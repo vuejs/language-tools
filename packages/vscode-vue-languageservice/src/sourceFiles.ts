@@ -2,6 +2,7 @@ import {
 	Diagnostic,
 	DiagnosticSeverity,
 	Location,
+	Position,
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { pugToHtml } from '@volar/pug';
@@ -726,6 +727,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					end: descriptor.template.loc.end - descriptor.template.loc.start,
 				},
 			});
+			sourceMaps.push(sourceMap);
 		}
 		return sourceMaps;
 	});
@@ -758,9 +760,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		update,
 		updateTemplateScript,
-		getTsSourceLocation,
-		getCssSourceLocation,
-		getHtmlSourceLocation,
 		getDiagnostics: useDiagnostics(),
 
 		getTextDocument: untrack(() => vue.document),
@@ -936,7 +935,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const tsProjectVersion = ref<string>();
 
 		const stylesDiags = computed(getStylesDiagnostics);
-		const templateDiags = computed(getTemplateDiagnostics);
+		const templateDiags = useTemplateValidation();
 		const templateScriptDiags_1 = useTemplateScriptValidation(1);
 		const templateScriptDiags_2 = useTemplateScriptValidation(2);
 		const templateScriptDiags_3 = useTemplateScriptValidation(3);
@@ -1018,107 +1017,100 @@ export function createSourceFile(initialDocument: TextDocument, {
 				return result;
 			}
 		}
-		function getTemplateDiagnostics() {
+		function useTemplateValidation() {
+			const htmlErrors = computed(() => {
+				const result: Diagnostic[] = [];
+				if (!templateDocument.value) return result;
+				const doc = templateDocument.value[0];
+				let _templateContent: string | undefined = doc.getText();
 
-			const result: Diagnostic[] = [];
+				/* pug */
+				if (doc.languageId === 'pug') {
+					try {
+						_templateContent = pugToHtml(_templateContent);
+					}
+					catch (err) {
+						_templateContent = undefined;
+						const line: number = err.line;
+						const column: number = err.column;
+						const diagnostic: Diagnostic = {
+							range: {
+								start: Position.create(line, column),
+								end: Position.create(line, column),
+							},
+							severity: DiagnosticSeverity.Error,
+							code: err.code,
+							source: 'pug',
+							message: err.msg,
+						};
+						result.push(diagnostic);
+					}
+				}
 
-			if (!descriptor.template) {
-				return result;
-			}
+				if (_templateContent === undefined) return result;
 
-			const startOffset = descriptor.template.loc.start;
-			const endOffset = descriptor.template.loc.end;
-			let _templateContent: string | undefined = descriptor.template.content;
-
-			/* pug */
-			if (descriptor.template.lang === 'pug') {
+				/* template */
 				try {
-					_templateContent = pugToHtml(_templateContent);
+					const templateResult = vueSfc.compileTemplate({
+						source: _templateContent,
+						filename: vue.fileName,
+						compilerOptions: {
+							onError: err => {
+								if (!err.loc) return;
+
+								const diagnostic: Diagnostic = {
+									range: {
+										start: doc.positionAt(err.loc.start.offset),
+										end: doc.positionAt(err.loc.end.offset),
+									},
+									severity: DiagnosticSeverity.Error,
+									code: err.code,
+									source: 'vue',
+									message: err.message,
+								};
+								result.push(diagnostic);
+							},
+						}
+					});
+
+					for (const err of templateResult.errors) {
+						if (typeof err !== 'object' || !err.loc)
+							continue;
+
+						const diagnostic: Diagnostic = {
+							range: {
+								start: doc.positionAt(err.loc.start.offset),
+								end: doc.positionAt(err.loc.end.offset),
+							},
+							severity: DiagnosticSeverity.Error,
+							source: 'vue',
+							code: err.code,
+							message: err.message,
+						};
+						result.push(diagnostic);
+					}
 				}
 				catch (err) {
-					_templateContent = undefined;
-					const line = err.line;
-					const column = err.column;
-
-					// line column to offset
-					let offset = column;
-					const lines = descriptor.template.content.split('\n');
-					for (let l = 0; l < line - 1; l++) {
-						offset += lines[l].length + 1; // +1 is \n
-					}
-
 					const diagnostic: Diagnostic = {
 						range: {
-							start: startOffset + offset,
-							end: startOffset + offset,
+							start: doc.positionAt(0),
+							end: doc.positionAt(doc.getText().length),
 						},
 						severity: DiagnosticSeverity.Error,
 						code: err.code,
-						source: 'pug',
-						message: err.msg,
-					};
-					result.push(diagnostic);
-				}
-			}
-
-			if (!_templateContent) return result;
-
-			/* template */
-			try {
-				const templateResult = vueSfc.compileTemplate({
-					source: _templateContent,
-					filename: vue.fileName,
-					compilerOptions: {
-						onError: err => {
-							if (!err.loc) return;
-
-							const diagnostic: Diagnostic = {
-								range: {
-									start: vue.document.positionAt(err.loc.start.offset + startOffset),
-									end: vue.document.positionAt(err.loc.end.offset + startOffset),
-								},
-								severity: DiagnosticSeverity.Error,
-								code: err.code,
-								source: 'vue',
-								message: err.message,
-							};
-							result.push(diagnostic);
-						},
-					}
-				});
-
-				for (const err of templateResult.errors) {
-					if (typeof err !== 'object' || !err.loc)
-						continue;
-
-					const diagnostic: Diagnostic = {
-						range: {
-							start: vue.document.positionAt(err.loc.start.offset + startOffset),
-							end: vue.document.positionAt(err.loc.end.offset + startOffset),
-						},
-						severity: DiagnosticSeverity.Error,
 						source: 'vue',
-						code: err.code,
 						message: err.message,
 					};
 					result.push(diagnostic);
 				}
-			}
-			catch (err) {
-				const diagnostic: Diagnostic = {
-					range: {
-						start: vue.document.positionAt(startOffset),
-						end: vue.document.positionAt(endOffset),
-					},
-					severity: DiagnosticSeverity.Error,
-					code: err.code,
-					source: 'vue',
-					message: err.message,
-				};
-				result.push(diagnostic);
-			}
 
-			return result;
+				return result;
+			});
+			const vueErrors = computed(() => {
+				if (!templateDocument.value) return [];
+				return getSourceDiags(htmlErrors.value, templateDocument.value[0].uri, htmlSourceMaps.value);
+			});
+			return vueErrors;
 		}
 		function getStylesDiagnostics() {
 			{ // watching
@@ -1129,7 +1121,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 			for (const sourceMap of cssSourceMaps.value) {
 				const errors = sourceMap.languageService.doValidation(sourceMap.targetDocument, sourceMap.stylesheet);
-				const errors_2 = getSourceDiags(errors as Diagnostic[], sourceMap.targetDocument.uri);
+				const errors_2 = getSourceDiags(errors as Diagnostic[], sourceMap.targetDocument.uri, cssSourceMaps.value);
 				result = result.concat(errors_2);
 			}
 
@@ -1156,7 +1148,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const scriptDiagnostics = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				const result = getSourceDiags(scriptDiagnosticsRaw.value, doc.uri);
+				const result = getSourceDiags(scriptDiagnosticsRaw.value, doc.uri, tsSourceMaps.value);
 				return result;
 			});
 			return scriptDiagnostics;
@@ -1205,59 +1197,34 @@ export function createSourceFile(initialDocument: TextDocument, {
 				const result_1 = templateScriptDocument.value ? getSourceDiags(
 					templateScriptDiagnostics.value,
 					templateScriptDocument.value.uri,
+					tsSourceMaps.value,
 				) : [];
 				const result_2 = scriptDocument.value ? getSourceDiags(
 					scriptDiagnostics.value,
 					scriptDocument.value.uri,
+					tsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
 
 			return result;
 		}
-	}
-	function getSourceDiags(errors: Diagnostic[], virtualScriptUri: string) {
-		const result: Diagnostic[] = [];
-		for (const error of errors) {
-			const loc = Location.create(virtualScriptUri, error.range);
-			const vueLoc = getTsSourceLocation(loc) ?? getCssSourceLocation(loc) ?? getHtmlSourceLocation(loc);
-			if (vueLoc) {
-				result.push({
-					...error,
-					range: vueLoc.range,
-				});
-			}
-		}
-		return result;
-	}
-	function getTsSourceLocation(location: Location) {
-		for (const sourceMap of tsSourceMaps.value) {
-			if (sourceMap.targetDocument.uri === location.uri) {
-				const vueLoc = sourceMap.findSource(location.range);
-				if (vueLoc) {
-					return vueLoc;
+		function getSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+			const result: Diagnostic[] = [];
+			for (const error of errors) {
+				for (const sourceMap of sourceMaps) {
+					if (sourceMap.targetDocument.uri === virtualScriptUri) {
+						const vueLoc = sourceMap.findSource(error.range);
+						if (vueLoc) {
+							result.push({
+								...error,
+								range: vueLoc.range,
+							});
+						}
+					}
 				}
 			}
-		}
-	}
-	function getCssSourceLocation(location: Location) {
-		for (const sourceMap of cssSourceMaps.value) {
-			if (sourceMap.targetDocument.uri === location.uri) {
-				const vueLoc = sourceMap.findSource(location.range);
-				if (vueLoc) {
-					return vueLoc;
-				}
-			}
-		}
-	}
-	function getHtmlSourceLocation(location: Location) {
-		for (const sourceMap of htmlSourceMaps.value) {
-			if (sourceMap.targetDocument.uri === location.uri) {
-				const vueLoc = sourceMap.findSource(location.range);
-				if (vueLoc) {
-					return vueLoc;
-				}
-			}
+			return result;
 		}
 	}
 	function transformLanguageId(lang: string) {
