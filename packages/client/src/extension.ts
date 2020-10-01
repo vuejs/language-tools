@@ -18,7 +18,7 @@ let diagClient: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
 	baseClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar');
-	diagClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'diagServer.js'), 'Volar (Diagnostics)');
+	diagClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'validateServer.js'), 'Volar Validate');
 }
 
 export function deactivate(): Thenable<void> | undefined {
