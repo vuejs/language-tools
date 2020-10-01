@@ -934,7 +934,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		const tsProjectVersion = ref<string>();
 
-		const stylesDiags = computed(getStylesDiagnostics);
+		const stylesDiags = useStylesValidation();
 		const templateDiags = useTemplateValidation();
 		const templateScriptDiags_1 = useTemplateScriptValidation(1);
 		const templateScriptDiags_2 = useTemplateScriptValidation(2);
@@ -1018,7 +1018,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 		}
 		function useTemplateValidation() {
-			const htmlErrors = computed(() => {
+			const errors = computed(() => {
 				const result: Diagnostic[] = [];
 				if (!templateDocument.value) return result;
 				const doc = templateDocument.value[0];
@@ -1106,30 +1106,32 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 				return result;
 			});
-			const vueErrors = computed(() => {
+			return computed(() => {
 				if (!templateDocument.value) return [];
-				return getSourceDiags(htmlErrors.value, templateDocument.value[0].uri, htmlSourceMaps.value);
+				return getSourceDiags(errors.value, templateDocument.value[0].uri, htmlSourceMaps.value);
 			});
-			return vueErrors;
 		}
-		function getStylesDiagnostics() {
-			{ // watching
-				cssSourceMaps.value;
-			}
-
-			let result: Diagnostic[] = [];
-
-			for (const sourceMap of cssSourceMaps.value) {
-				const errors = sourceMap.languageService.doValidation(sourceMap.targetDocument, sourceMap.stylesheet);
-				const errors_2 = getSourceDiags(errors as Diagnostic[], sourceMap.targetDocument.uri, cssSourceMaps.value);
-				result = result.concat(errors_2);
-			}
-
-			return result;
+		function useStylesValidation() {
+			const errors = computed(() => {
+				let result = new Map<string, css.Diagnostic[]>();
+				for (const [document, stylesheet] of styleDocuments.value) {
+					const ls = document.languageId === "scss" ? scssLanguageService : cssLanguageService;
+					const errs = ls.doValidation(document, stylesheet);
+					if (errs) result.set(document.uri, errs);
+				}
+				return result;
+			});
+			return computed(() => {
+				let result: css.Diagnostic[] = [];
+				for (const [uri, errs] of errors.value) {
+					result = result.concat(getSourceDiags(errs, uri, cssSourceMaps.value));
+				}
+				return result;
+			});
 		}
 		function useScriptValidation(mode: number) {
 			const document = computed(() => scriptSetupDocument.value ? scriptSetupDocument.value : scriptDocument.value);
-			const scriptDiagnosticsRaw = computed(() => {
+			const errors = computed(() => {
 				{ // watching
 					tsProjectVersion.value;
 				}
@@ -1145,16 +1147,14 @@ export function createSourceFile(initialDocument: TextDocument, {
 					return tsLanguageService.doValidation(doc, { suggestion: true });
 				}
 			});
-			const scriptDiagnostics = computed(() => {
+			return computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				const result = getSourceDiags(scriptDiagnosticsRaw.value, doc.uri, tsSourceMaps.value);
-				return result;
+				return getSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
 			});
-			return scriptDiagnostics;
 		}
 		function useTemplateScriptValidation(mode: number) {
-			const templateScriptDiagnostics = computed(() => {
+			const errors_1 = computed(() => {
 				{ // watching
 					tsProjectVersion.value;
 				}
@@ -1170,56 +1170,63 @@ export function createSourceFile(initialDocument: TextDocument, {
 					return tsLanguageService.doValidation(doc, { suggestion: true });
 				}
 			});
-			const scriptDiagnostics = computed(() => {
+			const errors_2 = computed(() => {
 				const result: Diagnostic[] = [];
-				if (templateScript.value && scriptDocument.value) {
-					for (const diag of templateScriptDiagnostics.value) {
-						const spanText = templateScript.value.document.getText(diag.range);
-						if (!templateScriptData.setupReturns.includes(spanText)) continue;
-						const propRights = templateScript.value.propSourceMap.findTargets(diag.range);
-						for (const propRight of propRights) {
-							if (propRight.data.isUnwrapProp) continue;
-							const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
-							for (const definition of definitions) {
-								if (definition.uri === scriptDocument.value.uri) {
-									result.push({
-										...diag,
-										range: definition.range,
-									});
-								}
-							}
+				if (!templateScript.value || !scriptDocument.value) return result;
+				for (const diag of errors_1.value) {
+					const spanText = templateScript.value.document.getText(diag.range);
+					if (!templateScriptData.setupReturns.includes(spanText)) continue;
+					const propRights = templateScript.value.propSourceMap.findTargets(diag.range);
+					for (const propRight of propRights) {
+						if (propRight.data.isUnwrapProp) continue;
+						const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
+						for (const definition of definitions) {
+							if (definition.uri !== scriptDocument.value.uri) continue;
+							result.push({
+								...diag,
+								range: definition.range,
+							});
 						}
 					}
 				}
 				return result;
 			})
-			const result = computed(() => {
+			return computed(() => {
 				const result_1 = templateScriptDocument.value ? getSourceDiags(
-					templateScriptDiagnostics.value,
+					errors_1.value,
 					templateScriptDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				const result_2 = scriptDocument.value ? getSourceDiags(
-					scriptDiagnostics.value,
+					errors_2.value,
 					scriptDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
-
-			return result;
 		}
-		function getSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
-			const result: Diagnostic[] = [];
+		function getSourceDiags<T = Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+			const result: T[] = [];
 			for (const error of errors) {
 				for (const sourceMap of sourceMaps) {
 					if (sourceMap.targetDocument.uri === virtualScriptUri) {
-						const vueLoc = sourceMap.findSource(error.range);
-						if (vueLoc) {
-							result.push({
-								...error,
-								range: vueLoc.range,
-							});
+						if (css.Diagnostic.is(error)) {
+							const vueLoc = sourceMap.findSource(error.range);
+							if (vueLoc) {
+								result.push({
+									...error,
+									range: vueLoc.range,
+								});
+							}
+						}
+						else if (Diagnostic.is(error)) {
+							const vueLoc = sourceMap.findSource(error.range);
+							if (vueLoc) {
+								result.push({
+									...error,
+									range: vueLoc.range,
+								});
+							}
 						}
 					}
 				}
