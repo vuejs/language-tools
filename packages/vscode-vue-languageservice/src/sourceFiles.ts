@@ -1,7 +1,6 @@
 import {
 	Diagnostic,
 	DiagnosticSeverity,
-	Location,
 	Position,
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -732,15 +731,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 		return sourceMaps;
 	});
 
-	const tsUris = computed(() => {
-		const uris = new Set<string>();
-		if (scriptDocument.value) uris.add(scriptDocument.value.uri);
-		if (scriptSetupDocument.value) uris.add(scriptSetupDocument.value.uri);
-		if (scriptUnwrapDocument.value) uris.add(scriptUnwrapDocument.value.uri);
-		if (scriptCaptureDocument.value) uris.add(scriptCaptureDocument.value.uri);
-		if (templateScriptDocument.value) uris.add(templateScriptDocument.value.uri);
-		return uris;
-	});
 	const tsDocuments = computed(() => {
 		const docs = new Map<string, TextDocument>();
 		if (scriptDocument.value) docs.set(scriptDocument.value.uri, scriptDocument.value);
@@ -754,19 +744,15 @@ export function createSourceFile(initialDocument: TextDocument, {
 	update(initialDocument);
 
 	return {
-		getTsSourceMaps: untrack(() => tsSourceMaps.value),
-		getCssSourceMaps: untrack(() => cssSourceMaps.value),
-		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
-
 		update,
 		updateTemplateScript,
 		getDiagnostics: useDiagnostics(),
-
-		getTextDocument: untrack(() => vue.document),
+		getTsSourceMaps: untrack(() => tsSourceMaps.value),
+		getCssSourceMaps: untrack(() => cssSourceMaps.value),
+		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getTemplateScript: untrack(() => templateScript.value),
 		getDescriptor: untrack(() => descriptor),
-		getTsUris: untrack(() => tsUris.value),
 		getTsDocuments: untrack(() => tsDocuments.value),
 	};
 
@@ -918,7 +904,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		function eqSet<T>(as: Set<T>, bs: Set<T>) {
 			if (as.size !== bs.size) return false;
-			for (var a of as) if (!bs.has(a)) return false;
+			for (const a of as) if (!bs.has(a)) return false;
 			return true;
 		}
 	}
@@ -1013,7 +999,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					...lastTemplateScriptDiags_2,
 					...lastTemplateScriptDiags_3,
 				];
-				result = result.filter(err => !(err.source === 'ts' && err.code === 7028));
+				result = result.filter(err => !(err.source === 'ts' && err.code === 7028)); // TODO: fix <script refs>
 				return result;
 			}
 		}

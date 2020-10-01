@@ -171,7 +171,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 				const uri = fsPathToUri(fileName);
 				const sourceFile = sourceFiles.get(uri);
 				if (sourceFile) {
-					for (const uri of sourceFile.getTsUris()) {
+					for (const [uri] of sourceFile.getTsDocuments()) {
 						tsFileNames.push(uriToFsPath(uri));
 					}
 				}

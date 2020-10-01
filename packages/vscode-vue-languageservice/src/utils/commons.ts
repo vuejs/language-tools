@@ -177,7 +177,7 @@ export function getSourceTsLocations(location: Location, sourceFiles: Map<string
 }
 export function findSourceFileByTsUri(sourceFiles: Map<string, SourceFile>, uri: string) {
 	for (const sourceFile of sourceFiles.values()) {
-		if (sourceFile.getTsUris().has(uri)) {
+		if (sourceFile.getTsDocuments().has(uri)) {
 			return sourceFile;
 		}
 	}

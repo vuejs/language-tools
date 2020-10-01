@@ -63,8 +63,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				const virtualLocs = sourceMap.findTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					const scriptTemplate = sourceFile.getTemplateScriptData();
-					const names = [...new Set(...scriptTemplate.components, ...scriptTemplate.components.map(hyphenate))];
+					const templateScriptData = sourceFile.getTemplateScriptData();
+					const names = [...new Set(...templateScriptData.components, ...templateScriptData.components.map(hyphenate))];
 					const dataProvider = html.newHTMLDataProvider(document.uri, {
 						version: 1.1,
 						tags: names.map(name => ({
