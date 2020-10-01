@@ -1,0 +1,14 @@
+{
+	"name": "@volar/server",
+	"version": "1.0.0",
+	"devDependencies": {
+		"@types/fs-extra": "latest"
+	},
+	"dependencies": {
+		"vscode-languageserver": "latest",
+		"vscode-languageserver-textdocument": "latest",
+		"fs-extra": "latest",
+		"typescript": "latest",
+		"upath": "latest"
+	}
+}

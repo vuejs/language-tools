@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "es2019",
+		"lib": ["ESNext"],
+		"module": "commonjs",
+		"outDir": "out",
+		"rootDir": "src",
+		"sourceMap": true,
+		"composite": true,
+		"declaration": true,
+		"strict": true,
+		"baseUrl": ".",
+		"paths": {
+			"@volar/*": ["*/src"]
+		},
+	},
+	// "include": ["src"],
+	// "exclude": ["node_modules", ".vscode-test"]
+}

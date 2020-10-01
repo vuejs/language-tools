@@ -1,0 +1,9 @@
+{
+	"name": "@volar/shared",
+	"version": "1.0.0",
+	"main": "out/index.js",
+	"devDependencies": {},
+	"dependencies": {
+		"upath": "latest"
+	}
+}

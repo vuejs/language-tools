@@ -1,0 +1,67 @@
+{
+	"private": true,
+	"name": "volar",
+	"displayName": "Volar",
+	"description": "TypeScript support for Vue 3",
+	"version": "0.10.8",
+	"author": "johnsoncodehk",
+	"publisher": "johnsoncodehk",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git"
+	},
+	"engines": {
+		"vscode": "^1.32.0"
+	},
+	"keywords": [
+		"volar",
+		"vue",
+		"vue3",
+		"ts",
+		"typescript",
+		"pug"
+	],
+	"activationEvents": [
+		"onLanguage:vue"
+	],
+	"main": "./packages/client/out/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "vue",
+				"extensions": [
+					".vue"
+				]
+			},
+			{
+				"id": "typescript",
+				"extensions": [
+					".ts",
+					".tsx"
+				]
+			}
+		],
+		"grammars": [
+			{
+				"language": "vue",
+				"scopeName": "text.html.vue",
+				"path": "./syntaxes/vue.tmLanguage.json"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"pack": "yarn && vsce package --yarn",
+		"publish": "yarn && vsce publish --yarn"
+	},
+	"devDependencies": {
+		"vsce": "latest",
+		"typescript": "latest"
+	},
+	"dependencies": {},
+	"workspaces": [
+		"packages/*"
+	]
+}

@@ -1,0 +1,9 @@
+.vscode/**
+packages/*/src/
+**/*.map
+.gitignore
+**/tsconfig.json
+**/tsconfig.base.json
+contributing.md
+node_modules/@volar/client
+node_modules/@volar/server

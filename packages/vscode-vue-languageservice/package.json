@@ -1,0 +1,24 @@
+{
+	"name": "@volar/vscode-vue-languageservice",
+	"version": "1.0.0",
+	"main": "out/index.js",
+	"devDependencies": {
+		"@types/prettier": "latest"
+	},
+	"dependencies": {
+		"@vue/compiler-core": "latest",
+		"@vue/compiler-sfc": "latest",
+		"@vue/compiler-dom": "latest",
+		"vscode-css-languageservice": "latest",
+		"vscode-html-languageservice": "latest",
+		"typescript": "latest",
+		"vscode-languageserver-textdocument": "latest",
+		"vscode-languageserver": "latest",
+		"@starptech/prettyhtml": "latest",
+		"@vue/reactivity": "latest",
+		"@vue/shared": "latest",
+		"upath": "latest",
+		"jsonc-parser": "latest",
+		"prettier": "latest"
+	}
+}

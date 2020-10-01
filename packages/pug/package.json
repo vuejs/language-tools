@@ -1,0 +1,14 @@
+{
+	"name": "@volar/pug",
+	"version": "1.0.0",
+	"main": "out/index.js",
+	"devDependencies": {
+		"@types/pug": "latest"
+	},
+	"dependencies": {
+		"pug": "latest",
+		"htmlparser2": "latest",
+		"domhandler": "latest",
+		"domelementtype": "latest"
+	}
+}

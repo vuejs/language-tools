@@ -1,0 +1,14 @@
+{
+	"name": "@volar/client",
+	"version": "1.0.0",
+	"engines": {
+		"vscode": "latest"
+	},
+	"dependencies": {
+		"vscode-languageclient": "latest"
+	},
+	"devDependencies": {
+		"@types/vscode": "latest",
+		"vscode-test": "latest"
+	}
+}
