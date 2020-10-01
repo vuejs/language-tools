@@ -220,7 +220,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		if (!desc.template) return [];
 
 		const handlerLine = range.start.line;
-		const templateStartLine = document.positionAt(desc.template.loc.start.offset).line;
+		const templateStartLine = document.positionAt(desc.template.loc.start).line;
 		if (handlerLine === templateStartLine) { // first line of <template>
 			const lang = desc.template.lang;
 
@@ -259,8 +259,8 @@ export function createLanguageService(host: LanguageServiceHost) {
 			const pug = htmlToPug(desc.template.content, 2, false) + '\n';
 			const newTemplate = `<template lang='pug'>` + pug;
 
-			let start = desc.template.loc.start.offset - '<template>'.length;
-			const end = desc.template.loc.end.offset;
+			let start = desc.template.loc.start - '<template>'.length;
+			const end = desc.template.loc.end;
 			const startMatch = '<template';
 
 			while (!document.getText(Range.create(
@@ -269,7 +269,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			)).startsWith(startMatch)) {
 				start--;
 				if (start < 0) {
-					throw 'Can't find start of tag <template>'
+					throw `Can't find start of tag <template>`
 				}
 			}
 
@@ -287,8 +287,8 @@ export function createLanguageService(host: LanguageServiceHost) {
 			html = prettyhtml(html).contents;
 			const newTemplate = `<template>\n` + html;
 
-			let start = desc.template.loc.start.offset - '<template>'.length;
-			const end = desc.template.loc.end.offset;
+			let start = desc.template.loc.start - '<template>'.length;
+			const end = desc.template.loc.end;
 			const startMatch = '<template';
 
 			while (!document.getText(Range.create(
@@ -297,7 +297,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			)).startsWith(startMatch)) {
 				start--;
 				if (start < 0) {
-					throw 'Can't find start of tag <template>'
+					throw `Can't find start of tag <template>`
 				}
 			}
 

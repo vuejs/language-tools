@@ -44,24 +44,24 @@ export function createSourceFile(initialDocument: TextDocument, {
 			lang: string,
 			content: string,
 			loc: {
-				start: { offset: number },
-				end: { offset: number },
+				start: number,
+				end: number,
 			},
 		} | null,
 		script: {
 			lang: string,
 			content: string,
 			loc: {
-				start: { offset: number },
-				end: { offset: number },
+				start: number,
+				end: number,
 			},
 		} | null,
 		scriptSetup: {
 			lang: string,
 			content: string,
 			loc: {
-				start: { offset: number },
-				end: { offset: number },
+				start: number,
+				end: number,
 			},
 			setup: string,
 		} | null,
@@ -69,8 +69,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 			lang: string,
 			content: string,
 			loc: {
-				start: { offset: number },
-				end: { offset: number },
+				start: number,
+				end: number,
 			},
 			module: boolean,
 		}[],
@@ -287,8 +287,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 					data: maped.data,
 					mode: maped.mode,
 					originalRange: {
-						start: maped.originalRange.start + descriptor.template.loc.start.offset,
-						end: maped.originalRange.end + descriptor.template.loc.start.offset,
+						start: maped.originalRange.start + descriptor.template.loc.start,
+						end: maped.originalRange.end + descriptor.template.loc.start,
 					},
 					mappingRange: {
 						start: maped.mappingRange.start + interpolationsStart,
@@ -541,8 +541,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const document = scriptDocument.value;
 		if (document && descriptor.script) {
 			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
-			const start = descriptor.script.loc.start.offset;
-			const end = descriptor.script.loc.end.offset;
+			const start = descriptor.script.loc.start;
+			const end = descriptor.script.loc.end;
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -572,8 +572,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const document = scriptSetupDocument.value;
 		if (document && descriptor.scriptSetup) {
 			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
-			const start = descriptor.scriptSetup.loc.start.offset;
-			const end = descriptor.scriptSetup.loc.end.offset;
+			const start = descriptor.scriptSetup.loc.start;
+			const end = descriptor.scriptSetup.loc.end;
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -632,8 +632,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const document = scriptUnwrapDocument.value;
 		if (document && descriptor.script) {
 			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
-			const start = descriptor.script.loc.start.offset;
-			const end = descriptor.script.loc.end.offset;
+			const start = descriptor.script.loc.start;
+			const end = descriptor.script.loc.end;
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -692,12 +692,12 @@ export function createSourceFile(initialDocument: TextDocument, {
 				data: undefined,
 				mode: MapedMode.Offset,
 				originalRange: {
-					start: loc.start.offset,
-					end: loc.end.offset,
+					start: loc.start,
+					end: loc.end,
 				},
 				mappingRange: {
 					start: 0,
-					end: loc.end.offset - loc.start.offset,
+					end: loc.end - loc.start,
 				},
 			});
 			sourceMaps.push(sourceMap);
@@ -718,12 +718,12 @@ export function createSourceFile(initialDocument: TextDocument, {
 				data: undefined,
 				mode: MapedMode.Offset,
 				originalRange: {
-					start: descriptor.template.loc.start.offset,
-					end: descriptor.template.loc.end.offset,
+					start: descriptor.template.loc.start,
+					end: descriptor.template.loc.end,
 				},
 				mappingRange: {
 					start: 0,
-					end: descriptor.template.loc.end.offset - descriptor.template.loc.start.offset,
+					end: descriptor.template.loc.end - descriptor.template.loc.start,
 				},
 			});
 		}
@@ -805,15 +805,15 @@ export function createSourceFile(initialDocument: TextDocument, {
 				lang: newDescriptor.template.lang ?? 'html',
 				content: newDescriptor.template.content,
 				loc: {
-					start: { offset: newDescriptor.template.loc.start.offset },
-					end: { offset: newDescriptor.template.loc.end.offset },
+					start: newDescriptor.template.loc.start.offset,
+					end: newDescriptor.template.loc.end.offset,
 				},
 			} : null;
 			if (descriptor.template && newData) {
 				descriptor.template.lang = newData.lang;
 				descriptor.template.content = newData.content;
-				descriptor.template.loc.start.offset = newData.loc.start.offset;
-				descriptor.template.loc.end.offset = newData.loc.end.offset;
+				descriptor.template.loc.start = newData.loc.start;
+				descriptor.template.loc.end = newData.loc.end;
 			}
 			else {
 				descriptor.template = newData;
@@ -824,15 +824,15 @@ export function createSourceFile(initialDocument: TextDocument, {
 				lang: newDescriptor.script.lang ?? 'js',
 				content: passScriptRefs(newDescriptor.script),
 				loc: {
-					start: { offset: newDescriptor.script.loc.start.offset },
-					end: { offset: newDescriptor.script.loc.end.offset },
+					start: newDescriptor.script.loc.start.offset,
+					end: newDescriptor.script.loc.end.offset,
 				},
 			} : null;
 			if (descriptor.script && newData) {
 				descriptor.script.lang = newData.lang;
 				descriptor.script.content = newData.content;
-				descriptor.script.loc.start.offset = newData.loc.start.offset;
-				descriptor.script.loc.end.offset = newData.loc.end.offset;
+				descriptor.script.loc.start = newData.loc.start;
+				descriptor.script.loc.end = newData.loc.end;
 			}
 			else {
 				descriptor.script = newData;
@@ -843,16 +843,16 @@ export function createSourceFile(initialDocument: TextDocument, {
 				lang: newDescriptor.scriptSetup.lang ?? 'js',
 				content: passScriptRefs(newDescriptor.scriptSetup),
 				loc: {
-					start: { offset: newDescriptor.scriptSetup.loc.start.offset },
-					end: { offset: newDescriptor.scriptSetup.loc.end.offset },
+					start: newDescriptor.scriptSetup.loc.start.offset,
+					end: newDescriptor.scriptSetup.loc.end.offset,
 				},
 				setup: typeof newDescriptor.scriptSetup.setup === 'string' ? newDescriptor.scriptSetup.setup : '',
 			} : null;
 			if (descriptor.scriptSetup && newData) {
 				descriptor.scriptSetup.lang = newData.lang;
 				descriptor.scriptSetup.content = newData.content;
-				descriptor.scriptSetup.loc.start.offset = newData.loc.start.offset;
-				descriptor.scriptSetup.loc.end.offset = newData.loc.end.offset;
+				descriptor.scriptSetup.loc.start = newData.loc.start;
+				descriptor.scriptSetup.loc.end = newData.loc.end;
 				descriptor.scriptSetup.setup = newData.setup;
 			}
 			else {
@@ -866,15 +866,16 @@ export function createSourceFile(initialDocument: TextDocument, {
 					lang: style.lang ?? 'css',
 					content: style.content,
 					loc: {
-						start: { offset: style.loc.start.offset },
-						end: { offset: style.loc.end.offset },
+						start: style.loc.start.offset,
+						end: style.loc.end.offset,
 					},
 					module: style.module !== false,
 				};
 				if (descriptor.styles.length > i) {
 					descriptor.styles[i].lang = newData.lang;
 					descriptor.styles[i].content = newData.content;
-					descriptor.styles[i].loc = newData.loc;
+					descriptor.styles[i].loc.start = newData.loc.start;
+					descriptor.styles[i].loc.end = newData.loc.end;
 					descriptor.styles[i].module = newData.module;
 				}
 				else {
@@ -1025,8 +1026,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 				return result;
 			}
 
-			const startOffset = descriptor.template.loc.start.offset;
-			const endOffset = descriptor.template.loc.end.offset;
+			const startOffset = descriptor.template.loc.start;
+			const endOffset = descriptor.template.loc.end;
 			let _templateContent: string | undefined = descriptor.template.content;
 
 			/* pug */

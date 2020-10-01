@@ -28,8 +28,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					name: '<template>',
 					kind: SymbolKind.Module,
 					location: Location.create(document.uri, Range.create(
-						document.positionAt(desc.template.loc.start.offset),
-						document.positionAt(desc.template.loc.end.offset),
+						document.positionAt(desc.template.loc.start),
+						document.positionAt(desc.template.loc.end),
 					)),
 				});
 			}
@@ -39,8 +39,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			// 		name: '<script>',
 			// 		kind: SymbolKind.Module,
 			// 		location: Location.create(document.uri, Range.create(
-			// 			document.positionAt(desc.script.loc.start.offset),
-			// 			document.positionAt(desc.script.loc.end.offset),
+			// 			document.positionAt(desc.script.loc.start),
+			// 			document.positionAt(desc.script.loc.end),
 			// 		)),
 			// 	});
 			// }
@@ -50,8 +50,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					name: '<style>',
 					kind: SymbolKind.Module,
 					location: Location.create(document.uri, Range.create(
-						document.positionAt(style.loc.start.offset),
-						document.positionAt(style.loc.end.offset),
+						document.positionAt(style.loc.start),
+						document.positionAt(style.loc.end),
 					)),
 				});
 			}
