@@ -21,12 +21,8 @@ import {
 	CompletionRequest,
 	createConnection,
 	DocumentRangeFormattingRequest,
-	DocumentHighlightRequest,
 	SelectionRangeRequest,
-	DocumentSymbolRequest,
-	DocumentLinkRequest,
 	SignatureHelpRequest,
-	DocumentColorRequest,
 	CompletionItem,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
@@ -122,11 +118,6 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host(document.uri)?.doHover(document, handler.position);
 	});
-	connection.onDocumentColor(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host(document.uri)?.findDocumentColors(document);
-	});
 	connection.onColorPresentation(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
@@ -146,21 +137,6 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
 		return host(document.uri)?.doRangeFormatting(document, handler.range, handler.options);
-	});
-	connection.onDocumentHighlight(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host(document.uri)?.findDocumentHighlights(document, handler.position);
-	});
-	connection.onDocumentSymbol(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host(document.uri)?.findDocumentSymbols(document);
-	});
-	connection.onDocumentLinks(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host(document.uri)?.findDocumentLinks(document);
 	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -217,10 +193,6 @@ function onInitialized() {
 	connection.client.register(TypeDefinitionRequest.type, vueOnly);
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
-	connection.client.register(DocumentHighlightRequest.type, vueOnly);
-	connection.client.register(DocumentSymbolRequest.type, vueOnly);
-	connection.client.register(DocumentLinkRequest.type, vueOnly);
-	connection.client.register(DocumentColorRequest.type, vueOnly);
 	connection.client.register(SignatureHelpRequest.type, {
 		documentSelector: vueOnly.documentSelector,
 		triggerCharacters: ['(', ',', '<'],
