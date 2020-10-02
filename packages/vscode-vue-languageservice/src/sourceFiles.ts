@@ -744,6 +744,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 	update(initialDocument);
 
 	return {
+		getTextDocument: untrack(() => vue.document),
 		update,
 		updateTemplateScript,
 		getDiagnostics: useDiagnostics(),

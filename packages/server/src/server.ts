@@ -27,6 +27,7 @@ import {
 	DocumentLinkRequest,
 	SignatureHelpRequest,
 	DocumentColorRequest,
+	CompletionItem,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands } from '@volar/vscode-vue-languageservice';
@@ -91,15 +92,20 @@ function onInitialize(params: InitializeParams) {
 function initLanguageService(rootPath: string) {
 
 	const host = createLanguageServiceHost(connection, documents, rootPath, false);
+	let resolveCache: CompletionItem | undefined;
 
 	connection.onCompletion(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return host(document.uri)?.doComplete(document, handler.position, handler.context);
 	});
-	connection.onCompletionResolve(item => {
+	connection.onCompletionResolve(async item => {
+		if (resolveCache && resolveCache.label === item.label && resolveCache.kind === item.kind) {
+			return resolveCache;
+		}
 		const uri = item.data?.uri;
-		return host(uri)?.doCompletionResolve(item) ?? item;
+		resolveCache = host(uri)?.doCompletionResolve(item) ?? item;
+		return resolveCache;
 	});
 	connection.onDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
