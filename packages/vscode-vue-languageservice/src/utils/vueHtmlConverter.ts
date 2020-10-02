@@ -21,11 +21,10 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				_code += `}\n`;
 			}
 		}
-		else if (node.type === NodeTypes.ELEMENT) {
+		else if (node.type === NodeTypes.ELEMENT) { // TODO: should not has indent
 			// props
 			if (!dontCreateBlock) _code += `{\n`;
-			// _code += `// ${node.tag}\n`;
-			if (node.tagType === ElementTypes.COMPONENT) { // TODO: should not has indent
+			{
 				// +1 to remove '<' from html tag
 				const sourceRanges = [{
 					start: node.loc.start.offset + 1,
@@ -48,9 +47,15 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				_code += `'] = {\n`;
 				writeProps(node, true);
 				_code += '};\n';
-			}
 
-			writeProps(node, false);
+				writeProps(node, false);
+
+				// childs
+				for (const childNode of node.children) {
+					_code = worker(_code, childNode);
+				}
+			}
+			if (!dontCreateBlock) _code += '}\n';
 
 			function writeProps(node: ElementNode, isInWrap: boolean) {
 				for (const prop of node.props) {
@@ -150,11 +155,6 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					}
 				}
 			}
-			// childs
-			for (const childNode of node.children) {
-				_code = worker(_code, childNode);
-			}
-			if (!dontCreateBlock) _code += '}\n';
 		}
 		else if (node.type === NodeTypes.TEXT_CALL) {
 			// {{ var }}
