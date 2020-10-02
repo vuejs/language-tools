@@ -41,13 +41,12 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					const sourceItems = items.map(item => toSourceItem(item, sourceMap));
 
 					const data: TsCompletionData = {
+						uri: document.uri,
 						mode: 'ts',
-						languageService: sourceMap.languageService,
-						document: sourceMap.targetDocument,
-						position: virtualLoc.range.start,
 					};
 					for (const entry of sourceItems) {
-						entry.data = data;
+						entry.data.uri = data.uri;
+						entry.data.mode = data.mode;
 						result.push(entry as CompletionItem);
 					}
 				}

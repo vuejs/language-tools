@@ -872,11 +872,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 		}
 	}
-	function updateTemplateScript(projectVersion: number) {
-		if (templateScriptData.projectVersion === projectVersion) {
+	function updateTemplateScript(vueProjectVersion: number) {
+		if (templateScriptData.projectVersion === vueProjectVersion) {
 			return false;
 		}
-		templateScriptData.projectVersion = projectVersion;
+		templateScriptData.projectVersion = vueProjectVersion;
 
 		const doc = scriptCaptureDocument.value;
 		const props = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_vm.')));

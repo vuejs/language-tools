@@ -43,6 +43,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
+	let vueProjectVersion = 0;
 	let tsProjectVersion = 0;
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
@@ -57,8 +58,6 @@ export function createLanguageService(host: LanguageServiceHost) {
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(doValidation.register(sourceFiles, () => tsLanguageServiceHost.getProjectVersion?.() ?? '-1')),
-		doComplete: apiHook(doComplete.register(sourceFiles)),
-		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles)),
 		doHover: apiHook(doHover.register(sourceFiles)),
 		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles)),
 		doFormatting: apiHook(doFormatting.register(sourceFiles)),
@@ -68,30 +67,32 @@ export function createLanguageService(host: LanguageServiceHost) {
 		doRename: apiHook(doRename.register(sourceFiles)),
 		doCodeAction: apiHook(doCodeAction),
 		doExecuteCommand: apiHook(doExecuteCommand),
-		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles)),
-		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles)),
-		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles)),
-		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles)),
-		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles)),
-		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, host)),
-		findDocumentColors: apiHook(findDocumentColors.register(sourceFiles)),
+		doComplete: apiHook(doComplete.register(sourceFiles), false),
+		doCompletionResolve: apiHook(doCompletionResolve.register(tsLanguageService), false),
+		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles), false),
+		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles), false),
+		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
+		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles), false),
+		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles), false),
+		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, host), false),
+		findDocumentColors: apiHook(findDocumentColors.register(sourceFiles), false),
 		dispose: tsLanguageService.dispose,
 	};
 
-	function apiHook<T extends Function>(api: T) {
+	function apiHook<T extends Function>(api: T, updateTemplateScript: boolean = true) {
 		const handler = {
 			apply: function (target: Function, thisArg: any, argumentsList: any[]) {
-				update();
+				update(updateTemplateScript);
 				return target.apply(thisArg, argumentsList);
 			}
 		};
 		return new Proxy(api, handler) as T;
 	}
-	function update() {
+	function update(updateTemplateScript: boolean) {
 		const currentVersion = host.getProjectVersion?.();
 		if (currentVersion === undefined || currentVersion !== lastProjectVersion) {
 
-			let tsProjectUpdated = false;
+			let tsFileChanged = false;
 			lastProjectVersion = currentVersion;
 			const oldFiles = new Set([...lastScriptVersions.keys()]);
 			const newFiles = new Set(host.getScriptFileNames());
@@ -105,7 +106,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 						removes.push(fileName);
 					}
 					else {
-						tsProjectUpdated = true;
+						tsFileChanged = true;
 					}
 					lastScriptVersions.delete(fileName);
 				}
@@ -116,7 +117,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 						adds.push(fileName);
 					}
 					else {
-						tsProjectUpdated = true;
+						tsFileChanged = true;
 					}
 					lastScriptVersions.set(fileName, host.getScriptVersion(fileName));
 				}
@@ -130,15 +131,16 @@ export function createLanguageService(host: LanguageServiceHost) {
 							updates.push(fileName);
 						}
 						else {
-							tsProjectUpdated = true;
+							tsFileChanged = true;
 						}
 						lastScriptVersions.set(fileName, newVersion);
 					}
 				}
 			}
 
-			if (tsProjectUpdated) {
-				tsProjectVersion++;
+			if (tsFileChanged) {
+				vueProjectVersion = tsProjectVersion + 1;
+				tsProjectVersion = vueProjectVersion;
 				updates.length = 0;
 				for (const fileName of oldFiles) {
 					if (newFiles.has(fileName)) {
@@ -150,7 +152,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			}
 
 			unsetSourceFiles(removes.map(fsPathToUri));
-			updateSourceFiles(adds.concat(updates).map(fsPathToUri), tsProjectUpdated)
+			updateSourceFiles(adds.concat(updates).map(fsPathToUri), updateTemplateScript)
 		}
 	}
 	function createTsLanguageServiceHost() {
@@ -331,9 +333,10 @@ export function createLanguageService(host: LanguageServiceHost) {
 	function getAllSourceFiles() {
 		return [...sourceFiles.values()];
 	}
-	function updateSourceFiles(uris: string[], tsFilesUpdated: boolean) {
+	function updateSourceFiles(uris: string[], updateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
 		let vueTemplageScriptUpdated = false;
+		const t = Date.now();
 
 		for (const uri of uris) {
 			const sourceFile = sourceFiles.get(uri);
@@ -358,16 +361,16 @@ export function createLanguageService(host: LanguageServiceHost) {
 				}
 			}
 		}
-
 		if (vueScriptsUpdated) {
-			tsProjectVersion++;
+			vueProjectVersion = tsProjectVersion + 1;
+			tsProjectVersion = vueProjectVersion;
 		}
 
-		if (vueScriptsUpdated || tsFilesUpdated) {
+		if (updateTemplateScript) {
 			for (const uri of uris) {
 				const sourceFile = sourceFiles.get(uri);
 				if (!sourceFile) continue;
-				const update = sourceFile.updateTemplateScript(tsProjectVersion);
+				const update = sourceFile.updateTemplateScript(vueProjectVersion);
 				if (update) {
 					vueTemplageScriptUpdated = true;
 				}
@@ -385,8 +388,9 @@ export function createLanguageService(host: LanguageServiceHost) {
 				count++;
 			}
 		}
-		if (count >= 0) {
-			tsProjectVersion++;
+		if (count > 0) {
+			vueProjectVersion = tsProjectVersion + 1;
+			tsProjectVersion = vueProjectVersion;
 		}
 	}
 }

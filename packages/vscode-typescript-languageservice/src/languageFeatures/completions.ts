@@ -17,7 +17,7 @@ export function register(languageService: ts.LanguageService) {
 		const offset = document.offsetAt(position);
 		const options: ts.GetCompletionsAtPositionOptions = {
 			disableSuggestions: false,
-			includeCompletionsForModuleExports: true,
+			// includeCompletionsForModuleExports: true,
 			includeAutomaticOptionalChainCompletions: true,
 			includeCompletionsWithInsertText: true,
 			importModuleSpecifierPreference: 'auto',
@@ -44,6 +44,10 @@ export function register(languageService: ts.LanguageService) {
 					insertText: entry.insertText,
 					preselect: entry.isRecommended,
 					commitCharacters: getCommitCharacters(entry),
+					data: {
+						fileName,
+						offset,
+					},
 				}
 
 				item = fuzzyCompletionItem(entry, item);
@@ -98,7 +102,7 @@ export function register(languageService: ts.LanguageService) {
 				);
 				item.additionalTextEdits = [TextEdit.del(range)];
 			}
-			else {
+			else if (item.insertText) {
 				/**
 				 * @before
 				 * $f + $foo => $$foo
