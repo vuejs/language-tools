@@ -80,14 +80,14 @@ export function getTsActionEntries(
 						let isProp = false;
 						for (const right of rights) {
 							if (right.data.isUnwrapProp) {
-								const loc2Definitions = ls.findDefinition(document, right.range.start);
-								isProp = loc2Definitions && loc2Definitions.length > 0;
+								const loc2Definitions = ls.findDefinition(templateScript.document, right.range.start);
+								isProp = loc2Definitions.length > 0;
 							}
 						}
 						if (isProp) {
 							for (const right of rights) {
 								if (!right.data.isUnwrapProp) {
-									const propRenameReferences = ls.findReferences(document, right.range.start);
+									const propRenameReferences = ls.findReferences(templateScript.document, right.range.start);
 									if (propRenameReferences) {
 										result = result.concat(propRenameReferences);
 									}

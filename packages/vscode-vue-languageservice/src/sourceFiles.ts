@@ -202,7 +202,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			});
 			propMappings.push({
 				data: {
-					isUnwrapProp: false,
+					isUnwrapProp: true,
 				},
 				mode: MapedMode.Offset,
 				originalRange: {
