@@ -5,7 +5,7 @@ import {
 	Location,
 } from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFiles';
-import * as ts from '@volar/vscode-typescript-languageservice';
+import type * as ts from '@volar/vscode-typescript-languageservice';
 
 export function notEmpty<T>(value: T): value is NonNullable<T> {
 	return value !== null && value !== undefined;
@@ -19,7 +19,7 @@ export function duplicateLocations(locations: Location[]): Location[] {
 export function getTsActionEntries(
 	document: TextDocument,
 	range: Range,
-	vueTag: string,
+	vueTag: string | undefined,
 	mode: 'rename' | 'reference' | 'definition',
 	worker: (document: TextDocument, position: Position) => Location[],
 	ls: ts.LanguageService,
@@ -53,7 +53,7 @@ export function getTsActionEntries(
 		...outsideEntries,
 	];
 
-	function findOutsideEntries(document: TextDocument, position: Position, vueTag: string, startLoc: Location): Location[] {
+	function findOutsideEntries(document: TextDocument, position: Position, vueTag: string | undefined, startLoc: Location): Location[] {
 		let entries = worker(document, position);
 
 		if (!entries.length && vueTag === 'template' && mode === 'definition') {

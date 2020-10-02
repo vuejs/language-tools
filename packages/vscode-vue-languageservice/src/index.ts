@@ -62,7 +62,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles)),
 		doFormatting: apiHook(doFormatting.register(sourceFiles)),
 		findDefinition: apiHook(findDefinition.register(sourceFiles)),
-		findReferences: apiHook(findReferences.register(sourceFiles)),
+		findReferences: apiHook(findReferences.register(sourceFiles, tsLanguageService)),
 		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles)),
 		doRename: apiHook(doRename.register(sourceFiles)),
 		doCodeAction: apiHook(doCodeAction),
@@ -336,7 +336,6 @@ export function createLanguageService(host: LanguageServiceHost) {
 	function updateSourceFiles(uris: string[], updateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
 		let vueTemplageScriptUpdated = false;
-		const t = Date.now();
 
 		for (const uri of uris) {
 			const sourceFile = sourceFiles.get(uri);

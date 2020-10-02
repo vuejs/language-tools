@@ -1,22 +1,30 @@
 import {
 	Position,
 	TextDocument,
-	Location
+	Location,
+	Range,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
 import {
 	getTsActionEntries,
 	getSourceTsLocations,
 	duplicateLocations,
-	findSourceFileByTsUri,
 } from '../utils/commons';
+import type * as ts from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, languageService: ts.LanguageService) {
 	return (document: TextDocument, position: Position) => {
+		const range = { start: position, end: position };
+
+		if (document.languageId === "typescript") {
+			let result = getTsResultWorker(document, range, undefined, languageService);
+			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			return result;
+		}
+
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 
-		const range = { start: position, end: position };
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
 		const result = [...tsResult, ...cssResult];
@@ -27,20 +35,22 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findTargets(range)) {
 					if (!tsLoc.data.capabilities.references) continue;
-					const worker = sourceMap.languageService.findReferences;
-					const entries = getTsActionEntries(sourceMap.targetDocument, tsLoc.range, tsLoc.data.vueTag, 'definition', worker, sourceMap.languageService, sourceFiles);
-					for (const location of entries) {
-						const document = sourceMap.languageService.getTextDocument(location.uri);
-						if (!document) continue;
-						const _result = worker(document, location.range.start);
-						result = result.concat(_result);
-					}
+					result = result.concat(getTsResultWorker(sourceMap.targetDocument, tsLoc.range, tsLoc.data.vueTag, sourceMap.languageService));
 				}
 			}
-			if (document.languageId === 'typescript') {
-				result = result.filter(loc => !findSourceFileByTsUri(sourceFiles, loc.uri)); // ignore typescript language service references
+			return result;
+		}
+		function getTsResultWorker(tsDoc: TextDocument, tsRange: Range, vueTag: string | undefined, languageService: ts.LanguageService) {
+			let result: Location[] = [];
+			const worker = languageService.findReferences;
+			const entries = getTsActionEntries(tsDoc, tsRange, vueTag, 'reference', worker, languageService, sourceFiles);
+			for (const location of entries) {
+				const document = languageService.getTextDocument(location.uri);
+				if (!document) continue;
+				let _result = worker(document, location.range.start);
+				_result = _result.map(location => getSourceTsLocations(location, sourceFiles)).flat();
+				result = result.concat(_result);
 			}
-			result = result.map(location => getSourceTsLocations(location, sourceFiles)).flat();
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {

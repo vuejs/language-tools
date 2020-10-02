@@ -74,5 +74,4 @@ declare global {
 ## TODO
 
 - HTML code comment
-- Remote editing
 - Tests
