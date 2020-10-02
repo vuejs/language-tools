@@ -205,7 +205,7 @@ function onInitialized() {
 		documentSelector: vueOnly.documentSelector,
 		triggerCharacters: [
 			'.', '"', '\'', '`', '/', '@', '<', '#', // ts
-			'$', // vue
+			// '$', // vue
 		],
 		resolveProvider: true,
 	});

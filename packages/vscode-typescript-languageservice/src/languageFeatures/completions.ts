@@ -102,7 +102,7 @@ export function register(languageService: ts.LanguageService) {
 				);
 				item.additionalTextEdits = [TextEdit.del(range)];
 			}
-			else if (item.insertText) {
+			else {
 				/**
 				 * @before
 				 * $f + $foo => $$foo
@@ -128,7 +128,7 @@ export function register(languageService: ts.LanguageService) {
 			// Try getting longer, prefix based range for completions that span words
 			const text = line.slice(Math.max(0, position.character - label.length), position.character).toLowerCase();
 			const entryName = label.toLowerCase();
-			for (let i = entryName.length; i >= 0; --i) {
+			for (let i = entryName.length; i > 0; --i) {
 				if (text.endsWith(entryName.substr(0, i))) {
 					return Range.create(
 						Position.create(position.line, Math.max(0, position.character - i)),
