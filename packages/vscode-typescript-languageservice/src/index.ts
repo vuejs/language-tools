@@ -38,7 +38,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		findDocumentSymbols: documentSymbol.register(languageService),
 		findWorkspaceSymbols: workspaceSymbols.register(languageService),
 		doComplete: completions.register(languageService),
-		doCompletionResolve: completionResolve.register(languageService),
+		doCompletionResolve: completionResolve.register(languageService, getTextDocument),
 		doHover: hover.register(languageService),
 		doFormatting: formatting.register(languageService),
 		getSignatureHelp: signatureHelp.register(languageService),

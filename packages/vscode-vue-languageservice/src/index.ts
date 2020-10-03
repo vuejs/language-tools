@@ -68,7 +68,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		doCodeAction: apiHook(doCodeAction),
 		doExecuteCommand: apiHook(doExecuteCommand),
 		doComplete: apiHook(doComplete.register(sourceFiles), false),
-		doCompletionResolve: apiHook(doCompletionResolve.register(tsLanguageService), false),
+		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles), false),
 		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles), false),
 		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles), false),
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
