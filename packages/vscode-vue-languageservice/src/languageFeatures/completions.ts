@@ -42,10 +42,12 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 					const data: TsCompletionData = {
 						uri: document.uri,
+						tsUri: sourceMap.targetDocument.uri,
 						mode: 'ts',
 					};
 					for (const entry of sourceItems) {
 						entry.data.uri = data.uri;
+						entry.data.tsUri = data.tsUri;
 						entry.data.mode = data.mode;
 						result.push(entry as CompletionItem);
 					}

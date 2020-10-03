@@ -1,4 +1,5 @@
 export interface TsCompletionData {
-	uri: string,
-	mode: 'ts',
+    uri: string,
+    tsUri: string,
+    mode: 'ts',
 }

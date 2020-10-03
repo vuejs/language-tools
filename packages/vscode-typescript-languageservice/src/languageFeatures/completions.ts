@@ -47,6 +47,7 @@ export function register(languageService: ts.LanguageService) {
 					data: {
 						fileName,
 						offset,
+						source: entry.source
 					},
 				}
 
