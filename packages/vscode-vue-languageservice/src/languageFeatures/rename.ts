@@ -9,7 +9,10 @@ import { SourceFile } from '../sourceFiles';
 import {
 	getTsActionEntries,
 	getSourceTsLocations,
+	findSourceFileByTsUri,
 } from '../utils/commons';
+import { hyphenate } from '@vue/shared';
+import { NodeTypes } from '@vue/compiler-dom';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument, position: Position, newName: string) => {
@@ -21,14 +24,16 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		const htmlResult = getHtmlResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
 
-		for (const result of [tsResult, ...cssResult, ...htmlResult]) {
-			if (result.changes && Object.keys(result.changes).length) {
-				return result;
+		let result: WorkspaceEdit | undefined;
+		for (const _result of [tsResult, ...cssResult, ...htmlResult]) {
+			if (_result.changes && Object.keys(_result.changes).length) {
+				result = _result;
 			}
 		}
+		return result;
 
 		function getTsResult(sourceFile: SourceFile) {
-			let workspaceEdits: WorkspaceEdit[] = [];
+			let tsEdits: WorkspaceEdit[] = [];
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
@@ -38,10 +43,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					for (const entry of entries) {
 						const entryDocument = sourceMap.languageService.getTextDocument(entry.uri);
 						if (!entryDocument) continue;
-						const edit = sourceMap.languageService.doRename(entryDocument, entry.range.start, newName);
-						if (edit) {
-							workspaceEdits.push(edit);
-						}
+						const tsEdit = sourceMap.languageService.doRename(entryDocument, entry.range.start, newName);
+						if (!tsEdit) continue;
+						tsEdits.push(tsEdit);
 					}
 
 					function getRenameLocations(document: TextDocument, position: Position) {
@@ -62,11 +66,33 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				}
 			}
 
-			workspaceEdits = workspaceEdits.map(edit => getSourceWorkspaceEdit(edit));
-			let workspaceEdit = margeWorkspaceEdits(workspaceEdits);
-			workspaceEdit = deduplication(workspaceEdit);
+			for (const tsEdit of tsEdits) {
+				keepHtmlTagStyle(tsEdit);
+			}
+			const vueEdits = tsEdits.map(edit => getSourceWorkspaceEdit(edit));
+			const vueEdit = margeWorkspaceEdits(vueEdits);
+			return deduplication(vueEdit);
 
-			return workspaceEdit;
+			function keepHtmlTagStyle(tsWorkspaceEdit: WorkspaceEdit) {
+				if (!tsWorkspaceEdit?.changes) return;
+				for (const uri in tsWorkspaceEdit.changes) {
+					const editSourceFile = findSourceFileByTsUri(sourceFiles, uri);
+					if (!editSourceFile) continue;
+					for (const sourceMap of editSourceFile.getTsSourceMaps()) {
+						if (sourceMap.virtualDocument.uri !== uri) continue;
+						for (const textEdit of tsWorkspaceEdit.changes[uri]) {
+							const isHtmlTag = sourceMap.findFirstVueLocation(textEdit.range)?.data.templateNodeType === NodeTypes.ELEMENT;
+							const oldName = sourceMap.virtualDocument.getText(textEdit.range);
+							if (isHtmlTag && isHyphenateName(oldName)) {
+								textEdit.newText = hyphenate(textEdit.newText);
+							}
+						}
+					}
+				}
+				function isHyphenateName(name: string) {
+					return name === hyphenate(name);
+				}
+			}
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit[] = [];

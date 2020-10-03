@@ -1,4 +1,4 @@
-import { TemplateChildNode, ElementNode, NodeTypes, RootNode, ElementTypes } from '@vue/compiler-core';
+import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
 import { createHtmlPugMapper } from '@volar/pug';
 import { MapedMode, TsMappingData, Mapping } from './sourceMaps';
 
@@ -36,14 +36,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						end: node.loc.end.offset - 1,
 					});
 				}
-				mapping(`__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, true, false, [{
+				mapping(node.type, `__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, true, false, [{
 					start: node.loc.start.offset + 1,
 					end: node.loc.start.offset + 1 + node.tag.length,
 				}], false);
 				_code += `__VLS_components[`;
-				mapping(`'${node.tag}'`, node.tag, MapedMode.Gate, false, false, sourceRanges, false);
+				mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, false, false, sourceRanges, false);
 				_code += `'`;
-				mapping(node.tag, node.tag, MapedMode.Offset, false, false, sourceRanges);
+				mapping(node.type, node.tag, node.tag, MapedMode.Offset, false, false, sourceRanges);
 				_code += `'] = {\n`;
 				writeProps(node, true);
 				_code += '};\n';
@@ -69,18 +69,18 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					) {
 						const propName = prop.arg.content;
 						const propValue = prop.exp.content;
-						let propNameStart = prop.arg.loc.start.offset;
-						let propValueStart = prop.exp.loc.start.offset;
+						const propNameStart = prop.arg.loc.start.offset;
+						const propValueStart = prop.exp.loc.start.offset;
 
 						if (isInWrap) {
 							// bind only
 							if (prop.name === 'bind' || prop.name === 'model') {
-								mapping(`'${propName}'`, propName, MapedMode.Gate, false, false, [{
+								mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
 									start: propNameStart,
 									end: propNameStart + propName.length,
 								}], false);
 								_code += `'`;
-								mapping(propName, propName, MapedMode.Offset, false, false, [{
+								mapping(prop.arg.type, propName, propName, MapedMode.Offset, false, false, [{
 									start: propNameStart,
 									end: propNameStart + propName.length,
 								}]);
@@ -89,7 +89,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						}
 						else {
 							_code += `(`;
-							mapping(propValue, propValue, MapedMode.Offset, false, true, [{
+							mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, false, true, [{
 								start: propValueStart,
 								end: propValueStart + propValue.length,
 							}])
@@ -111,7 +111,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							}
 							else {
 								_code += `(`;
-								mapping(propValue, propValue, MapedMode.Offset, false, true, [{
+								mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, false, true, [{
 									start: propValueStart,
 									end: propValueStart + propValue.length,
 								}])
@@ -129,24 +129,24 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						let propValueStart = prop.value.loc.start.offset + prop.value.loc.source.indexOf(propValue); // 'test' => 'tex => test
 
 						if (isInWrap) {
-							mapping(`'${propName}'`, propName, MapedMode.Gate, false, false, [{
+							mapping(prop.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
 								start: propNameStart,
 								end: propNameStart + propName.length,
 							}], false);
 							_code += `'`;
-							mapping(propName, propName, MapedMode.Offset, false, false, [{
+							mapping(prop.type, propName, propName, MapedMode.Offset, false, false, [{
 								start: propNameStart,
 								end: propNameStart + propName.length,
 							}]);
 							_code += `': '${propValue}',\n`;
 						}
 						else {
-							mapping(`'${propValue}'`, propValue, MapedMode.Gate, false, false, [{
+							mapping(prop.value.type, `'${propValue}'`, propValue, MapedMode.Gate, false, false, [{
 								start: propValueStart,
 								end: propValueStart + propValue.length,
 							}], false)
 							_code += `'`;
-							mapping(propValue, propValue, MapedMode.Offset, false, true, [{
+							mapping(prop.value.type, propValue, propValue, MapedMode.Offset, false, true, [{
 								start: propValueStart,
 								end: propValueStart + propValue.length,
 							}])
@@ -174,7 +174,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			let start = node.loc.start.offset + 2;
 
 			_code += `{`;
-			mapping(context, context, MapedMode.Offset, false, true, [{
+			mapping(node.type, context, context, MapedMode.Offset, false, true, [{
 				start: start,
 				end: start + context.length,
 			}]);
@@ -198,7 +198,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							firstIf = false;
 							_code += `if (\n`;
 							_code += `(`;
-							mapping(context, context, MapedMode.Offset, false, true, [{
+							mapping(branch.condition.type, context, context, MapedMode.Offset, false, true, [{
 								start: start,
 								end: start + context.length,
 							}]);
@@ -208,7 +208,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						else {
 							_code += `else if (\n`;
 							_code += `(`;
-							mapping(context, context, MapedMode.Offset, false, true, [{
+							mapping(branch.condition.type, context, context, MapedMode.Offset, false, true, [{
 								start: start,
 								end: start + context.length,
 							}]);
@@ -250,20 +250,20 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
 				_code += `const ${sourceVarName} = __VLS_getVforSourceType(`;
-				mapping(source.content, source.content, MapedMode.Offset, false, false, [{
+				mapping(source.type, source.content, source.content, MapedMode.Offset, false, false, [{
 					start: start_source,
 					end: start_source + source.content.length,
 				}]);
 				_code += `);\n`;
 				_code += `for (__VLS_for_key in `;
-				mapping(sourceVarName, source.content, MapedMode.Gate, true, false, [{
+				mapping(source.type, sourceVarName, source.content, MapedMode.Gate, true, false, [{
 					start: source.loc.start.offset,
 					end: source.loc.end.offset,
 				}]);
 				_code += `) {\n`;
 
 				_code += `const `;
-				mapping(value.content, value.content, MapedMode.Offset, false, false, [{
+				mapping(value.type, value.content, value.content, MapedMode.Offset, false, false, [{
 					start: start_value,
 					end: start_value + value.content.length,
 				}]);
@@ -272,7 +272,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
 					_code += `const `;
-					mapping(key.content, key.content, MapedMode.Offset, false, false, [{
+					mapping(key.type, key.content, key.content, MapedMode.Offset, false, false, [{
 						start: start_key,
 						end: start_key + key.content.length,
 					}]);
@@ -281,7 +281,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				if (index && index.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
 					_code += `const `;
-					mapping(index.content, index.content, MapedMode.Offset, false, false, [{
+					mapping(index.type, index.content, index.content, MapedMode.Offset, false, false, [{
 						start: start_index,
 						end: start_index + index.content.length,
 					}]);
@@ -304,7 +304,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 		}
 		return _code;
 
-		function mapping(mapCode: string, pugSearchCode: string, mode: MapedMode, diagnosticOnly: boolean, formatting: boolean, sourceRanges: { start: number, end: number }[], addCode = true) {
+		function mapping(nodeType: NodeTypes, mapCode: string, pugSearchCode: string, mode: MapedMode, diagnosticOnly: boolean, formatting: boolean, sourceRanges: { start: number, end: number }[], addCode = true) {
 			if (pugMapper) {
 				sourceRanges = sourceRanges.map(range => ({ ...range })); // clone
 				for (const sourceRange of sourceRanges) {
@@ -332,6 +332,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					virtualRange: range,
 					data: {
 						vueTag: 'template',
+						templateNodeType: nodeType,
 						capabilities: {
 							// TODO
 							basic: !diagnosticOnly,

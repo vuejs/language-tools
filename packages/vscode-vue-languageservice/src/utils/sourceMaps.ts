@@ -3,6 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as html from 'vscode-html-languageservice';
 import * as css from 'vscode-css-languageservice';
 import * as ts from '@volar/vscode-typescript-languageservice';
+import type { NodeTypes } from '@vue/compiler-core';
 
 export interface MapedRange {
 	start: number,
@@ -36,6 +37,10 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 	}
 	public findFirstVueLocation(virtualRange: Range) {
 		const result = this.maps(virtualRange, false, true);
+		if (result.length) return result[0];
+	}
+	public findFirstVirtualLocation(vueRange: Range) {
+		const result = this.maps(vueRange, true, true);
 		if (result.length) return result[0];
 	}
 	public findVueLocations(virtualRange: Range) {
@@ -89,6 +94,7 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 
 export interface TsMappingData {
 	vueTag: string,
+	templateNodeType?: NodeTypes, // for template
 	capabilities: {
 		basic: boolean,
 		references: boolean, // references, definitions, rename

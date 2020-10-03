@@ -22,8 +22,6 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (!sourceFile) return;
 		const range = Range.create(position, position);
 
-		console.log("kind", context?.triggerKind);
-
 		const tsResult = getTsResult(sourceFile);
 		if (tsResult.items.length) return tsResult;
 
