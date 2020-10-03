@@ -24,6 +24,8 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 		worker(node, false);
 	}
 
+	return pug;
+
 	function getIndent(indent: number) {
 		return useTabs ? '\t'.repeat(indent) : ' '.repeat(indent * tabSize);
 	}
@@ -49,9 +51,9 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 					.join(' ');
 
 				if (val)
-					atts.push(`${att}='${val}'`);
+					atts.push(`${att}="${val}"`);
 				else
-					atts.push(`${att}=''`);
+					atts.push(`${att}=""`);
 			}
 			if (atts.length > 0) {
 				code += `(${atts.join(', ')})`;
@@ -119,8 +121,6 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 
 		return newNodes;
 	}
-
-	return pug;
 }
 export function createHtmlPugMapper(pug: string, html: string) {
 	html = removeEndTags(html);

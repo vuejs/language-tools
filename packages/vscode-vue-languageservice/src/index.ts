@@ -259,7 +259,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			if (lang !== 'html') return;
 
 			const pug = htmlToPug(desc.template.content, 2, false) + '\n';
-			const newTemplate = `<template lang='pug'>` + pug;
+			const newTemplate = `<template lang="pug">` + pug;
 
 			let start = desc.template.loc.start - '<template>'.length;
 			const end = desc.template.loc.end;
