@@ -133,38 +133,35 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 				}
 			}
 		}
-		async function fullValidation(primaryDocs: TextDocument[]) {
-			// const startTime = Date.now();
+		async function fullValidation(changedDocs: TextDocument[]) {
 			const req = ++fullValidationReq;
-			const docs = [...primaryDocs];
-			const sourceFiles = documents.all().filter(doc => doc.languageId === 'vue');
-			for (const document of sourceFiles) {
-				if (primaryDocs.find(doc => doc.uri === document.uri)) continue;
+			const docs = [...changedDocs];
+			const openedUris = new Set(documents.all().map(doc => doc.uri));
+			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue');
+			for (const document of openedDocs) {
+				if (changedDocs.find(doc => doc.uri === document.uri)) continue;
 				docs.push(document);
 			}
 			for (const sourceFile of ls.getAllSourceFiles()) {
 				const document = sourceFile.getTextDocument();
-				if (primaryDocs.find(doc => doc.uri === document.uri)) continue;
-				if (sourceFiles.find(doc => doc.uri === document.uri)) continue;
+				if (changedDocs.find(doc => doc.uri === document.uri)) continue;
+				if (openedDocs.find(doc => doc.uri === document.uri)) continue;
 				docs.push(document);
 			}
-			for (const document of docs) {
+			for (const doc of docs) {
 				if (req !== fullValidationReq) break;
-				await sendDiagnostics(document);
+				const t = Date.now();
+				await sendDiagnostics(doc, openedUris.has(doc.uri));
 			}
-			// console.log('fullValidation', Date.now() - startTime, req !== fullValidationReq ? 'Cancle!' : '');
 		}
-		async function sendDiagnostics(document: TextDocument) {
+		async function sendDiagnostics(document: TextDocument, suggestion: boolean) {
 			const currentReq = ++diagnosticReq;
 			getDiagnosticsReq[document.uri] = currentReq;
 			const isCancel = () => getDiagnosticsReq[document.uri] !== currentReq;
 
-			const diagnostics = await ls.doValidation(document, isCancel, diagnostics => {
-				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // unfinished
+			await ls.doValidation(document, suggestion, isCancel, diagnostics => {
+				connection.sendDiagnostics({ uri: document.uri, diagnostics });
 			});
-			if (diagnostics !== undefined) {
-				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // finished
-			}
 		}
 		function onParsedCommandLineUpdate() {
 
@@ -211,10 +208,10 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 				}
 			}
 		}
-		async function onProjectFilesUpdate(primaryDocs: TextDocument[]) {
+		async function onProjectFilesUpdate(changedDocs: TextDocument[]) {
 			projectVersion++;
 			if (diag) {
-				fullValidation(primaryDocs);
+				fullValidation(changedDocs);
 			}
 		}
 		function createLanguageServiceHost() {

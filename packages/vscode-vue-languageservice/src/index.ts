@@ -57,7 +57,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 	return {
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
-		doValidation: apiHook(doValidation.register(sourceFiles, () => tsLanguageServiceHost.getProjectVersion?.() ?? '-1')),
+		doValidation: apiHook(doValidation.register(sourceFiles, () => vueProjectVersion.toString())),
 		doHover: apiHook(doHover.register(sourceFiles)),
 		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles)),
 		doFormatting: apiHook(doFormatting.register(sourceFiles)),

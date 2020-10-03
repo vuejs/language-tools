@@ -15,7 +15,7 @@ import * as vueDom from '@vue/compiler-dom';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import * as upath from 'upath';
-import { ref, computed, reactive, pauseTracking, resetTracking } from '@vue/reactivity';
+import { ref, computed, reactive, pauseTracking, resetTracking, Ref } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
@@ -930,78 +930,72 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const scriptDiags_2 = useScriptValidation(2);
 		const scriptDiags_3 = useScriptValidation(3);
 
-		let lastStylesDiags: Diagnostic[] = [];
-		let lastTemplateDiags: Diagnostic[] = [];
-		let lastTemplateScriptDiags_1: Diagnostic[] = [];
-		let lastTemplateScriptDiags_2: Diagnostic[] = [];
-		let lastTemplateScriptDiags_3: Diagnostic[] = [];
-		let lastScriptDiags_1: Diagnostic[] = [];
-		let lastScriptDiags_2: Diagnostic[] = [];
-		let lastScriptDiags_3: Diagnostic[] = [];
+		const lastStylesDiags = ref<Diagnostic[]>([]);
+		const lastTemplateDiags = ref<Diagnostic[]>([]);
+		const lastTemplateScriptDiags_1 = ref<Diagnostic[]>([]);
+		const lastTemplateScriptDiags_2 = ref<Diagnostic[]>([]);
+		const lastTemplateScriptDiags_3 = ref<Diagnostic[]>([]);
+		const lastScriptDiags_1 = ref<Diagnostic[]>([]);
+		const lastScriptDiags_2 = ref<Diagnostic[]>([]);
+		const lastScriptDiags_3 = ref<Diagnostic[]>([]);
+		const result = computed(() => {
+			let result = [
+				...lastStylesDiags.value,
+				...lastTemplateDiags.value,
+				...lastScriptDiags_1.value,
+				...lastScriptDiags_2.value,
+				...lastScriptDiags_3.value,
+				...lastTemplateScriptDiags_1.value,
+				...lastTemplateScriptDiags_2.value,
+				...lastTemplateScriptDiags_3.value,
+			];
+			result = result.filter(err => !(err.source === 'ts' && err.code === 7028)); // TODO: fix <script refs>
+			return result;
+		});
 
 		return worker;
 
-		async function worker(newTsProjectVersion: string, isCancel: () => boolean, onProgress: (diags: Diagnostic[]) => void) {
+		async function worker(suggestion: boolean, newTsProjectVersion: string, isCancel: () => boolean, onProgress: (diags: Diagnostic[]) => void) {
 			tsProjectVersion.value = newTsProjectVersion;
 
-			await nextTick();
+
 			if (isCancel()) return undefined;
-			lastStylesDiags = stylesDiags.value as Diagnostic[];
-			onProgress(getResult());
+			await tryProgress(stylesDiags, lastStylesDiags);
 
-			await nextTick();
 			if (isCancel()) return undefined;
-			lastTemplateDiags = templateDiags.value;
-			onProgress(getResult());
+			await tryProgress(templateDiags, lastTemplateDiags);
 
-			await nextTick();
 			if (isCancel()) return undefined;
-			lastTemplateScriptDiags_1 = templateScriptDiags_1.value;
-			onProgress(getResult());
+			await tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
 
-			await nextTick();
 			if (isCancel()) return undefined;
-			lastTemplateScriptDiags_2 = templateScriptDiags_2.value;
-			onProgress(getResult());
+			await tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
 
-			await nextTick();
 			if (isCancel()) return undefined;
-			lastTemplateScriptDiags_3 = templateScriptDiags_3.value;
-			onProgress(getResult());
+			await tryProgress(scriptDiags_1, lastScriptDiags_1);
 
-			await nextTick();
 			if (isCancel()) return undefined;
-			lastScriptDiags_1 = scriptDiags_1.value;
-			onProgress(getResult());
+			await tryProgress(scriptDiags_2, lastScriptDiags_2);
 
-			await nextTick();
-			if (isCancel()) return undefined;
-			lastScriptDiags_2 = scriptDiags_2.value;
-			onProgress(getResult());
+			if (suggestion) {
+				if (isCancel()) return undefined;
+				await tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
 
-			await nextTick();
-			if (isCancel()) return undefined;
-			lastScriptDiags_3 = scriptDiags_3.value;
-			// onProgress(getResult());
+				if (isCancel()) return undefined;
+				await tryProgress(scriptDiags_3, lastScriptDiags_3);
+			}
 
-			return getResult();
-
+			async function tryProgress(data: Ref<Diagnostic[]>, lastData: Ref<Diagnostic[]>) {
+				const newData = data.value;
+				const shouldSend = lastData.value.length > 0 || newData.length > 0;
+				if (shouldSend) {
+					lastData.value = newData;
+					onProgress(result.value);
+					await nextTick();
+				}
+			}
 			function nextTick() {
 				return new Promise(resolve => setTimeout(resolve, 0));
-			}
-			function getResult() {
-				let result = [
-					...lastStylesDiags,
-					...lastTemplateDiags,
-					...lastScriptDiags_1,
-					...lastScriptDiags_2,
-					...lastScriptDiags_3,
-					...lastTemplateScriptDiags_1,
-					...lastTemplateScriptDiags_2,
-					...lastTemplateScriptDiags_3,
-				];
-				result = result.filter(err => !(err.source === 'ts' && err.code === 7028)); // TODO: fix <script refs>
-				return result;
 			}
 		}
 		function useTemplateValidation() {
@@ -1113,7 +1107,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				for (const [uri, errs] of errors.value) {
 					result = result.concat(getSourceDiags(errs, uri, cssSourceMaps.value));
 				}
-				return result;
+				return result as Diagnostic[];
 			});
 		}
 		function useScriptValidation(mode: number) {
