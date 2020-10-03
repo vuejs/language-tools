@@ -29,13 +29,13 @@ This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and 
 - [x] Unused highlight for setup() return properties (v0.7.0 added)
 - [x] Diagnostic all vue scripts (v0.9.0 added)
 - [x] `<script setup>` support (v0.10.0 added)
-- [x] html tag services (v0.11.0 added)
+- [x] Native html tag services (v0.11.0 added)
 
 ## Template component element LS support
 
-Local and Built-in component Type-Checking is default active.
+Local components, Built-in components, native html elements Type-Checking is default active.
 
-For Global component, you need to definition `__VLS_GlobalComponents` interface, for example:
+For Global components, you need to definition `__VLS_GlobalComponents` interface, for example:
 
 ```typescript
 import { RouterLink, RouterView } from 'vue-router';

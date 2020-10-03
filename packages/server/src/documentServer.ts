@@ -45,6 +45,11 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host(document.uri)?.findDocumentColors(document);
 	});
+	connection.onColorPresentation(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return host(document.uri)?.getColorPresentations(document, handler.color, handler.range);
+	});
 	connection.onDocumentHighlight(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;

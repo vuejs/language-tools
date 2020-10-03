@@ -958,7 +958,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 		async function worker(suggestion: boolean, newTsProjectVersion: string, isCancel: () => boolean, onProgress: (diags: Diagnostic[]) => void) {
 			tsProjectVersion.value = newTsProjectVersion;
 
-
 			if (isCancel()) return undefined;
 			await tryProgress(stylesDiags, lastStylesDiags);
 

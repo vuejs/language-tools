@@ -118,11 +118,6 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host(document.uri)?.doHover(document, handler.position);
 	});
-	connection.onColorPresentation(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host(document.uri)?.getColorPresentations(document, handler.color, handler.range);
-	});
 	connection.onSignatureHelp(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
