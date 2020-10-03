@@ -74,7 +74,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 
 						if (isInWrap) {
 							// bind only
-							if (prop.name === 'bind') {
+							if (prop.name === 'bind' || prop.name === 'model') {
 								mapping(`'${propName}'`, propName, MapedMode.Gate, false, false, [{
 									start: propNameStart,
 									end: propNameStart + propName.length,
