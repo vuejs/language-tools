@@ -328,8 +328,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			for (const sourceRange of sourceRanges) {
 				mappings.push({
 					mode,
-					originalRange: sourceRange,
-					mappingRange: range,
+					vueRange: sourceRange,
+					virtualRange: range,
 					data: {
 						vueTag: 'template',
 						capabilities: {

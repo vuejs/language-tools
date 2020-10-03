@@ -15,9 +15,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.findTargets(range)) {
+				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.data.capabilities.basic) continue;
-					const result = sourceMap.languageService.getSignatureHelp(sourceMap.targetDocument, tsLoc.range.start);
+					const result = sourceMap.languageService.getSignatureHelp(sourceMap.virtualDocument, tsLoc.range.start);
 					if (result) {
 						return result; // TODO: to array
 					}

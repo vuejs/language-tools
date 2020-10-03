@@ -22,11 +22,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getTsResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.findTargets(range)) {
+				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.data.capabilities.basic) continue;
-					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.targetDocument, tsLoc.range.start);
+					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.virtualDocument, tsLoc.range.start);
 					for (const highlight of highlights) {
-						const vueLoc = sourceMap.findSource(highlight.range);
+						const vueLoc = sourceMap.findFirstVueLocation(highlight.range);
 						if (vueLoc) {
 							result.push({
 								...highlight,
@@ -41,10 +41,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const htmlLoc of sourceMap.findTargets(range)) {
-					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.targetDocument, htmlLoc.range.start, sourceMap.htmlDocument);
+				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
+					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.virtualDocument, htmlLoc.range.start, sourceMap.htmlDocument);
 					for (const highlight of highlights) {
-						const vueLoc = sourceMap.findSource(highlight.range);
+						const vueLoc = sourceMap.findFirstVueLocation(highlight.range);
 						if (vueLoc) {
 							result.push({
 								...highlight,
@@ -59,10 +59,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getCssResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				for (const cssLoc of sourceMap.findTargets(range)) {
-					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
+				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
+					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {
-						const vueLoc = sourceMap.findSource(highlight.range);
+						const vueLoc = sourceMap.findFirstVueLocation(highlight.range);
 						if (vueLoc) {
 							result.push({
 								...highlight,

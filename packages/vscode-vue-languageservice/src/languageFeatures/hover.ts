@@ -48,11 +48,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.findTargets(range)) {
+				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.data.capabilities.basic) continue;
-					const result = sourceMap.languageService.doHover(sourceMap.targetDocument, tsLoc.range.start);
+					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, tsLoc.range.start);
 					if (result?.range) {
-						const vueLoc = sourceMap.findSource(result.range);
+						const vueLoc = sourceMap.findFirstVueLocation(result.range);
 						if (vueLoc) result.range = vueLoc.range;
 					}
 					if (result) {
@@ -63,10 +63,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const htmlLoc of sourceMap.findTargets(range)) {
-					const result = sourceMap.languageService.doHover(sourceMap.targetDocument, htmlLoc.range.start, sourceMap.htmlDocument);
+				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
+					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, htmlLoc.range.start, sourceMap.htmlDocument);
 					if (result?.range) {
-						const vueLoc = sourceMap.findSource(result.range);
+						const vueLoc = sourceMap.findFirstVueLocation(result.range);
 						if (vueLoc) result.range = vueLoc.range;
 					}
 					if (result) {
@@ -77,10 +77,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				for (const cssLoc of sourceMap.findTargets(range)) {
-					const result = sourceMap.languageService.doHover(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
+				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
+					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
 					if (result?.range) {
-						const vueLoc = sourceMap.findSource(result.range);
+						const vueLoc = sourceMap.findFirstVueLocation(result.range);
 						if (vueLoc) result.range = vueLoc.range;
 					}
 					if (result) {

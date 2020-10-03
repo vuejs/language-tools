@@ -16,11 +16,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 		function getTsResult(sourceFile: SourceFile, item: CompletionItem) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				if (sourceMap.targetDocument.uri !== data.docUri) continue;
+				if (sourceMap.virtualDocument.uri !== data.docUri) continue;
 				item = sourceMap.languageService.doCompletionResolve(item);
 				if (item.additionalTextEdits) {
 					for (const textEdit of item.additionalTextEdits) {
-						const vueLoc = sourceMap.findSource(textEdit.range);
+						const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
 						if (vueLoc) {
 							textEdit.range = vueLoc.range;
 						}

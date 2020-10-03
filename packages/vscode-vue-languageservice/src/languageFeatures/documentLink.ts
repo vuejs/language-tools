@@ -31,7 +31,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			let result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				// TODO: move to vscode-typescript-languageservice
-				const scriptContent = sourceMap.targetDocument.getText();
+				const scriptContent = sourceMap.virtualDocument.getText();
 				const root = jsonc.parseTree(scriptContent);
 				const scriptDoc = TextDocument.create(document.uri, 'typescript', 0, scriptContent);
 
@@ -117,9 +117,9 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const links = sourceMap.languageService.findDocumentLinks(sourceMap.targetDocument, documentContext);
+				const links = sourceMap.languageService.findDocumentLinks(sourceMap.virtualDocument, documentContext);
 				for (const link of links) {
-					const vueLoc = sourceMap.findSource(link.range);
+					const vueLoc = sourceMap.findFirstVueLocation(link.range);
 					if (vueLoc) {
 						result.push({
 							...link,
@@ -134,9 +134,9 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const links = sourceMap.languageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
+				const links = sourceMap.languageService.findDocumentLinks(sourceMap.virtualDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
-					const vueLoc = sourceMap.findSource(link.range);
+					const vueLoc = sourceMap.findFirstVueLocation(link.range);
 					if (vueLoc) {
 						result.push({
 							...link,

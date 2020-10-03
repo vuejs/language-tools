@@ -157,11 +157,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 				componentMappings.push({
 					data: undefined,
 					mode: MapedMode.Gate,
-					originalRange: {
+					vueRange: {
 						start: start_1,
 						end: end_1,
 					},
-					mappingRange: {
+					virtualRange: {
 						start: start_2,
 						end: end_2,
 					},
@@ -169,11 +169,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 				componentMappings.push({
 					data: undefined,
 					mode: MapedMode.Gate,
-					originalRange: {
+					vueRange: {
 						start: start_1 + 1,
 						end: end_1 - 1,
 					},
-					mappingRange: {
+					virtualRange: {
 						start: start_2 + 1,
 						end: end_2 - 1,
 					},
@@ -191,11 +191,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					isUnwrapProp: false,
 				},
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: code.length + `var `.length,
 					end: code.length + `var ${propName}`.length,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: code.length + `var ${propName} = __VLS_vm.`.length,
 					end: code.length + `var ${propName} = __VLS_vm.${propName}`.length,
 				},
@@ -205,11 +205,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					isUnwrapProp: true,
 				},
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: code.length + `var `.length,
 					end: code.length + `var ${propName}`.length,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props.`.length,
 					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props.${propName}`.length,
 				},
@@ -271,11 +271,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 						},
 					},
 					mode: maped.mode,
-					originalRange: {
+					vueRange: {
 						start: maped.originalOffset,
 						end: maped.originalOffset + maped.originalLength,
 					},
-					mappingRange: {
+					virtualRange: {
 						start: maped.mappingOffset,
 						end: maped.mappingOffset + maped.mappingLength,
 					},
@@ -286,13 +286,13 @@ export function createSourceFile(initialDocument: TextDocument, {
 				sourceMap.add({
 					data: maped.data,
 					mode: maped.mode,
-					originalRange: {
-						start: maped.originalRange.start + descriptor.template.loc.start,
-						end: maped.originalRange.end + descriptor.template.loc.start,
+					vueRange: {
+						start: maped.vueRange.start + descriptor.template.loc.start,
+						end: maped.vueRange.end + descriptor.template.loc.start,
 					},
-					mappingRange: {
-						start: maped.mappingRange.start + interpolationsStart,
-						end: maped.mappingRange.end + interpolationsStart,
+					virtualRange: {
+						start: maped.virtualRange.start + interpolationsStart,
+						end: maped.virtualRange.end + interpolationsStart,
 					},
 				});
 			}
@@ -310,7 +310,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const names = new Map<string, [TextDocument, number][]>();
 			for (const sourceMap of cssSourceMaps.value) {
 				if (!sourceMap.module) continue;
-				worker(sourceMap, sourceMap.targetDocument, sourceMap.stylesheet);
+				worker(sourceMap, sourceMap.virtualDocument, sourceMap.stylesheet);
 				for (const linkStyle of sourceMap.links) {
 					worker(undefined, linkStyle[0], linkStyle[1]);
 				}
@@ -333,7 +333,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 								names.set(text, []);
 							}
 							if (sourceMap) {
-								const vueLoc = sourceMap.findSource(s.location.range);
+								const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
 								if (vueLoc) {
 									names.get(text)!.push([vue.document, vue.document.offsetAt(vueLoc.range.start) + 1]);
 								}
@@ -554,11 +554,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					},
 				},
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: start,
 					end: end,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: 0,
 					end: end - start,
 				},
@@ -585,11 +585,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					},
 				},
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: start,
 					end: end,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: 0,
 					end: end - start,
 				},
@@ -614,11 +614,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					},
 				},
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: start,
 					end: end,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: start_2,
 					end: end_2,
 				},
@@ -645,11 +645,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					},
 				},
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: start,
 					end: end,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: 0,
 					end: end - start,
 				},
@@ -691,11 +691,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 			sourceMap.add({
 				data: undefined,
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: loc.start,
 					end: loc.end,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: 0,
 					end: loc.end - loc.start,
 				},
@@ -717,11 +717,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 			sourceMap.add({
 				data: undefined,
 				mode: MapedMode.Offset,
-				originalRange: {
+				vueRange: {
 					start: descriptor.template.loc.start,
 					end: descriptor.template.loc.end,
 				},
-				mappingRange: {
+				virtualRange: {
 					start: 0,
 					end: descriptor.template.loc.end - descriptor.template.loc.start,
 				},
@@ -1171,7 +1171,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				for (const diag of errors_1.value) {
 					const spanText = templateScript.value.document.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = templateScript.value.propSourceMap.findTargets(diag.range);
+					const propRights = templateScript.value.propSourceMap.findVirtualLocations(diag.range);
 					for (const propRight of propRights) {
 						if (propRight.data.isUnwrapProp) continue;
 						const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
@@ -1205,9 +1205,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const result: T[] = [];
 			for (const error of errors) {
 				for (const sourceMap of sourceMaps) {
-					if (sourceMap.targetDocument.uri === virtualScriptUri) {
+					if (sourceMap.virtualDocument.uri === virtualScriptUri) {
 						if (css.Diagnostic.is(error)) {
-							const vueLoc = sourceMap.findSource(error.range);
+							const vueLoc = sourceMap.findFirstVueLocation(error.range);
 							if (vueLoc) {
 								result.push({
 									...error,
@@ -1216,7 +1216,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 							}
 						}
 						else if (Diagnostic.is(error)) {
-							const vueLoc = sourceMap.findSource(error.range);
+							const vueLoc = sourceMap.findFirstVueLocation(error.range);
 							if (vueLoc) {
 								result.push({
 									...error,

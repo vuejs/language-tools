@@ -33,9 +33,9 @@ export function register(sourceFiles: Map<string, SourceFile>, languageService: 
 		function getTsResult(sourceFile: SourceFile) {
 			let result: Location[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.findTargets(range)) {
+				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.data.capabilities.references) continue;
-					result = result.concat(getTsResultWorker(sourceMap.targetDocument, tsLoc.range, tsLoc.data.vueTag, sourceMap.languageService));
+					result = result.concat(getTsResultWorker(sourceMap.virtualDocument, tsLoc.range, tsLoc.data.vueTag, sourceMap.languageService));
 				}
 			}
 			return result;
@@ -56,12 +56,12 @@ export function register(sourceFiles: Map<string, SourceFile>, languageService: 
 		function getCssResult(sourceFile: SourceFile) {
 			let result: Location[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				for (const cssLoc of sourceMap.findTargets(range)) {
-					const locations = sourceMap.languageService.findReferences(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
+				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
+					const locations = sourceMap.languageService.findReferences(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
 					for (const location of locations) {
-						const sourceLoc = sourceMap.findSource(location.range);
+						const sourceLoc = sourceMap.findFirstVueLocation(location.range);
 						if (sourceLoc) result.push({
-							uri: sourceMap.sourceDocument.uri,
+							uri: sourceMap.vueDocument.uri,
 							range: sourceLoc.range,
 						});
 					}

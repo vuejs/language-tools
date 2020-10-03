@@ -31,9 +31,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			let workspaceEdits: WorkspaceEdit[] = [];
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.findTargets(range)) {
+				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.data.capabilities.references) continue;
-					const entries = getTsActionEntries(sourceMap.targetDocument, tsLoc.range, tsLoc.data.vueTag, 'rename', getRenameLocations, sourceMap.languageService, sourceFiles);
+					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.data.vueTag, 'rename', getRenameLocations, sourceMap.languageService, sourceFiles);
 
 					for (const entry of entries) {
 						const entryDocument = sourceMap.languageService.getTextDocument(entry.uri);
@@ -71,14 +71,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const htmlLoc of sourceMap.findTargets(range)) {
-					const workspaceEdit = sourceMap.languageService.doRename(sourceMap.targetDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
+				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
+					const workspaceEdit = sourceMap.languageService.doRename(sourceMap.virtualDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
 					if (workspaceEdit) {
 						if (workspaceEdit.changes) {
 							for (const uri in workspaceEdit.changes) {
 								const edits = workspaceEdit.changes[uri];
 								for (const edit of edits) {
-									const vueLoc = sourceMap.findSource(edit.range);
+									const vueLoc = sourceMap.findFirstVueLocation(edit.range);
 									if (vueLoc) edit.range = vueLoc.range;
 								}
 							}
@@ -92,14 +92,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getCssResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				for (const cssLoc of sourceMap.findTargets(range)) {
-					const workspaceEdit = sourceMap.languageService.doRename(sourceMap.targetDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
+				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
+					const workspaceEdit = sourceMap.languageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
 					if (workspaceEdit) {
 						if (workspaceEdit.changes) {
 							for (const uri in workspaceEdit.changes) {
 								const edits = workspaceEdit.changes[uri];
 								for (const edit of edits) {
-									const vueLoc = sourceMap.findSource(edit.range);
+									const vueLoc = sourceMap.findFirstVueLocation(edit.range);
 									if (vueLoc) edit.range = vueLoc.range;
 								}
 							}

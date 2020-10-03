@@ -25,9 +25,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			let result: Location[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLocs = sourceMap.findTargets(Range.create(position, position));
+				const cssLocs = sourceMap.findVirtualLocations(Range.create(position, position));
 				for (const virLoc of cssLocs) {
-					const definition = sourceMap.languageService.findDefinition(sourceMap.targetDocument, virLoc.range.start, sourceMap.stylesheet);
+					const definition = sourceMap.languageService.findDefinition(sourceMap.virtualDocument, virLoc.range.start, sourceMap.stylesheet);
 					if (definition) {
 						const vueLocs = getSourceTsLocations(definition, sourceFiles);
 						result = result.concat(vueLocs);
@@ -48,9 +48,9 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
 		const ls = sourceMap.languageService;
 		const worker = isTypeDefinition ? ls.findTypeDefinition : ls.findDefinition;
-		for (const tsLoc of sourceMap.findTargets(range)) {
+		for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 			if (!tsLoc.data.capabilities.references) continue;
-			const entries = getTsActionEntries(sourceMap.targetDocument, tsLoc.range, tsLoc.data.vueTag, 'definition', worker, ls, sourceFiles);
+			const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.data.vueTag, 'definition', worker, ls, sourceFiles);
 			for (const location of entries) {
 				const document = ls.getTextDocument(location.uri);
 				if (!document) continue;

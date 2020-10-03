@@ -69,12 +69,12 @@ export function getTsActionEntries(
 
 			/* props */
 			if (entry.uri === templateScript.document.uri) {
-				let left = templateScript.propSourceMap.findSource(entry.range)?.range;
-				if (!left && templateScript.propSourceMap.isSource(entry.range)) {
+				let left = templateScript.propSourceMap.findFirstVueLocation(entry.range)?.range;
+				if (!left && templateScript.propSourceMap.isVueLocation(entry.range)) {
 					left = entry.range;
 				}
 				if (left) {
-					const rights = templateScript.propSourceMap.findTargets(left);
+					const rights = templateScript.propSourceMap.findVirtualLocations(left);
 					let result = rights.map(right => Location.create(entry.uri, right.range));
 					{ // patch prop rename
 						let isProp = false;
@@ -101,12 +101,12 @@ export function getTsActionEntries(
 
 			/* components */
 			if (entry.uri === templateScript.document.uri) {
-				let left = templateScript.componentSourceMap.findSource(entry.range)?.range;
-				if (!left && templateScript.componentSourceMap.isSource(entry.range)) {
+				let left = templateScript.componentSourceMap.findFirstVueLocation(entry.range)?.range;
+				if (!left && templateScript.componentSourceMap.isVueLocation(entry.range)) {
 					left = entry.range;
 				}
 				if (left) {
-					const rights = templateScript.componentSourceMap.findTargets(left);
+					const rights = templateScript.componentSourceMap.findVirtualLocations(left);
 					const result = rights.map(right => Location.create(entry.uri, right.range));
 					return result;
 				}
@@ -141,13 +141,13 @@ export function getTsActionEntries(
 			if (!templateScript) continue;
 			if (entry.uri !== templateScript.document.uri) continue;
 			{ // props
-				const left = templateScript.propSourceMap.findSource(entry.range);
+				const left = templateScript.propSourceMap.findFirstVueLocation(entry.range);
 				if (left) {
 					insideEntries.push(Location.create(entry.uri, left.range));
 				}
 			}
 			{ // components
-				const left = templateScript.componentSourceMap.findSource(entry.range);
+				const left = templateScript.componentSourceMap.findFirstVueLocation(entry.range);
 				if (left) {
 					insideEntries.push(Location.create(entry.uri, left.range));
 				}
@@ -165,10 +165,10 @@ export function getSourceTsLocations(location: Location, sourceFiles: Map<string
 	const result: Location[] = [];
 
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
-		if (sourceMap.targetDocument.uri !== location.uri) continue;
-		const vueLoc = sourceMap.findSource(location.range);
-		if (vueLoc) {
-			const sourceLocation = Location.create(sourceMap.sourceDocument.uri, vueLoc.range)
+		if (sourceMap.virtualDocument.uri !== location.uri) continue;
+		const vueLocs = sourceMap.findVueLocations(location.range);
+		for (const vueLoc of vueLocs) {
+			const sourceLocation = Location.create(sourceMap.vueDocument.uri, vueLoc.range)
 			result.push(sourceLocation);
 		}
 	}

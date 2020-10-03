@@ -44,15 +44,15 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 		const textEdits: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 			for (const maped of sourceMap) {
-				const newStyleText = prettier.format(sourceMap.targetDocument.getText(), {
+				const newStyleText = prettier.format(sourceMap.virtualDocument.getText(), {
 					tabWidth: options.tabSize,
 					useTabs: !options.insertSpaces,
-					parser: sourceMap.targetDocument.languageId === 'scss' ? 'scss' : 'css',
+					parser: sourceMap.virtualDocument.languageId === 'scss' ? 'scss' : 'css',
 				});
 
 				const vueRange = {
-					start: sourceMap.sourceDocument.positionAt(maped.originalRange.start),
-					end: sourceMap.sourceDocument.positionAt(maped.originalRange.end),
+					start: sourceMap.vueDocument.positionAt(maped.vueRange.start),
+					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
 				};
 				const textEdit = TextEdit.replace(
 					vueRange,
@@ -71,7 +71,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				const prefixes = '<template>';
 				const suffixes = '</template>';
 
-				let newHtml = prettyhtml(prefixes + sourceMap.targetDocument.getText() + suffixes, {
+				let newHtml = prettyhtml(prefixes + sourceMap.virtualDocument.getText() + suffixes, {
 					tabWidth: options.tabSize,
 					useTabs: !options.insertSpaces,
 					printWidth: 100,
@@ -80,8 +80,8 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				newHtml = newHtml.substring(prefixes.length, newHtml.length - suffixes.length);
 
 				const vueRange = {
-					start: sourceMap.sourceDocument.positionAt(maped.originalRange.start),
-					end: sourceMap.sourceDocument.positionAt(maped.originalRange.end),
+					start: sourceMap.vueDocument.positionAt(maped.vueRange.start),
+					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
 				};
 				const textEdit = TextEdit.replace(vueRange, newHtml);
 				result.push(textEdit);
@@ -95,12 +95,12 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 			for (const maped of sourceMap) {
 				if (!maped.data.capabilities.formatting) continue;
 				const tsRange = {
-					start: sourceMap.targetDocument.positionAt(maped.mappingRange.start),
-					end: sourceMap.targetDocument.positionAt(maped.mappingRange.end),
+					start: sourceMap.virtualDocument.positionAt(maped.virtualRange.start),
+					end: sourceMap.virtualDocument.positionAt(maped.virtualRange.end),
 				};
-				const textEdits = sourceMap.languageService.doFormatting(sourceMap.targetDocument, options, tsRange);
+				const textEdits = sourceMap.languageService.doFormatting(sourceMap.virtualDocument, options, tsRange);
 				for (const edit of textEdits) {
-					const vueLoc = sourceMap.findSource(edit.range);
+					const vueLoc = sourceMap.findFirstVueLocation(edit.range);
 					if (vueLoc) {
 						result.push({
 							...edit,

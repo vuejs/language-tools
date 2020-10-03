@@ -40,11 +40,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				items: [],
 			};
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const virtualLocs = sourceMap.findTargets(range);
+				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.data.capabilities.basic) continue;
 					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
-					const items = sourceMap.languageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, {
+					const items = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: !isIncomplete,
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
@@ -52,7 +52,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					const sourceItems = items.map(item => toSourceItem(item, sourceMap));
 					const data: CompletionData = {
 						uri: document.uri,
-						docUri: sourceMap.targetDocument.uri,
+						docUri: sourceMap.virtualDocument.uri,
 						mode: 'ts',
 					};
 					for (const entry of sourceItems) {
@@ -74,7 +74,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				items: [],
 			};
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const virtualLocs = sourceMap.findTargets(range);
+				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
 					const templateScriptData = sourceFile.getTemplateScriptData();
 					const names = [...new Set(...templateScriptData.components, ...templateScriptData.components.map(hyphenate))];
@@ -87,14 +87,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						})),
 					});
 					sourceMap.languageService.setDataProviders(true, [dataProvider]);
-					const newResult = sourceMap.languageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument, { [document.uri]: true });
+					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, { [document.uri]: true });
 					newResult.items = newResult.items.map(item => toSourceItem(item, sourceMap));
 					if (newResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
 					const data: CompletionData = {
 						uri: document.uri,
-						docUri: sourceMap.targetDocument.uri,
+						docUri: sourceMap.virtualDocument.uri,
 						mode: 'html',
 					};
 					for (const entry of newResult.items) {
@@ -115,16 +115,16 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				items: [],
 			};
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const virtualLocs = sourceMap.findTargets(range);
+				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const newResult = sourceMap.languageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.stylesheet);
+					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
 					newResult.items = newResult.items.map(item => toSourceItem(item, sourceMap));
 					if (newResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
 					const data: CompletionData = {
 						uri: document.uri,
-						docUri: sourceMap.targetDocument.uri,
+						docUri: sourceMap.virtualDocument.uri,
 						mode: 'css',
 					};
 					for (const entry of newResult.items) {
@@ -146,7 +146,7 @@ function toSourceItem<T extends CompletionItem | css.CompletionItem>(entry: T, s
 	if (entry.additionalTextEdits) {
 		const newAdditionalTextEdits: TextEdit[] = [];
 		for (const textEdit of entry.additionalTextEdits) {
-			const vueLoc = sourceMap.findSource(textEdit.range);
+			const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
 			if (vueLoc) {
 				newAdditionalTextEdits.push({
 					newText: textEdit.newText,
@@ -157,7 +157,7 @@ function toSourceItem<T extends CompletionItem | css.CompletionItem>(entry: T, s
 		entry.additionalTextEdits = newAdditionalTextEdits;
 	}
 	if (entry.textEdit && TextEdit.is(entry.textEdit)) {
-		const vueLoc = sourceMap.findSource(entry.textEdit.range);
+		const vueLoc = sourceMap.findFirstVueLocation(entry.textEdit.range);
 		if (vueLoc) {
 			entry.textEdit = {
 				newText: entry.textEdit.newText,
