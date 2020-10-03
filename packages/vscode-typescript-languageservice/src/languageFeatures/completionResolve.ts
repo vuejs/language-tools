@@ -1,7 +1,5 @@
 import * as ts from 'typescript';
-import {
-	CompletionItem, TextEdit,
-} from 'vscode-languageserver';
+import { CompletionItem, TextEdit } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 
@@ -13,27 +11,35 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			includeCompletionsForModuleExports: true,
 			includeCompletionsWithInsertText: true,
 		});
-		if (detail) {
-			item.detail = ts.displayPartsToString(detail.displayParts);
+		const details: string[] = [];
+		if (detail?.source) {
+			const importPath = `'${ts.displayPartsToString(detail.source)}'`;
+			const autoImportLabel = `Auto import from ${importPath}`;
+			details.push(autoImportLabel);
+		}
+		if (detail?.displayParts) {
+			details.push(ts.displayPartsToString(detail.displayParts));
 		}
 		if (detail?.documentation) {
 			item.documentation = ts.displayPartsToString(detail.documentation);
 		}
+		if (details.length) item.detail = details.join('\n');
+
 		if (detail?.codeActions) {
 			if (!item.additionalTextEdits) item.additionalTextEdits = [];
-			detail.codeActions.map(action => {
-				action.changes.map(change => {
+			for (const action of detail.codeActions) {
+				for (const change of action.changes) {
 					const entries = change.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span }
 					});
-					let locs = entriesToLocations(entries, getTextDocument);
-					locs.map((loc, index) => {
+					const locs = entriesToLocations(entries, getTextDocument);
+					locs.forEach((loc, index) => {
 						item.additionalTextEdits?.push(TextEdit.insert(loc.range.start, change.textChanges[index].newText))
 					});
-
-				})
-			})
+				}
+			}
 		}
+
 		return item;
 	};
 }

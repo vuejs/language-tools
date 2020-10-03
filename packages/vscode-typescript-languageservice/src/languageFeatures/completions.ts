@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import * as PConst from '../protocol.const';
 import {
 	Position,
@@ -7,15 +7,14 @@ import {
 	Range,
 	TextDocument,
 	TextEdit,
-	CompletionContext,
 } from 'vscode-languageserver';
 import { uriToFsPath } from '@volar/shared';
 
 export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument, position: Position, _options?: ts.GetCompletionsAtPositionOptions, context?: CompletionContext): CompletionItem[] => {
+	return (document: TextDocument, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const options: ts.GetCompletionsAtPositionOptions = {
+		const defaultOptions: ts.GetCompletionsAtPositionOptions = {
 			disableSuggestions: false,
 			// includeCompletionsForModuleExports: true,
 			includeAutomaticOptionalChainCompletions: true,
@@ -25,14 +24,8 @@ export function register(languageService: ts.LanguageService) {
 			allowTextChangesInNewFiles: true,
 			providePrefixAndSuffixTextForRename: true,
 		};
-		if (context) {
-			options.triggerCharacter = context.triggerCharacter as ts.CompletionsTriggerCharacter;
-		}
-		for (const key in _options) {
-			(options as any)[key] = (_options as any)[key];
-		}
 
-		const completions = languageService.getCompletionsAtPosition(fileName, offset, options);
+		const completions = languageService.getCompletionsAtPosition(fileName, offset, { ...defaultOptions, ...options });
 		if (completions === undefined) return [];
 
 		const entries = completions.entries

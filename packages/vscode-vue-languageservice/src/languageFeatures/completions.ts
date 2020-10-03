@@ -5,14 +5,16 @@ import {
 	Range,
 	TextEdit,
 	CompletionContext,
+	CompletionTriggerKind,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
-import { TsCompletionData } from '../utils/types';
+import { CompletionData } from '../utils/types';
 import * as html from 'vscode-html-languageservice';
 import * as css from 'vscode-css-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { hyphenate } from '@vue/shared';
+import type * as ts from 'typescript';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument, position: Position, context?: CompletionContext): CompletionItem[] | CompletionList | undefined => {
@@ -20,40 +22,50 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (!sourceFile) return;
 		const range = Range.create(position, position);
 
+		console.log("kind", context?.triggerKind);
+
 		const tsResult = getTsResult(sourceFile);
-		if (tsResult.length) return tsResult;
+		if (tsResult.items.length) return tsResult;
 
 		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult) return htmlResult as CompletionList;
+		if (htmlResult.items.length) return htmlResult as CompletionList;
 
 		const cssResult = getCssResult(sourceFile);
-		if (cssResult) return cssResult as CompletionList;
+		if (cssResult.items.length) return cssResult as CompletionList;
 
 		function getTsResult(sourceFile: SourceFile) {
-			let result: CompletionItem[] = [];
+			const isIncomplete = context?.triggerKind !== CompletionTriggerKind.TriggerForIncompleteCompletions;
+			const result: CompletionList = {
+				isIncomplete,
+				items: [],
+			};
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.findTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.data.capabilities.basic) continue;
-
 					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
-					const items = sourceMap.languageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, { quotePreference }, context);
+					const items = sourceMap.languageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, {
+						quotePreference,
+						includeCompletionsForModuleExports: !isIncomplete,
+						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
+					});
 					const sourceItems = items.map(item => toSourceItem(item, sourceMap));
-
-					const data: TsCompletionData = {
+					const data: CompletionData = {
 						uri: document.uri,
-						tsUri: sourceMap.targetDocument.uri,
+						docUri: sourceMap.targetDocument.uri,
 						mode: 'ts',
 					};
 					for (const entry of sourceItems) {
-						entry.data.uri = data.uri;
-						entry.data.tsUri = data.tsUri;
-						entry.data.mode = data.mode;
-						result.push(entry as CompletionItem);
+						if (!entry.data) entry.data = {};
+						entry.data = {
+							...entry.data,
+							...data,
+						}
+						result.items.push(entry as CompletionItem);
 					}
 				}
 			}
-			result = result.filter(result => !result.label.startsWith('__VLS_'));
+			result.items = result.items.filter(result => !result.label.startsWith('__VLS_'));
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
@@ -80,6 +92,18 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					if (newResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
+					const data: CompletionData = {
+						uri: document.uri,
+						docUri: sourceMap.targetDocument.uri,
+						mode: 'html',
+					};
+					for (const entry of newResult.items) {
+						if (!entry.data) entry.data = {};
+						entry.data = {
+							...entry.data,
+							...data,
+						}
+					}
 					result.items = result.items.concat(newResult.items);
 				}
 			}
@@ -97,6 +121,18 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					newResult.items = newResult.items.map(item => toSourceItem(item, sourceMap));
 					if (newResult.isIncomplete) {
 						result.isIncomplete = true;
+					}
+					const data: CompletionData = {
+						uri: document.uri,
+						docUri: sourceMap.targetDocument.uri,
+						mode: 'css',
+					};
+					for (const entry of newResult.items) {
+						if (!entry.data) entry.data = {};
+						entry.data = {
+							...entry.data,
+							...data,
+						}
 					}
 					result.items = result.items.concat(newResult.items);
 				}

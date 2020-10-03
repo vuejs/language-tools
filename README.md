@@ -12,38 +12,30 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 My motivation for building this tool is that Vetur's Type-Checking is too slow (it has been improved now). I hope to get an experience similar to coding native ts when coding vue. It is more realistic to abandon the technical debt of Vue2 and rewrite it than to participate in the reconstruction of Vetur.
 
-Thanks to Vue3's ```ref``` and ```computed``` (Yes, I use Composition API to write Vue Language Service!), the current development experience is quite close to coding native ts. And I added All the TypeScript features I need.
+Thanks to Vue3's `ref` and `computed` (Yes, I use Composition API to write Vue Language Service!), the current development experience is quite close to coding native ts. And I added All the TypeScript features I need.
 
-This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and only supports major languages (no sass, vue2...etc), so if Vetur is good for you now, just continue to use Vetur .
+This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and only supports major languages (no sass, vue2...etc), so if Vetur is good for you now, just continue to use Vetur.
 
 ## Features other than Vetur (until v0.26)
 
 - [x] Multi root support
 - [x] Interpolation formatting
-- [x] Component tag LS support
-- [x] Component props LS support (v0.5.0 added)
-- [x] Pug interpolation LS support
-- [x] Auto $style type for css module and LS support
+- [x] Component tag services
+- [x] Component props services (v0.5.0 added)
+- [x] Pug interpolation services
+- [x] css module services
 - [x] Asset url link jump
 - [x] pug-html convert tool
 - [x] Unused highlight for setup() return properties (v0.7.0 added)
 - [x] Diagnostic all vue scripts (v0.9.0 added)
 - [x] `<script setup>` support (v0.10.0 added)
-
-> LS support mean all this features has been support:
-> - Find References
-> - Find Definition
-> - Rename Symbol
-> - Formatting
-> - Type-Checking & Diagnostics
-> - Autocompletion
-> - Hover information
+- [x] html tag services (v0.11.0 added)
 
 ## Template component element LS support
 
 Local and Built-in component Type-Checking is default active.
 
-For Global component, you need to definition ```__VLS_GlobalComponents``` interface, for example:
+For Global component, you need to definition `__VLS_GlobalComponents` interface, for example:
 
 ```typescript
 import { RouterLink, RouterView } from 'vue-router';
@@ -64,7 +56,7 @@ declare global {
 
 > If rename location include both .ts and .vue files. Please perform the rename operation in the .vue file, otherwise the rename location in the .vue cannot be found correctly.
 
-> Click ```<template>``` tag to use pug convert tool. This tool will move to a single extension. So will can work with Vetur.
+> Click `<template>` tag to use pug convert tool.
 
 > Currently support languages:
 > - template: html, pug
