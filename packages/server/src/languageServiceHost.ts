@@ -150,7 +150,6 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 			}
 			for (const doc of docs) {
 				if (req !== fullValidationReq) break;
-				const t = Date.now();
 				await sendDiagnostics(doc, openedUris.has(doc.uri));
 			}
 		}
@@ -159,9 +158,12 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 			getDiagnosticsReq[document.uri] = currentReq;
 			const isCancel = () => getDiagnosticsReq[document.uri] !== currentReq;
 
-			await ls.doValidation(document, suggestion, isCancel, diagnostics => {
-				connection.sendDiagnostics({ uri: document.uri, diagnostics });
+			const diagnostics = await ls.doValidation(document, suggestion, isCancel, diagnostics => {
+				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // dirty
 			});
+			if (diagnostics !== undefined) {
+				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // finish
+			}
 		}
 		function onParsedCommandLineUpdate() {
 

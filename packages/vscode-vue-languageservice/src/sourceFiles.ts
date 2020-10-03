@@ -919,6 +919,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 	}
 	function useDiagnostics() {
 
+		let version = 0;
 		const tsProjectVersion = ref<string>();
 
 		const stylesDiags = useStylesValidation();
@@ -955,43 +956,54 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		return worker;
 
-		async function worker(suggestion: boolean, newTsProjectVersion: string, isCancel: () => boolean, onProgress: (diags: Diagnostic[]) => void) {
+		async function worker(suggestion: boolean, newTsProjectVersion: string, isCancel: () => boolean, onDirty: (diags: Diagnostic[]) => void) {
 			tsProjectVersion.value = newTsProjectVersion;
+			let dirty = false;
 
-			if (isCancel()) return undefined;
-			await tryProgress(stylesDiags, lastStylesDiags);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(stylesDiags, lastStylesDiags);
 
-			if (isCancel()) return undefined;
-			await tryProgress(templateDiags, lastTemplateDiags);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(templateDiags, lastTemplateDiags);
 
-			if (isCancel()) return undefined;
-			await tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
 
-			if (isCancel()) return undefined;
-			await tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
 
-			if (isCancel()) return undefined;
-			await tryProgress(scriptDiags_1, lastScriptDiags_1);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
 
-			if (isCancel()) return undefined;
-			await tryProgress(scriptDiags_2, lastScriptDiags_2);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(scriptDiags_2, lastScriptDiags_2);
 
 			if (suggestion) {
-				if (isCancel()) return undefined;
-				await tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
+				if (dirty) await nextTick();
+				if (isCancel()) return;
+				dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
 
-				if (isCancel()) return undefined;
-				await tryProgress(scriptDiags_3, lastScriptDiags_3);
+				if (dirty) await nextTick();
+				if (isCancel()) return;
+				dirty = tryProgress(scriptDiags_3, lastScriptDiags_3);
 			}
 
-			async function tryProgress(data: Ref<Diagnostic[]>, lastData: Ref<Diagnostic[]>) {
-				const newData = data.value;
-				const shouldSend = lastData.value.length > 0 || newData.length > 0;
-				if (shouldSend) {
-					lastData.value = newData;
-					onProgress(result.value);
-					await nextTick();
+			return result.value;
+
+			function tryProgress(data: Ref<Diagnostic[]>, lastData: Ref<Diagnostic[]>) {
+				const oldVersion = version;
+				lastData.value = data.value;
+				if (version !== oldVersion) {
+					onDirty(result.value);
+					return true;
 				}
+				return false;
 			}
 			function nextTick() {
 				return new Promise(resolve => setTimeout(resolve, 0));
@@ -1087,6 +1099,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				return result;
 			});
 			return computed(() => {
+				version++;
 				if (!templateDocument.value) return [];
 				return getSourceDiags(errors.value, templateDocument.value[0].uri, htmlSourceMaps.value);
 			});
@@ -1102,6 +1115,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				return result;
 			});
 			return computed(() => {
+				version++;
 				let result: css.Diagnostic[] = [];
 				for (const [uri, errs] of errors.value) {
 					result = result.concat(getSourceDiags(errs, uri, cssSourceMaps.value));
@@ -1128,6 +1142,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				}
 			});
 			return computed(() => {
+				version++;
 				const doc = document.value;
 				if (!doc) return [];
 				return getSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
@@ -1172,6 +1187,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				return result;
 			})
 			return computed(() => {
+				version++;
 				const result_1 = templateScriptDocument.value ? getSourceDiags(
 					errors_1.value,
 					templateScriptDocument.value.uri,
