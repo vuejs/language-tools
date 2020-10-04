@@ -47,6 +47,20 @@
 				"scopeName": "text.html.vue",
 				"path": "./syntaxes/vue.tmLanguage.json"
 			}
+		],
+		"commands": [
+			{
+				"command": "volar.action.comment",
+				"title": "// vue"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "volar.action.comment",
+				"key": "ctrl+/",
+				"mac": "cmd+/",
+				"when": "editorLangId == vue"
+			}
 		]
 	},
 	"scripts": {

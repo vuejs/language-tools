@@ -65,5 +65,4 @@ declare global {
 
 ## TODO
 
-- HTML code comment
 - Tests

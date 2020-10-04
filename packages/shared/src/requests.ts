@@ -6,8 +6,19 @@
 import {
 	RequestType,
 	TextDocumentPositionParams,
+	TextDocumentIdentifier,
+	Range,
 } from 'vscode-languageserver';
 
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any, any> = new RequestType('html/tag');
+}
+export namespace GetEmbeddedLanguageRequest {
+	export const type: RequestType<{
+		textDocument: TextDocumentIdentifier,
+		range: Range,
+	}, {
+		id: string,
+		range: Range,
+	} | undefined, any, any> = new RequestType('comment');
 }

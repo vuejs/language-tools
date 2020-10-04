@@ -17,6 +17,7 @@ import * as prettyhtml from '@starptech/prettyhtml';
 import * as doComplete from './languageFeatures/completions';
 import * as doCompletionResolve from './languageFeatures/completionResolve';
 import * as doAutoClose from './languageFeatures/autoClose';
+import * as getEmbeddedLanguage from './languageFeatures/embeddedLanguage';
 import * as doHover from './languageFeatures/hover';
 import * as doValidation from './languageFeatures/diagnostics';
 import * as doRangeFormatting from './languageFeatures/rangeFormatting';
@@ -71,6 +72,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		doComplete: apiHook(doComplete.register(sourceFiles), false),
 		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles), false),
 		doAutoClose: apiHook(doAutoClose.register(sourceFiles), false),
+		getEmbeddedLanguage: apiHook(getEmbeddedLanguage.register(sourceFiles), false),
 		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles), false),
 		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles), false),
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),

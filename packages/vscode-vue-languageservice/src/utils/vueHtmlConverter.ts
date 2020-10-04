@@ -146,7 +146,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 								end: propValueStart + propValue.length,
 							}], false)
 							_code += `'`;
-							mapping(prop.value.type, propValue, propValue, MapedMode.Offset, false, true, [{
+							mapping(prop.value.type, propValue, propValue, MapedMode.Offset, false, false, [{
 								start: propValueStart,
 								end: propValueStart + propValue.length,
 							}])

@@ -29,7 +29,7 @@ import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { TagCloseRequest } from '@volar/shared';
+import { TagCloseRequest, GetEmbeddedLanguageRequest } from '@volar/shared';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -95,8 +95,12 @@ function initLanguageService(rootPath: string) {
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		console.log(host(document.uri)?.doAutoClose(document, handler.position));
 		return host(document.uri)?.doAutoClose(document, handler.position);
+	});
+	connection.onRequest(GetEmbeddedLanguageRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return host(document.uri)?.getEmbeddedLanguage(document, handler.range);
 	});
 
 	connection.onCompletion(handler => {

@@ -53,6 +53,7 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		const result: {
 			data: MapedData,
 			range: Range,
+			mapedFromRange: Range,
 		}[] = [];
 		const toDoc = vueToVirtual ? this.virtualDocument : this.vueDocument;
 		const fromDoc = vueToVirtual ? this.vueDocument : this.virtualDocument;
@@ -65,24 +66,36 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 			const mapedFromRange = vueToVirtual ? maped.vueRange : maped.virtualRange;
 			if (maped.mode === MapedMode.Gate) {
 				if (fromRange.start === mapedFromRange.start && fromRange.end === mapedFromRange.end) {
+					const toRange = Range.create(
+						toDoc.positionAt(mapedToRange.start),
+						toDoc.positionAt(mapedToRange.end),
+					);
+					const range = Range.create(
+						fromDoc.positionAt(mapedFromRange.start),
+						fromDoc.positionAt(mapedFromRange.end),
+					);
 					result.push({
 						data: maped.data,
-						range: Range.create(
-							toDoc.positionAt(mapedToRange.start),
-							toDoc.positionAt(mapedToRange.end),
-						),
+						range: toRange,
+						mapedFromRange: range,
 					});
 					if (returnFirstResult) return result;
 				}
 			}
 			else if (maped.mode === MapedMode.Offset) {
 				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					const toRange = Range.create(
+						toDoc.positionAt(mapedToRange.start + fromRange.start - mapedFromRange.start),
+						toDoc.positionAt(mapedToRange.end + fromRange.end - mapedFromRange.end),
+					);
+					const range = Range.create(
+						fromDoc.positionAt(mapedFromRange.start),
+						fromDoc.positionAt(mapedFromRange.end),
+					);
 					result.push({
 						data: maped.data,
-						range: Range.create(
-							toDoc.positionAt(mapedToRange.start + fromRange.start - mapedFromRange.start),
-							toDoc.positionAt(mapedToRange.end + fromRange.end - mapedFromRange.end),
-						),
+						range: toRange,
+						mapedFromRange: range,
 					});
 					if (returnFirstResult) return result;
 				}
@@ -112,6 +125,7 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 		super(vueDocument, virtualDocument);
 	}
 }
+
 export class CssSourceMap extends SourceMap<undefined> {
 	constructor(
 		public vueDocument: TextDocument,
@@ -124,6 +138,7 @@ export class CssSourceMap extends SourceMap<undefined> {
 		super(vueDocument, virtualDocument);
 	}
 }
+
 export class HtmlSourceMap extends SourceMap<undefined> {
 	constructor(
 		public vueDocument: TextDocument,
