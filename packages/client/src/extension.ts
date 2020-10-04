@@ -5,24 +5,39 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-
 import {
 	LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind,
 } from 'vscode-languageclient';
+import {
+	TextDocument,
+} from 'vscode';
+import { activateTagClosing } from './tagClosing';
+import { TagCloseRequest } from '@volar/shared';
 
-let baseClient: LanguageClient;
-let diagClient: LanguageClient;
+let client: LanguageClient;
+let docClient: LanguageClient;
+const toDispose: vscode.Disposable[] = [];
 
 export function activate(context: vscode.ExtensionContext) {
-	baseClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic');
-	diagClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document');
+	client = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic');
+	docClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document');
+
+	let tagRequestor = (document: TextDocument, position: vscode.Position) => {
+		let param = client.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+		return client.sendRequest(TagCloseRequest.type, param);
+	};
+	let disposable = activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags');
+	toDispose.push(disposable);
 }
 
 export function deactivate(): Thenable<void> | undefined {
-	return baseClient?.stop() && diagClient?.stop();
+	for (const disposable of toDispose) {
+		disposable.dispose();
+	}
+	return client?.stop() && docClient?.stop();
 }
 
 function setupLanguageService(context: vscode.ExtensionContext, script: string, name: string,) {

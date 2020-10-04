@@ -75,17 +75,19 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
 					const templateScriptData = sourceFile.getTemplateScriptData();
-					const names = [...new Set(...templateScriptData.components, ...templateScriptData.components.map(hyphenate))];
+					const names = templateScriptData.components.map(hyphenate);
 					const dataProvider = html.newHTMLDataProvider(document.uri, {
 						version: 1.1,
 						tags: names.map(name => ({
 							name: name,
-							description: 'Volar: TODO',
-							attributes: [],
+							description: '', // TODO
+							attributes: [], // TODO
 						})),
 					});
 					sourceMap.languageService.setDataProviders(true, [dataProvider]);
-					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, { [document.uri]: true });
+					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, {
+						[document.uri]: true,
+					});
 					newResult.items = newResult.items.map(item => toSourceItem(item, sourceMap));
 					if (newResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -100,7 +102,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						entry.data = {
 							...entry.data,
 							...data,
-						}
+						};
 					}
 					result.items = result.items.concat(newResult.items);
 				}

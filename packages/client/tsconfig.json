@@ -5,5 +5,8 @@
 		"rootDir": "src",
 	},
 	"include": ["src"],
-	"exclude": ["node_modules", ".vscode-test"]
+	"exclude": ["node_modules", ".vscode-test"],
+	"references": [
+		{ "path": "../shared" }
+	]
 }
