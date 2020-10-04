@@ -108,7 +108,6 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 						});
 					}
 				}
-				break;
 			}
 		}
 		return result;
