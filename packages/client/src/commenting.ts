@@ -4,13 +4,13 @@ import { Range } from 'vscode-languageclient';
 
 const command = 'volar.action.comment';
 const languagesConfigs = new Map<string, LanguageConfiguration>();
-languagesConfigs.set('vue', require('../../../languages/html.json'));
-languagesConfigs.set('html', require('../../../languages/html.json'));
-languagesConfigs.set('pug', require('../../../languages/pug.json'));
-languagesConfigs.set('css', require('../../../languages/css.json'));
-languagesConfigs.set('scss', require('../../../languages/scss.json'));
-languagesConfigs.set('typescript', require('../../../languages/typescript.json'));
-languagesConfigs.set('javascript', require('../../../languages/typescript.json'));
+languagesConfigs.set('vue', require('../../../languages/vue-language-configuration.json'));
+languagesConfigs.set('html', require('../../../languages/html-language-configuration.json'));
+languagesConfigs.set('pug', require('../../../languages/pug-language-configuration.json'));
+languagesConfigs.set('css', require('../../../languages/css-language-configuration.json'));
+languagesConfigs.set('scss', require('../../../languages/scss-language-configuration.json'));
+languagesConfigs.set('typescript', require('../../../languages/javascript-language-configuration.json'));
+languagesConfigs.set('javascript', require('../../../languages/typescript-language-configuration.json'));
 
 export function activateCommenting(embeddedLanguageRequestor: (document: TextDocument, range: vscode.Range) => Thenable<{
 	id: string,
