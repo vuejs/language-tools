@@ -31,7 +31,8 @@
 				"id": "vue",
 				"extensions": [
 					".vue"
-				]
+				],
+				"configuration": "./languages/vue-language-configuration.json"
 			},
 			{
 				"id": "typescript",
