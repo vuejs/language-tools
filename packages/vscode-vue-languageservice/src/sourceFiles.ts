@@ -706,7 +706,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 	});
 	const htmlSourceMaps = computed(() => {
 		const sourceMaps: HtmlSourceMap[] = [];
-		if (templateDocument.value && descriptor.template) {
+		if (templateDocument.value?.[0].languageId === 'html' && descriptor.template) {
 			const [document, htmlDocument] = templateDocument.value;
 			const sourceMap = new HtmlSourceMap(
 				vue.document,
