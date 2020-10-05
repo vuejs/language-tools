@@ -524,14 +524,18 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return ref;
 		}
 	});
-	const templateDocument = computed<[TextDocument, html.HTMLDocument] | undefined>(() => {
+	const templateDocument = computed<TextDocument | undefined>(() => {
 		if (descriptor.template) {
 			const lang = descriptor.template.lang;
 			const uri = vue.uri + '.' + lang;
 			const content = descriptor.template.content;
 			const document = TextDocument.create(uri, lang, documentVersion++, content);
-			const htmlDocument = htmlLanguageService.parseHTMLDocument(document);
-			return [document, htmlDocument];
+			return document;
+		}
+	});
+	const templateHtmlDocument = computed<html.HTMLDocument | undefined>(() => {
+		if (templateDocument.value) {
+			return htmlLanguageService.parseHTMLDocument(templateDocument.value);
 		}
 	});
 
@@ -706,13 +710,38 @@ export function createSourceFile(initialDocument: TextDocument, {
 	});
 	const htmlSourceMaps = computed(() => {
 		const sourceMaps: HtmlSourceMap[] = [];
-		if (templateDocument.value?.[0].languageId === 'html' && descriptor.template) {
-			const [document, htmlDocument] = templateDocument.value;
+		if (templateDocument.value?.languageId === 'html' && templateHtmlDocument.value && descriptor.template) {
+			const document = templateDocument.value;
+			const htmlDocument = templateHtmlDocument.value;
 			const sourceMap = new HtmlSourceMap(
 				vue.document,
 				document,
 				htmlLanguageService,
 				htmlDocument,
+			);
+			sourceMap.add({
+				data: undefined,
+				mode: MapedMode.Offset,
+				vueRange: {
+					start: descriptor.template.loc.start,
+					end: descriptor.template.loc.end,
+				},
+				virtualRange: {
+					start: 0,
+					end: descriptor.template.loc.end - descriptor.template.loc.start,
+				},
+			});
+			sourceMaps.push(sourceMap);
+		}
+		return sourceMaps;
+	});
+	const pugSourceMaps = computed(() => {
+		const sourceMaps: SourceMap[] = [];
+		if (templateDocument.value?.languageId === 'pug' && descriptor.template) {
+			const document = templateDocument.value;
+			const sourceMap = new SourceMap(
+				vue.document,
+				document,
 			);
 			sourceMap.add({
 				data: undefined,
@@ -751,6 +780,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
 		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
+		getPugSourceMaps: untrack(() => pugSourceMaps.value),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getTemplateScript: untrack(() => templateScript.value),
 		getDescriptor: untrack(() => descriptor),
@@ -1013,7 +1043,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const errors = computed(() => {
 				const result: Diagnostic[] = [];
 				if (!templateDocument.value) return result;
-				const doc = templateDocument.value[0];
+				const doc = templateDocument.value;
 				let _templateContent: string | undefined = doc.getText();
 
 				/* pug */
@@ -1101,7 +1131,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return computed(() => {
 				version++;
 				if (!templateDocument.value) return [];
-				return getSourceDiags(errors.value, templateDocument.value[0].uri, htmlSourceMaps.value);
+				return getSourceDiags(errors.value, templateDocument.value.uri, htmlSourceMaps.value);
 			});
 		}
 		function useStylesValidation() {

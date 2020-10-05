@@ -16,6 +16,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		const htmlResult = getHtmlResult(sourceFile);
 		if (htmlResult !== undefined) return htmlResult;
 
+		const pugResult = getPugResult(sourceFile);
+		if (pugResult !== undefined) return pugResult;
+
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult !== undefined) return cssResult;
 
@@ -42,6 +45,17 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+				const virtualLocs = sourceMap.findVirtualLocations(range);
+				for (const virtualLoc of virtualLocs) {
+					return {
+						id: sourceMap.virtualDocument.languageId,
+						range: virtualLoc.mapedFromRange,
+					};
+				}
+			}
+		}
+		function getPugResult(sourceFile: SourceFile) {
+			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
 					return {
