@@ -13,7 +13,6 @@ import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
-import * as prettyhtml from '@starptech/prettyhtml';
 import * as doComplete from './languageFeatures/completions';
 import * as doCompletionResolve from './languageFeatures/completionResolve';
 import * as doAutoClose from './languageFeatures/autoClose';
@@ -290,7 +289,6 @@ export function createLanguageService(host: LanguageServiceHost) {
 			if (lang !== 'pug') return;
 
 			let html = pugToHtml(desc.template.content);
-			html = prettyhtml(html).contents;
 			const newTemplate = `<template>\n` + html;
 
 			let start = desc.template.loc.start - '<template>'.length;

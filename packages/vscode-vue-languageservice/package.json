@@ -14,7 +14,6 @@
 		"typescript": "latest",
 		"vscode-languageserver-textdocument": "latest",
 		"vscode-languageserver": "latest",
-		"@starptech/prettyhtml": "latest",
 		"@vue/reactivity": "latest",
 		"@vue/shared": "latest",
 		"upath": "latest",

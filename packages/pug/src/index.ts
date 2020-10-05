@@ -2,16 +2,43 @@ import * as pug from 'pug';
 import * as htmlparser2 from 'htmlparser2';
 import { Node, DataNode, Element } from 'domhandler';
 import { ElementType } from 'domelementtype';
+import * as prettyhtml from '@starptech/prettyhtml';
 
-export function pugToHtml(html: string) {
-	const template = pug.compile(html);
+export function pugToHtml(pugCode: string) {
+	let htmlCode = pug.compile(pugCode)();
+	htmlCode = htmlCode.replace(/\-\-\>/g, " -->");
 
 	// TODO
-	return template()
+	htmlCode = htmlCode
 		.replace(/&gt;/g, `>`)
 		.replace(/&lt;/g, `<`)
 		.replace(/&amp;/g, `&`)
 		.replace(/&quot;/g, `"`)
+
+	// make html pug mapping correct, let pug mutli-line interpolations work.
+	htmlCode = prettyhtml(htmlCode).contents;
+	const mapper = createHtmlPugMapper(pugCode, htmlCode);
+	const htmlLines = htmlCode.split('\n');
+	let htmlOffset = 0;
+	let newHtmlCode = '';
+	for (const htmlLine of htmlLines) {
+		const htmlLineTrimed = htmlLine.trimStart();
+		htmlOffset += htmlLine.length - htmlLineTrimed.length;
+		const pugOffset = mapper(htmlLineTrimed, htmlOffset)
+		htmlOffset += htmlLineTrimed.length + 1; // +1 is \n
+		if (pugOffset) {
+			let pugTrimed = '';
+			for (let i = pugOffset - 1; i >= 0 && ['\t', ' '].includes(pugCode[i]); i--) {
+				pugTrimed = pugCode[i] + pugTrimed;
+			}
+			newHtmlCode += pugTrimed + htmlLineTrimed + '\n';
+		}
+		else {
+			newHtmlCode += htmlLine + '\n';
+		}
+	}
+
+	return newHtmlCode.trim();
 }
 export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 	let nodes = htmlparser2.parseDOM(html, {
@@ -19,11 +46,9 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 	});
 	nodes = filterEmptyTextNodes(nodes);
 	let pug = '';
-
 	for (const node of nodes) {
 		worker(node, false);
 	}
-
 	return pug;
 
 	function getIndent(indent: number) {
@@ -32,11 +57,21 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 	function worker(node: Node, inlineChild: boolean, indent: number = 0) {
 		if (node.type === ElementType.Text) {
 			const dataNode = node as DataNode;
-			if (inlineChild) {
-				pug += ' ' + dataNode.data;
+			// single line
+			if (dataNode.data.indexOf('\n') === -1) {
+				if (inlineChild) {
+					pug += ' ' + dataNode.data;
+				}
+				else {
+					pug += '\n' + getIndent(indent) + '| ' + dataNode.data;
+				}
 			}
+			// mutli-line
 			else {
-				pug += '\n' + getIndent(indent) + '| ' + dataNode.data;
+				pug += '\n' + getIndent(indent) + '.';
+				for (const line of dataNode.data.split('\n')) {
+					pug += '\n' + getIndent(indent + 1) + line.trim();
+				}
 			}
 		}
 		else if (node.type === ElementType.Tag) {
@@ -45,11 +80,10 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 			const atts: string[] = [];
 			for (const att in element.attribs) {
 				// remove newline in att
-				let val = element.attribs[att]
+				const val = element.attribs[att]
 					.split('\n')
 					.map(s => s.trim())
 					.join(' ');
-
 				if (val)
 					atts.push(`${att}="${val}"`);
 				else
@@ -70,7 +104,6 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 			const dataNode = node as DataNode;
 			const lines = dataNode.data.split('\n')
 				.map(s => s.trim());
-
 			// multi-line
 			if (lines.length >= 2) {
 				pug += '\n' + getIndent(indent) + '//';
@@ -93,26 +126,12 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 		for (const node of nodes) {
 			if (node.type === ElementType.Text) {
 				const dataNode = node as DataNode;
-
-				// remove newline in {{ ... }}
-				const data = dataNode.data.replace(
-					/\{\{(.*\n.*)+\}\}/g,
-					match => match.split('\n').map(s => s.trim()).join('')
-				);
-
-				const strs = data
-					// .replace(/\{\{.*\}\}/gs, match => match.replace(/\n/g, ' '))
-					.split('\n')
-					.map(s => s.trim())
-					.filter(s => s !== '');
-
-				for (const str of strs) {
-					const newNode = new DataNode(
-						ElementType.Text,
-						str,
-					);
-					newNodes.push(newNode);
-				}
+				const text = dataNode.data.trim();
+				if (text === '') continue;
+				newNodes.push(new DataNode(
+					ElementType.Text,
+					text,
+				));
 			}
 			else {
 				newNodes.push(node);
@@ -133,7 +152,7 @@ export function createHtmlPugMapper(pug: string, html: string) {
 	function searchPugOffset(code: string, htmlOffset: number) {
 		const htmlMatches = getMatchOffsets(html, code);
 		const pugMatches = getMatchOffsets(pug, code);
-	
+
 		if (htmlMatches.length === pugMatches.length) {
 			const matchIndex = htmlMatches.indexOf(htmlOffset);
 			if (matchIndex >= 0) {

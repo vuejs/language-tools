@@ -30,6 +30,7 @@ This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and 
 - [x] Diagnostic all vue scripts (v0.9.0 added)
 - [x] `<script setup>` support (v0.10.0 added)
 - [x] Native html tag services (v0.11.0 added)
+- [x] Interpolation commenting (v0.11.2 added)
 
 ## Template component element LS support
 

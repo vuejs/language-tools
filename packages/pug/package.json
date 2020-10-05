@@ -6,6 +6,7 @@
 		"@types/pug": "latest"
 	},
 	"dependencies": {
+		"@starptech/prettyhtml": "latest",
 		"pug": "latest",
 		"htmlparser2": "latest",
 		"domhandler": "latest",
