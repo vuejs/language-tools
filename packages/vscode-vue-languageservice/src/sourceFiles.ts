@@ -113,6 +113,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`declare var __VLS_for_key: string;`,
 			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
 			`type __VLS_PropsType<T extends (new (...args: any) => { $props: any }) | ___VLS_FunctionalComponent> = T extends new (...args: any) => { $props: any } ? InstanceType<T>['$props'] : (T extends ___VLS_FunctionalComponent<infer R> ? R : {});`,
+			`type __VLS_WithUnknowProp<T> = { [P in keyof T]: T[P] & Record<string, unknown> };`,
 		].join('\n') + `\n`;
 
 		/* CSS Module */
@@ -146,7 +147,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		/* Components */
 		code += '/* Components */\n';
-		code += 'declare var __VLS_components: JSX.IntrinsicElements & {\n';
+		code += 'declare var __VLS_componentsRaw: JSX.IntrinsicElements & {\n';
 		for (const name_1 of templateScriptData.components) {
 			const names = new Set([name_1, hyphenate(name_1)]);
 			for (const name_2 of names) {
@@ -178,10 +179,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 						end: end_2 - 1,
 					},
 				});
-				code += `'${name_2}': __VLS_PropsType<typeof __VLS_Components['${name_1}']> & Record<string, unknown>,\n`;
+				code += `'${name_2}': __VLS_PropsType<typeof __VLS_Components['${name_1}']>,\n`;
 			}
 		}
 		code += '};\n';
+		code +=  'declare var __VLS_components: __VLS_WithUnknowProp<typeof __VLS_componentsRaw>;';
 
 		/* Props */
 		code += `/* Props */\n`;

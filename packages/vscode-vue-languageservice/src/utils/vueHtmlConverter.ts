@@ -45,10 +45,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				_code += `'`;
 				mapping(node.type, node.tag, node.tag, MapedMode.Offset, false, false, sourceRanges);
 				_code += `'] = {\n`;
-				writeProps(node, true);
+				writeProps(node);
 				_code += '};\n';
-
-				writeProps(node, false);
 
 				// childs
 				for (const childNode of node.children) {
@@ -57,101 +55,78 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			}
 			if (!dontCreateBlock) _code += '}\n';
 
-			function writeProps(node: ElementNode, isInWrap: boolean) {
+			function writeProps(node: ElementNode) {
 				for (const prop of node.props) {
 					if (
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.arg
-						&& prop.exp
+						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-						&& prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
-						&& !prop.exp.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
+						// && prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
+						&& !prop.exp?.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
 					) {
-						const propName = prop.arg.content;
-						const propValue = prop.exp.content;
-						const propNameStart = prop.arg.loc.start.offset;
-						const propValueStart = prop.exp.loc.start.offset;
+						let propName = prop.arg.content;
+						const propValue = prop.exp?.content ?? 'undefined';
 
-						if (isInWrap) {
-							// bind only
-							if (prop.name === 'bind' || prop.name === 'model') {
-								mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
-									start: propNameStart,
-									end: propNameStart + propName.length,
-								}], false);
-								_code += `'`;
-								mapping(prop.arg.type, propName, propName, MapedMode.Offset, false, false, [{
-									start: propNameStart,
-									end: propNameStart + propName.length,
-								}]);
-								_code += `': (${propValue}),\n`;
-							}
+						if (prop.name === 'on') {
+							propName = 'on' + propName[0].toUpperCase() + propName.substr(1);
 						}
-						else {
-							_code += `(`;
-							mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, false, true, [{
-								start: propValueStart,
-								end: propValueStart + propValue.length,
-							}])
-							_code += `);\n`;
-						}
-					}
-					else if (
-						prop.type === NodeTypes.DIRECTIVE
-						&& prop.exp
-						&& prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
-						&& !prop.exp.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
-					) {
-						const propValue = prop.exp.content;
-						let propValueStart = prop.exp.loc.start.offset;
 
-						if (propValueStart !== undefined) { // TODO: Pug support
-							if (isInWrap) {
-								// no prop name
+						if (prop.name === 'bind' || prop.name === 'model' || prop.name === 'on') {
+							mapping(prop.type, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, true, false, [{
+								start: prop.loc.start.offset,
+								end: prop.loc.end.offset,
+							}], false);
+
+							mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}], false);
+							_code += `'`;
+							mapping(prop.arg.type, propName, propName, MapedMode.Offset, false, false, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}]);
+							_code += `': (`;
+							if (prop.exp) {
+								mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, false, true, [{
+									start: prop.exp.loc.start.offset,
+									end: prop.exp.loc.end.offset,
+								}])
 							}
 							else {
-								_code += `(`;
-								mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, false, true, [{
-									start: propValueStart,
-									end: propValueStart + propValue.length,
-								}])
-								_code += `);\n`;
+								_code += propValue;
 							}
+							_code += `),\n`;
 						}
 					}
 					else if (
 						prop.type === NodeTypes.ATTRIBUTE
-						&& prop.value
 					) {
 						const propName = prop.name;
-						const propValue = prop.value.content;
+						const propValue = prop.value?.content ?? '';
 						let propNameStart = prop.loc.start.offset;
-						let propValueStart = prop.value.loc.start.offset + prop.value.loc.source.indexOf(propValue); // 'test' => 'tex => test
 
-						if (isInWrap) {
-							mapping(prop.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
-								start: propNameStart,
-								end: propNameStart + propName.length,
-							}], false);
-							_code += `'`;
-							mapping(prop.type, propName, propName, MapedMode.Offset, false, false, [{
-								start: propNameStart,
-								end: propNameStart + propName.length,
-							}]);
-							_code += `': '${propValue}',\n`;
-						}
-						else {
-							mapping(prop.value.type, `'${propValue}'`, propValue, MapedMode.Gate, false, false, [{
-								start: propValueStart,
-								end: propValueStart + propValue.length,
-							}], false)
-							_code += `'`;
-							mapping(prop.value.type, propValue, propValue, MapedMode.Offset, false, false, [{
-								start: propValueStart,
-								end: propValueStart + propValue.length,
-							}])
-							_code += `';\n`;
-						}
+						mapping(prop.type, `'${propName}': "${propValue}"`, prop.loc.source, MapedMode.Gate, true, false, [{
+							start: prop.loc.start.offset,
+							end: prop.loc.end.offset,
+						}], false);
+
+						mapping(prop.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
+							start: propNameStart,
+							end: propNameStart + propName.length,
+						}], false);
+						_code += `'`;
+						mapping(prop.type, propName, propName, MapedMode.Offset, false, false, [{
+							start: propNameStart,
+							end: propNameStart + propName.length,
+						}]);
+						_code += `': "`;
+						_code += propValue;
+						_code += `",\n`;;
+					}
+					else {
+						_code += "//" + [prop.type, prop.name, prop.loc.source].join(", ") + "\n";
 					}
 				}
 			}
@@ -321,15 +296,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				}
 				sourceRanges = sourceRanges.filter(range => range.start !== -1);
 			}
-			const range = {
-				start: _code.length,
-				end: _code.length + mapCode.length,
-			};
 			for (const sourceRange of sourceRanges) {
 				mappings.push({
 					mode,
 					vueRange: sourceRange,
-					virtualRange: range,
+					virtualRange: {
+						start: _code.length,
+						end: _code.length + mapCode.length,
+					},
 					data: {
 						vueTag: 'template',
 						templateNodeType: nodeType,
