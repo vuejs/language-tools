@@ -48,6 +48,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				writeProps(node);
 				_code += '};\n';
 
+				writeOnProps(node);
+
 				// childs
 				for (const childNode of node.children) {
 					_code = worker(_code, childNode);
@@ -62,17 +64,12 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.arg
 						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-						// && prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
-						&& !prop.exp?.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
+						&& !prop.exp?.isConstant // TODO: style='z-index: 2' will compile to {'z-index':'2'}
 					) {
 						let propName = prop.arg.content;
-						const propValue = prop.exp?.content ?? 'undefined';
+						let propValue = prop.exp?.content ?? 'undefined';
 
-						if (prop.name === 'on') {
-							propName = 'on' + propName[0].toUpperCase() + propName.substr(1);
-						}
-
-						if (prop.name === 'bind' || prop.name === 'model' || prop.name === 'on') {
+						if (prop.name === 'bind' || prop.name === 'model') {
 							mapping(prop.type, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, true, false, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
@@ -127,6 +124,46 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					}
 					else {
 						_code += "//" + [prop.type, prop.name, prop.loc.source].join(", ") + "\n";
+					}
+				}
+			}
+			function writeOnProps(node: ElementNode) {
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& prop.arg
+						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
+						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
+						// && prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
+						&& !prop.exp?.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
+						&& prop.name === 'on'
+					) {
+						const varName = `__VLS_${elementIndex++}`;
+						const propName = prop.arg.content;
+						const propName2 = 'on' + propName[0].toUpperCase() + propName.substr(1);
+
+						_code += `let ${varName}: { '${propName}': __VLS_NeverToUnknown<__VLS_ConstructorOverloads<typeof __VLS_componentEmits['${node.tag}'], '${propName}'>> & __VLS_NeverToUnknown<typeof __VLS_components['${node.tag}']['${propName2}']> };\n`
+						_code += `${varName} = { `;
+						mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						}], false);
+						_code += `'`;
+						mapping(prop.arg.type, propName, propName, MapedMode.Offset, false, false, [{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						}]);
+						_code += `': (`;
+						if (prop.exp) {
+							mapping(prop.exp.type, prop.exp.content, prop.exp.content, MapedMode.Offset, false, true, [{
+								start: prop.exp.loc.start.offset,
+								end: prop.exp.loc.end.offset,
+							}])
+						}
+						else {
+							_code += 'undefined';
+						}
+						_code += `) };\n`;
 					}
 				}
 			}

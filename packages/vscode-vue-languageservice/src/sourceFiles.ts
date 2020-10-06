@@ -104,7 +104,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const propMappings: Mapping<{ isUnwrapProp: boolean }>[] = [];
 
 		let code = [
-			`import { FunctionalComponent as ___VLS_FunctionalComponent } from 'vue'`,
+			`import * as __VLS_Vue from 'vue'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
 			`import __VLS_VM_Unwrap from './${upath.basename(vue.fileName)}.unwrap';`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
@@ -112,9 +112,57 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
 			`declare var __VLS_for_key: string;`,
 			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
-			`type __VLS_PropsType<T extends (new (...args: any) => { $props: any }) | ___VLS_FunctionalComponent> = T extends new (...args: any) => { $props: any } ? InstanceType<T>['$props'] : (T extends ___VLS_FunctionalComponent<infer R> ? R : {});`,
-			`type __VLS_WithUnknowProp<T> = { [P in keyof T]: T[P] & Record<string, unknown> };`,
+			`type __VLS_MapPropsType<T> = { [K in keyof T]: (T[K] extends new (...args: any) => { $props: infer Props } ? Props : (T[K] extends __VLS_Vue.FunctionalComponent<infer R> ? R : T[K])) & __VLS_Vue.HTMLAttributes & Record<string, unknown> };`,
+			`type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : undefined };`,
+			`type __VLS_NeverToUnknown<T> = [T] extends [never] ? unknown : T;`,
 		].join('\n') + `\n`;
+
+		code += `
+type __VLS_ConstructorOverloads<T, E extends string> =
+// 4
+T extends {
+	(event: infer E1, ...payload: infer P1): void;
+	(event: infer E2, ...payload: infer P2): void;
+	(event: infer E3, ...payload: infer P3): void;
+	(event: infer E4, ...payload: infer P4): void;
+} ? (
+	E extends E1 ? (...payload: P1) => void
+	: E extends E2 ? (...payload: P2) => void
+	: E extends E3 ? (...payload: P3) => void
+	: E extends E4 ? (...payload: P4) => void
+	: unknown
+) :
+// 3
+T extends {
+	(event: infer E1, ...payload: infer P1): void;
+	(event: infer E2, ...payload: infer P2): void;
+	(event: infer E3, ...payload: infer P3): void;
+} ? (
+	E extends E1 ? (...payload: P1) => void
+	: E extends E2 ? (...payload: P2) => void
+	: E extends E3 ? (...payload: P3) => void
+	: unknown
+) :
+// 2
+T extends {
+	(event: infer E1, ...payload: infer P1): void;
+	(event: infer E2, ...payload: infer P2): void;
+} ? (
+	E extends E1 ? (...payload: P1) => void
+	: E extends E2 ? (...payload: P2) => void
+	: unknown
+) :
+// 1
+T extends {
+	(event: infer E1, ...payload: infer P1): void;
+} ? (
+	'__VLS_ToIngnoreDefaultEmitOf event: string' extends E1 ? unknown :
+	E extends E1 ? (...payload: P1) => void
+	: unknown
+) :
+// 0
+unknown;
+`
 
 		/* CSS Module */
 		code += '/* CSS Module */\n';
@@ -147,14 +195,14 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		/* Components */
 		code += '/* Components */\n';
-		code += 'declare var __VLS_componentsRaw: JSX.IntrinsicElements & {\n';
+		code += 'declare var __VLS_components_0: JSX.IntrinsicElements & {\n';
 		for (const name_1 of templateScriptData.components) {
 			const names = new Set([name_1, hyphenate(name_1)]);
 			for (const name_2 of names) {
 				const start_1 = code.length;
 				const end_1 = code.length + `'${name_2}'`.length;
-				const start_2 = code.length + `'${name_2}': __VLS_PropsType<typeof __VLS_Components[`.length;
-				const end_2 = code.length + `'${name_2}': __VLS_PropsType<typeof __VLS_Components['${name_1}'`.length;
+				const start_2 = code.length + `'${name_2}': typeof __VLS_Components[`.length;
+				const end_2 = code.length + `'${name_2}': typeof __VLS_Components['${name_1}'`.length;
 				componentMappings.push({
 					data: undefined,
 					mode: MapedMode.Gate,
@@ -179,11 +227,12 @@ export function createSourceFile(initialDocument: TextDocument, {
 						end: end_2 - 1,
 					},
 				});
-				code += `'${name_2}': __VLS_PropsType<typeof __VLS_Components['${name_1}']>,\n`;
+				code += `'${name_2}': typeof __VLS_Components['${name_1}'],\n`;
 			}
 		}
 		code += '};\n';
-		code +=  'declare var __VLS_components: __VLS_WithUnknowProp<typeof __VLS_componentsRaw>;';
+		code += 'declare var __VLS_components: __VLS_MapPropsType<typeof __VLS_components_0>;\n';
+		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components_0>;\n'
 
 		/* Props */
 		code += `/* Props */\n`;
@@ -212,11 +261,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					end: code.length + `var ${propName}`.length,
 				},
 				virtualRange: {
-					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props.`.length,
-					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props.${propName}`.length,
+					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props['`.length,
+					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props['${propName}`.length,
 				},
 			});
-			code += `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props.${propName};\n`;
+			code += `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props['${propName}'];\n`;
 		}
 
 		/* Interpolations */
