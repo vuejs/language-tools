@@ -602,57 +602,57 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const document = scriptSetupDocument.value;
 		if (document && descriptor.scriptSetup) {
 			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
-			const start = descriptor.scriptSetup.loc.start;
-			const end = descriptor.scriptSetup.loc.end;
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: true,
-						references: true,
-						diagnostic: true,
-						formatting: true,
+			{
+				const start = descriptor.scriptSetup.loc.start;
+				const end = descriptor.scriptSetup.loc.end;
+				sourceMap.add({
+					data: {
+						vueTag: 'script',
+						capabilities: {
+							basic: true,
+							references: true,
+							diagnostic: true,
+							formatting: true,
+						},
 					},
-				},
-				mode: MapedMode.Offset,
-				vueRange: {
-					start: start,
-					end: end,
-				},
-				virtualRange: {
-					start: 0,
-					end: end - start,
-				},
-			});
-			sourceMaps.push(sourceMap);
-		}
-		if (document && descriptor.scriptSetup) {
-			const setup = descriptor.scriptSetup.setup;
-			const sourceMap = new TsSourceMap(vue.document, vue.document, tsLanguageService);
-			const start = vue.document.getText().indexOf(setup); // TODO: don't use indexOf()
-			const end = start + setup.length;
-			const start_2 = document.getText().indexOf(`${setup}]: typeof __VLS_parameters;`);
-			const end_2 = start_2 + setup.length;
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: true,
-						references: true,
-						diagnostic: true,
-						formatting: true,
+					mode: MapedMode.Offset,
+					vueRange: {
+						start: start,
+						end: end,
 					},
-				},
-				mode: MapedMode.Offset,
-				vueRange: {
-					start: start,
-					end: end,
-				},
-				virtualRange: {
-					start: start_2,
-					end: end_2,
-				},
-			});
+					virtualRange: {
+						start: 0,
+						end: end - start,
+					},
+				});
+			}
+			{
+				const setup = descriptor.scriptSetup.setup;
+				const start = vue.document.getText().substring(0, descriptor.scriptSetup.loc.start).lastIndexOf(setup); // TODO: don't use indexOf()
+				const end = start + setup.length;
+				const start_2 = document.getText().lastIndexOf(`${setup}]: typeof __VLS_parameters;`);
+				const end_2 = start_2 + setup.length;
+				sourceMap.add({
+					data: {
+						vueTag: 'script',
+						capabilities: {
+							basic: true,
+							references: true,
+							diagnostic: true,
+							formatting: true,
+						},
+					},
+					mode: MapedMode.Offset,
+					vueRange: {
+						start: start,
+						end: end,
+					},
+					virtualRange: {
+						start: start_2,
+						end: end_2,
+					},
+				});
+			}
 			sourceMaps.push(sourceMap);
 		}
 		return sourceMaps;
