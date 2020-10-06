@@ -134,7 +134,6 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.arg
 						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-						// && prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
 						&& !prop.exp?.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
 						&& prop.name === 'on'
 					) {
@@ -142,7 +141,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						const propName = prop.arg.content;
 						const propName2 = 'on' + propName[0].toUpperCase() + propName.substr(1);
 
-						_code += `let ${varName}: { '${propName}': __VLS_NeverToUnknown<__VLS_ConstructorOverloads<typeof __VLS_componentEmits['${node.tag}'], '${propName}'>> & __VLS_NeverToUnknown<typeof __VLS_components['${node.tag}']['${propName2}']> };\n`
+						_code += `let ${varName}: { '${propName}': __VLS_FirstFunction<__VLS_NeverToUnknown<__VLS_ConstructorOverloads<typeof __VLS_componentEmits['${node.tag}'], '${propName}'>>, __VLS_NeverToUnknown<typeof __VLS_components['${node.tag}']['${propName2}']>> };\n`
 						_code += `${varName} = { `;
 						mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
 							start: prop.arg.loc.start.offset,

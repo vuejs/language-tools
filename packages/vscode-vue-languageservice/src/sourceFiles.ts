@@ -115,54 +115,29 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`type __VLS_MapPropsType<T> = { [K in keyof T]: (T[K] extends new (...args: any) => { $props: infer Props } ? Props : (T[K] extends __VLS_Vue.FunctionalComponent<infer R> ? R : T[K])) & __VLS_Vue.HTMLAttributes & Record<string, unknown> };`,
 			`type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : undefined };`,
 			`type __VLS_NeverToUnknown<T> = [T] extends [never] ? unknown : T;`,
+			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : F2;`,
 		].join('\n') + `\n`;
 
-		code += `
-type __VLS_ConstructorOverloads<T, E extends string> =
-// 4
-T extends {
-	(event: infer E1, ...payload: infer P1): void;
-	(event: infer E2, ...payload: infer P2): void;
-	(event: infer E3, ...payload: infer P3): void;
-	(event: infer E4, ...payload: infer P4): void;
-} ? (
-	E extends E1 ? (...payload: P1) => void
-	: E extends E2 ? (...payload: P2) => void
-	: E extends E3 ? (...payload: P3) => void
-	: E extends E4 ? (...payload: P4) => void
-	: unknown
-) :
-// 3
-T extends {
-	(event: infer E1, ...payload: infer P1): void;
-	(event: infer E2, ...payload: infer P2): void;
-	(event: infer E3, ...payload: infer P3): void;
-} ? (
-	E extends E1 ? (...payload: P1) => void
-	: E extends E2 ? (...payload: P2) => void
-	: E extends E3 ? (...payload: P3) => void
-	: unknown
-) :
-// 2
-T extends {
-	(event: infer E1, ...payload: infer P1): void;
-	(event: infer E2, ...payload: infer P2): void;
-} ? (
-	E extends E1 ? (...payload: P1) => void
-	: E extends E2 ? (...payload: P2) => void
-	: unknown
-) :
-// 1
-T extends {
-	(event: infer E1, ...payload: infer P1): void;
-} ? (
-	'__VLS_ToIngnoreDefaultEmitOf event: string' extends E1 ? unknown :
-	E extends E1 ? (...payload: P1) => void
-	: unknown
-) :
-// 0
-unknown;
-`
+		code += `type __VLS_ConstructorOverloads<T, E extends string> =\n`;
+		for (let i = 8; i >= 1; i--) {
+			code += `// ${i}\n`;
+			code += `T extends {\n`;
+			for (let j = 1; j <= i; j++) {
+				code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`
+			}
+			code += `} ? (\n`
+			for (let j = 1; j <= i; j++) {
+				if (i === 1) {
+					code += `'Catch Me If You Can' extends E1 ? unknown :\n`;
+				}
+				code += `${j > 1 ? ': ' : ''}E extends E${j} ? (...payload: P${j}) => void\n`
+			}
+			code += `: unknown\n`;
+			code += `) :\n`;
+		}
+		code += `// 0\n`
+		code += `unknown;\n`
+		// TODO: '__VLS_ToIngnoreDefaultEmitOf event: string' extends E1 ? unknown :
 
 		/* CSS Module */
 		code += '/* CSS Module */\n';
