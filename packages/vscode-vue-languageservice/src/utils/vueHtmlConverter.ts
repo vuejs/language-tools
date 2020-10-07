@@ -54,7 +54,9 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			writeProps(node);
 			_code += '};\n';
 
+			_code += `__VLS_componentEmits['${node.tag}'] = {\n`
 			writeOnProps(node);
+			_code += '};\n';
 
 			if (!dontCreateBlock) _code += `{\n`;
 			for (const childNode of node.children) {
@@ -167,12 +169,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& !prop.exp?.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
 						&& prop.name === 'on'
 					) {
-						const varName = `__VLS_${elementIndex++}`;
 						const propName = prop.arg.content;
-						const propName2 = 'on' + propName[0].toUpperCase() + propName.substr(1);
 
-						_code += `let ${varName}: { '${propName}': __VLS_FirstFunction<__VLS_NeverToUnknown<__VLS_ConstructorOverloads<typeof __VLS_componentEmits['${node.tag}'], '${propName}'>>, __VLS_NeverToUnknown<typeof __VLS_components['${node.tag}']['${propName2}']>> };\n`
-						_code += `${varName} = { `;
 						mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
@@ -192,7 +190,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						else {
 							_code += 'undefined';
 						}
-						_code += `) };\n`;
+						_code += `),\n`;
 					}
 				}
 			}

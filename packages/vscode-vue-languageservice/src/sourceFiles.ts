@@ -121,12 +121,12 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends __VLS_Vue.FunctionalComponent<infer R> ? R : C;`,
 			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue.HTMLAttributes> & Record<string, unknown> };`,
 			`type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };`,
-			`type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : undefined };`,
+			`type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {} };`,
 			`type __VLS_NeverToUnknown<T> = [T] extends [never] ? unknown : T;`,
 			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : F2;`,
 		].join('\n') + `\n`;
 
-		code += `type __VLS_ConstructorOverloads<T, E extends string> =\n`;
+		code += `type __VLS_ConstructorOverloads<T> =\n`;
 		for (let i = 8; i >= 1; i--) {
 			code += `// ${i}\n`;
 			code += `T extends {\n`;
@@ -135,12 +135,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 			code += `} ? (\n`
 			for (let j = 1; j <= i; j++) {
-				if (i === 1) {
-					code += `'Catch Me If You Can' extends E1 ? unknown :\n`;
-				}
-				code += `${j > 1 ? ': ' : ''}E extends E${j} ? (...payload: P${j}) => void\n`
+				if (j > 1) code += '& ';
+				code += `(E${j} extends string ? { [K${j} in E${j}]?: (...payload: P${j}) => void } : {})\n`;
 			}
-			code += `: unknown\n`;
 			code += `) :\n`;
 		}
 		code += `// 0\n`
@@ -218,9 +215,13 @@ export function createSourceFile(initialDocument: TextDocument, {
 		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components_0>;\n'
 
 		/* HTML Completion */
-		code += '/* HTML Completion */\n';
+		code += '/* HTML Completion (props) */\n';
 		for (const name of validComponentNames.value) {
 			code += `__VLS_componentsBase['${name}'][''];\n`
+		}
+		code += '/* HTML Completion (emits) */\n';
+		for (const name of validComponentNames.value) {
+			code += `__VLS_componentEmits['${name}'][''];\n`
 		}
 
 		/* Props */
@@ -821,7 +822,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		getTextDocument: untrack(() => vue.document),
 		update,
 		updateTemplateScript,
-		getComponentProps,
+		getComponentCompletionData,
 		getDiagnostics: useDiagnostics(),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
@@ -1352,18 +1353,29 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return result;
 		};
 	}
-	function getComponentProps() {
-		const data = new Map<string, CompletionItem[]>();
+	function getComponentCompletionData() {
+		const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
 		if (templateScriptDocument.value) {
 			const doc = templateScriptDocument.value;
 			const text = doc.getText();
 			for (const name of validComponentNames.value) {
-				const searchText = `__VLS_componentsBase['${name}']['`;
-				let offset = text.indexOf(searchText);
-				if (offset === -1) continue; // should never
-				offset += searchText.length;
-				const items = tsLanguageService.doComplete(doc, doc.positionAt(offset));
-				data.set(name, items);
+				let bind: CompletionItem[] = [];
+				let on: CompletionItem[] = [];
+				{
+					const searchText = `__VLS_componentsBase['${name}']['`;
+					let offset = text.indexOf(searchText);
+					if (offset === -1) continue; // should never
+					offset += searchText.length;
+					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				}
+				{
+					const searchText = `__VLS_componentEmits['${name}']['`;
+					let offset = text.indexOf(searchText);
+					if (offset === -1) continue; // should never
+					offset += searchText.length;
+					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				}
+				data.set(name, { bind, on });
 			}
 		}
 		return data;

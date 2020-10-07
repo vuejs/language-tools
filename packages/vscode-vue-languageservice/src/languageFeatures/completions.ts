@@ -73,17 +73,22 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			};
 
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const componentProps = sourceFile.getComponentProps();
+				const componentCompletion = sourceFile.getComponentCompletionData();
 				const customTags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
-				for (const [name, props] of componentProps) {
+				for (const [name, { bind, on }] of componentCompletion) {
 					customTags.push({
 						name: name,
 						// description: '', // TODO
 						attributes: [
-							...props.map(prop => {
+							...bind.map(prop => {
 								const name = ':' + hyphenate(prop.data.name);
 								tsItems.set(name, prop);
+								return { name };
+							}),
+							...on.map(event => {
+								const name = '@' + event.data.name;
+								tsItems.set(name, event);
 								return { name };
 							}),
 						],
