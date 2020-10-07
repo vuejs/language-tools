@@ -236,11 +236,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					end: code.length + `var ${propName}`.length,
 				},
 				virtualRange: {
-					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props['`.length,
-					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props['${propName}`.length,
+					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap['props']['`.length,
+					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap['props']['${propName}`.length,
 				},
 			});
-			code += `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap.props['${propName}'];\n`;
+			code += `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap['props']['${propName}'];\n`;
 		}
 
 		/* Interpolations */
