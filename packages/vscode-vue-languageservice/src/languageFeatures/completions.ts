@@ -14,6 +14,7 @@ import * as css from 'vscode-css-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
+import { hyphenate } from '@vue/shared';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument, position: Position, context?: CompletionContext): CompletionItem[] | CompletionList | undefined => {
@@ -79,13 +80,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					customTags.push({
 						name: name,
 						// description: '', // TODO
-						attributes: props.map(prop => {
-							const name = ':' + prop.data.name;
-							tsItems.set(name, prop);
-							return {
-								name,
-							}
-						}),
+						attributes: [
+							...props.map(prop => {
+								const name = ':' + hyphenate(prop.data.name);
+								tsItems.set(name, prop);
+								return { name };
+							}),
+						],
 					});
 				}
 				const dataProvider = html.newHTMLDataProvider(document.uri, {

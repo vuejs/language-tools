@@ -145,7 +145,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		code += `// 0\n`
 		code += `unknown;\n`
-		// TODO: '__VLS_ToIngnoreDefaultEmitOf event: string' extends E1 ? unknown :
 
 		/* CSS Module */
 		code += '/* CSS Module */\n';

@@ -1,6 +1,7 @@
 import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
 import { createHtmlPugMapper } from '@volar/pug';
 import { MapedMode, TsMappingData, Mapping } from './sourceMaps';
+import { camelize, hyphenate } from '@vue/shared';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, formatting: true, references: true, completion: true },
@@ -70,21 +71,22 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
 						&& !prop.exp?.isConstant // TODO: style='z-index: 2' will compile to {'z-index':'2'}
 					) {
-						let propName = prop.arg.content;
-						let propValue = prop.exp?.content ?? 'undefined';
+						const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
+						const propValue = prop.exp?.content ?? 'undefined';
+						const propName2 = prop.arg.content;
 
 						if (prop.name === 'bind' || prop.name === 'model') {
+							// camelize name
 							mapping(prop.type, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}], false);
-
-							mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(prop.arg.type, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}], false);
 							_code += `'`;
-							mapping(prop.arg.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(prop.arg.type, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
@@ -99,32 +101,56 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 								_code += propValue;
 							}
 							_code += `),\n`;
+							// original name
+							if (propName2 !== propName) {
+								mapping(prop.arg.type, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								}], false);
+								_code += `'`;
+								mapping(prop.arg.type, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								}]);
+								_code += `': (${propValue}),\n`;
+							}
 						}
 					}
 					else if (
 						prop.type === NodeTypes.ATTRIBUTE
 					) {
-						const propName = prop.name;
+						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
 						const propValue = prop.value?.content ?? '';
-						let propNameStart = prop.loc.start.offset;
+						const propName2 = prop.name;
 
+						// camelize name
 						mapping(prop.type, `'${propName}': "${propValue}"`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
-
-						mapping(prop.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-							start: propNameStart,
-							end: propNameStart + propName.length,
+						mapping(prop.type, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + propName2.length,
 						}], false);
 						_code += `'`;
-						mapping(prop.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
-							start: propNameStart,
-							end: propNameStart + propName.length,
+						mapping(prop.type, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + propName2.length,
 						}]);
-						_code += `': "`;
-						_code += propValue;
-						_code += `",\n`;;
+						_code += `': "${propValue}",\n`;
+						// original name
+						if (propName2 !== propName) {
+							mapping(prop.type, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + propName2.length,
+							}], false);
+							_code += `'`;
+							mapping(prop.type, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + propName2.length,
+							}]);
+							_code += `': "${propValue}",\n`;
+						}
 					}
 					else {
 						_code += "//" + [prop.type, prop.name, prop.loc.source].join(", ") + "\n";
