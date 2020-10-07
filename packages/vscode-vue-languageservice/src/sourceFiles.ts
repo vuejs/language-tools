@@ -86,6 +86,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		props: [] as string[],
 		components: [] as string[],
 		setupReturns: [] as string[],
+		globalElements: [] as string[],
 	});
 
 	// template script(document + source maps)
@@ -215,14 +216,14 @@ export function createSourceFile(initialDocument: TextDocument, {
 		for (const name of templateScriptData.components) {
 			code += `__VLS_componentProps['${name}'][''];\n`
 		}
-		code += '/* HTML Completion (emits) */\n';
+		code += '/* Emits */\n';
 		for (const name of templateScriptData.components) {
 			code += `__VLS_componentEmits['${name}'][''];\n`
 		}
-		code += '/* HTML Completion (props) */\n';
+		code += '/* HTML Completion */\n';
 		code += `({} as __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps)[''];`; // global atts
-		for (const name of templateScriptData.components) {
-			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)[''];\n`;
+		for (const name of [...templateScriptData.components, ...templateScriptData.globalElements]) {
+			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_Vue.HTMLAttributes | keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)[''];\n`;
 		}
 
 		/* Props */
@@ -489,6 +490,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`__VLS_vm.;`,
 			`__VLS_Components.;`,
 			`__VLS_VM_Unwrap.setup().;`,
+			`({} as JSX.IntrinsicElements).;`,
 			``,
 			`declare global {`,
 			`interface __VLS_GlobalComponents { }`,
@@ -825,26 +827,27 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const doc = templateScriptDocument.value;
 			const text = doc.getText();
 			const templateText = templateDocument.value.getText();
-			for (const componentName of templateScriptData.components) {
-				if (templateText.indexOf(componentName) === -1) continue; // TODO: not a good filter
+			for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
+				console.log(tagName);
+				if (templateText.indexOf(tagName) === -1) continue; // TODO: not a good filter
 				let bind: CompletionItem[];
 				let on: CompletionItem[];
 				{
-					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${componentName}'], keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)['`;
+					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_Vue.HTMLAttributes | keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)['`;
 					let offset = text.indexOf(searchText);
 					if (offset === -1) continue; // should never
 					offset += searchText.length;
 					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
 				{
-					const searchText = `__VLS_componentEmits['${componentName}']['`;
+					const searchText = `__VLS_componentEmits['${tagName}']['`;
 					let offset = text.indexOf(searchText);
 					if (offset === -1) continue; // should never
 					offset += searchText.length;
 					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
-				data.set(componentName, { bind, on });
-				data.set(hyphenate(componentName), { bind, on });
+				data.set(tagName, { bind, on });
+				data.set(hyphenate(tagName), { bind, on });
 			}
 			let globalBind: CompletionItem[];
 			{
@@ -1003,20 +1006,25 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const props = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_vm.')));
 		const components = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Components.')));
 		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_VM_Unwrap.setup().')));
+		const globalElements = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('({} as JSX.IntrinsicElements).')));
 
 		const propNames = props.map(entry => entry.data.name);
 		const componentNames = components.map(entry => entry.data.name);
 		const setupReturnNames = setupReturns.map(entry => entry.data.name);
+		const globalElementNames = globalElements.map(entry => entry.data.name);
 
 		if (eqSet(new Set(propNames), new Set(templateScriptData.props))
 			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
-			&& eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))) {
+			&& eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
+			&& eqSet(new Set(globalElementNames), new Set(templateScriptData.globalElements))
+		) {
 			return false;
 		}
 
 		templateScriptData.props = propNames;
 		templateScriptData.components = componentNames;
 		templateScriptData.setupReturns = setupReturnNames;
+		templateScriptData.globalElements = globalElementNames;
 		updateTemplateScriptDocument();
 		return true;
 
