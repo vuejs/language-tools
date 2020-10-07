@@ -7,7 +7,9 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	return (item: CompletionItem): CompletionItem => {
 		const fileName = item.data.fileName;
 		const offset = item.data.offset;
-		const detail = languageService.getCompletionEntryDetails(fileName, offset, item.label, {}, item.data.source, {
+		const name = item.data.name;
+		const source = item.data.source;
+		const detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, {
 			includeCompletionsForModuleExports: true,
 			includeCompletionsWithInsertText: true,
 		});

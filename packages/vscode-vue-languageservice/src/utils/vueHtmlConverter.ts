@@ -2,6 +2,13 @@ import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compil
 import { createHtmlPugMapper } from '@volar/pug';
 import { MapedMode, TsMappingData, Mapping } from './sourceMaps';
 
+const capabilitiesSet = {
+	all: { basic: true, diagnostic: true, formatting: true, references: true, completion: true },
+	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, completion: true },
+	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, completion: true },
+	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, completion: false },
+}
+
 export function transformVueHtml(pugData: { html: string, pug: string } | undefined, node: RootNode) {
 	const mappings: Mapping<TsMappingData>[] = [];
 	let elementIndex = 0;
@@ -34,14 +41,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				});
 			}
 
-			mapping(node.type, `__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, true, false, [{
+			mapping(node.type, `__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 				start: node.loc.start.offset + 1,
 				end: node.loc.start.offset + 1 + node.tag.length,
 			}], false);
 			_code += `__VLS_components[`;
-			mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, false, false, sourceRanges, false);
+			mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
 			_code += `'`;
-			mapping(node.type, node.tag, node.tag, MapedMode.Offset, false, false, sourceRanges);
+			mapping(node.type, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
 			_code += `'] = {\n`;
 			writeProps(node);
 			_code += '};\n';
@@ -67,23 +74,23 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						let propValue = prop.exp?.content ?? 'undefined';
 
 						if (prop.name === 'bind' || prop.name === 'model') {
-							mapping(prop.type, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, true, false, [{
+							mapping(prop.type, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}], false);
 
-							mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
+							mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}], false);
 							_code += `'`;
-							mapping(prop.arg.type, propName, propName, MapedMode.Offset, false, false, [{
+							mapping(prop.arg.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
 							_code += `': (`;
 							if (prop.exp) {
-								mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, false, true, [{
+								mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
 								}])
@@ -101,17 +108,17 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						const propValue = prop.value?.content ?? '';
 						let propNameStart = prop.loc.start.offset;
 
-						mapping(prop.type, `'${propName}': "${propValue}"`, prop.loc.source, MapedMode.Gate, true, false, [{
+						mapping(prop.type, `'${propName}': "${propValue}"`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
 
-						mapping(prop.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
+						mapping(prop.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 							start: propNameStart,
 							end: propNameStart + propName.length,
 						}], false);
 						_code += `'`;
-						mapping(prop.type, propName, propName, MapedMode.Offset, false, false, [{
+						mapping(prop.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 							start: propNameStart,
 							end: propNameStart + propName.length,
 						}]);
@@ -140,18 +147,18 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 
 						_code += `let ${varName}: { '${propName}': __VLS_FirstFunction<__VLS_NeverToUnknown<__VLS_ConstructorOverloads<typeof __VLS_componentEmits['${node.tag}'], '${propName}'>>, __VLS_NeverToUnknown<typeof __VLS_components['${node.tag}']['${propName2}']>> };\n`
 						_code += `${varName} = { `;
-						mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, false, false, [{
+						mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
 						}], false);
 						_code += `'`;
-						mapping(prop.arg.type, propName, propName, MapedMode.Offset, false, false, [{
+						mapping(prop.arg.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
 						}]);
 						_code += `': (`;
 						if (prop.exp) {
-							mapping(prop.exp.type, prop.exp.content, prop.exp.content, MapedMode.Offset, false, true, [{
+							mapping(prop.exp.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 								start: prop.exp.loc.start.offset,
 								end: prop.exp.loc.end.offset,
 							}])
@@ -182,7 +189,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			let start = node.loc.start.offset + 2;
 
 			_code += `{`;
-			mapping(node.type, context, context, MapedMode.Offset, false, true, [{
+			mapping(node.type, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 				start: start,
 				end: start + context.length,
 			}]);
@@ -206,7 +213,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							firstIf = false;
 							_code += `if (\n`;
 							_code += `(`;
-							mapping(branch.condition.type, context, context, MapedMode.Offset, false, true, [{
+							mapping(branch.condition.type, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 								start: start,
 								end: start + context.length,
 							}]);
@@ -216,7 +223,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						else {
 							_code += `else if (\n`;
 							_code += `(`;
-							mapping(branch.condition.type, context, context, MapedMode.Offset, false, true, [{
+							mapping(branch.condition.type, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 								start: start,
 								end: start + context.length,
 							}]);
@@ -258,20 +265,20 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
 				_code += `const ${sourceVarName} = __VLS_getVforSourceType(`;
-				mapping(source.type, source.content, source.content, MapedMode.Offset, false, false, [{
+				mapping(source.type, source.content, source.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 					start: start_source,
 					end: start_source + source.content.length,
 				}]);
 				_code += `);\n`;
 				_code += `for (__VLS_for_key in `;
-				mapping(source.type, sourceVarName, source.content, MapedMode.Gate, true, false, [{
+				mapping(source.type, sourceVarName, source.content, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 					start: source.loc.start.offset,
 					end: source.loc.end.offset,
 				}]);
 				_code += `) {\n`;
 
 				_code += `const `;
-				mapping(value.type, value.content, value.content, MapedMode.Offset, false, false, [{
+				mapping(value.type, value.content, value.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 					start: start_value,
 					end: start_value + value.content.length,
 				}]);
@@ -280,7 +287,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
 					_code += `const `;
-					mapping(key.type, key.content, key.content, MapedMode.Offset, false, false, [{
+					mapping(key.type, key.content, key.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 						start: start_key,
 						end: start_key + key.content.length,
 					}]);
@@ -289,7 +296,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				if (index && index.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
 					_code += `const `;
-					mapping(index.type, index.content, index.content, MapedMode.Offset, false, false, [{
+					mapping(index.type, index.content, index.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 						start: start_index,
 						end: start_index + index.content.length,
 					}]);
@@ -312,7 +319,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 		}
 		return _code;
 
-		function mapping(nodeType: NodeTypes, mapCode: string, pugSearchCode: string, mode: MapedMode, diagnosticOnly: boolean, formatting: boolean, sourceRanges: { start: number, end: number }[], addCode = true) {
+		function mapping(nodeType: NodeTypes, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
 			if (pugMapper) {
 				sourceRanges = sourceRanges.map(range => ({ ...range })); // clone
 				for (const sourceRange of sourceRanges) {
@@ -340,13 +347,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					data: {
 						vueTag: 'template',
 						templateNodeType: nodeType,
-						capabilities: {
-							// TODO
-							basic: !diagnosticOnly,
-							references: !diagnosticOnly,
-							diagnostic: true,
-							formatting,
-						},
+						capabilities: capabilities,
 					},
 				});
 			}

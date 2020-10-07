@@ -2,6 +2,7 @@ import {
 	Diagnostic,
 	DiagnosticSeverity,
 	Position,
+	CompletionItem,
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { pugToHtml } from '@volar/pug';
@@ -88,6 +89,10 @@ export function createSourceFile(initialDocument: TextDocument, {
 	});
 
 	// template script(document + source maps)
+	const validComponentNames = computed(() => {
+		const set = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
+		return [...set];
+	});
 	const templateScript = computed(() => {
 		const interpolations = getInterpolations();
 		if (!interpolations) return;
@@ -210,7 +215,14 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		code += '};\n';
 		code += 'declare var __VLS_components: __VLS_MapPropsType<typeof __VLS_components_0>;\n';
+		code += 'declare var __VLS_componentsBase: __VLS_MapPropsTypeBase<typeof __VLS_components_0>;\n';
 		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components_0>;\n'
+
+		/* HTML Completion */
+		code += '/* HTML Completion */\n';
+		for (const name of validComponentNames.value) {
+			code += `__VLS_componentsBase['${name}'][''];\n`
+		}
 
 		/* Props */
 		code += `/* Props */\n`;
@@ -297,6 +309,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 							references: true,
 							diagnostic: true,
 							formatting: false,
+							completion: true,
 						},
 					},
 					mode: maped.mode,
@@ -584,6 +597,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 						references: true,
 						diagnostic: true,
 						formatting: true,
+						completion: true,
 					},
 				},
 				mode: MapedMode.Offset,
@@ -616,6 +630,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 							references: true,
 							diagnostic: true,
 							formatting: true,
+							completion: true,
 						},
 					},
 					mode: MapedMode.Offset,
@@ -643,6 +658,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 							references: true,
 							diagnostic: true,
 							formatting: true,
+							completion: true,
 						},
 					},
 					mode: MapedMode.Offset,
@@ -675,6 +691,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 						references: true,
 						diagnostic: false,
 						formatting: false,
+						completion: false,
 					},
 				},
 				mode: MapedMode.Offset,
@@ -805,6 +822,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		getTextDocument: untrack(() => vue.document),
 		update,
 		updateTemplateScript,
+		getComponentProps,
 		getDiagnostics: useDiagnostics(),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
@@ -943,9 +961,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const components = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Components.')));
 		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_VM_Unwrap.setup().')));
 
-		const propNames = props.map(entry => entry.label.endsWith('?') ? entry.label.substring(0, entry.label.length - 1) : entry.label);
-		const componentNames = components.map(entry => entry.label);
-		const setupReturnNames = setupReturns.map(entry => entry.label);
+		const propNames = props.map(entry => entry.data.name);
+		const componentNames = components.map(entry => entry.data.name);
+		const setupReturnNames = setupReturns.map(entry => entry.data.name);
 
 		if (eqSet(new Set(propNames), new Set(templateScriptData.props))
 			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
@@ -1334,5 +1352,21 @@ export function createSourceFile(initialDocument: TextDocument, {
 			resetTracking();
 			return result;
 		};
+	}
+	function getComponentProps() {
+		const data = new Map<string, CompletionItem[]>();
+		if (templateScriptDocument.value) {
+			const doc = templateScriptDocument.value;
+			const text = doc.getText();
+			for (const name of validComponentNames.value) {
+				const searchText = `__VLS_componentsBase['${name}']['`;
+				let offset = text.indexOf(searchText);
+				if (offset === -1) continue; // should never
+				offset += searchText.length;
+				const items = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				data.set(name, items);
+			}
+		}
+		return data;
 	}
 }

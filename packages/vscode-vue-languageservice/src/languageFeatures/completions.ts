@@ -13,7 +13,6 @@ import * as html from 'vscode-html-languageservice';
 import * as css from 'vscode-css-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
@@ -40,7 +39,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.data.capabilities.basic) continue;
+					if (!virtualLoc.data.capabilities.completion) continue;
 					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
 					const items = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
@@ -71,20 +70,32 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				isIncomplete: false,
 				items: [],
 			};
+
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+				const componentProps = sourceFile.getComponentProps();
+				const customTags: html.ITagData[] = [];
+				const tsItems = new Map<string, CompletionItem>();
+				for (const [name, props] of componentProps) {
+					customTags.push({
+						name: name,
+						// description: '', // TODO
+						attributes: props.map(prop => {
+							const name = ':' + prop.data.name;
+							tsItems.set(name, prop);
+							return {
+								name,
+							}
+						}),
+					});
+				}
+				const dataProvider = html.newHTMLDataProvider(document.uri, {
+					version: 1.1,
+					tags: customTags,
+				});
+				sourceMap.languageService.setDataProviders(true, [dataProvider]);
+
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const templateScriptData = sourceFile.getTemplateScriptData();
-					const names = templateScriptData.components.map(hyphenate);
-					const dataProvider = html.newHTMLDataProvider(document.uri, {
-						version: 1.1,
-						tags: names.map(name => ({
-							name: name,
-							description: '', // TODO
-							attributes: [], // TODO
-						})),
-					});
-					sourceMap.languageService.setDataProviders(true, [dataProvider]);
 					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, {
 						[document.uri]: true,
 					});
@@ -99,9 +110,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					};
 					for (const entry of newResult.items) {
 						if (!entry.data) entry.data = {};
+						const tsItem = tsItems.get(entry.label);
 						entry.data = {
 							...entry.data,
 							...data,
+							tsItem,
 						};
 					}
 					result.items = result.items.concat(newResult.items);

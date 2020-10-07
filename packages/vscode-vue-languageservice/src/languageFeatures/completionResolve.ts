@@ -11,6 +11,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (data.mode === 'ts') {
 			item = getTsResult(sourceFile, item);
 		}
+		if (data.mode === 'html') {
+			item = getHtmlResult(sourceFile, item);
+		}
 
 		return item;
 
@@ -27,6 +30,22 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					}
 				}
 			}
+			return item;
+		}
+		function getHtmlResult(sourceFile: SourceFile, item: CompletionItem) {
+			let tsItem: CompletionItem | undefined = item.data.tsItem;
+			const tsLanguageService = sourceFile.getTsSourceMaps()[0]?.languageService;
+			if (!tsItem || !tsLanguageService) return item;
+
+			tsItem = tsLanguageService.doCompletionResolve(tsItem);
+			item.tags = tsItem.tags;
+			item.detail = tsItem.detail;
+			item.documentation = tsItem.documentation;
+			item.deprecated = tsItem.deprecated;
+			item.preselect = tsItem.preselect;
+			item.sortText = tsItem.sortText;
+			item.filterText = tsItem.filterText;
+
 			return item;
 		}
 	}
