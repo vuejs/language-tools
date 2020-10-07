@@ -814,28 +814,30 @@ export function createSourceFile(initialDocument: TextDocument, {
 			templateScriptData.projectVersion;
 		}
 		const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
-		if (templateScriptDocument.value) {
+		if (templateScriptDocument.value && templateDocument.value) {
 			const doc = templateScriptDocument.value;
 			const text = doc.getText();
-			for (const name of templateScriptData.components) {
-				let bind: CompletionItem[] = [];
-				let on: CompletionItem[] = [];
+			const templateText = templateDocument.value.getText();
+			for (const componentName of templateScriptData.components) {
+				if (templateText.indexOf(componentName) === -1) continue; // TODO: not a good filter
+				let bind: CompletionItem[];
+				let on: CompletionItem[];
 				{
-					const searchText = `__VLS_componentProps['${name}']['`;
+					const searchText = `__VLS_componentProps['${componentName}']['`;
 					let offset = text.indexOf(searchText);
 					if (offset === -1) continue; // should never
 					offset += searchText.length;
 					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
 				{
-					const searchText = `__VLS_componentEmits['${name}']['`;
+					const searchText = `__VLS_componentEmits['${componentName}']['`;
 					let offset = text.indexOf(searchText);
 					if (offset === -1) continue; // should never
 					offset += searchText.length;
 					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
-				data.set(name, { bind, on });
-				data.set(hyphenate(name), { bind, on });
+				data.set(componentName, { bind, on });
+				data.set(hyphenate(componentName), { bind, on });
 			}
 		}
 		return data;

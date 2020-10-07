@@ -92,23 +92,35 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						const name: string = prop.data.name;
 						if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
 							const propName = '@' + name[2].toLowerCase() + name.substr(3);
-							attributes.push({ name: propName })
-							tsItems.set(propName, prop);
+							const propKey = componentName + '::' + propName;
+							attributes.push({
+								name: propName,
+								description: propKey, // TODO: with show in hover
+							});
+							tsItems.set(propKey, prop);
 						}
 						else {
 							const propName = ':' + hyphenate(name);
-							attributes.push({ name: propName })
-							tsItems.set(propName, prop);
+							const propKey = componentName + '::' + propName;
+							attributes.push({
+								name: propName,
+								description: propKey, // TODO: with show in hover
+							})
+							tsItems.set(propKey, prop);
 						}
 					}
 					for (const event of on) {
 						const propName = '@' + event.data.name;
-						attributes.push({ name: propName })
-						tsItems.set(propName, event);
+						const propKey = componentName + '::' + propName;
+						attributes.push({
+							name: propName,
+							description: propKey, // TODO: with show in hover
+						})
+						tsItems.set(propKey, event);
 					}
 					customTags.push({
 						name: componentName,
-						// description: '', // TODO
+						// description: '', // TODO: component description
 						attributes,
 					});
 				}
@@ -134,7 +146,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					};
 					for (const entry of newResult.items) {
 						if (!entry.data) entry.data = {};
-						const tsItem = tsItems.get(entry.label);
+						const documentation = typeof entry.documentation === 'string' ? entry.documentation : entry.documentation?.value;
+						const tsItem = documentation ? tsItems.get(documentation) : undefined;
 						entry.data = {
 							...entry.data,
 							...data,
