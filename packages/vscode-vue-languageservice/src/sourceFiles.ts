@@ -829,7 +829,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const text = doc.getText();
 			const templateText = templateDocument.value.getText();
 			for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
-				if (templateText.indexOf(tagName) === -1) continue; // TODO: not a good filter
+				if (templateText.indexOf(tagName) === -1 && templateText.indexOf(hyphenate(tagName)) === -1) continue; // TODO: not a good filter
 				let bind: CompletionItem[];
 				let on: CompletionItem[];
 				{

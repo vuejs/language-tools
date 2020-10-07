@@ -187,11 +187,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 							const name2 = entry.label.substr(1);
 							const entry2 = itemsMap.get(name2);
 							if (entry2) {
+								entry.detail = entry2.detail;
 								entry.documentation = entry2.documentation;
-							}
-							if (entry.label.indexOf('accesskey') >= 0) {
-								console.log(entry);
-								console.log(entry2);
 							}
 						}
 						entry.data = {
