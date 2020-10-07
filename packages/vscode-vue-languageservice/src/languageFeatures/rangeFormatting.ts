@@ -92,21 +92,18 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 	function getTsFormattingEdits() {
 		const result: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
-			for (const maped of sourceMap) {
-				if (!maped.data.capabilities.formatting) continue;
-				const tsRange = {
-					start: sourceMap.virtualDocument.positionAt(maped.virtualRange.start),
-					end: sourceMap.virtualDocument.positionAt(maped.virtualRange.end),
-				};
-				const textEdits = sourceMap.languageService.doFormatting(sourceMap.virtualDocument, options, tsRange);
-				for (const edit of textEdits) {
-					const vueLoc = sourceMap.findFirstVueLocation(edit.range);
-					if (vueLoc) {
-						result.push({
-							...edit,
-							range: vueLoc.range,
-						});
-					}
+			const textEdits = sourceMap.languageService.doFormatting(sourceMap.virtualDocument, options);
+			for (const textEdit of textEdits) {
+				for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
+					if (!vueLoc.data.capabilities.formatting) continue;
+					if (vueLoc.range.start.line < range.start.line) continue;
+					if (vueLoc.range.end.line > range.end.line) continue;
+					if (vueLoc.range.start.line === range.start.line && vueLoc.range.start.character < range.start.character) continue;
+					if (vueLoc.range.end.line === range.end.line && vueLoc.range.end.character > range.end.character) continue;
+					result.push({
+						...textEdit,
+						range: vueLoc.range,
+					});
 				}
 			}
 		}

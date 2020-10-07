@@ -22,38 +22,35 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			}
 		}
 		else if (node.type === NodeTypes.ELEMENT) { // TODO: should not has indent
-			// props
+			// +1 to remove '<' from html tag
+			const sourceRanges = [{
+				start: node.loc.start.offset + 1,
+				end: node.loc.start.offset + 1 + node.tag.length,
+			}];
+			if (!node.isSelfClosing) {
+				sourceRanges.push({
+					start: node.loc.end.offset - 1 - node.tag.length,
+					end: node.loc.end.offset - 1,
+				});
+			}
+
+			mapping(node.type, `__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, true, false, [{
+				start: node.loc.start.offset + 1,
+				end: node.loc.start.offset + 1 + node.tag.length,
+			}], false);
+			_code += `__VLS_components[`;
+			mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, false, false, sourceRanges, false);
+			_code += `'`;
+			mapping(node.type, node.tag, node.tag, MapedMode.Offset, false, false, sourceRanges);
+			_code += `'] = {\n`;
+			writeProps(node);
+			_code += '};\n';
+
+			writeOnProps(node);
+
 			if (!dontCreateBlock) _code += `{\n`;
-			{
-				// +1 to remove '<' from html tag
-				const sourceRanges = [{
-					start: node.loc.start.offset + 1,
-					end: node.loc.start.offset + 1 + node.tag.length,
-				}];
-				if (!node.isSelfClosing) {
-					sourceRanges.push({
-						start: node.loc.end.offset - 1 - node.tag.length,
-						end: node.loc.end.offset - 1,
-					});
-				}
-				mapping(node.type, `__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, true, false, [{
-					start: node.loc.start.offset + 1,
-					end: node.loc.start.offset + 1 + node.tag.length,
-				}], false);
-				_code += `__VLS_components[`;
-				mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, false, false, sourceRanges, false);
-				_code += `'`;
-				mapping(node.type, node.tag, node.tag, MapedMode.Offset, false, false, sourceRanges);
-				_code += `'] = {\n`;
-				writeProps(node);
-				_code += '};\n';
-
-				writeOnProps(node);
-
-				// childs
-				for (const childNode of node.children) {
-					_code = worker(_code, childNode);
-				}
+			for (const childNode of node.children) {
+				_code = worker(_code, childNode);
 			}
 			if (!dontCreateBlock) _code += '}\n';
 
