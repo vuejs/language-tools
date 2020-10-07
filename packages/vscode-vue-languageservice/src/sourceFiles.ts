@@ -120,7 +120,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue.HTMLAttributes> & Record<string, unknown> };`,
 			`type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_RemoveAnyFnSet<T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {}> };`,
 			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : F2;`,
-			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`
+			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`,
+			`type __VLS_GlobalAttrs = __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps;`,
 		].join('\n') + `\n`;
 
 		code += `type __VLS_ConstructorOverloads<T> =\n`;
@@ -221,9 +222,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			code += `__VLS_componentEmits['${name}'][''];\n`
 		}
 		code += '/* HTML Completion */\n';
-		code += `({} as __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps)[''];`; // global atts
+		code += `({} as __VLS_GlobalAttrs)[''];\n`; // global atts
 		for (const name of [...templateScriptData.components, ...templateScriptData.globalElements]) {
-			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_Vue.HTMLAttributes | keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)[''];\n`;
+			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_GlobalAttrs>)[''];\n`;
 		}
 
 		/* Props */
@@ -828,12 +829,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const text = doc.getText();
 			const templateText = templateDocument.value.getText();
 			for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
-				console.log(tagName);
 				if (templateText.indexOf(tagName) === -1) continue; // TODO: not a good filter
 				let bind: CompletionItem[];
 				let on: CompletionItem[];
 				{
-					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_Vue.HTMLAttributes | keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)['`;
+					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_GlobalAttrs>)['`;
 					let offset = text.indexOf(searchText);
 					if (offset === -1) continue; // should never
 					offset += searchText.length;
@@ -851,7 +851,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 			let globalBind: CompletionItem[];
 			{
-				const searchText = `({} as __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps)['`;
+				const searchText = `({} as __VLS_GlobalAttrs)['`;
 				let offset = text.indexOf(searchText);
 				// if (offset === -1) continue; // should never
 				offset += searchText.length;
