@@ -115,6 +115,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
 			`type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;`,
 			`type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends __VLS_Vue.FunctionalComponent<infer R> ? R : C;`,
+			`type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };`,
 			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue.HTMLAttributes> & Record<string, unknown> };`,
 			`type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_RemoveAnyFnSet<T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {}> };`,
 			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : F2;`,
@@ -205,17 +206,23 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 		}
 		code += '};\n';
+		code += 'declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n';
 		code += 'declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
 		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
 
-		/* HTML Completion */
-		code += '/* HTML Completion (props) */\n';
+		/* Completion */
+		code += '/* Props */\n';
 		for (const name of templateScriptData.components) {
 			code += `__VLS_componentProps['${name}'][''];\n`
 		}
 		code += '/* HTML Completion (emits) */\n';
 		for (const name of templateScriptData.components) {
 			code += `__VLS_componentEmits['${name}'][''];\n`
+		}
+		code += '/* HTML Completion (props) */\n';
+		code += `({} as __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps)[''];`; // global atts
+		for (const name of templateScriptData.components) {
+			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)[''];\n`;
 		}
 
 		/* Props */
@@ -823,7 +830,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				let bind: CompletionItem[];
 				let on: CompletionItem[];
 				{
-					const searchText = `__VLS_componentProps['${componentName}']['`;
+					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${componentName}'], keyof __VLS_Vue.VNodeProps | keyof __VLS_Vue.AllowedComponentProps>)['`;
 					let offset = text.indexOf(searchText);
 					if (offset === -1) continue; // should never
 					offset += searchText.length;
@@ -839,6 +846,15 @@ export function createSourceFile(initialDocument: TextDocument, {
 				data.set(componentName, { bind, on });
 				data.set(hyphenate(componentName), { bind, on });
 			}
+			let globalBind: CompletionItem[];
+			{
+				const searchText = `({} as __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps)['`;
+				let offset = text.indexOf(searchText);
+				// if (offset === -1) continue; // should never
+				offset += searchText.length;
+				globalBind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+			}
+			data.set('*', { bind: globalBind, on: [] });
 		}
 		return data;
 	});

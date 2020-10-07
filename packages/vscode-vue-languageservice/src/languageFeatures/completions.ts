@@ -84,49 +84,76 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			}
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
-				const customTags: html.ITagData[] = [];
+				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
+				const globalAttributes: html.IAttributeData[] = [];
 				for (const [componentName, { bind, on }] of componentCompletion) {
-					const attributes: html.IAttributeData[] = [];
-					for (const prop of bind) {
-						const name: string = prop.data.name;
-						if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
-							const propName = '@' + name[2].toLowerCase() + name.substr(3);
-							const propKey = componentName + '::' + propName;
-							attributes.push({
-								name: propName,
-								description: propKey, // TODO: with show in hover
-							});
-							tsItems.set(propKey, prop);
+					if (componentName === '*') {
+						for (const prop of bind) {
+							const name: string = prop.data.name;
+							if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
+								const propName = '@' + name[2].toLowerCase() + name.substr(3);
+								const propKey = componentName + ':' + propName;
+								globalAttributes.push({
+									name: propName,
+									description: propKey, // TODO: should not show in hover
+								});
+								tsItems.set(propKey, prop);
+							}
+							else {
+								const propName = ':' + hyphenate(name);
+								const propKey = componentName + ':' + propName;
+								globalAttributes.push({
+									name: propName,
+									description: propKey, // TODO: should not show in hover
+								})
+								tsItems.set(propKey, prop);
+							}
 						}
-						else {
-							const propName = ':' + hyphenate(name);
-							const propKey = componentName + '::' + propName;
+					}
+					else {
+						const attributes: html.IAttributeData[] = [];
+						for (const prop of bind) {
+							const name: string = prop.data.name;
+							if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
+								const propName = '@' + name[2].toLowerCase() + name.substr(3);
+								const propKey = componentName + ':' + propName;
+								attributes.push({
+									name: propName,
+									description: propKey, // TODO: should not show in hover
+								});
+								tsItems.set(propKey, prop);
+							}
+							else {
+								const propName = ':' + hyphenate(name);
+								const propKey = componentName + ':' + propName;
+								attributes.push({
+									name: propName,
+									description: propKey, // TODO: should not show in hover
+								})
+								tsItems.set(propKey, prop);
+							}
+						}
+						for (const event of on) {
+							const propName = '@' + event.data.name;
+							const propKey = componentName + ':' + propName;
 							attributes.push({
 								name: propName,
-								description: propKey, // TODO: with show in hover
+								description: propKey, // TODO: should not show in hover
 							})
-							tsItems.set(propKey, prop);
+							tsItems.set(propKey, event);
 						}
+						tags.push({
+							name: componentName,
+							// description: '', // TODO: component description
+							attributes,
+						});
 					}
-					for (const event of on) {
-						const propName = '@' + event.data.name;
-						const propKey = componentName + '::' + propName;
-						attributes.push({
-							name: propName,
-							description: propKey, // TODO: with show in hover
-						})
-						tsItems.set(propKey, event);
-					}
-					customTags.push({
-						name: componentName,
-						// description: '', // TODO: component description
-						attributes,
-					});
 				}
 				const dataProvider = html.newHTMLDataProvider(document.uri, {
 					version: 1.1,
-					tags: customTags,
+					tags,
+					globalAttributes,
 				});
 				sourceMap.languageService.setDataProviders(true, [dataProvider]);
 
@@ -148,6 +175,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						if (!entry.data) entry.data = {};
 						const documentation = typeof entry.documentation === 'string' ? entry.documentation : entry.documentation?.value;
 						const tsItem = documentation ? tsItems.get(documentation) : undefined;
+						if (tsItem && !documentation?.startsWith('*:')) {
+							entry.kind = tsItem.kind;
+							entry.sortText = '\u0000' + tsItem.sortText;
+						}
 						entry.data = {
 							...entry.data,
 							...data,
