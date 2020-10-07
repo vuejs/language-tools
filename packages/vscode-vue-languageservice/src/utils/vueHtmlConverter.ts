@@ -42,6 +42,21 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				});
 			}
 
+			for (const prop of node.props) {
+				if (
+					prop.type === NodeTypes.DIRECTIVE
+					&& prop.name === 'slot'
+					&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				) {
+					_code += `let `;
+					mapping(prop.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					}]);
+					_code += ` = {} as any;\n`;
+				}
+			}
+
 			mapping(node.type, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 				start: node.loc.start.offset + 1,
 				end: node.loc.start.offset + 1 + node.tag.length,
