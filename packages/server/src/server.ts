@@ -26,7 +26,7 @@ import {
 	CompletionItem,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { Commands } from '@volar/vscode-vue-languageservice';
+import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { TagCloseRequest, GetEmbeddedLanguageRequest } from '@volar/shared';
@@ -211,10 +211,7 @@ function onInitialized() {
 	});
 	connection.client.register(CompletionRequest.type, {
 		documentSelector: vueOnly.documentSelector,
-		triggerCharacters: [
-			'.', '"', '\'', '`', '/', '@', '<', '#', // ts
-			// '$', // vue
-		],
+		triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
 		resolveProvider: true,
 	});
 }

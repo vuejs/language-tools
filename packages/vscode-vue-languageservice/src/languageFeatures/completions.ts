@@ -16,6 +16,11 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
 import { hyphenate } from '@vue/shared';
 
+export const triggerCharacter = {
+	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
+	html: ['@', ':', '<'],
+};
+
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument, position: Position, context?: CompletionContext): CompletionItem[] | CompletionList | undefined => {
 		const sourceFile = sourceFiles.get(document.uri);
@@ -37,6 +42,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				isIncomplete,
 				items: [],
 			};
+			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
+				return result;
+			}
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
@@ -71,27 +79,37 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				isIncomplete: false,
 				items: [],
 			};
-
+			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
+				return result;
+			}
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const customTags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
 				for (const [name, { bind, on }] of componentCompletion) {
+					const attributes: html.IAttributeData[] = [];
+					for (const prop of bind) {
+						const name: string = prop.data.name;
+						if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
+							const newName = '@' + name[2].toLowerCase() + name.substr(3);
+							attributes.push({ name: newName })
+							tsItems.set(newName, prop);
+						}
+						else {
+							const newName = ':' + hyphenate(name);
+							attributes.push({ name: newName })
+							tsItems.set(newName, prop);
+						}
+					}
+					for (const event of on) {
+						const newName = '@' + name;
+						attributes.push({ name: newName })
+						tsItems.set(newName, event);
+					}
 					customTags.push({
 						name: name,
 						// description: '', // TODO
-						attributes: [
-							...bind.map(prop => {
-								const name = ':' + hyphenate(prop.data.name);
-								tsItems.set(name, prop);
-								return { name };
-							}),
-							...on.map(event => {
-								const name = '@' + event.data.name;
-								tsItems.set(name, event);
-								return { name };
-							}),
-						],
+						attributes,
 					});
 				}
 				const dataProvider = html.newHTMLDataProvider(document.uri, {

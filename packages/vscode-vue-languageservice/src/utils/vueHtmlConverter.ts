@@ -42,11 +42,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				});
 			}
 
-			mapping(node.type, `__VLS_components['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+			mapping(node.type, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 				start: node.loc.start.offset + 1,
 				end: node.loc.start.offset + 1 + node.tag.length,
 			}], false);
-			_code += `__VLS_components[`;
+			_code += `__VLS_componentProps[`;
 			mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
 			_code += `'`;
 			mapping(node.type, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);

@@ -174,7 +174,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		/* Components */
 		code += '/* Components */\n';
-		code += 'declare var __VLS_components_0: JSX.IntrinsicElements & {\n';
+		code += 'declare var __VLS_components: JSX.IntrinsicElements & {\n';
 		for (const name_1 of templateScriptData.components) {
 			const names = new Set([name_1, hyphenate(name_1)]);
 			for (const name_2 of names) {
@@ -210,14 +210,13 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 		}
 		code += '};\n';
-		code += 'declare var __VLS_components: __VLS_MapPropsType<typeof __VLS_components_0>;\n';
-		code += 'declare var __VLS_componentsBase: __VLS_MapPropsTypeBase<typeof __VLS_components_0>;\n';
-		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components_0>;\n'
+		code += 'declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
+		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
 
 		/* HTML Completion */
 		code += '/* HTML Completion (props) */\n';
 		for (const name of validComponentNames.value) {
-			code += `__VLS_componentsBase['${name}'][''];\n`
+			code += `__VLS_componentProps['${name}'][''];\n`
 		}
 		code += '/* HTML Completion (emits) */\n';
 		for (const name of validComponentNames.value) {
@@ -815,6 +814,36 @@ export function createSourceFile(initialDocument: TextDocument, {
 		if (templateScriptDocument.value) docs.set(templateScriptDocument.value.uri, templateScriptDocument.value);
 		return docs;
 	});
+	const componentCompletionData = computed(() => {
+		{ // watching
+			templateScriptData.projectVersion;
+		}
+		const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
+		if (templateScriptDocument.value) {
+			const doc = templateScriptDocument.value;
+			const text = doc.getText();
+			for (const name of validComponentNames.value) {
+				let bind: CompletionItem[] = [];
+				let on: CompletionItem[] = [];
+				{
+					const searchText = `__VLS_componentProps['${name}']['`;
+					let offset = text.indexOf(searchText);
+					if (offset === -1) continue; // should never
+					offset += searchText.length;
+					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				}
+				{
+					const searchText = `__VLS_componentEmits['${name}']['`;
+					let offset = text.indexOf(searchText);
+					if (offset === -1) continue; // should never
+					offset += searchText.length;
+					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				}
+				data.set(name, { bind, on });
+			}
+		}
+		return data;
+	});
 
 	update(initialDocument);
 
@@ -822,7 +851,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		getTextDocument: untrack(() => vue.document),
 		update,
 		updateTemplateScript,
-		getComponentCompletionData,
+		getComponentCompletionData: untrack(() => componentCompletionData.value),
 		getDiagnostics: useDiagnostics(),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
@@ -1352,32 +1381,5 @@ export function createSourceFile(initialDocument: TextDocument, {
 			resetTracking();
 			return result;
 		};
-	}
-	function getComponentCompletionData() {
-		const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
-		if (templateScriptDocument.value) {
-			const doc = templateScriptDocument.value;
-			const text = doc.getText();
-			for (const name of validComponentNames.value) {
-				let bind: CompletionItem[] = [];
-				let on: CompletionItem[] = [];
-				{
-					const searchText = `__VLS_componentsBase['${name}']['`;
-					let offset = text.indexOf(searchText);
-					if (offset === -1) continue; // should never
-					offset += searchText.length;
-					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
-				}
-				{
-					const searchText = `__VLS_componentEmits['${name}']['`;
-					let offset = text.indexOf(searchText);
-					if (offset === -1) continue; // should never
-					offset += searchText.length;
-					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
-				}
-				data.set(name, { bind, on });
-			}
-		}
-		return data;
 	}
 }

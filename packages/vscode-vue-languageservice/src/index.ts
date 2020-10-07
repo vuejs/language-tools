@@ -39,6 +39,7 @@ export enum Commands {
 }
 export interface LanguageServiceHost extends ts.LanguageServiceHost { }
 export type LanguageService = ReturnType<typeof createLanguageService>;
+export { triggerCharacter } from './languageFeatures/completions';
 
 export function createLanguageService(host: LanguageServiceHost) {
 
