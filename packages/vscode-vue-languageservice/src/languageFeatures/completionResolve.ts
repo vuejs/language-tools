@@ -1,4 +1,4 @@
-import { CompletionItem } from 'vscode-languageserver';
+import { CompletionItem, MarkupKind } from 'vscode-languageserver';
 import { CompletionData } from '../utils/types';
 import { SourceFile } from '../sourceFiles';
 
@@ -38,9 +38,21 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			if (!tsItem || !tsLanguageService) return item;
 
 			tsItem = tsLanguageService.doCompletionResolve(tsItem);
-			item.tags = tsItem.tags;
-			item.detail = tsItem.detail;
-			item.documentation = tsItem.documentation;
+			item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
+
+			const details: string[] = [];
+			const documentations: string[] = [];
+
+			if (item.detail) details.push(item.detail);
+			if (tsItem.detail) details.push(tsItem.detail);
+			if (details.length) item.detail = details.join('\n\n');
+
+			if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
+			if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
+			if (documentations.length) item.documentation = {
+				kind: MarkupKind.Markdown,
+				value: documentations.join('\n\n'),
+			};
 
 			return item;
 		}

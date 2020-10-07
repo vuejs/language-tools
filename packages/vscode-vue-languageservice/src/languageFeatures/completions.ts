@@ -171,13 +171,28 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						docUri: sourceMap.virtualDocument.uri,
 						mode: 'html',
 					};
+					const itemsMap = new Map<string, html.CompletionItem>();
 					for (const entry of newResult.items) {
-						if (!entry.data) entry.data = {};
+						itemsMap.set(entry.label, entry);
+					}
+					for (const entry of newResult.items) {
 						const documentation = typeof entry.documentation === 'string' ? entry.documentation : entry.documentation?.value;
 						const tsItem = documentation ? tsItems.get(documentation) : undefined;
 						if (tsItem && !documentation?.startsWith('*:')) {
 							entry.kind = tsItem.kind;
 							entry.sortText = '\u0000' + tsItem.sortText;
+						}
+						// steal document from html language service
+						if (entry.label.startsWith(':')) {
+							const name2 = entry.label.substr(1);
+							const entry2 = itemsMap.get(name2);
+							if (entry2) {
+								entry.documentation = entry2.documentation;
+							}
+							if (entry.label.indexOf('accesskey') >= 0) {
+								console.log(entry);
+								console.log(entry2);
+							}
 						}
 						entry.data = {
 							...entry.data,
