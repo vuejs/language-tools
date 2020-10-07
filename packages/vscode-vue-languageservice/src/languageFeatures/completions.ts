@@ -86,28 +86,28 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const customTags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
-				for (const [name, { bind, on }] of componentCompletion) {
+				for (const [componentName, { bind, on }] of componentCompletion) {
 					const attributes: html.IAttributeData[] = [];
 					for (const prop of bind) {
 						const name: string = prop.data.name;
 						if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
-							const newName = '@' + name[2].toLowerCase() + name.substr(3);
-							attributes.push({ name: newName })
-							tsItems.set(newName, prop);
+							const propName = '@' + name[2].toLowerCase() + name.substr(3);
+							attributes.push({ name: propName })
+							tsItems.set(propName, prop);
 						}
 						else {
-							const newName = ':' + hyphenate(name);
-							attributes.push({ name: newName })
-							tsItems.set(newName, prop);
+							const propName = ':' + hyphenate(name);
+							attributes.push({ name: propName })
+							tsItems.set(propName, prop);
 						}
 					}
 					for (const event of on) {
-						const newName = '@' + name;
-						attributes.push({ name: newName })
-						tsItems.set(newName, event);
+						const propName = '@' + event.data.name;
+						attributes.push({ name: propName })
+						tsItems.set(propName, event);
 					}
 					customTags.push({
-						name: name,
+						name: componentName,
 						// description: '', // TODO
 						attributes,
 					});
