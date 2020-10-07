@@ -41,10 +41,6 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			item.tags = tsItem.tags;
 			item.detail = tsItem.detail;
 			item.documentation = tsItem.documentation;
-			item.deprecated = tsItem.deprecated;
-			item.preselect = tsItem.preselect;
-			item.sortText = tsItem.sortText;
-			item.filterText = tsItem.filterText;
 
 			return item;
 		}
