@@ -89,10 +89,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 	});
 
 	// template script(document + source maps)
-	const validComponentNames = computed(() => {
-		const set = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
-		return [...set];
-	});
 	const templateScript = computed(() => {
 		const interpolations = getInterpolations();
 		if (!interpolations) return;
@@ -120,10 +116,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;`,
 			`type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends __VLS_Vue.FunctionalComponent<infer R> ? R : C;`,
 			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue.HTMLAttributes> & Record<string, unknown> };`,
-			`type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };`,
-			`type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {} };`,
-			`type __VLS_NeverToUnknown<T> = [T] extends [never] ? unknown : T;`,
+			`type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_RemoveAnyFnSet<T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {}> };`,
 			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : F2;`,
+			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`
 		].join('\n') + `\n`;
 
 		code += `type __VLS_ConstructorOverloads<T> =\n`;
@@ -136,7 +131,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			code += `} ? (\n`
 			for (let j = 1; j <= i; j++) {
 				if (j > 1) code += '& ';
-				code += `(E${j} extends string ? { [K${j} in E${j}]?: (...payload: P${j}) => void } : {})\n`;
+				code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
 			}
 			code += `) :\n`;
 		}
@@ -215,11 +210,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		/* HTML Completion */
 		code += '/* HTML Completion (props) */\n';
-		for (const name of validComponentNames.value) {
+		for (const name of templateScriptData.components) {
 			code += `__VLS_componentProps['${name}'][''];\n`
 		}
 		code += '/* HTML Completion (emits) */\n';
-		for (const name of validComponentNames.value) {
+		for (const name of templateScriptData.components) {
 			code += `__VLS_componentEmits['${name}'][''];\n`
 		}
 
@@ -399,7 +394,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				}).ast;
 				if (errors.length > 0) {
 					return {
-						text: errors.map(err => `// ${JSON.stringify(err)}`).join('\n'),
+						text: '',
 						mappings: [],
 					};
 				}
@@ -413,7 +408,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			}
 			catch (err) {
 				return {
-					text: `// vueCompilerDom.compile / pug2html / templateToTs throw\n// ${JSON.stringify(err)}`,
+					text: '',
 					mappings: [],
 				};
 			}
@@ -822,7 +817,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		if (templateScriptDocument.value) {
 			const doc = templateScriptDocument.value;
 			const text = doc.getText();
-			for (const name of validComponentNames.value) {
+			for (const name of templateScriptData.components) {
 				let bind: CompletionItem[] = [];
 				let on: CompletionItem[] = [];
 				{
@@ -840,6 +835,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
 				data.set(name, { bind, on });
+				data.set(hyphenate(name), { bind, on });
 			}
 		}
 		return data;

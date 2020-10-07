@@ -54,9 +54,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			writeProps(node);
 			_code += '};\n';
 
-			_code += `__VLS_componentEmits['${node.tag}'] = {\n`
 			writeOnProps(node);
-			_code += '};\n';
 
 			if (!dontCreateBlock) _code += `{\n`;
 			for (const childNode of node.children) {
@@ -161,6 +159,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			}
 			function writeOnProps(node: ElementNode) {
 				for (const prop of node.props) {
+					const varName = `__VLS_${elementIndex++}`;
 					if (
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.arg
@@ -170,27 +169,33 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.name === 'on'
 					) {
 						const propName = prop.arg.content;
+						const propName2 = 'on' + propName[0].toUpperCase() + propName.substr(1);
 
-						mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						}], false);
-						_code += `'`;
-						mapping(prop.arg.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						}]);
-						_code += `': (`;
-						if (prop.exp) {
-							mapping(prop.exp.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
-								start: prop.exp.loc.start.offset,
-								end: prop.exp.loc.end.offset,
-							}])
+						_code += `let ${varName}!: { '${propName}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}']['${propName}'], typeof __VLS_componentProps['${node.tag}']['${propName2}']> };\n`;
+						_code += `${varName} = {\n`
+						{
+							mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}], false);
+							_code += `'`;
+							mapping(prop.arg.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}]);
+							_code += `': (`;
+							if (prop.exp) {
+								mapping(prop.exp.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+									start: prop.exp.loc.start.offset,
+									end: prop.exp.loc.end.offset,
+								}])
+							}
+							else {
+								_code += 'undefined';
+							}
+							_code += `),\n`;
 						}
-						else {
-							_code += 'undefined';
-						}
-						_code += `),\n`;
+						_code += `};\n`;
 					}
 				}
 			}
