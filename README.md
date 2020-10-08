@@ -16,10 +16,23 @@ Thanks to Vue3's `ref` and `computed` (Yes, I use Composition API to write Vue L
 
 This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and only supports major languages (no sass, vue2...etc), so if Vetur is good for you now, just continue to use Vetur.
 
+## Work for Vue 2
+
+This tool using Vue 3 types from '@vue/runtime-dom' module to calculate completion.
+
+Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
+
+```json
+{
+  "devDependencies": {
+    "@vue/runtime-dom": "latest"
+  }
+}
+```
+
 ## Features other than Vetur (until v0.26)
 
 - [x] Multi root support
-- [x] Interpolation formatting
 - [x] Component tag services
 - [x] Component props services (v0.5.0 added)
 - [x] Pug interpolation services
@@ -30,7 +43,9 @@ This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and 
 - [x] Diagnostic all vue scripts (v0.9.0 added)
 - [x] `<script setup>` support (v0.10.0 added)
 - [x] Native html tag services (v0.11.0 added)
-- [x] Interpolation commenting (v0.11.2 added)
+- [x] Interpolation formatting + commenting (v0.11.2 added)
+- [x] Emits Type-Checking (v0.11.4 added)
+- [x] Component props auto completion (v0.11.6 added)
 
 ## Template component element LS support
 

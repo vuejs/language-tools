@@ -213,19 +213,18 @@ export function createSourceFile(initialDocument: TextDocument, {
 		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
 
 		/* Completion */
-		code += '/* Props */\n';
+		code += '/* Completion: Emits */\n';
 		for (const name of templateScriptData.components) {
-			code += `__VLS_componentProps['${name}'][''];\n`
-		}
-		code += '/* Emits */\n';
-		for (const name of templateScriptData.components) {
+			if (!hasElement(interpolations.tags, name)) continue;
 			code += `__VLS_componentEmits['${name}'][''];\n`
 		}
-		code += '/* HTML Completion */\n';
-		code += `({} as __VLS_GlobalAttrs)[''];\n`; // global atts
+		code += '/* Completion: Props */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.globalElements]) {
+			if (!hasElement(interpolations.tags, name)) continue;
 			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_GlobalAttrs>)[''];\n`;
 		}
+		code += '/* Completion: Global Attrs */\n';
+		code += `({} as __VLS_GlobalAttrs)[''];\n`;
 
 		/* Props */
 		code += `/* Props */\n`;
@@ -277,6 +276,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			getSourceMaps,
 		};
 
+		function hasElement(tags: Set<string>, tagName: string) {
+			return tags.has(tagName) || tags.has(hyphenate(tagName));
+		}
 		function getPropSourceMap() {
 			const sourceMap = new SourceMap<{ isUnwrapProp: boolean }>(
 				document,
@@ -405,6 +407,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					return {
 						text: '',
 						mappings: [],
+						tags: new Set<string>(),
 					};
 				}
 				return transformVueHtml(
@@ -419,6 +422,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				return {
 					text: '',
 					mappings: [],
+					tags: new Set<string>(),
 				};
 			}
 		}
@@ -827,35 +831,34 @@ export function createSourceFile(initialDocument: TextDocument, {
 		if (templateScriptDocument.value && templateDocument.value) {
 			const doc = templateScriptDocument.value;
 			const text = doc.getText();
-			const templateText = templateDocument.value.getText();
 			for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
-				if (templateText.indexOf(tagName) === -1 && templateText.indexOf(hyphenate(tagName)) === -1) continue; // TODO: not a good filter
 				let bind: CompletionItem[];
 				let on: CompletionItem[];
 				{
 					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_GlobalAttrs>)['`;
 					let offset = text.indexOf(searchText);
-					if (offset === -1) continue; // should never
+					if (offset === -1) continue;
 					offset += searchText.length;
 					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
 				{
 					const searchText = `__VLS_componentEmits['${tagName}']['`;
 					let offset = text.indexOf(searchText);
-					if (offset === -1) continue; // should never
+					if (offset === -1) continue;
 					offset += searchText.length;
 					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
 				data.set(tagName, { bind, on });
 				data.set(hyphenate(tagName), { bind, on });
 			}
-			let globalBind: CompletionItem[];
+			let globalBind: CompletionItem[] = [];
 			{
 				const searchText = `({} as __VLS_GlobalAttrs)['`;
 				let offset = text.indexOf(searchText);
-				// if (offset === -1) continue; // should never
-				offset += searchText.length;
-				globalBind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				if (offset >= 0) {
+					offset += searchText.length;
+					globalBind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+				}
 			}
 			data.set('*', { bind: globalBind, on: [] });
 		}

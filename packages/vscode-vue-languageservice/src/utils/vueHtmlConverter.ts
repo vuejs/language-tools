@@ -12,6 +12,7 @@ const capabilitiesSet = {
 
 export function transformVueHtml(pugData: { html: string, pug: string } | undefined, node: RootNode) {
 	const mappings: Mapping<TsMappingData>[] = [];
+	const tags = new Set<string>();
 	let elementIndex = 0;
 	const pugMapper = pugData ? createHtmlPugMapper(pugData.pug, pugData.html) : undefined;
 	const text = worker('', node);
@@ -19,6 +20,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 	return {
 		mappings,
 		text,
+		tags,
 	};
 
 	function worker(_code: string, node: TemplateChildNode | RootNode, dontCreateBlock = false): string {
@@ -41,6 +43,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					end: node.loc.end.offset - 1,
 				});
 			}
+
+			tags.add(node.tag);
 
 			for (const prop of node.props) {
 				if (
