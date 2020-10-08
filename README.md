@@ -4,10 +4,6 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
-## Status: Preview
-
-> It is still in the stage of rapid prototype implementation, source code will be uploaded after reconstruction.
-
 ## Why not Vetur?
 
 My motivation for building this tool is that Vetur's Type-Checking is too slow (it has been improved now). I hope to get an experience similar to coding native ts when coding vue. It is more realistic to abandon the technical debt of Vue2 and rewrite it than to participate in the reconstruction of Vetur.
@@ -30,7 +26,7 @@ Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
 }
 ```
 
-## Features other than Vetur (until v0.26)
+## Some interesting features:
 
 - [x] Multi root support
 - [x] Component tag services
@@ -46,6 +42,7 @@ Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
 - [x] Interpolation formatting + commenting (v0.11.2 added)
 - [x] Emits Type-Checking (v0.11.4 added)
 - [x] Component props auto completion (v0.11.6 added)
+- [x] v-slot Type-Checking (v0.12.1 added)
 
 ## Template component element LS support
 
@@ -66,9 +63,7 @@ declare global {
 
 ## Note
 
-> To avoid performance impact, you need to disable Vetur when enabling this tool.
-
-> Syntax highlighting is power by [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
+> Syntax highlighting is base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
 
 > If rename location include both .ts and .vue files. Please perform the rename operation in the .vue file, otherwise the rename location in the .vue cannot be found correctly.
 

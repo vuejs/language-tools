@@ -71,13 +71,13 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							end: prop.exp.loc.end.offset,
 						}]);
 						if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION) {
-							_code += ` = __VLS_Components['${parent.tag}'].__VLS_slots['${prop.arg.content}'];\n`;
+							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots['${prop.arg.content}'];\n`;
 						}
 						else if (prop.arg?.type === NodeTypes.COMPOUND_EXPRESSION) {
-							_code += ` = __VLS_Components['${parent.tag}'].__VLS_slots[${prop.arg.children}];\n`; // TODO
+							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots[${prop.arg.children}];\n`; // TODO
 						}
 						else {
-							_code += ` = __VLS_Components['${parent.tag}'].__VLS_slots[''];\n`;
+							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots[''];\n`;
 						}
 					}
 
