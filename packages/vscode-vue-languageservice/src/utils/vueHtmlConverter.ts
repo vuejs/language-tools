@@ -13,9 +13,16 @@ const capabilitiesSet = {
 export function transformVueHtml(pugData: { html: string, pug: string } | undefined, node: RootNode) {
 	const mappings: Mapping<TsMappingData>[] = [];
 	const tags = new Set<string>();
+	const slots = new Map<string, string>();
 	let elementIndex = 0;
 	const pugMapper = pugData ? createHtmlPugMapper(pugData.pug, pugData.html) : undefined;
-	const text = worker('', node);
+	let text = worker('', node, []);
+
+	text += `export default {\n`
+	for (const [name, bind] of slots) {
+		text += `'${name}': ${bind},\n`;
+	}
+	text += `};\n`
 
 	return {
 		mappings,
@@ -23,61 +30,84 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 		tags,
 	};
 
-	function worker(_code: string, node: TemplateChildNode | RootNode, dontCreateBlock = false): string {
+	function worker(_code: string, node: TemplateChildNode | RootNode, parents: (TemplateChildNode | RootNode)[], dontCreateBlock = false): string {
 		if (node.type === NodeTypes.ROOT) {
 			for (const childNode of node.children) {
 				_code += `{\n`;
-				_code = worker(_code, childNode);
+				_code = worker(_code, childNode, parents.concat(node));
 				_code += `}\n`;
 			}
 		}
 		else if (node.type === NodeTypes.ELEMENT) { // TODO: should not has indent
-			// +1 to remove '<' from html tag
-			const sourceRanges = [{
-				start: node.loc.start.offset + 1,
-				end: node.loc.start.offset + 1 + node.tag.length,
-			}];
-			if (!node.isSelfClosing) {
-				sourceRanges.push({
-					start: node.loc.end.offset - 1 - node.tag.length,
-					end: node.loc.end.offset - 1,
-				});
-			}
-
-			tags.add(node.tag);
-
-			for (const prop of node.props) {
-				if (
-					prop.type === NodeTypes.DIRECTIVE
-					&& prop.name === 'slot'
-					&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
-				) {
-					_code += `let `;
-					mapping(prop.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
-						start: prop.exp.loc.start.offset,
-						end: prop.exp.loc.end.offset,
-					}]);
-					_code += ` = {} as any;\n`;
-				}
-			}
-
-			mapping(node.type, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
-				start: node.loc.start.offset + 1,
-				end: node.loc.start.offset + 1 + node.tag.length,
-			}], false);
-			_code += `__VLS_componentProps[`;
-			mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
-			_code += `'`;
-			mapping(node.type, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
-			_code += `'] = {\n`;
-			writeProps(node);
-			_code += '};\n';
-
-			writeOnProps(node);
-
 			if (!dontCreateBlock) _code += `{\n`;
-			for (const childNode of node.children) {
-				_code = worker(_code, childNode);
+			{
+				// +1 to remove '<' from html tag
+				const sourceRanges = [{
+					start: node.loc.start.offset + 1,
+					end: node.loc.start.offset + 1 + node.tag.length,
+				}];
+				if (!node.isSelfClosing) {
+					sourceRanges.push({
+						start: node.loc.end.offset - 1 - node.tag.length,
+						end: node.loc.end.offset - 1,
+					});
+				}
+
+				tags.add(node.tag);
+
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& prop.name === 'slot'
+						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+						// && prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION // TODO
+					) {
+						const parent = findComponentNode(parents.concat(node));
+						if (!parent) continue;
+
+						_code += `let `;
+						mapping(prop.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						}]);
+						if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION) {
+							_code += ` = __VLS_Components['${parent.tag}'].__VLS_slots['${prop.arg.content}'];\n`;
+						}
+						else if (prop.arg?.type === NodeTypes.COMPOUND_EXPRESSION) {
+							_code += ` = __VLS_Components['${parent.tag}'].__VLS_slots[${prop.arg.children}];\n`; // TODO
+						}
+						else {
+							_code += ` = __VLS_Components['${parent.tag}'].__VLS_slots[''];\n`;
+						}
+					}
+
+					function findComponentNode(parents: (TemplateChildNode | RootNode)[]): ElementNode | undefined {
+						for (const parent of parents) {
+							if (parent.type === NodeTypes.ELEMENT) {
+								return parent;
+							}
+						}
+					}
+				}
+
+				mapping(node.type, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+					start: node.loc.start.offset + 1,
+					end: node.loc.start.offset + 1 + node.tag.length,
+				}], false);
+				_code += `__VLS_componentProps[`;
+				mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
+				_code += `'`;
+				mapping(node.type, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
+				_code += `'] = {\n`;
+				writeProps(node);
+				_code += '};\n';
+
+				writeOns(node);
+				writeSlots(node);
+
+				for (const childNode of node.children) {
+					_code = worker(_code, childNode, parents.concat(node));
+				}
 			}
 			if (!dontCreateBlock) _code += '}\n';
 
@@ -176,7 +206,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					}
 				}
 			}
-			function writeOnProps(node: ElementNode) {
+			function writeOns(node: ElementNode) {
 				for (const prop of node.props) {
 					const varName = `__VLS_${elementIndex++}`;
 					if (
@@ -218,16 +248,52 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					}
 				}
 			}
+			function writeSlots(node: ElementNode) {
+				if (node.tag !== 'slot') return;
+				const varName = `__VLS_${elementIndex++}`;
+				const varName2 = `__VLS_${elementIndex++}`;
+				const slotName = getSlotName();
+
+				_code += `const ${varName} = {\n`;
+
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
+						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+					) {
+						mapping(node.type, `'${prop.arg.content}'`, prop.exp.content, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }], false);
+						_code += `'`;
+						mapping(node.type, prop.arg.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
+						_code += `': (`;
+						mapping(node.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
+						_code += `),\n`;
+					}
+				}
+
+				_code += `};\n`;
+				_code += `var ${varName2}!: typeof ${varName};\n`
+				slots.set(slotName, varName2);
+
+				function getSlotName() {
+					for (const prop2 of node.props) {
+						if (prop2.name === 'name' && prop2.type === NodeTypes.ATTRIBUTE && prop2.value) {
+							return prop2.value.content;
+						}
+					}
+					return '';
+				}
+			}
 		}
 		else if (node.type === NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			_code = worker(_code, node.content);
+			_code = worker(_code, node.content, parents.concat(node));
 		}
 		else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					_code = worker(_code, childNode as TemplateChildNode);
+					_code = worker(_code, childNode as TemplateChildNode, parents.concat(node));
 				}
 			}
 		}
@@ -279,7 +345,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							_code += `) {\n`;
 						}
 						for (const childNode of branch.children) {
-							_code = worker(_code, childNode, childHasBlock);
+							_code = worker(_code, childNode, parents.concat([node, branch]), childHasBlock);
 						}
 						_code += '}\n';
 					}
@@ -287,7 +353,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				else {
 					_code += 'else {\n';
 					for (const childNode of branch.children) {
-						_code = worker(_code, childNode, childHasBlock);
+						_code = worker(_code, childNode, parents.concat([node, branch]), childHasBlock);
 					}
 					_code += '}\n';
 				}
@@ -351,7 +417,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					_code += ` = 0;\n`;
 				}
 				for (const childNode of node.children) {
-					_code = worker(_code, childNode, childHasBlock);
+					_code = worker(_code, childNode, parents.concat(node), childHasBlock);
 				}
 				_code += '}\n';
 			}

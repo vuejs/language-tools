@@ -108,9 +108,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 		let code = [
 			`import * as __VLS_Vue from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
-			`import __VLS_VM_Unwrap from './${upath.basename(vue.fileName)}.unwrap';`,
+			`const __VLS_Options = __VLS_VM.__VLS_options`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
-			`declare var __VLS_vmUnwrap: typeof __VLS_VM_Unwrap & { components: { } };`,
+			`declare var __VLS_vmUnwrap: typeof __VLS_Options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
 			`declare var __VLS_for_key: string;`,
 			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
@@ -253,11 +253,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 					end: code.length + `var ${propName}`.length,
 				},
 				virtualRange: {
-					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap['props']['`.length,
-					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap['props']['${propName}`.length,
+					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['`.length,
+					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}`.length,
 				},
 			});
-			code += `var ${propName} = __VLS_vm.${propName}; __VLS_VM_Unwrap['props']['${propName}'];\n`;
+			code += `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}'];\n`;
 		}
 
 		/* Interpolations */
@@ -432,7 +432,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 	const scriptDocument = computed(() => {
 		if (descriptor.script) {
 			const lang = descriptor.script.lang;
-			const uri = `${vue.uri}.${lang}`;
+			const uri = `${vue.uri}.script.${lang}`;
 			const languageId = transformLanguageId(lang);
 			const content = descriptor.script.content;
 			return TextDocument.create(uri, languageId, documentVersion++, content);
@@ -473,9 +473,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
 	});
-	const scriptUnwrapDocument = computed(() => {
+	const scriptOptionsDocument = computed(() => {
 		if (scriptDocument.value) {
-			const uri = `${vue.uri}.unwrap.ts`;
+			const uri = `${vue.uri}.options.ts`;
 			const languageId = 'typescript';
 			const content = [
 				scriptDocument.value.getText(),
@@ -484,17 +484,18 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
 	});
-	const scriptCaptureDocument = computed(() => {
-		const uri = `${vue.uri}.catthers.ts`;
+	const scriptMainDocument = computed(() => {
+		const uri = `${vue.uri}.ts`;
 		const content = [
-			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
-			`import __VLS_VM_Unwrap from './${upath.basename(vue.fileName)}.unwrap';`,
+			`import __VLS_VM from './${upath.basename(vue.fileName)}.script';`,
+			`import __VLS_Options from './${upath.basename(vue.fileName)}.options';`,
+			`import __VLS_Slots from './${upath.basename(vue.fileName)}.template';`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
-			`declare var __VLS_ComponentsWrap: typeof __VLS_VM_Unwrap & { components: { } };`,
+			`declare var __VLS_ComponentsWrap: typeof __VLS_Options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
 			`__VLS_vm.;`,
 			`__VLS_Components.;`,
-			`__VLS_VM_Unwrap.setup().;`,
+			`__VLS_Options.setup().;`,
 			`({} as JSX.IntrinsicElements).;`,
 			``,
 			`declare global {`,
@@ -507,6 +508,13 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`	| 'Teleport'`,
 			`	> { }`,
 			`}`,
+			``,
+			`declare const __VLS_exportData: typeof __VLS_VM & {`,
+			`__VLS_options: typeof __VLS_Options,`,
+			`__VLS_slots: typeof __VLS_Slots,`,
+			`};`,
+			`export default __VLS_exportData;`,
+			`export * from './${upath.basename(vue.fileName)}.script';`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', documentVersion++, content);
 	});
@@ -686,7 +694,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 	});
 	const scriptUnwrapSourceMaps = computed(() => {
 		const sourceMaps: TsSourceMap[] = [];
-		const document = scriptUnwrapDocument.value;
+		const document = scriptOptionsDocument.value;
 		if (document && descriptor.script) {
 			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
 			const start = descriptor.script.loc.start;
@@ -818,8 +826,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const docs = new Map<string, TextDocument>();
 		if (scriptDocument.value) docs.set(scriptDocument.value.uri, scriptDocument.value);
 		if (scriptSetupDocument.value) docs.set(scriptSetupDocument.value.uri, scriptSetupDocument.value);
-		if (scriptUnwrapDocument.value) docs.set(scriptUnwrapDocument.value.uri, scriptUnwrapDocument.value);
-		if (scriptCaptureDocument.value) docs.set(scriptCaptureDocument.value.uri, scriptCaptureDocument.value);
+		if (scriptOptionsDocument.value) docs.set(scriptOptionsDocument.value.uri, scriptOptionsDocument.value);
+		if (scriptMainDocument.value) docs.set(scriptMainDocument.value.uri, scriptMainDocument.value);
 		if (templateScriptDocument.value) docs.set(templateScriptDocument.value.uri, templateScriptDocument.value);
 		return docs;
 	});
@@ -1005,10 +1013,10 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		templateScriptData.projectVersion = vueProjectVersion;
 
-		const doc = scriptCaptureDocument.value;
+		const doc = scriptMainDocument.value;
 		const props = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_vm.')));
 		const components = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Components.')));
-		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_VM_Unwrap.setup().')));
+		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Options.setup().')));
 		const globalElements = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('({} as JSX.IntrinsicElements).')));
 
 		const propNames = props.map(entry => entry.data.name);
