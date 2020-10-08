@@ -4,47 +4,25 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
-## Why not Vetur?
-
-My motivation for building this tool is that Vetur's Type-Checking is too slow (it has been improved now). I hope to get an experience similar to coding native ts when coding vue. It is more realistic to abandon the technical debt of Vue2 and rewrite it than to participate in the reconstruction of Vetur.
-
-Thanks to Vue3's `ref` and `computed` (Yes, I use Composition API to write Vue Language Service!), the current development experience is quite close to coding native ts. And I added All the TypeScript features I need.
-
-This tool will not replace Vetur. This tool only focuses on Vue3+TypeScript and only supports major languages (no sass, vue2...etc), so if Vetur is good for you now, just continue to use Vetur.
-
-## Work for Vue 2
-
-This tool using Vue 3 types from '@vue/runtime-dom' module to calculate completion.
-
-Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
-
-```json
-{
-  "devDependencies": {
-    "@vue/runtime-dom": "latest"
-  }
-}
-```
-
 ## Some interesting features:
 
-- [x] Multi root support
-- [x] Component tag services
-- [x] Component props services (v0.5.0 added)
-- [x] Pug interpolation services
-- [x] css module services
-- [x] Asset url link jump
-- [x] pug-html convert tool
-- [x] Unused highlight for setup() return properties (v0.7.0 added)
-- [x] Diagnostic all vue scripts (v0.9.0 added)
-- [x] `<script setup>` support (v0.10.0 added)
-- [x] Native html tag services (v0.11.0 added)
-- [x] Interpolation formatting + commenting (v0.11.2 added)
-- [x] Emits Type-Checking (v0.11.4 added)
-- [x] Component props auto completion (v0.11.6 added)
 - [x] v-slot Type-Checking (v0.12.1 added)
+- [x] Component props auto completion (v0.11.6 added)
+- [x] Emits Type-Checking (v0.11.4 added)
+- [x] Interpolation formatting + commenting (v0.11.2 added)
+- [x] Native html tag services (v0.11.0 added)
+- [x] `<script setup>` support (v0.10.0 added)
+- [x] Diagnostic all vue scripts (v0.9.0 added)
+- [x] Unused highlight for setup() return properties (v0.7.0 added)
+- [x] pug-html convert tool
+- [x] Asset url link jump
+- [x] css module services
+- [x] Pug interpolation services
+- [x] Component props services (v0.5.0 added)
+- [x] Component tag services
+- [x] Multi root support
 
-## Template component element LS support
+## Components service
 
 Local components, Built-in components, native html elements Type-Checking is default active.
 
@@ -61,6 +39,52 @@ declare global {
 }
 ```
 
+## v-slot Type-Checking
+
+v-slot Type-Checking will auto service to project .vue components, but third party library you need to define the slot types, for example:
+
+```typescript
+import { RouterLink, RouterView, RouteLocationNormalized, NavigationFailure } from 'vue-router';
+
+declare global {
+  interface __VLS_GlobalComponents {
+    'RouterLink': typeof RouterLink & {
+      __VLS_slots: {
+        '': {
+          route: RouteLocationNormalized & { href: string }
+          href: string
+          isActive: boolean
+          isExactActive: boolean
+          navigate: (event?: MouseEvent) => Promise<NavigationFailure | void>
+        }
+      }
+    }
+    'RouterView': typeof RouterView & {
+      __VLS_slots: {
+        '': {
+          Component: VNode
+          route: RouteLocationNormalized & { href: string }
+        }
+      }
+    }
+  }
+}
+```
+
+## Work for Vue 2?
+
+This tool using Vue 3 types from '@vue/runtime-dom' module to calculate completion.
+
+Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
+
+```json
+{
+  "devDependencies": {
+    "@vue/runtime-dom": "latest"
+  }
+}
+```
+
 ## Note
 
 > Syntax highlighting is base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
@@ -73,7 +97,3 @@ declare global {
 > - template: html, pug
 > - script: js, ts, jsx, tsx
 > - style: css, scss
-
-## TODO
-
-- Tests
