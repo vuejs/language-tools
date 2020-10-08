@@ -106,7 +106,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const propMappings: Mapping<{ isUnwrapProp: boolean }>[] = [];
 
 		let code = [
-			`import * as __VLS_Vue from 'vue'`,
+			`import * as __VLS_Vue from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
 			`import __VLS_VM_Unwrap from './${upath.basename(vue.fileName)}.unwrap';`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
@@ -439,7 +439,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const languageId = transformLanguageId(lang);
 			const content = [
 				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.setup';`,
-				`import { defineComponent } from 'vue';`,
+				`import { defineComponent } from '@vue/runtime-dom';`,
 				`declare function __VLS_defaultType<T, K>(source: T): T extends { default: infer K } ? K : {};`,
 				`const __VLS_default = __VLS_defaultType(__VLS_setups);`,
 				`export default defineComponent({`,
