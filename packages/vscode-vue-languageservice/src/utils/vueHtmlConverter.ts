@@ -60,9 +60,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.name === 'slot'
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
-						// && prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION // TODO
 					) {
-						const parent = findComponentNode(parents.concat(node));
+						const parent = findParentElement(parents.concat(node));
 						if (!parent) continue;
 
 						_code += `let `;
@@ -73,17 +72,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION) {
 							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots['${prop.arg.content}'];\n`;
 						}
-						else if (prop.arg?.type === NodeTypes.COMPOUND_EXPRESSION) {
-							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots[${prop.arg.children}];\n`; // TODO
-						}
 						else {
 							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots[''];\n`;
 						}
 					}
 
-					function findComponentNode(parents: (TemplateChildNode | RootNode)[]): ElementNode | undefined {
-						for (const parent of parents) {
-							if (parent.type === NodeTypes.ELEMENT) {
+					function findParentElement(parents: (TemplateChildNode | RootNode)[]): ElementNode | undefined {
+						for (const parent of parents.reverse()) {
+							if (parent.type === NodeTypes.ELEMENT && parent.tag !== 'template') {
 								return parent;
 							}
 						}
