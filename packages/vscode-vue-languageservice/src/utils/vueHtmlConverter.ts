@@ -246,18 +246,35 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			}
 			function writeSlots(node: ElementNode) {
 				if (node.tag !== 'slot') return;
-				const varName = `__VLS_${elementIndex++}`;
-				const varName2 = `__VLS_${elementIndex++}`;
+				const varDefaultBind = `__VLS_${elementIndex++}`;
+				const varBinds = `__VLS_${elementIndex++}`;
+				const varSlot = `__VLS_${elementIndex++}`;
 				const slotName = getSlotName();
+				let hasDefaultBind = false;
+				let hasBinds = false;
 
-				_code += `const ${varName} = {\n`;
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& !prop.arg
+						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+					) {
+						hasDefaultBind = true;
+						_code += `const ${varDefaultBind} = (\n`;
+						mapping(node.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
+						_code += `);\n`;
+						break;
+					}
+				}
 
+				_code += `const ${varBinds} = {\n`;
 				for (const prop of node.props) {
 					if (
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
+						hasBinds = true;
 						mapping(node.type, `'${prop.arg.content}'`, prop.exp.content, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }], false);
 						_code += `'`;
 						mapping(node.type, prop.arg.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
@@ -266,10 +283,21 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						_code += `),\n`;
 					}
 				}
-
 				_code += `};\n`;
-				_code += `var ${varName2}!: typeof ${varName};\n`
-				slots.set(slotName, varName2);
+
+				if (hasDefaultBind && hasBinds) {
+					_code += `var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`
+				}
+				else if (hasDefaultBind) {
+					_code += `var ${varSlot}!: typeof ${varDefaultBind};\n`
+				}
+				else if (hasBinds) {
+					_code += `var ${varSlot}!: typeof ${varBinds};\n`
+				}
+
+				if (hasDefaultBind || hasBinds) {
+					slots.set(slotName, varSlot);
+				}
 
 				function getSlotName() {
 					for (const prop2 of node.props) {

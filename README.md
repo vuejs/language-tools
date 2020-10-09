@@ -44,19 +44,13 @@ v-slot Type-Checking will auto service the .vue files under project, but for thi
 
 ```typescript
 // shims-volar.d.ts
-import { RouterLink, RouterView, RouteLocationNormalized, NavigationFailure } from 'vue-router'
-import { VNode } from 'vue'
+import { RouterLink, RouterView, useLink, RouteLocationNormalized } from 'vue-router'
+import { UnwrapRef, VNode } from 'vue'
 
 interface __VLS_GlobalComponents {
 	'RouterLink': typeof RouterLink & {
 		__VLS_slots: {
-			'': {
-				route: RouteLocationNormalized & { href: string }
-				href: string
-				isActive: boolean
-				isExactActive: boolean
-				navigate: (event?: MouseEvent) => Promise<NavigationFailure | void>
-			}
+			'': UnwrapRef<ReturnType<typeof useLink>>
 		}
 	}
 	'RouterView': typeof RouterView & {
@@ -68,7 +62,6 @@ interface __VLS_GlobalComponents {
 		}
 	}
 }
-
 ```
 
 ## Work for Vue 2?
