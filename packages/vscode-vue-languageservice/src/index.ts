@@ -45,7 +45,6 @@ export function createLanguageService(host: LanguageServiceHost) {
 
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
-	let vueProjectVersion = 0;
 	let tsProjectVersion = 0;
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
@@ -59,7 +58,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 	return {
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
-		doValidation: apiHook(doValidation.register(sourceFiles, () => vueProjectVersion.toString())),
+		doValidation: apiHook(doValidation.register(sourceFiles, () => tsProjectVersion.toString())),
 		doHover: apiHook(doHover.register(sourceFiles)),
 		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles)),
 		doFormatting: apiHook(doFormatting.register(sourceFiles)),
@@ -83,16 +82,16 @@ export function createLanguageService(host: LanguageServiceHost) {
 		dispose: tsLanguageService.dispose,
 	};
 
-	function apiHook<T extends Function>(api: T, updateTemplateScript: boolean = true) {
+	function apiHook<T extends Function>(api: T, shouldUpdateTemplateScript: boolean = true) {
 		const handler = {
 			apply: function (target: Function, thisArg: any, argumentsList: any[]) {
-				update(updateTemplateScript);
+				update(shouldUpdateTemplateScript);
 				return target.apply(thisArg, argumentsList);
 			}
 		};
 		return new Proxy(api, handler) as T;
 	}
-	function update(updateTemplateScript: boolean) {
+	function update(shouldUpdateTemplateScript: boolean) {
 		const currentVersion = host.getProjectVersion?.();
 		if (currentVersion === undefined || currentVersion !== lastProjectVersion) {
 
@@ -143,8 +142,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			}
 
 			if (tsFileChanged) {
-				vueProjectVersion = tsProjectVersion + 1;
-				tsProjectVersion = vueProjectVersion;
+				tsProjectVersion++;
 				updates.length = 0;
 				for (const fileName of oldFiles) {
 					if (newFiles.has(fileName)) {
@@ -156,7 +154,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			}
 
 			unsetSourceFiles(removes.map(fsPathToUri));
-			updateSourceFiles(adds.concat(updates).map(fsPathToUri), updateTemplateScript)
+			updateSourceFiles(adds.concat(updates).map(fsPathToUri), shouldUpdateTemplateScript)
 		}
 	}
 	function createTsLanguageServiceHost() {
@@ -336,7 +334,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 	function getAllSourceFiles() {
 		return [...sourceFiles.values()];
 	}
-	function updateSourceFiles(uris: string[], updateTemplateScript: boolean) {
+	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
 		let vueTemplageScriptUpdated = false;
 
@@ -364,16 +362,15 @@ export function createLanguageService(host: LanguageServiceHost) {
 			}
 		}
 		if (vueScriptsUpdated) {
-			vueProjectVersion = tsProjectVersion + 1;
-			tsProjectVersion = vueProjectVersion;
+			tsProjectVersion++;
 		}
 
-		if (updateTemplateScript) {
+		if (shouldUpdateTemplateScript) {
 			for (const uri of uris) {
 				const sourceFile = sourceFiles.get(uri);
 				if (!sourceFile) continue;
-				const update = sourceFile.updateTemplateScript(vueProjectVersion);
-				if (update) {
+				const updated = sourceFile.updateTemplateScript(tsProjectVersion);
+				if (updated) {
 					vueTemplageScriptUpdated = true;
 				}
 			}
@@ -391,8 +388,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 			}
 		}
 		if (count > 0) {
-			vueProjectVersion = tsProjectVersion + 1;
-			tsProjectVersion = vueProjectVersion;
+			tsProjectVersion++;
 		}
 	}
 }
