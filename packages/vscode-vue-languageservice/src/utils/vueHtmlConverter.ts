@@ -260,7 +260,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
 						hasDefaultBind = true;
-						_code += `const ${varDefaultBind} = (\n`;
+						_code += `const ${varDefaultBind} = (`;
 						mapping(node.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
 						_code += `);\n`;
 						break;
