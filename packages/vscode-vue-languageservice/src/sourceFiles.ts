@@ -439,7 +439,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		if (descriptor.scriptSetup) {
 			const lang = 'ts';
-			const uri = `${vue.uri}.${lang}`;
+			const uri = `${vue.uri}.script.${lang}`;
 			const languageId = transformLanguageId(lang);
 			const content = [
 				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.setup';`,
