@@ -19,7 +19,7 @@ import { hyphenate } from '@vue/shared';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
-	html: ['@', ':', '<'],
+	html: ['<'],
 };
 
 export function register(sourceFiles: Map<string, SourceFile>) {

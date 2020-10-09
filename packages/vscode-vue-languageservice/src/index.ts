@@ -70,7 +70,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		doExecuteCommand: apiHook(doExecuteCommand),
 		doComplete: apiHook(doComplete.register(sourceFiles), false),
 		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles), false),
-		doAutoClose: apiHook(doAutoClose.register(sourceFiles), false),
+		doAutoClose: apiHook(doAutoClose.register(sourceFiles, htmlLanguageService), false),
 		getEmbeddedLanguage: apiHook(getEmbeddedLanguage.register(sourceFiles), false),
 		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles), false),
 		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles), false),

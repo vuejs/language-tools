@@ -591,6 +591,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return document;
 		}
 	});
+	const vueHtmlDocument = computed(() => {
+		return htmlLanguageService.parseHTMLDocument(vue.document);
+	});
 	const templateHtmlDocument = computed<html.HTMLDocument | undefined>(() => {
 		if (templateDocument.value) {
 			return htmlLanguageService.parseHTMLDocument(templateDocument.value);
@@ -888,6 +891,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getTemplateScript: untrack(() => templateScript.value),
 		getDescriptor: untrack(() => descriptor),
+		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getTsDocuments: untrack(() => tsDocuments.value),
 	};
 
