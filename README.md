@@ -41,7 +41,7 @@ declare global {
 
 ## v-slot Type-Checking
 
-v-slot Type-Checking will auto service to project .vue components, but third party library you need to define the slot types, for example:
+v-slot Type-Checking will auto service the .vue files under project, but for third party library you need to define the slot types, for example:
 
 ```typescript
 import { RouterLink, RouterView, RouteLocationNormalized, NavigationFailure } from 'vue-router';
