@@ -50,12 +50,12 @@ import { UnwrapRef, VNode } from 'vue'
 interface __VLS_GlobalComponents {
 	'RouterLink': typeof RouterLink & {
 		__VLS_slots: {
-			'': UnwrapRef<ReturnType<typeof useLink>>
+			default: UnwrapRef<ReturnType<typeof useLink>>
 		}
 	}
 	'RouterView': typeof RouterView & {
 		__VLS_slots: {
-			'': {
+			default: {
 				Component: VNode
 				route: RouteLocationNormalized & { href: string }
 			}

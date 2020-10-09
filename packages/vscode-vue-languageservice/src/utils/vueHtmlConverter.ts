@@ -69,12 +69,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
 						}]);
-						if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION) {
-							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots['${prop.arg.content}'];\n`;
+						let slotName = 'default';
+						if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
+							slotName = prop.arg.content;
 						}
-						else {
-							_code += ` = __VLS_components['${parent.tag}'].__VLS_slots[''];\n`;
-						}
+						_code += ` = __VLS_components['${parent.tag}'].__VLS_slots['${slotName}'];\n`;
 					}
 
 					function findParentElement(parents: (TemplateChildNode | RootNode)[]): ElementNode | undefined {
@@ -302,10 +301,15 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				function getSlotName() {
 					for (const prop2 of node.props) {
 						if (prop2.name === 'name' && prop2.type === NodeTypes.ATTRIBUTE && prop2.value) {
-							return prop2.value.content;
+							if (prop2.value.content === '') {
+								return 'default';
+							}
+							else {
+								return prop2.value.content;
+							}
 						}
 					}
-					return '';
+					return 'default';
 				}
 			}
 		}
