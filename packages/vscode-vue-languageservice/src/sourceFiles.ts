@@ -513,8 +513,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`__VLS_options: typeof __VLS_Options,`,
 			`__VLS_slots: typeof __VLS_Slots,`,
 			`};`,
-			`export default __VLS_exportData;`,
 			`export * from './${upath.basename(vue.fileName)}.script';`,
+			`export default __VLS_exportData;`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', documentVersion++, content);
 	});
@@ -695,7 +695,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		return sourceMaps;
 	});
-	const scriptUnwrapSourceMaps = computed(() => {
+	const scriptOptionsSourceMaps = computed(() => {
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptOptionsDocument.value;
 		if (document && descriptor.script) {
@@ -727,6 +727,36 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		return sourceMaps;
 	});
+	const scriptMainSourceMapes = computed(() => {
+		const sourceMaps: TsSourceMap[] = [];
+		const document = scriptMainDocument.value;
+		if (document && descriptor.script) {
+			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
+			sourceMap.add({
+				data: {
+					vueTag: 'script',
+					capabilities: {
+						basic: false,
+						references: false,
+						diagnostic: false,
+						formatting: false,
+						completion: false,
+					},
+				},
+				mode: MapedMode.Gate,
+				vueRange: {
+					start: descriptor.script.loc.start,
+					end: descriptor.script.loc.end,
+				},
+				virtualRange: {
+					start: 0,
+					end: document.getText().length,
+				},
+			});
+			sourceMaps.push(sourceMap);
+		}
+		return sourceMaps;
+	});
 	const templateScriptSourceMaps = computed(() => templateScript.value?.getSourceMaps() ?? []);
 
 	// source map sets
@@ -734,7 +764,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 		return [
 			...scriptSourceMapes.value,
 			...scriptSetupSourceMaps.value,
-			...scriptUnwrapSourceMaps.value,
+			...scriptOptionsSourceMaps.value,
+			...scriptMainSourceMapes.value,
 			...templateScriptSourceMaps.value,
 		];
 	});
