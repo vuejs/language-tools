@@ -6,6 +6,7 @@ import {
 	TextEdit,
 	CompletionContext,
 	CompletionTriggerKind,
+	CompletionItemKind,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
 import { CompletionData } from '../utils/types';
@@ -86,7 +87,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
-				const globalAttributes: html.IAttributeData[] = [];
+				const globalAttributes: html.IAttributeData[] = [
+					// TODO: hardcode
+					{ name: 'v-if' },
+					{ name: 'v-else-if' },
+					{ name: 'v-else' },
+					{ name: 'v-for' },
+				];
 				for (const [componentName, { bind, on }] of componentCompletion) {
 					if (componentName === '*') {
 						for (const prop of bind) {
@@ -178,18 +185,25 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					for (const entry of newResult.items) {
 						const documentation = typeof entry.documentation === 'string' ? entry.documentation : entry.documentation?.value;
 						const tsItem = documentation ? tsItems.get(documentation) : undefined;
-						if (tsItem && !documentation?.startsWith('*:')) {
-							entry.kind = tsItem.kind;
-							entry.sortText = '\u0000' + tsItem.sortText;
-						}
-						// steal document from html language service
 						if (entry.label.startsWith(':')) {
-							const name2 = entry.label.substr(1);
-							const entry2 = itemsMap.get(name2);
-							if (entry2) {
-								entry.detail = entry2.detail;
-								entry.documentation = entry2.documentation;
-							}
+							entry.kind = CompletionItemKind.Field;
+							entry.label = entry.label.substr(1);
+							entry.sortText = '\u0000' + entry.sortText;
+						}
+						else if (entry.label.startsWith('@')) {
+							entry.kind = CompletionItemKind.Event;
+							entry.label = entry.label.substr(1);
+							entry.sortText = '\u0001' + entry.sortText;
+						}
+						if (tsItem && !documentation?.startsWith('*:')) { // not globalAttributes
+							entry.sortText = '\u0000' + entry.sortText;
+						}
+						else if (entry.label.startsWith('v-')) {
+							entry.kind = CompletionItemKind.Method;
+							entry.sortText = '\u0002' + entry.sortText;
+						}
+						else {
+							entry.sortText = '\u0001' + entry.sortText;
 						}
 						entry.data = {
 							...entry.data,
