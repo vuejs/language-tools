@@ -29,13 +29,12 @@ Local components, Built-in components, native html elements Type-Checking is def
 For Global components, you need to definition `__VLS_GlobalComponents` interface, for example:
 
 ```typescript
-import { RouterLink, RouterView } from 'vue-router';
+// shims-volar.d.ts
+import { RouterLink, RouterView } from 'vue-router'
 
-declare global {
-  interface __VLS_GlobalComponents {
-      'RouterLink': typeof RouterLink;
-      'RouterView': typeof RouterView;
-  }
+interface __VLS_GlobalComponents {
+    'RouterLink': typeof RouterLink
+    'RouterView': typeof RouterView
 }
 ```
 
@@ -44,31 +43,32 @@ declare global {
 v-slot Type-Checking will auto service the .vue files under project, but for third party library you need to define the slot types, for example:
 
 ```typescript
-import { RouterLink, RouterView, RouteLocationNormalized, NavigationFailure } from 'vue-router';
+// shims-volar.d.ts
+import { RouterLink, RouterView, RouteLocationNormalized, NavigationFailure } from 'vue-router'
+import { VNode } from 'vue'
 
-declare global {
-  interface __VLS_GlobalComponents {
-    'RouterLink': typeof RouterLink & {
-      __VLS_slots: {
-        '': {
-          route: RouteLocationNormalized & { href: string }
-          href: string
-          isActive: boolean
-          isExactActive: boolean
-          navigate: (event?: MouseEvent) => Promise<NavigationFailure | void>
-        }
-      }
-    }
-    'RouterView': typeof RouterView & {
-      __VLS_slots: {
-        '': {
-          Component: VNode
-          route: RouteLocationNormalized & { href: string }
-        }
-      }
-    }
-  }
+interface __VLS_GlobalComponents {
+	'RouterLink': typeof RouterLink & {
+		__VLS_slots: {
+			'': {
+				route: RouteLocationNormalized & { href: string }
+				href: string
+				isActive: boolean
+				isExactActive: boolean
+				navigate: (event?: MouseEvent) => Promise<NavigationFailure | void>
+			}
+		}
+	}
+	'RouterView': typeof RouterView & {
+		__VLS_slots: {
+			'': {
+				Component: VNode
+				route: RouteLocationNormalized & { href: string }
+			}
+		}
+	}
 }
+
 ```
 
 ## Work for Vue 2?
