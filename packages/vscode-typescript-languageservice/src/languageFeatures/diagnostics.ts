@@ -43,6 +43,10 @@ export function register(languageService: ts.LanguageService) {
 					if (diagnostic.tags === undefined) diagnostic.tags = [];
 					diagnostic.tags.push(DiagnosticTag.Unnecessary);
 				}
+				if (diagnostic.source === 'ts' && diagnostic.code === 6385) {
+					if (diagnostic.tags === undefined) diagnostic.tags = [];
+					diagnostic.tags.push(DiagnosticTag.Deprecated);
+				}
 
 				output.push(diagnostic);
 			}
