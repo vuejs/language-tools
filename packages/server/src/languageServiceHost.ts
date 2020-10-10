@@ -31,7 +31,9 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		}
 	}, true);
 
-	return (uri: string) => {
+	return get;
+
+	function get(uri: string) {
 		const fileName = uriToFsPath(uri);
 		const firstMatchTsConfigs: string[] = [];
 		const secondMatchTsConfigs: string[] = [];
@@ -61,19 +63,17 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		if (tsConfig) {
 			return languageServices.get(tsConfig)?.languageService;
 		}
-	};
-
+	}
 	function add(tsConfig: string) {
-		console.log('[Create Language Service]', tsConfig);
-		let fullValidationReq = 0;
-		const getDiagnosticsReq: { [uri: string]: number } = {};
-		let diagnosticReq = 0;
+		let projectCurrentReq = 0;
 		let projectVersion = 0;
 		let disposed = false;
+		let parsedCommandLineUpdateTrigger = false;
+		let parsedCommandLine = createParsedCommandLine();
+		const fileCurrentReqs = new Map<string, number>();
 		const fileWatchers = new Map<string, ts.FileWatcher>();
 		const scriptVersions = new Map<string, string>();
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-		let parsedCommandLine = createParsedCommandLine();
 		const languageServiceHost = createLanguageServiceHost();
 		const ls = createLanguageService(languageServiceHost);
 
@@ -84,7 +84,6 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 				onParsedCommandLineUpdate();
 			}
 		});
-		let parsedCommandLineUpdateTrigger = false;
 		const directoryWatcher = ts.sys.watchDirectory!(upath.dirname(tsConfig), fileName => {
 			parsedCommandLineUpdateTrigger = true;
 			setTimeout(() => {
@@ -97,6 +96,8 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		}, true);
 
 		documents.onDidChangeContent(change => onDidChangeContent(change.document));
+		documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
+
 		languageServices.set(tsConfig, {
 			languageService: ls,
 			getParsedCommandLine: () => parsedCommandLine,
@@ -104,9 +105,14 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		});
 
 		function createParsedCommandLine() {
-			const parseConfigHost = {
+			const parseConfigHost: ts.ParseConfigHost = {
 				...ts.sys,
-				readDirectory: readDirectoryProxy,
+				readDirectory: (path, extensions, exclude, include, depth) => {
+					return [
+						...ts.sys.readDirectory(path, extensions, exclude, include, depth),
+						...ts.sys.readDirectory(path, ['.vue'], exclude, include, depth),
+					];
+				},
 			};
 
 			const file = ts.findConfigFile(tsConfig, ts.sys.fileExists)!;
@@ -114,51 +120,34 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(file));
 			content.options.allowJs = true; // TODO: should not patch?
 			return content;
-
-			function readDirectoryProxy(path: string, extensions?: readonly string[], exclude?: readonly string[], include?: readonly string[], depth?: number): string[] {
-				return [
-					...ts.sys.readDirectory(path, extensions, exclude, include, depth),
-					...ts.sys.readDirectory(path, ['.vue'], exclude, include, depth),
-				];
-			}
 		}
-		function onDidChangeContent(document: TextDocument) {
+		async function onDidChangeContent(document: TextDocument) {
 			const fileName = uriToFsPath(document.uri);
 			if (new Set(parsedCommandLine.fileNames).has(fileName)) {
-				const oldVersion = scriptVersions.get(fileName);
 				const newVersion = ts.sys.createHash!(document.getText());
-				if (oldVersion !== newVersion) {
-					scriptVersions.set(fileName, newVersion);
-					onProjectFilesUpdate([document]);
-				}
+				scriptVersions.set(fileName, newVersion);
+				await onProjectFilesUpdate([document]);
 			}
 		}
 		async function fullValidation(changedDocs: TextDocument[]) {
-			const req = ++fullValidationReq;
+			const req = ++projectCurrentReq;
 			const docs = [...changedDocs];
-			const openedUris = new Set(documents.all().map(doc => doc.uri));
 			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue');
 			for (const document of openedDocs) {
 				if (changedDocs.find(doc => doc.uri === document.uri)) continue;
 				docs.push(document);
 			}
-			for (const sourceFile of ls.getAllSourceFiles()) {
-				const document = sourceFile.getTextDocument();
-				if (changedDocs.find(doc => doc.uri === document.uri)) continue;
-				if (openedDocs.find(doc => doc.uri === document.uri)) continue;
-				docs.push(document);
-			}
 			for (const doc of docs) {
-				if (req !== fullValidationReq) break;
-				await sendDiagnostics(doc, openedUris.has(doc.uri));
+				if (req !== projectCurrentReq) break;
+				await sendDiagnostics(doc);
 			}
 		}
-		async function sendDiagnostics(document: TextDocument, suggestion: boolean) {
-			const currentReq = ++diagnosticReq;
-			getDiagnosticsReq[document.uri] = currentReq;
-			const isCancel = () => getDiagnosticsReq[document.uri] !== currentReq;
+		async function sendDiagnostics(document: TextDocument) {
+			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
+			fileCurrentReqs.set(document.uri, req);
+			const isCancel = () => fileCurrentReqs.get(document.uri) !== req;
 
-			const diagnostics = await ls.doValidation(document, suggestion, isCancel, diagnostics => {
+			const diagnostics = await ls.doValidation(document, isCancel, diagnostics => {
 				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // dirty
 			});
 			if (diagnostics !== undefined) {
@@ -166,7 +155,6 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 			}
 		}
 		function onParsedCommandLineUpdate() {
-
 			const fileNames = new Set(parsedCommandLine.fileNames);
 			let filesChanged = false;
 
@@ -177,7 +165,6 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 					filesChanged = true;
 				}
 			}
-
 			for (const fileName of fileNames) {
 				if (!fileWatchers.has(fileName)) {
 					const fileWatcher = ts.sys.watchFile!(fileName, (fileName, eventKind) => {
@@ -189,7 +176,6 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 					filesChanged = true;
 				}
 			}
-
 			if (filesChanged) {
 				onProjectFilesUpdate([]);
 			}
@@ -213,7 +199,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		async function onProjectFilesUpdate(changedDocs: TextDocument[]) {
 			projectVersion++;
 			if (diag) {
-				fullValidation(changedDocs);
+				await fullValidation(changedDocs);
 			}
 		}
 		function createLanguageServiceHost() {
@@ -268,8 +254,8 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		}
 		function dispose() {
 			disposed = true;
-			for (const fileWatcher of fileWatchers) {
-				fileWatcher[1].close();
+			for (const [uri, fileWatcher] of fileWatchers) {
+				fileWatcher.close();
 			}
 			directoryWatcher.close();
 			tsConfigWatcher.close();
@@ -277,11 +263,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		}
 	}
 	function remove(tsConfig: string) {
-		const ls = languageServices.get(tsConfig);
-		if (ls) {
-			ls.dispose();
-			console.log('[Destroy Language Service]', tsConfig)
-		}
+		languageServices.get(tsConfig)?.dispose();
 		languageServices.delete(tsConfig);
 	}
 }

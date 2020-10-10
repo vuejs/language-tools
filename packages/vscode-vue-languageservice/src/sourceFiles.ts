@@ -1130,7 +1130,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		return worker;
 
-		async function worker(suggestion: boolean, newTsProjectVersion: string, isCancel: () => boolean, onDirty: (diags: Diagnostic[]) => void) {
+		async function worker(newTsProjectVersion: string, isCancel: () => boolean, onDirty: (diags: Diagnostic[]) => void) {
 			tsProjectVersion.value = newTsProjectVersion;
 			let dirty = false;
 
@@ -1144,29 +1144,27 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 			if (dirty) await nextTick();
 			if (isCancel()) return;
-			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
-
-			if (dirty) await nextTick();
-			if (isCancel()) return;
 			dirty = tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
-
-			if (dirty) await nextTick();
-			if (isCancel()) return;
-			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
 
 			if (dirty) await nextTick();
 			if (isCancel()) return;
 			dirty = tryProgress(scriptDiags_2, lastScriptDiags_2);
 
-			if (suggestion) {
-				if (dirty) await nextTick();
-				if (isCancel()) return;
-				dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
 
-				if (dirty) await nextTick();
-				if (isCancel()) return;
-				dirty = tryProgress(scriptDiags_3, lastScriptDiags_3);
-			}
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(scriptDiags_3, lastScriptDiags_3);
+
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
+
+			if (dirty) await nextTick();
+			if (isCancel()) return;
+			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
 
 			return result.value;
 
@@ -1300,7 +1298,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		function useScriptValidation(mode: number) {
 			const document = computed(() => scriptSetupDocument.value ? scriptSetupDocument.value : scriptDocument.value);
 			const errors = computed(() => {
-				{ // watching
+				if (mode === 1) { // watching
 					tsProjectVersion.value;
 				}
 				const doc = document.value;
@@ -1324,7 +1322,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 		function useTemplateScriptValidation(mode: number) {
 			const errors_1 = computed(() => {
-				{ // watching
+				if (mode === 1) { // watching
 					tsProjectVersion.value;
 				}
 				const doc = templateScriptDocument.value;

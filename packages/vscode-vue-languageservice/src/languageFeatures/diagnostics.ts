@@ -5,8 +5,8 @@ import {
 import { SourceFile } from '../sourceFiles';
 
 export function register(sourceFiles: Map<string, SourceFile>, gerTsProjectVersion: () => string) {
-	return async (document: TextDocument, suggestion: boolean, isCancel: () => boolean, onProcess: (diags: Diagnostic[]) => void) => {
+	return async (document: TextDocument, isCancel: () => boolean, onProcess: (diags: Diagnostic[]) => void) => {
 		const sourceFile = sourceFiles.get(document.uri);
-		return await sourceFile?.getDiagnostics(suggestion, gerTsProjectVersion(), isCancel, onProcess);
+		return await sourceFile?.getDiagnostics(gerTsProjectVersion(), isCancel, onProcess);
 	};
 }

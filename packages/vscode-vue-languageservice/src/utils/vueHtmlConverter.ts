@@ -14,8 +14,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 	const mappings: Mapping<TsMappingData>[] = [];
 	const tags = new Set<string>();
 	const slots = new Map<string, string>();
-	let elementIndex = 0;
 	const pugMapper = pugData ? createHtmlPugMapper(pugData.pug, pugData.html) : undefined;
+	let elementIndex = 0;
 	let text = worker('', node, []);
 
 	text += `export default {\n`
