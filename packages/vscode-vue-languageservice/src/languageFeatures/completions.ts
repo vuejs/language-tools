@@ -16,6 +16,7 @@ import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
 import { hyphenate } from '@vue/shared';
+import * as upath from 'upath';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
@@ -38,9 +39,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (cssResult.items.length) return cssResult as CompletionList;
 
 		function getTsResult(sourceFile: SourceFile) {
-			const isIncomplete = context?.triggerKind !== CompletionTriggerKind.TriggerForIncompleteCompletions;
 			const result: CompletionList = {
-				isIncomplete,
+				isIncomplete: false,
 				items: [],
 			};
 			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
@@ -53,7 +53,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
 					const items = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
-						includeCompletionsForModuleExports: !isIncomplete,
+						includeCompletionsForModuleExports: true, // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
 					const sourceItems = items.map(item => toSourceItem(item, sourceMap));
@@ -67,6 +67,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						entry.data = {
 							...entry.data,
 							...data,
+						};
+						// patch import completion icon
+						if (entry.detail?.endsWith('vue.ts')) {
+							entry.detail = upath.trimExt(entry.detail);
 						}
 						result.items.push(entry as CompletionItem);
 					}

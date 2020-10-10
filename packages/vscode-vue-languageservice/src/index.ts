@@ -9,6 +9,7 @@ import {
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { pugToHtml, htmlToPug } from '@volar/pug';
 import { createSourceFile, SourceFile } from './sourceFiles';
+import * as upath from 'upath';
 import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
@@ -37,11 +38,11 @@ export enum Commands {
 	HTML_TO_PUG_COMMAND = 'volar.html-to-pug',
 	PUG_TO_HTML_COMMAND = 'volar.pug-to-html',
 }
-export interface LanguageServiceHost extends ts.LanguageServiceHost { }
+export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { triggerCharacter } from './languageFeatures/completions';
 
-export function createLanguageService(host: LanguageServiceHost) {
+export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
@@ -77,7 +78,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
 		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles), false),
 		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles), false),
-		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, host), false),
+		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(findDocumentColors.register(sourceFiles), false),
 		dispose: tsLanguageService.dispose,
 	};
@@ -92,13 +93,13 @@ export function createLanguageService(host: LanguageServiceHost) {
 		return new Proxy(api, handler) as T;
 	}
 	function update(shouldUpdateTemplateScript: boolean) {
-		const currentVersion = host.getProjectVersion?.();
+		const currentVersion = vueHost.getProjectVersion?.();
 		if (currentVersion === undefined || currentVersion !== lastProjectVersion) {
 
 			let tsFileChanged = false;
 			lastProjectVersion = currentVersion;
 			const oldFiles = new Set([...lastScriptVersions.keys()]);
-			const newFiles = new Set(host.getScriptFileNames());
+			const newFiles = new Set(vueHost.getScriptFileNames());
 			const removes: string[] = [];
 			const adds: string[] = [];
 			const updates: string[] = [];
@@ -122,13 +123,13 @@ export function createLanguageService(host: LanguageServiceHost) {
 					else {
 						tsFileChanged = true;
 					}
-					lastScriptVersions.set(fileName, host.getScriptVersion(fileName));
+					lastScriptVersions.set(fileName, vueHost.getScriptVersion(fileName));
 				}
 			}
 			for (const fileName of oldFiles) {
 				if (newFiles.has(fileName)) {
 					const oldVersion = lastScriptVersions.get(fileName);
-					const newVersion = host.getScriptVersion(fileName);
+					const newVersion = vueHost.getScriptVersion(fileName);
 					if (oldVersion !== newVersion) {
 						if (fileName.endsWith('.vue')) {
 							updates.push(fileName);
@@ -159,19 +160,36 @@ export function createLanguageService(host: LanguageServiceHost) {
 	}
 	function createTsLanguageServiceHost() {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
+		ts.sys.getDirectories
 		const tsHost: ts2.LanguageServiceHost = {
-			...host,
+			...vueHost,
 			getProjectVersion: () => tsProjectVersion.toString(),
 			getScriptFileNames,
 			getScriptVersion,
 			getScriptSnapshot,
+			readDirectory: (path, extensions, exclude, include, depth) => {
+				const result = ts.sys.readDirectory(path, extensions, exclude, include, depth);
+				for (const [uri, sourceFile] of sourceFiles) {
+					const tsPath = uriToFsPath(uri) + '.ts'; // TODO
+					if (upath.relative(path, tsPath).startsWith('..')) {
+						continue;
+					}
+					if (!depth && upath.relative(path, tsPath).indexOf(upath.sep) === -1) {
+						result.push(tsPath);
+					}
+					else if (depth) {
+						result.push(tsPath); // TODO: depth num
+					}
+				}
+				return result;
+			},
 		};
 
 		return tsHost;
 
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
-			for (const fileName of host.getScriptFileNames()) {
+			for (const fileName of vueHost.getScriptFileNames()) {
 				const uri = fsPathToUri(fileName);
 				const sourceFile = sourceFiles.get(uri);
 				if (sourceFile) {
@@ -193,7 +211,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 					return doc.version.toString();
 				}
 			}
-			return host.getScriptVersion(fileName);
+			return vueHost.getScriptVersion(fileName);
 		}
 		function getScriptSnapshot(fileName: string) {
 			const version = getScriptVersion(fileName);
@@ -211,7 +229,7 @@ export function createLanguageService(host: LanguageServiceHost) {
 					return snapshot;
 				}
 			}
-			return host.getScriptSnapshot(fileName);
+			return vueHost.getScriptSnapshot(fileName);
 		}
 	}
 	function doCodeAction(document: TextDocument, range: Range): CodeAction[] {
@@ -317,9 +335,9 @@ export function createLanguageService(host: LanguageServiceHost) {
 		if (doc) return doc;
 
 		const fileName = uriToFsPath(uri);
-		const version = Number(host.getScriptVersion(fileName));
+		const version = Number(vueHost.getScriptVersion(fileName));
 		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
-			const scriptSnapshot = host.getScriptSnapshot(fileName);
+			const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 				const document = TextDocument.create(uri, 'typescript', version, scriptText);

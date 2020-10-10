@@ -17,10 +17,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 import { DocumentSemanticTokensProvider } from './languageFeatures/semanticTokens';
 
-export interface LanguageServiceHost extends ts.LanguageServiceHost { }
+export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 
-export function createLanguageService(host: LanguageServiceHost) {
+export function createLanguageService(host: ts.LanguageServiceHost) {
 
 	const documents = new Map<string, TextDocument>();
 	const languageService = ts.createLanguageService(host);

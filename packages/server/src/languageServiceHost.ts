@@ -205,6 +205,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		function createLanguageServiceHost() {
 
 			const host: LanguageServiceHost = {
+				...ts.sys as any,
 				getProjectVersion: () => projectVersion.toString(),
 				getScriptFileNames,
 				getScriptVersion,
@@ -212,9 +213,6 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 				getCurrentDirectory: () => upath.dirname(tsConfig),
 				getCompilationSettings: () => parsedCommandLine.options,
 				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
-				fileExists: ts.sys.fileExists,
-				readFile: ts.sys.readFile,
-				readDirectory: ts.sys.readDirectory,
 			};
 
 			return host;
