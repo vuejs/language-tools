@@ -170,15 +170,16 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				const result = ts.sys.readDirectory(path, extensions, exclude, include, depth);
 				for (const [uri, sourceFile] of sourceFiles) {
-					const tsPath = uriToFsPath(uri) + '.ts'; // TODO
-					if (upath.relative(path, tsPath).startsWith('..')) {
+					const vuePath = uriToFsPath(uri);
+					const vuePath2 = upath.join(path, upath.basename(vuePath));
+					if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
 						continue;
 					}
-					if (!depth && upath.relative(path, tsPath).indexOf(upath.sep) === -1) {
-						result.push(tsPath);
+					if (!depth && vuePath.toLowerCase() === vuePath2.toLowerCase()) {
+						result.push(vuePath2);
 					}
 					else if (depth) {
-						result.push(tsPath); // TODO: depth num
+						result.push(vuePath2); // TODO: depth num
 					}
 				}
 				return result;

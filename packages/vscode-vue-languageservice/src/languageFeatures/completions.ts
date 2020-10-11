@@ -67,10 +67,6 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 							textEdit: translateTextEdit(tsItem.textEdit, sourceMap),
 							data,
 						};
-						// patch import completion icon
-						if (vueItem.detail?.endsWith('vue.ts')) {
-							vueItem.detail = upath.trimExt(vueItem.detail);
-						}
 						return vueItem;
 					});
 					result.items = result.items.concat(vueItems);
