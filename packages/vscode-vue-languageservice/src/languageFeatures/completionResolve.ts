@@ -23,7 +23,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				if (sourceMap.virtualDocument.uri !== data.docUri) continue;
 				data.tsItem = sourceMap.languageService.doCompletionResolve(data.tsItem);
 				vueItem.documentation = data.tsItem.documentation;
-				vueItem.detail = data.tsItem.detail;
+				// TODO: this is a patch for import ts file icon
+				if (vueItem.detail !== data.tsItem.detail + '.ts') {
+					vueItem.detail = data.tsItem.detail;
+				}
 				vueItem.additionalTextEdits = translateAdditionalTextEdits(data.tsItem.additionalTextEdits, sourceMap);
 			}
 			return vueItem;
