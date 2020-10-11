@@ -32,9 +32,11 @@ For Global components, you need to definition `__VLS_GlobalComponents` interface
 // shims-volar.d.ts
 import { RouterLink, RouterView } from 'vue-router'
 
-interface __VLS_GlobalComponents {
-    'RouterLink': typeof RouterLink
-    'RouterView': typeof RouterView
+declare global {
+	interface __VLS_GlobalComponents {
+		'RouterLink': typeof RouterLink
+		'RouterView': typeof RouterView
+	}
 }
 ```
 
@@ -47,17 +49,19 @@ v-slot Type-Checking will auto service the .vue files under project, but for thi
 import { RouterLink, RouterView, useLink, RouteLocationNormalized } from 'vue-router'
 import { UnwrapRef, VNode } from 'vue'
 
-interface __VLS_GlobalComponents {
-	'RouterLink': typeof RouterLink & {
-		__VLS_slots: {
-			default: UnwrapRef<ReturnType<typeof useLink>>
+declare global {
+	interface __VLS_GlobalComponents {
+		'RouterLink': typeof RouterLink & {
+			__VLS_slots: {
+				default: UnwrapRef<ReturnType<typeof useLink>>
+			}
 		}
-	}
-	'RouterView': typeof RouterView & {
-		__VLS_slots: {
-			default: {
-				Component: VNode
-				route: RouteLocationNormalized & { href: string }
+		'RouterView': typeof RouterView & {
+			__VLS_slots: {
+				default: {
+					Component: VNode
+					route: RouteLocationNormalized & { href: string }
+				}
 			}
 		}
 	}
