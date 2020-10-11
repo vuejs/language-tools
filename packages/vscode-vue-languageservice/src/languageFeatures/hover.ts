@@ -49,7 +49,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
-					if (!tsLoc.data.capabilities.basic) continue;
+					if (!tsLoc.maped.data.capabilities.basic) continue;
 					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, tsLoc.range.start);
 					if (result?.range) {
 						const vueLoc = sourceMap.findFirstVueLocation(result.range);

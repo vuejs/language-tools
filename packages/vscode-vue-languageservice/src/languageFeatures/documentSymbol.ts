@@ -70,8 +70,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						map.set(`${sourceMap.virtualDocument.offsetAt(s.location.range.start)}:${sourceMap.virtualDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
 							...s,
 							location: Location.create(document.uri, vueLoc.range),
-							name: s.kind === SymbolKind.Module ? `<${vueLoc.data.vueTag}>` : s.name,
-							containerName: s.containerName ?? `<${vueLoc.data.vueTag}>`,
+							name: s.kind === SymbolKind.Module ? `<${vueLoc.maped.data.vueTag}>` : s.name,
+							containerName: s.containerName ?? `<${vueLoc.maped.data.vueTag}>`,
 						});
 					}
 				}

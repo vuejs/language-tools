@@ -79,14 +79,14 @@ export function getTsActionEntries(
 					{ // patch prop rename
 						let isProp = false;
 						for (const right of rights) {
-							if (right.data.isUnwrapProp) {
+							if (right.maped.data.isUnwrapProp) {
 								const loc2Definitions = ls.findDefinition(templateScript.document, right.range.start);
 								isProp = loc2Definitions.length > 0;
 							}
 						}
 						if (isProp) {
 							for (const right of rights) {
-								if (!right.data.isUnwrapProp) {
+								if (!right.maped.data.isUnwrapProp) {
 									const propRenameReferences = ls.findReferences(templateScript.document, right.range.start);
 									if (propRenameReferences) {
 										result = result.concat(propRenameReferences);

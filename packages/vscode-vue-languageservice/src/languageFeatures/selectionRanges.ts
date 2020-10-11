@@ -21,7 +21,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const range of ranges) {
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
 					for (const tsLoc of sourceMap.findVirtualLocations(range)) {
-						if (!tsLoc.data.capabilities.basic) continue;
+						if (!tsLoc.maped.data.capabilities.basic) continue;
 						const selectRange = sourceMap.languageService.getSelectionRange(sourceMap.virtualDocument, tsLoc.range.start);
 						if (selectRange) {
 							const vueLoc = sourceMap.findFirstVueLocation(selectRange.range);

@@ -49,8 +49,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.data.capabilities.completion) continue;
-					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
+					if (!virtualLoc.maped.data.capabilities.completion) continue;
+					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
 					const items = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: true, // TODO: read ts config

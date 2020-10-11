@@ -23,8 +23,8 @@ let apiClient: LanguageClient;
 let docClient: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
-	apiClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic');
-	docClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document');
+	apiClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic', 6009);
+	docClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
 
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
 	context.subscriptions.push(activateCommenting(embeddedLanguageRequestor));
@@ -45,12 +45,12 @@ export function deactivate(): Thenable<void> | undefined {
 	return apiClient?.stop() && docClient?.stop();
 }
 
-function setupLanguageService(context: vscode.ExtensionContext, script: string, name: string,) {
+function setupLanguageService(context: vscode.ExtensionContext, script: string, name: string, port: number) {
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(script);
 	// The debug options for the server
 	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
-	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+	let debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used

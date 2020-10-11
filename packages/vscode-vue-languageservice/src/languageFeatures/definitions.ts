@@ -49,8 +49,8 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 		const ls = sourceMap.languageService;
 		const worker = isTypeDefinition ? ls.findTypeDefinition : ls.findDefinition;
 		for (const tsLoc of sourceMap.findVirtualLocations(range)) {
-			if (!tsLoc.data.capabilities.references) continue;
-			const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.data.vueTag, 'definition', worker, ls, sourceFiles);
+			if (!tsLoc.maped.data.capabilities.references) continue;
+			const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'definition', worker, ls, sourceFiles);
 			for (const location of entries) {
 				const document = ls.getTextDocument(location.uri);
 				if (!document) continue;

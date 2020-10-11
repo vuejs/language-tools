@@ -34,8 +34,8 @@ export function register(sourceFiles: Map<string, SourceFile>, languageService: 
 			let result: Location[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
-					if (!tsLoc.data.capabilities.references) continue;
-					result = result.concat(getTsResultWorker(sourceMap.virtualDocument, tsLoc.range, tsLoc.data.vueTag, sourceMap.languageService));
+					if (!tsLoc.maped.data.capabilities.references) continue;
+					result = result.concat(getTsResultWorker(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, sourceMap.languageService));
 				}
 			}
 			return result;

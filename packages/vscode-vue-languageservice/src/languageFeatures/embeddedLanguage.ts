@@ -35,10 +35,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.data.capabilities.formatting) continue;
+					if (!virtualLoc.maped.data.capabilities.formatting) continue;
+					const range = {
+						start: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.start),
+						end: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.end),
+					};
 					return {
 						id: sourceMap.virtualDocument.languageId,
-						range: virtualLoc.mapedFromRange,
+						range,
 					};
 				}
 			}
@@ -47,9 +51,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
+					const range = {
+						start: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.start),
+						end: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.end),
+					};
 					return {
 						id: sourceMap.virtualDocument.languageId,
-						range: virtualLoc.mapedFromRange,
+						range,
 					};
 				}
 			}
@@ -58,9 +66,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
+					const range = {
+						start: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.start),
+						end: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.end),
+					};
 					return {
 						id: sourceMap.virtualDocument.languageId,
-						range: virtualLoc.mapedFromRange,
+						range,
 					};
 				}
 			}
@@ -69,9 +81,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
+					const range = {
+						start: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.start),
+						end: sourceMap.vueDocument.positionAt(virtualLoc.maped.vueRange.end),
+					};
 					return {
 						id: sourceMap.virtualDocument.languageId,
-						range: virtualLoc.mapedFromRange,
+						range,
 					};
 				}
 			}

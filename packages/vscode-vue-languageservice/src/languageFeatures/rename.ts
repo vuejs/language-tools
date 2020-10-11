@@ -37,8 +37,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
-					if (!tsLoc.data.capabilities.references) continue;
-					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.data.vueTag, 'rename', getRenameLocations, sourceMap.languageService, sourceFiles);
+					if (!tsLoc.maped.data.capabilities.references) continue;
+					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'rename', getRenameLocations, sourceMap.languageService, sourceFiles);
 
 					for (const entry of entries) {
 						const entryDocument = sourceMap.languageService.getTextDocument(entry.uri);
@@ -81,7 +81,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					for (const sourceMap of editSourceFile.getTsSourceMaps()) {
 						if (sourceMap.virtualDocument.uri !== uri) continue;
 						for (const textEdit of tsWorkspaceEdit.changes[uri]) {
-							const isHtmlTag = sourceMap.findFirstVueLocation(textEdit.range)?.data.templateNodeType === NodeTypes.ELEMENT;
+							const isHtmlTag = sourceMap.findFirstVueLocation(textEdit.range)?.maped.data.templateNodeType === NodeTypes.ELEMENT;
 							const oldName = sourceMap.virtualDocument.getText(textEdit.range);
 							if (isHtmlTag && isHyphenateName(oldName)) {
 								textEdit.newText = hyphenate(textEdit.newText);

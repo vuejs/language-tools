@@ -51,9 +51,8 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 	}
 	private maps(range: Range, vueToVirtual: boolean, returnFirstResult?: boolean) {
 		const result: {
-			data: MapedData,
+			maped: Mapping<MapedData>,
 			range: Range,
-			mapedFromRange: Range,
 		}[] = [];
 		const toDoc = vueToVirtual ? this.virtualDocument : this.vueDocument;
 		const fromDoc = vueToVirtual ? this.vueDocument : this.virtualDocument;
@@ -70,14 +69,9 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 						toDoc.positionAt(mapedToRange.start),
 						toDoc.positionAt(mapedToRange.end),
 					);
-					const range = Range.create(
-						fromDoc.positionAt(mapedFromRange.start),
-						fromDoc.positionAt(mapedFromRange.end),
-					);
 					result.push({
-						data: maped.data,
+						maped,
 						range: toRange,
-						mapedFromRange: range,
 					});
 					if (returnFirstResult) return result;
 				}
@@ -88,14 +82,9 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 						toDoc.positionAt(mapedToRange.start + fromRange.start - mapedFromRange.start),
 						toDoc.positionAt(mapedToRange.end + fromRange.end - mapedFromRange.end),
 					);
-					const range = Range.create(
-						fromDoc.positionAt(mapedFromRange.start),
-						fromDoc.positionAt(mapedFromRange.end),
-					);
 					result.push({
-						data: maped.data,
+						maped,
 						range: toRange,
-						mapedFromRange: range,
 					});
 					if (returnFirstResult) return result;
 				}

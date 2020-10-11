@@ -95,7 +95,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 			const textEdits = sourceMap.languageService.doFormatting(sourceMap.virtualDocument, options);
 			for (const textEdit of textEdits) {
 				for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
-					if (!vueLoc.data.capabilities.formatting) continue;
+					if (!vueLoc.maped.data.capabilities.formatting) continue;
 					if (vueLoc.range.start.line < range.start.line) continue;
 					if (vueLoc.range.end.line > range.end.line) continue;
 					if (vueLoc.range.start.line === range.start.line && vueLoc.range.start.character < range.start.character) continue;

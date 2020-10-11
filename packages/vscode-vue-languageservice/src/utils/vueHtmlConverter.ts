@@ -164,11 +164,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						prop.type === NodeTypes.ATTRIBUTE
 					) {
 						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-						const propValue = prop.value?.content ?? '';
+						const propValue = prop.value?.content.replace(/`/g, '\\`') ?? '';
 						const propName2 = prop.name;
 
 						// camelize name
-						mapping(prop.type, `'${propName}': "${propValue}"`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+						mapping(prop.type, `'${propName}': \`${propValue}\``, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
@@ -181,7 +181,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
 						}]);
-						_code += `': "${propValue}",\n`;
+						_code += `': \`${propValue}\`,\n`;
 						// original name
 						if (propName2 !== propName) {
 							mapping(prop.type, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
@@ -193,11 +193,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 								start: prop.loc.start.offset,
 								end: prop.loc.start.offset + propName2.length,
 							}]);
-							_code += `': "${propValue}",\n`;
+							_code += `': \`${propValue}\`,\n`;
 						}
 					}
 					else {
-						_code += "//" + [prop.type, prop.name, prop.loc.source].join(", ") + "\n";
+						_code += "/* " + [prop.type, prop.name, prop.loc.source].join(", ") + " */\n";
 					}
 				}
 			}

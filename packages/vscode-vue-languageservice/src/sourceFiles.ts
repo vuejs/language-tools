@@ -1345,7 +1345,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
 					const propRights = templateScript.value.propSourceMap.findVirtualLocations(diag.range);
 					for (const propRight of propRights) {
-						if (propRight.data.isUnwrapProp) continue;
+						if (propRight.maped.data.isUnwrapProp) continue;
 						const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
 						for (const definition of definitions) {
 							if (definition.uri !== scriptDocument.value.uri) continue;
