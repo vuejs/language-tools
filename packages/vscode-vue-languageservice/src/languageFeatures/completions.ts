@@ -51,7 +51,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
 					const tsItems = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
-						includeCompletionsForModuleExports: true, // TODO: read ts config
+						includeCompletionsForModuleExports: virtualLoc.maped.data.vueTag === 'script', // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
