@@ -5,13 +5,11 @@ import {
 	Range,
 	TextEdit,
 	CompletionContext,
-	CompletionTriggerKind,
 	CompletionItemKind,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
 import { CompletionData } from '../utils/types';
 import * as html from 'vscode-html-languageservice';
-import * as css from 'vscode-css-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';

@@ -21,16 +21,19 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		const range = { start: position, end: position };
 
 		const tsResult = getTsResult(sourceFile);
-		const htmlResult = getHtmlResult(sourceFile);
-		const cssResult = getCssResult(sourceFile);
-
-		let result: WorkspaceEdit | undefined;
-		for (const _result of [tsResult, ...cssResult, ...htmlResult]) {
-			if (_result.changes && Object.keys(_result.changes).length) {
-				result = _result;
-			}
+		if (tsResult.changes && Object.keys(tsResult.changes).length) {
+			return tsResult;
 		}
-		return result;
+
+		const htmlResult = getHtmlResult(sourceFile);
+		if (htmlResult.changes && Object.keys(htmlResult.changes).length) {
+			return htmlResult;
+		}
+
+		const cssResult = getCssResult(sourceFile);
+		if (cssResult.changes && Object.keys(cssResult.changes).length) {
+			return cssResult;
+		}
 
 		function getTsResult(sourceFile: SourceFile) {
 			let tsEdits: WorkspaceEdit[] = [];
@@ -95,42 +98,52 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			}
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: WorkspaceEdit[] = [];
+			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
-					const workspaceEdit = sourceMap.languageService.doRename(sourceMap.virtualDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
-					if (workspaceEdit) {
-						if (workspaceEdit.changes) {
-							for (const uri in workspaceEdit.changes) {
-								const edits = workspaceEdit.changes[uri];
-								for (const edit of edits) {
-									const vueLoc = sourceMap.findFirstVueLocation(edit.range);
-									if (vueLoc) edit.range = vueLoc.range;
-								}
+					const htmlEdits = sourceMap.languageService.doRename(sourceMap.virtualDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
+					if (!htmlEdits) continue;
+					if (!htmlEdits.changes) continue;
+					for (const uri in htmlEdits.changes) {
+						const edits = htmlEdits.changes[uri];
+						for (const htmlEdit of edits) {
+							const vueLoc = sourceMap.findFirstVueLocation(htmlEdit.range);
+							if (!vueLoc) continue;
+							const vueUri = sourceMap.vueDocument.uri;
+							if (!result.changes![vueUri]) {
+								result.changes![vueUri] = [];
 							}
+							result.changes![vueUri].push({
+								range: vueLoc.range,
+								newText: htmlEdit.newText,
+							});
 						}
-						result.push(workspaceEdit);
 					}
 				}
 			}
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			const result: WorkspaceEdit[] = [];
+			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
-					const workspaceEdit = sourceMap.languageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
-					if (workspaceEdit) {
-						if (workspaceEdit.changes) {
-							for (const uri in workspaceEdit.changes) {
-								const edits = workspaceEdit.changes[uri];
-								for (const edit of edits) {
-									const vueLoc = sourceMap.findFirstVueLocation(edit.range);
-									if (vueLoc) edit.range = vueLoc.range;
-								}
+					const cssEdits = sourceMap.languageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
+					if (!cssEdits) continue;
+					if (!cssEdits.changes) continue;
+					for (const uri in cssEdits.changes) {
+						const edits = cssEdits.changes[uri];
+						for (const cssEdit of edits) {
+							const vueLoc = sourceMap.findFirstVueLocation(cssEdit.range);
+							if (!vueLoc) continue;
+							const vueUri = sourceMap.vueDocument.uri;
+							if (!result.changes![vueUri]) {
+								result.changes![vueUri] = [];
 							}
+							result.changes![vueUri].push({
+								range: vueLoc.range,
+								newText: cssEdit.newText,
+							});
 						}
-						result.push(workspaceEdit);
 					}
 				}
 			}
