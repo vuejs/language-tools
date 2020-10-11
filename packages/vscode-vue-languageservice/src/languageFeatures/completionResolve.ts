@@ -1,6 +1,7 @@
 import { CompletionItem, MarkupKind } from 'vscode-languageserver';
-import { CompletionData } from '../utils/types';
+import { CompletionData, TsCompletionData, HtmlCompletionData } from '../utils/types';
 import { SourceFile } from '../sourceFiles';
+import { translateAdditionalTextEdits } from './completions';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (item: CompletionItem) => {
@@ -9,52 +10,51 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (!sourceFile) return;
 
 		if (data.mode === 'ts') {
-			item = getTsResult(sourceFile, item);
+			return getTsResult(sourceFile, item, data);
 		}
 		if (data.mode === 'html') {
-			item = getHtmlResult(sourceFile, item);
+			return getHtmlResult(sourceFile, item, data);
 		}
 
 		return item;
 
-		function getTsResult(sourceFile: SourceFile, item: CompletionItem) {
+		function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (sourceMap.virtualDocument.uri !== data.docUri) continue;
-				item = sourceMap.languageService.doCompletionResolve(item);
-				if (item.additionalTextEdits) {
-					for (const textEdit of item.additionalTextEdits) {
-						const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
-						if (vueLoc) {
-							textEdit.range = vueLoc.range;
-						}
-					}
-				}
+				data.tsItem = sourceMap.languageService.doCompletionResolve(data.tsItem);
+				vueItem.documentation = data.tsItem.documentation;
+				vueItem.detail = data.tsItem.detail;
+				vueItem.additionalTextEdits = translateAdditionalTextEdits(data.tsItem.additionalTextEdits, sourceMap);
 			}
-			return item;
+			return vueItem;
 		}
-		function getHtmlResult(sourceFile: SourceFile, item: CompletionItem) {
-			let tsItem: CompletionItem | undefined = item.data.tsItem;
+		function getHtmlResult(sourceFile: SourceFile, vueItem: CompletionItem, data: HtmlCompletionData) {
+			let tsItem: CompletionItem | undefined = data.tsItem;
 			const tsLanguageService = sourceFile.getTsSourceMaps()[0]?.languageService;
-			if (!tsItem || !tsLanguageService) return item;
+			if (!tsItem || !tsLanguageService) return vueItem;
 
 			tsItem = tsLanguageService.doCompletionResolve(tsItem);
-			item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
+			vueItem.tags = [...vueItem.tags ?? [], ...tsItem.tags ?? []];
 
 			const details: string[] = [];
 			const documentations: string[] = [];
 
-			if (item.detail) details.push(item.detail);
+			if (vueItem.detail) details.push(vueItem.detail);
 			if (tsItem.detail) details.push(tsItem.detail);
-			if (details.length) item.detail = details.join('\n\n');
+			if (details.length) {
+				vueItem.detail = details.join('\n\n');
+			}
 
-			if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
+			if (vueItem.documentation) documentations.push(typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation.value);
 			if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
-			if (documentations.length) item.documentation = {
-				kind: MarkupKind.Markdown,
-				value: documentations.join('\n\n'),
-			};
+			if (documentations.length) {
+				vueItem.documentation = {
+					kind: MarkupKind.Markdown,
+					value: documentations.join('\n\n'),
+				};
+			}
 
-			return item;
+			return vueItem;
 		}
 	}
 }

@@ -51,29 +51,31 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.maped.data.capabilities.completion) continue;
 					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
-					const items = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
+					const tsItems = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: true, // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
-					const sourceItems = items.map(item => toSourceItem(item, sourceMap));
-					const data: CompletionData = {
-						uri: document.uri,
-						docUri: sourceMap.virtualDocument.uri,
-						mode: 'ts',
-					};
-					for (const entry of sourceItems) {
-						if (!entry.data) entry.data = {};
-						entry.data = {
-							...entry.data,
-							...data,
+					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
+						const data: CompletionData = {
+							uri: document.uri,
+							docUri: sourceMap.virtualDocument.uri,
+							mode: 'ts',
+							tsItem: tsItem,
+						};
+						const vueItem: CompletionItem = {
+							...tsItem,
+							additionalTextEdits: translateAdditionalTextEdits(tsItem.additionalTextEdits, sourceMap),
+							textEdit: translateTextEdit(tsItem.textEdit, sourceMap),
+							data,
 						};
 						// patch import completion icon
-						if (entry.detail?.endsWith('vue.ts')) {
-							entry.detail = upath.trimExt(entry.detail);
+						if (vueItem.detail?.endsWith('vue.ts')) {
+							vueItem.detail = upath.trimExt(vueItem.detail);
 						}
-						result.items.push(entry as CompletionItem);
-					}
+						return vueItem;
+					});
+					result.items = result.items.concat(vueItems);
 				}
 			}
 			result.items = result.items.filter(result => !result.label.startsWith('__VLS_'));
@@ -170,52 +172,53 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, {
+					const htmlResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, {
 						[document.uri]: true,
 					});
-					newResult.items = newResult.items.map(item => toSourceItem(item, sourceMap));
-					if (newResult.isIncomplete) {
+					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
-					const data: CompletionData = {
-						uri: document.uri,
-						docUri: sourceMap.virtualDocument.uri,
-						mode: 'html',
-					};
-					const itemsMap = new Map<string, html.CompletionItem>();
-					for (const entry of newResult.items) {
-						itemsMap.set(entry.label, entry);
+					const vueItems: CompletionItem[] = htmlResult.items.map(htmlItem => ({
+						...htmlItem,
+						additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
+						textEdit: translateTextEdit(htmlItem.textEdit, sourceMap),
+					}));
+					const htmlItemsMap = new Map<string, html.CompletionItem>();
+					for (const entry of htmlResult.items) {
+						htmlItemsMap.set(entry.label, entry);
 					}
-					for (const entry of newResult.items) {
-						const documentation = typeof entry.documentation === 'string' ? entry.documentation : entry.documentation?.value;
+					for (const vueItem of vueItems) {
+						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
 						const tsItem = documentation ? tsItems.get(documentation) : undefined;
-						if (entry.label.startsWith(':')) {
-							entry.kind = CompletionItemKind.Field;
-							entry.label = entry.label.substr(1);
-							entry.sortText = '\u0000' + entry.sortText;
+						if (vueItem.label.startsWith(':')) {
+							vueItem.kind = CompletionItemKind.Field;
+							vueItem.label = vueItem.label.substr(1);
+							vueItem.sortText = '\u0000' + vueItem.sortText;
 						}
-						else if (entry.label.startsWith('@')) {
-							entry.kind = CompletionItemKind.Event;
-							entry.label = entry.label.substr(1);
-							entry.sortText = '\u0001' + entry.sortText;
+						else if (vueItem.label.startsWith('@')) {
+							vueItem.kind = CompletionItemKind.Event;
+							vueItem.label = vueItem.label.substr(1);
+							vueItem.sortText = '\u0001' + vueItem.sortText;
 						}
 						if (tsItem && !documentation?.startsWith('*:')) { // not globalAttributes
-							entry.sortText = '\u0000' + entry.sortText;
+							vueItem.sortText = '\u0000' + vueItem.sortText;
 						}
-						else if (entry.label.startsWith('v-')) {
-							entry.kind = CompletionItemKind.Method;
-							entry.sortText = '\u0002' + entry.sortText;
+						else if (vueItem.label.startsWith('v-')) {
+							vueItem.kind = CompletionItemKind.Method;
+							vueItem.sortText = '\u0002' + vueItem.sortText;
 						}
 						else {
-							entry.sortText = '\u0001' + entry.sortText;
+							vueItem.sortText = '\u0001' + vueItem.sortText;
 						}
-						entry.data = {
-							...entry.data,
-							...data,
-							tsItem,
+						const data: CompletionData = {
+							mode: 'html',
+							uri: document.uri,
+							docUri: sourceMap.virtualDocument.uri,
+							tsItem: tsItem,
 						};
+						vueItem.data = data;
 					}
-					result.items = result.items.concat(newResult.items);
+					result.items = result.items.concat(vueItems);
 				}
 			}
 			return result;
@@ -228,9 +231,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const newResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
-					newResult.items = newResult.items.map(item => toSourceItem(item, sourceMap));
-					if (newResult.isIncomplete) {
+					const cssResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
+					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
 					const data: CompletionData = {
@@ -238,14 +240,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						docUri: sourceMap.virtualDocument.uri,
 						mode: 'css',
 					};
-					for (const entry of newResult.items) {
-						if (!entry.data) entry.data = {};
-						entry.data = {
-							...entry.data,
-							...data,
-						}
-					}
-					result.items = result.items.concat(newResult.items);
+					const vueItems: CompletionItem[] = cssResult.items.map(htmlItem => ({
+						...htmlItem,
+						additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
+						textEdit: translateTextEdit(htmlItem.textEdit, sourceMap),
+						data,
+					}));
+					result.items = result.items.concat(vueItems);
 				}
 			}
 			return result;
@@ -253,10 +254,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 	}
 }
 
-function toSourceItem<T extends CompletionItem | css.CompletionItem>(entry: T, sourceMap: SourceMap): T {
-	if (entry.additionalTextEdits) {
+export function translateAdditionalTextEdits(additionalTextEdits: TextEdit[] | undefined, sourceMap: SourceMap) {
+	if (additionalTextEdits) {
 		const newAdditionalTextEdits: TextEdit[] = [];
-		for (const textEdit of entry.additionalTextEdits) {
+		for (const textEdit of additionalTextEdits) {
 			const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
 			if (vueLoc) {
 				newAdditionalTextEdits.push({
@@ -265,16 +266,19 @@ function toSourceItem<T extends CompletionItem | css.CompletionItem>(entry: T, s
 				});
 			}
 		}
-		entry.additionalTextEdits = newAdditionalTextEdits;
+		return newAdditionalTextEdits;
 	}
-	if (entry.textEdit && TextEdit.is(entry.textEdit)) {
-		const vueLoc = sourceMap.findFirstVueLocation(entry.textEdit.range);
+	return undefined;
+}
+export function translateTextEdit(textEdit: TextEdit | html.InsertReplaceEdit | undefined, sourceMap: SourceMap) {
+	if (textEdit && TextEdit.is(textEdit)) {
+		const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
 		if (vueLoc) {
-			entry.textEdit = {
-				newText: entry.textEdit.newText,
+			return {
+				newText: textEdit.newText,
 				range: vueLoc.range,
 			};
 		}
 	}
-	return entry;
+	return undefined;
 }
