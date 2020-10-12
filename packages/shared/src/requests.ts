@@ -20,11 +20,11 @@ export namespace GetEmbeddedLanguageRequest {
 	}, {
 		id: string,
 		range: Range,
-	} | undefined, any, any> = new RequestType('comment');
+	} | undefined, any, any> = new RequestType('volar.action.comment');
 }
 export namespace VerifyAllScriptsRequest {
-	export const type: RequestType<undefined, undefined, any, any> = new RequestType('comment');
+	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.verifyAllScripts');
 }
 export namespace FormatAllScriptsRequest {
-	export const type: RequestType<undefined, undefined, any, any> = new RequestType('comment');
+	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.formatAllScripts');
 }
