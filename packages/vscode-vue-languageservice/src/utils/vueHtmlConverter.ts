@@ -41,20 +41,19 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 		else if (node.type === NodeTypes.ELEMENT) { // TODO: should not has indent
 			if (!dontCreateBlock) _code += `{\n`;
 			{
-				// +1 to remove '<' from html tag
-				const sourceRanges = [{
-					start: node.loc.start.offset + 1,
-					end: node.loc.start.offset + 1 + node.tag.length,
-				}];
-				if (!node.isSelfClosing) {
-					sourceRanges.push({
-						start: node.loc.end.offset - 1 - node.tag.length,
-						end: node.loc.end.offset - 1,
-					});
-				}
-
 				tags.add(node.tag);
+				writeImportSlots(node);
+				writeReferenceProps(node);
+				writeProps(node);
+				writeOns(node);
+				writeSlots(node);
+				for (const childNode of node.children) {
+					_code = worker(_code, childNode, parents.concat(node));
+				}
+			}
+			if (!dontCreateBlock) _code += '}\n';
 
+			function writeImportSlots(node: ElementNode) {
 				for (const prop of node.props) {
 					if (
 						prop.type === NodeTypes.DIRECTIVE
@@ -84,6 +83,94 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						}
 					}
 				}
+			}
+			function writeReferenceProps(node: ElementNode) {
+				// fix find references not work if prop has default value
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& prop.arg
+						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
+						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
+						&& !prop.exp?.isConstant // TODO: style='z-index: 2' will compile to {'z-index':'2'}
+					) {
+						const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
+						const propName2 = prop.arg.content;
+
+						if (prop.name === 'bind' || prop.name === 'model') {
+							_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
+							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}], false);
+							_code += `'`;
+							mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}]);
+							_code += `'];\n`;
+							// original name
+							if (propName2 !== propName) {
+								_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
+								mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								}], false);
+								_code += `'`;
+								mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								}]);
+								_code += `'];\n`;
+							}
+						}
+					}
+					else if (
+						prop.type === NodeTypes.ATTRIBUTE
+					) {
+						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
+						const propName2 = prop.name;
+
+						_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
+						mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + propName2.length,
+						}], false);
+						_code += `'`;
+						mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + propName2.length,
+						}]);
+						_code += `'];\n`;
+						// original name
+						if (propName2 !== propName) {
+							_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
+							mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + propName2.length,
+							}], false);
+							_code += `'`;
+							mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + propName2.length,
+							}]);
+							_code += `'];\n`;
+						}
+					}
+				}
+			}
+			function writeProps(node: ElementNode) {
+				// +1 to remove '<' from html tag
+				const sourceRanges = [{
+					start: node.loc.start.offset + 1,
+					end: node.loc.start.offset + 1 + node.tag.length,
+				}];
+				if (!node.isSelfClosing) {
+					sourceRanges.push({
+						start: node.loc.end.offset - 1 - node.tag.length,
+						end: node.loc.end.offset - 1,
+					});
+				}
 
 				mapping(undefined, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 					start: node.loc.start.offset + 1,
@@ -94,19 +181,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				_code += `'`;
 				mapping(MapedNodeTypes.HtmlTag, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
 				_code += `'] = {\n`;
-				writeProps(node);
-				_code += '};\n';
 
-				writeOns(node);
-				writeSlots(node);
-
-				for (const childNode of node.children) {
-					_code = worker(_code, childNode, parents.concat(node));
-				}
-			}
-			if (!dontCreateBlock) _code += '}\n';
-
-			function writeProps(node: ElementNode) {
 				for (const prop of node.props) {
 					if (
 						prop.type === NodeTypes.DIRECTIVE
@@ -197,9 +272,10 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						}
 					}
 					else {
-						_code += "/* " + [prop.type, prop.name, prop.loc.source].join(", ") + " */\n";
+						_code += "/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n";
 					}
 				}
+				_code += '};\n';
 			}
 			function writeOns(node: ElementNode) {
 				for (const prop of node.props) {
