@@ -43,7 +43,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			{
 				tags.add(node.tag);
 				writeImportSlots(node);
-				writeReferenceProps(node);
+				writeOptionReferences(node);
 				writeVshow(node);
 				writeProps(node);
 				writeOns(node);
@@ -85,7 +85,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					}
 				}
 			}
-			function writeReferenceProps(node: ElementNode) {
+			function writeOptionReferences(node: ElementNode) {
 				// fix find references not work if prop has default value
 				for (const prop of node.props) {
 					if (
@@ -97,9 +97,17 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					) {
 						const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
 						const propName2 = prop.arg.content;
+						let option: string | undefined;
 
 						if (prop.name === 'bind' || prop.name === 'model') {
-							_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
+							option = 'props';
+						}
+						else if (prop.name === 'on') {
+							option = 'emits';
+						}
+
+						if (option) {
+							_code += `__VLS_components['${node.tag}']['__VLS_options']['${option}'][`;
 							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
@@ -112,7 +120,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							_code += `'];\n`;
 							// original name
 							if (propName2 !== propName) {
-								_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
+								_code += `__VLS_components['${node.tag}']['__VLS_options']['${option}'][`;
 								mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.end.offset,
