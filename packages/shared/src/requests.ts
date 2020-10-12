@@ -25,3 +25,6 @@ export namespace GetEmbeddedLanguageRequest {
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('comment');
 }
+export namespace FormatAllScriptsRequest {
+	export const type: RequestType<undefined, undefined, any, any> = new RequestType('comment');
+}

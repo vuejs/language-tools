@@ -57,6 +57,10 @@
 			{
 				"command": "volar.action.verifyAllScripts",
 				"title": "Volar: Verify all scripts"
+			},
+			{
+				"command": "volar.action.formatAllScripts",
+				"title": "Volar: Format all scripts"
 			}
 		],
 		"keybindings": [

@@ -9,7 +9,7 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	createConnection,
-	DocumentFormattingRegistrationOptions,
+	TextDocumentRegistrationOptions,
 	DocumentHighlightRequest,
 	DocumentSymbolRequest,
 	DocumentLinkRequest,
@@ -88,7 +88,7 @@ function initLanguageService(rootPath: string) {
 	});
 }
 function onInitialized() {
-	const vueOnly: DocumentFormattingRegistrationOptions = {
+	const vueOnly: TextDocumentRegistrationOptions = {
 		documentSelector: [{ language: 'vue' }],
 	};
 

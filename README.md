@@ -6,6 +6,7 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Some interesting features:
 
+- [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
 - [x] v-slot Type-Checking (v0.12.1 added)
 - [x] Component props auto completion (v0.11.6 added)

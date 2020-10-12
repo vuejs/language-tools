@@ -11,7 +11,7 @@ import {
 	InitializeResult,
 	DocumentFormattingRequest,
 	RenameRequest,
-	DocumentFormattingRegistrationOptions,
+	TextDocumentRegistrationOptions,
 	CodeActionRequest,
 	ReferencesRequest,
 	DefinitionRequest,
@@ -24,12 +24,14 @@ import {
 	SelectionRangeRequest,
 	SignatureHelpRequest,
 	CompletionItem,
+	WorkspaceEdit,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { TagCloseRequest, GetEmbeddedLanguageRequest } from '@volar/shared';
+import { TagCloseRequest, GetEmbeddedLanguageRequest, FormatAllScriptsRequest, uriToFsPath } from '@volar/shared';
+import * as upath from 'upath';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -101,6 +103,25 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return host.get(document.uri)?.getEmbeddedLanguage(document, handler.range);
+	});
+	connection.onRequest(FormatAllScriptsRequest.type, async () => {
+		const progress = await connection.window.createWorkDoneProgress();
+		progress.begin('Format', 0, '', true);
+		for (const [uri, service] of host.services) {
+			const sourceFiles = service.languageService.getAllSourceFiles();
+			let i = 0;
+			for (const sourceFile of sourceFiles) {
+				if (progress.token.isCancellationRequested) {
+					continue;
+				}
+				const doc = sourceFile.getTextDocument();
+				const edits = service.languageService.doFormatting(doc, { tabSize: 4, insertSpaces: false }) ?? [];
+				const workspaceEdit: WorkspaceEdit = { changes: { [doc.uri]: edits } };
+				await connection.workspace.applyEdit(workspaceEdit);
+				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(doc.uri)));
+			}
+		}
+		progress.done();
 	});
 
 	connection.onCompletion(handler => {
@@ -185,10 +206,10 @@ function onInitialized() {
 		});
 	}
 
-	const vueOnly: DocumentFormattingRegistrationOptions = {
+	const vueOnly: TextDocumentRegistrationOptions = {
 		documentSelector: [{ language: 'vue' }],
 	};
-	const both: DocumentFormattingRegistrationOptions = {
+	const both: TextDocumentRegistrationOptions = {
 		documentSelector: [{ language: 'vue' }, { language: 'typescript' }],
 	};
 
