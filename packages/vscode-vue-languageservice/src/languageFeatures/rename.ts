@@ -12,7 +12,7 @@ import {
 	findSourceFileByTsUri,
 } from '../utils/commons';
 import { hyphenate } from '@vue/shared';
-import { NodeTypes } from '@vue/compiler-dom';
+import { MapedNodeTypes } from '../utils/sourceMaps';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument, position: Position, newName: string) => {
@@ -70,13 +70,13 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			}
 
 			for (const tsEdit of tsEdits) {
-				keepHtmlTagStyle(tsEdit);
+				keepHtmlTagOrAttrStyle(tsEdit);
 			}
 			const vueEdits = tsEdits.map(edit => getSourceWorkspaceEdit(edit));
 			const vueEdit = margeWorkspaceEdits(vueEdits);
 			return deduplication(vueEdit);
 
-			function keepHtmlTagStyle(tsWorkspaceEdit: WorkspaceEdit) {
+			function keepHtmlTagOrAttrStyle(tsWorkspaceEdit: WorkspaceEdit) {
 				if (!tsWorkspaceEdit?.changes) return;
 				for (const uri in tsWorkspaceEdit.changes) {
 					const editSourceFile = findSourceFileByTsUri(sourceFiles, uri);
@@ -84,16 +84,18 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					for (const sourceMap of editSourceFile.getTsSourceMaps()) {
 						if (sourceMap.virtualDocument.uri !== uri) continue;
 						for (const textEdit of tsWorkspaceEdit.changes[uri]) {
-							const isHtmlTag = sourceMap.findFirstVueLocation(textEdit.range)?.maped.data.templateNodeType === NodeTypes.ELEMENT;
-							const oldName = sourceMap.virtualDocument.getText(textEdit.range);
-							if (isHtmlTag && isHyphenateName(oldName)) {
-								textEdit.newText = hyphenate(textEdit.newText);
+							for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
+								const oldName = sourceMap.vueDocument.getText(vueLoc.range);
+								const isHyphenateName = oldName === hyphenate(oldName)
+								const isHtmlTag = vueLoc.maped.data.type === MapedNodeTypes.HtmlTag;
+								const isAttrArg = vueLoc.maped.data.type === MapedNodeTypes.AttrArg;
+								if ((isHtmlTag || isAttrArg) && isHyphenateName) {
+									textEdit.newText = hyphenate(textEdit.newText);
+									break;
+								}
 							}
 						}
 					}
-				}
-				function isHyphenateName(name: string) {
-					return name === hyphenate(name);
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
 import { createHtmlPugMapper } from '@volar/pug';
-import { MapedMode, TsMappingData, Mapping } from './sourceMaps';
+import { MapedMode, TsMappingData, Mapping, MapedNodeTypes } from './sourceMaps';
 import { camelize, hyphenate } from '@vue/shared';
 
 const capabilitiesSet = {
@@ -65,7 +65,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						if (!parent) continue;
 
 						_code += `let `;
-						mapping(prop.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
 						}]);
@@ -85,14 +85,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					}
 				}
 
-				mapping(node.type, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+				mapping(undefined, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 					start: node.loc.start.offset + 1,
 					end: node.loc.start.offset + 1 + node.tag.length,
 				}], false);
 				_code += `__VLS_componentProps[`;
-				mapping(node.type, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
+				mapping(MapedNodeTypes.HtmlTag, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
 				_code += `'`;
-				mapping(node.type, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
+				mapping(MapedNodeTypes.HtmlTag, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
 				_code += `'] = {\n`;
 				writeProps(node);
 				_code += '};\n';
@@ -121,22 +121,22 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 
 						if (prop.name === 'bind' || prop.name === 'model') {
 							// camelize name
-							mapping(prop.type, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+							mapping(undefined, `'${propName}': (${propValue})`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}], false);
-							mapping(prop.arg.type, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}], false);
 							_code += `'`;
-							mapping(prop.arg.type, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
 							_code += `': (`;
 							if (prop.exp) {
-								mapping(prop.exp.type, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{
+								mapping(undefined, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
 								}])
@@ -147,12 +147,12 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							_code += `),\n`;
 							// original name
 							if (propName2 !== propName) {
-								mapping(prop.arg.type, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+								mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.end.offset,
 								}], false);
 								_code += `'`;
-								mapping(prop.arg.type, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+								mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.end.offset,
 								}]);
@@ -168,28 +168,28 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						const propName2 = prop.name;
 
 						// camelize name
-						mapping(prop.type, `'${propName}': \`${propValue}\``, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+						mapping(undefined, `'${propName}': \`${propValue}\``, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
-						mapping(prop.type, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+						mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
 						}], false);
 						_code += `'`;
-						mapping(prop.type, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+						mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
 						}]);
 						_code += `': \`${propValue}\`,\n`;
 						// original name
 						if (propName2 !== propName) {
-							mapping(prop.type, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.start.offset + propName2.length,
 							}], false);
 							_code += `'`;
-							mapping(prop.type, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.start.offset + propName2.length,
 							}]);
@@ -218,18 +218,18 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						_code += `let ${varName}!: { '${propName}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}']['${propName}'], typeof __VLS_componentProps['${node.tag}']['${propName2}']> };\n`;
 						_code += `${varName} = {\n`
 						{
-							mapping(prop.arg.type, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}], false);
 							_code += `'`;
-							mapping(prop.arg.type, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mapping(MapedNodeTypes.AttrArg, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
 							_code += `': (`;
 							if (prop.exp) {
-								mapping(prop.exp.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+								mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
 								}])
@@ -260,7 +260,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					) {
 						hasDefaultBind = true;
 						_code += `const ${varDefaultBind} = (`;
-						mapping(node.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
+						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
 						_code += `);\n`;
 						break;
 					}
@@ -274,11 +274,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
 						hasBinds = true;
-						mapping(node.type, `'${prop.arg.content}'`, prop.exp.content, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }], false);
+						mapping(MapedNodeTypes.AttrArg, `'${prop.arg.content}'`, prop.exp.content, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }], false);
 						_code += `'`;
-						mapping(node.type, prop.arg.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
+						mapping(MapedNodeTypes.AttrArg, prop.arg.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
 						_code += `': (`;
-						mapping(node.type, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
+						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
 						_code += `),\n`;
 					}
 				}
@@ -331,7 +331,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			let start = node.loc.start.offset + 2;
 
 			_code += `{`;
-			mapping(node.type, context, context, MapedMode.Offset, capabilitiesSet.all, [{
+			mapping(undefined, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 				start: start,
 				end: start + context.length,
 			}]);
@@ -355,7 +355,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							firstIf = false;
 							_code += `if (\n`;
 							_code += `(`;
-							mapping(branch.condition.type, context, context, MapedMode.Offset, capabilitiesSet.all, [{
+							mapping(undefined, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 								start: start,
 								end: start + context.length,
 							}]);
@@ -365,7 +365,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						else {
 							_code += `else if (\n`;
 							_code += `(`;
-							mapping(branch.condition.type, context, context, MapedMode.Offset, capabilitiesSet.all, [{
+							mapping(undefined, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 								start: start,
 								end: start + context.length,
 							}]);
@@ -407,20 +407,20 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
 				_code += `const ${sourceVarName} = __VLS_getVforSourceType(`;
-				mapping(source.type, source.content, source.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
+				mapping(undefined, source.content, source.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 					start: start_source,
 					end: start_source + source.content.length,
 				}]);
 				_code += `);\n`;
 				_code += `for (__VLS_for_key in `;
-				mapping(source.type, sourceVarName, source.content, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+				mapping(undefined, sourceVarName, source.content, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 					start: source.loc.start.offset,
 					end: source.loc.end.offset,
 				}]);
 				_code += `) {\n`;
 
 				_code += `const `;
-				mapping(value.type, value.content, value.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
+				mapping(undefined, value.content, value.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 					start: start_value,
 					end: start_value + value.content.length,
 				}]);
@@ -429,7 +429,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
 					_code += `const `;
-					mapping(key.type, key.content, key.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
+					mapping(undefined, key.content, key.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 						start: start_key,
 						end: start_key + key.content.length,
 					}]);
@@ -438,7 +438,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				if (index && index.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
 					_code += `const `;
-					mapping(index.type, index.content, index.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
+					mapping(undefined, index.content, index.content, MapedMode.Offset, capabilitiesSet.noFormatting, [{
 						start: start_index,
 						end: start_index + index.content.length,
 					}]);
@@ -461,7 +461,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 		}
 		return _code;
 
-		function mapping(nodeType: NodeTypes, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
+		function mapping(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
 			if (pugMapper) {
 				sourceRanges = sourceRanges.map(range => ({ ...range })); // clone
 				for (const sourceRange of sourceRanges) {
@@ -487,8 +487,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						end: _code.length + mapCode.length,
 					},
 					data: {
+						type,
 						vueTag: 'template',
-						templateNodeType: nodeType,
 						capabilities: capabilities,
 					},
 				});

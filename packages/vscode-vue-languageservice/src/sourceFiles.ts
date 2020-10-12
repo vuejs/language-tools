@@ -7,7 +7,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { pugToHtml } from '@volar/pug';
 import { uriToFsPath } from '@volar/shared';
-import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping } from './utils/sourceMaps';
+import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, MapedNodeTypes } from './utils/sourceMaps';
 import { transformVueHtml } from './utils/vueHtmlConverter';
 import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';

@@ -94,9 +94,14 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 	}
 }
 
+export enum MapedNodeTypes {
+	HtmlTag,
+	AttrArg,
+}
+
 export interface TsMappingData {
 	vueTag: string,
-	templateNodeType?: NodeTypes, // for template
+	type?: MapedNodeTypes,
 	capabilities: {
 		basic: boolean,
 		references: boolean, // references, definitions, rename
