@@ -451,10 +451,10 @@ export function createSourceFile(initialDocument: TextDocument, {
 				`declare function __VLS_defaultType<T, K>(source: T): T extends { default: infer K } ? K : {};`,
 				`const __VLS_default = __VLS_defaultType(__VLS_setups);`,
 				`export default defineComponent({`,
-				`	...__VLS_default,`,
-				`	setup() {`,
-				`		return __VLS_setups;`,
-				`	}`,
+				`	setup() { return {`,
+				`		...new __VLS_default(),`,
+				`		...__VLS_setups,`,
+				`	} }`,
 				`});`,
 			].join('\n')
 			return TextDocument.create(uri, languageId, documentVersion++, content);
@@ -469,20 +469,27 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const content = [
 				descriptor.scriptSetup.content,
 				`declare const __VLS_options: typeof import('./${upath.basename(vue.fileName)}.setup').default;`,
-				`declare const __VLS_defineComponent: typeof import('vue').defineComponent;`,
-				`const __VLS_setup = __VLS_defineComponent(__VLS_options).setup;`,
-				`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_setup>>;`,
+				`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
 				`declare var [${setup}]: typeof __VLS_parameters;`,
 			].join('\n');
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
 	});
 	const scriptOptionsDocument = computed(() => {
-		if (scriptDocument.value) {
+		if (descriptor.scriptSetup) {
 			const uri = `${vue.uri}.options.ts`;
 			const languageId = 'typescript';
 			const content = [
-				scriptDocument.value.getText(),
+				descriptor.scriptSetup.content,
+				`declare function defineComponent<T>(options: T): T;`,
+			].join('\n');
+			return TextDocument.create(uri, languageId, documentVersion++, content);
+		}
+		if (descriptor.script) {
+			const uri = `${vue.uri}.options.ts`;
+			const languageId = 'typescript';
+			const content = [
+				descriptor.script.content,
 				`declare function defineComponent<T>(options: T): T;`,
 			].join('\n');
 			return TextDocument.create(uri, languageId, documentVersion++, content);
@@ -705,10 +712,10 @@ export function createSourceFile(initialDocument: TextDocument, {
 	const scriptOptionsSourceMaps = computed(() => {
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptOptionsDocument.value;
-		if (document && descriptor.script) {
+		const start = descriptor.scriptSetup?.loc.start ?? descriptor.script?.loc.start;
+		const end = descriptor.scriptSetup?.loc.end ?? descriptor.script?.loc.end;
+		if (document && start !== undefined && end !== undefined) {
 			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
-			const start = descriptor.script.loc.start;
-			const end = descriptor.script.loc.end;
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
