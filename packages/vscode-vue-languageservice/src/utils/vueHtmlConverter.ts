@@ -43,10 +43,10 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			{
 				tags.add(node.tag);
 				writeImportSlots(node);
-				writeOptionReferences(node);
 				writeVshow(node);
 				writeProps(node);
 				writeOns(node);
+				writeOptionReferences(node);
 				writeSlots(node);
 				for (const childNode of node.children) {
 					_code = worker(_code, childNode, parents.concat(node));
@@ -87,6 +87,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 			}
 			function writeOptionReferences(node: ElementNode) {
 				// fix find references not work if prop has default value
+				// fix emits references not work
 				for (const prop of node.props) {
 					if (
 						prop.type === NodeTypes.DIRECTIVE
@@ -95,77 +96,29 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
 						&& !prop.exp?.isConstant // TODO: style='z-index: 2' will compile to {'z-index':'2'}
 					) {
-						const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
-						const propName2 = prop.arg.content;
-						let option: string | undefined;
-
 						if (prop.name === 'bind' || prop.name === 'model') {
-							option = 'props';
+							write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 						}
 						else if (prop.name === 'on') {
-							option = 'emits';
-						}
-
-						if (option) {
-							_code += `__VLS_components['${node.tag}']['__VLS_options']['${option}'][`;
-							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							}], false);
-							_code += `'`;
-							mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							}]);
-							_code += `'];\n`;
-							// original name
-							if (propName2 !== propName) {
-								_code += `__VLS_components['${node.tag}']['__VLS_options']['${option}'][`;
-								mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-									start: prop.arg.loc.start.offset,
-									end: prop.arg.loc.end.offset,
-								}], false);
-								_code += `'`;
-								mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
-									start: prop.arg.loc.start.offset,
-									end: prop.arg.loc.end.offset,
-								}]);
-								_code += `'];\n`;
-							}
+							write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 						}
 					}
 					else if (
 						prop.type === NodeTypes.ATTRIBUTE
 					) {
-						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-						const propName2 = prop.name;
-
-						_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
-						mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-							start: prop.loc.start.offset,
-							end: prop.loc.start.offset + propName2.length,
-						}], false);
-						_code += `'`;
-						mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
-							start: prop.loc.start.offset,
-							end: prop.loc.start.offset + propName2.length,
-						}]);
-						_code += `'];\n`;
-						// original name
-						if (propName2 !== propName) {
-							_code += `__VLS_components['${node.tag}']['__VLS_options']['props'][`;
-							mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.loc.start.offset,
-								end: prop.loc.start.offset + propName2.length,
-							}], false);
-							_code += `'`;
-							mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.loc.start.offset,
-								end: prop.loc.start.offset + propName2.length,
-							}]);
-							_code += `'];\n`;
-						}
+						write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
 					}
+				}
+				function write(option: 'props' | 'emits', propName: string, start: number, end: number) {
+					const camelizeName = hyphenate(propName) === propName ? camelize(propName) : propName;
+					const originalName = propName;
+					const type = option === 'props' ? MapedNodeTypes.Prop : undefined;
+					_code += `__VLS_components['${node.tag}']['__VLS_options']['${option}'][`;
+					mappingWithQuotes(type, camelizeName, originalName, capabilitiesSet.htmlTagOrAttr, [{
+						start,
+						end,
+					}]);
+					_code += `];\n`;
 				}
 			}
 			function writeVshow(node: ElementNode) {
@@ -202,10 +155,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 					end: node.loc.start.offset + 1 + node.tag.length,
 				}], false);
 				_code += `__VLS_componentProps[`;
-				mapping(MapedNodeTypes.HtmlTag, `'${node.tag}'`, node.tag, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, sourceRanges, false);
-				_code += `'`;
-				mapping(MapedNodeTypes.HtmlTag, node.tag, node.tag, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, sourceRanges);
-				_code += `'] = {\n`;
+				mappingWithQuotes(MapedNodeTypes.ElementTag, node.tag, node.tag, capabilitiesSet.htmlTagOrAttr, sourceRanges);
+				_code += `] = {\n`;
 
 				for (const prop of node.props) {
 					if (
@@ -225,16 +176,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}], false);
-							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							}], false);
-							_code += `'`;
-							mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
-							_code += `': (`;
+							_code += `: (`;
 							if (prop.exp) {
 								mapping(undefined, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
@@ -247,16 +193,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							_code += `),\n`;
 							// original name
 							if (propName2 !== propName) {
-								mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-									start: prop.arg.loc.start.offset,
-									end: prop.arg.loc.end.offset,
-								}], false);
-								_code += `'`;
-								mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+								mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.end.offset,
 								}]);
-								_code += `': (${propValue}),\n`;
+								_code += `: (${propValue}),\n`;
 							}
 						}
 					}
@@ -272,28 +213,18 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
-						mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-							start: prop.loc.start.offset,
-							end: prop.loc.start.offset + propName2.length,
-						}], false);
-						_code += `'`;
-						mapping(MapedNodeTypes.AttrArg, propName, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+						mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
 						}]);
-						_code += `': \`${propValue}\`,\n`;
+						_code += `: \`${propValue}\`,\n`;
 						// original name
 						if (propName2 !== propName) {
-							mapping(MapedNodeTypes.AttrArg, `'${propName2}'`, propName2, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.loc.start.offset,
-								end: prop.loc.start.offset + propName2.length,
-							}], false);
-							_code += `'`;
-							mapping(MapedNodeTypes.AttrArg, propName2, propName2, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.start.offset + propName2.length,
 							}]);
-							_code += `': \`${propValue}\`,\n`;
+							_code += `: \`${propValue}\`,\n`;
 						}
 					}
 					else {
@@ -319,16 +250,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						_code += `let ${varName}!: { '${propName}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}']['${propName}'], typeof __VLS_componentProps['${node.tag}']['${propName2}']> };\n`;
 						_code += `${varName} = {\n`
 						{
-							mapping(MapedNodeTypes.AttrArg, `'${propName}'`, propName, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							}], false);
-							_code += `'`;
-							mapping(MapedNodeTypes.AttrArg, propName, propName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+							mappingWithQuotes(MapedNodeTypes.Prop, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
-							_code += `': (`;
+							_code += `: (`;
 							if (prop.exp) {
 								mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
@@ -375,10 +301,8 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
 						hasBinds = true;
-						mapping(MapedNodeTypes.AttrArg, `'${prop.arg.content}'`, prop.exp.content, MapedMode.Gate, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }], false);
-						_code += `'`;
-						mapping(MapedNodeTypes.AttrArg, prop.arg.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
-						_code += `': (`;
+						mappingWithQuotes(MapedNodeTypes.Prop, prop.arg.content, prop.arg.content, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
+						_code += `: (`;
 						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
 						_code += `),\n`;
 					}
@@ -562,6 +486,12 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 		}
 		return _code;
 
+		function mappingWithQuotes(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[]) {
+			mapping(type, `'${mapCode}'`, pugSearchCode, MapedMode.Gate, capabilities, sourceRanges, false);
+			_code += `'`;
+			mapping(type, mapCode, pugSearchCode, MapedMode.Offset, capabilities, sourceRanges);
+			_code += `'`;
+		}
 		function mapping(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
 			if (pugMapper) {
 				sourceRanges = sourceRanges.map(range => ({ ...range })); // clone

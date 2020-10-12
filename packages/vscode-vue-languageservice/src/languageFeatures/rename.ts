@@ -87,8 +87,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 							for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
 								const oldName = sourceMap.vueDocument.getText(vueLoc.range);
 								const isHyphenateName = oldName === hyphenate(oldName)
-								const isHtmlTag = vueLoc.maped.data.type === MapedNodeTypes.HtmlTag;
-								const isAttrArg = vueLoc.maped.data.type === MapedNodeTypes.AttrArg;
+								const isHtmlTag = vueLoc.maped.data.type === MapedNodeTypes.ElementTag;
+								const isAttrArg = vueLoc.maped.data.type === MapedNodeTypes.Prop;
 								if ((isHtmlTag || isAttrArg) && isHyphenateName) {
 									textEdit.newText = hyphenate(textEdit.newText);
 									break;
