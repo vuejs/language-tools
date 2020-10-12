@@ -107,6 +107,7 @@ export interface TsMappingData {
 		references: boolean, // references, definitions, rename
 		diagnostic: boolean,
 		formatting: boolean,
+		rename: boolean,
 		completion: boolean,
 	},
 }

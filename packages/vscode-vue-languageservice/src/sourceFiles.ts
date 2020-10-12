@@ -315,6 +315,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 						capabilities: {
 							basic: true,
 							references: true,
+							rename: true,
 							diagnostic: true,
 							formatting: false,
 							completion: true,
@@ -617,6 +618,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					capabilities: {
 						basic: true,
 						references: true,
+						rename: true,
 						diagnostic: true,
 						formatting: true,
 						completion: true,
@@ -650,6 +652,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 						capabilities: {
 							basic: true,
 							references: true,
+							rename: true,
 							diagnostic: true,
 							formatting: true,
 							completion: true,
@@ -678,6 +681,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 						capabilities: {
 							basic: true,
 							references: true,
+							rename: true,
 							diagnostic: true,
 							formatting: true,
 							completion: true,
@@ -711,6 +715,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					capabilities: {
 						basic: false,
 						references: true,
+						rename: true,
 						diagnostic: false,
 						formatting: false,
 						completion: false,
@@ -741,6 +746,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					capabilities: {
 						basic: false,
 						references: false,
+						rename: false,
 						diagnostic: false,
 						formatting: false,
 						completion: false,
@@ -756,6 +762,31 @@ export function createSourceFile(initialDocument: TextDocument, {
 					end: document.getText().length,
 				},
 			});
+			const optionsPropertyOffset = document.getText().indexOf('__VLS_options: typeof __VLS_Options,');
+			if (optionsPropertyOffset >= 0) {
+				sourceMap.add({
+					data: {
+						vueTag: 'script',
+						capabilities: {
+							basic: false,
+							references: false,
+							rename: false,
+							diagnostic: false,
+							formatting: false,
+							completion: false,
+						},
+					},
+					mode: MapedMode.Gate,
+					vueRange: {
+						start: descriptor.script.loc.start,
+						end: descriptor.script.loc.end,
+					},
+					virtualRange: {
+						start: optionsPropertyOffset,
+						end: optionsPropertyOffset + '__VLS_options'.length,
+					},
+				});
+			}
 			sourceMaps.push(sourceMap);
 		}
 		return sourceMaps;

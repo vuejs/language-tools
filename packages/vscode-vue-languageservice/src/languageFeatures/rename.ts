@@ -40,7 +40,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
-					if (!tsLoc.maped.data.capabilities.references) continue;
+					if (!tsLoc.maped.data.capabilities.rename) continue;
 					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'rename', getRenameLocations, sourceMap.languageService, sourceFiles);
 
 					for (const entry of entries) {

@@ -4,10 +4,11 @@ import { MapedMode, TsMappingData, Mapping, MapedNodeTypes } from './sourceMaps'
 import { camelize, hyphenate } from '@vue/shared';
 
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, formatting: true, references: true, completion: true },
-	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, completion: true },
-	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, completion: true },
-	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, completion: false },
+	all: { basic: true, diagnostic: true, formatting: true, references: true, rename: true, completion: true },
+	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true },
+	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true },
+	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false },
+	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false },
 }
 
 export function transformVueHtml(pugData: { html: string, pug: string } | undefined, node: RootNode) {
@@ -51,6 +52,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				for (const childNode of node.children) {
 					_code = worker(_code, childNode, parents.concat(node));
 				}
+
+				_code += `__VLS_components['${node.tag}'][`;
+				mappingWithQuotes(undefined, `__VLS_options`, node.tag, capabilitiesSet.referencesOnly, [{
+					// +1 to remove '<' from html tag
+					start: node.loc.start.offset + 1,
+					end: node.loc.start.offset + 1 + node.tag.length,
+				}]);
+				_code += `];\n`;
 			}
 			if (!dontCreateBlock) _code += '}\n';
 
