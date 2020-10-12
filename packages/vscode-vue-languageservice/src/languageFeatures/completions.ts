@@ -98,8 +98,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					if (componentName === '*') {
 						for (const prop of bind) {
 							const name: string = prop.data.name;
-							if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
-								const propName = '@' + name[2].toLowerCase() + name.substr(3);
+							if (name.length > 2 && hyphenate(name).startsWith('on-')) {
+								const propName = '@' + hyphenate(name).substr('on-'.length);
 								const propKey = componentName + ':' + propName;
 								globalAttributes.push({
 									name: propName,
@@ -122,8 +122,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						const attributes: html.IAttributeData[] = [];
 						for (const prop of bind) {
 							const name: string = prop.data.name;
-							if (name.length > 2 && name.startsWith('on') && name[2].toUpperCase() === name[2]) {
-								const propName = '@' + name[2].toLowerCase() + name.substr(3);
+							if (name.length > 2 && hyphenate(name).startsWith('on-')) {
+								const propName = '@' + hyphenate(name).substr('on-'.length);
 								const propKey = componentName + ':' + propName;
 								attributes.push({
 									name: propName,

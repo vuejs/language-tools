@@ -245,12 +245,23 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						&& prop.name === 'on'
 					) {
 						const propName = prop.arg.content;
-						const propName2 = 'on' + propName[0].toUpperCase() + propName.substr(1);
+						const propName2 = camelize('on-' + propName);
 
-						_code += `let ${varName}!: { '${propName}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}']['${propName}'], typeof __VLS_componentProps['${node.tag}']['${propName2}']> };\n`;
+						_code += `let ${varName}!: { '${propName}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}'][`;
+						mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						}]);
+						_code += `], typeof __VLS_componentProps['${node.tag}'][`;
+						mappingWithQuotes(undefined, propName2, propName, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						}]);
+						_code += `]> };\n`;
+
 						_code += `${varName} = {\n`
 						{
-							mappingWithQuotes(MapedNodeTypes.Prop, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
+							mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
