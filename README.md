@@ -6,13 +6,13 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Some interesting features:
 
+- [x] Verify all scripts command (v0.13.3 added)
 - [x] v-slot Type-Checking (v0.12.1 added)
 - [x] Component props auto completion (v0.11.6 added)
 - [x] Emits Type-Checking (v0.11.4 added)
 - [x] Interpolation formatting + commenting (v0.11.2 added)
 - [x] Native html tag services (v0.11.0 added)
 - [x] `<script setup>` support (v0.10.0 added)
-- [x] ~~Diagnostic all vue scripts (v0.9.0 added)~~ (v0.13.0 removed because that will cause cpu heat)
 - [x] Unused highlight for setup() return properties (v0.7.0 added)
 - [x] pug-html convert tool
 - [x] Asset url link jump

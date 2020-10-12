@@ -31,7 +31,10 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		}
 	}, true);
 
-	return get;
+	return {
+		services: languageServices,
+		get,
+	};
 
 	function get(uri: string) {
 		const fileName = uriToFsPath(uri);

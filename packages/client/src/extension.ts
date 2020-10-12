@@ -17,7 +17,7 @@ import {
 } from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { activateCommenting } from './commenting';
-import { TagCloseRequest, GetEmbeddedLanguageRequest } from '@volar/shared';
+import { TagCloseRequest, GetEmbeddedLanguageRequest, VerifyAllScriptsRequest } from '@volar/shared';
 
 let apiClient: LanguageClient;
 let docClient: LanguageClient;
@@ -28,6 +28,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
 	context.subscriptions.push(activateCommenting(embeddedLanguageRequestor));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
+		docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
+	}));
 
 	function tagRequestor(document: TextDocument, position: vscode.Position) {
 		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);

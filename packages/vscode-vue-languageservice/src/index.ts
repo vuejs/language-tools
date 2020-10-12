@@ -35,8 +35,8 @@ import * as getSignatureHelp from './languageFeatures/signatureHelp';
 import * as getColorPresentations from './languageFeatures/colorPresentations';
 
 export enum Commands {
-	HTML_TO_PUG_COMMAND = 'volar.html-to-pug',
-	PUG_TO_HTML_COMMAND = 'volar.pug-to-html',
+	HTML_TO_PUG = 'volar.html-to-pug',
+	PUG_TO_HTML = 'volar.pug-to-html',
 }
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -57,6 +57,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	const scssLanguageService = css.getSCSSLanguageService();
 
 	return {
+		rootPath: vueHost.getCurrentDirectory(),
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(doValidation.register(sourceFiles, () => tsProjectVersion.toString())),
@@ -251,12 +252,12 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			const pugToHtml: CodeAction = { title: `Convert to HTML`, kind: CodeActionKind.RefactorRewrite };
 
 			htmlToPug.command = {
-				command: Commands.HTML_TO_PUG_COMMAND,
+				command: Commands.HTML_TO_PUG,
 				title: 'Convert to Pug',
 				arguments: [document.uri],
 			};
 			pugToHtml.command = {
-				command: Commands.PUG_TO_HTML_COMMAND,
+				command: Commands.PUG_TO_HTML,
 				title: 'Convert to HTML',
 				arguments: [document.uri],
 			};
@@ -276,7 +277,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 		const lang = desc.template.lang;
 
-		if (command === Commands.HTML_TO_PUG_COMMAND) {
+		if (command === Commands.HTML_TO_PUG) {
 			if (lang !== 'html') return;
 
 			const pug = htmlToPug(desc.template.content, 2, false) + '\n';
@@ -303,7 +304,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			const textEdit = TextEdit.replace(range, newTemplate);
 			connection.workspace.applyEdit({ changes: { [document.uri]: [textEdit] } });
 		}
-		if (command === Commands.PUG_TO_HTML_COMMAND) {
+		if (command === Commands.PUG_TO_HTML) {
 			if (lang !== 'pug') return;
 
 			let html = pugToHtml(desc.template.content);

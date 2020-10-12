@@ -1133,40 +1133,40 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 		return worker;
 
-		async function worker(newTsProjectVersion: string, isCancel: () => boolean, onDirty: (diags: Diagnostic[]) => void) {
+		async function worker(newTsProjectVersion: string, isCancel?: () => boolean, onDirty?: (diags: Diagnostic[]) => void) {
 			tsProjectVersion.value = newTsProjectVersion;
 			let dirty = false;
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(stylesDiags, lastStylesDiags);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(templateDiags, lastTemplateDiags);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_2, lastScriptDiags_2);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_3, lastScriptDiags_3);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
 
 			if (dirty) await nextTick();
-			if (isCancel()) return;
+			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
 
 			return result.value;
@@ -1175,7 +1175,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				const oldVersion = version;
 				lastData.value = data.value;
 				if (version !== oldVersion) {
-					onDirty(result.value);
+					onDirty?.(result.value);
 					return true;
 				}
 				return false;

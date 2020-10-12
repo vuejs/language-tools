@@ -53,6 +53,10 @@
 			{
 				"command": "volar.action.comment",
 				"title": "// vue"
+			},
+			{
+				"command": "volar.action.verifyAllScripts",
+				"title": "Volar: Verify all scripts"
 			}
 		],
 		"keybindings": [

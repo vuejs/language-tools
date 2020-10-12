@@ -95,83 +95,83 @@ function initLanguageService(rootPath: string) {
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host(document.uri)?.doAutoClose(document, handler.position);
+		return host.get(document.uri)?.doAutoClose(document, handler.position);
 	});
 	connection.onRequest(GetEmbeddedLanguageRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host(document.uri)?.getEmbeddedLanguage(document, handler.range);
+		return host.get(document.uri)?.getEmbeddedLanguage(document, handler.range);
 	});
 
 	connection.onCompletion(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host(document.uri)?.doComplete(document, handler.position, handler.context);
+		return host.get(document.uri)?.doComplete(document, handler.position, handler.context);
 	});
 	connection.onCompletionResolve(async item => {
 		if (resolveCache && resolveCache.label === item.label && resolveCache.kind === item.kind) {
 			return resolveCache;
 		}
 		const uri = item.data?.uri;
-		resolveCache = host(uri)?.doCompletionResolve(item) ?? item;
+		resolveCache = host.get(uri)?.doCompletionResolve(item) ?? item;
 		return resolveCache;
 	});
 	connection.onDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.findDefinition(document, handler.position);
+		return host.get(document.uri)?.findDefinition(document, handler.position);
 	});
 	connection.onTypeDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.findTypeDefinition(document, handler.position);
+		return host.get(document.uri)?.findTypeDefinition(document, handler.position);
 	});
 	connection.onHover(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.doHover(document, handler.position);
+		return host.get(document.uri)?.doHover(document, handler.position);
 	});
 	connection.onSignatureHelp(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.getSignatureHelp(document, handler.position);
+		return host.get(document.uri)?.getSignatureHelp(document, handler.position);
 	});
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.doFormatting(document, handler.options);
+		return host.get(document.uri)?.doFormatting(document, handler.options);
 	});
 	connection.onDocumentRangeFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.doRangeFormatting(document, handler.range, handler.options);
+		return host.get(document.uri)?.doRangeFormatting(document, handler.range, handler.options);
 	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.getSelectionRanges(document, handler.positions);
+		return host.get(document.uri)?.getSelectionRanges(document, handler.positions);
 	});
 	connection.onCodeAction(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.doCodeAction(document, handler.range);
+		return host.get(document.uri)?.doCodeAction(document, handler.range);
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
 		const document = documents.get(uri);
 		if (!document) return undefined;
-		return host(uri)?.doExecuteCommand(document, handler.command, connection);
+		return host.get(uri)?.doExecuteCommand(document, handler.command, connection);
 	});
 	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.doRename(document, handler.position, handler.newName);
+		return host.get(document.uri)?.doRename(document, handler.position, handler.newName);
 	});
 	// vue & ts
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host(document.uri)?.findReferences(document, handler.position);
+		return host.get(document.uri)?.findReferences(document, handler.position);
 	});
 }
 function onInitialized() {
@@ -207,7 +207,7 @@ function onInitialized() {
 		retriggerCharacters: [')'],
 	});
 	connection.client.register(ExecuteCommandRequest.type, {
-		commands: [Commands.HTML_TO_PUG_COMMAND, Commands.PUG_TO_HTML_COMMAND]
+		commands: [Commands.HTML_TO_PUG, Commands.PUG_TO_HTML]
 	});
 	connection.client.register(CompletionRequest.type, {
 		documentSelector: vueOnly.documentSelector,
