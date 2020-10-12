@@ -106,7 +106,10 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const propMappings: Mapping<{ isUnwrapProp: boolean }>[] = [];
 
 		let code = [
-			`import * as __VLS_Vue from '@vue/runtime-dom'`,
+			`import { FunctionalComponent as __VLS_Vue_FunctionalComponent } from '@vue/runtime-dom'`,
+			`import { HTMLAttributes as __VLS_Vue_HTMLAttributes } from '@vue/runtime-dom'`,
+			`import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'`,
+			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
@@ -115,13 +118,13 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`declare var __VLS_for_key: string;`,
 			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
 			`type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;`,
-			`type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends __VLS_Vue.FunctionalComponent<infer R> ? R : C;`,
+			`type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends __VLS_Vue_FunctionalComponent<infer R> ? R : C;`,
 			`type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };`,
-			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue.HTMLAttributes> & Record<string, unknown> };`,
+			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue_HTMLAttributes> & Record<string, unknown> };`,
 			`type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_RemoveAnyFnSet<T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {}> };`,
 			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : F2;`,
 			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`,
-			`type __VLS_GlobalAttrs = __VLS_Vue.HTMLAttributes & __VLS_Vue.VNodeProps & __VLS_Vue.AllowedComponentProps;`,
+			`type __VLS_GlobalAttrs = __VLS_Vue_HTMLAttributes & __VLS_Vue_VNodeProps & __VLS_Vue_AllowedComponentProps;`,
 		].join('\n') + `\n`;
 
 		code += `type __VLS_ConstructorOverloads<T> =\n`;
