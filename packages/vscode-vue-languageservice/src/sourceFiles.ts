@@ -471,7 +471,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const content = [
 				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.setup';`,
 				`import { defineComponent } from '@vue/runtime-dom';`,
-				`type __VLS_DefaultType<T> = T extends { default: infer K } ? K : {};`,
+				`type __VLS_DefaultType<T> = T extends { default: infer K } ? K : new () => ({});`,
 				`type __VLS_NonDefaultType<T> = Omit<T, 'default'>;`,
 				`declare const __VLS_default: __VLS_DefaultType<typeof __VLS_setups>;`,
 				`declare const __VLS_nonDefault: __VLS_NonDefaultType<typeof __VLS_setups>;`,
