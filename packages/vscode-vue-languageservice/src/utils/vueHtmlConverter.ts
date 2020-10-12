@@ -44,6 +44,7 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 				tags.add(node.tag);
 				writeImportSlots(node);
 				writeReferenceProps(node);
+				writeVshow(node);
 				writeProps(node);
 				writeOns(node);
 				writeSlots(node);
@@ -156,6 +157,22 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							}]);
 							_code += `'];\n`;
 						}
+					}
+				}
+			}
+			function writeVshow(node: ElementNode) {
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& !prop.arg
+						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+					) {
+						_code += `(`;
+						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						}]);
+						_code += `);\n`;
 					}
 				}
 			}
