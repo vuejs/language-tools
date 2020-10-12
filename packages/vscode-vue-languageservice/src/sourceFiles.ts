@@ -103,7 +103,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			mode: MapedMode,
 		}[] = [];
 		const componentMappings: Mapping<undefined>[] = [];
-		const propMappings: Mapping<{ isUnwrapProp: boolean }>[] = [];
+		const propMappings: Mapping<{ isOptionsProp?: boolean, isSetupExport?: boolean }>[] = [];
 
 		let code = [
 			`import { FunctionalComponent as __VLS_Vue_FunctionalComponent } from '@vue/runtime-dom'`,
@@ -111,6 +111,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'`,
 			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
+			(descriptor.scriptSetup
+				? `import * as __VLS_setups from './team-logo.vue.options';`
+				: `// no setups`),
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
 			`declare var __VLS_vmUnwrap: typeof __VLS_Options & { components: { } };`,
@@ -234,7 +237,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 		for (const propName of templateScriptData.props) {
 			propMappings.push({
 				data: {
-					isUnwrapProp: false,
 				},
 				mode: MapedMode.Offset,
 				vueRange: {
@@ -248,7 +250,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			});
 			propMappings.push({
 				data: {
-					isUnwrapProp: true,
+					isOptionsProp: true,
 				},
 				mode: MapedMode.Offset,
 				vueRange: {
@@ -260,7 +262,28 @@ export function createSourceFile(initialDocument: TextDocument, {
 					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}`.length,
 				},
 			});
-			code += `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}'];\n`;
+			if (descriptor.scriptSetup) {
+				propMappings.push({
+					data: {
+						isSetupExport: true,
+					},
+					mode: MapedMode.Offset,
+					vueRange: {
+						start: code.length + `var `.length,
+						end: code.length + `var ${propName}`.length,
+					},
+					virtualRange: {
+						start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}']; __VLS_setups['`.length,
+						end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}']; __VLS_setups['${propName}`.length,
+					},
+				});
+			}
+			if (descriptor.scriptSetup) {
+				code += `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}']; __VLS_setups['${propName}'];\n`;
+			}
+			else {
+				code += `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}'];\n`;
+			}
 		}
 
 		/* Interpolations */
@@ -283,7 +306,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return tags.has(tagName) || tags.has(hyphenate(tagName));
 		}
 		function getPropSourceMap() {
-			const sourceMap = new SourceMap<{ isUnwrapProp: boolean }>(
+			const sourceMap = new SourceMap<{ isOptionsProp?: boolean, isSetupExport?: boolean }>(
 				document,
 				document,
 			);
@@ -1388,7 +1411,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
 					const propRights = templateScript.value.propSourceMap.findVirtualLocations(diag.range);
 					for (const propRight of propRights) {
-						if (propRight.maped.data.isUnwrapProp) continue;
+						if (propRight.maped.data.isOptionsProp || propRight.maped.data.isSetupExport) continue;
 						const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
 						for (const definition of definitions) {
 							if (definition.uri !== scriptDocument.value.uri) continue;

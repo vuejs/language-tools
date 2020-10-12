@@ -79,18 +79,19 @@ export function getTsActionEntries(
 					{ // patch prop rename
 						let isProp = false;
 						for (const right of rights) {
-							if (right.maped.data.isUnwrapProp) {
+							if (right.maped.data.isOptionsProp || right.maped.data.isSetupExport) {
 								const loc2Definitions = ls.findDefinition(templateScript.document, right.range.start);
-								isProp = loc2Definitions.length > 0;
+								if (loc2Definitions.length > 0) {
+									isProp = true;
+									break;
+								}
 							}
 						}
 						if (isProp) {
-							for (const right of rights) {
-								if (!right.maped.data.isUnwrapProp) {
-									const propRenameReferences = ls.findReferences(templateScript.document, right.range.start);
-									if (propRenameReferences) {
-										result = result.concat(propRenameReferences);
-									}
+							for (const left of rights) {
+								if (!left.maped.data.isOptionsProp && !left.maped.data.isSetupExport) {
+									const propRenameReferences = ls.findReferences(templateScript.document, left.range.start);
+									result = result.concat(propRenameReferences);
 								}
 							}
 						}
