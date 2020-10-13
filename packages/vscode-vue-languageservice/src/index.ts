@@ -398,6 +398,15 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 		if (vueTemplageScriptUpdated) {
 			tsProjectVersion++;
+
+			// TODO: init html completion data
+			if (shouldUpdateTemplateScript) {
+				for (const uri of uris) {
+					const sourceFile = sourceFiles.get(uri);
+					if (!sourceFile) continue;
+					sourceFile.getComponentCompletionData();
+				}
+			}
 		}
 	}
 	function unsetSourceFiles(uris: string[]) {

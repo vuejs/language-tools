@@ -14,15 +14,14 @@ import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
 import { hyphenate } from '@vue/shared';
-import * as upath from 'upath';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
-	html: ['<'],
+	html: ['<', ':', '@'],
 };
 
 export function register(sourceFiles: Map<string, SourceFile>) {
-	return (document: TextDocument, position: Position, context?: CompletionContext): CompletionItem[] | CompletionList | undefined => {
+	return (document: TextDocument, position: Position, context?: CompletionContext) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 		const range = Range.create(position, position);
@@ -31,10 +30,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (tsResult.items.length) return tsResult;
 
 		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult.items.length) return htmlResult as CompletionList;
+		if (htmlResult.items.length) return htmlResult;
 
 		const cssResult = getCssResult(sourceFile);
-		if (cssResult.items.length) return cssResult as CompletionList;
+		if (cssResult.items.length) return cssResult;
 
 		function getTsResult(sourceFile: SourceFile) {
 			const result: CompletionList = {
@@ -76,7 +75,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: html.CompletionList = {
+			const result: CompletionList = {
 				isIncomplete: false,
 				items: [],
 			};
@@ -166,9 +165,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const htmlResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument, {
-						[document.uri]: true,
-					});
+					const htmlResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument);
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -185,17 +182,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
 						const tsItem = documentation ? tsItems.get(documentation) : undefined;
 						if (vueItem.label.startsWith(':')) {
-							vueItem.kind = CompletionItemKind.Field;
-							vueItem.label = vueItem.label.substr(1);
 							vueItem.sortText = '\u0000' + vueItem.sortText;
 						}
 						else if (vueItem.label.startsWith('@')) {
-							vueItem.kind = CompletionItemKind.Event;
-							vueItem.label = vueItem.label.substr(1);
 							vueItem.sortText = '\u0001' + vueItem.sortText;
 						}
 						if (tsItem && !documentation?.startsWith('*:')) { // not globalAttributes
 							vueItem.sortText = '\u0000' + vueItem.sortText;
+							vueItem.kind = CompletionItemKind.Field;
 						}
 						else if (vueItem.label.startsWith('v-')) {
 							vueItem.kind = CompletionItemKind.Method;
@@ -218,7 +212,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			const result: html.CompletionList = {
+			const result: CompletionList = {
 				isIncomplete: false,
 				items: [],
 			};

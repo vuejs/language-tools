@@ -932,11 +932,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 		if (templateScriptDocument.value) docs.set(templateScriptDocument.value.uri, templateScriptDocument.value);
 		return docs;
 	});
+	const componentCompletionDataCache = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
 	const componentCompletionData = computed(() => {
 		{ // watching
 			templateScriptData.projectVersion;
 		}
-		const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
 		if (templateScriptDocument.value && templateDocument.value) {
 			const doc = templateScriptDocument.value;
 			const text = doc.getText();
@@ -957,8 +957,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 					offset += searchText.length;
 					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
-				data.set(tagName, { bind, on });
-				data.set(hyphenate(tagName), { bind, on });
+				componentCompletionDataCache.set(tagName, { bind, on });
+				componentCompletionDataCache.set(hyphenate(tagName), { bind, on });
 			}
 			let globalBind: CompletionItem[] = [];
 			{
@@ -969,9 +969,9 @@ export function createSourceFile(initialDocument: TextDocument, {
 					globalBind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 				}
 			}
-			data.set('*', { bind: globalBind, on: [] });
+			componentCompletionDataCache.set('*', { bind: globalBind, on: [] });
 		}
-		return data;
+		return componentCompletionDataCache;
 	});
 
 	update(initialDocument);
