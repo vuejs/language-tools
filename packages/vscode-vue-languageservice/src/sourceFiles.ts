@@ -112,7 +112,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
 			(descriptor.scriptSetup
-				? `import * as __VLS_setups from './team-logo.vue.options';`
+				? `import * as __VLS_setups from './${upath.basename(vue.fileName)}.options';`
 				: `// no setups`),
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
 			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
