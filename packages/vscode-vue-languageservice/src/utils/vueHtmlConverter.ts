@@ -268,25 +268,53 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						}]);
 						_code += `]> };\n`;
 
-						_code += `${varName} = {\n`
-						{
+						if (prop.exp) {
+							const varExpOriginal = `__VLS_${elementIndex++}`;
+							const varExpWrapFn = `__VLS_${elementIndex++}`;
+							const varExpFinal = `__VLS_${elementIndex++}`;
+
+							_code += `const ${varExpOriginal} = (() => { return ${prop.exp.content} })();\n`;
+							_code += `const ${varExpWrapFn} = () => { ${prop.exp.content} };\n`;
+							_code += `let ${varExpFinal}!: __VLS_PickFunc<typeof ${varExpOriginal}, typeof ${varExpWrapFn}>;\n`;
+							_code += `${varName} = {\n`
 							mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
-							_code += `: (`;
-							if (prop.exp) {
+							_code += `: ${varExpFinal},\n`;
+							_code += `};\n`;
+						}
+						else {
+							_code += `${varName} = {\n`
+							mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}]);
+							_code += `: undefined,\n`;
+							_code += `};\n`;
+						}
+
+						if (prop.exp) {
+							_code += `${varName} = {\n`
+							_code += `'${propName}': `;
+							if (prop.exp.content.indexOf('=>') >= 0) {
+								_code += `(`;
 								mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
 								}])
+								_code += `),\n`;
 							}
 							else {
-								_code += 'undefined';
+								_code += `() => { `;
+								mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+									start: prop.exp.loc.start.offset,
+									end: prop.exp.loc.end.offset,
+								}])
+								_code += ` },\n`;
 							}
-							_code += `),\n`;
+							_code += `};\n`;
 						}
-						_code += `};\n`;
 					}
 				}
 			}

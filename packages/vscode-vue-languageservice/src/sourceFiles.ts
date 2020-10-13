@@ -128,6 +128,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			`type __VLS_FirstFunction<F1, F2> = F1 extends (...args: any) => any ? F1 : (F2 extends (...args: any) => any ? F2 : F1);`,
 			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`,
 			`type __VLS_GlobalAttrs = __VLS_Vue_HTMLAttributes & __VLS_Vue_VNodeProps & __VLS_Vue_AllowedComponentProps;`,
+			`type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;`,
 		].join('\n') + `\n`;
 
 		code += `type __VLS_ConstructorOverloads<T> =\n`;
