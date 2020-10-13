@@ -100,8 +100,17 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 					if (vueLoc.range.end.line > range.end.line) continue;
 					if (vueLoc.range.start.line === range.start.line && vueLoc.range.start.character < range.start.character) continue;
 					if (vueLoc.range.end.line === range.end.line && vueLoc.range.end.character > range.end.character) continue;
+					{ // patch 'computed' keyword from <script refs>
+						const start = sourceMap.vueDocument.positionAt(sourceMap.vueDocument.offsetAt(vueLoc.range.start) + 1);
+						const end = sourceMap.vueDocument.positionAt(sourceMap.vueDocument.offsetAt(vueLoc.range.end) + 'puted'.length);
+						const range = { start, end };
+						const vueText = sourceMap.vueDocument.getText(range);
+						if (vueText.endsWith('computed')) {
+							vueLoc.range.end = sourceMap.vueDocument.positionAt(sourceMap.vueDocument.offsetAt(vueLoc.range.end) - 'com'.length);
+						}
+					}
 					result.push({
-						...textEdit,
+						newText: textEdit.newText,
 						range: vueLoc.range,
 					});
 				}

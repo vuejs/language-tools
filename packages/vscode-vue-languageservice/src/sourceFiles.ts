@@ -1495,7 +1495,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 				else if (tokenType === ts.SyntaxKind.Identifier && tokenText === 'computed') {
 					const nextTokenType = tsScanner.scan();
 					if (nextTokenType === ts.SyntaxKind.Identifier) {
-						content = content.substring(0, tokenPos) + '_: const' + content.substring(tokenPos + '_: const'.length);
+						content = content.substring(0, tokenPos) + '   const' + content.substring(tokenPos + '   const'.length);
 					}
 					tokenType = nextTokenType;
 				}
