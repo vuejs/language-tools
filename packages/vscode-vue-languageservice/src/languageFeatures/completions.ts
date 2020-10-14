@@ -14,10 +14,17 @@ import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
 import { hyphenate } from '@vue/shared';
+import { getWordRange } from '../utils/commons';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
 	html: ['<', ':', '@'],
+	css: ['.', '@'],
+};
+export const wordPatterns = {
+	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
+	less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
+	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
 };
 
 export function register(sourceFiles: Map<string, SourceFile>) {
@@ -216,9 +223,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				isIncomplete: false,
 				items: [],
 			};
+			if (context?.triggerCharacter && !triggerCharacter.css.includes(context.triggerCharacter)) {
+				return result;
+			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
+					const wordPattern = sourceMap.virtualDocument.languageId === 'scss' ? wordPatterns.scss : wordPatterns.css;
+					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.virtualDocument);
 					const cssResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -228,21 +240,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						docUri: sourceMap.virtualDocument.uri,
 						mode: 'css',
 					};
-					const vueItems: CompletionItem[] = cssResult.items.map(htmlItem => {
-						if (htmlItem.label.startsWith('@')) {
-							const newText = htmlItem.textEdit?.newText || htmlItem.insertText || htmlItem.label;
-							const start = { ...position };
-							start.character -= 1;
-							const end = { ...position };
-							end.character = start.character + newText.length;
-							htmlItem.textEdit = { newText, range: { start, end } };
-						} else {
-							htmlItem.textEdit = translateTextEdit(htmlItem.textEdit, sourceMap);
-						}
+					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {
+						const newText = cssItem.textEdit?.newText || cssItem.insertText || cssItem.label;
+						const textEdit = translateTextEdit(TextEdit.replace(wordRange, newText), sourceMap);
+						const addTextEdits = translateAdditionalTextEdits(cssItem.additionalTextEdits, sourceMap);
 						return {
-							...htmlItem,
-							additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
-							textEdit: htmlItem.textEdit,
+							...cssItem,
+							additionalTextEdits: addTextEdits,
+							textEdit: textEdit,
 							data,
 						};
 
