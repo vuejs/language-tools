@@ -228,12 +228,26 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 						docUri: sourceMap.virtualDocument.uri,
 						mode: 'css',
 					};
-					const vueItems: CompletionItem[] = cssResult.items.map(htmlItem => ({
-						...htmlItem,
-						additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
-						textEdit: translateTextEdit(htmlItem.textEdit, sourceMap),
-						data,
-					}));
+					const vueItems: CompletionItem[] = cssResult.items.map(htmlItem => {
+						if (htmlItem.label.startsWith('@')) {
+							const newText = htmlItem.textEdit?.newText || htmlItem.insertText || htmlItem.label;
+							const start = { ...position };
+							start.character -= 1;
+							const end = { ...position };
+							end.character = start.character + newText.length;
+							htmlItem.textEdit = { newText, range: { start, end } };
+						} else {
+							htmlItem.textEdit = translateTextEdit(htmlItem.textEdit, sourceMap);
+						}
+						return {
+							...htmlItem,
+							additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
+							textEdit: htmlItem.textEdit,
+							data,
+						};
+
+					}
+					);
 					result.items = result.items.concat(vueItems);
 				}
 			}
