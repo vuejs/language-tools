@@ -26,6 +26,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	let documentVersion = 0;
 
 	// sources
+	const tsProjectVersion = ref<string>();
 	const vue = reactive({
 		uri: initialDocument.uri,
 		fileName: uriToFsPath(initialDocument.uri),
@@ -73,7 +74,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		styles: [],
 	});
 	const templateScriptData = reactive({
-		projectVersion: -1,
+		projectVersion: undefined as string | undefined,
 		props: [] as string[],
 		components: [] as string[],
 		setupReturns: [] as string[],
@@ -418,17 +419,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const content = descriptor.template.content;
 			try {
 				const html = lang === 'pug' ? pugToHtml(content) : content;
-				const errors: vueSfc.CompilerError[] = [];
-				const ast = vueDom.compile(html, {
-					onError: err => errors.push(err),
-				}).ast;
-				if (errors.length > 0) {
-					return {
-						text: '',
-						mappings: [],
-						tags: new Set<string>(),
-					};
-				}
+				const ast = vueDom.compile(html, { onError: () => { } }).ast;
 				return transformVueHtml(
 					lang === 'pug' ? {
 						pug: content,
@@ -920,47 +911,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		if (templateScriptDocument.value) docs.set(templateScriptDocument.value.uri, templateScriptDocument.value);
 		return docs;
 	});
-	const componentCompletionDataCache = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
-	const componentCompletionData = computed(() => {
-		{ // watching
-			templateScriptData.projectVersion;
-		}
-		if (templateScriptDocument.value && templateDocument.value) {
-			const doc = templateScriptDocument.value;
-			const text = doc.getText();
-			for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
-				let bind: CompletionItem[];
-				let on: CompletionItem[];
-				{
-					const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_GlobalAttrs>)['`;
-					let offset = text.indexOf(searchText);
-					if (offset === -1) continue;
-					offset += searchText.length;
-					bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
-				}
-				{
-					const searchText = `__VLS_componentEmits['${tagName}']['`;
-					let offset = text.indexOf(searchText);
-					if (offset === -1) continue;
-					offset += searchText.length;
-					on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
-				}
-				componentCompletionDataCache.set(tagName, { bind, on });
-				componentCompletionDataCache.set(hyphenate(tagName), { bind, on });
-			}
-			let globalBind: CompletionItem[] = [];
-			{
-				const searchText = `({} as __VLS_GlobalAttrs)['`;
-				let offset = text.indexOf(searchText);
-				if (offset >= 0) {
-					offset += searchText.length;
-					globalBind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
-				}
-			}
-			componentCompletionDataCache.set('*', { bind: globalBind, on: [] });
-		}
-		return componentCompletionDataCache;
-	});
 
 	update(initialDocument);
 
@@ -968,7 +918,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		getTextDocument: untrack(() => vue.document),
 		update,
 		updateTemplateScript,
-		getComponentCompletionData: untrack(() => componentCompletionData.value),
+		getComponentCompletionData: useComponentCompletionData(),
 		getDiagnostics: useDiagnostics(),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
@@ -1097,11 +1047,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			}
 		}
 	}
-	function updateTemplateScript(vueProjectVersion: number) {
-		if (templateScriptData.projectVersion === vueProjectVersion) {
+	function updateTemplateScript() {
+		if (templateScriptData.projectVersion === tsLanguageService.host.getProjectVersion?.()) {
 			return false;
 		}
-		templateScriptData.projectVersion = vueProjectVersion;
+		templateScriptData.projectVersion = tsLanguageService.host.getProjectVersion?.();
 
 		const doc = scriptMainDocument.value;
 		const props = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_vm.')));
@@ -1149,7 +1099,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	function useDiagnostics() {
 
 		let version = 0;
-		const tsProjectVersion = ref<string>();
 
 		const stylesDiags = useStylesValidation();
 		const templateDiags = useTemplateValidation();
@@ -1185,8 +1134,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		return worker;
 
-		async function worker(newTsProjectVersion: string, isCancel?: () => boolean, onDirty?: (diags: Diagnostic[]) => void) {
-			tsProjectVersion.value = newTsProjectVersion;
+		async function worker(isCancel?: () => boolean, onDirty?: (diags: Diagnostic[]) => void) {
+			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 			let dirty = false;
 
 			if (dirty) await nextTick();
@@ -1456,6 +1405,53 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			}
 			return result;
 		}
+	}
+	function useComponentCompletionData() {
+		const result = computed(() => {
+			{ // watching
+				tsProjectVersion.value;
+			}
+			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
+			if (templateScriptDocument.value && templateDocument.value) {
+				const doc = templateScriptDocument.value;
+				const text = doc.getText();
+				for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
+					let bind: CompletionItem[];
+					let on: CompletionItem[];
+					{
+						const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_GlobalAttrs>)['`;
+						let offset = text.indexOf(searchText);
+						if (offset === -1) continue;
+						offset += searchText.length;
+						bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+					}
+					{
+						const searchText = `__VLS_componentEmits['${tagName}']['`;
+						let offset = text.indexOf(searchText);
+						if (offset === -1) continue;
+						offset += searchText.length;
+						on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+					}
+					data.set(tagName, { bind, on });
+					data.set(hyphenate(tagName), { bind, on });
+				}
+				let globalBind: CompletionItem[] = [];
+				{
+					const searchText = `({} as __VLS_GlobalAttrs)['`;
+					let offset = text.indexOf(searchText);
+					if (offset >= 0) {
+						offset += searchText.length;
+						globalBind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+					}
+				}
+				data.set('*', { bind: globalBind, on: [] });
+			}
+			return data;
+		});
+		return () => {
+			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
+			return result.value;
+		};
 	}
 	function transformLanguageId(lang: string) {
 		switch (lang) {

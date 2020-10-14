@@ -55,7 +55,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		rootPath: vueHost.getCurrentDirectory(),
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
-		doValidation: apiHook(doValidation.register(sourceFiles, () => tsProjectVersion.toString())),
+		doValidation: apiHook(doValidation.register(sourceFiles)),
 		doHover: apiHook(doHover.register(sourceFiles, tsLanguageService)),
 		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles, tsLanguageService)),
 		doFormatting: apiHook(doFormatting.register(sourceFiles, tsLanguageService)),
@@ -374,29 +374,17 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		if (vueScriptsUpdated) {
 			tsProjectVersion++;
 		}
-
 		if (shouldUpdateTemplateScript) {
 			for (const uri of uris) {
 				const sourceFile = sourceFiles.get(uri);
 				if (!sourceFile) continue;
-				const updated = sourceFile.updateTemplateScript(tsProjectVersion);
-				if (updated) {
+				if (sourceFile.updateTemplateScript()) {
 					vueTemplageScriptUpdated = true;
 				}
 			}
 		}
-
 		if (vueTemplageScriptUpdated) {
 			tsProjectVersion++;
-
-			// TODO: init html completion data
-			if (shouldUpdateTemplateScript) {
-				for (const uri of uris) {
-					const sourceFile = sourceFiles.get(uri);
-					if (!sourceFile) continue;
-					sourceFile.getComponentCompletionData();
-				}
-			}
 		}
 	}
 	function unsetSourceFiles(uris: string[]) {
