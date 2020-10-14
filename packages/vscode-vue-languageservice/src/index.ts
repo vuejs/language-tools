@@ -47,6 +47,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	let tsProjectVersion = 0;
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
+	const templateScriptUpdateUris = new Set<string>();
 
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost);
@@ -152,6 +153,9 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 			unsetSourceFiles(removes.map(fsPathToUri));
 			updateSourceFiles(adds.concat(updates).map(fsPathToUri), shouldUpdateTemplateScript)
+		}
+		else if (shouldUpdateTemplateScript && templateScriptUpdateUris.size) {
+			updateSourceFiles([], shouldUpdateTemplateScript)
 		}
 	}
 	function createTsLanguageServiceHost() {
@@ -370,18 +374,20 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 					vueTemplageScriptUpdated = true;
 				}
 			}
+			templateScriptUpdateUris.add(uri);
 		}
 		if (vueScriptsUpdated) {
 			tsProjectVersion++;
 		}
 		if (shouldUpdateTemplateScript) {
-			for (const uri of uris) {
+			for (const uri of templateScriptUpdateUris) {
 				const sourceFile = sourceFiles.get(uri);
 				if (!sourceFile) continue;
 				if (sourceFile.updateTemplateScript()) {
 					vueTemplageScriptUpdated = true;
 				}
 			}
+			templateScriptUpdateUris.clear();
 		}
 		if (vueTemplageScriptUpdated) {
 			tsProjectVersion++;
