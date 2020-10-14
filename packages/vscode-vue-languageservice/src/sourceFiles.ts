@@ -10,7 +10,7 @@ import { uriToFsPath } from '@volar/shared';
 import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, MapedNodeTypes } from './utils/sourceMaps';
 import { transformVueHtml } from './utils/vueHtmlConverter';
 import * as ts from 'typescript';
-import * as ts2 from '@volar/vscode-typescript-languageservice';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import * as vueDom from '@vue/compiler-dom';
 import * as css from 'vscode-css-languageservice';
@@ -18,20 +18,11 @@ import * as html from 'vscode-html-languageservice';
 import * as upath from 'upath';
 import { ref, computed, reactive, pauseTracking, resetTracking, Ref } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
+import * as globalServices from './globalServices';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
-export function createSourceFile(initialDocument: TextDocument, {
-	htmlLanguageService,
-	cssLanguageService,
-	scssLanguageService,
-	tsLanguageService,
-}: {
-	htmlLanguageService: html.LanguageService,
-	cssLanguageService: css.LanguageService,
-	scssLanguageService: css.LanguageService,
-	tsLanguageService: ts2.LanguageService,
-}) {
+export function createSourceFile(initialDocument: TextDocument, tsLanguageService: ts2.LanguageService) {
 	let documentVersion = 0;
 
 	// sources
@@ -376,7 +367,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 			function getSourceMap(sourceDoc: TextDocument, targetDoc: TextDocument) {
 				const key = sourceDoc.uri + '=>' + targetDoc.uri;
 				if (!sourceMaps.has(key)) {
-					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc, tsLanguageService));
+					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc));
 				}
 				return sourceMaps.get(key)!;
 			}
@@ -393,8 +384,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 			return names;
 
 			function worker(sourceMap: CssSourceMap | undefined, doc: TextDocument, ss: css.Stylesheet) {
-				const ls = doc.languageId === 'scss' ? scssLanguageService : cssLanguageService;
-				const symbols = ls.findDocumentSymbols(doc, ss);
+				const cssLanguageService = doc.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
 				for (const s of symbols) {
 					if (s.kind === css.SymbolKind.Class) {
 						// https://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
@@ -574,14 +565,14 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const content = style.content;
 			const documentUri = vue.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, documentVersion++, content);
-			const ls = lang === 'scss' ? scssLanguageService : cssLanguageService;
-			const stylesheet = ls.parseStylesheet(document);
+			const cssLanguageService = lang === 'scss' ? globalServices.scss : globalServices.css;
+			const stylesheet = cssLanguageService.parseStylesheet(document);
 			const linkStyles: [TextDocument, css.Stylesheet][] = [];
 			findLinks(document, stylesheet);
 			documents.push([document, stylesheet, linkStyles]);
 
 			function findLinks(textDocument: TextDocument, stylesheet: css.Stylesheet) {
-				const links = ls.findDocumentLinks(textDocument, stylesheet, documentContext);
+				const links = cssLanguageService.findDocumentLinks(textDocument, stylesheet, documentContext);
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss')) continue;
@@ -593,7 +584,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, documentVersion++, text);
-					const ss = lang === 'scss' ? scssLanguageService.parseStylesheet(doc) : cssLanguageService.parseStylesheet(doc);
+					const ss = lang === 'scss' ? globalServices.scss.parseStylesheet(doc) : globalServices.css.parseStylesheet(doc);
 					linkStyles.push([doc, ss]);
 					findLinks(doc, ss);
 				}
@@ -629,11 +620,11 @@ export function createSourceFile(initialDocument: TextDocument, {
 		}
 	});
 	const vueHtmlDocument = computed(() => {
-		return htmlLanguageService.parseHTMLDocument(vue.document);
+		return globalServices.html.parseHTMLDocument(vue.document);
 	});
 	const templateHtmlDocument = computed<html.HTMLDocument | undefined>(() => {
 		if (templateDocument.value) {
-			return htmlLanguageService.parseHTMLDocument(templateDocument.value);
+			return globalServices.html.parseHTMLDocument(templateDocument.value);
 		}
 	});
 
@@ -642,7 +633,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptDocument.value;
 		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
+			const sourceMap = new TsSourceMap(vue.document, document);
 			const start = descriptor.script.loc.start;
 			const end = descriptor.script.loc.end;
 			sourceMap.add({
@@ -675,7 +666,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptSetupDocument.value;
 		if (document && descriptor.scriptSetup) {
-			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
+			const sourceMap = new TsSourceMap(vue.document, document);
 			{
 				const start = descriptor.scriptSetup.loc.start;
 				const end = descriptor.scriptSetup.loc.end;
@@ -741,7 +732,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const start = descriptor.scriptSetup?.loc.start ?? descriptor.script?.loc.start;
 		const end = descriptor.scriptSetup?.loc.end ?? descriptor.script?.loc.end;
 		if (document && start !== undefined && end !== undefined) {
-			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
+			const sourceMap = new TsSourceMap(vue.document, document);
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -772,7 +763,7 @@ export function createSourceFile(initialDocument: TextDocument, {
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptMainDocument.value;
 		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document, tsLanguageService);
+			const sourceMap = new TsSourceMap(vue.document, document);
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -845,12 +836,10 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const linkStyles = styleDocuments.value[i][2];
 			const loc = style.loc;
 			const module = style.module;
-			const ls = style.lang === 'scss' ? scssLanguageService : cssLanguageService;
 
 			const sourceMap = new CssSourceMap(
 				vue.document,
 				document,
-				ls,
 				stylesheet,
 				module,
 				linkStyles,
@@ -879,7 +868,6 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const sourceMap = new HtmlSourceMap(
 				vue.document,
 				document,
-				htmlLanguageService,
 				htmlDocument,
 			);
 			sourceMap.add({
@@ -1347,8 +1335,8 @@ export function createSourceFile(initialDocument: TextDocument, {
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const [document, stylesheet] of styleDocuments.value) {
-					const ls = document.languageId === "scss" ? scssLanguageService : cssLanguageService;
-					const errs = ls.doValidation(document, stylesheet);
+					const cssLanguageService = document.languageId === "scss" ? globalServices.scss : globalServices.css;
+					const errs = cssLanguageService.doValidation(document, stylesheet);
 					if (errs) result.set(document.uri, errs);
 				}
 				return result;

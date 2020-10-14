@@ -15,6 +15,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
 import { hyphenate } from '@vue/shared';
 import { getWordRange } from '../utils/commons';
+import * as globalServices from '../globalServices';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
@@ -27,7 +29,7 @@ export const wordPatterns = {
 	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
 };
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, position: Position, context?: CompletionContext) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -55,7 +57,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.maped.data.capabilities.completion) continue;
 					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
-					const tsItems = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
+					const tsItems = tsLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: virtualLoc.maped.data.vueTag === 'script', // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
@@ -168,11 +170,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					tags,
 					globalAttributes,
 				});
-				sourceMap.languageService.setDataProviders(true, [dataProvider]);
+				globalServices.html.setDataProviders(true, [dataProvider]);
 
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const htmlResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument);
+					const htmlResult = globalServices.html.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument);
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -227,11 +229,12 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				return result;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
 					const wordPattern = sourceMap.virtualDocument.languageId === 'scss' ? wordPatterns.scss : wordPatterns.css;
 					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.virtualDocument);
-					const cssResult = sourceMap.languageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
+					const cssResult = cssLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}

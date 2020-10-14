@@ -6,8 +6,10 @@ import {
 	Range,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
+import * as globalServices from '../globalServices';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -63,7 +65,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const map = new Map<string, SymbolInformation>();
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				let symbols = sourceMap.languageService.findWorkspaceSymbols(sourceMap.virtualDocument);
+				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.virtualDocument);
 				for (const s of symbols) {
 					const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
 					if (vueLoc) {
@@ -87,7 +89,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let symbols = sourceMap.languageService.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.htmlDocument);
+				let symbols = globalServices.html.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.htmlDocument);
 				if (!symbols) continue;
 				for (const s of symbols) {
 					const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
@@ -105,7 +107,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let symbols = sourceMap.languageService.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.stylesheet);
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {
 					const vueLoc = sourceMap.findFirstVueLocation(s.location.range);

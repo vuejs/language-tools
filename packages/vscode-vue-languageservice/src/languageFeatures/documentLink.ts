@@ -9,6 +9,7 @@ import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import * as upath from 'upath';
 import * as ts from 'typescript';
 import { notEmpty } from '../utils/commons';
+import * as globalServices from '../globalServices';
 
 export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.LanguageServiceHost) {
 	return (document: TextDocument) => {
@@ -117,7 +118,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const links = sourceMap.languageService.findDocumentLinks(sourceMap.virtualDocument, documentContext);
+				const links = globalServices.html.findDocumentLinks(sourceMap.virtualDocument, documentContext);
 				for (const link of links) {
 					const vueLoc = sourceMap.findFirstVueLocation(link.range);
 					if (vueLoc) {
@@ -134,7 +135,8 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const links = sourceMap.languageService.findDocumentLinks(sourceMap.virtualDocument, sourceMap.stylesheet, documentContext);
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const links = cssLanguageService.findDocumentLinks(sourceMap.virtualDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
 					const vueLoc = sourceMap.findFirstVueLocation(link.range);
 					if (vueLoc) {

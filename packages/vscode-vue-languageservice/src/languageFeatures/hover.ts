@@ -6,8 +6,10 @@ import {
 	MarkedString,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
+import * as globalServices from '../globalServices';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, position: Position) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -50,7 +52,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.maped.data.capabilities.basic) continue;
-					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, tsLoc.range.start);
+					const result = tsLanguageService.doHover(sourceMap.virtualDocument, tsLoc.range.start);
 					if (result?.range) {
 						const vueLoc = sourceMap.findFirstVueLocation(result.range);
 						if (vueLoc) result.range = vueLoc.range;
@@ -64,7 +66,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
-					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, htmlLoc.range.start, sourceMap.htmlDocument);
+					const result = globalServices.html.doHover(sourceMap.virtualDocument, htmlLoc.range.start, sourceMap.htmlDocument);
 					if (result?.range) {
 						const vueLoc = sourceMap.findFirstVueLocation(result.range);
 						if (vueLoc) result.range = vueLoc.range;
@@ -77,8 +79,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
 				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
-					const result = sourceMap.languageService.doHover(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
+					const result = cssLanguageService.doHover(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
 					if (result?.range) {
 						const vueLoc = sourceMap.findFirstVueLocation(result.range);
 						if (vueLoc) result.range = vueLoc.range;

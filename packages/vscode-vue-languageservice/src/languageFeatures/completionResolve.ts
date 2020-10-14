@@ -2,8 +2,9 @@ import { CompletionItem, MarkupKind } from 'vscode-languageserver';
 import { CompletionData, TsCompletionData, HtmlCompletionData } from '../utils/types';
 import { SourceFile } from '../sourceFiles';
 import { translateAdditionalTextEdits } from './completions';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (item: CompletionItem) => {
 		const data: CompletionData = item.data;
 		const sourceFile = sourceFiles.get(data.uri);
@@ -21,7 +22,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (sourceMap.virtualDocument.uri !== data.docUri) continue;
-				data.tsItem = sourceMap.languageService.doCompletionResolve(data.tsItem);
+				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem);
 				vueItem.documentation = data.tsItem.documentation;
 				// TODO: this is a patch for import ts file icon
 				if (vueItem.detail !== data.tsItem.detail + '.ts') {
@@ -33,8 +34,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getHtmlResult(sourceFile: SourceFile, vueItem: CompletionItem, data: HtmlCompletionData) {
 			let tsItem: CompletionItem | undefined = data.tsItem;
-			const tsLanguageService = sourceFile.getTsSourceMaps()[0]?.languageService;
-			if (!tsItem || !tsLanguageService) return vueItem;
+			if (!tsItem) return vueItem;
 
 			tsItem = tsLanguageService.doCompletionResolve(tsItem);
 			vueItem.tags = [...vueItem.tags ?? [], ...tsItem.tags ?? []];

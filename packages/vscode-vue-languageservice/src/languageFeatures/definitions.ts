@@ -10,12 +10,14 @@ import {
 	getSourceTsLocations,
 	duplicateLocations,
 } from '../utils/commons';
+import * as globalServices from '../globalServices';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, position: Position) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const tsResult = tsDefinitionWorker(sourceFile, position, sourceFiles, false);
+		const tsResult = tsDefinitionWorker(sourceFile, position, sourceFiles, false, tsLanguageService);
 		const cssResult = getCssResult(sourceFile);
 
 		const result = [...tsResult, ...cssResult];
@@ -25,9 +27,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			let result: Location[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
 				const cssLocs = sourceMap.findVirtualLocations(Range.create(position, position));
 				for (const virLoc of cssLocs) {
-					const definition = sourceMap.languageService.findDefinition(sourceMap.virtualDocument, virLoc.range.start, sourceMap.stylesheet);
+					const definition = cssLanguageService.findDefinition(sourceMap.virtualDocument, virLoc.range.start, sourceMap.stylesheet);
 					if (definition) {
 						const vueLocs = getSourceTsLocations(definition, sourceFiles);
 						result = result.concat(vueLocs);
@@ -39,20 +42,19 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 	}
 }
 
-export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, sourceFiles: Map<string, SourceFile>, isTypeDefinition: boolean) {
+export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, sourceFiles: Map<string, SourceFile>, isTypeDefinition: boolean, tsLanguageService: ts2.LanguageService) {
 	const range = {
 		start: position,
 		end: position,
 	};
 	let result: Location[] = [];
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
-		const ls = sourceMap.languageService;
-		const worker = isTypeDefinition ? ls.findTypeDefinition : ls.findDefinition;
+		const worker = isTypeDefinition ? tsLanguageService.findTypeDefinition : tsLanguageService.findDefinition;
 		for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 			if (!tsLoc.maped.data.capabilities.references) continue;
-			const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'definition', worker, ls, sourceFiles);
+			const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'definition', worker, tsLanguageService, sourceFiles);
 			for (const location of entries) {
-				const document = ls.getTextDocument(location.uri);
+				const document = tsLanguageService.getTextDocument(location.uri);
 				if (!document) continue;
 				const definitions = worker(document, location.range.start);
 				result = result.concat(definitions);

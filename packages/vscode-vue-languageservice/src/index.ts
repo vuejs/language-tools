@@ -12,8 +12,6 @@ import { createSourceFile, SourceFile } from './sourceFiles';
 import * as upath from 'upath';
 import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
-import * as css from 'vscode-css-languageservice';
-import * as html from 'vscode-html-languageservice';
 import * as doComplete from './languageFeatures/completions';
 import * as doCompletionResolve from './languageFeatures/completionResolve';
 import * as doAutoClose from './languageFeatures/autoClose';
@@ -52,33 +50,30 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost);
-	const htmlLanguageService = html.getLanguageService();
-	const cssLanguageService = css.getCSSLanguageService();
-	const scssLanguageService = css.getSCSSLanguageService();
 
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(doValidation.register(sourceFiles, () => tsProjectVersion.toString())),
-		doHover: apiHook(doHover.register(sourceFiles)),
-		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles)),
-		doFormatting: apiHook(doFormatting.register(sourceFiles)),
-		findDefinition: apiHook(findDefinition.register(sourceFiles)),
+		doHover: apiHook(doHover.register(sourceFiles, tsLanguageService)),
+		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles, tsLanguageService)),
+		doFormatting: apiHook(doFormatting.register(sourceFiles, tsLanguageService)),
+		findDefinition: apiHook(findDefinition.register(sourceFiles, tsLanguageService)),
 		findReferences: apiHook(findReferences.register(sourceFiles, tsLanguageService)),
-		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles)),
-		doRename: apiHook(doRename.register(sourceFiles)),
+		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles, tsLanguageService)),
+		doRename: apiHook(doRename.register(sourceFiles, tsLanguageService)),
 		doCodeAction: apiHook(doCodeAction),
 		doExecuteCommand: apiHook(doExecuteCommand),
-		doComplete: apiHook(doComplete.register(sourceFiles), false),
-		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles), false),
-		doAutoClose: apiHook(doAutoClose.register(sourceFiles, htmlLanguageService), false),
+		doComplete: apiHook(doComplete.register(sourceFiles, tsLanguageService), false),
+		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles, tsLanguageService), false),
+		doAutoClose: apiHook(doAutoClose.register(sourceFiles), false),
 		getEmbeddedLanguage: apiHook(getEmbeddedLanguage.register(sourceFiles), false),
-		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles), false),
-		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles), false),
+		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles, tsLanguageService), false),
+		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
-		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles), false),
-		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles), false),
+		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles, tsLanguageService), false),
+		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(findDocumentColors.register(sourceFiles), false),
 		dispose: tsLanguageService.dispose,
@@ -363,12 +358,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, {
-					htmlLanguageService,
-					cssLanguageService,
-					scssLanguageService,
-					tsLanguageService,
-				}));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService));
 				vueScriptsUpdated = true;
 			}
 			else {

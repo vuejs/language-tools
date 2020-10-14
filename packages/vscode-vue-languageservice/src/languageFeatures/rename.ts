@@ -13,8 +13,10 @@ import {
 } from '../utils/commons';
 import { hyphenate } from '@vue/shared';
 import { MapedNodeTypes } from '../utils/sourceMaps';
+import * as globalServices from '../globalServices';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, position: Position, newName: string) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -41,18 +43,18 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.maped.data.capabilities.rename) continue;
-					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'rename', getRenameLocations, sourceMap.languageService, sourceFiles);
+					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'rename', getRenameLocations, tsLanguageService, sourceFiles);
 
 					for (const entry of entries) {
-						const entryDocument = sourceMap.languageService.getTextDocument(entry.uri);
+						const entryDocument = tsLanguageService.getTextDocument(entry.uri);
 						if (!entryDocument) continue;
-						const tsEdit = sourceMap.languageService.doRename(entryDocument, entry.range.start, newName);
+						const tsEdit = tsLanguageService.doRename(entryDocument, entry.range.start, newName);
 						if (!tsEdit) continue;
 						tsEdits.push(tsEdit);
 					}
 
 					function getRenameLocations(document: TextDocument, position: Position) {
-						const workspaceEdit = sourceMap.languageService.doRename(document, position, newName);
+						const workspaceEdit = tsLanguageService.doRename(document, position, newName);
 						if (!workspaceEdit) return [];
 
 						const locations: Location[] = [];
@@ -103,7 +105,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
-					const htmlEdits = sourceMap.languageService.doRename(sourceMap.virtualDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
+					const htmlEdits = globalServices.html.doRename(sourceMap.virtualDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
 					if (!htmlEdits) continue;
 					if (!htmlEdits.changes) continue;
 					for (const uri in htmlEdits.changes) {
@@ -128,8 +130,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getCssResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
 				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
-					const cssEdits = sourceMap.languageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
+					const cssEdits = cssLanguageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
 					if (!cssEdits) continue;
 					if (!cssEdits.changes) continue;
 					for (const uri in cssEdits.changes) {

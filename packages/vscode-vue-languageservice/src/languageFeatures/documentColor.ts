@@ -3,6 +3,7 @@ import {
 	ColorInformation,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
+import * as globalServices from '../globalServices';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument) => {
@@ -16,7 +17,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let colors = sourceMap.languageService.findDocumentColors(sourceMap.virtualDocument, sourceMap.stylesheet);
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				let colors = cssLanguageService.findDocumentColors(sourceMap.virtualDocument, sourceMap.stylesheet);
 				for (const color of colors) {
 					const vueLoc = sourceMap.findFirstVueLocation(color.range);
 					if (vueLoc) {

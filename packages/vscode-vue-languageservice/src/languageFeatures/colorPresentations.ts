@@ -6,6 +6,7 @@ import {
 	TextEdit,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
+import * as globalServices from '../globalServices';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument, color: Color, range: Range) => {
@@ -18,10 +19,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getCssResult(sourceFile: SourceFile) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const ls = sourceMap.languageService;
-					const _result = ls.getColorPresentations(sourceMap.virtualDocument, sourceMap.stylesheet, color, virtualLoc.range);
+					const _result = cssLanguageService.getColorPresentations(sourceMap.virtualDocument, sourceMap.stylesheet, color, virtualLoc.range);
 					for (const item of _result) {
 						if (item.textEdit) {
 							if (TextEdit.is(item.textEdit)) {

@@ -116,7 +116,6 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 	constructor(
 		public vueDocument: TextDocument,
 		public virtualDocument: TextDocument,
-		public languageService: ts.LanguageService,
 	) {
 		super(vueDocument, virtualDocument);
 	}
@@ -126,7 +125,6 @@ export class CssSourceMap extends SourceMap<undefined> {
 	constructor(
 		public vueDocument: TextDocument,
 		public virtualDocument: TextDocument,
-		public languageService: css.LanguageService,
 		public stylesheet: css.Stylesheet,
 		public module: boolean,
 		public links: [TextDocument, css.Stylesheet][],
@@ -139,7 +137,6 @@ export class HtmlSourceMap extends SourceMap<undefined> {
 	constructor(
 		public vueDocument: TextDocument,
 		public virtualDocument: TextDocument,
-		public languageService: html.LanguageService,
 		public htmlDocument: html.HTMLDocument,
 	) {
 		super(vueDocument, virtualDocument);

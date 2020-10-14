@@ -78,7 +78,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		const scriptVersions = new Map<string, string>();
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const languageServiceHost = createLanguageServiceHost();
-		const ls = createLanguageService(languageServiceHost);
+		const vueLanguageService = createLanguageService(languageServiceHost);
 
 		onParsedCommandLineUpdate();
 		const tsConfigWatcher = ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
@@ -102,7 +102,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
 
 		languageServices.set(tsConfig, {
-			languageService: ls,
+			languageService: vueLanguageService,
 			getParsedCommandLine: () => parsedCommandLine,
 			dispose: dispose,
 		});
@@ -150,7 +150,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 			fileCurrentReqs.set(document.uri, req);
 			const isCancel = () => fileCurrentReqs.get(document.uri) !== req;
 
-			const diagnostics = await ls.doValidation(document, isCancel, diagnostics => {
+			const diagnostics = await vueLanguageService.doValidation(document, isCancel, diagnostics => {
 				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // dirty
 			});
 			if (diagnostics !== undefined) {
@@ -260,7 +260,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 			}
 			directoryWatcher.close();
 			tsConfigWatcher.close();
-			ls.dispose();
+			vueLanguageService.dispose();
 		}
 	}
 	function remove(tsConfig: string) {

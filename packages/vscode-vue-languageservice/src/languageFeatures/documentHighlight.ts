@@ -4,8 +4,10 @@ import {
 	DocumentHighlight,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
+import * as globalServices from '../globalServices';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, position: Position) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -24,7 +26,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
 					if (!tsLoc.maped.data.capabilities.basic) continue;
-					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.virtualDocument, tsLoc.range.start);
+					const highlights = tsLanguageService.findDocumentHighlights(sourceMap.virtualDocument, tsLoc.range.start);
 					for (const highlight of highlights) {
 						const vueLoc = sourceMap.findFirstVueLocation(highlight.range);
 						if (vueLoc) {
@@ -42,7 +44,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
-					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.virtualDocument, htmlLoc.range.start, sourceMap.htmlDocument);
+					const highlights = globalServices.html.findDocumentHighlights(sourceMap.virtualDocument, htmlLoc.range.start, sourceMap.htmlDocument);
 					for (const highlight of highlights) {
 						const vueLoc = sourceMap.findFirstVueLocation(highlight.range);
 						if (vueLoc) {
@@ -59,8 +61,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		function getCssResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
 				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
-					const highlights = sourceMap.languageService.findDocumentHighlights(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
+					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.virtualDocument, cssLoc.range.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {
 						const vueLoc = sourceMap.findFirstVueLocation(highlight.range);
 						if (vueLoc) {

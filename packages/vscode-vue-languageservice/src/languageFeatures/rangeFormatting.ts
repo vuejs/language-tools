@@ -7,16 +7,17 @@ import {
 import { SourceFile } from '../sourceFiles';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, range: Range, options: FormattingOptions) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		return formattingWorker(sourceFile, document, options, range);
+		return formattingWorker(sourceFile, document, options, range, tsLanguageService);
 	};
 }
 
-export function formattingWorker(sourceFile: SourceFile, document: TextDocument, options: FormattingOptions, range: Range): TextEdit[] | undefined {
+export function formattingWorker(sourceFile: SourceFile, document: TextDocument, options: FormattingOptions, range: Range, tsLanguageService: ts2.LanguageService): TextEdit[] | undefined {
 	let newDocument = document;
 
 	const htmlEdits = getHtmlFormattingEdits();
@@ -92,7 +93,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 	function getTsFormattingEdits() {
 		const result: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
-			const textEdits = sourceMap.languageService.doFormatting(sourceMap.virtualDocument, options);
+			const textEdits = tsLanguageService.doFormatting(sourceMap.virtualDocument, options);
 			for (const textEdit of textEdits) {
 				for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
 					if (!vueLoc.maped.data.capabilities.formatting) continue;
