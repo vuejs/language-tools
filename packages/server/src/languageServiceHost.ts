@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import * as upath from 'upath';
 import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
-import { uriToFsPath, fsPathToUri } from '@volar/shared';
+import { uriToFsPath, fsPathToUri, sleep } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection } from 'vscode-languageserver';
 import type { TextDocuments } from 'vscode-languageserver';
@@ -73,6 +73,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		let disposed = false;
 		let parsedCommandLineUpdateTrigger = false;
 		let parsedCommandLine = createParsedCommandLine();
+		let currentValidation: Promise<void> | undefined;
 		const fileCurrentReqs = new Map<string, number>();
 		const fileWatchers = new Map<string, ts.FileWatcher>();
 		const scriptVersions = new Map<string, string>();
@@ -87,15 +88,14 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 				onParsedCommandLineUpdate();
 			}
 		});
-		const directoryWatcher = ts.sys.watchDirectory!(upath.dirname(tsConfig), fileName => {
+		const directoryWatcher = ts.sys.watchDirectory!(upath.dirname(tsConfig), async fileName => {
 			parsedCommandLineUpdateTrigger = true;
-			setTimeout(() => {
-				if (parsedCommandLineUpdateTrigger && !disposed) {
-					parsedCommandLineUpdateTrigger = false;
-					parsedCommandLine = createParsedCommandLine();
-					onParsedCommandLineUpdate();
-				}
-			}, 0);
+			await sleep();
+			if (parsedCommandLineUpdateTrigger && !disposed) {
+				parsedCommandLineUpdateTrigger = false;
+				parsedCommandLine = createParsedCommandLine();
+				onParsedCommandLineUpdate();
+			}
 		}, true);
 
 		documents.onDidChangeContent(change => onDidChangeContent(change.document));
@@ -132,7 +132,7 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 				await onProjectFilesUpdate([document]);
 			}
 		}
-		async function fullValidation(changedDocs: TextDocument[]) {
+		async function doValidation(changedDocs: TextDocument[]) {
 			const req = ++projectCurrentReq;
 			const docs = [...changedDocs];
 			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue');
@@ -202,7 +202,12 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		async function onProjectFilesUpdate(changedDocs: TextDocument[]) {
 			projectVersion++;
 			if (diag) {
-				await fullValidation(changedDocs);
+				while (currentValidation) {
+					await currentValidation;
+				}
+				currentValidation = doValidation(changedDocs);
+				await currentValidation;
+				currentValidation = undefined;
 			}
 		}
 		function createLanguageServiceHost() {

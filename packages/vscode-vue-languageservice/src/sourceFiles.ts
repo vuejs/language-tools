@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { pugToHtml } from '@volar/pug';
-import { uriToFsPath } from '@volar/shared';
+import { uriToFsPath, sleep } from '@volar/shared';
 import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, MapedNodeTypes } from './utils/sourceMaps';
 import { transformVueHtml } from './utils/vueHtmlConverter';
 import * as ts from 'typescript';
@@ -1138,35 +1138,35 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 			let dirty = false;
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(stylesDiags, lastStylesDiags);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(templateDiags, lastTemplateDiags);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_2, lastScriptDiags_2);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_3, lastScriptDiags_3);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
 
-			if (dirty) await nextTick();
+			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
 
@@ -1180,9 +1180,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					return true;
 				}
 				return false;
-			}
-			function nextTick() {
-				return new Promise(resolve => setTimeout(resolve, 0));
 			}
 		}
 		function useTemplateValidation() {
