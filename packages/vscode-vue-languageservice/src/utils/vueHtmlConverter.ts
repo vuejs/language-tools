@@ -214,11 +214,11 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 						prop.type === NodeTypes.ATTRIBUTE
 					) {
 						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-						const propValue = prop.value?.content.replace(/`/g, '\\`') ?? '';
+						const propValue = prop.value ? `\`${prop.value?.content.replace(/`/g, '\\`')}\`` : 'true';
 						const propName2 = prop.name;
 
 						// camelize name
-						mapping(undefined, `'${propName}': \`${propValue}\``, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+						mapping(undefined, `'${propName}': ${propValue}`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
@@ -226,14 +226,14 @@ export function transformVueHtml(pugData: { html: string, pug: string } | undefi
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
 						}]);
-						_code += `: \`${propValue}\`,\n`;
+						_code += `: ${propValue},\n`;
 						// original name
 						if (propName2 !== propName) {
 							mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.start.offset + propName2.length,
 							}]);
-							_code += `: \`${propValue}\`,\n`;
+							_code += `: ${propValue},\n`;
 						}
 					}
 					else {
