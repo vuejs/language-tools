@@ -5,6 +5,7 @@
 
 import {
 	RequestType,
+	RequestType0,
 	TextDocumentPositionParams,
 	TextDocumentIdentifier,
 	Range,
@@ -27,4 +28,16 @@ export namespace VerifyAllScriptsRequest {
 }
 export namespace FormatAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.formatAllScripts');
+}
+
+// semantic tokens
+export interface SemanticTokenParams {
+	textDocument: TextDocumentIdentifier;
+	range: Range;
+}
+export namespace SemanticTokensRequest {
+	export const type: RequestType<SemanticTokenParams, [number, number, number, number, number | undefined | null][], any, any> = new RequestType('vue/semanticTokens');
+}
+export namespace SemanticTokenLegendRequest {
+	export const type: RequestType0<{ types: string[]; modifiers: string[] }, any, any> = new RequestType0('vue/semanticTokenLegend');
 }

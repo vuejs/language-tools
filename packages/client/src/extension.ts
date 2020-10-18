@@ -17,12 +17,34 @@ import {
 } from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { activateCommenting } from './commenting';
-import { TagCloseRequest, GetEmbeddedLanguageRequest, VerifyAllScriptsRequest, FormatAllScriptsRequest } from '@volar/shared';
+import {
+	TagCloseRequest,
+	GetEmbeddedLanguageRequest,
+	VerifyAllScriptsRequest,
+	FormatAllScriptsRequest,
+	SemanticTokensRequest,
+	SemanticTokenLegendRequest,
+} from '@volar/shared';
+import {
+	DocumentSemanticTokensProvider, CancellationToken,
+	languages, SemanticTokensLegend, SemanticTokensBuilder
+} from 'vscode';
 
 let apiClient: LanguageClient;
 let docClient: LanguageClient;
 
-export function activate(context: vscode.ExtensionContext) {
+console.log(new SemanticTokensBuilder().push);
+
+export async function activate(context: vscode.ExtensionContext) {
+	// from typescript
+	vscode.languages.setLanguageConfiguration('vue', {
+		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+		indentationRules: {
+			decreaseIndentPattern: /^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/,
+			increaseIndentPattern: /^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/
+		},
+	});
+
 	apiClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic', 6009);
 	docClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
 
@@ -34,6 +56,11 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.formatAllScripts', () => {
 		apiClient.sendRequest(FormatAllScriptsRequest.type, undefined);
 	}));
+
+	await apiClient.onReady();
+	const _tokenLegend = await apiClient.sendRequest(SemanticTokenLegendRequest.type);
+	const tokenLegend = new SemanticTokensLegend(_tokenLegend.types, _tokenLegend.modifiers);
+	languages.registerDocumentSemanticTokensProvider([{ scheme: 'file', language: 'vue' }], new SemanticTokensProvider(), tokenLegend);
 
 	function tagRequestor(document: TextDocument, position: vscode.Position) {
 		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
@@ -95,4 +122,19 @@ function setupLanguageService(context: vscode.ExtensionContext, script: string, 
 	client.start();
 
 	return client;
+}
+
+class SemanticTokensProvider implements DocumentSemanticTokensProvider {
+	onDidChangeSemanticTokens?: import("vscode").Event<void> | undefined;
+	async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken) {
+		const builder = new SemanticTokensBuilder();
+		const tokens = await apiClient.sendRequest(SemanticTokensRequest.type, {
+			textDocument: apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
+			range: { start: document.positionAt(0), end: document.positionAt(document.getText().length) },
+		});
+		for (const token of tokens) {
+			builder.push(token[0], token[1], token[2], token[3], token[4] ?? undefined);
+		}
+		return builder.build();
+	}
 }

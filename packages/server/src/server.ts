@@ -27,10 +27,17 @@ import {
 	WorkspaceEdit,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
+import { Commands, triggerCharacter, getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { TagCloseRequest, GetEmbeddedLanguageRequest, FormatAllScriptsRequest, uriToFsPath } from '@volar/shared';
+import {
+	TagCloseRequest,
+	GetEmbeddedLanguageRequest,
+	FormatAllScriptsRequest,
+	SemanticTokensRequest,
+	SemanticTokenLegendRequest,
+	uriToFsPath,
+} from '@volar/shared';
 import * as upath from 'upath';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
@@ -122,6 +129,14 @@ function initLanguageService(rootPath: string) {
 			}
 		}
 		progress.done();
+	});
+	connection.onRequest(SemanticTokensRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return host.get(document.uri)?.getSemanticTokens(document, handler.range);
+	});
+	connection.onRequest(SemanticTokenLegendRequest.type, () => {
+		return getSemanticTokensLegend();
 	});
 
 	connection.onCompletion(handler => {

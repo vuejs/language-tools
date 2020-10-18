@@ -31,6 +31,7 @@ import * as findDocumentColors from './languageFeatures/documentColor';
 import * as getSelectionRanges from './languageFeatures/selectionRanges';
 import * as getSignatureHelp from './languageFeatures/signatureHelp';
 import * as getColorPresentations from './languageFeatures/colorPresentations';
+import * as getSemanticTokens from './languageFeatures/semanticTokens';
 
 export enum Commands {
 	HTML_TO_PUG = 'volar.html-to-pug',
@@ -40,6 +41,9 @@ export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { triggerCharacter } from './languageFeatures/completions';
 
+export function getSemanticTokensLegend() {
+	return getSemanticTokens.semanticTokenLegend;
+}
 export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 	let lastProjectVersion: string | undefined;
@@ -64,6 +68,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findReferences: apiHook(findReferences.register(sourceFiles, tsLanguageService)),
 		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles, tsLanguageService)),
 		doRename: apiHook(doRename.register(sourceFiles, tsLanguageService)),
+		getSemanticTokens: apiHook(getSemanticTokens.register(sourceFiles)),
 		doCodeAction: apiHook(doCodeAction),
 		doExecuteCommand: apiHook(doExecuteCommand),
 		doComplete: apiHook(doComplete.register(sourceFiles, tsLanguageService), false),
@@ -160,7 +165,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	}
 	function createTsLanguageServiceHost() {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-		ts.sys.getDirectories
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
 			getProjectVersion: () => tsProjectVersion.toString(),

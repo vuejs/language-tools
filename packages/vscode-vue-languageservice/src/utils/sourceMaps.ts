@@ -2,8 +2,6 @@ import { Range } from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as html from 'vscode-html-languageservice';
 import * as css from 'vscode-css-languageservice';
-import * as ts from '@volar/vscode-typescript-languageservice';
-import type { NodeTypes } from '@vue/compiler-core';
 
 export interface MapedRange {
 	start: number,
