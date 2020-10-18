@@ -57,8 +57,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		apiClient.sendRequest(FormatAllScriptsRequest.type, undefined);
 	}));
 
-	await apiClient.onReady();
-	const _tokenLegend = await apiClient.sendRequest(SemanticTokenLegendRequest.type);
+	await docClient.onReady();
+	const _tokenLegend = await docClient.sendRequest(SemanticTokenLegendRequest.type);
 	const tokenLegend = new SemanticTokensLegend(_tokenLegend.types, _tokenLegend.modifiers);
 	languages.registerDocumentSemanticTokensProvider([{ scheme: 'file', language: 'vue' }], new SemanticTokensProvider(), tokenLegend);
 
@@ -128,8 +128,8 @@ class SemanticTokensProvider implements DocumentSemanticTokensProvider {
 	onDidChangeSemanticTokens?: import("vscode").Event<void> | undefined;
 	async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken) {
 		const builder = new SemanticTokensBuilder();
-		const tokens = await apiClient.sendRequest(SemanticTokensRequest.type, {
-			textDocument: apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
+		const tokens = await docClient.sendRequest(SemanticTokensRequest.type, {
+			textDocument: docClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
 			range: { start: document.positionAt(0), end: document.positionAt(document.getText().length) },
 		});
 		for (const token of tokens) {
