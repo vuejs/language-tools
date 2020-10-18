@@ -68,7 +68,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findReferences: apiHook(findReferences.register(sourceFiles, tsLanguageService)),
 		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles, tsLanguageService)),
 		doRename: apiHook(doRename.register(sourceFiles, tsLanguageService)),
-		getSemanticTokens: apiHook(getSemanticTokens.register(sourceFiles)),
+		getSemanticTokens: apiHook(getSemanticTokens.register(sourceFiles, tsLanguageService)),
 		doCodeAction: apiHook(doCodeAction),
 		doExecuteCommand: apiHook(doExecuteCommand),
 		doComplete: apiHook(doComplete.register(sourceFiles, tsLanguageService), false),

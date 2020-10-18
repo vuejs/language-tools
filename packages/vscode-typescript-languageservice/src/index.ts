@@ -19,6 +19,7 @@ import { DocumentSemanticTokensProvider } from './languageFeatures/semanticToken
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
+export { getLegend } from './languageFeatures/semanticTokens';
 
 export function createLanguageService(host: ts.LanguageServiceHost) {
 
@@ -46,11 +47,7 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 		doValidation: diagnostics.register(languageService),
 		getTextDocument,
 		dispose,
-
-		// SemanticTokens
-		getDocumentSemanticTokens: documentSemanticTokensProvider.provideDocumentSemanticTokens,
-		getDocumentRangeSemanticTokens: documentSemanticTokensProvider.provideDocumentRangeSemanticTokens,
-		getLegend: documentSemanticTokensProvider.getLegend,
+		getDocumentSemanticTokensProvider: () => documentSemanticTokensProvider,
 	};
 
 	function getTextDocument(uri: string) {

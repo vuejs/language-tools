@@ -1,6 +1,7 @@
 import {
 	TextDocument,
 	Range,
+	CancellationToken,
 } from 'vscode-languageserver';
 import { SemanticTokenTypes, SemanticTokenModifiers } from 'vscode-languageserver-protocol/lib/protocol.sematicTokens.proposed';
 import { SourceFile } from '../sourceFiles';
@@ -8,10 +9,14 @@ import * as globalServices from '../globalServices';
 import * as html from 'vscode-html-languageservice';
 import { MapedMode } from '../utils/sourceMaps';
 import { hyphenate } from '@vue/shared';
+import * as ts2 from '@volar/vscode-typescript-languageservice';
+import { Position } from 'vscode-html-languageservice';
 
 type TokenData = [number, number, number, number, number | undefined];
 
+const tsLegend = ts2.getLegend();
 const tokenTypesLegend = [
+	...tsLegend.tokenTypes,
 	SemanticTokenTypes.comment,
 	SemanticTokenTypes.keyword,
 	SemanticTokenTypes.string,
@@ -37,11 +42,11 @@ const tokenTypes = new Map(tokenTypesLegend.map((t, i) => [t, i]));
 
 export const semanticTokenLegend = {
 	types: tokenTypesLegend,
-	modifiers: [] as string[],
+	modifiers: tsLegend.tokenModifiers,
 };
 
-export function register(sourceFiles: Map<string, SourceFile>) {
-	return (document: TextDocument, range: Range) => {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+	return async (document: TextDocument, range: Range, token: CancellationToken) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 		const offsetRange = {
@@ -49,10 +54,40 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			end: document.offsetAt(range.end),
 		};
 
+		const tsResult = await getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 
-		return [...htmlResult];
+		return [...tsResult, ...htmlResult];
 
+		async function getTsResult(sourceFile: SourceFile) {
+			const result: TokenData[] = [];
+			const tsSemanticTokensProvider = tsLanguageService.getDocumentSemanticTokensProvider();
+
+			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				for (const maped of sourceMap) {
+					if (maped.mode !== MapedMode.Offset) continue;
+					if (maped.vueRange.start < offsetRange.start) continue;
+					if (maped.vueRange.end > offsetRange.end) continue;
+					const tsRange = {
+						start: sourceMap.virtualDocument.positionAt(maped.virtualRange.start),
+						end: sourceMap.virtualDocument.positionAt(maped.virtualRange.end),
+					};
+					const tokens = await tsSemanticTokensProvider.provideDocumentRangeSemanticTokens(sourceMap.virtualDocument, tsRange, token);
+					if (!tokens) continue;
+					for (const token of tokens) {
+						const [line, character] = token;
+						const tokenPos = Position.create(line, character);
+						const tokenOffset = sourceMap.virtualDocument.offsetAt(tokenPos);
+						const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+						const vuePos = document.positionAt(vueOffset);
+						token[0] = vuePos.line;
+						token[1] = vuePos.character;
+						result.push(token);
+					}
+				}
+			}
+			return result;
+		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 			const templateScriptData = sourceFile.getTemplateScriptData();

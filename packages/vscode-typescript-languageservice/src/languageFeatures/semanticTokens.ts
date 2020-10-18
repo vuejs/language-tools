@@ -9,12 +9,15 @@ import { TokenEncodingConsts, TokenModifier, TokenType } from 'typescript-vscode
 import * as vscode from 'vscode-languageserver';
 import * as Proto from '../protocol';
 import { uriToFsPath } from '@volar/shared';
-import { SemanticTokensBuilder } from 'vscode-languageserver/lib/sematicTokens.proposed';
 import { Position } from 'vscode-languageserver';
 import { Proposed } from 'vscode-languageserver-protocol';
 
 // as we don't do deltas, for performance reasons, don't compute semantic tokens for documents above that limit
 const CONTENT_LENGTH_LIMIT = 100000;
+
+export function getLegend(): Proposed.SemanticTokensLegend {
+	return { tokenTypes, tokenModifiers };
+}
 
 /**
  * Prototype of a DocumentSemanticTokensProvider, relying on the experimental `encodedSemanticClassifications-full` request from the TypeScript server.
@@ -26,11 +29,7 @@ export class DocumentSemanticTokensProvider {
 	constructor(private readonly client: LanguageService) {
 	}
 
-	getLegend(): Proposed.SemanticTokensLegend {
-		return { tokenTypes, tokenModifiers };
-	}
-
-	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<Proposed.SemanticTokens | null> {
+	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken) {
 		const file = uriToFsPath(document.uri.toString());
 		if (!file || document.getText().length > CONTENT_LENGTH_LIMIT) {
 			return null;
@@ -38,7 +37,7 @@ export class DocumentSemanticTokensProvider {
 		return this._provideSemanticTokens(document, { file, start: 0, length: document.getText().length }, token);
 	}
 
-	async provideDocumentRangeSemanticTokens(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken): Promise<Proposed.SemanticTokens | null> {
+	async provideDocumentRangeSemanticTokens(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
 		const file = uriToFsPath(document.uri.toString());
 		if (!file || (document.offsetAt(range.end) - document.offsetAt(range.start) > CONTENT_LENGTH_LIMIT)) {
 			return null;
@@ -49,7 +48,7 @@ export class DocumentSemanticTokensProvider {
 		return this._provideSemanticTokens(document, { file, start, length }, token);
 	}
 
-	async _provideSemanticTokens(document: vscode.TextDocument, requestArg: ExperimentalProtocol.EncodedSemanticClassificationsRequestArgs, token: vscode.CancellationToken): Promise<Proposed.SemanticTokens | null> {
+	async _provideSemanticTokens(document: vscode.TextDocument, requestArg: ExperimentalProtocol.EncodedSemanticClassificationsRequestArgs, token: vscode.CancellationToken) {
 		const file = uriToFsPath(document.uri.toString());
 		if (!file) {
 			return null;
@@ -57,7 +56,8 @@ export class DocumentSemanticTokensProvider {
 
 		let versionBeforeRequest = document.version;
 
-		const response = this.client.getEncodedSemanticClassifications(file, requestArg);
+		const response_1 = this.client.getEncodedSemanticClassifications(file, requestArg);
+		const response_2 = this.client.getEncodedSyntacticClassifications(file, requestArg);
 
 		const versionAfterRequest = document.version;
 
@@ -75,9 +75,9 @@ export class DocumentSemanticTokensProvider {
 			throw new Error('busy');
 		}
 
-		const tokenSpan = response.spans;
+		const tokenSpan = [...response_1.spans, ...response_2.spans];
 
-		const builder = new SemanticTokensBuilder();
+		const builder: [number, number, number, number, number][] = [];
 		let i = 0;
 		while (i < tokenSpan.length) {
 			const offset = tokenSpan[i++];
@@ -104,10 +104,10 @@ export class DocumentSemanticTokensProvider {
 			for (let line = startPos.line; line <= endPos.line; line++) {
 				const startCharacter = (line === startPos.line ? startPos.character : 0);
 				const endCharacter = (line === endPos.line ? endPos.character : document.getText({ start: Position.create(line, 0), end: Position.create(line + 1, 0) }).length - 1);
-				builder.push(line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers);
+				builder.push([line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers]);
 			}
 		}
-		return builder.build();
+		return builder;
 	}
 }
 
