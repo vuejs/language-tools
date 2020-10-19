@@ -52,10 +52,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			end: document.offsetAt(range.end),
 		};
 
-		const tsResult = await getTsResult(sourceFile);
+		// TODO: inconsistent with typescript-language-features
+		// const tsResult = await getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 
-		return [...tsResult, ...htmlResult];
+		return [
+			// ...tsResult,
+			...htmlResult,
+		];
 
 		async function getTsResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
