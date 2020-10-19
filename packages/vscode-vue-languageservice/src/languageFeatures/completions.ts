@@ -13,7 +13,7 @@ import * as html from 'vscode-html-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
-import { hyphenate } from '@vue/shared';
+import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import { getWordRange } from '../utils/commons';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -57,11 +57,23 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.maped.data.capabilities.completion) continue;
 					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
-					const tsItems = tsLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
+					let tsItems = tsLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: virtualLoc.maped.data.vueTag === 'script', // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
+					if (virtualLoc.maped.data.vueTag === 'template') {
+						tsItems = tsItems.filter(tsItem => {
+							const sortText = Number(tsItem.sortText);
+							if (Number.isNaN(sortText))
+								return true;
+							if (sortText < 4)
+								return true;
+							if (isGloballyWhitelisted(tsItem.label))
+								return true;
+							return false;
+						});
+					}
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
 						const data: CompletionData = {
 							uri: document.uri,
