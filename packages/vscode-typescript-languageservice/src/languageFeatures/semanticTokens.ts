@@ -3,140 +3,113 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// all constants are const
-import { LanguageService } from 'typescript';
-import { TokenEncodingConsts, TokenModifier, TokenType } from 'typescript-vscode-sh-plugin/lib/constants';
-import * as vscode from 'vscode-languageserver';
-import * as Proto from '../protocol';
+import { Position, Range } from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as ts from 'typescript';
 import { uriToFsPath } from '@volar/shared';
-import { Position } from 'vscode-languageserver';
-import { Proposed } from 'vscode-languageserver-protocol';
 
-// as we don't do deltas, for performance reasons, don't compute semantic tokens for documents above that limit
-const CONTENT_LENGTH_LIMIT = 100000;
-
-export function getLegend(): Proposed.SemanticTokensLegend {
-	return { tokenTypes, tokenModifiers };
+export function getSemanticTokenLegend() {
+	if (tokenTypes.length !== TokenType._) {
+		console.warn('TokenType has added new entries.');
+	}
+	if (tokenModifiers.length !== TokenModifier._) {
+		console.warn('TokenModifier has added new entries.');
+	}
+	return { types: tokenTypes, modifiers: tokenModifiers };
 }
 
-/**
- * Prototype of a DocumentSemanticTokensProvider, relying on the experimental `encodedSemanticClassifications-full` request from the TypeScript server.
- * As the results retured by the TypeScript server are limited, we also add a Typescript plugin (typescript-vscode-sh-plugin) to enrich the returned token.
- * See https://github.com/aeschli/typescript-vscode-sh-plugin.
- */
-export class DocumentSemanticTokensProvider {
+export function register(languageService: ts.LanguageService) {
+	return (currentTextDocument: TextDocument, range: Range) => {
+		//https://ts-ast-viewer.com/#code/AQ0g2CmAuwGbALzAJwG4BQZQGNwEMBnQ4AQQEYBmYAb2C22zgEtJwATJVTRxgcwD27AQAp8AGmAAjAJS0A9POB8+7NQ168oscAJz5wANXwAnLug2bsJmAFcTAO2XAA1MHyvgu-UdOeWbOw8ViAAvpagocBAA
 
-	constructor(private readonly client: LanguageService) {
+		let resultTokens: { start: Position, length: number, typeIdx: number, modifierSet: number }[] = [];
+		const collector = (node: ts.Node, typeIdx: number, modifierSet: number) => {
+			resultTokens.push({ start: currentTextDocument.positionAt(node.getStart()), length: node.getWidth(), typeIdx, modifierSet });
+		};
+		const startOffset = currentTextDocument.offsetAt(range.start);
+		const endOffset = currentTextDocument.offsetAt(range.end);
+		collectTokens(languageService, uriToFsPath(currentTextDocument.uri), { start: startOffset, length: endOffset - startOffset }, collector);
+
+		return resultTokens;
 	}
+}
 
-	async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken) {
-		const file = uriToFsPath(document.uri.toString());
-		if (!file || document.getText().length > CONTENT_LENGTH_LIMIT) {
-			return null;
-		}
-		return this._provideSemanticTokens(document, { file, start: 0, length: document.getText().length }, token);
-	}
+function collectTokens(jsLanguageService: ts.LanguageService, fileName: string, span: ts.TextSpan, collector: (node: ts.Node, tokenType: number, tokenModifier: number) => void) {
 
-	async provideDocumentRangeSemanticTokens(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken) {
-		const file = uriToFsPath(document.uri.toString());
-		if (!file || (document.offsetAt(range.end) - document.offsetAt(range.start) > CONTENT_LENGTH_LIMIT)) {
-			return null;
-		}
+	const program = jsLanguageService.getProgram();
+	if (program) {
+		const typeChecker = program.getTypeChecker();
 
-		const start = document.offsetAt(range.start);
-		const length = document.offsetAt(range.end) - start;
-		return this._provideSemanticTokens(document, { file, start, length }, token);
-	}
-
-	async _provideSemanticTokens(document: vscode.TextDocument, requestArg: ExperimentalProtocol.EncodedSemanticClassificationsRequestArgs, token: vscode.CancellationToken) {
-		const file = uriToFsPath(document.uri.toString());
-		if (!file) {
-			return null;
-		}
-
-		let versionBeforeRequest = document.version;
-
-		const response_1 = this.client.getEncodedSemanticClassifications(file, requestArg);
-		const response_2 = this.client.getEncodedSyntacticClassifications(file, requestArg);
-
-		const versionAfterRequest = document.version;
-
-		if (versionBeforeRequest !== versionAfterRequest) {
-			// cannot convert result's offsets to (line;col) values correctly
-			// a new request will come in soon...
-			//
-			// here we cannot return null, because returning null would remove all semantic tokens.
-			// we must throw to indicate that the semantic tokens should not be removed.
-			// using the string busy here because it is not logged to error telemetry if the error text contains busy.
-
-			// as the new request will come in right after our response, we first wait for the document activity to stop
-			await waitForDocumentChangesToEnd(document);
-
-			throw new Error('busy');
-		}
-
-		const tokenSpan = [...response_1.spans, ...response_2.spans];
-
-		const builder: [number, number, number, number, number][] = [];
-		let i = 0;
-		while (i < tokenSpan.length) {
-			const offset = tokenSpan[i++];
-			const length = tokenSpan[i++];
-			const tsClassification = tokenSpan[i++];
-
-			let tokenModifiers = 0;
-			let tokenType = getTokenTypeFromClassification(tsClassification);
-			if (tokenType !== undefined) {
-				// it's a classification as returned by the typescript-vscode-sh-plugin
-				tokenModifiers = getTokenModifierFromClassification(tsClassification);
-			} else {
-				// typescript-vscode-sh-plugin is not present
-				tokenType = tokenTypeMap[tsClassification];
-				if (tokenType === undefined) {
-					continue;
+		function visit(node: ts.Node) {
+			if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth())) {
+				return;
+			}
+			if (ts.isIdentifier(node)) {
+				let symbol = typeChecker.getSymbolAtLocation(node);
+				if (symbol) {
+					if (symbol.flags & ts.SymbolFlags.Alias) {
+						symbol = typeChecker.getAliasedSymbol(symbol);
+					}
+					let typeIdx = classifySymbol(symbol);
+					if (typeIdx !== undefined) {
+						let modifierSet = 0;
+						if (node.parent) {
+							const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
+							if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
+								modifierSet = 1 << TokenModifier.declaration;
+							}
+						}
+						const decl = symbol.valueDeclaration;
+						const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
+						const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
+						if (modifiers & ts.ModifierFlags.Static) {
+							modifierSet |= 1 << TokenModifier.static;
+						}
+						if (modifiers & ts.ModifierFlags.Async) {
+							modifierSet |= 1 << TokenModifier.async;
+						}
+						if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
+							modifierSet |= 1 << TokenModifier.readonly;
+						}
+						collector(node, typeIdx, modifierSet);
+					}
 				}
 			}
 
-			// we can use the document's range conversion methods because the result is at the same version as the document
-			const startPos = document.positionAt(offset);
-			const endPos = document.positionAt(offset + length);
-
-			for (let line = startPos.line; line <= endPos.line; line++) {
-				const startCharacter = (line === startPos.line ? startPos.character : 0);
-				const endCharacter = (line === endPos.line ? endPos.character : document.getText({ start: Position.create(line, 0), end: Position.create(line + 1, 0) }).length - 1);
-				builder.push([line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers]);
-			}
+			ts.forEachChild(node, visit);
 		}
-		return builder;
+		const sourceFile = program.getSourceFile(fileName);
+		if (sourceFile) {
+			visit(sourceFile);
+		}
 	}
 }
 
-function waitForDocumentChangesToEnd(document: vscode.TextDocument) {
-	let version = document.version;
-	return new Promise((s) => {
-		let iv = setInterval(_ => {
-			if (document.version === version) {
-				clearInterval(iv);
-				s();
-			}
-			version = document.version;
-		}, 400);
-	});
-}
-
-
-// typescript-vscode-sh-plugin encodes type and modifiers in the classification:
-// TSClassification = (TokenType + 1) << 8 + TokenModifier
-
-function getTokenTypeFromClassification(tsClassification: number): number | undefined {
-	if (tsClassification > TokenEncodingConsts.modifierMask) {
-		return (tsClassification >> TokenEncodingConsts.typeOffset) - 1;
+function classifySymbol(symbol: ts.Symbol) {
+	const flags = symbol.getFlags();
+	if (flags & ts.SymbolFlags.Class) {
+		return TokenType.class;
+	} else if (flags & ts.SymbolFlags.Enum) {
+		return TokenType.enum;
+	} else if (flags & ts.SymbolFlags.TypeAlias) {
+		return TokenType.type;
+	} else if (flags & ts.SymbolFlags.Type) {
+		if (flags & ts.SymbolFlags.Interface) {
+			return TokenType.interface;
+		} if (flags & ts.SymbolFlags.TypeParameter) {
+			return TokenType.typeParameter;
+		}
 	}
-	return undefined;
+	const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
+	return decl && tokenFromDeclarationMapping[decl.kind];
 }
 
-function getTokenModifierFromClassification(tsClassification: number) {
-	return tsClassification & TokenEncodingConsts.modifierMask;
+export const enum TokenType {
+	class, enum, interface, namespace, typeParameter, type, parameter, variable, property, function, member, _
+}
+
+export const enum TokenModifier {
+	declaration, static, async, readonly, _
 }
 
 const tokenTypes: string[] = [];
@@ -148,7 +121,6 @@ tokenTypes[TokenType.typeParameter] = 'typeParameter';
 tokenTypes[TokenType.type] = 'type';
 tokenTypes[TokenType.parameter] = 'parameter';
 tokenTypes[TokenType.variable] = 'variable';
-tokenTypes[TokenType.enumMember] = 'enumMember';
 tokenTypes[TokenType.property] = 'property';
 tokenTypes[TokenType.function] = 'function';
 tokenTypes[TokenType.member] = 'member';
@@ -158,96 +130,21 @@ tokenModifiers[TokenModifier.async] = 'async';
 tokenModifiers[TokenModifier.declaration] = 'declaration';
 tokenModifiers[TokenModifier.readonly] = 'readonly';
 tokenModifiers[TokenModifier.static] = 'static';
-tokenModifiers[TokenModifier.local] = 'local';
-tokenModifiers[TokenModifier.defaultLibrary] = 'defaultLibrary';
 
-// make sure token types and modifiers are complete
-if (tokenTypes.filter(t => !!t).length !== TokenType._) {
-	console.warn('typescript-vscode-sh-plugin has added new tokens types.');
-}
-if (tokenModifiers.filter(t => !!t).length !== TokenModifier._) {
-	console.warn('typescript-vscode-sh-plugin has added new tokens modifiers.');
-}
-
-// mapping for the original ExperimentalProtocol.ClassificationType from TypeScript (only used when plugin is not available)
-const tokenTypeMap: number[] = [];
-tokenTypeMap[ExperimentalProtocol.ClassificationType.className] = TokenType.class;
-tokenTypeMap[ExperimentalProtocol.ClassificationType.enumName] = TokenType.enum;
-tokenTypeMap[ExperimentalProtocol.ClassificationType.interfaceName] = TokenType.interface;
-tokenTypeMap[ExperimentalProtocol.ClassificationType.moduleName] = TokenType.namespace;
-tokenTypeMap[ExperimentalProtocol.ClassificationType.typeParameterName] = TokenType.typeParameter;
-tokenTypeMap[ExperimentalProtocol.ClassificationType.typeAliasName] = TokenType.type;
-tokenTypeMap[ExperimentalProtocol.ClassificationType.parameterName] = TokenType.parameter;
-
-namespace ExperimentalProtocol {
-
-	/**
-	 * A request to get encoded semantic classifications for a span in the file
-	 */
-	export interface EncodedSemanticClassificationsRequest extends Proto.FileRequest {
-		arguments: EncodedSemanticClassificationsRequestArgs;
-	}
-
-	/**
-	 * Arguments for EncodedSemanticClassificationsRequest request.
-	 */
-	export interface EncodedSemanticClassificationsRequestArgs extends Proto.FileRequestArgs {
-		/**
-		 * Start position of the span.
-		 */
-		start: number;
-		/**
-		 * Length of the span.
-		 */
-		length: number;
-	}
-
-	export const enum EndOfLineState {
-		None,
-		InMultiLineCommentTrivia,
-		InSingleQuoteStringLiteral,
-		InDoubleQuoteStringLiteral,
-		InTemplateHeadOrNoSubstitutionTemplate,
-		InTemplateMiddleOrTail,
-		InTemplateSubstitutionPosition,
-	}
-
-	export const enum ClassificationType {
-		comment = 1,
-		identifier = 2,
-		keyword = 3,
-		numericLiteral = 4,
-		operator = 5,
-		stringLiteral = 6,
-		regularExpressionLiteral = 7,
-		whiteSpace = 8,
-		text = 9,
-		punctuation = 10,
-		className = 11,
-		enumName = 12,
-		interfaceName = 13,
-		moduleName = 14,
-		typeParameterName = 15,
-		typeAliasName = 16,
-		parameterName = 17,
-		docCommentTagName = 18,
-		jsxOpenTagName = 19,
-		jsxCloseTagName = 20,
-		jsxSelfClosingTagName = 21,
-		jsxAttribute = 22,
-		jsxText = 23,
-		jsxAttributeStringLiteralValue = 24,
-		bigintLiteral = 25,
-	}
-
-	export interface EncodedSemanticClassificationsResponse extends Proto.Response {
-		body?: {
-			endOfLineState: EndOfLineState;
-			spans: number[];
-		};
-	}
-
-	export interface ExtendedTsServerRequests {
-		'encodedSemanticClassifications-full': [ExperimentalProtocol.EncodedSemanticClassificationsRequestArgs, ExperimentalProtocol.EncodedSemanticClassificationsResponse];
-	}
-}
+const tokenFromDeclarationMapping: { [name: string]: TokenType } = {
+	[ts.SyntaxKind.VariableDeclaration]: TokenType.variable,
+	[ts.SyntaxKind.Parameter]: TokenType.parameter,
+	[ts.SyntaxKind.PropertyDeclaration]: TokenType.property,
+	[ts.SyntaxKind.ModuleDeclaration]: TokenType.namespace,
+	[ts.SyntaxKind.EnumDeclaration]: TokenType.enum,
+	[ts.SyntaxKind.EnumMember]: TokenType.property,
+	[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
+	[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
+	[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,
+	[ts.SyntaxKind.MethodSignature]: TokenType.member,
+	[ts.SyntaxKind.GetAccessor]: TokenType.property,
+	[ts.SyntaxKind.PropertySignature]: TokenType.property,
+	[ts.SyntaxKind.InterfaceDeclaration]: TokenType.interface,
+	[ts.SyntaxKind.TypeAliasDeclaration]: TokenType.type,
+	[ts.SyntaxKind.TypeParameter]: TokenType.typeParameter
+};

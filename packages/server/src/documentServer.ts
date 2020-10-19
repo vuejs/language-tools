@@ -66,10 +66,10 @@ function initLanguageService(rootPath: string) {
 		}
 		progress.done();
 	});
-	connection.onRequest(SemanticTokensRequest.type, async (handler, token) => {
+	connection.onRequest(SemanticTokensRequest.type, async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return await host.get(document.uri)?.getSemanticTokens(document, handler.range, token);
+		return await host.get(document.uri)?.getSemanticTokens(document, handler.range);
 	});
 	connection.onRequest(SemanticTokenLegendRequest.type, () => {
 		return getSemanticTokensLegend();

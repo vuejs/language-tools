@@ -107,6 +107,7 @@ export interface TsMappingData {
 		formatting: boolean,
 		rename: boolean,
 		completion: boolean,
+		semanticTokens: boolean,
 	},
 }
 

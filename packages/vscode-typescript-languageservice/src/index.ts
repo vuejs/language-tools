@@ -15,17 +15,16 @@ import * as workspaceSymbols from './languageFeatures/workspaceSymbols';
 import * as formatting from './languageFeatures/formatting';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-import { DocumentSemanticTokensProvider } from './languageFeatures/semanticTokens';
+import * as getSemanticTokens from './languageFeatures/semanticTokens';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
-export { getLegend } from './languageFeatures/semanticTokens';
+export { getSemanticTokenLegend } from './languageFeatures/semanticTokens';
 
 export function createLanguageService(host: ts.LanguageServiceHost) {
 
 	const documents = new Map<string, TextDocument>();
 	const languageService = ts.createLanguageService(host);
-	const documentSemanticTokensProvider = new DocumentSemanticTokensProvider(languageService);
 
 	return {
 		host,
@@ -47,7 +46,7 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 		doValidation: diagnostics.register(languageService),
 		getTextDocument,
 		dispose,
-		getDocumentSemanticTokensProvider: () => documentSemanticTokensProvider,
+		getDocumentSemanticTokens: getSemanticTokens.register(languageService),
 	};
 
 	function getTextDocument(uri: string) {

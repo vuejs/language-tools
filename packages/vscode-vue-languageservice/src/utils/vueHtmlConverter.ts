@@ -4,11 +4,11 @@ import { MapedMode, TsMappingData, Mapping, MapedNodeTypes } from './sourceMaps'
 import { camelize, hyphenate } from '@vue/shared';
 
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, formatting: true, references: true, rename: true, completion: true },
-	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true },
-	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true },
-	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false },
-	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false },
+	all: { basic: true, diagnostic: true, formatting: true, references: true, rename: true, completion: true, semanticTokens: true },
+	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true, semanticTokens: true },
+	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true, semanticTokens: false },
+	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
+	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
 
 export function transformVueHtml(pugData: { html: string, pug: string } | undefined, node: RootNode) {
