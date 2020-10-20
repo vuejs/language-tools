@@ -52,6 +52,13 @@
 					"source.directive.vue": "javascript",
 					"expression.embbeded.vue": "javascript"
 				}
+			},
+			{
+				"path": "./syntaxes/pug-injection.json",
+				"scopeName": "pug.injection",
+				"injectTo": [
+					"text.html.vue"
+				]
 			}
 		],
 		"commands": [

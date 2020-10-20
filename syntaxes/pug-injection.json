@@ -1,0 +1,12 @@
+{
+	"scopeName": "pug.injection",
+	"injectionSelector": "L:text.pug",
+	"patterns": [
+		{
+			"include": "text.html.vue#vue-directives"
+		},
+		{
+			"include": "text.html.vue#vue-interpolations"
+		}
+	]
+}
