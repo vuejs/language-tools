@@ -69,7 +69,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (!maped.data.capabilities.semanticTokens)
 						continue;
-					if (maped.vueRange.start < offsetRange.start && maped.vueRange.end > offsetRange.end)
+					if (maped.vueRange.end < offsetRange.start)
+						continue;
+					if (maped.vueRange.start > offsetRange.end)
 						continue;
 					const tsRange = {
 						start: sourceMap.virtualDocument.positionAt(maped.virtualRange.start),
@@ -96,7 +98,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
-					if (maped.vueRange.start < offsetRange.start && maped.vueRange.end > offsetRange.end)
+					if (maped.vueRange.end < offsetRange.start)
+						continue;
+					if (maped.vueRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.virtualDocument.getText();
 					const scanner = globalServices.html.createScanner(docText, maped.virtualRange.start);
@@ -134,7 +138,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
-					if (maped.vueRange.start < offsetRange.start && maped.vueRange.end > offsetRange.end)
+					if (maped.vueRange.end < offsetRange.start)
+						continue;
+					if (maped.vueRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.html;
 					const scanner = globalServices.html.createScanner(docText, 0);
