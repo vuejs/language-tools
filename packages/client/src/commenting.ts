@@ -9,10 +9,10 @@ languagesConfigs.set('html', require('../../../languages/html-language-configura
 languagesConfigs.set('pug', require('../../../languages/pug-language-configuration.json'));
 languagesConfigs.set('css', require('../../../languages/css-language-configuration.json'));
 languagesConfigs.set('scss', require('../../../languages/scss-language-configuration.json'));
-languagesConfigs.set('typescript', require('../../../languages/javascript-language-configuration.json'));
-languagesConfigs.set('jsx', require('../../../languages/javascript-language-configuration.json'));
-languagesConfigs.set('javascript', require('../../../languages/typescript-language-configuration.json'));
-languagesConfigs.set('tsx', require('../../../languages/typescript-language-configuration.json'));
+languagesConfigs.set('javascript', require('../../../languages/javascript-language-configuration.json'));
+languagesConfigs.set('javascriptreact', require('../../../languages/javascript-language-configuration.json'));
+languagesConfigs.set('typescript', require('../../../languages/typescript-language-configuration.json'));
+languagesConfigs.set('typescriptreact', require('../../../languages/typescript-language-configuration.json'));
 
 export function activateCommenting(embeddedLanguageRequestor: (document: TextDocument, range: vscode.Range) => Thenable<{
 	id: string,

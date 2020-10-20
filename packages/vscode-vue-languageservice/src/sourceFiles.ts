@@ -1461,6 +1461,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		switch (lang) {
 			case 'js': return 'javascript';
 			case 'ts': return 'typescript';
+			case 'jsx': return 'javascriptreact';
+			case 'tsx': return 'typescriptreact';
 			default: return lang;
 		}
 	}
