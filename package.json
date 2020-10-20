@@ -32,21 +32,29 @@
 				"extensions": [
 					".vue"
 				],
-				"configuration": "./languages/vue-language-configuration.json"
+				"configuration": "./languages/html-language-configuration.json"
 			}
 		],
 		"grammars": [
 			{
 				"language": "vue",
 				"scopeName": "text.html.vue",
-				"path": "./syntaxes/vue.tmLanguage.json"
+				"path": "./syntaxes/vue.tmLanguage.json",
+				"embeddedLanguages": {
+					"text.pug": "jade",
+					"source.css": "css",
+					"source.scss": "scss",
+					"source.less": "less",
+					"source.js": "javascript",
+					"source.ts": "typescript",
+					"source.jsx": "javascriptreact",
+					"source.tsx": "typescriptreact",
+					"source.directive.vue": "javascript",
+					"expression.embbeded.vue": "javascript"
+				}
 			}
 		],
 		"commands": [
-			{
-				"command": "volar.action.comment",
-				"title": "// vue"
-			},
 			{
 				"command": "volar.action.verifyAllScripts",
 				"title": "Volar: Verify all scripts"
@@ -54,14 +62,6 @@
 			{
 				"command": "volar.action.formatAllScripts",
 				"title": "Volar: Format all scripts"
-			}
-		],
-		"keybindings": [
-			{
-				"command": "volar.action.comment",
-				"key": "ctrl+/",
-				"mac": "cmd+/",
-				"when": "editorLangId == vue"
 			}
 		]
 	},

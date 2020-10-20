@@ -10,16 +10,13 @@ import {
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind,
-	TextDocumentIdentifier,
 } from 'vscode-languageclient';
 import {
 	TextDocument,
 } from 'vscode';
 import { activateTagClosing } from './tagClosing';
-import { activateCommenting } from './commenting';
 import {
 	TagCloseRequest,
-	GetEmbeddedLanguageRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
 	SemanticTokensRequest,
@@ -34,26 +31,19 @@ let apiClient: LanguageClient;
 let docClient: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	// from typescript
-	vscode.languages.setLanguageConfiguration('vue', {
-		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
-		indentationRules: {
-			decreaseIndentPattern: /^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/,
-			increaseIndentPattern: /^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/
-		},
-	});
-
 	apiClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic', 6009);
 	docClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
 
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
-	context.subscriptions.push(activateCommenting(embeddedLanguageRequestor));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
 		docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.formatAllScripts', () => {
 		apiClient.sendRequest(FormatAllScriptsRequest.type, undefined);
 	}));
+
+	// TODO: active by vue block lang
+	startEmbeddedLanguageServices();
 
 	await docClient.onReady();
 	const _tokenLegend = await docClient.sendRequest(SemanticTokenLegendRequest.type);
@@ -63,12 +53,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	function tagRequestor(document: TextDocument, position: vscode.Position) {
 		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
 		return apiClient.sendRequest(TagCloseRequest.type, param);
-	}
-	function embeddedLanguageRequestor(document: TextDocument, range: vscode.Range) {
-		return apiClient.sendRequest(GetEmbeddedLanguageRequest.type, {
-			textDocument: TextDocumentIdentifier.create(document.uri.toString()),
-			range: range,
-		});
 	}
 }
 
@@ -121,6 +105,20 @@ function setupLanguageService(context: vscode.ExtensionContext, script: string, 
 	client.start();
 
 	return client;
+}
+async function startEmbeddedLanguageServices() {
+	const ts = vscode.extensions.getExtension('vscode.typescript-language-features');
+	const css = vscode.extensions.getExtension('vscode.css-language-features');
+	const html = vscode.extensions.getExtension('vscode.html-language-features');
+	if (ts && !ts.isActive) {
+		await ts.activate();
+	}
+	if (css && !css.isActive) {
+		await css.activate();
+	}
+	if (html && !html.isActive) {
+		await html.activate();
+	}
 }
 
 class SemanticTokensProvider implements DocumentSemanticTokensProvider {

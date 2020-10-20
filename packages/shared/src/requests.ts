@@ -21,7 +21,7 @@ export namespace GetEmbeddedLanguageRequest {
 	}, {
 		id: string,
 		range: Range,
-	} | undefined, any, any> = new RequestType('volar.action.comment');
+	} | undefined, any, any> = new RequestType('vue/embeddedLanguage');
 }
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.verifyAllScripts');
