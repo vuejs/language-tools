@@ -1,5 +1,4 @@
 import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
-import { createHtmlPugMapper } from '@volar/pug';
 import { MapedMode, TsMappingData, Mapping, MapedNodeTypes } from './sourceMaps';
 import { camelize, hyphenate } from '@vue/shared';
 
@@ -11,11 +10,10 @@ const capabilitiesSet = {
 	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
 
-export function transformVueHtml(pugData: { html: string, pug: string } | undefined, node: RootNode) {
+export function transformVueHtml(node: RootNode, pugMapper?: (code: string, htmlOffset: number) => number | undefined) {
 	const mappings: Mapping<TsMappingData>[] = [];
 	const tags = new Set<string>();
 	const slots = new Map<string, string>();
-	const pugMapper = pugData ? createHtmlPugMapper(pugData.pug, pugData.html) : undefined;
 	let elementIndex = 0;
 	let text = worker('', node, []);
 

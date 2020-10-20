@@ -141,3 +141,14 @@ export class HtmlSourceMap extends SourceMap<undefined> {
 		super(vueDocument, virtualDocument);
 	}
 }
+
+export class PugSourceMap extends SourceMap<undefined> {
+	constructor(
+		public vueDocument: TextDocument,
+		public virtualDocument: TextDocument,
+		public html: string,
+		public mapper: (code: string, htmlOffset: number) => number | undefined,
+	) {
+		super(vueDocument, virtualDocument);
+	}
+}

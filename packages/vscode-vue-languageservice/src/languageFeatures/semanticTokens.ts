@@ -2,7 +2,7 @@ import {
 	TextDocument,
 	Range,
 } from 'vscode-languageserver';
-import { SemanticTokenTypes, SemanticTokenModifiers } from 'vscode-languageserver-protocol/lib/protocol.sematicTokens.proposed';
+import { SemanticTokenTypes } from 'vscode-languageserver-protocol/lib/protocol.sematicTokens.proposed';
 import { SourceFile } from '../sourceFiles';
 import * as globalServices from '../globalServices';
 import * as html from 'vscode-html-languageservice';
@@ -55,19 +55,22 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		// TODO: inconsistent with typescript-language-features
 		// const tsResult = await getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
+		const pugResult = getPugResult(sourceFile);
 
 		return [
 			// ...tsResult,
 			...htmlResult,
+			...pugResult,
 		];
 
 		async function getTsResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const maped of sourceMap) {
-					if (!maped.data.capabilities.semanticTokens) continue;
-					if (maped.vueRange.start < offsetRange.start) continue;
-					if (maped.vueRange.end > offsetRange.end) continue;
+					if (!maped.data.capabilities.semanticTokens)
+						continue;
+					if (maped.vueRange.start < offsetRange.start && maped.vueRange.end > offsetRange.end)
+						continue;
 					const tsRange = {
 						start: sourceMap.virtualDocument.positionAt(maped.virtualRange.start),
 						end: sourceMap.virtualDocument.positionAt(maped.virtualRange.end),
@@ -91,9 +94,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const maped of sourceMap) {
-					if (maped.mode !== MapedMode.Offset) continue;
-					if (maped.vueRange.start < offsetRange.start) continue;
-					if (maped.vueRange.end > offsetRange.end) continue;
+					if (maped.mode !== MapedMode.Offset)
+						continue;
+					if (maped.vueRange.start < offsetRange.start && maped.vueRange.end > offsetRange.end)
+						continue;
 					const docText = sourceMap.virtualDocument.getText();
 					const scanner = globalServices.html.createScanner(docText, maped.virtualRange.start);
 					let token = scanner.scan();
@@ -118,6 +122,52 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					}
 				}
 			}
+
+			return result;
+		}
+		function getPugResult(sourceFile: SourceFile) {
+			const result: TokenData[] = [];
+			const templateScriptData = sourceFile.getTemplateScriptData();
+			const components = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
+
+			for (const sourceMap of sourceFile.getPugSourceMaps()) {
+				for (const maped of sourceMap) {
+					if (maped.mode !== MapedMode.Offset)
+						continue;
+					if (maped.vueRange.start < offsetRange.start && maped.vueRange.end > offsetRange.end)
+						continue;
+					const docText = sourceMap.html;
+					const scanner = globalServices.html.createScanner(docText, 0);
+					let token = scanner.scan();
+					while (token !== html.TokenType.EOS) {
+						const htmlOffset = scanner.getTokenOffset();
+						const tokenLength = scanner.getTokenLength();
+						const tokenText = docText.substr(htmlOffset, tokenLength);
+						if (token === html.TokenType.AttributeName) {
+							if (['v-if', 'v-else-if', 'v-else', 'v-for'].includes(tokenText)) {
+								const tokenOffset = sourceMap.mapper(tokenText, htmlOffset);
+								if (tokenOffset !== undefined) {
+									const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+									const vuePos = document.positionAt(vueOffset);
+									result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get(SemanticTokenTypes.keyword) ?? -1, undefined]);
+								}
+							}
+						}
+						else if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
+							if (components.has(tokenText)) {
+								const tokenOffset = sourceMap.mapper(tokenText, htmlOffset);
+								if (tokenOffset !== undefined) {
+									const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+									const vuePos = document.positionAt(vueOffset);
+									result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get(SemanticTokenTypes.class) ?? -1, undefined]);
+								}
+							}
+						}
+						token = scanner.scan();
+					}
+				}
+			}
+
 			return result;
 		}
 	}

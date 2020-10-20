@@ -5,9 +5,9 @@ import {
 	CompletionItem,
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { pugToHtml } from '@volar/pug';
+import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
 import { uriToFsPath, sleep } from '@volar/shared';
-import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping } from './utils/sourceMaps';
+import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, PugSourceMap } from './utils/sourceMaps';
 import { transformVueHtml } from './utils/vueHtmlConverter';
 import * as ts from 'typescript';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -79,6 +79,16 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		components: [] as string[],
 		setupReturns: [] as string[],
 		globalElements: [] as string[],
+	});
+	const pugHtmlMapper = computed(() => {
+		if (descriptor.template?.lang === 'pug') {
+			const html = pugToHtml(descriptor.template.content);
+			const mapper = createHtmlPugMapper(descriptor.template.content, html);
+			return {
+				html,
+				mapper,
+			};
+		}
 	});
 
 	// template script(document + source maps)
@@ -416,17 +426,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		function getInterpolations() {
 			if (!descriptor.template) return;
-			const lang = descriptor.template.lang;
-			const content = descriptor.template.content;
 			try {
-				const html = lang === 'pug' ? pugToHtml(content) : content;
+				const html = pugHtmlMapper.value?.html ?? descriptor.template.content;
 				const ast = vueDom.compile(html, { onError: () => { } }).ast;
 				return transformVueHtml(
-					lang === 'pug' ? {
-						pug: content,
-						html: html,
-					} : undefined,
 					ast,
+					pugHtmlMapper.value?.mapper,
 				);
 			}
 			catch (err) {
@@ -885,12 +890,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		return sourceMaps;
 	});
 	const pugSourceMaps = computed(() => {
-		const sourceMaps: SourceMap[] = [];
-		if (templateDocument.value?.languageId === 'pug' && descriptor.template) {
+		const sourceMaps: PugSourceMap[] = [];
+		if (templateDocument.value?.languageId === 'pug' && descriptor.template && pugHtmlMapper.value) {
 			const document = templateDocument.value;
-			const sourceMap = new SourceMap(
+			const sourceMap = new PugSourceMap(
 				vue.document,
 				document,
+				pugHtmlMapper.value.html,
+				pugHtmlMapper.value.mapper,
 			);
 			sourceMap.add({
 				data: undefined,
