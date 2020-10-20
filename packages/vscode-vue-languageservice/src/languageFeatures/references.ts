@@ -17,10 +17,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	return (document: TextDocument, position: Position) => {
 		const range = { start: position, end: position };
 
-		if (document.languageId === "typescript") {
+		if (document.languageId !== 'vue') {
 			let result = getTsResultWorker(document, range, undefined, tsLanguageService);
 			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
-			return result;
+			return duplicateLocations(result);
 		}
 
 		const sourceFile = sourceFiles.get(document.uri);

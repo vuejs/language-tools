@@ -215,7 +215,11 @@ function onInitialized() {
 		documentSelector: [{ language: 'vue' }],
 	};
 	const both: TextDocumentRegistrationOptions = {
-		documentSelector: [{ language: 'vue' }, { language: 'typescript' }],
+		documentSelector: [
+			{ language: 'vue' },
+			{ language: 'typescript' },
+			{ language: 'typescriptreact' },
+		],
 	};
 
 	connection.client.register(ReferencesRequest.type, both);

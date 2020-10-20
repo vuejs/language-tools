@@ -33,13 +33,6 @@
 					".vue"
 				],
 				"configuration": "./languages/vue-language-configuration.json"
-			},
-			{
-				"id": "typescript",
-				"extensions": [
-					".ts",
-					".tsx"
-				]
 			}
 		],
 		"grammars": [

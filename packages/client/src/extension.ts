@@ -100,6 +100,7 @@ function setupLanguageService(context: vscode.ExtensionContext, script: string, 
 		documentSelector: [
 			{ scheme: 'file', language: 'vue' },
 			{ scheme: 'file', language: 'typescript' },
+			{ scheme: 'file', language: 'typescriptreact' },
 			// { scheme: 'file', language: 'javascript' },
 		],
 		synchronize: {
