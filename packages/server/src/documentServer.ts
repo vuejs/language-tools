@@ -24,8 +24,10 @@ import {
 	VerifyAllScriptsRequest,
 	SemanticTokensRequest,
 	SemanticTokenLegendRequest,
+	WriteAllDebugFilesRequest,
 } from '@volar/shared';
 import * as upath from 'upath';
+import * as fs from 'fs-extra';
 
 export const connection = createConnection(ProposedFeatures.all);
 connection.onInitialize(onInitialize);
@@ -48,6 +50,24 @@ function onInitialize(params: InitializeParams) {
 function initLanguageService(rootPath: string) {
 	const host = createLanguageServiceHost(connection, documents, rootPath, true);
 
+	connection.onRequest(WriteAllDebugFilesRequest.type, async () => {
+		const progress = await connection.window.createWorkDoneProgress();
+		progress.begin('Write', 0, '', true);
+		for (const [uri, service] of host.services) {
+			const sourceFiles = service.languageService.getAllSourceFiles();
+			let i = 0;
+			for (const sourceFile of sourceFiles) {
+				for (const [uri, doc] of sourceFile.getTsDocuments()) {
+					if (progress.token.isCancellationRequested) {
+						continue;
+					}
+					await fs.writeFile(uriToFsPath(uri), doc.getText(), "utf8");
+				}
+				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, sourceFile.fileName));
+			}
+		}
+		progress.done();
+	});
 	connection.onRequest(VerifyAllScriptsRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Verify', 0, '', true);
@@ -61,7 +81,7 @@ function initLanguageService(rootPath: string) {
 				const doc = sourceFile.getTextDocument();
 				const diags = await service.languageService.doValidation(doc) ?? [];
 				connection.sendDiagnostics({ uri: doc.uri, diagnostics: diags });
-				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(doc.uri)));
+				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, sourceFile.fileName));
 			}
 		}
 		progress.done();

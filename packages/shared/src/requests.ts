@@ -29,6 +29,9 @@ export namespace VerifyAllScriptsRequest {
 export namespace FormatAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.formatAllScripts');
 }
+export namespace WriteAllDebugFilesRequest {
+	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.writeAllDebugFiles');
+}
 
 // semantic tokens
 export interface SemanticTokenParams {

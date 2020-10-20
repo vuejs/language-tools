@@ -929,6 +929,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	update(initialDocument);
 
 	return {
+		uri: vue.uri,
+		fileName: vue.fileName,
 		getTextDocument: untrack(() => vue.document),
 		update,
 		updateTemplateScript,

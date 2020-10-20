@@ -21,6 +21,7 @@ import {
 	FormatAllScriptsRequest,
 	SemanticTokensRequest,
 	SemanticTokenLegendRequest,
+	WriteAllDebugFilesRequest,
 } from '@volar/shared';
 import {
 	DocumentSemanticTokensProvider, CancellationToken,
@@ -37,6 +38,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
 		docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeAllDebugFiles', () => {
+		docClient.sendRequest(WriteAllDebugFilesRequest.type, undefined);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.formatAllScripts', () => {
 		apiClient.sendRequest(FormatAllScriptsRequest.type, undefined);

@@ -69,6 +69,10 @@
 			{
 				"command": "volar.action.formatAllScripts",
 				"title": "Volar: Format all scripts"
+			},
+			{
+				"command": "volar.action.writeAllDebugFiles",
+				"title": "Volar: Write all debug files"
 			}
 		]
 	},
