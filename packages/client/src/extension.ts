@@ -33,8 +33,6 @@ import {
 let apiClient: LanguageClient;
 let docClient: LanguageClient;
 
-console.log(new SemanticTokensBuilder().push);
-
 export async function activate(context: vscode.ExtensionContext) {
 	// from typescript
 	vscode.languages.setLanguageConfiguration('vue', {
