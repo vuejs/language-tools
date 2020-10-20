@@ -438,6 +438,46 @@
 			]
 		},
 		{
+			"begin": "(?:^\\s+)?(<)((?i:script))\\b(?=[^>]*lang=(['\"])tsx\\1?)",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.script.html"
+				}
+			},
+			"end": "(?<=<\/(script|SCRIPT))(>)(?:\\s*\\n)?",
+			"endCaptures": {
+				"2": {
+					"name": "punctuation.definition.tag.html"
+				}
+			},
+			"name": "source.tsx.embedded.html",
+			"patterns": [
+				{
+					"include": "#tag-stuff"
+				},
+				{
+					"begin": "(?<!<\/(?:script|SCRIPT))(>)",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html"
+						},
+						"2": {
+							"name": "entity.name.tag.script.html"
+						}
+					},
+					"end": "(<\/)((?i:script))",
+					"patterns": [
+						{
+							"include": "source.tsx"
+						}
+					]
+				}
+			]
+		},
+		{
 			"begin": "(?:^\\s+)?(<)((?i:script))\\b(?=[^>]*lang=(['\"])ts\\1?)",
 			"beginCaptures": {
 				"1": {
