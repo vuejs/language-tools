@@ -1,6 +1,6 @@
 {
 	"scopeName": "pug.injection",
-	"injectionSelector": "L:text.pug",
+	"injectionSelector": "L:text.pug -comment -string.comment",
 	"patterns": [
 		{
 			"include": "text.html.vue#vue-directives"
