@@ -50,14 +50,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				for (const childNode of node.children) {
 					_code = worker(_code, childNode, parents.concat(node));
 				}
-
-				_code += `__VLS_components['${node.tag}'][`;
-				mappingWithQuotes(undefined, `__VLS_options`, node.tag, capabilitiesSet.referencesOnly, [{
-					// +1 to remove '<' from html tag
-					start: node.loc.start.offset + 1,
-					end: node.loc.start.offset + 1 + node.tag.length,
-				}]);
-				_code += `];\n`;
 			}
 			if (!dontCreateBlock) _code += '}\n';
 
