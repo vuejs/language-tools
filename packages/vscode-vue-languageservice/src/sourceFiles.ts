@@ -1144,7 +1144,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				...lastTemplateScriptDiags_2.value,
 				...lastTemplateScriptDiags_3.value,
 			];
-			result = result.filter(err => !(err.source === 'ts' && err.code === 7028)); // TODO: fix <script refs>
 			return result;
 		});
 
