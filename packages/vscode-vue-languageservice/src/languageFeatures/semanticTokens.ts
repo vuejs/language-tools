@@ -1,13 +1,10 @@
-import {
-	TextDocument,
-	Range,
-} from 'vscode-languageserver';
-import { SemanticTokenTypes } from 'vscode-languageserver-protocol/lib/protocol.sematicTokens.proposed';
-import { SourceFile } from '../sourceFiles';
-import * as globalServices from '../globalServices';
-import * as html from 'vscode-html-languageservice';
+import type { Range } from 'vscode-languageserver';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { SourceFile } from '../sourceFiles';
 import { MapedMode } from '../utils/sourceMaps';
 import { hyphenate } from '@vue/shared';
+import * as globalServices from '../globalServices';
+import * as html from 'vscode-html-languageservice';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
 
 type TokenData = [number, number, number, number, number | undefined];
@@ -15,26 +12,9 @@ type TokenData = [number, number, number, number, number | undefined];
 const tsLegend = ts2.getSemanticTokenLegend();
 const tokenTypesLegend = [
 	...tsLegend.types,
-	SemanticTokenTypes.comment,
-	SemanticTokenTypes.keyword,
-	SemanticTokenTypes.string,
-	SemanticTokenTypes.number,
-	SemanticTokenTypes.regexp,
-	SemanticTokenTypes.operator,
-	SemanticTokenTypes.namespace,
-	SemanticTokenTypes.type,
-	SemanticTokenTypes.struct,
-	SemanticTokenTypes.class,
-	SemanticTokenTypes.interface,
-	SemanticTokenTypes.enum,
-	SemanticTokenTypes.typeParameter,
-	SemanticTokenTypes.function,
-	SemanticTokenTypes.member,
-	SemanticTokenTypes.property,
-	SemanticTokenTypes.macro,
-	SemanticTokenTypes.variable,
-	SemanticTokenTypes.parameter,
-	SemanticTokenTypes.label,
+	'template/component',
+	'template/conditional',
+	'template/loop',
 ];
 const tokenTypes = new Map(tokenTypesLegend.map((t, i) => [t, i]));
 
@@ -51,6 +31,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			start: document.offsetAt(range.start),
 			end: document.offsetAt(range.end),
 		};
+		const templateScriptData = sourceFile.getTemplateScriptData();
+		const components = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
 
 		// TODO: inconsistent with typescript-language-features
 		// const tsResult = await getTsResult(sourceFile);
@@ -91,8 +73,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
-			const templateScriptData = sourceFile.getTemplateScriptData();
-			const components = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
 
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const maped of sourceMap) {
@@ -108,19 +88,19 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= maped.virtualRange.end) {
 						const tokenOffset = scanner.getTokenOffset();
 						const tokenLength = scanner.getTokenLength();
+						const tokenText = docText.substr(tokenOffset, tokenLength);
 						const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
-						const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
-						if (token === html.TokenType.AttributeName) {
-							const tokenText = docText.substr(tokenOffset, tokenLength);
-							if (['v-if', 'v-else-if', 'v-else', 'v-for'].includes(tokenText)) {
-								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get(SemanticTokenTypes.keyword) ?? -1, undefined]);
-							}
+						if (isConditionalToken(token, tokenText)) {
+							const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
+							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/conditional') ?? -1, undefined]);
 						}
-						else if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
-							const tokenText = docText.substr(tokenOffset, tokenLength);
-							if (components.has(tokenText)) {
-								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get(SemanticTokenTypes.class) ?? -1, undefined]);
-							}
+						else if (isLoopToken(token, tokenText)) {
+							const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
+							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/loop') ?? -1, undefined]);
+						}
+						else if (isComponentToken(token, tokenText)) {
+							const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
+							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/component') ?? -1, undefined]);
 						}
 						token = scanner.scan();
 					}
@@ -131,8 +111,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 		function getPugResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
-			const templateScriptData = sourceFile.getTemplateScriptData();
-			const components = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
 
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				for (const maped of sourceMap) {
@@ -149,32 +127,57 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const htmlOffset = scanner.getTokenOffset();
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(htmlOffset, tokenLength);
-						if (token === html.TokenType.AttributeName) {
-							if (['v-if', 'v-else-if', 'v-else', 'v-for'].includes(tokenText)) {
-								const tokenOffset = sourceMap.mapper(tokenText, htmlOffset);
-								if (tokenOffset !== undefined) {
-									const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
-									const vuePos = document.positionAt(vueOffset);
-									result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get(SemanticTokenTypes.keyword) ?? -1, undefined]);
-								}
-							}
+						if (isConditionalToken(token, tokenText)) {
+							const vuePos = getTokenPosition(htmlOffset, tokenText);
+							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/conditional') ?? -1, undefined]);
 						}
-						else if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
-							if (components.has(tokenText)) {
-								const tokenOffset = sourceMap.mapper(tokenText, htmlOffset);
-								if (tokenOffset !== undefined) {
-									const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
-									const vuePos = document.positionAt(vueOffset);
-									result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get(SemanticTokenTypes.class) ?? -1, undefined]);
-								}
-							}
+						else if (isLoopToken(token, tokenText)) {
+							const vuePos = getTokenPosition(htmlOffset, tokenText);
+							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/loop') ?? -1, undefined]);
+						}
+						else if (isComponentToken(token, tokenText)) {
+							const vuePos = getTokenPosition(htmlOffset, tokenText);
+							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/component') ?? -1, undefined]);
 						}
 						token = scanner.scan();
+					}
+
+					function getTokenPosition(htmlOffset: number, tokenText: string) {
+						const tokenOffset = sourceMap.mapper(tokenText, htmlOffset);
+						if (tokenOffset !== undefined) {
+							const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+							const vuePos = document.positionAt(vueOffset);
+							return vuePos;
+						}
 					}
 				}
 			}
 
 			return result;
+		}
+		function isComponentToken(token: html.TokenType, tokenText: string) {
+			if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
+				if (components.has(tokenText)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		function isLoopToken(token: html.TokenType, tokenText: string) {
+			if (token === html.TokenType.AttributeName) {
+				if (tokenText === 'v-for') {
+					return true;
+				}
+			}
+			return false;
+		}
+		function isConditionalToken(token: html.TokenType, tokenText: string) {
+			if (token === html.TokenType.AttributeName) {
+				if (['v-if', 'v-else-if', 'v-else'].includes(tokenText)) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

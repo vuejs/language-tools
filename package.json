@@ -61,6 +61,16 @@
 				]
 			}
 		],
+		"semanticTokenScopes": [
+			{
+				"language": "vue",
+				"scopes": {
+					"template/component": ["support.class.component.vue"],
+					"template/conditional": ["keyword.control.conditional.vue"],
+					"template/loop": ["keyword.control.loop.vue"]
+				}
+			}
+		],
 		"commands": [
 			{
 				"command": "volar.action.verifyAllScripts",
