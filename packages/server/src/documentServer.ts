@@ -14,6 +14,7 @@ import {
 	DocumentSymbolRequest,
 	DocumentLinkRequest,
 	DocumentColorRequest,
+	FoldingRangeRequest,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocuments } from 'vscode-languageserver';
@@ -120,6 +121,11 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.get(document.uri)?.findDocumentLinks(document);
 	});
+	connection.onFoldingRanges(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return host.get(document.uri)?.getFoldingRanges(document);
+	});
 }
 function onInitialized() {
 	const vueOnly: TextDocumentRegistrationOptions = {
@@ -130,4 +136,5 @@ function onInitialized() {
 	connection.client.register(DocumentSymbolRequest.type, vueOnly);
 	connection.client.register(DocumentLinkRequest.type, vueOnly);
 	connection.client.register(DocumentColorRequest.type, vueOnly);
+	connection.client.register(FoldingRangeRequest.type, vueOnly);
 }

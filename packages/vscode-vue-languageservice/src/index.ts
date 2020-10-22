@@ -32,6 +32,7 @@ import * as getSelectionRanges from './languageFeatures/selectionRanges';
 import * as getSignatureHelp from './languageFeatures/signatureHelp';
 import * as getColorPresentations from './languageFeatures/colorPresentations';
 import * as getSemanticTokens from './languageFeatures/semanticTokens';
+import * as getFoldingRanges from './languageFeatures/foldingRanges';
 
 export enum Commands {
 	HTML_TO_PUG = 'volar.html-to-pug',
@@ -82,6 +83,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(findDocumentColors.register(sourceFiles), false),
+		getFoldingRanges: apiHook(getFoldingRanges.register(sourceFiles, tsLanguageService), false),
 		dispose: tsLanguageService.dispose,
 	};
 

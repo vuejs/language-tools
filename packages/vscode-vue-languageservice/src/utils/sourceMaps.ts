@@ -115,6 +115,9 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 	constructor(
 		public vueDocument: TextDocument,
 		public virtualDocument: TextDocument,
+		public capabilities: {
+			foldingRanges: boolean,
+		},
 	) {
 		super(vueDocument, virtualDocument);
 	}
@@ -146,8 +149,8 @@ export class PugSourceMap extends SourceMap<undefined> {
 	constructor(
 		public vueDocument: TextDocument,
 		public virtualDocument: TextDocument,
-		public html: string,
-		public mapper: (code: string, htmlOffset: number) => number | undefined,
+		public html: string | undefined,
+		public mapper: ((code: string, htmlOffset: number) => number | undefined) | undefined,
 	) {
 		super(vueDocument, virtualDocument);
 	}

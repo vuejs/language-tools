@@ -19,6 +19,7 @@ import * as upath from 'upath';
 import { ref, computed, reactive, pauseTracking, resetTracking, Ref } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
 import * as globalServices from './globalServices';
+import * as prettyhtml from '@starptech/prettyhtml';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
@@ -80,15 +81,35 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		setupReturns: [] as string[],
 		globalElements: [] as string[],
 	});
-	const pugHtmlMapper = computed(() => {
+	const pugData = computed(() => {
 		if (descriptor.template?.lang === 'pug') {
-			const html = pugToHtml(descriptor.template.content);
-			const mapper = createHtmlPugMapper(descriptor.template.content, html);
-			return {
-				html,
-				mapper,
-			};
+			try {
+				const html = pugToHtml(descriptor.template.content);
+				const mapper = createHtmlPugMapper(descriptor.template.content, html);
+				return {
+					html,
+					mapper,
+				};
+			}
+			catch (err) {
+				const line: number = err.line - 1;
+				const column: number = err.column - 1;
+				const diagnostic: Diagnostic = {
+					range: {
+						start: Position.create(line, column),
+						end: Position.create(line, column),
+					},
+					severity: DiagnosticSeverity.Error,
+					code: err.code,
+					source: 'pug',
+					message: err.msg,
+				};
+				return {
+					error: diagnostic
+				};
+			}
 		}
+		return {};
 	});
 
 	// template script(document + source maps)
@@ -379,7 +400,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			function getSourceMap(sourceDoc: TextDocument, targetDoc: TextDocument) {
 				const key = sourceDoc.uri + '=>' + targetDoc.uri;
 				if (!sourceMaps.has(key)) {
-					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc));
+					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc, { foldingRanges: false }));
 				}
 				return sourceMaps.get(key)!;
 			}
@@ -427,11 +448,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		function getInterpolations() {
 			if (!descriptor.template) return;
 			try {
-				const html = pugHtmlMapper.value?.html ?? descriptor.template.content;
+				const html = pugData.value?.html ?? descriptor.template.content;
 				const ast = vueDom.compile(html, { onError: () => { } }).ast;
 				return transformVueHtml(
 					ast,
-					pugHtmlMapper.value?.mapper,
+					pugData.value?.mapper,
 				);
 			}
 			catch (err) {
@@ -630,7 +651,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptDocument.value;
 		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document);
+			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: true });
 			const start = descriptor.script.loc.start;
 			const end = descriptor.script.loc.end;
 			sourceMap.add({
@@ -664,7 +685,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptSetupDocument.value;
 		if (document && descriptor.scriptSetup) {
-			const sourceMap = new TsSourceMap(vue.document, document);
+			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: true });
 			{
 				const start = descriptor.scriptSetup.loc.start;
 				const end = descriptor.scriptSetup.loc.end;
@@ -732,7 +753,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const start = descriptor.scriptSetup?.loc.start ?? descriptor.script?.loc.start;
 		const end = descriptor.scriptSetup?.loc.end ?? descriptor.script?.loc.end;
 		if (document && start !== undefined && end !== undefined) {
-			const sourceMap = new TsSourceMap(vue.document, document);
+			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -764,7 +785,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptMainDocument.value;
 		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document);
+			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -891,13 +912,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const pugSourceMaps = computed(() => {
 		const sourceMaps: PugSourceMap[] = [];
-		if (templateDocument.value?.languageId === 'pug' && descriptor.template && pugHtmlMapper.value) {
+		if (templateDocument.value?.languageId === 'pug' && descriptor.template) {
 			const document = templateDocument.value;
 			const sourceMap = new PugSourceMap(
 				vue.document,
 				document,
-				pugHtmlMapper.value.html,
-				pugHtmlMapper.value.mapper,
+				pugData.value.html,
+				pugData.value.mapper,
 			);
 			sourceMap.add({
 				data: undefined,
@@ -1198,41 +1219,49 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			}
 		}
 		function useTemplateValidation() {
-			const errors = computed(() => {
+			const htmlErrors = computed(() => {
+				if (templateDocument.value?.languageId === 'html') {
+					return getVueCompileErrors(templateDocument.value);
+				}
+				return [];
+			});
+			const pugErrors = computed(() => {
 				const result: Diagnostic[] = [];
-				if (!templateDocument.value) return result;
-				const doc = templateDocument.value;
-				let _templateContent: string | undefined = doc.getText();
-
-				/* pug */
-				if (doc.languageId === 'pug') {
-					try {
-						_templateContent = pugToHtml(_templateContent);
-					}
-					catch (err) {
-						_templateContent = undefined;
-						const line: number = err.line;
-						const column: number = err.column;
-						const diagnostic: Diagnostic = {
-							range: {
-								start: Position.create(line, column),
-								end: Position.create(line, column),
-							},
-							severity: DiagnosticSeverity.Error,
-							code: err.code,
-							source: 'pug',
-							message: err.msg,
-						};
-						result.push(diagnostic);
+				if (pugData.value.error) {
+					result.push(pugData.value.error);
+				}
+				if (pugData.value.html && templateDocument.value) {
+					const htmlDoc = TextDocument.create('', 'html', 0, pugData.value.html);
+					const vueCompileErrors = getVueCompileErrors(htmlDoc);
+					const pugDocRange = {
+						start: templateDocument.value.positionAt(0),
+						end: templateDocument.value.positionAt(templateDocument.value.getText().length),
+					};
+					// TODO
+					for (const vueCompileError of vueCompileErrors) {
+						let errorText = htmlDoc.getText(vueCompileError.range);
+						errorText = prettyhtml(errorText).contents;
+						vueCompileError.range = pugDocRange;
+						vueCompileError.message += '\n```html\n' + errorText + '```';
+						result.push(vueCompileError);
 					}
 				}
+				return result;
+			});
+			return computed(() => {
+				version++;
+				if (!templateDocument.value) return [];
+				return [
+					...getSourceDiags(htmlErrors.value, templateDocument.value.uri, htmlSourceMaps.value),
+					...getSourceDiags(pugErrors.value, templateDocument.value.uri, pugSourceMaps.value),
+				];
+			});
 
-				if (_templateContent === undefined) return result;
-
-				/* template */
+			function getVueCompileErrors(doc: TextDocument) {
+				const result: Diagnostic[] = [];
 				try {
 					const templateResult = vueSfc.compileTemplate({
-						source: _templateContent,
+						source: doc.getText(),
 						filename: vue.fileName,
 						compilerOptions: {
 							onError: err => {
@@ -1283,14 +1312,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					};
 					result.push(diagnostic);
 				}
-
 				return result;
-			});
-			return computed(() => {
-				version++;
-				if (!templateDocument.value) return [];
-				return getSourceDiags(errors.value, templateDocument.value.uri, htmlSourceMaps.value);
-			});
+			}
 		}
 		function useStylesValidation() {
 			const errors = computed(() => {

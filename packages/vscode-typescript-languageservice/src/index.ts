@@ -13,9 +13,10 @@ import * as documentHighlight from './languageFeatures/documentHighlight';
 import * as documentSymbol from './languageFeatures/documentSymbol';
 import * as workspaceSymbols from './languageFeatures/workspaceSymbols';
 import * as formatting from './languageFeatures/formatting';
+import * as getSemanticTokens from './languageFeatures/semanticTokens';
+import * as getFoldingRanges from './languageFeatures/foldingRanges';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-import * as getSemanticTokens from './languageFeatures/semanticTokens';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -44,9 +45,10 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 		getSignatureHelp: signatureHelp.register(languageService),
 		getSelectionRange: selectionRanges.register(languageService),
 		doValidation: diagnostics.register(languageService),
+		getFoldingRanges: getFoldingRanges.register(languageService),
+		getDocumentSemanticTokens: getSemanticTokens.register(languageService),
 		getTextDocument,
 		dispose,
-		getDocumentSemanticTokens: getSemanticTokens.register(languageService),
 	};
 
 	function getTextDocument(uri: string) {

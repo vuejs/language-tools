@@ -113,6 +113,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: TokenData[] = [];
 
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
+				if (sourceMap.html === undefined) continue;
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
@@ -143,7 +144,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					}
 
 					function getTokenPosition(htmlOffset: number, tokenText: string) {
-						const tokenOffset = sourceMap.mapper(tokenText, htmlOffset);
+						const tokenOffset = sourceMap.mapper?.(tokenText, htmlOffset);
 						if (tokenOffset !== undefined) {
 							const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
 							const vuePos = document.positionAt(vueOffset);

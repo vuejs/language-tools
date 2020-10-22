@@ -31,8 +31,7 @@
 				"id": "vue",
 				"extensions": [
 					".vue"
-				],
-				"configuration": "./languages/html-language-configuration.json"
+				]
 			}
 		],
 		"grammars": [
