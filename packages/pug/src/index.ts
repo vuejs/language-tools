@@ -47,20 +47,8 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 	});
 	nodes = filterEmptyTextNodes(nodes);
 	let pug = '';
-	const variables: string[] = [];
 	for (const node of nodes) {
 		worker(node, false);
-	}
-	if (variables.length) {
-		let variablesText = '\n-\n';
-		for (let i = 0; i < variables.length; i++) {
-			let variable = variables[i];
-			variable = variable.replace(/\`/g, '\\`');
-			variable = variable.replace(/\n/g, '\n' + getIndent(1));
-			variablesText += getIndent(1) + `var var_${i} = \`${variable}\`;\n`;
-		}
-		variablesText += '-';
-		pug = variablesText + ' ' + pug;
 	}
 	return pug;
 
@@ -97,8 +85,8 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 					atts.push(`${att}="${val}"`);
 				}
 				else {
-					const valIndex = variables.push(val) - 1;
-					atts.push(`${att}=var_${valIndex}`);
+					val = val.replace(/\`/g, '\\`');
+					atts.push(`${att}=\`${val}\``);
 				}
 			}
 			if (atts.length > 0) {
