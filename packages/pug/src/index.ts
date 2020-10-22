@@ -5,6 +5,7 @@ import { ElementType } from 'domelementtype';
 import * as prettyhtml from '@starptech/prettyhtml';
 
 export function pugToHtml(pugCode: string) {
+	pugCode = pugCode.replace(/\/\/-/g, '// ')
 	let htmlCode = pug.compile(pugCode)();
 	htmlCode = htmlCode.replace(/\-\-\>/g, " -->");
 
