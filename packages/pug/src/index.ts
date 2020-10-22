@@ -47,8 +47,20 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 	});
 	nodes = filterEmptyTextNodes(nodes);
 	let pug = '';
+	const variables: string[] = [];
 	for (const node of nodes) {
 		worker(node, false);
+	}
+	if (variables.length) {
+		let variablesText = '\n-\n';
+		for (let i = 0; i < variables.length; i++) {
+			let variable = variables[i];
+			variable = variable.replace(/\`/g, '\\`');
+			variable = variable.replace(/\n/g, '\n' + getIndent(1));
+			variablesText += getIndent(1) + `var var_${i} = \`${variable}\`;\n`;
+		}
+		variablesText += '-';
+		pug = variablesText + ' ' + pug;
 	}
 	return pug;
 
@@ -80,15 +92,14 @@ export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
 			let code = element.name;
 			const atts: string[] = [];
 			for (const att in element.attribs) {
-				// remove newline in att
-				const val = element.attribs[att]
-					.split('\n')
-					.map(s => s.trim())
-					.join(' ');
-				if (val)
+				let val = element.attribs[att];
+				if (val.indexOf('\n') === -1) {
 					atts.push(`${att}="${val}"`);
-				else
-					atts.push(`${att}=""`);
+				}
+				else {
+					const valIndex = variables.push(val) - 1;
+					atts.push(`${att}=var_${valIndex}`);
+				}
 			}
 			if (atts.length > 0) {
 				code += `(${atts.join(', ')})`;

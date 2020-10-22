@@ -285,7 +285,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		if (command === Commands.HTML_TO_PUG) {
 			if (lang !== 'html') return;
 
-			const pug = htmlToPug(desc.template.content, 2, false) + '\n';
+			const pug = htmlToPug(desc.template.content, 4, true) + '\n';
 			const newTemplate = `<template lang="pug">` + pug;
 
 			let start = desc.template.loc.start - '<template>'.length;
