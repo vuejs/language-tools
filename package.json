@@ -3,7 +3,7 @@
 	"name": "volar",
 	"displayName": "Volar",
 	"description": "TypeScript support for Vue 3",
-	"version": "0.14.1",
+	"version": "0.14.2",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
@@ -65,9 +65,15 @@
 			{
 				"language": "vue",
 				"scopes": {
-					"template/component": ["support.class.component.vue"],
-					"template/conditional": ["keyword.control.conditional.vue"],
-					"template/loop": ["keyword.control.loop.vue"]
+					"template/component": [
+						"support.class.component.vue"
+					],
+					"template/conditional": [
+						"keyword.control.conditional.vue"
+					],
+					"template/loop": [
+						"keyword.control.loop.vue"
+					]
 				}
 			}
 		],
