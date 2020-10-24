@@ -3,8 +3,11 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import * as path from 'path';
+import * as path from 'upath';
 import * as vscode from 'vscode';
+import { activateTagClosing } from './tagClosing';
+import { registerDocumentFormattingEditProvider } from './format';
+import { registerDocumentSemanticTokensProvider } from './semanticTokens';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -12,28 +15,18 @@ import {
 	TransportKind,
 } from 'vscode-languageclient';
 import {
-	TextDocument,
-} from 'vscode';
-import { activateTagClosing } from './tagClosing';
-import {
 	TagCloseRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
-	SemanticTokensRequest,
-	SemanticTokenLegendRequest,
 	WriteAllDebugFilesRequest,
 } from '@volar/shared';
-import {
-	DocumentSemanticTokensProvider, CancellationToken,
-	languages, SemanticTokensLegend, SemanticTokensBuilder
-} from 'vscode';
 
 let apiClient: LanguageClient;
 let docClient: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	apiClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic', 6009);
-	docClient = setupLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
+	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic', 6009);
+	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
 
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
@@ -48,13 +41,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
+	registerDocumentFormattingEditProvider(apiClient);
+	registerDocumentSemanticTokensProvider(docClient);
 
-	await docClient.onReady();
-	const _tokenLegend = await docClient.sendRequest(SemanticTokenLegendRequest.type);
-	const tokenLegend = new SemanticTokensLegend(_tokenLegend.types, _tokenLegend.modifiers);
-	languages.registerDocumentSemanticTokensProvider([{ scheme: 'file', language: 'vue' }], new SemanticTokensProvider(), tokenLegend);
-
-	function tagRequestor(document: TextDocument, position: vscode.Position) {
+	function tagRequestor(document: vscode.TextDocument, position: vscode.Position) {
 		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
 		return apiClient.sendRequest(TagCloseRequest.type, param);
 	}
@@ -64,7 +54,7 @@ export function deactivate(): Thenable<void> | undefined {
 	return apiClient?.stop() && docClient?.stop();
 }
 
-function setupLanguageService(context: vscode.ExtensionContext, script: string, name: string, port: number) {
+function createLanguageService(context: vscode.ExtensionContext, script: string, name: string, port: number) {
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(script);
 	// The debug options for the server
@@ -89,7 +79,6 @@ function setupLanguageService(context: vscode.ExtensionContext, script: string, 
 			{ scheme: 'file', language: 'vue' },
 			{ scheme: 'file', language: 'typescript' },
 			{ scheme: 'file', language: 'typescriptreact' },
-			// { scheme: 'file', language: 'javascript' },
 		],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
@@ -122,20 +111,5 @@ async function startEmbeddedLanguageServices() {
 	}
 	if (html && !html.isActive) {
 		await html.activate();
-	}
-}
-
-class SemanticTokensProvider implements DocumentSemanticTokensProvider {
-	onDidChangeSemanticTokens?: import("vscode").Event<void> | undefined;
-	async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken) {
-		const builder = new SemanticTokensBuilder();
-		const tokens = await docClient.sendRequest(SemanticTokensRequest.type, {
-			textDocument: docClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-			range: { start: document.positionAt(0), end: document.positionAt(document.getText().length) },
-		});
-		for (const token of tokens) {
-			builder.push(token[0], token[1], token[2], token[3], token[4] ?? undefined);
-		}
-		return builder.build();
 	}
 }

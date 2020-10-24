@@ -115,6 +115,7 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 	constructor(
 		public vueDocument: TextDocument,
 		public virtualDocument: TextDocument,
+		public isInterpolation: boolean,
 		public capabilities: {
 			foldingRanges: boolean,
 		},

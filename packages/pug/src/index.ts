@@ -4,6 +4,9 @@ import { Node, DataNode, Element } from 'domhandler';
 import { ElementType } from 'domelementtype';
 import * as prettyhtml from '@starptech/prettyhtml';
 
+const tabSize = 2;
+const useTabs = false;
+
 export function pugToHtml(pugCode: string) {
 	pugCode = pugCode.replace(/\/\/-/g, '// ')
 	let htmlCode = pug.compile(pugCode)();
@@ -17,7 +20,7 @@ export function pugToHtml(pugCode: string) {
 		.replace(/&quot;/g, `"`)
 
 	// make html pug mapping correct, let pug mutli-line interpolations work.
-	htmlCode = prettyhtml(htmlCode).contents;
+	htmlCode = prettyhtml(htmlCode, { tabWidth: tabSize, useTabs: useTabs }).contents;
 	const mapper = createHtmlPugMapper(pugCode, htmlCode);
 	const htmlLines = htmlCode.split('\n');
 	let htmlOffset = 0;
@@ -41,7 +44,7 @@ export function pugToHtml(pugCode: string) {
 
 	return newHtmlCode.trim();
 }
-export function htmlToPug(html: string, tabSize: number, useTabs: boolean) {
+export function htmlToPug(html: string) {
 	let nodes = htmlparser2.parseDOM(html, {
 		xmlMode: true
 	});

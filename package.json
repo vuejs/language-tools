@@ -90,7 +90,27 @@
 				"command": "volar.action.writeAllDebugFiles",
 				"title": "Volar: Write all debug files"
 			}
-		]
+		],
+		"configuration": {
+			"title": "Volar",
+			"properties": {
+				"volar.format.formatter": {
+					"type": "string",
+					"default": "default",
+					"enum": [
+						"none",
+						"default",
+						"workspaceExtensions"
+					],
+					"enumDescriptions": [
+						"disable formatting",
+						"css (prettier), html (@starptech/prettyhtml), javascript (typescript)",
+						"user-defined"
+					],
+					"description": "Formatter for <template>, <script>, <style> region"
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

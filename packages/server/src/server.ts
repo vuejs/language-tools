@@ -9,7 +9,6 @@ import {
 	DidChangeConfigurationNotification,
 	TextDocumentSyncKind,
 	InitializeResult,
-	DocumentFormattingRequest,
 	RenameRequest,
 	TextDocumentRegistrationOptions,
 	CodeActionRequest,
@@ -20,20 +19,20 @@ import {
 	ExecuteCommandRequest,
 	CompletionRequest,
 	createConnection,
-	DocumentRangeFormattingRequest,
 	SelectionRangeRequest,
 	SignatureHelpRequest,
 	CompletionItem,
 	WorkspaceEdit,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
+import { Commands, triggerCharacter, SourceMap, TsSourceMap } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	TagCloseRequest,
 	GetEmbeddedLanguageRequest,
 	FormatAllScriptsRequest,
+	GetFormattingSourceMapsRequest,
 	uriToFsPath,
 } from '@volar/shared';
 import * as upath from 'upath';
@@ -108,6 +107,35 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return host.get(document.uri)?.getEmbeddedLanguage(document, handler.range);
+	});
+	connection.onRequest(GetFormattingSourceMapsRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		const sourceFile = host.get(document.uri)?.getSourceFile(document.uri);
+		if (!sourceFile) return;
+		const result = {
+			templates: [...sourceFile.getHtmlSourceMaps().map(s => translateSourceMap(s, 'template')), ...sourceFile.getPugSourceMaps().map(s => translateSourceMap(s, 'template'))],
+			styles: sourceFile.getCssSourceMaps().map(s => translateSourceMap(s, 'style')),
+			scripts: sourceFile.getTsSourceMaps().map(translateTsSourceMap).filter(script => script.mappings.length > 0),
+		};
+		return result;
+
+		function translateSourceMap(sourceMap: SourceMap, vueRegion: string) {
+			return {
+				languageId: sourceMap.virtualDocument.languageId,
+				content: sourceMap.virtualDocument.getText(),
+				mappings: [...sourceMap.values()],
+				vueRegion,
+			};
+		}
+		function translateTsSourceMap(sourceMap: TsSourceMap) {
+			return {
+				languageId: sourceMap.virtualDocument.languageId,
+				content: sourceMap.virtualDocument.getText(),
+				mappings: [...sourceMap.values()].filter(maped => maped.data.capabilities.formatting),
+				vueRegion: sourceMap.isInterpolation ? 'template' : 'script',
+			};
+		}
 	});
 	connection.onRequest(FormatAllScriptsRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
@@ -223,8 +251,6 @@ function onInitialized() {
 	};
 
 	connection.client.register(ReferencesRequest.type, both);
-	connection.client.register(DocumentFormattingRequest.type, vueOnly);
-	connection.client.register(DocumentRangeFormattingRequest.type, vueOnly);
 	connection.client.register(RenameRequest.type, vueOnly);
 	connection.client.register(CodeActionRequest.type, vueOnly);
 	connection.client.register(DefinitionRequest.type, vueOnly);

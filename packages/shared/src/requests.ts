@@ -11,6 +11,22 @@ import {
 	Range,
 } from 'vscode-languageserver';
 
+export interface ISourceMap {
+	languageId: string;
+	content: string;
+	vueRegion: string;
+	mappings: {
+		vueRange: {
+			start: number;
+			end: number;
+		};
+		virtualRange: {
+			start: number;
+			end: number;
+		};
+	}[],
+}
+
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any, any> = new RequestType('html/tag');
 }
@@ -21,7 +37,16 @@ export namespace GetEmbeddedLanguageRequest {
 	}, {
 		id: string,
 		range: Range,
-	} | undefined, any, any> = new RequestType('vue/embeddedLanguage');
+	} | undefined, any, any> = new RequestType('vue.embeddedLanguage');
+}
+export namespace GetFormattingSourceMapsRequest {
+	export const type: RequestType<{
+		textDocument: TextDocumentIdentifier,
+	}, {
+		templates: ISourceMap[],
+		scripts: ISourceMap[],
+		styles: ISourceMap[],
+	} | undefined, any, any> = new RequestType('vue.descriptor');
 }
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.verifyAllScripts');
@@ -39,8 +64,8 @@ export interface SemanticTokenParams {
 	range: Range;
 }
 export namespace SemanticTokensRequest {
-	export const type: RequestType<SemanticTokenParams, [number, number, number, number, number | undefined | null][], any, any> = new RequestType('vue/semanticTokens');
+	export const type: RequestType<SemanticTokenParams, [number, number, number, number, number | undefined | null][], any, any> = new RequestType('vue.semanticTokens');
 }
 export namespace SemanticTokenLegendRequest {
-	export const type: RequestType0<{ types: string[]; modifiers: string[] }, any, any> = new RequestType0('vue/semanticTokenLegend');
+	export const type: RequestType0<{ types: string[]; modifiers: string[] }, any, any> = new RequestType0('vue.semanticTokenLegend');
 }

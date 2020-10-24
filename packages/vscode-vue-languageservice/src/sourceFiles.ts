@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
-import { uriToFsPath, sleep } from '@volar/shared';
+import { uriToFsPath, sleep, extNameToLanguageId } from '@volar/shared';
 import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, PugSourceMap } from './utils/sourceMaps';
 import { transformVueHtml } from './utils/vueHtmlConverter';
 import * as ts from 'typescript';
@@ -22,6 +22,24 @@ import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
+interface IDescriptorBlock {
+	lang: string;
+	content: string;
+	loc: {
+		start: number;
+		end: number;
+	};
+}
+interface IDescriptor {
+	template: IDescriptorBlock | null;
+	script: IDescriptorBlock | null;
+	scriptSetup: (IDescriptorBlock & {
+		setup: string;
+	}) | null;
+	styles: (IDescriptorBlock & {
+		module: boolean;
+	})[];
+}
 
 export function createSourceFile(initialDocument: TextDocument, tsLanguageService: ts2.LanguageService) {
 	let documentVersion = 0;
@@ -33,42 +51,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		fileName: uriToFsPath(initialDocument.uri),
 		document: initialDocument,
 	});
-	const descriptor = reactive<{
-		template: {
-			lang: string,
-			content: string,
-			loc: {
-				start: number,
-				end: number,
-			},
-		} | null,
-		script: {
-			lang: string,
-			content: string,
-			loc: {
-				start: number,
-				end: number,
-			},
-		} | null,
-		scriptSetup: {
-			lang: string,
-			content: string,
-			loc: {
-				start: number,
-				end: number,
-			},
-			setup: string,
-		} | null,
-		styles: {
-			lang: string,
-			content: string,
-			loc: {
-				start: number,
-				end: number,
-			},
-			module: boolean,
-		}[],
-	}>({
+	const descriptor = reactive<IDescriptor>({
 		template: null,
 		script: null,
 		scriptSetup: null,
@@ -400,7 +383,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			function getSourceMap(sourceDoc: TextDocument, targetDoc: TextDocument) {
 				const key = sourceDoc.uri + '=>' + targetDoc.uri;
 				if (!sourceMaps.has(key)) {
-					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc, { foldingRanges: false }));
+					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc, true, { foldingRanges: false }));
 				}
 				return sourceMaps.get(key)!;
 			}
@@ -470,14 +453,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		if (descriptor.script) {
 			const lang = descriptor.script.lang;
 			const uri = `${vue.uri}.script.${lang}`;
-			const languageId = transformLanguageId(lang);
+			const languageId = extNameToLanguageId(lang);
 			const content = descriptor.script.content;
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
 		if (descriptor.scriptSetup) {
 			const lang = 'ts';
 			const uri = `${vue.uri}.script.${lang}`;
-			const languageId = transformLanguageId(lang);
+			const languageId = extNameToLanguageId(lang);
 			const content = [
 				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.setup';`,
 				`import { defineComponent } from '@vue/runtime-dom';`,
@@ -499,7 +482,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		if (descriptor.scriptSetup) {
 			const lang = descriptor.scriptSetup.lang;
 			const uri = `${vue.uri}.setup.${lang}`;
-			const languageId = transformLanguageId(lang);
+			const languageId = extNameToLanguageId(lang);
 			const setup = descriptor.scriptSetup.setup;
 			const content = [
 				descriptor.scriptSetup.content,
@@ -630,7 +613,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const templateDocument = computed<TextDocument | undefined>(() => {
 		if (descriptor.template) {
-			const lang = descriptor.template.lang;
+			const lang = extNameToLanguageId(descriptor.template.lang);
 			const uri = vue.uri + '.' + lang;
 			const content = descriptor.template.content;
 			const document = TextDocument.create(uri, lang, documentVersion++, content);
@@ -651,7 +634,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptDocument.value;
 		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: true });
+			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: true });
 			const start = descriptor.script.loc.start;
 			const end = descriptor.script.loc.end;
 			sourceMap.add({
@@ -685,7 +668,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptSetupDocument.value;
 		if (document && descriptor.scriptSetup) {
-			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: true });
+			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: true });
 			{
 				const start = descriptor.scriptSetup.loc.start;
 				const end = descriptor.scriptSetup.loc.end;
@@ -753,7 +736,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const start = descriptor.scriptSetup?.loc.start ?? descriptor.script?.loc.start;
 		const end = descriptor.scriptSetup?.loc.end ?? descriptor.script?.loc.end;
 		if (document && start !== undefined && end !== undefined) {
-			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: false });
+			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -785,7 +768,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		const document = scriptMainDocument.value;
 		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document, { foldingRanges: false });
+			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -912,7 +895,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const pugSourceMaps = computed(() => {
 		const sourceMaps: PugSourceMap[] = [];
-		if (templateDocument.value?.languageId === 'pug' && descriptor.template) {
+		if (templateDocument.value?.languageId === 'jade' && descriptor.template) {
 			const document = templateDocument.value;
 			const sourceMap = new PugSourceMap(
 				vue.document,
@@ -1487,15 +1470,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 			return result.value;
 		};
-	}
-	function transformLanguageId(lang: string) {
-		switch (lang) {
-			case 'js': return 'javascript';
-			case 'ts': return 'typescript';
-			case 'jsx': return 'javascriptreact';
-			case 'tsx': return 'typescriptreact';
-			default: return lang;
-		}
 	}
 	function passScriptRefs(script: vueSfc.SFCScriptBlock) {
 		let content = script.content;

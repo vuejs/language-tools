@@ -41,6 +41,7 @@ export enum Commands {
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { triggerCharacter } from './languageFeatures/completions';
+export * from './utils/sourceMaps';
 
 export function getSemanticTokensLegend() {
 	return getSemanticTokens.semanticTokenLegend;
@@ -285,7 +286,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		if (command === Commands.HTML_TO_PUG) {
 			if (lang !== 'html') return;
 
-			const pug = htmlToPug(desc.template.content, 4, true) + '\n';
+			const pug = htmlToPug(desc.template.content) + '\n';
 			const newTemplate = `<template lang="pug">` + pug;
 
 			let start = desc.template.loc.start - '<template>'.length;

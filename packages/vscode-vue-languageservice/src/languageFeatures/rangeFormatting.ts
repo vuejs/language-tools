@@ -1,9 +1,9 @@
 import {
-	TextDocument,
 	FormattingOptions,
 	TextEdit,
 	Range,
 } from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFile } from '../sourceFiles';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
