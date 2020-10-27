@@ -25,9 +25,9 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Components service
 
-Local components, Built-in components, native html elements Type-Checking is default active.
+By default, Local components, Built-in components, native html elements Type-Checking are active.
 
-For Global components, you need to definition `__VLS_GlobalComponents` interface, for example:
+For Global components, you need to add the `__VLS_GlobalComponents` interface definition, for example:
 
 ```typescript
 // shims-volar.d.ts
@@ -43,7 +43,7 @@ declare global {
 
 ## v-slot Type-Checking
 
-v-slot Type-Checking will auto service the .vue files under project, but for third party library you need to define the slot types, for example:
+v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
 
 ```typescript
 // shims-volar.d.ts
@@ -69,11 +69,11 @@ declare global {
 }
 ```
 
-## Work for Vue 2?
+## Work with Vue 2?
 
-This tool using Vue 3 types from '@vue/runtime-dom' module to calculate completion.
+This tool uses Vue 3 types from '@vue/runtime-dom' module to calculate completion.
 
-Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
+Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have to install this package yourslef:
 
 ```json
 {
@@ -85,13 +85,13 @@ Vue 3 is include '@vue/runtime-dom'. for Vue 2 you need to install by yourself:
 
 ## Note
 
-> Syntax highlighting is base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
+> Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
 
-> If rename location include both .ts and .vue files. Please perform the rename operation in the .vue file, otherwise the rename location in the .vue cannot be found correctly.
+> If your rename location includes both a .ts and a .vue file. Please perform the rename operation on the .vue file, otherwise the rename location in the .vue wouldn't be found.
 
 > Click `<template>` tag to use pug convert tool.
 
-> Currently support languages:
+> Currently supported languages:
 > - template: html, pug
 > - script: js, ts, jsx, tsx
 > - style: css, scss
