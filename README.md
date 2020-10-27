@@ -73,7 +73,7 @@ declare global {
 
 This tool uses Vue 3 types from '@vue/runtime-dom' module to calculate completion.
 
-Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have to install this package yourslef:
+Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have to install this package yourself:
 
 ```json
 {
