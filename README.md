@@ -1,6 +1,6 @@
 # Volar
 
-> Faster and more acurrate TypeScript support of Vue 3
+> Faster and more accurate TypeScript support of Vue 3
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
