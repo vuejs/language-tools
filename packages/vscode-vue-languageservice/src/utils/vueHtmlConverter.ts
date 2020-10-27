@@ -217,7 +217,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						const propName2 = prop.name;
 						const isClassOrStyleAttr = ['style', 'class'].includes(propName);
 
-						if (isClassOrStyleAttr || forDuplicateClassOrStyleAttr) continue;
+						if (isClassOrStyleAttr !== forDuplicateClassOrStyleAttr) continue;
 
 						// camelize name
 						mapping(undefined, `'${propName}': ${propValue}`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
