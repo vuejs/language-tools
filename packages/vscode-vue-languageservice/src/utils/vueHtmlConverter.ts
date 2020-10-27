@@ -43,7 +43,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				tags.add(node.tag);
 				writeImportSlots(node);
 				writeVshow(node);
-				writeProps(node);
+				writeProps(node, false);
+				writeProps(node, true);
 				writeOns(node);
 				writeOptionReferences(node);
 				writeSlots(node);
@@ -136,7 +137,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					}
 				}
 			}
-			function writeProps(node: ElementNode) {
+			function writeProps(node: ElementNode, forDuplicateClassOrStyleAttr: boolean) {
 				// +1 to remove '<' from html tag
 				const sourceRanges = [{
 					start: node.loc.start.offset + 1,
@@ -149,13 +150,19 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					});
 				}
 
-				mapping(undefined, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
-					start: node.loc.start.offset + 1,
-					end: node.loc.start.offset + 1 + node.tag.length,
-				}], false);
-				_code += `__VLS_componentProps[`;
-				mappingWithQuotes(MapedNodeTypes.ElementTag, node.tag, node.tag, capabilitiesSet.htmlTagOrAttr, sourceRanges);
-				_code += `] = {\n`;
+				if (!forDuplicateClassOrStyleAttr) {
+					mapping(undefined, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
+						start: node.loc.start.offset + 1,
+						end: node.loc.start.offset + 1 + node.tag.length,
+					}], false);
+					_code += `__VLS_componentProps[`;
+					mappingWithQuotes(MapedNodeTypes.ElementTag, node.tag, node.tag, capabilitiesSet.htmlTagOrAttr, sourceRanges);
+					_code += `] = {\n`;
+				}
+				else {
+					_code += `// @ts-ignore\n`;
+					_code += `__VLS_componentProps['${node.tag}'] = {\n`;
+				}
 
 				for (const prop of node.props) {
 					if (
@@ -165,6 +172,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
 						&& !prop.exp?.isConstant // TODO: style='z-index: 2' will compile to {'z-index':'2'}
 					) {
+						if (forDuplicateClassOrStyleAttr) continue;
+
 						const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
 						const propValue = prop.exp?.content ?? 'undefined';
 						const propName2 = prop.arg.content;
@@ -206,6 +215,9 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
 						const propValue = prop.value ? `\`${prop.value?.content.replace(/`/g, '\\`')}\`` : 'true';
 						const propName2 = prop.name;
+						const isClassOrStyleAttr = ['style', 'class'].includes(propName);
+
+						if (isClassOrStyleAttr || forDuplicateClassOrStyleAttr) continue;
 
 						// camelize name
 						mapping(undefined, `'${propName}': ${propValue}`, prop.loc.source, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
@@ -230,6 +242,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						_code += "/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n";
 					}
 				}
+
 				_code += '};\n';
 			}
 			function writeOns(node: ElementNode) {

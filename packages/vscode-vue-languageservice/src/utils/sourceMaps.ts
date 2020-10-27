@@ -102,7 +102,7 @@ export interface TsMappingData {
 	type?: MapedNodeTypes,
 	capabilities: {
 		basic: boolean,
-		references: boolean, // references, definitions, rename
+		references: boolean, // references, definitions
 		diagnostic: boolean,
 		formatting: boolean,
 		rename: boolean,
