@@ -6,7 +6,7 @@
 import {
 	RequestType,
 	RequestType0,
-	NotificationType,
+	NotificationType0,
 	TextDocumentPositionParams,
 	TextDocumentIdentifier,
 	Range,
@@ -71,5 +71,5 @@ export namespace SemanticTokenLegendRequest {
 	export const type: RequestType0<{ types: string[]; modifiers: string[] }, any, any> = new RequestType0('vue.semanticTokenLegend');
 }
 export namespace SemanticTokensChangedNotification {
-	export const type: NotificationType<undefined> = new NotificationType('vue.semanticTokensChanged');
+	export const type: NotificationType0 = new NotificationType0('vue.semanticTokensChanged');
 }

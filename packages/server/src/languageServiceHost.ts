@@ -208,7 +208,7 @@ export function createLanguageServiceHost(
 		async function onProjectFilesUpdate(changedDocs: TextDocument[]) {
 			projectVersion++;
 			if (semanticTokensEvent) {
-				connection.sendNotification(SemanticTokensChangedNotification.type, undefined);
+				connection.sendNotification(SemanticTokensChangedNotification.type);
 			}
 			if (diagEvent) {
 				while (currentValidation) {

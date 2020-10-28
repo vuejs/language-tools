@@ -8,6 +8,7 @@
 	"dependencies": {
 		"@starptech/prettyhtml": "latest",
 		"pug": "latest",
+		"pug-plain-loader": "latest",
 		"htmlparser2": "latest",
 		"domhandler": "latest",
 		"domelementtype": "latest"
