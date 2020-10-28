@@ -1,12 +1,18 @@
 import * as ts from 'typescript';
 import * as upath from 'upath';
 import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
-import { uriToFsPath, fsPathToUri, sleep } from '@volar/shared';
+import { uriToFsPath, fsPathToUri, sleep, SemanticTokensChangedNotification } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection } from 'vscode-languageserver';
 import type { TextDocuments } from 'vscode-languageserver';
 
-export function createLanguageServiceHost(connection: Connection, documents: TextDocuments<TextDocument>, rootPath: string, diag: boolean) {
+export function createLanguageServiceHost(
+	connection: Connection,
+	documents: TextDocuments<TextDocument>,
+	rootPath: string,
+	diagEvent: boolean,
+	semanticTokensEvent: boolean,
+) {
 	let tsConfigs = ts.sys.readDirectory(rootPath, ['tsconfig.json'], undefined, ['**/*']);
 	tsConfigs = tsConfigs.filter(tsConfig => upath.basename(tsConfig) === 'tsconfig.json');
 
@@ -201,7 +207,10 @@ export function createLanguageServiceHost(connection: Connection, documents: Tex
 		}
 		async function onProjectFilesUpdate(changedDocs: TextDocument[]) {
 			projectVersion++;
-			if (diag) {
+			if (semanticTokensEvent) {
+				connection.sendNotification(SemanticTokensChangedNotification.type, undefined);
+			}
+			if (diagEvent) {
 				while (currentValidation) {
 					await currentValidation;
 				}

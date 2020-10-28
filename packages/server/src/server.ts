@@ -94,7 +94,7 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, false);
+	const host = createLanguageServiceHost(connection, documents, rootPath, false, false);
 	let resolveCache: CompletionItem | undefined;
 
 	// custom requests

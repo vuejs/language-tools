@@ -49,7 +49,7 @@ function onInitialize(params: InitializeParams) {
 	return result;
 }
 function initLanguageService(rootPath: string) {
-	const host = createLanguageServiceHost(connection, documents, rootPath, true);
+	const host = createLanguageServiceHost(connection, documents, rootPath, true, true);
 
 	connection.onRequest(WriteAllDebugFilesRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
