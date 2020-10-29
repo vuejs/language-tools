@@ -62,7 +62,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		props: [] as string[],
 		components: [] as string[],
 		setupReturns: [] as string[],
-		globalElements: [] as string[],
+		htmlElements: [] as string[],
 	});
 	const pugData = computed(() => {
 		if (descriptor.template?.lang === 'pug') {
@@ -249,12 +249,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		/* Completion */
 		code += '/* Completion: Emits */\n';
-		for (const name of templateScriptData.components) {
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			code += `__VLS_componentEmits['${name}'][''];\n`
 		}
 		code += '/* Completion: Props */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.globalElements]) {
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			code += `__VLS_componentPropsBase['${name}'][''];\n`
 		}
@@ -1211,17 +1211,17 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const props = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_vm.')));
 		const components = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Components.')));
 		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Options.setup().')));
-		const globalElements = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('({} as JSX.IntrinsicElements).')));
+		const htmlElements = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('({} as JSX.IntrinsicElements).')));
 
 		const propNames = props.map(entry => entry.data.name);
 		const componentNames = components.map(entry => entry.data.name);
 		const setupReturnNames = setupReturns.map(entry => entry.data.name);
-		const globalElementNames = globalElements.map(entry => entry.data.name);
+		const htmlElementNames = htmlElements.map(entry => entry.data.name);
 
 		if (eqSet(new Set(propNames), new Set(templateScriptData.props))
 			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
 			&& eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
-			&& eqSet(new Set(globalElementNames), new Set(templateScriptData.globalElements))
+			&& eqSet(new Set(htmlElementNames), new Set(templateScriptData.htmlElements))
 		) {
 			return false;
 		}
@@ -1229,7 +1229,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		templateScriptData.props = propNames;
 		templateScriptData.components = componentNames;
 		templateScriptData.setupReturns = setupReturnNames;
-		templateScriptData.globalElements = globalElementNames;
+		templateScriptData.htmlElements = htmlElementNames;
 		updateTemplateScriptDocument();
 		return true;
 
@@ -1567,7 +1567,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			if (templateScriptDocument.value && templateDocument.value) {
 				const doc = templateScriptDocument.value;
 				const text = doc.getText();
-				for (const tagName of [...templateScriptData.components, ...templateScriptData.globalElements]) {
+				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 					let bind: CompletionItem[];
 					let on: CompletionItem[];
 					{
