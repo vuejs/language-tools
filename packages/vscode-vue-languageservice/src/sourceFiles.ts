@@ -358,6 +358,35 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			if (!interpolations) return [];
 
 			const sourceMaps = new Map<string, TsSourceMap>();
+			{ // diagnostic for '@vue/runtime-dom' package not exist
+				const sourceMap = getSourceMap(vue.document, document);
+				const text = `'@vue/runtime-dom'`;
+				const textIndex = document.getText().indexOf(text);
+				const virtualRange = {
+					start: textIndex,
+					end: textIndex + text.length,
+				};
+				sourceMap.add({
+					data: {
+						vueTag: 'template',
+						capabilities: {
+							basic: false,
+							references: false,
+							rename: false,
+							diagnostic: true,
+							formatting: false,
+							completion: false,
+							semanticTokens: false,
+						},
+					},
+					mode: MapedMode.Gate,
+					vueRange: {
+						start: descriptor.template.loc.start,
+						end: descriptor.template.loc.start,
+					},
+					virtualRange: virtualRange,
+				});
+			}
 			for (const maped of cssModuleMappings) {
 				const sourceMap = getSourceMap(maped.document, document);
 				sourceMap.add({
