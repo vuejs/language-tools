@@ -13,8 +13,9 @@ export function createLanguageServiceHost(
 	diagEvent: boolean,
 	semanticTokensEvent: boolean,
 ) {
-	let tsConfigs = ts.sys.readDirectory(rootPath, ['tsconfig.json'], undefined, ['**/*']);
-	tsConfigs = tsConfigs.filter(tsConfig => upath.basename(tsConfig) === 'tsconfig.json');
+	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
+	let tsConfigs = ts.sys.readDirectory(rootPath, searchFiles, undefined, ['**/*']);
+	tsConfigs = tsConfigs.filter(tsConfig => searchFiles.includes(upath.basename(tsConfig)));
 
 	const languageServices = new Map<string, {
 		languageService: LanguageService,
@@ -27,7 +28,7 @@ export function createLanguageServiceHost(
 	}
 
 	ts.sys.watchDirectory!(rootPath, fileName => {
-		if (upath.basename(fileName) === 'tsconfig.json') {
+		if (searchFiles.includes(upath.basename(fileName))) {
 			if (ts.sys.fileExists(fileName)) {
 				add(fileName);
 			}
@@ -124,10 +125,11 @@ export function createLanguageServiceHost(
 				},
 			};
 
-			const file = ts.findConfigFile(tsConfig, ts.sys.fileExists)!;
-			const config = ts.readJsonConfigFile(file, ts.sys.readFile);
-			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(file));
-			content.options.allowJs = true; // TODO: should not patch?
+			const config = ts.readJsonConfigFile(tsConfig, ts.sys.readFile);
+			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(tsConfig));
+			if (upath.basename(tsConfig) === 'jsconfig.json') {
+				content.options.allowJs = true;
+			}
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
