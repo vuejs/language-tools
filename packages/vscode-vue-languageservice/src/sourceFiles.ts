@@ -539,7 +539,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				descriptor.scriptSetup.content,
 				...(!hasExportDefault(descriptor.scriptSetup.content) ? [
 					``,
-					`declare const __VLS_defineComponent: (typeof import('vue'))['defineComponent'];`,
+					`declare const __VLS_defineComponent: (typeof import('@vue/runtime-dom'))['defineComponent'];`,
 					`const __VLS_options = __VLS_defineComponent({ setup: () => { } });`,
 					`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
 					`declare function __VLS_setup(__VLS_props: typeof props, __VLS_ctx: typeof __VLS_parameters[1]): ReturnType<NonNullable<typeof __VLS_options.setup>>;`,
@@ -620,7 +620,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			``,
 			`declare global {`,
 			`interface __VLS_GlobalComponents { }`,
-			`interface __VLS_BuiltInComponents extends Pick<typeof import('vue'),`,
+			`interface __VLS_BuiltInComponents extends Pick<typeof import('@vue/runtime-dom'),`,
 			`	'Transition'`,
 			`	| 'TransitionGroup'`,
 			`	| 'KeepAlive'`,
