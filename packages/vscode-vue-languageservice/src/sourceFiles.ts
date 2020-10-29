@@ -1259,9 +1259,15 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const templateScriptDiags_1 = useTemplateScriptValidation(1);
 		const templateScriptDiags_2 = useTemplateScriptValidation(2);
 		const templateScriptDiags_3 = useTemplateScriptValidation(3);
-		const scriptDiags_1 = useScriptValidation(1);
-		const scriptDiags_2 = useScriptValidation(2);
-		const scriptDiags_3 = useScriptValidation(3);
+		const scriptDiags_1 = useScriptValidation(scriptDocument, 1);
+		const scriptDiags_2 = useScriptValidation(scriptDocument, 2);
+		const scriptDiags_3 = useScriptValidation(scriptDocument, 3);
+		const scriptSetupDiags_1 = useScriptValidation(scriptSetupDocument, 1);
+		const scriptSetupDiags_2 = useScriptValidation(scriptSetupDocument, 2);
+		const scriptSetupDiags_3 = useScriptValidation(scriptSetupDocument, 3);
+		const scriptSetup0Diags_1 = useScriptValidation(scriptSetupDocument0, 1);
+		const scriptSetup0Diags_2 = useScriptValidation(scriptSetupDocument0, 2);
+		const scriptSetup0Diags_3 = useScriptValidation(scriptSetupDocument0, 3);
 
 		const lastStylesDiags = ref<Diagnostic[]>([]);
 		const lastTemplateDiags = ref<Diagnostic[]>([]);
@@ -1271,6 +1277,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const lastScriptDiags_1 = ref<Diagnostic[]>([]);
 		const lastScriptDiags_2 = ref<Diagnostic[]>([]);
 		const lastScriptDiags_3 = ref<Diagnostic[]>([]);
+		const lastScriptSetupDiags_1 = ref<Diagnostic[]>([]);
+		const lastScriptSetupDiags_2 = ref<Diagnostic[]>([]);
+		const lastScriptSetupDiags_3 = ref<Diagnostic[]>([]);
+		const lastScriptSetup0Diags_1 = ref<Diagnostic[]>([]);
+		const lastScriptSetup0Diags_2 = ref<Diagnostic[]>([]);
+		const lastScriptSetup0Diags_3 = ref<Diagnostic[]>([]);
+
 		const result = computed(() => {
 			let result = [
 				...lastStylesDiags.value,
@@ -1281,6 +1294,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				...lastTemplateScriptDiags_1.value,
 				...lastTemplateScriptDiags_2.value,
 				...lastTemplateScriptDiags_3.value,
+				...lastScriptSetupDiags_1.value,
+				...lastScriptSetupDiags_2.value,
+				...lastScriptSetupDiags_3.value,
+				...lastScriptSetup0Diags_1.value,
+				...lastScriptSetup0Diags_2.value,
+				...lastScriptSetup0Diags_3.value,
 			];
 			return result;
 		});
@@ -1309,6 +1328,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 			if (dirty) await sleep();
 			if (isCancel?.()) return;
+			dirty = tryProgress(scriptSetupDiags_2, lastScriptSetupDiags_2);
+
+			if (dirty) await sleep();
+			if (isCancel?.()) return;
+			dirty = tryProgress(scriptSetup0Diags_2, lastScriptSetup0Diags_2);
+
+			if (dirty) await sleep();
+			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
 
 			if (dirty) await sleep();
@@ -1317,11 +1344,27 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 			if (dirty) await sleep();
 			if (isCancel?.()) return;
+			dirty = tryProgress(scriptSetupDiags_3, lastScriptSetupDiags_3);
+
+			if (dirty) await sleep();
+			if (isCancel?.()) return;
+			dirty = tryProgress(scriptSetup0Diags_3, lastScriptSetup0Diags_3);
+
+			if (dirty) await sleep();
+			if (isCancel?.()) return;
 			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
 
 			if (dirty) await sleep();
 			if (isCancel?.()) return;
 			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
+
+			if (dirty) await sleep();
+			if (isCancel?.()) return;
+			dirty = tryProgress(scriptSetupDiags_1, lastScriptSetupDiags_1);
+
+			if (dirty) await sleep();
+			if (isCancel?.()) return;
+			dirty = tryProgress(scriptSetup0Diags_1, lastScriptSetup0Diags_1);
 
 			return result.value;
 
@@ -1451,8 +1494,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result as Diagnostic[];
 			});
 		}
-		function useScriptValidation(mode: number) {
-			const document = computed(() => scriptSetupDocument.value ? scriptSetupDocument.value : scriptDocument.value);
+		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: number) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
