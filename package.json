@@ -122,7 +122,6 @@
 		"publish": "yarn && vsce publish --yarn"
 	},
 	"devDependencies": {
-		"vsce": "latest",
 		"typescript": "latest"
 	},
 	"dependencies": {},
