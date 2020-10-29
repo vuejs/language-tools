@@ -251,10 +251,10 @@ function onInitialized() {
 	};
 
 	connection.client.register(ReferencesRequest.type, both);
+	connection.client.register(DefinitionRequest.type, both);
+	connection.client.register(TypeDefinitionRequest.type, both);
 	connection.client.register(RenameRequest.type, vueOnly);
 	connection.client.register(CodeActionRequest.type, vueOnly);
-	connection.client.register(DefinitionRequest.type, vueOnly);
-	connection.client.register(TypeDefinitionRequest.type, vueOnly);
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
 	connection.client.register(SignatureHelpRequest.type, {
