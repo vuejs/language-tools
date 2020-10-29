@@ -18,7 +18,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 		if (document.languageId !== 'vue') {
 			const tsLocs = tsLanguageService.findDefinition(document, position);
-			return tsLocs.map(tsLoc => getSourceTsLocations(tsLoc, sourceFiles)).flat();
+			let result = tsLocs.map(tsLoc => getSourceTsLocations(tsLoc, sourceFiles)).flat();
+			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			return result;
 		}
 
 		const sourceFile = sourceFiles.get(document.uri);
