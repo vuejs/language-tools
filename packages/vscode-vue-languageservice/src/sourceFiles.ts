@@ -156,6 +156,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`,
 			`type __VLS_GlobalAttrs = __VLS_Vue_HTMLAttributes & __VLS_Vue_VNodeProps & __VLS_Vue_AllowedComponentProps;`,
 			`type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;`,
+			`type __VLS_OmitGlobalAttrs<T> = { [K in keyof T]: Omit<T[K], keyof __VLS_GlobalAttrs> };`,
 		].join('\n') + `\n`;
 
 		code += `type __VLS_ConstructorOverloads<T> =\n`;
@@ -206,7 +207,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		/* Components */
 		code += '/* Components */\n';
-		code += 'declare var __VLS_components: JSX.IntrinsicElements & {\n';
+		code += 'declare var __VLS_components: __VLS_OmitGlobalAttrs<JSX.IntrinsicElements> & {\n';
 		for (const name_1 of templateScriptData.components) {
 			const names = new Set([name_1, hyphenate(name_1)]);
 			for (const name_2 of names) {
@@ -255,7 +256,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		code += '/* Completion: Props */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.globalElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
-			code += `({} as Omit<typeof __VLS_componentPropsBase['${name}'], keyof __VLS_GlobalAttrs>)[''];\n`;
+			code += `__VLS_componentPropsBase['${name}'][''];\n`
 		}
 		code += '/* Completion: Global Attrs */\n';
 		code += `({} as __VLS_GlobalAttrs)[''];\n`;
@@ -1570,7 +1571,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					let bind: CompletionItem[];
 					let on: CompletionItem[];
 					{
-						const searchText = `({} as Omit<typeof __VLS_componentPropsBase['${tagName}'], keyof __VLS_GlobalAttrs>)['`;
+						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
 						let offset = text.indexOf(searchText);
 						if (offset === -1) continue;
 						offset += searchText.length;
