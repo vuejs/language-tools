@@ -125,9 +125,10 @@ export function createLanguageServiceHost(
 				},
 			};
 
-			const config = ts.readJsonConfigFile(tsConfig, ts.sys.readFile);
-			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(tsConfig));
-			if (upath.basename(tsConfig) === 'jsconfig.json') {
+			const realTsConfig = ts.sys.realpath!(tsConfig);
+			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
+			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig));
+			if (upath.basename(realTsConfig) === 'jsconfig.json') {
 				content.options.allowJs = true;
 			}
 			return content;
