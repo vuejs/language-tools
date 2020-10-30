@@ -29,7 +29,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 		tags,
 	};
 
-	function worker(_code: string, node: TemplateChildNode | RootNode, parents: (TemplateChildNode | RootNode)[], dontCreateBlock = false): string {
+	function worker(_code: string, node: TemplateChildNode | RootNode, parents: (TemplateChildNode | RootNode)[]): string {
 		if (node.type === NodeTypes.ROOT) {
 			for (const childNode of node.children) {
 				_code += `{\n`;
@@ -38,7 +38,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			}
 		}
 		else if (node.type === NodeTypes.ELEMENT) { // TODO: should not has indent
-			if (!dontCreateBlock) _code += `{\n`;
+			_code += `{\n`;
 			{
 				tags.add(node.tag);
 				writeImportSlots(node);
@@ -52,7 +52,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					_code = worker(_code, childNode, parents.concat(node));
 				}
 			}
-			if (!dontCreateBlock) _code += '}\n';
+			_code += '}\n';
 
 			function writeImportSlots(node: ElementNode) {
 				for (const prop of node.props) {
@@ -415,9 +415,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 		}
 		else if (node.type === NodeTypes.IF) {
 			// v-if / v-else-if / v-else
-			let childHasBlock = true;
-			if (node.codegenNode) childHasBlock = node.loc.source.substring(1, 9) !== 'template';
-
 			let firstIf = true;
 
 			for (const branch of node.branches) {
@@ -449,7 +446,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							_code += `) {\n`;
 						}
 						for (const childNode of branch.children) {
-							_code = worker(_code, childNode, parents.concat([node, branch]), childHasBlock);
+							_code = worker(_code, childNode, parents.concat([node, branch]));
 						}
 						_code += '}\n';
 					}
@@ -457,7 +454,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				else {
 					_code += 'else {\n';
 					for (const childNode of branch.children) {
-						_code = worker(_code, childNode, parents.concat([node, branch]), childHasBlock);
+						_code = worker(_code, childNode, parents.concat([node, branch]));
 					}
 					_code += '}\n';
 				}
@@ -469,8 +466,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			const value = node.parseResult.value;
 			const key = node.parseResult.key;
 			const index = node.parseResult.index;
-			let childHasBlock = true;
-			if (node.codegenNode) childHasBlock = node.codegenNode.loc.source.substring(1, 9) !== 'template';
 
 			if (value
 				&& source.type === NodeTypes.SIMPLE_EXPRESSION
@@ -521,7 +516,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					_code += ` = 0;\n`;
 				}
 				for (const childNode of node.children) {
-					_code = worker(_code, childNode, parents.concat(node), childHasBlock);
+					_code = worker(_code, childNode, parents.concat(node));
 				}
 				_code += '}\n';
 			}

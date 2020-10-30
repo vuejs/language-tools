@@ -2,6 +2,7 @@ import * as htmlparser2 from 'htmlparser2';
 import { Node, DataNode, Element } from 'domhandler';
 import { ElementType } from 'domelementtype';
 import * as prettyhtml from '@starptech/prettyhtml';
+import { createIndent } from '@volar/shared';
 
 let pugLoader: (source: string) => string = require('pug-plain-loader');
 pugLoader = pugLoader.bind({ addDependency: () => { } }); // patch loader
@@ -58,7 +59,7 @@ export function htmlToPug(html: string) {
 	return pug;
 
 	function getIndent(indent: number) {
-		return useTabs ? '\t'.repeat(indent) : ' '.repeat(indent * tabSize);
+		return createIndent(useTabs, tabSize, indent);
 	}
 	function worker(node: Node, inlineChild: boolean, indent: number = 0) {
 		if (node.type === ElementType.Text) {

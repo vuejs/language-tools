@@ -667,7 +667,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				const links = cssLanguageService.findDocumentLinks(textDocument, stylesheet, documentContext);
 				for (const link of links) {
 					if (!link.target) continue;
-					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss')) continue;
+					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
 					if (!ts.sys.fileExists(uriToFsPath(link.target))) continue;
 					if (linkStyles.find(l => l[0].uri === link.target)) continue; // Loop
 
@@ -676,9 +676,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, documentVersion++, text);
-					const cssLanguageService = globalServices.getCssService(lang);
-					linkStyles.push([doc, cssLanguageService]);
-					findLinks(doc, cssLanguageService);
+					const stylesheet = globalServices.getCssService(lang).parseStylesheet(doc);
+					linkStyles.push([doc, stylesheet]);
+					findLinks(doc, stylesheet);
 				}
 			}
 		}

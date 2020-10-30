@@ -8,6 +8,7 @@ import { SourceFile } from '../sourceFiles';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import { createIndent } from '@volar/shared';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, range: Range, options: FormattingOptions) => {
@@ -27,6 +28,10 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 
 	const tsEdits = getTsFormattingEdits();
 	newDocument = applyTextEdits(newDocument, filterEditsByRange(tsEdits));
+	sourceFile.update(newDocument);
+
+	const indentTextEdits = patchInterpolationIndent();
+	newDocument = applyTextEdits(newDocument, filterEditsByRange(indentTextEdits));
 	sourceFile.update(document);
 
 	if (newDocument.getText() === document.getText()) return;
@@ -38,6 +43,56 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 	const textEdit = TextEdit.replace(editRange, newDocument.getText());
 	return [textEdit];
 
+	function patchInterpolationIndent() {
+		const indentTextEdits: TextEdit[] = [];
+		for (const tsSourceMap of sourceFile.getTsSourceMaps()) {
+			if (!tsSourceMap.isInterpolation)
+				continue;
+
+			for (const maped of tsSourceMap) {
+				if (!maped.data.capabilities.formatting)
+					continue;
+
+				const textRange = {
+					start: newDocument.positionAt(maped.vueRange.start),
+					end: newDocument.positionAt(maped.vueRange.end),
+				};
+				const text = newDocument.getText(textRange);
+				if (text.indexOf('\n') === -1)
+					continue;
+				const lines = text.split('\n');
+				const removeIndent = getRemoveIndent();
+				const baseIndent = getBaseIndent();
+				const pushIndent = getPushIndent();
+				for (let i = 1; i < lines.length; i++) {
+					const line = lines[i];
+					if (line.startsWith(removeIndent)) {
+						lines[i] = line.replace(removeIndent, baseIndent + pushIndent);
+					}
+					else {
+						lines[i] = baseIndent + line.trimStart();
+					}
+				}
+				indentTextEdits.push({
+					newText: lines.join('\n'),
+					range: textRange,
+				});
+
+				function getRemoveIndent() {
+					return lines[1].substr(0, lines[1].length - lines[1].trimStart().length);
+				}
+				function getBaseIndent() {
+					const startPos = newDocument.positionAt(maped.vueRange.start);
+					const startLineText = newDocument.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
+					return startLineText.substr(0, startLineText.length - startLineText.trimStart().length);
+				}
+				function getPushIndent() {
+					return createIndent(!options.insertSpaces, options.tabSize, 1);
+				}
+			}
+		}
+		return indentTextEdits;
+	}
 	function filterEditsByRange(textEdits: TextEdit[]) {
 		return textEdits.filter(edit => edit.range.start.line >= range.start.line && edit.range.end.line <= range.end.line);
 	}
