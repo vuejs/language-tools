@@ -63,8 +63,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let result: SelectionRange[] = [];
 			for (const range of ranges) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
-				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
+					const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
+					for (const cssLoc of sourceMap.findVirtualLocations(range)) {
 						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.virtualDocument, [cssLoc.range.start], sourceMap.stylesheet);
 						for (const selectRange of selectRanges) {
 							const vueLoc = sourceMap.findFirstVueLocation(selectRange.range);

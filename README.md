@@ -94,4 +94,4 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 > Currently supported languages:
 > - template: html, pug
 > - script: js, ts, jsx, tsx
-> - style: css, scss
+> - style: css, scss, less

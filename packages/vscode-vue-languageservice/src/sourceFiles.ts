@@ -451,7 +451,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			return names;
 
 			function worker(sourceMap: CssSourceMap | undefined, doc: TextDocument, ss: css.Stylesheet) {
-				const cssLanguageService = doc.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const cssLanguageService = globalServices.getCssService(doc.languageId);
 				const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
 				for (const s of symbols) {
 					if (s.kind === css.SymbolKind.Class) {
@@ -657,7 +657,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const content = style.content;
 			const documentUri = vue.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, documentVersion++, content);
-			const cssLanguageService = lang === 'scss' ? globalServices.scss : globalServices.css;
+			const cssLanguageService = globalServices.getCssService(lang);
 			const stylesheet = cssLanguageService.parseStylesheet(document);
 			const linkStyles: [TextDocument, css.Stylesheet][] = [];
 			findLinks(document, stylesheet);
@@ -676,9 +676,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, documentVersion++, text);
-					const ss = lang === 'scss' ? globalServices.scss.parseStylesheet(doc) : globalServices.css.parseStylesheet(doc);
-					linkStyles.push([doc, ss]);
-					findLinks(doc, ss);
+					const cssLanguageService = globalServices.getCssService(lang);
+					linkStyles.push([doc, cssLanguageService]);
+					findLinks(doc, cssLanguageService);
 				}
 			}
 		}

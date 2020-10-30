@@ -23,7 +23,7 @@ export const triggerCharacter = {
 	html: ['<', ':', '@'],
 	css: ['.', '@'],
 };
-export const wordPatterns = {
+export const wordPatterns: { [lang: string]: RegExp } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
 	less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
 	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
@@ -241,10 +241,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				return result;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
 				const virtualLocs = sourceMap.findVirtualLocations(range);
 				for (const virtualLoc of virtualLocs) {
-					const wordPattern = sourceMap.virtualDocument.languageId === 'scss' ? wordPatterns.scss : wordPatterns.css;
+					const wordPattern = wordPatterns[sourceMap.virtualDocument.languageId] ?? wordPatterns.css;
 					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.virtualDocument);
 					const cssResult = cssLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {

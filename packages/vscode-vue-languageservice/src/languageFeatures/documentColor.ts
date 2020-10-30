@@ -17,7 +17,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
 				let colors = cssLanguageService.findDocumentColors(sourceMap.virtualDocument, sourceMap.stylesheet);
 				for (const color of colors) {
 					const vueLoc = sourceMap.findFirstVueLocation(color.range);

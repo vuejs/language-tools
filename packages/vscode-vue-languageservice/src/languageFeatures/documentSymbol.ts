@@ -107,7 +107,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
 				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {

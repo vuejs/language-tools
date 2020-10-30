@@ -130,7 +130,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getCssResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = sourceMap.virtualDocument.languageId === 'scss' ? globalServices.scss : globalServices.css;
+				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
 				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
 					const cssEdits = cssLanguageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
 					if (!cssEdits) continue;

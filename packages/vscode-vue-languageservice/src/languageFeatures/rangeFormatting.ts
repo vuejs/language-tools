@@ -48,7 +48,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				const newStyleText = prettier.format(sourceMap.virtualDocument.getText(), {
 					tabWidth: options.tabSize,
 					useTabs: !options.insertSpaces,
-					parser: sourceMap.virtualDocument.languageId === 'scss' ? 'scss' : 'css',
+					parser: sourceMap.virtualDocument.languageId,
 				});
 
 				const vueRange = {
