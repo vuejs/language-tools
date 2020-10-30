@@ -224,7 +224,17 @@ export function createLanguageServiceHost(
 		function createLanguageServiceHost() {
 
 			const host: LanguageServiceHost = {
-				...ts.sys as any,
+				// ts
+				getNewLine: () => ts.sys.newLine,
+				useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
+				readFile: ts.sys.readFile,
+				writeFile: ts.sys.writeFile,
+				fileExists: ts.sys.fileExists,
+				directoryExists: ts.sys.directoryExists,
+				getDirectories: ts.sys.getDirectories,
+				readDirectory: ts.sys.readDirectory,
+				realpath: ts.sys.realpath,
+				// custom
 				getProjectVersion: () => projectVersion.toString(),
 				getScriptFileNames,
 				getScriptVersion,
