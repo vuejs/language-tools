@@ -8,7 +8,7 @@ import { SourceFile } from '../sourceFiles';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
-import { createIndent } from '@volar/shared';
+const pugBeautify = require('pug-beautify');
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, range: Range, options: FormattingOptions) => {
@@ -21,9 +21,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 export function formattingWorker(sourceFile: SourceFile, document: TextDocument, options: FormattingOptions, range: Range, tsLanguageService: ts2.LanguageService): TextEdit[] | undefined {
 	let newDocument = document;
 
+	const pugEdits = getPugFormattingEdits();
 	const htmlEdits = getHtmlFormattingEdits();
 	const cssEdits = getCssFormattingEdits();
-	newDocument = applyTextEdits(document, filterEditsByRange([...htmlEdits, ...cssEdits]));
+	newDocument = applyTextEdits(document, filterEditsByRange([
+		...pugEdits,
+		...htmlEdits,
+		...cssEdits,
+	]));
 	sourceFile.update(newDocument);
 
 	const tsEdits = getTsFormattingEdits();
@@ -63,14 +68,10 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				const lines = text.split('\n');
 				const removeIndent = getRemoveIndent();
 				const baseIndent = getBaseIndent();
-				const pushIndent = getPushIndent();
 				for (let i = 1; i < lines.length; i++) {
 					const line = lines[i];
 					if (line.startsWith(removeIndent)) {
-						lines[i] = line.replace(removeIndent, baseIndent + pushIndent);
-					}
-					else {
-						lines[i] = baseIndent + line.trimStart();
+						lines[i] = line.replace(removeIndent, baseIndent);
 					}
 				}
 				indentTextEdits.push({
@@ -79,15 +80,13 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				});
 
 				function getRemoveIndent() {
-					return lines[1].substr(0, lines[1].length - lines[1].trimStart().length);
+					const lastLine = lines[lines.length - 1];
+					return lastLine.substr(0, lastLine.length - lastLine.trimStart().length);
 				}
 				function getBaseIndent() {
 					const startPos = newDocument.positionAt(maped.vueRange.start);
 					const startLineText = newDocument.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
 					return startLineText.substr(0, startLineText.length - startLineText.trimStart().length);
-				}
-				function getPushIndent() {
-					return createIndent(!options.insertSpaces, options.tabSize, 1);
 				}
 			}
 		}
@@ -140,6 +139,25 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
 				};
 				const textEdit = TextEdit.replace(vueRange, newHtml);
+				result.push(textEdit);
+			}
+		}
+		return result;
+	}
+	function getPugFormattingEdits() {
+		const result: TextEdit[] = [];
+		for (const sourceMap of sourceFile.getPugSourceMaps()) {
+			for (const maped of sourceMap) {
+				let newPug = pugBeautify(sourceMap.virtualDocument.getText(), {
+					tab_size: options.tabSize,
+					fill_tab: !options.insertSpaces,
+				});
+				newPug = '\n' + newPug.trim() + '\n';
+				const vueRange = {
+					start: sourceMap.vueDocument.positionAt(maped.vueRange.start),
+					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
+				};
+				const textEdit = TextEdit.replace(vueRange, newPug);
 				result.push(textEdit);
 			}
 		}

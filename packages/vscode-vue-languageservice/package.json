@@ -18,6 +18,7 @@
 		"@vue/shared": "latest",
 		"upath": "latest",
 		"jsonc-parser": "latest",
-		"prettier": "latest"
+		"prettier": "latest",
+		"pug-beautify": "latest"
 	}
 }

@@ -27,6 +27,3 @@ export function languageIdToExtName(languageId: string) {
 export function randomStr() {
     return [...Array(10)].map(i => (~~(Math.random() * 36)).toString(36)).join('');
 }
-export function createIndent(useTabs: boolean, tabSize: number, indent: number) {
-    return useTabs ? '\t'.repeat(indent) : ' '.repeat(indent * tabSize);
-}
