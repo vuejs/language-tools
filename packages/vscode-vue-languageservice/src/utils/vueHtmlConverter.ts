@@ -282,7 +282,11 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						for (const prop_2 of transformResult.props) {
 							const value = prop_2.value;
 							_code += `${var_on} = {\n`
-							_code += `'${key_1}': `;
+							mappingWithQuotes(undefined, key_1, key_1, capabilitiesSet.htmlTagOrAttr, [{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							}]);
+							_code += `: `;
 
 							if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
 								mapping(undefined, value.content, value.content, MapedMode.Offset, capabilitiesSet.all, [{
