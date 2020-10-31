@@ -22,12 +22,12 @@ import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
 
 enum SearchTexts {
-	Context = '/* SearchTexts.Context */',
-	Components = '/* SearchTexts.Components */',
-	Props = '/* SearchTexts.Props */',
-	SetupReturns = '/* SearchTexts.SetupReturns */',
-	ScriptSetupExports = '/* SearchTexts.ScriptSetupExports */',
-	HtmlElements = '/* SearchTexts.HtmlElements */',
+	Context = '/* __VLS_.SearchTexts.Context */',
+	Components = '/* __VLS_.SearchTexts.Components */',
+	Props = '/* __VLS_.SearchTexts.Props */',
+	SetupReturns = '/* __VLS_.SearchTexts.SetupReturns */',
+	ScriptSetupExports = '/* __VLS_.SearchTexts.ScriptSetupExports */',
+	HtmlElements = '/* __VLS_.SearchTexts.HtmlElements */',
 }
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
@@ -105,26 +105,24 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		return {};
 	});
-	const scriptSetupDeclarePropsLoc = computed(() => {
+	const scriptSetupDeclares = computed(() => {
+		const declares = new Map<string, { start: number, end: number }>();
 		if (descriptor.scriptSetup) {
 			const sourceFile = ts.createSourceFile('', descriptor.scriptSetup.content, ts.ScriptTarget.Latest);
-			let propsNode: ts.Node | undefined;
 			sourceFile.forEachChild(node => {
 				if (!ts.isVariableStatement(node))
 					return
 				if (!node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword))
 					return;
-				if (!node.declarationList.declarations.find(d => ts.isIdentifier(d.name) && d.name.escapedText === 'props'))
-					return;
-				propsNode = node;
+
+				for (const declaration of node.declarationList.declarations) {
+					if (ts.isIdentifier(declaration.name)) {
+						declares.set(declaration.name.escapedText as string, { start: node.pos, end: node.end });
+					}
+				}
 			});
-			if (propsNode) {
-				return {
-					start: propsNode.pos,
-					end: propsNode.end,
-				};
-			}
 		}
+		return declares;
 	});
 
 	// template script(document + source maps)
@@ -542,12 +540,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const lang = descriptor.scriptSetup.lang;
 			const uri = `${vue.uri}.script.setup.declare.${lang}`;
 			const languageId = syntaxToLanguageId(lang);
-			const hasDefaultExport = templateScriptData.scriptSetupExports.includes('default');
-			const content = [
-				descriptor.scriptSetup.content,
-				...(!hasDefaultExport ? [
-					`declare const props: {};`,
-					`declare const emits: {};`,
+			const hasDefaultExport = hasExportDefault(descriptor.scriptSetup.content);
+			let content = descriptor.scriptSetup.content;
+			if (!hasDefaultExport) {
+				content += [
+					``,
+					scriptSetupDeclares.value.has('props') ? `// has props` : `declare const props: {};`,
+					scriptSetupDeclares.value.has('emits') ? `// has emits` : `declare const emits: {};`, // TODO
 					`declare const __VLS_defineComponent: (typeof import('@vue/runtime-dom'))['defineComponent'];`,
 					`const __VLS_options = __VLS_defineComponent({ setup: () => { } });`,
 					`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
@@ -557,9 +556,20 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					`	new(): InstanceType<typeof __VLS_options> & typeof props,`,
 					`}`,
 					`export default __VLS_export;`,
-				] : []),
-			].join('\n');
+				].join('\n');
+			}
 			return TextDocument.create(uri, languageId, documentVersion++, content);
+
+			function hasExportDefault(code: string) {
+				const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.Latest);
+				let result = false;
+				sourceFile.forEachChild(node => {
+					if (ts.isExportAssignment(node)) {
+						result = true;
+					}
+				});
+				return result;
+			}
 		}
 	});
 	const scriptSetupDocument = computed(() => {
@@ -568,13 +578,16 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const uri = `${vue.uri}.script.setup.${lang}`;
 			const languageId = syntaxToLanguageId(lang);
 			const setup = descriptor.scriptSetup.setup;
-			const content = [
-				scriptSetupDeclarePropsLoc.value
-					? (descriptor.scriptSetup.content.substring(0, scriptSetupDeclarePropsLoc.value.start)
-						+ ' '.repeat(scriptSetupDeclarePropsLoc.value.end - scriptSetupDeclarePropsLoc.value.start)
-						+ descriptor.scriptSetup.content.substring(scriptSetupDeclarePropsLoc.value.end))
-					: descriptor.scriptSetup.content,
-				``,
+			let content = '';
+			let start = 0;
+			const locs = [...scriptSetupDeclares.value.values()].sort((a, b) => a.start - b.start);
+			for (const loc of locs) {
+				content += descriptor.scriptSetup.content.substring(start, loc.start);
+				content += ' '.repeat(loc.end - loc.start);
+				start = loc.end;
+			}
+			content += descriptor.scriptSetup.content.substring(start);
+			content += [
 				`declare const __VLS_options: typeof import('./${upath.basename(vue.fileName)}.script.setup.declare').default;`,
 				`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
 				`declare var [${setup}]: typeof __VLS_parameters;`,
@@ -760,34 +773,32 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const sourceMaps: TsSourceMap[] = [];
 		// .vue.script.setup.declare.ts
 		const document0 = scriptSetupDeclareDocument.value;
-		if (document0 && descriptor.scriptSetup && scriptSetupDeclarePropsLoc.value) {
-			const vueStart = descriptor.scriptSetup.loc.start;
-			const sourceMap = new TsSourceMap(vue.document, document0, false, { foldingRanges: true });
-			const virtualRange = scriptSetupDeclarePropsLoc.value;
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: true,
-						references: true,
-						rename: true,
-						diagnostic: true,
-						formatting: true,
-						completion: true,
-						semanticTokens: true,
+		if (document0 && descriptor.scriptSetup) {
+			for (const [dec, loc] of scriptSetupDeclares.value) {
+				const vueStart = descriptor.scriptSetup.loc.start;
+				const sourceMap = new TsSourceMap(vue.document, document0, false, { foldingRanges: true });
+				sourceMap.add({
+					data: {
+						vueTag: 'script',
+						capabilities: {
+							basic: true,
+							references: true,
+							rename: true,
+							diagnostic: true,
+							formatting: true,
+							completion: true,
+							semanticTokens: true,
+						},
 					},
-				},
-				mode: MapedMode.Offset,
-				vueRange: {
-					start: vueStart + virtualRange.start,
-					end: vueStart + virtualRange.end,
-				},
-				virtualRange: {
-					start: virtualRange.start,
-					end: virtualRange.end,
-				},
-			});
-			sourceMaps.push(sourceMap);
+					mode: MapedMode.Offset,
+					vueRange: {
+						start: vueStart + loc.start,
+						end: vueStart + loc.end,
+					},
+					virtualRange: loc,
+				});
+				sourceMaps.push(sourceMap);
+			}
 		}
 		// img.vue.setup.ts
 		const document = scriptSetupDocument.value;
@@ -797,13 +808,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				const vueStart = descriptor.scriptSetup.loc.start;
 				const vueEnd = descriptor.scriptSetup.loc.end;
 				const virtualRanges: { start: number, end: number }[] = [];
-				if (scriptSetupDeclarePropsLoc.value) {
-					virtualRanges.push({ start: 0, end: scriptSetupDeclarePropsLoc.value.start });
-					virtualRanges.push({ start: scriptSetupDeclarePropsLoc.value.end, end: vueEnd - vueStart });
+				let start = 0;
+				const locs = [...scriptSetupDeclares.value.values()].sort((a, b) => a.start - b.start);
+				for (const loc of locs) {
+					virtualRanges.push({ start: start, end: loc.start });
+					start = loc.end;
 				}
-				else {
-					virtualRanges.push({ start: 0, end: vueEnd - vueStart })
-				}
+				virtualRanges.push({ start: start, end: vueEnd - vueStart });
 				for (const virtualRange of virtualRanges) {
 					sourceMap.add({
 						data: {
@@ -1090,7 +1101,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vue.fileName }).descriptor;
 		const versionsBeforeUpdate = [
 			scriptDocument.value?.version,
-			scriptSetupDocument.value?.version,
+			scriptSetupDeclareDocument.value?.version,
 			templateScriptDocument.value?.version,
 		];
 
@@ -1106,7 +1117,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		const versionsAfterUpdate = [
 			scriptDocument.value?.version,
-			scriptSetupDocument.value?.version,
+			scriptSetupDeclareDocument.value?.version,
 			templateScriptDocument.value?.version,
 		];
 
