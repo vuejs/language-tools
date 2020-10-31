@@ -1,4 +1,5 @@
 import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
+import { TransformContext, transformOn } from '@vue/compiler-core';
 import { MapedMode, TsMappingData, Mapping, MapedNodeTypes } from './sourceMaps';
 import { camelize, hyphenate } from '@vue/shared';
 
@@ -246,77 +247,66 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				_code += '};\n';
 			}
 			function writeOns(node: ElementNode) {
+				// @ts-ignore
+				const context: TransformContext = {
+					onError: () => { },
+					helperString: str => str.toString(),
+					cacheHandlers: false,
+					prefixIdentifiers: false,
+				};
+
 				for (const prop of node.props) {
-					const varName = `__VLS_${elementIndex++}`;
 					if (
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.arg
-						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-						&& !prop.exp?.isConstant // style='z-index: 2' will compile to {'z-index':'2'}
 						&& prop.name === 'on'
 					) {
-						const propName = prop.arg.content;
-						const propName2 = camelize('on-' + propName);
+						const var_on = `__VLS_${elementIndex++}`;
+						const key_1 = prop.arg.content;
+						const key_2 = camelize('on-' + key_1);
 
-						_code += `let ${varName}!: { '${propName}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}'][`;
-						mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
+						_code += `let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentEmits['${node.tag}'][`;
+						mappingWithQuotes(undefined, key_1, key_1, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
 						}]);
 						_code += `], typeof __VLS_componentProps['${node.tag}'][`;
-						mappingWithQuotes(undefined, propName2, propName, capabilitiesSet.htmlTagOrAttr, [{
+						mappingWithQuotes(undefined, key_2, key_1, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
 						}]);
 						_code += `]> };\n`;
 
-						if (prop.exp) {
-							const varExpOriginal = `__VLS_${elementIndex++}`;
-							const varExpWrapFn = `__VLS_${elementIndex++}`;
-							const varExpFinal = `__VLS_${elementIndex++}`;
+						const transformResult = transformOn(prop, node, context);
+						for (const prop_2 of transformResult.props) {
+							const value = prop_2.value;
+							_code += `${var_on} = {\n`
+							_code += `'${key_1}': `;
 
-							_code += `const ${varExpOriginal} = (() => { return ${prop.exp.content} })();\n`;
-							_code += `const ${varExpWrapFn} = () => { ${prop.exp.content} };\n`;
-							_code += `let ${varExpFinal}!: __VLS_PickFunc<typeof ${varExpOriginal}, typeof ${varExpWrapFn}>;\n`;
-							_code += `${varName} = {\n`
-							mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							}]);
-							_code += `: ${varExpFinal},\n`;
-							_code += `};\n`;
-						}
-						else {
-							_code += `${varName} = {\n`
-							mappingWithQuotes(undefined, propName, propName, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							}]);
-							_code += `: undefined,\n`;
-							_code += `};\n`;
-						}
-
-						if (prop.exp) {
-							_code += `${varName} = {\n`
-							_code += `'${propName}': `;
-							if (prop.exp.content.indexOf('=>') >= 0) {
-								_code += `(`;
-								mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
-									start: prop.exp.loc.start.offset,
-									end: prop.exp.loc.end.offset,
+							if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
+								mapping(undefined, value.content, value.content, MapedMode.Offset, capabilitiesSet.all, [{
+									start: value.loc.start.offset,
+									end: value.loc.end.offset,
 								}])
-								_code += `),\n`;
 							}
-							else {
-								_code += `() => { `;
-								mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
-									start: prop.exp.loc.start.offset,
-									end: prop.exp.loc.end.offset,
-								}])
-								_code += ` },\n`;
+							else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
+								for (const child of value.children) {
+									if (typeof child === 'string') {
+										_code += child;
+									}
+									else if (typeof child === 'symbol') {
+										// ignore
+									}
+									else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
+										mapping(undefined, child.content, child.content, MapedMode.Offset, capabilitiesSet.all, [{
+											start: child.loc.start.offset,
+											end: child.loc.end.offset,
+										}])
+									}
+								}
 							}
-							_code += `};\n`;
+							_code += `\n};\n`;
 						}
 					}
 				}
