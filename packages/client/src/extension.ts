@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { registerDocumentFormattingEditProvider } from './format';
 import { registerDocumentSemanticTokensProvider } from './semanticTokens';
+import { registerEmmetConfigurationRequestProvider } from './emmetConfig';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -42,6 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
 	registerDocumentFormattingEditProvider(apiClient);
+	registerEmmetConfigurationRequestProvider(apiClient);
 	registerDocumentSemanticTokensProvider(docClient);
 
 	function tagRequestor(document: vscode.TextDocument, position: vscode.Position) {

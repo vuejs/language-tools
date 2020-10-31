@@ -17,6 +17,9 @@ import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import { getWordRange } from '../utils/commons';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import * as emmet from 'vscode-emmet-helper';
+import * as getEmbeddedDocument from './embeddedDocument';
+import { languageIdToSyntax } from '@volar/shared';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
@@ -30,7 +33,9 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 };
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	return (document: TextDocument, position: Position, context?: CompletionContext) => {
+	const getEmbeddedDoc = getEmbeddedDocument.register(sourceFiles);
+
+	return (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.EmmetConfiguration>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 		const range = Range.create(position, position);
@@ -43,6 +48,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult.items.length) return cssResult;
+
+		return getEmmetResult();
 
 		function getTsResult(sourceFile: SourceFile) {
 			const result: CompletionList = {
@@ -272,6 +279,29 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				}
 			}
 			return result;
+		}
+		async function getEmmetResult() {
+			if (!getEmmetConfig) return;
+			const embededDoc = getEmbeddedDoc(document, { start: position, end: position });
+			if (embededDoc) {
+				const emmetConfig = await getEmmetConfig(embededDoc.document.languageId);
+				if (emmetConfig) {
+					let syntax = languageIdToSyntax(embededDoc.document.languageId);
+					if (syntax === 'vue') syntax = 'html';
+					const emmetResult = emmet.doComplete(embededDoc.document, embededDoc.range.start, syntax, emmetConfig);
+					if (emmetResult && embededDoc.sourceMap) {
+						for (const item of emmetResult.items) {
+							if (item.textEdit) {
+								item.textEdit = translateTextEdit(item.textEdit, embededDoc.sourceMap);
+							}
+							if (item.additionalTextEdits) {
+								item.additionalTextEdits = translateAdditionalTextEdits(item.additionalTextEdits, embededDoc.sourceMap);
+							}
+						}
+					}
+					return emmetResult;
+				}
+			}
 		}
 	}
 }

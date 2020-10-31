@@ -31,15 +31,6 @@ export interface ISourceMap {
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any, any> = new RequestType('html/tag');
 }
-export namespace GetEmbeddedLanguageRequest {
-	export const type: RequestType<{
-		textDocument: TextDocumentIdentifier,
-		range: Range,
-	}, {
-		id: string,
-		range: Range,
-	} | undefined, any, any> = new RequestType('vue.embeddedLanguage');
-}
 export namespace GetFormattingSourceMapsRequest {
 	export const type: RequestType<{
 		textDocument: TextDocumentIdentifier,
@@ -57,6 +48,9 @@ export namespace FormatAllScriptsRequest {
 }
 export namespace WriteAllDebugFilesRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.writeAllDebugFiles');
+}
+export namespace EmmetConfigurationRequest {
+	export const type: RequestType<string, any, any, any> = new RequestType('volar.getEmmetConfiguration');
 }
 
 // semantic tokens

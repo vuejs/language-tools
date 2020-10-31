@@ -4,7 +4,7 @@ export * from './requests';
 export function sleep(ms = 0) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-export function extNameToLanguageId(extName: string) {
+export function syntaxToLanguageId(extName: string) {
     switch (extName) {
         case 'js': return 'javascript';
         case 'ts': return 'typescript';
@@ -14,7 +14,7 @@ export function extNameToLanguageId(extName: string) {
     }
     return extName;
 }
-export function languageIdToExtName(languageId: string) {
+export function languageIdToSyntax(languageId: string) {
     switch (languageId) {
         case 'javascript': return 'js';
         case 'typescript': return 'ts';

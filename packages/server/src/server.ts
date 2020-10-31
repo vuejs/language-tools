@@ -30,10 +30,10 @@ import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	TagCloseRequest,
-	GetEmbeddedLanguageRequest,
 	FormatAllScriptsRequest,
 	GetFormattingSourceMapsRequest,
 	uriToFsPath,
+	EmmetConfigurationRequest,
 } from '@volar/shared';
 import * as upath from 'upath';
 
@@ -103,11 +103,6 @@ function initLanguageService(rootPath: string) {
 		if (!document) return;
 		return host.get(document.uri)?.doAutoClose(document, handler.position);
 	});
-	connection.onRequest(GetEmbeddedLanguageRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return host.get(document.uri)?.getEmbeddedLanguage(document, handler.range);
-	});
 	connection.onRequest(GetFormattingSourceMapsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
@@ -157,10 +152,15 @@ function initLanguageService(rootPath: string) {
 		progress.done();
 	});
 
-	connection.onCompletion(handler => {
+	connection.onCompletion(async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host.get(document.uri)?.doComplete(document, handler.position, handler.context);
+		return host.get(document.uri)?.doComplete(
+			document,
+			handler.position,
+			handler.context,
+			syntax => connection.sendRequest(EmmetConfigurationRequest.type, syntax),
+		);
 	});
 	connection.onCompletionResolve(async item => {
 		if (resolveCache && resolveCache.label === item.label && resolveCache.kind === item.kind) {

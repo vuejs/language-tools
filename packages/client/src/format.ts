@@ -7,7 +7,7 @@ import {
 } from 'vscode-languageclient';
 import {
     GetFormattingSourceMapsRequest,
-    languageIdToExtName,
+    languageIdToSyntax,
     randomStr,
     ISourceMap,
 } from '@volar/shared';
@@ -139,7 +139,7 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
                 }
             }
             async function getEdits(languageId: string, content: string, vueRegion: string) {
-                const lang = languageIdToExtName(languageId);
+                const lang = languageIdToSyntax(languageId);
                 const tempUri = vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), randomStr() + '.' + path.basename(document.uri.fsPath) + '.' + vueRegion + '.' + lang));
                 await vscode.workspace.fs.writeFile(tempUri, Buffer.from(content));
                 await vscode.workspace.openTextDocument(tempUri);
@@ -152,7 +152,7 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
                 return result;
             }
             async function tryFormatter(languageId: string) {
-                const lang = languageIdToExtName(languageId);
+                const lang = languageIdToSyntax(languageId);
                 const tempUri = vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), randomStr() + '.' + lang));
                 await vscode.workspace.fs.writeFile(tempUri, Buffer.from(''));
                 const tempDoc = await vscode.workspace.openTextDocument(tempUri);

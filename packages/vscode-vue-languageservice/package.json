@@ -19,6 +19,7 @@
 		"upath": "latest",
 		"jsonc-parser": "latest",
 		"prettier": "latest",
-		"pug-beautify": "latest"
+		"pug-beautify": "latest",
+		"vscode-emmet-helper": "latest"
 	}
 }

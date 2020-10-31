@@ -4,11 +4,11 @@ import {
 } from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFiles';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as getEmbeddedLanguage from './embeddedLanguage';
+import * as getEmbeddedDocument from './embeddedDocument';
 import * as globalServices from '../globalServices';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
-	const getLang = getEmbeddedLanguage.register(sourceFiles);
+	const getEmbeddedDoc = getEmbeddedDocument.register(sourceFiles);
 
 	return (document: TextDocument, position: Position): string | undefined | null => {
 		const sourceFile = sourceFiles.get(document.uri);
@@ -20,8 +20,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			return htmlResult;
 		}
 
-		const lang = getLang(document, { start: position, end: position });
-		if (lang?.id === 'vue') {
+		const lang = getEmbeddedDoc(document, { start: position, end: position })?.document.languageId;
+		if (lang === 'vue') {
 			return globalServices.html.doTagComplete(document, position, sourceFile.getVueHtmlDocument());
 		}
 

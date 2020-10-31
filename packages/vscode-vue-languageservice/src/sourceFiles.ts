@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
-import { uriToFsPath, sleep, extNameToLanguageId } from '@volar/shared';
+import { uriToFsPath, sleep, syntaxToLanguageId } from '@volar/shared';
 import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, PugSourceMap } from './utils/sourceMaps';
 import { transformVueHtml } from './utils/vueHtmlConverter';
 import * as ts from 'typescript';
@@ -504,14 +504,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		if (descriptor.script) {
 			const lang = descriptor.script.lang;
 			const uri = `${vue.uri}.script.${lang}`;
-			const languageId = extNameToLanguageId(lang);
+			const languageId = syntaxToLanguageId(lang);
 			const content = descriptor.script.content;
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
 		if (descriptor.scriptSetup) {
 			const lang = 'ts';
 			const uri = `${vue.uri}.script.${lang}`;
-			const languageId = extNameToLanguageId(lang);
+			const languageId = syntaxToLanguageId(lang);
 			const content = [
 				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.setup.0';`,
 				`import { defineComponent } from '@vue/runtime-dom';`,
@@ -533,7 +533,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		if (descriptor.scriptSetup) {
 			const lang = descriptor.scriptSetup.lang;
 			const uri = `${vue.uri}.setup.0.${lang}`;
-			const languageId = extNameToLanguageId(lang);
+			const languageId = syntaxToLanguageId(lang);
 			ts.SyntaxKind
 			const content = [
 				descriptor.scriptSetup.content,
@@ -568,7 +568,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		if (descriptor.scriptSetup) {
 			const lang = descriptor.scriptSetup.lang;
 			const uri = `${vue.uri}.setup.${lang}`;
-			const languageId = extNameToLanguageId(lang);
+			const languageId = syntaxToLanguageId(lang);
 			const setup = descriptor.scriptSetup.setup;
 			const content = [
 				scriptSetupDeclarePropsLoc.value
@@ -704,7 +704,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const templateDocument = computed<TextDocument | undefined>(() => {
 		if (descriptor.template) {
-			const lang = extNameToLanguageId(descriptor.template.lang);
+			const lang = syntaxToLanguageId(descriptor.template.lang);
 			const uri = vue.uri + '.' + lang;
 			const content = descriptor.template.content;
 			const document = TextDocument.create(uri, lang, documentVersion++, content);
