@@ -21,6 +21,15 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
 
+enum SearchTexts {
+	Context = '/* SearchTexts.Context */',
+	Components = '/* SearchTexts.Components */',
+	Props = '/* SearchTexts.Props */',
+	SetupReturns = '/* SearchTexts.SetupReturns */',
+	ScriptSetupExports = '/* SearchTexts.ScriptSetupExports */',
+	HtmlElements = '/* SearchTexts.HtmlElements */',
+}
+
 export type SourceFile = ReturnType<typeof createSourceFile>;
 interface IDescriptorBlock {
 	lang: string;
@@ -59,9 +68,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const templateScriptData = reactive({
 		projectVersion: undefined as string | undefined,
-		props: [] as string[],
+		context: [] as string[],
 		components: [] as string[],
+		props: [] as string[],
 		setupReturns: [] as string[],
+		scriptSetupExports: [] as string[],
 		htmlElements: [] as string[],
 	});
 	const pugData = computed(() => {
@@ -139,10 +150,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
 			(descriptor.scriptSetup
-				? `import * as __VLS_setups from './${upath.basename(vue.fileName)}.options';`
+				? `import * as __VLS_setups from './${upath.basename(vue.fileName)}.script.setup';`
 				: `// no setups`),
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
-			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
+			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
 			`declare var __VLS_vmUnwrap: typeof __VLS_Options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
 			`declare var __VLS_for_key: string;`,
@@ -263,56 +274,53 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		/* Props */
 		code += `/* Props */\n`;
-		for (const propName of templateScriptData.props) {
+		const propsSet = new Set(templateScriptData.props);
+		const scriptSetupExportsSet = new Set(templateScriptData.scriptSetupExports);
+		for (const propName of templateScriptData.context) {
+			const vueRange = {
+				start: code.length + `var `.length,
+				end: code.length + `var ${propName}`.length,
+			};
 			propMappings.push({
 				data: {
 				},
 				mode: MapedMode.Offset,
-				vueRange: {
-					start: code.length + `var `.length,
-					end: code.length + `var ${propName}`.length,
-				},
+				vueRange: vueRange,
 				virtualRange: {
-					start: code.length + `var ${propName} = __VLS_vm.`.length,
-					end: code.length + `var ${propName} = __VLS_vm.${propName}`.length,
+					start: code.length + `var ${propName} = __VLS_ctx.`.length,
+					end: code.length + `var ${propName} = __VLS_ctx.${propName}`.length,
 				},
 			});
-			propMappings.push({
-				data: {
-					isOptionsProp: true,
-				},
-				mode: MapedMode.Offset,
-				vueRange: {
-					start: code.length + `var `.length,
-					end: code.length + `var ${propName}`.length,
-				},
-				virtualRange: {
-					start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['`.length,
-					end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}`.length,
-				},
-			});
-			if (descriptor.scriptSetup) {
+			code += `var ${propName} = __VLS_ctx.${propName}; `;
+			if (propsSet.has(propName)) {
+				propMappings.push({
+					data: {
+						isOptionsProp: true,
+					},
+					mode: MapedMode.Offset,
+					vueRange: vueRange,
+					virtualRange: {
+						start: code.length + `__VLS_Options.props.`.length,
+						end: code.length + `__VLS_Options.props.${propName}`.length,
+					},
+				});
+				code += `__VLS_Options.props.${propName}; `;
+			}
+			if (scriptSetupExportsSet.has(propName)) {
 				propMappings.push({
 					data: {
 						isSetupExport: true,
 					},
 					mode: MapedMode.Offset,
-					vueRange: {
-						start: code.length + `var `.length,
-						end: code.length + `var ${propName}`.length,
-					},
+					vueRange: vueRange,
 					virtualRange: {
-						start: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}']; __VLS_setups['`.length,
-						end: code.length + `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}']; __VLS_setups['${propName}`.length,
+						start: code.length + `__VLS_setups.`.length,
+						end: code.length + `__VLS_setups.${propName}`.length,
 					},
 				});
+				code += `__VLS_setups.${propName}; `
 			}
-			if (descriptor.scriptSetup) {
-				code += `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}']; __VLS_setups['${propName}'];\n`;
-			}
-			else {
-				code += `var ${propName} = __VLS_vm.${propName}; __VLS_Options['props']['${propName}'];\n`;
-			}
+			code += `\n`;
 		}
 
 		/* Interpolations */
@@ -513,7 +521,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const uri = `${vue.uri}.script.${lang}`;
 			const languageId = syntaxToLanguageId(lang);
 			const content = [
-				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.setup.0';`,
+				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.script.setup.declare';`,
 				`import { defineComponent } from '@vue/runtime-dom';`,
 				`type __VLS_DefaultType<T> = T extends { default: infer K } ? K : new () => ({});`,
 				`type __VLS_NonDefaultType<T> = Omit<T, 'default'>;`,
@@ -529,16 +537,17 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
 	});
-	const scriptSetupDocument0 = computed(() => {
+	const scriptSetupDeclareDocument = computed(() => {
 		if (descriptor.scriptSetup) {
 			const lang = descriptor.scriptSetup.lang;
-			const uri = `${vue.uri}.setup.0.${lang}`;
+			const uri = `${vue.uri}.script.setup.declare.${lang}`;
 			const languageId = syntaxToLanguageId(lang);
-			ts.SyntaxKind
+			const hasDefaultExport = templateScriptData.scriptSetupExports.includes('default');
 			const content = [
 				descriptor.scriptSetup.content,
-				...(!hasExportDefault(descriptor.scriptSetup.content) ? [
-					``,
+				...(!hasDefaultExport ? [
+					`declare const props: {};`,
+					`declare const emits: {};`,
 					`declare const __VLS_defineComponent: (typeof import('@vue/runtime-dom'))['defineComponent'];`,
 					`const __VLS_options = __VLS_defineComponent({ setup: () => { } });`,
 					`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
@@ -552,22 +561,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			].join('\n');
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
-
-		function hasExportDefault(code: string) {
-			const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.Latest);
-			let result = false;
-			sourceFile.forEachChild(node => {
-				if (ts.isExportAssignment(node)) {
-					result = true;
-				}
-			});
-			return result;
-		}
 	});
 	const scriptSetupDocument = computed(() => {
 		if (descriptor.scriptSetup) {
 			const lang = descriptor.scriptSetup.lang;
-			const uri = `${vue.uri}.setup.${lang}`;
+			const uri = `${vue.uri}.script.setup.${lang}`;
 			const languageId = syntaxToLanguageId(lang);
 			const setup = descriptor.scriptSetup.setup;
 			const content = [
@@ -577,7 +575,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						+ descriptor.scriptSetup.content.substring(scriptSetupDeclarePropsLoc.value.end))
 					: descriptor.scriptSetup.content,
 				``,
-				`declare const __VLS_options: typeof import('./${upath.basename(vue.fileName)}.setup.0').default;`,
+				`declare const __VLS_options: typeof import('./${upath.basename(vue.fileName)}.script.setup.declare').default;`,
 				`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
 				`declare var [${setup}]: typeof __VLS_parameters;`,
 			].join('\n');
@@ -610,13 +608,16 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`import __VLS_VM from './${upath.basename(vue.fileName)}.script';`,
 			`import __VLS_Options from './${upath.basename(vue.fileName)}.options';`,
 			`import __VLS_Slots from './${upath.basename(vue.fileName)}.template';`,
-			`declare var __VLS_vm: InstanceType<typeof __VLS_VM>;`,
+			`import * as __VLS_Setup from './${upath.basename(vue.fileName)}.script.setup';`,
+			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
 			`declare var __VLS_ComponentsWrap: typeof __VLS_Options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
-			`__VLS_vm.;`,
-			`__VLS_Components.;`,
-			`__VLS_Options.setup().;`,
-			`({} as JSX.IntrinsicElements).;`,
+			`__VLS_ctx.${SearchTexts.Context};`,
+			`__VLS_Components.${SearchTexts.Components};`,
+			`__VLS_Options.setup().${SearchTexts.SetupReturns};`,
+			`__VLS_Options.props.${SearchTexts.Props};`,
+			`__VLS_Setup.${SearchTexts.ScriptSetupExports};`,
+			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
 			``,
 			`declare global {`,
 			`interface __VLS_GlobalComponents { }`,
@@ -757,8 +758,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const scriptSetupSourceMaps = computed(() => {
 		const sourceMaps: TsSourceMap[] = [];
-		// .vue.setup.0.ts
-		const document0 = scriptSetupDocument0.value;
+		// .vue.script.setup.declare.ts
+		const document0 = scriptSetupDeclareDocument.value;
 		if (document0 && descriptor.scriptSetup && scriptSetupDeclarePropsLoc.value) {
 			const vueStart = descriptor.scriptSetup.loc.start;
 			const sourceMap = new TsSourceMap(vue.document, document0, false, { foldingRanges: true });
@@ -1056,7 +1057,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	const tsDocuments = computed(() => {
 		const docs = new Map<string, TextDocument>();
 		if (scriptDocument.value) docs.set(scriptDocument.value.uri, scriptDocument.value);
-		if (scriptSetupDocument0.value) docs.set(scriptSetupDocument0.value.uri, scriptSetupDocument0.value);
+		if (scriptSetupDeclareDocument.value) docs.set(scriptSetupDeclareDocument.value.uri, scriptSetupDeclareDocument.value);
 		if (scriptSetupDocument.value) docs.set(scriptSetupDocument.value.uri, scriptSetupDocument.value);
 		if (scriptOptionsDocument.value) docs.set(scriptOptionsDocument.value.uri, scriptOptionsDocument.value);
 		if (scriptMainDocument.value) docs.set(scriptMainDocument.value.uri, scriptMainDocument.value);
@@ -1208,34 +1209,40 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		templateScriptData.projectVersion = tsLanguageService.host.getProjectVersion?.();
 
 		const doc = scriptMainDocument.value;
-		const props = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_vm.')));
-		const components = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Components.')));
-		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('__VLS_Options.setup().')));
-		const htmlElements = tsLanguageService.doComplete(doc, doc.positionAt(getCodeEndIndex('({} as JSX.IntrinsicElements).')));
+		const docText = doc.getText();
+		const context = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Context)));
+		const components = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Components)));
+		const props = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Props)));
+		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns)));
+		const scriptSetupExports = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.ScriptSetupExports)));
+		const htmlElements = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.HtmlElements)));
 
-		const propNames = props.map(entry => entry.data.name);
+		const contextNames = context.map(entry => entry.data.name);
 		const componentNames = components.map(entry => entry.data.name);
+		const propNames = props.map(entry => entry.data.name);
 		const setupReturnNames = setupReturns.map(entry => entry.data.name);
+		const scriptSetupExportNames = scriptSetupExports.map(entry => entry.data.name);
 		const htmlElementNames = htmlElements.map(entry => entry.data.name);
 
-		if (eqSet(new Set(propNames), new Set(templateScriptData.props))
+		if (eqSet(new Set(contextNames), new Set(templateScriptData.context))
 			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
+			&& eqSet(new Set(propNames), new Set(templateScriptData.props))
 			&& eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
+			&& eqSet(new Set(scriptSetupExportNames), new Set(templateScriptData.scriptSetupExports))
 			&& eqSet(new Set(htmlElementNames), new Set(templateScriptData.htmlElements))
 		) {
 			return false;
 		}
 
-		templateScriptData.props = propNames;
+		templateScriptData.context = contextNames;
 		templateScriptData.components = componentNames;
+		templateScriptData.props = propNames;
 		templateScriptData.setupReturns = setupReturnNames;
+		templateScriptData.scriptSetupExports = scriptSetupExportNames;
 		templateScriptData.htmlElements = htmlElementNames;
 		updateTemplateScriptDocument();
 		return true;
 
-		function getCodeEndIndex(text: string) {
-			return doc.getText().indexOf(text) + text.length
-		}
 		function eqSet<T>(as: Set<T>, bs: Set<T>) {
 			if (as.size !== bs.size) return false;
 			for (const a of as) if (!bs.has(a)) return false;
@@ -1265,9 +1272,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const scriptSetupDiags_1 = useScriptValidation(scriptSetupDocument, 1);
 		const scriptSetupDiags_2 = useScriptValidation(scriptSetupDocument, 2);
 		const scriptSetupDiags_3 = useScriptValidation(scriptSetupDocument, 3);
-		const scriptSetup0Diags_1 = useScriptValidation(scriptSetupDocument0, 1);
-		const scriptSetup0Diags_2 = useScriptValidation(scriptSetupDocument0, 2);
-		const scriptSetup0Diags_3 = useScriptValidation(scriptSetupDocument0, 3);
+		const scriptSetup0Diags_1 = useScriptValidation(scriptSetupDeclareDocument, 1);
+		const scriptSetup0Diags_2 = useScriptValidation(scriptSetupDeclareDocument, 2);
+		const scriptSetup0Diags_3 = useScriptValidation(scriptSetupDeclareDocument, 3);
 
 		const lastStylesDiags = ref<Diagnostic[]>([]);
 		const lastTemplateDiags = ref<Diagnostic[]>([]);
