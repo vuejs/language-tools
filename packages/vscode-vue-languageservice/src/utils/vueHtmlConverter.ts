@@ -44,6 +44,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				tags.add(node.tag);
 				writeImportSlots(node);
 				writeVshow(node);
+				writeElReferences(node); // <el ref="foo" />
 				writeProps(node, false);
 				writeProps(node, true);
 				writeOns(node);
@@ -133,6 +134,23 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
+						}]);
+						_code += `);\n`;
+					}
+				}
+			}
+			function writeElReferences(node: ElementNode) {
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.ATTRIBUTE
+						&& prop.name === 'ref'
+						&& prop.value
+					) {
+						_code += `// @ts-ignore\n`;
+						_code += `(`;
+						mapping(undefined, prop.value.content, prop.value.content, MapedMode.Offset, capabilitiesSet.referencesOnly, [{
+							start: prop.value.loc.start.offset + 1,
+							end: prop.value.loc.end.offset - 1,
 						}]);
 						_code += `);\n`;
 					}
