@@ -47,7 +47,12 @@ export function pugToHtml(pugCode: string) {
 	return newHtmlCode.trim();
 }
 export function htmlToPug(html: string) {
-	let nodes = htmlparser2.parseDOM(html);
+	let nodes = htmlparser2.parseDOM(html, {
+		xmlMode: false,
+		lowerCaseTags: false,
+		lowerCaseAttributeNames: false,
+		recognizeSelfClosing: true,
+	});
 	nodes = filterEmptyTextNodes(nodes);
 	let pug = '';
 	for (const node of nodes) {
