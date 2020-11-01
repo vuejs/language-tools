@@ -116,12 +116,12 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					const originalName = propName;
 					const type = option === 'props' ? MapedNodeTypes.Prop : undefined;
 					_code += `// @ts-ignore\n`;
-					_code += `__VLS_components['${node.tag}'].__VLS_options.${option}.`;
-					mapping(type, camelizeName, originalName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
+					_code += `__VLS_components['${node.tag}'].__VLS_options.${option} = { `;
+					mappingWithQuotes(type, camelizeName, originalName, capabilitiesSet.htmlTagOrAttr, [{
 						start,
 						end,
-					}])
-					_code += `;\n`;
+					}]);
+					_code += `: {} as any };\n`;
 				}
 			}
 			function writeVshow(node: ElementNode) {
