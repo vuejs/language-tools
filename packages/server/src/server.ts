@@ -117,16 +117,16 @@ function initLanguageService(rootPath: string) {
 
 		function translateSourceMap(sourceMap: SourceMap, vueRegion: string) {
 			return {
-				languageId: sourceMap.virtualDocument.languageId,
-				content: sourceMap.virtualDocument.getText(),
+				languageId: sourceMap.targetDocument.languageId,
+				content: sourceMap.targetDocument.getText(),
 				mappings: [...sourceMap.values()],
 				vueRegion,
 			};
 		}
 		function translateTsSourceMap(sourceMap: TsSourceMap) {
 			return {
-				languageId: sourceMap.virtualDocument.languageId,
-				content: sourceMap.virtualDocument.getText(),
+				languageId: sourceMap.targetDocument.languageId,
+				content: sourceMap.targetDocument.getText(),
 				mappings: [...sourceMap.values()].filter(maped => maped.data.capabilities.formatting),
 				vueRegion: sourceMap.isInterpolation ? 'template' : 'script',
 			};

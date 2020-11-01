@@ -60,11 +60,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				return result;
 			}
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.maped.data.capabilities.completion) continue;
 					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
-					let tsItems = tsLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, {
+					let tsItems = tsLanguageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: virtualLoc.maped.data.vueTag === 'script', // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
@@ -84,7 +84,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
 						const data: CompletionData = {
 							uri: document.uri,
-							docUri: sourceMap.virtualDocument.uri,
+							docUri: sourceMap.targetDocument.uri,
 							mode: 'ts',
 							tsItem: tsItem,
 						};
@@ -191,9 +191,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				});
 				globalServices.html.setDataProviders(true, [dataProvider]);
 
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					const htmlResult = globalServices.html.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument);
+					const htmlResult = globalServices.html.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument);
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -229,7 +229,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const data: CompletionData = {
 							mode: 'html',
 							uri: document.uri,
-							docUri: sourceMap.virtualDocument.uri,
+							docUri: sourceMap.targetDocument.uri,
 							tsItem: tsItem,
 						};
 						vueItem.data = data;
@@ -248,18 +248,18 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				return result;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					const wordPattern = wordPatterns[sourceMap.virtualDocument.languageId] ?? wordPatterns.css;
-					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.virtualDocument);
-					const cssResult = cssLanguageService.doComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.stylesheet);
+					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;
+					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.targetDocument);
+					const cssResult = cssLanguageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
 					const data: CompletionData = {
 						uri: document.uri,
-						docUri: sourceMap.virtualDocument.uri,
+						docUri: sourceMap.targetDocument.uri,
 						mode: 'css',
 					};
 					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {
@@ -310,7 +310,7 @@ export function translateAdditionalTextEdits(additionalTextEdits: TextEdit[] | u
 	if (additionalTextEdits) {
 		const newAdditionalTextEdits: TextEdit[] = [];
 		for (const textEdit of additionalTextEdits) {
-			const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
+			const vueLoc = sourceMap.targetToSource(textEdit.range);
 			if (vueLoc) {
 				newAdditionalTextEdits.push({
 					newText: textEdit.newText,
@@ -324,7 +324,7 @@ export function translateAdditionalTextEdits(additionalTextEdits: TextEdit[] | u
 }
 export function translateTextEdit(textEdit: TextEdit | html.InsertReplaceEdit | undefined, sourceMap: SourceMap) {
 	if (textEdit && TextEdit.is(textEdit)) {
-		const vueLoc = sourceMap.findFirstVueLocation(textEdit.range);
+		const vueLoc = sourceMap.targetToSource(textEdit.range);
 		if (vueLoc) {
 			return {
 				newText: textEdit.newText,

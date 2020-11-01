@@ -17,10 +17,10 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				let colors = cssLanguageService.findDocumentColors(sourceMap.virtualDocument, sourceMap.stylesheet);
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				let colors = cssLanguageService.findDocumentColors(sourceMap.targetDocument, sourceMap.stylesheet);
 				for (const color of colors) {
-					const vueLoc = sourceMap.findFirstVueLocation(color.range);
+					const vueLoc = sourceMap.targetToSource(color.range);
 					if (vueLoc) {
 						result.push({
 							...color,

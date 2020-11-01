@@ -139,7 +139,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			mode: MapedMode,
 		}[] = [];
 		const componentMappings: Mapping<undefined>[] = [];
-		const propMappings: Mapping<{ isOptionsProp?: boolean, isSetupExport?: boolean }>[] = [];
+		const ctxMappings: Mapping<{ isAdditionalReference: boolean }>[] = [];
 
 		let code = [
 			`import { FunctionalComponent as __VLS_Vue_FunctionalComponent } from '@vue/runtime-dom'`,
@@ -227,11 +227,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				componentMappings.push({
 					data: undefined,
 					mode: MapedMode.Gate,
-					vueRange: {
+					sourceRange: {
 						start: start_1,
 						end: end_1,
 					},
-					virtualRange: {
+					targetRange: {
 						start: start_2,
 						end: end_2,
 					},
@@ -239,11 +239,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				componentMappings.push({
 					data: undefined,
 					mode: MapedMode.Gate,
-					vueRange: {
+					sourceRange: {
 						start: start_1 + 1,
 						end: end_1 - 1,
 					},
-					virtualRange: {
+					targetRange: {
 						start: start_2 + 1,
 						end: end_2 - 1,
 					},
@@ -279,25 +279,22 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				start: code.length + `var `.length,
 				end: code.length + `var ${propName}`.length,
 			};
-			propMappings.push({
-				data: {
-				},
+			ctxMappings.push({
+				data: { isAdditionalReference: false },
 				mode: MapedMode.Offset,
-				vueRange: vueRange,
-				virtualRange: {
+				sourceRange: vueRange,
+				targetRange: {
 					start: code.length + `var ${propName} = __VLS_ctx.`.length,
 					end: code.length + `var ${propName} = __VLS_ctx.${propName}`.length,
 				},
 			});
 			code += `var ${propName} = __VLS_ctx.${propName}; `;
 			if (propsSet.has(propName)) {
-				propMappings.push({
-					data: {
-						isOptionsProp: true,
-					},
+				ctxMappings.push({
+					data: { isAdditionalReference: true },
 					mode: MapedMode.Offset,
-					vueRange: vueRange,
-					virtualRange: {
+					sourceRange: vueRange,
+					targetRange: {
 						start: code.length + `__VLS_Options.props.`.length,
 						end: code.length + `__VLS_Options.props.${propName}`.length,
 					},
@@ -305,13 +302,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				code += `__VLS_Options.props.${propName}; `;
 			}
 			if (scriptSetupExportsSet.has(propName)) {
-				propMappings.push({
-					data: {
-						isSetupExport: true,
-					},
+				ctxMappings.push({
+					data: { isAdditionalReference: true },
 					mode: MapedMode.Offset,
-					vueRange: vueRange,
-					virtualRange: {
+					sourceRange: vueRange,
+					targetRange: {
 						start: code.length + `__VLS_setups.`.length,
 						end: code.length + `__VLS_setups.${propName}`.length,
 					},
@@ -327,12 +322,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		code += interpolations.text;
 
 		const document = TextDocument.create(vue.uri + '.template.ts', 'typescript', documentVersion++, code);
-		const propSourceMap = getPropSourceMap();
+		const contextSourceMap = getContextSourceMap();
 		const componentSourceMap = getComponentSourceMap();
 
 		return {
 			document,
-			propSourceMap,
+			contextSourceMap,
 			componentSourceMap,
 			getSourceMaps,
 		};
@@ -340,12 +335,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		function hasElement(tags: Set<string>, tagName: string) {
 			return tags.has(tagName) || tags.has(hyphenate(tagName));
 		}
-		function getPropSourceMap() {
-			const sourceMap = new SourceMap<{ isOptionsProp?: boolean, isSetupExport?: boolean }>(
+		function getContextSourceMap() {
+			const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
 				document,
 				document,
 			);
-			for (const maped of propMappings) {
+			for (const maped of ctxMappings) {
 				sourceMap.add(maped);
 			}
 			return sourceMap;
@@ -387,11 +382,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						},
 					},
 					mode: MapedMode.Gate,
-					vueRange: {
+					sourceRange: {
 						start: descriptor.template.loc.start,
 						end: descriptor.template.loc.start,
 					},
-					virtualRange: virtualRange,
+					targetRange: virtualRange,
 				});
 			}
 			for (const maped of cssModuleMappings) {
@@ -410,11 +405,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						},
 					},
 					mode: maped.mode,
-					vueRange: {
+					sourceRange: {
 						start: maped.originalOffset,
 						end: maped.originalOffset + maped.originalLength,
 					},
-					virtualRange: {
+					targetRange: {
 						start: maped.mappingOffset,
 						end: maped.mappingOffset + maped.mappingLength,
 					},
@@ -425,13 +420,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				sourceMap.add({
 					data: maped.data,
 					mode: maped.mode,
-					vueRange: {
-						start: maped.vueRange.start + descriptor.template.loc.start,
-						end: maped.vueRange.end + descriptor.template.loc.start,
+					sourceRange: {
+						start: maped.sourceRange.start + descriptor.template.loc.start,
+						end: maped.sourceRange.end + descriptor.template.loc.start,
 					},
-					virtualRange: {
-						start: maped.virtualRange.start + interpolationsStart,
-						end: maped.virtualRange.end + interpolationsStart,
+					targetRange: {
+						start: maped.targetRange.start + interpolationsStart,
+						end: maped.targetRange.end + interpolationsStart,
 					},
 				});
 			}
@@ -449,7 +444,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const names = new Map<string, [TextDocument, number][]>();
 			for (const sourceMap of cssSourceMaps.value) {
 				if (!sourceMap.module) continue;
-				worker(sourceMap, sourceMap.virtualDocument, sourceMap.stylesheet);
+				worker(sourceMap, sourceMap.targetDocument, sourceMap.stylesheet);
 				for (const linkStyle of sourceMap.links) {
 					worker(undefined, linkStyle[0], linkStyle[1]);
 				}
@@ -472,7 +467,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 								names.set(text, []);
 							}
 							if (sourceMap) {
-								const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
+								const vueLoc = sourceMap.targetToSource(s.location.range);
 								if (vueLoc) {
 									names.get(text)!.push([vue.document, vue.document.offsetAt(vueLoc.range.start) + 1]);
 								}
@@ -756,11 +751,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					},
 				},
 				mode: MapedMode.Offset,
-				vueRange: {
+				sourceRange: {
 					start: start,
 					end: end,
 				},
-				virtualRange: {
+				targetRange: {
 					start: 0,
 					end: end - start,
 				},
@@ -791,11 +786,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						},
 					},
 					mode: MapedMode.Offset,
-					vueRange: {
+					sourceRange: {
 						start: vueStart + loc.start,
 						end: vueStart + loc.end,
 					},
-					virtualRange: loc,
+					targetRange: loc,
 				});
 				sourceMaps.push(sourceMap);
 			}
@@ -830,11 +825,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 							},
 						},
 						mode: MapedMode.Offset,
-						vueRange: {
+						sourceRange: {
 							start: vueStart + virtualRange.start,
 							end: vueStart + virtualRange.end,
 						},
-						virtualRange: {
+						targetRange: {
 							start: virtualRange.start,
 							end: virtualRange.end,
 						},
@@ -861,11 +856,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						},
 					},
 					mode: MapedMode.Offset,
-					vueRange: {
+					sourceRange: {
 						start: start,
 						end: end,
 					},
-					virtualRange: {
+					targetRange: {
 						start: start_2,
 						end: end_2,
 					},
@@ -896,11 +891,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					},
 				},
 				mode: MapedMode.Offset,
-				vueRange: {
+				sourceRange: {
 					start: start,
 					end: end,
 				},
-				virtualRange: {
+				targetRange: {
 					start: 0,
 					end: end - start,
 				},
@@ -928,11 +923,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					},
 				},
 				mode: MapedMode.Gate,
-				vueRange: {
+				sourceRange: {
 					start: descriptor.script.loc.start,
 					end: descriptor.script.loc.end,
 				},
-				virtualRange: {
+				targetRange: {
 					start: 0,
 					end: document.getText().length,
 				},
@@ -953,11 +948,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						},
 					},
 					mode: MapedMode.Gate,
-					vueRange: {
+					sourceRange: {
 						start: descriptor.script.loc.start,
 						end: descriptor.script.loc.end,
 					},
-					virtualRange: {
+					targetRange: {
 						start: optionsPropertyOffset,
 						end: optionsPropertyOffset + '__VLS_options'.length,
 					},
@@ -999,11 +994,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			sourceMap.add({
 				data: undefined,
 				mode: MapedMode.Offset,
-				vueRange: {
+				sourceRange: {
 					start: loc.start,
 					end: loc.end,
 				},
-				virtualRange: {
+				targetRange: {
 					start: 0,
 					end: loc.end - loc.start,
 				},
@@ -1025,11 +1020,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			sourceMap.add({
 				data: undefined,
 				mode: MapedMode.Offset,
-				vueRange: {
+				sourceRange: {
 					start: descriptor.template.loc.start,
 					end: descriptor.template.loc.end,
 				},
-				virtualRange: {
+				targetRange: {
 					start: 0,
 					end: descriptor.template.loc.end - descriptor.template.loc.start,
 				},
@@ -1051,11 +1046,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			sourceMap.add({
 				data: undefined,
 				mode: MapedMode.Offset,
-				vueRange: {
+				sourceRange: {
 					start: descriptor.template.loc.start,
 					end: descriptor.template.loc.end,
 				},
-				virtualRange: {
+				targetRange: {
 					start: 0,
 					end: descriptor.template.loc.end - descriptor.template.loc.start,
 				},
@@ -1559,9 +1554,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				for (const diag of errors_1.value) {
 					const spanText = templateScript.value.document.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = templateScript.value.propSourceMap.findVirtualLocations(diag.range);
+					const propRights = templateScript.value.contextSourceMap.sourceToTargets(diag.range);
 					for (const propRight of propRights) {
-						if (propRight.maped.data.isOptionsProp || propRight.maped.data.isSetupExport) continue;
+						if (propRight.maped.data.isAdditionalReference) continue;
 						const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
 						for (const definition of definitions) {
 							if (definition.uri !== scriptDocument.value.uri) continue;
@@ -1593,9 +1588,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const result: T[] = [];
 			for (const error of errors) {
 				for (const sourceMap of sourceMaps) {
-					if (sourceMap.virtualDocument.uri === virtualScriptUri) {
+					if (sourceMap.targetDocument.uri === virtualScriptUri) {
 						if (css.Diagnostic.is(error)) {
-							const vueLoc = sourceMap.findFirstVueLocation(error.range);
+							const vueLoc = sourceMap.targetToSource(error.range);
 							if (vueLoc) {
 								result.push({
 									...error,
@@ -1604,7 +1599,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 							}
 						}
 						else if (Diagnostic.is(error)) {
-							const vueLoc = sourceMap.findFirstVueLocation(error.range);
+							const vueLoc = sourceMap.targetToSource(error.range);
 							if (vueLoc) {
 								result.push({
 									...error,

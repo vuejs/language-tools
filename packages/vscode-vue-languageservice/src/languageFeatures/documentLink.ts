@@ -32,7 +32,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			let result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				// TODO: move to vscode-typescript-languageservice
-				const scriptContent = sourceMap.virtualDocument.getText();
+				const scriptContent = sourceMap.targetDocument.getText();
 				const root = jsonc.parseTree(scriptContent);
 				const scriptDoc = TextDocument.create(document.uri, 'typescript', 0, scriptContent);
 
@@ -118,9 +118,9 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const links = globalServices.html.findDocumentLinks(sourceMap.virtualDocument, documentContext);
+				const links = globalServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext);
 				for (const link of links) {
-					const vueLoc = sourceMap.findFirstVueLocation(link.range);
+					const vueLoc = sourceMap.targetToSource(link.range);
 					if (vueLoc) {
 						result.push({
 							...link,
@@ -135,10 +135,10 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				const links = cssLanguageService.findDocumentLinks(sourceMap.virtualDocument, sourceMap.stylesheet, documentContext);
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const links = cssLanguageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
-					const vueLoc = sourceMap.findFirstVueLocation(link.range);
+					const vueLoc = sourceMap.targetToSource(link.range);
 					if (vueLoc) {
 						result.push({
 							...link,

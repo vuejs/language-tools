@@ -32,12 +32,12 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					if (!virtualLoc.maped.data.capabilities.formatting) continue;
 					return {
 						sourceMap,
-						document: sourceMap.virtualDocument,
+						document: sourceMap.targetDocument,
 						range: virtualLoc.range,
 					};
 				}
@@ -45,11 +45,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					return {
 						sourceMap,
-						document: sourceMap.virtualDocument,
+						document: sourceMap.targetDocument,
 						range: virtualLoc.range,
 					};
 				}
@@ -57,11 +57,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getPugResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					return {
 						sourceMap,
-						document: sourceMap.virtualDocument,
+						document: sourceMap.targetDocument,
 						range: virtualLoc.range,
 					};
 				}
@@ -69,11 +69,11 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					return {
 						sourceMap,
-						document: sourceMap.virtualDocument,
+						document: sourceMap.targetDocument,
 						range: virtualLoc.range,
 					};
 				}

@@ -22,11 +22,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let result: SelectionRange[] = [];
 			for (const range of ranges) {
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
-					for (const tsLoc of sourceMap.findVirtualLocations(range)) {
+					for (const tsLoc of sourceMap.sourceToTargets(range)) {
 						if (!tsLoc.maped.data.capabilities.basic) continue;
-						const selectRange = tsLanguageService.getSelectionRange(sourceMap.virtualDocument, tsLoc.range.start);
+						const selectRange = tsLanguageService.getSelectionRange(sourceMap.targetDocument, tsLoc.range.start);
 						if (selectRange) {
-							const vueLoc = sourceMap.findFirstVueLocation(selectRange.range);
+							const vueLoc = sourceMap.targetToSource(selectRange.range);
 							if (vueLoc) {
 								result.push({
 									range: vueLoc.range,
@@ -43,10 +43,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let result: SelectionRange[] = [];
 			for (const range of ranges) {
 				for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-					for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
-						const selectRanges = globalServices.html.getSelectionRanges(sourceMap.virtualDocument, [htmlLoc.range.start]);
+					for (const htmlLoc of sourceMap.sourceToTargets(range)) {
+						const selectRanges = globalServices.html.getSelectionRanges(sourceMap.targetDocument, [htmlLoc.range.start]);
 						for (const selectRange of selectRanges) {
-							const vueLoc = sourceMap.findFirstVueLocation(selectRange.range);
+							const vueLoc = sourceMap.targetToSource(selectRange.range);
 							if (vueLoc) {
 								result.push({
 									range: vueLoc.range,
@@ -63,11 +63,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let result: SelectionRange[] = [];
 			for (const range of ranges) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
-					const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-					for (const cssLoc of sourceMap.findVirtualLocations(range)) {
-						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.virtualDocument, [cssLoc.range.start], sourceMap.stylesheet);
+					const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+					for (const cssLoc of sourceMap.sourceToTargets(range)) {
+						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.targetDocument, [cssLoc.range.start], sourceMap.stylesheet);
 						for (const selectRange of selectRanges) {
-							const vueLoc = sourceMap.findFirstVueLocation(selectRange.range);
+							const vueLoc = sourceMap.targetToSource(selectRange.range);
 							if (vueLoc) {
 								result.push({
 									range: vueLoc.range,

@@ -16,51 +16,51 @@ export enum MapedMode {
 export interface Mapping<T = undefined> {
 	data: T,
 	mode: MapedMode,
-	vueRange: MapedRange,
-	virtualRange: MapedRange,
+	sourceRange: MapedRange,
+	targetRange: MapedRange,
 }
 
 export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 	constructor(
-		public vueDocument: TextDocument,
-		public virtualDocument: TextDocument,
+		public sourceDocument: TextDocument,
+		public targetDocument: TextDocument,
 	) {
 		super();
 	}
-	public isVueLocation(vueRange: Range) {
-		return this.maps(vueRange, true, true).length > 0;
+	public isSource(range: Range) {
+		return this.maps(range, true, true).length > 0;
 	}
-	public isVirtualLocation(virtualRange: Range) {
-		return this.maps(virtualRange, false, true).length > 0;
+	public isTarget(range: Range) {
+		return this.maps(range, false, true).length > 0;
 	}
-	public findFirstVueLocation(virtualRange: Range) {
-		const result = this.maps(virtualRange, false, true);
+	public targetToSource(range: Range) {
+		const result = this.maps(range, false, true);
 		if (result.length) return result[0];
 	}
-	public findFirstVirtualLocation(vueRange: Range) {
-		const result = this.maps(vueRange, true, true);
+	public sourceToTarget(range: Range) {
+		const result = this.maps(range, true, true);
 		if (result.length) return result[0];
 	}
-	public findVueLocations(virtualRange: Range) {
-		return this.maps(virtualRange, false);
+	public targetToSources(range: Range) {
+		return this.maps(range, false);
 	}
-	public findVirtualLocations(vueRange: Range) {
-		return this.maps(vueRange, true);
+	public sourceToTargets(range: Range) {
+		return this.maps(range, true);
 	}
-	private maps(range: Range, vueToVirtual: boolean, returnFirstResult?: boolean) {
+	private maps(range: Range, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const result: {
 			maped: Mapping<MapedData>,
 			range: Range,
 		}[] = [];
-		const toDoc = vueToVirtual ? this.virtualDocument : this.vueDocument;
-		const fromDoc = vueToVirtual ? this.vueDocument : this.virtualDocument;
+		const toDoc = sourceToTarget ? this.targetDocument : this.sourceDocument;
+		const fromDoc = sourceToTarget ? this.sourceDocument : this.targetDocument;
 		const fromRange = {
 			start: fromDoc.offsetAt(range.start),
 			end: fromDoc.offsetAt(range.end),
 		};
 		for (const maped of this) {
-			const mapedToRange = vueToVirtual ? maped.virtualRange : maped.vueRange;
-			const mapedFromRange = vueToVirtual ? maped.vueRange : maped.virtualRange;
+			const mapedToRange = sourceToTarget ? maped.targetRange : maped.sourceRange;
+			const mapedFromRange = sourceToTarget ? maped.sourceRange : maped.targetRange;
 			if (maped.mode === MapedMode.Gate) {
 				if (fromRange.start === mapedFromRange.start && fromRange.end === mapedFromRange.end) {
 					const toRange = Range.create(
@@ -113,46 +113,46 @@ export interface TsMappingData {
 
 export class TsSourceMap extends SourceMap<TsMappingData> {
 	constructor(
-		public vueDocument: TextDocument,
-		public virtualDocument: TextDocument,
+		public sourceDocument: TextDocument,
+		public targetDocument: TextDocument,
 		public isInterpolation: boolean,
 		public capabilities: {
 			foldingRanges: boolean,
 		},
 	) {
-		super(vueDocument, virtualDocument);
+		super(sourceDocument, targetDocument);
 	}
 }
 
 export class CssSourceMap extends SourceMap<undefined> {
 	constructor(
-		public vueDocument: TextDocument,
-		public virtualDocument: TextDocument,
+		public sourceDocument: TextDocument,
+		public targetDocument: TextDocument,
 		public stylesheet: css.Stylesheet,
 		public module: boolean,
 		public links: [TextDocument, css.Stylesheet][],
 	) {
-		super(vueDocument, virtualDocument);
+		super(sourceDocument, targetDocument);
 	}
 }
 
 export class HtmlSourceMap extends SourceMap<undefined> {
 	constructor(
-		public vueDocument: TextDocument,
-		public virtualDocument: TextDocument,
+		public sourceDocument: TextDocument,
+		public targetDocument: TextDocument,
 		public htmlDocument: html.HTMLDocument,
 	) {
-		super(vueDocument, virtualDocument);
+		super(sourceDocument, targetDocument);
 	}
 }
 
 export class PugSourceMap extends SourceMap<undefined> {
 	constructor(
-		public vueDocument: TextDocument,
-		public virtualDocument: TextDocument,
+		public sourceDocument: TextDocument,
+		public targetDocument: TextDocument,
 		public html: string | undefined,
 		public mapper: ((code: string, htmlOffset: number) => number | undefined) | undefined,
 	) {
-		super(vueDocument, virtualDocument);
+		super(sourceDocument, targetDocument);
 	}
 }

@@ -115,12 +115,13 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					const camelizeName = hyphenate(propName) === propName ? camelize(propName) : propName;
 					const originalName = propName;
 					const type = option === 'props' ? MapedNodeTypes.Prop : undefined;
-					_code += `__VLS_components['${node.tag}']['__VLS_options']['${option}'][`;
-					mappingWithQuotes(type, camelizeName, originalName, capabilitiesSet.htmlTagOrAttr, [{
+					_code += `// @ts-ignore\n`;
+					_code += `__VLS_components['${node.tag}'].__VLS_options.${option}.`;
+					mapping(type, camelizeName, originalName, MapedMode.Offset, capabilitiesSet.htmlTagOrAttr, [{
 						start,
 						end,
-					}]);
-					_code += `];\n`;
+					}])
+					_code += `;\n`;
 				}
 			}
 			function writeVshow(node: ElementNode) {
@@ -570,8 +571,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			for (const sourceRange of sourceRanges) {
 				mappings.push({
 					mode,
-					vueRange: sourceRange,
-					virtualRange: {
+					sourceRange: sourceRange,
+					targetRange: {
 						start: _code.length,
 						end: _code.length + mapCode.length,
 					},

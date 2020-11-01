@@ -7,12 +7,11 @@ import {
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
 import {
-	getTsActionEntries,
-	getSourceTsLocations,
+	tsLocationToVueLocations,
 	findSourceFileByTsUri,
 } from '../utils/commons';
 import { hyphenate } from '@vue/shared';
-import { MapedNodeTypes } from '../utils/sourceMaps';
+import { MapedNodeTypes, SourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
@@ -39,35 +38,12 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 		function getTsResult(sourceFile: SourceFile) {
 			let tsEdits: WorkspaceEdit[] = [];
+			let tsLocations: Location[] = [];
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.findVirtualLocations(range)) {
+				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.rename) continue;
-					const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'rename', getRenameLocations, tsLanguageService, sourceFiles);
-
-					for (const entry of entries) {
-						const entryDocument = tsLanguageService.getTextDocument(entry.uri);
-						if (!entryDocument) continue;
-						const tsEdit = tsLanguageService.doRename(entryDocument, entry.range.start, newName);
-						if (!tsEdit) continue;
-						tsEdits.push(tsEdit);
-					}
-
-					function getRenameLocations(document: TextDocument, position: Position) {
-						const workspaceEdit = tsLanguageService.doRename(document, position, newName);
-						if (!workspaceEdit) return [];
-
-						const locations: Location[] = [];
-						for (const uri in workspaceEdit.changes) {
-							const edits = workspaceEdit.changes[uri];
-							for (const edit of edits) {
-								const location = Location.create(uri, edit.range);
-								locations.push(location);
-							}
-						}
-
-						return locations;
-					}
+					worker(sourceMap.targetDocument, tsLoc.range.start);
 				}
 			}
 
@@ -78,16 +54,63 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const vueEdit = margeWorkspaceEdits(vueEdits);
 			return deduplication(vueEdit);
 
+			function worker(doc: TextDocument, pos: Position) {
+				const rename = tsLanguageService.doRename(doc, pos, newName);
+				if (!rename) return;
+				tsEdits.push(rename);
+				for (const tsUri in rename.changes) {
+					const tsEdits = rename.changes[tsUri];
+					for (const tsEdit of tsEdits) {
+						const tsLoc = { uri: tsUri, range: tsEdit.range };
+						if (hasLocation(tsLoc)) continue;
+						tsLocations.push(tsLoc);
+						const sourceFile_2 = findSourceFileByTsUri(sourceFiles, tsUri);
+						const templateScript = sourceFile_2?.getTemplateScript();
+						if (templateScript?.document && templateScript?.document.uri === tsLoc.uri) {
+							transfer(templateScript.contextSourceMap, templateScript.document);
+							transfer(templateScript.componentSourceMap, templateScript.document);
+							function transfer(sourceMap: SourceMap, tsDocument: TextDocument) {
+								const leftRange = sourceMap.isSource(tsLoc.range)
+									? tsLoc.range
+									: sourceMap.targetToSource(tsLoc.range)?.range;
+								if (leftRange) {
+									const leftLoc = { uri: tsDocument.uri, range: leftRange };
+									if (!hasLocation(leftLoc)) {
+										worker(tsDocument, leftLoc.range.start);
+									}
+									const rightLocs = sourceMap.sourceToTargets(leftRange);
+									for (const rightLoc of rightLocs) {
+										const rightLoc_2 = { uri: tsDocument.uri, range: rightLoc.range };
+										if (!hasLocation(rightLoc_2)) {
+											worker(tsDocument, rightLoc_2.range.start);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			// TODO: use map
+			function hasLocation(loc: Location) {
+				return tsLocations.find(tsLoc =>
+					tsLoc.uri === loc.uri
+					&& tsLoc.range.start.line === loc.range.start.line
+					&& tsLoc.range.start.character === loc.range.start.character
+					&& tsLoc.range.end.line === loc.range.end.line
+					&& tsLoc.range.end.character === loc.range.end.character
+				)
+			}
 			function keepHtmlTagOrAttrStyle(tsWorkspaceEdit: WorkspaceEdit) {
 				if (!tsWorkspaceEdit?.changes) return;
 				for (const uri in tsWorkspaceEdit.changes) {
 					const editSourceFile = findSourceFileByTsUri(sourceFiles, uri);
 					if (!editSourceFile) continue;
 					for (const sourceMap of editSourceFile.getTsSourceMaps()) {
-						if (sourceMap.virtualDocument.uri !== uri) continue;
+						if (sourceMap.targetDocument.uri !== uri) continue;
 						for (const textEdit of tsWorkspaceEdit.changes[uri]) {
-							for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
-								const oldName = sourceMap.vueDocument.getText(vueLoc.range);
+							for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
+								const oldName = sourceMap.sourceDocument.getText(vueLoc.range);
 								const isHyphenateName = oldName === hyphenate(oldName)
 								const isHtmlTag = vueLoc.maped.data.type === MapedNodeTypes.ElementTag;
 								const isAttrArg = vueLoc.maped.data.type === MapedNodeTypes.Prop;
@@ -104,16 +127,16 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const htmlLoc of sourceMap.findVirtualLocations(range)) {
-					const htmlEdits = globalServices.html.doRename(sourceMap.virtualDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
+				for (const htmlLoc of sourceMap.sourceToTargets(range)) {
+					const htmlEdits = globalServices.html.doRename(sourceMap.targetDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
 					if (!htmlEdits) continue;
 					if (!htmlEdits.changes) continue;
 					for (const uri in htmlEdits.changes) {
 						const edits = htmlEdits.changes[uri];
 						for (const htmlEdit of edits) {
-							const vueLoc = sourceMap.findFirstVueLocation(htmlEdit.range);
+							const vueLoc = sourceMap.targetToSource(htmlEdit.range);
 							if (!vueLoc) continue;
-							const vueUri = sourceMap.vueDocument.uri;
+							const vueUri = sourceMap.sourceDocument.uri;
 							if (!result.changes![vueUri]) {
 								result.changes![vueUri] = [];
 							}
@@ -130,17 +153,17 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getCssResult(sourceFile: SourceFile) {
 			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				for (const cssLoc of sourceMap.findVirtualLocations(range)) {
-					const cssEdits = cssLanguageService.doRename(sourceMap.virtualDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				for (const cssLoc of sourceMap.sourceToTargets(range)) {
+					const cssEdits = cssLanguageService.doRename(sourceMap.targetDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
 					if (!cssEdits) continue;
 					if (!cssEdits.changes) continue;
 					for (const uri in cssEdits.changes) {
 						const edits = cssEdits.changes[uri];
 						for (const cssEdit of edits) {
-							const vueLoc = sourceMap.findFirstVueLocation(cssEdit.range);
+							const vueLoc = sourceMap.targetToSource(cssEdit.range);
 							if (!vueLoc) continue;
-							const vueUri = sourceMap.vueDocument.uri;
+							const vueUri = sourceMap.sourceDocument.uri;
 							if (!result.changes![vueUri]) {
 								result.changes![vueUri] = [];
 							}
@@ -162,7 +185,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const edits = workspaceEdit.changes[uri];
 				for (const edit of edits) {
 					const location = Location.create(uri, edit.range);
-					const sourceLocations = getSourceTsLocations(location, sourceFiles);
+					const sourceLocations = tsLocationToVueLocations(location, sourceFiles);
 					for (const sourceLocation of sourceLocations) {
 						const sourceTextEdit = TextEdit.replace(sourceLocation.range, edit.newText);
 						const sourceUri = sourceLocation.uri;

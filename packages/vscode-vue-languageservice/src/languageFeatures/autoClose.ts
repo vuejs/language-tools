@@ -27,9 +27,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const virtualLocs = sourceMap.findVirtualLocations(range);
+				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					const result = globalServices.html.doTagComplete(sourceMap.virtualDocument, virtualLoc.range.start, sourceMap.htmlDocument);
+					const result = globalServices.html.doTagComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument);
 					if (result) return result;
 				}
 			}

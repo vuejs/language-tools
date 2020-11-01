@@ -31,7 +31,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const foldingRanges = tsLanguageService.getFoldingRanges(sourceMap.virtualDocument);
+				const foldingRanges = tsLanguageService.getFoldingRanges(sourceMap.targetDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
 			return result;
@@ -39,8 +39,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getCssResult(sourceFile: SourceFile) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.virtualDocument);
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.targetDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
 			return result;
@@ -48,7 +48,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getPugResult(sourceFile: SourceFile) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const text = sourceMap.virtualDocument.getText();
+				const text = sourceMap.targetDocument.getText();
 				const lines = text.split('\n');
 				const lineOffsets = getLineOffsets(lines);
 				const lineIndents = getLineIndents(lines);
@@ -59,7 +59,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					const offset = lineOffsets[i];
 					const indent = lineIndents[i];
 					if (indent === undefined) continue;
-					const startPos = sourceMap.virtualDocument.positionAt(offset);
+					const startPos = sourceMap.targetDocument.positionAt(offset);
 					const kind = getFoldingRangeKind(line);
 					let found = false;
 
@@ -68,7 +68,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const indent_2 = lineIndents[j];
 						if (indent_2 === undefined) continue;
 						if (indent_2.length <= indent.length) {
-							const endPos = sourceMap.virtualDocument.positionAt(offset_2);
+							const endPos = sourceMap.targetDocument.positionAt(offset_2);
 							const foldingRange = FoldingRange.create(
 								startPos.line,
 								endPos.line - 1,
@@ -84,7 +84,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 					if (!found) {
 						const offset_2 = text.length;
-						const endPos = sourceMap.virtualDocument.positionAt(offset_2);
+						const endPos = sourceMap.targetDocument.positionAt(offset_2);
 						const foldingRange = FoldingRange.create(
 							startPos.line,
 							endPos.line - 1,
@@ -136,7 +136,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: SourceMap) {
 	const result: FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
-		const vueLoc = sourceMap.findFirstVueLocation({
+		const vueLoc = sourceMap.targetToSource({
 			start: { line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			end: { line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
 		});

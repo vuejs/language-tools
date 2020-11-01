@@ -6,19 +6,20 @@ import {
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
 import {
-	getTsActionEntries,
-	getSourceTsLocations,
+	findSourceFileByTsUri,
+	tsLocationToVueLocations,
 	duplicateLocations,
 } from '../utils/commons';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import { SourceMap } from '../utils/sourceMaps';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument, position: Position) => {
 
 		if (document.languageId !== 'vue') {
 			const tsLocs = tsLanguageService.findDefinition(document, position);
-			let result = tsLocs.map(tsLoc => getSourceTsLocations(tsLoc, sourceFiles)).flat();
+			let result = tsLocs.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles)).flat();
 			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
 			return result;
 		}
@@ -35,12 +36,12 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let result: Location[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				const cssLocs = sourceMap.findVirtualLocations(Range.create(position, position));
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const cssLocs = sourceMap.sourceToTargets(Range.create(position, position));
 				for (const virLoc of cssLocs) {
-					const definition = cssLanguageService.findDefinition(sourceMap.virtualDocument, virLoc.range.start, sourceMap.stylesheet);
+					const definition = cssLanguageService.findDefinition(sourceMap.targetDocument, virLoc.range.start, sourceMap.stylesheet);
 					if (definition) {
-						const vueLocs = getSourceTsLocations(definition, sourceFiles);
+						const vueLocs = tsLocationToVueLocations(definition, sourceFiles);
 						result = result.concat(vueLocs);
 					}
 				}
@@ -58,17 +59,38 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 	let result: Location[] = [];
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
 		const worker = isTypeDefinition ? tsLanguageService.findTypeDefinition : tsLanguageService.findDefinition;
-		for (const tsLoc of sourceMap.findVirtualLocations(range)) {
+		for (const tsLoc of sourceMap.sourceToTargets(range)) {
 			if (!tsLoc.maped.data.capabilities.references) continue;
-			const entries = getTsActionEntries(sourceMap.virtualDocument, tsLoc.range, tsLoc.maped.data.vueTag, 'definition', worker, tsLanguageService, sourceFiles);
-			for (const location of entries) {
-				const document = tsLanguageService.getTextDocument(location.uri);
-				if (!document) continue;
-				const definitions = worker(document, location.range.start);
-				result = result.concat(definitions);
+			const definitions = worker(sourceMap.targetDocument, tsLoc.range.start);
+			const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
+			if (vueDefinitions.length) {
+				result = result.concat(vueDefinitions);
+			}
+			else {
+				const references = tsLanguageService.findReferences(sourceMap.targetDocument, tsLoc.range.start);
+				for (const reference of references) {
+					const sourceFile_2 = findSourceFileByTsUri(sourceFiles, reference.uri);
+					const templateScript = sourceFile_2?.getTemplateScript();
+					if (templateScript?.document && templateScript?.document.uri === reference.uri) {
+						transfer(templateScript.contextSourceMap, templateScript.document);
+						transfer(templateScript.componentSourceMap, templateScript.document);
+						function transfer(sourceMap: SourceMap, tsDocument: TextDocument) {
+							const leftRange = sourceMap.isSource(reference.range)
+								? reference.range
+								: sourceMap.targetToSource(reference.range)?.range;
+							if (leftRange) {
+								const rightLocs = sourceMap.sourceToTargets(leftRange);
+								for (const rightLoc of rightLocs) {
+									const definitions = worker(tsDocument, rightLoc.range.start);
+									const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
+									result = result.concat(vueDefinitions);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
-	result = result.map(location => getSourceTsLocations(location, sourceFiles)).flat();
 	return result;
 }

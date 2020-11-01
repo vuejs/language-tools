@@ -51,19 +51,19 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (!maped.data.capabilities.semanticTokens)
 						continue;
-					if (maped.vueRange.end < offsetRange.start)
+					if (maped.sourceRange.end < offsetRange.start)
 						continue;
-					if (maped.vueRange.start > offsetRange.end)
+					if (maped.sourceRange.start > offsetRange.end)
 						continue;
 					const tsRange = {
-						start: sourceMap.virtualDocument.positionAt(maped.virtualRange.start),
-						end: sourceMap.virtualDocument.positionAt(maped.virtualRange.end),
+						start: sourceMap.targetDocument.positionAt(maped.targetRange.start),
+						end: sourceMap.targetDocument.positionAt(maped.targetRange.end),
 					};
-					const tokens = await tsLanguageService.getDocumentSemanticTokens(sourceMap.virtualDocument, tsRange);
+					const tokens = await tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument, tsRange);
 					if (!tokens) continue;
 					for (const token of tokens) {
-						const tokenOffset = sourceMap.virtualDocument.offsetAt(token.start);
-						const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+						const tokenOffset = sourceMap.targetDocument.offsetAt(token.start);
+						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
 						const vuePos = document.positionAt(vueOffset);
 						result.push([vuePos.line, vuePos.character, token.length, token.typeIdx, token.modifierSet]);
 					}
@@ -78,28 +78,28 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
-					if (maped.vueRange.end < offsetRange.start)
+					if (maped.sourceRange.end < offsetRange.start)
 						continue;
-					if (maped.vueRange.start > offsetRange.end)
+					if (maped.sourceRange.start > offsetRange.end)
 						continue;
-					const docText = sourceMap.virtualDocument.getText();
-					const scanner = globalServices.html.createScanner(docText, maped.virtualRange.start);
+					const docText = sourceMap.targetDocument.getText();
+					const scanner = globalServices.html.createScanner(docText, maped.targetRange.start);
 					let token = scanner.scan();
-					while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= maped.virtualRange.end) {
+					while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= maped.targetRange.end) {
 						const tokenOffset = scanner.getTokenOffset();
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(tokenOffset, tokenLength);
-						const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
 						if (isConditionalToken(token, tokenText)) {
-							const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
+							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
 							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/conditional') ?? -1, undefined]);
 						}
 						else if (isLoopToken(token, tokenText)) {
-							const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
+							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
 							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/loop') ?? -1, undefined]);
 						}
 						else if (isComponentToken(token, tokenText)) {
-							const vuePos = sourceMap.vueDocument.positionAt(vueOffset);
+							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
 							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/component') ?? -1, undefined]);
 						}
 						token = scanner.scan();
@@ -117,9 +117,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
-					if (maped.vueRange.end < offsetRange.start)
+					if (maped.sourceRange.end < offsetRange.start)
 						continue;
-					if (maped.vueRange.start > offsetRange.end)
+					if (maped.sourceRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.html;
 					const scanner = globalServices.html.createScanner(docText, 0);
@@ -146,7 +146,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					function getTokenPosition(htmlOffset: number, tokenText: string) {
 						const tokenOffset = sourceMap.mapper?.(tokenText, htmlOffset);
 						if (tokenOffset !== undefined) {
-							const vueOffset = tokenOffset - maped.virtualRange.start + maped.vueRange.start;
+							const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
 							const vuePos = document.positionAt(vueOffset);
 							return vuePos;
 						}

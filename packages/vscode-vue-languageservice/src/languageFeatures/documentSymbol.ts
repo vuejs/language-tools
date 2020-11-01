@@ -65,11 +65,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const map = new Map<string, SymbolInformation>();
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.virtualDocument);
+				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.targetDocument);
 				for (const s of symbols) {
-					const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
+					const vueLoc = sourceMap.targetToSource(s.location.range);
 					if (vueLoc) {
-						map.set(`${sourceMap.virtualDocument.offsetAt(s.location.range.start)}:${sourceMap.virtualDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
+						map.set(`${sourceMap.targetDocument.offsetAt(s.location.range.start)}:${sourceMap.targetDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
 							...s,
 							location: Location.create(document.uri, vueLoc.range),
 							name: s.kind === SymbolKind.Module ? `<${vueLoc.maped.data.vueTag}>` : s.name,
@@ -89,10 +89,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let symbols = globalServices.html.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.htmlDocument);
+				let symbols = globalServices.html.findDocumentSymbols(sourceMap.targetDocument, sourceMap.htmlDocument);
 				if (!symbols) continue;
 				for (const s of symbols) {
-					const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
+					const vueLoc = sourceMap.targetToSource(s.location.range);
 					if (vueLoc) {
 						result.push({
 							...s,
@@ -107,11 +107,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.virtualDocument.languageId);
-				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.virtualDocument, sourceMap.stylesheet);
+				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.targetDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {
-					const vueLoc = sourceMap.findFirstVueLocation(s.location.range);
+					const vueLoc = sourceMap.targetToSource(s.location.range);
 					if (vueLoc) {
 						result.push({
 							...s,

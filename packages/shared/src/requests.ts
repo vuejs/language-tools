@@ -17,11 +17,11 @@ export interface ISourceMap {
 	content: string;
 	vueRegion: string;
 	mappings: {
-		vueRange: {
+		sourceRange: {
 			start: number;
 			end: number;
 		};
-		virtualRange: {
+		targetRange: {
 			start: number;
 			end: number;
 		};

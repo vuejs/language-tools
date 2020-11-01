@@ -59,8 +59,8 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 					continue;
 
 				const textRange = {
-					start: newDocument.positionAt(maped.vueRange.start),
-					end: newDocument.positionAt(maped.vueRange.end),
+					start: newDocument.positionAt(maped.sourceRange.start),
+					end: newDocument.positionAt(maped.sourceRange.end),
 				};
 				const text = newDocument.getText(textRange);
 				if (text.indexOf('\n') === -1)
@@ -84,7 +84,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 					return lastLine.substr(0, lastLine.length - lastLine.trimStart().length);
 				}
 				function getBaseIndent() {
-					const startPos = newDocument.positionAt(maped.vueRange.start);
+					const startPos = newDocument.positionAt(maped.sourceRange.start);
 					const startLineText = newDocument.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
 					return startLineText.substr(0, startLineText.length - startLineText.trimStart().length);
 				}
@@ -99,15 +99,15 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 		const textEdits: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 			for (const maped of sourceMap) {
-				const newStyleText = prettier.format(sourceMap.virtualDocument.getText(), {
+				const newStyleText = prettier.format(sourceMap.targetDocument.getText(), {
 					tabWidth: options.tabSize,
 					useTabs: !options.insertSpaces,
-					parser: sourceMap.virtualDocument.languageId,
+					parser: sourceMap.targetDocument.languageId,
 				});
 
 				const vueRange = {
-					start: sourceMap.vueDocument.positionAt(maped.vueRange.start),
-					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
+					start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+					end: sourceMap.sourceDocument.positionAt(maped.sourceRange.end),
 				};
 				const textEdit = TextEdit.replace(
 					vueRange,
@@ -126,7 +126,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				const prefixes = '<template>';
 				const suffixes = '</template>';
 
-				let newHtml = prettyhtml(prefixes + sourceMap.virtualDocument.getText() + suffixes, {
+				let newHtml = prettyhtml(prefixes + sourceMap.targetDocument.getText() + suffixes, {
 					tabWidth: options.tabSize,
 					useTabs: !options.insertSpaces,
 					printWidth: 100,
@@ -135,8 +135,8 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				newHtml = newHtml.substring(prefixes.length, newHtml.length - suffixes.length);
 
 				const vueRange = {
-					start: sourceMap.vueDocument.positionAt(maped.vueRange.start),
-					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
+					start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+					end: sourceMap.sourceDocument.positionAt(maped.sourceRange.end),
 				};
 				const textEdit = TextEdit.replace(vueRange, newHtml);
 				result.push(textEdit);
@@ -148,14 +148,14 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 		const result: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getPugSourceMaps()) {
 			for (const maped of sourceMap) {
-				let newPug = pugBeautify(sourceMap.virtualDocument.getText(), {
+				let newPug = pugBeautify(sourceMap.targetDocument.getText(), {
 					tab_size: options.tabSize,
 					fill_tab: !options.insertSpaces,
 				});
 				newPug = '\n' + newPug.trim() + '\n';
 				const vueRange = {
-					start: sourceMap.vueDocument.positionAt(maped.vueRange.start),
-					end: sourceMap.vueDocument.positionAt(maped.vueRange.end),
+					start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+					end: sourceMap.sourceDocument.positionAt(maped.sourceRange.end),
 				};
 				const textEdit = TextEdit.replace(vueRange, newPug);
 				result.push(textEdit);
@@ -166,9 +166,9 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 	function getTsFormattingEdits() {
 		const result: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
-			const textEdits = tsLanguageService.doFormatting(sourceMap.virtualDocument, options);
+			const textEdits = tsLanguageService.doFormatting(sourceMap.targetDocument, options);
 			for (const textEdit of textEdits) {
-				for (const vueLoc of sourceMap.findVueLocations(textEdit.range)) {
+				for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
 					if (!vueLoc.maped.data.capabilities.formatting) continue;
 					if (vueLoc.range.start.line < range.start.line) continue;
 					if (vueLoc.range.end.line > range.end.line) continue;

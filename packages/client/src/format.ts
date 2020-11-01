@@ -102,8 +102,8 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
                             const maped = findMapedByVirtualRange(virtualRange, [sourceMap]);
                             if (maped) {
                                 const vueOffsetRange = {
-                                    start: virtualRange.start - maped.virtualRange.start + maped.vueRange.start,
-                                    end: virtualRange.end - maped.virtualRange.end + maped.vueRange.end,
+                                    start: virtualRange.start - maped.targetRange.start + maped.sourceRange.start,
+                                    end: virtualRange.end - maped.targetRange.end + maped.sourceRange.end,
                                 };
                                 if (findMapedByVueRange(vueOffsetRange, ignoreSourceMaps)) {
                                     continue;
@@ -122,7 +122,7 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
                 function findMapedByVueRange(vueRange: { start: number, end: number }, sourceMaps: ISourceMap[]) {
                     for (const sourceMap of sourceMaps) {
                         for (const maped of sourceMap.mappings) {
-                            if (vueRange.start >= maped.vueRange.start && vueRange.end <= maped.vueRange.end) {
+                            if (vueRange.start >= maped.sourceRange.start && vueRange.end <= maped.sourceRange.end) {
                                 return maped;
                             }
                         }
@@ -131,7 +131,7 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
                 function findMapedByVirtualRange(virtualRange: { start: number, end: number }, sourceMaps: ISourceMap[]) {
                     for (const sourceMap of sourceMaps) {
                         for (const maped of sourceMap.mappings) {
-                            if (virtualRange.start >= maped.virtualRange.start && virtualRange.end <= maped.virtualRange.end) {
+                            if (virtualRange.start >= maped.targetRange.start && virtualRange.end <= maped.targetRange.end) {
                                 return maped;
                             }
                         }
