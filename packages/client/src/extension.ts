@@ -114,4 +114,8 @@ async function startEmbeddedLanguageServices() {
 	if (html && !html.isActive) {
 		await html.activate();
 	}
+
+	vscode.languages.setLanguageConfiguration('jade', {
+		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+	});
 }
