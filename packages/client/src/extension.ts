@@ -115,6 +115,9 @@ async function startEmbeddedLanguageServices() {
 		await html.activate();
 	}
 
+	vscode.languages.setLanguageConfiguration('vue', {
+		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+	});
 	vscode.languages.setLanguageConfiguration('jade', {
 		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
 	});
