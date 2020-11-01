@@ -42,6 +42,7 @@
 				"scopeName": "text.html.vue",
 				"path": "./syntaxes/vue.tmLanguage.json",
 				"embeddedLanguages": {
+					"text.html.vue": "vue",
 					"text.html": "html",
 					"text.pug": "jade",
 					"source.css": "css",
