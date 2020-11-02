@@ -10,7 +10,7 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 - [x] Verify all scripts command (v0.13.3 added)
 - [x] v-slot Type-Checking (v0.12.1 added)
 - [x] Component props auto completion (v0.11.6 added)
-- [x] Emits Type-Checking (v0.11.4 added)
+- [x] emits Type-Checking (v0.11.4 added)
 - [x] Interpolation formatting + commenting (v0.11.2 added)
 - [x] Native html tag services (v0.11.0 added)
 - [x] `<script setup>` support (v0.10.0 added)
@@ -83,13 +83,15 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 }
 ```
 
+## Limitations
+
+- Due to TypeScript limitations and performance considerations, if component emits events count greater than 8, emits type-checking will stop work for this component. (https://github.com/microsoft/TypeScript/issues/26591, https://github.com/microsoft/TypeScript/issues/37079#issuecomment-592078751)
+
 ## Note
 
 > Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
 
 > If your rename location includes both a .ts and a .vue file. Please perform the rename operation on the .vue file, otherwise the rename location in the .vue wouldn't be found.
-
-> Click `<template>` tag to use pug convert tool.
 
 > Currently supported languages:
 > - template: html, pug
