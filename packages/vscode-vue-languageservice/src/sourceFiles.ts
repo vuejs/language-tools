@@ -613,11 +613,15 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	const scriptMainDocument = computed(() => {
 		const uri = `${vue.uri}.ts`;
 		const content = [
+			`import { defineComponent as __VLS_defineComponent } from '@vue/runtime-dom';`,
 			`import __VLS_VM from './${upath.basename(vue.fileName)}.script';`,
 			`import __VLS_Options from './${upath.basename(vue.fileName)}.options';`,
 			`import __VLS_Slots from './${upath.basename(vue.fileName)}.template';`,
 			`import * as __VLS_Setup from './${upath.basename(vue.fileName)}.script.setup';`,
-			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
+			`const __VLS_comp2 = __VLS_defineComponent(__VLS_VM);`,
+			`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_comp2;`,
+			`declare var __VLS_Component: __VLS_ComponentType<typeof __VLS_VM>;`,
+			`declare var __VLS_ctx: InstanceType<typeof __VLS_Component>;`,
 			`declare var __VLS_ComponentsWrap: typeof __VLS_Options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
 			`__VLS_ctx.${SearchTexts.Context};`,
@@ -638,7 +642,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`	> { }`,
 			`}`,
 			``,
-			`declare const __VLS_exportData: typeof __VLS_VM & {`,
+			`declare const __VLS_exportData: typeof __VLS_Component & {`,
 			`__VLS_options: typeof __VLS_Options,`,
 			`__VLS_slots: typeof __VLS_Slots,`,
 			`};`,
