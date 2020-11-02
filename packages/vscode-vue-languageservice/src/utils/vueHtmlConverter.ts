@@ -278,7 +278,9 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					if (
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.arg
+						&& prop.exp
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
+						&& prop.exp.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.name === 'on'
 					) {
 						const var_on = `__VLS_${elementIndex++}`;
@@ -322,10 +324,15 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 										// ignore
 									}
 									else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
-										mapping(undefined, child.content, child.content, MapedMode.Offset, capabilitiesSet.all, [{
-											start: child.loc.start.offset,
-											end: child.loc.end.offset,
-										}])
+										if (child.content === prop.exp.content) {
+											mapping(undefined, child.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+												start: child.loc.start.offset,
+												end: child.loc.end.offset,
+											}])
+										}
+										else {
+											_code += child.content;
+										}
 									}
 								}
 							}
