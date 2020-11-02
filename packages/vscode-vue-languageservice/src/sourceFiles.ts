@@ -597,6 +597,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const content = [
 				descriptor.scriptSetup.content,
 				`declare function defineComponent<T>(options: T): T;`,
+				`export { };`
 			].join('\n');
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
@@ -606,6 +607,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const content = [
 				descriptor.script.content,
 				`declare function defineComponent<T>(options: T): T;`,
+				`export { };`
 			].join('\n');
 			return TextDocument.create(uri, languageId, documentVersion++, content);
 		}
