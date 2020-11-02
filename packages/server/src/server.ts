@@ -132,7 +132,7 @@ function initLanguageService(rootPath: string) {
 			};
 		}
 	});
-	connection.onRequest(FormatAllScriptsRequest.type, async () => {
+	connection.onRequest(FormatAllScriptsRequest.type, async options => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Format', 0, '', true);
 		for (const [uri, service] of host.services) {
@@ -143,7 +143,7 @@ function initLanguageService(rootPath: string) {
 					continue;
 				}
 				const doc = sourceFile.getTextDocument();
-				const edits = service.languageService.doFormatting(doc, { tabSize: 4, insertSpaces: false }) ?? [];
+				const edits = service.languageService.doFormatting(doc, options) ?? [];
 				const workspaceEdit: WorkspaceEdit = { changes: { [doc.uri]: edits } };
 				await connection.workspace.applyEdit(workspaceEdit);
 				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(doc.uri)));

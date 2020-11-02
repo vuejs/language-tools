@@ -10,6 +10,7 @@ import {
 	TextDocumentPositionParams,
 	TextDocumentIdentifier,
 	Range,
+	FormattingOptions,
 } from 'vscode-languageserver';
 
 export interface ISourceMap {
@@ -44,7 +45,7 @@ export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.verifyAllScripts');
 }
 export namespace FormatAllScriptsRequest {
-	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.formatAllScripts');
+	export const type: RequestType<FormattingOptions, undefined, any, any> = new RequestType('volar.action.formatAllScripts');
 }
 export namespace WriteAllDebugFilesRequest {
 	export const type: RequestType<undefined, undefined, any, any> = new RequestType('volar.action.writeAllDebugFiles');
