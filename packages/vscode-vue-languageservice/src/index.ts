@@ -1,13 +1,5 @@
-import {
-	Range,
-	CodeAction,
-	CodeActionKind,
-	TextDocument,
-	TextEdit,
-	Connection,
-} from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
-import { pugToHtml, htmlToPug } from '@volar/pug';
 import { createSourceFile, SourceFile } from './sourceFiles';
 import * as upath from 'upath';
 import * as ts from 'typescript';
@@ -33,15 +25,14 @@ import * as getSignatureHelp from './languageFeatures/signatureHelp';
 import * as getColorPresentations from './languageFeatures/colorPresentations';
 import * as getSemanticTokens from './languageFeatures/semanticTokens';
 import * as getFoldingRanges from './languageFeatures/foldingRanges';
+import * as getCodeLens from './languageFeatures/codeLens';
+import * as doExecuteCommand from './languageFeatures/executeCommand';
 
-export enum Commands {
-	HTML_TO_PUG = 'volar.html-to-pug',
-	PUG_TO_HTML = 'volar.pug-to-html',
-}
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { triggerCharacter } from './languageFeatures/completions';
 export * from './utils/sourceMaps';
+export * from './commands';
 
 export function getSemanticTokensLegend() {
 	return getSemanticTokens.semanticTokenLegend;
@@ -71,8 +62,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles, tsLanguageService)),
 		doRename: apiHook(doRename.register(sourceFiles, tsLanguageService)),
 		getSemanticTokens: apiHook(getSemanticTokens.register(sourceFiles, tsLanguageService)),
-		doCodeAction: apiHook(doCodeAction),
-		doExecuteCommand: apiHook(doExecuteCommand),
+		doExecuteCommand: apiHook(doExecuteCommand.register(sourceFiles), false),
 		doComplete: apiHook(doComplete.register(sourceFiles, tsLanguageService), false),
 		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles, tsLanguageService), false),
 		doAutoClose: apiHook(doAutoClose.register(sourceFiles), false),
@@ -80,6 +70,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles, tsLanguageService), false),
 		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
+		getCodeLens: apiHook(getCodeLens.register(sourceFiles), false),
 		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles, tsLanguageService), false),
 		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, vueHost), false),
@@ -238,104 +229,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 				}
 			}
 			return vueHost.getScriptSnapshot(fileName);
-		}
-	}
-	function doCodeAction(document: TextDocument, range: Range): CodeAction[] {
-		if (range.start.line != range.end.line) return [];
-
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return [];
-
-		const desc = sourceFile.getDescriptor();
-		if (!desc.template) return [];
-
-		const handlerLine = range.start.line;
-		const templateStartLine = document.positionAt(desc.template.loc.start).line;
-		if (handlerLine === templateStartLine) { // first line of <template>
-			const lang = desc.template.lang;
-
-			const htmlToPug: CodeAction = { title: `Convert to Pug`, kind: CodeActionKind.RefactorRewrite };
-			const pugToHtml: CodeAction = { title: `Convert to HTML`, kind: CodeActionKind.RefactorRewrite };
-
-			htmlToPug.command = {
-				command: Commands.HTML_TO_PUG,
-				title: 'Convert to Pug',
-				arguments: [document.uri],
-			};
-			pugToHtml.command = {
-				command: Commands.PUG_TO_HTML,
-				title: 'Convert to HTML',
-				arguments: [document.uri],
-			};
-
-			if (lang === 'pug') return [pugToHtml];
-			if (lang === 'html') return [htmlToPug];
-		}
-
-		return [];
-	}
-	function doExecuteCommand(document: TextDocument, command: string, connection: Connection) {
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return;
-
-		const desc = sourceFile.getDescriptor();
-		if (!desc.template) return;
-
-		const lang = desc.template.lang;
-
-		if (command === Commands.HTML_TO_PUG) {
-			if (lang !== 'html') return;
-
-			const pug = htmlToPug(desc.template.content) + '\n';
-			const newTemplate = `<template lang="pug">` + pug;
-
-			let start = desc.template.loc.start - '<template>'.length;
-			const end = desc.template.loc.end;
-			const startMatch = '<template';
-
-			while (!document.getText(Range.create(
-				document.positionAt(start),
-				document.positionAt(start + startMatch.length),
-			)).startsWith(startMatch)) {
-				start--;
-				if (start < 0) {
-					throw `Can't find start of tag <template>`
-				}
-			}
-
-			const range = Range.create(
-				document.positionAt(start),
-				document.positionAt(end),
-			);
-			const textEdit = TextEdit.replace(range, newTemplate);
-			connection.workspace.applyEdit({ changes: { [document.uri]: [textEdit] } });
-		}
-		if (command === Commands.PUG_TO_HTML) {
-			if (lang !== 'pug') return;
-
-			let html = pugToHtml(desc.template.content);
-			const newTemplate = `<template>\n` + html;
-
-			let start = desc.template.loc.start - '<template>'.length;
-			const end = desc.template.loc.end;
-			const startMatch = '<template';
-
-			while (!document.getText(Range.create(
-				document.positionAt(start),
-				document.positionAt(start + startMatch.length),
-			)).startsWith(startMatch)) {
-				start--;
-				if (start < 0) {
-					throw `Can't find start of tag <template>`
-				}
-			}
-
-			const range = Range.create(
-				document.positionAt(start),
-				document.positionAt(end),
-			);
-			const textEdit = TextEdit.replace(range, newTemplate);
-			connection.workspace.applyEdit({ changes: { [document.uri]: [textEdit] } });
 		}
 	}
 	function getTextDocument(uri: string): TextDocument | undefined {

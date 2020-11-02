@@ -11,7 +11,6 @@ import {
 	InitializeResult,
 	RenameRequest,
 	TextDocumentRegistrationOptions,
-	CodeActionRequest,
 	ReferencesRequest,
 	DefinitionRequest,
 	TypeDefinitionRequest,
@@ -23,6 +22,7 @@ import {
 	SignatureHelpRequest,
 	CompletionItem,
 	WorkspaceEdit,
+	CodeLensRequest,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter, SourceMap, TsSourceMap } from '@volar/vscode-vue-languageservice';
@@ -170,16 +170,6 @@ function initLanguageService(rootPath: string) {
 		resolveCache = host.get(uri)?.doCompletionResolve(item) ?? item;
 		return resolveCache;
 	});
-	connection.onDefinition(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.get(document.uri)?.findDefinition(document, handler.position);
-	});
-	connection.onTypeDefinition(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.get(document.uri)?.findTypeDefinition(document, handler.position);
-	});
 	connection.onHover(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
@@ -205,10 +195,15 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.get(document.uri)?.getSelectionRanges(document, handler.positions);
 	});
-	connection.onCodeAction(handler => {
+	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.doCodeAction(document, handler.range);
+		return host.get(document.uri)?.doRename(document, handler.position, handler.newName);
+	});
+	connection.onCodeLens(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return host.get(document.uri)?.getCodeLens(document);
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
@@ -216,16 +211,21 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.get(uri)?.doExecuteCommand(document, handler.command, connection);
 	});
-	connection.onRenameRequest(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.get(document.uri)?.doRename(document, handler.position, handler.newName);
-	});
 	// vue & ts
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
 		return host.get(document.uri)?.findReferences(document, handler.position);
+	});
+	connection.onDefinition(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return host.get(document.uri)?.findDefinition(document, handler.position);
+	});
+	connection.onTypeDefinition(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return host.get(document.uri)?.findTypeDefinition(document, handler.position);
 	});
 }
 function onInitialized() {
@@ -255,8 +255,8 @@ function onInitialized() {
 	connection.client.register(TypeDefinitionRequest.type, both);
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(RenameRequest.type, vueOnly);
-	connection.client.register(CodeActionRequest.type, vueOnly);
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
+	connection.client.register(CodeLensRequest.type, vueOnly);
 	connection.client.register(SignatureHelpRequest.type, {
 		documentSelector: vueOnly.documentSelector,
 		triggerCharacters: ['(', ',', '<'],
