@@ -153,7 +153,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
 			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
 			`declare var __VLS_vmUnwrap: typeof __VLS_Options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
+			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents;`,
 			`declare var __VLS_for_key: string;`,
 			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
 			`type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;`,
@@ -625,7 +625,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`declare var __VLS_Component: __VLS_ComponentType<typeof __VLS_VM>;`,
 			`declare var __VLS_ctx: InstanceType<typeof __VLS_Component>;`,
 			`declare var __VLS_ComponentsWrap: typeof __VLS_Options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_BuiltInComponents;`,
+			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents;`,
 			`__VLS_ctx.${SearchTexts.Context};`,
 			`__VLS_Components.${SearchTexts.Components};`,
 			`__VLS_Options.setup().${SearchTexts.SetupReturns};`,
@@ -634,8 +634,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
 			``,
 			`declare global {`,
-			`interface __VLS_GlobalComponents { }`,
-			`interface __VLS_BuiltInComponents extends Pick<typeof import('@vue/runtime-dom'),`,
+			`interface __VLS_GlobalComponents extends Pick<typeof import('@vue/runtime-dom'),`,
 			`	'Transition'`,
 			`	| 'TransitionGroup'`,
 			`	| 'KeepAlive'`,
@@ -1629,21 +1628,23 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				const doc = templateScriptDocument.value;
 				const text = doc.getText();
 				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-					let bind: CompletionItem[];
-					let on: CompletionItem[];
+					let bind: CompletionItem[] = [];
+					let on: CompletionItem[] = [];
 					{
 						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
 						let offset = text.indexOf(searchText);
-						if (offset === -1) continue;
-						offset += searchText.length;
-						bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+						if (offset >= 0) {
+							offset += searchText.length;
+							bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+						}
 					}
 					{
 						const searchText = `__VLS_componentEmits['${tagName}']['`;
 						let offset = text.indexOf(searchText);
-						if (offset === -1) continue;
-						offset += searchText.length;
-						on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+						if (offset >= 0) {
+							offset += searchText.length;
+							on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+						}
 					}
 					data.set(tagName, { bind, on });
 					data.set(hyphenate(tagName), { bind, on });

@@ -140,7 +140,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								globalAttributes.push({
 									name: propName,
 									description: propKey, // TODO: should not show in hover
-								})
+								});
 								tsItems.set(propKey, prop);
 							}
 						}
@@ -164,7 +164,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								attributes.push({
 									name: propName,
 									description: propKey, // TODO: should not show in hover
-								})
+								});
 								tsItems.set(propKey, prop);
 							}
 						}
@@ -174,7 +174,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							attributes.push({
 								name: propName,
 								description: propKey, // TODO: should not show in hover
-							})
+							});
 							tsItems.set(propKey, event);
 						}
 						tags.push({
