@@ -42,6 +42,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = 0;
+	let initTemplateScript = false; // html components completion require template data
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
@@ -82,6 +83,10 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	function apiHook<T extends Function>(api: T, shouldUpdateTemplateScript: boolean = true) {
 		const handler = {
 			apply: function (target: Function, thisArg: any, argumentsList: any[]) {
+				if (!initTemplateScript) {
+					initTemplateScript = true;
+					shouldUpdateTemplateScript = true;
+				}
 				update(shouldUpdateTemplateScript);
 				return target.apply(thisArg, argumentsList);
 			}
