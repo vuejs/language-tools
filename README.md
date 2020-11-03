@@ -6,6 +6,8 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Some interesting features:
 
+- [x] Scoped CSS services (v0.15.1 added)
+- [x] JS support (v0.15.0 added)
 - [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
 - [x] v-slot Type-Checking (v0.12.1 added)
@@ -17,7 +19,7 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 - [x] Unused highlight for setup() return properties (v0.7.0 added)
 - [x] pug-html convert tool
 - [x] Asset url link jump
-- [x] css module services
+- [x] Css Module services
 - [x] Pug interpolation services
 - [x] Component props services (v0.5.0 added)
 - [x] Component tag services

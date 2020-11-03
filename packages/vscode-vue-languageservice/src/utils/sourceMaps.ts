@@ -130,6 +130,7 @@ export class CssSourceMap extends SourceMap<undefined> {
 		public targetDocument: TextDocument,
 		public stylesheet: css.Stylesheet,
 		public module: boolean,
+		public scoped: boolean,
 		public links: [TextDocument, css.Stylesheet][],
 	) {
 		super(sourceDocument, targetDocument);

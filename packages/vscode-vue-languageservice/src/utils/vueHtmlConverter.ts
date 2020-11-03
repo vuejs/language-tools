@@ -47,6 +47,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				writeElReferences(node); // <el ref="foo" />
 				writeProps(node, false);
 				writeProps(node, true);
+				writeClassScopeds(node);
 				writeOns(node);
 				writeOptionReferences(node);
 				writeSlots(node);
@@ -264,6 +265,38 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				}
 
 				_code += '};\n';
+			}
+			function writeClassScopeds(node: ElementNode) {
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.ATTRIBUTE
+						&& prop.name === 'class'
+						&& prop.value
+					) {
+						let startOffset = prop.value.loc.start.offset + 1; // +1 is "
+						let tempClassName = '';
+
+						for (const char of (prop.value.content + ' ')) {
+							if (char.trim() !== '') {
+								tempClassName += char;
+							}
+							else {
+								addClass(tempClassName, startOffset);
+								startOffset += tempClassName.length + 1;
+								tempClassName = '';
+							}
+						}
+
+						function addClass(className: string, offset: number) {
+							_code += `__VLS_styleScopedClasses[`
+							mappingWithQuotes(MapedNodeTypes.Prop, className, className, capabilitiesSet.htmlTagOrAttr, [{
+								start: offset,
+								end: offset + className.length,
+							}]);
+							_code += `];\n`;
+						}
+					}
+				}
 			}
 			function writeOns(node: ElementNode) {
 				// @ts-ignore

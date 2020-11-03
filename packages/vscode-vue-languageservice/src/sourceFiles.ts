@@ -47,6 +47,7 @@ interface IDescriptor {
 	}) | null;
 	styles: (IDescriptorBlock & {
 		module: boolean;
+		scoped: boolean;
 	})[];
 }
 
@@ -187,31 +188,16 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		/* CSS Module */
 		code += '/* CSS Module */\n';
-		const cssModuleClasses = getCssModuleClasses();
+		const cssModuleClasses = getCssClasses('module');
 		code += 'declare var $style: {\n';
-		for (const [className, locs] of cssModuleClasses) {
-			for (const loc of locs) {
-				const document = loc[0];
-				const offset = loc[1];
-				cssModuleMappings.push({
-					document,
-					originalOffset: offset,
-					mappingOffset: code.length + 1, // + '
-					originalLength: className.length,
-					mappingLength: className.length,
-					mode: MapedMode.Offset,
-				});
-				cssModuleMappings.push({
-					document,
-					originalOffset: offset,
-					mappingOffset: code.length,
-					originalLength: className.length,
-					mappingLength: className.length + 2,
-					mode: MapedMode.Gate,
-				});
-			}
-			code += `'${className}': string,\n`;
-		}
+		writeCssClassProperties(cssModuleClasses);
+		code += '};\n';
+
+		/* Style Scoped */
+		code += '/* Style Scoped */\n';
+		const cssScopedClasses = getCssClasses('scoped');
+		code += 'declare var __VLS_styleScopedClasses: {\n';
+		writeCssClassProperties(cssScopedClasses);
 		code += '};\n';
 
 		/* Components */
@@ -332,6 +318,31 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			getSourceMaps,
 		};
 
+		function writeCssClassProperties(classes: Map<string, [TextDocument, number][]>) {
+			for (const [className, locs] of classes) {
+				for (const loc of locs) {
+					const document = loc[0];
+					const offset = loc[1];
+					cssModuleMappings.push({
+						document,
+						originalOffset: offset,
+						mappingOffset: code.length + 1, // + '
+						originalLength: className.length,
+						mappingLength: className.length,
+						mode: MapedMode.Offset,
+					});
+					cssModuleMappings.push({
+						document,
+						originalOffset: offset,
+						mappingOffset: code.length,
+						originalLength: className.length,
+						mappingLength: className.length + 2,
+						mode: MapedMode.Gate,
+					});
+				}
+				code += `'${className}': string,\n`;
+			}
+		}
 		function hasElement(tags: Set<string>, tagName: string) {
 			return tags.has(tagName) || tags.has(hyphenate(tagName));
 		}
@@ -440,10 +451,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return sourceMaps.get(key)!;
 			}
 		}
-		function getCssModuleClasses() {
+		function getCssClasses(type: 'module' | 'scoped') {
 			const names = new Map<string, [TextDocument, number][]>();
 			for (const sourceMap of cssSourceMaps.value) {
-				if (!sourceMap.module) continue;
+				if (type === 'module' && !sourceMap.module)
+					continue;
+				if (type === 'scoped' && !sourceMap.scoped)
+					continue;
 				worker(sourceMap, sourceMap.targetDocument, sourceMap.stylesheet);
 				for (const linkStyle of sourceMap.links) {
 					worker(undefined, linkStyle[0], linkStyle[1]);
@@ -988,12 +1002,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			const linkStyles = styleDocuments.value[i][2];
 			const loc = style.loc;
 			const module = style.module;
+			const scoped = style.scoped;
 
 			const sourceMap = new CssSourceMap(
 				vue.document,
 				document,
 				stylesheet,
 				module,
+				scoped,
 				linkStyles,
 			);
 			sourceMap.add({
@@ -1195,7 +1211,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						start: style.loc.start.offset,
 						end: style.loc.end.offset,
 					},
-					module: style.module !== false,
+					module: !!style.module,
+					scoped: !!style.scoped,
 				};
 				if (descriptor.styles.length > i) {
 					descriptor.styles[i].lang = newData.lang;
@@ -1203,6 +1220,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					descriptor.styles[i].loc.start = newData.loc.start;
 					descriptor.styles[i].loc.end = newData.loc.end;
 					descriptor.styles[i].module = newData.module;
+					descriptor.styles[i].scoped = newData.scoped;
 				}
 				else {
 					descriptor.styles.push(newData);
