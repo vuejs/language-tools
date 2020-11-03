@@ -127,10 +127,7 @@ export function createLanguageServiceHost(
 
 			const realTsConfig = ts.sys.realpath!(tsConfig);
 			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig));
-			if (upath.basename(realTsConfig) === 'jsconfig.json') {
-				content.options.allowJs = true;
-			}
+			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
