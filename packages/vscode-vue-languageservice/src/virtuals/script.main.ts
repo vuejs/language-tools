@@ -10,6 +10,8 @@ export function useScriptMain(
 	script: Ref<IDescriptor['script']>,
 ) {
 	let version = 0;
+	const optionsPropertyName = '__VLS_options';
+	const exportVarName = '__VLS_exportData';
 	const textDocument = computed(() => {
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
@@ -42,12 +44,12 @@ export function useScriptMain(
 			`	> { }`,
 			`}`,
 			``,
-			`declare const __VLS_exportData: typeof __VLS_Component & {`,
-			`__VLS_options: typeof __VLS_Options,`,
+			`declare const ${exportVarName}: typeof __VLS_Component & {`,
+			`${optionsPropertyName}: typeof __VLS_Options,`,
 			`__VLS_slots: typeof __VLS_Slots,`,
 			`};`,
 			`export * from './${upath.basename(vueDoc.uri)}.script';`,
-			`export default __VLS_exportData;`,
+			`export default ${exportVarName};`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', version++, content);
 	});
@@ -55,32 +57,26 @@ export function useScriptMain(
 		if (textDocument.value && script.value) {
 			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false });
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: false,
-						references: false,
-						rename: false,
-						diagnostic: false,
-						formatting: false,
-						completion: false,
-						semanticTokens: false,
-					},
-				},
-				mode: MapedMode.Gate,
-				sourceRange: {
-					start: script.value.loc.start,
-					end: script.value.loc.end,
-				},
-				targetRange: {
-					start: 0,
-					end: docText.length,
-				},
-			});
-			const optionsPropertyOffset = docText.indexOf('__VLS_options: typeof __VLS_Options,');
+			const rangesToSourceFullScript = [{
+				start: 0,
+				end: docText.length,
+			}];
+			const optionsPropertyOffset = docText.indexOf(optionsPropertyName);
 			if (optionsPropertyOffset >= 0) {
+				rangesToSourceFullScript.push({
+					start: optionsPropertyOffset,
+					end: optionsPropertyOffset + optionsPropertyName.length,
+				});
+			}
+			const exportVarOffset = docText.indexOf(exportVarName);
+			if (exportVarOffset >= 0) {
+				rangesToSourceFullScript.push({
+					start: exportVarOffset,
+					end: exportVarOffset + exportVarName.length,
+				});
+			}
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false });
+			for (const range of rangesToSourceFullScript) {
 				sourceMap.add({
 					data: {
 						vueTag: 'script',
@@ -99,10 +95,7 @@ export function useScriptMain(
 						start: script.value.loc.start,
 						end: script.value.loc.end,
 					},
-					targetRange: {
-						start: optionsPropertyOffset,
-						end: optionsPropertyOffset + '__VLS_options'.length,
-					},
+					targetRange: range,
 				});
 			}
 			return sourceMap;
