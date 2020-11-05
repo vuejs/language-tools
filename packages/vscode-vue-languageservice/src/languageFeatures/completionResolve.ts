@@ -1,5 +1,5 @@
 import { CompletionItem, MarkupKind } from 'vscode-languageserver';
-import { CompletionData, TsCompletionData, HtmlCompletionData } from '../utils/types';
+import { CompletionData, TsCompletionData, HtmlCompletionData } from '../types';
 import { SourceFile } from '../sourceFiles';
 import { translateAdditionalTextEdits } from './completions';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';

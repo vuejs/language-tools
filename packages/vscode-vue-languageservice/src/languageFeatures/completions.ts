@@ -8,7 +8,7 @@ import {
 	CompletionItemKind,
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
-import { CompletionData } from '../utils/types';
+import { CompletionData } from '../types';
 import * as html from 'vscode-html-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';

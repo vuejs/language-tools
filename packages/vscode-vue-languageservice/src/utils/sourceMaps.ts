@@ -37,15 +37,29 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		const result = this.maps(range, false, true);
 		if (result.length) return result[0];
 	}
+	public targetToSource2(range: MapedRange) {
+		const result = this.maps2(range, false, true);
+		if (result.length) return result[0];
+	}
 	public sourceToTarget(range: Range) {
 		const result = this.maps(range, true, true);
+		if (result.length) return result[0];
+	}
+	public sourceToTarget2(range: MapedRange) {
+		const result = this.maps2(range, true, true);
 		if (result.length) return result[0];
 	}
 	public targetToSources(range: Range) {
 		return this.maps(range, false);
 	}
+	public targetToSources2(range: MapedRange) {
+		return this.maps2(range, false);
+	}
 	public sourceToTargets(range: Range) {
 		return this.maps(range, true);
+	}
+	public sourceToTargets2(range: MapedRange) {
+		return this.maps2(range, true);
 	}
 	private maps(range: Range, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const result: {
@@ -83,6 +97,38 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 					result.push({
 						maped,
 						range: toRange,
+					});
+					if (returnFirstResult) return result;
+				}
+			}
+		}
+		return result;
+	}
+	private maps2(fromRange: MapedRange, sourceToTarget: boolean, returnFirstResult?: boolean) {
+		const result: {
+			maped: Mapping<MapedData>,
+			range: MapedRange,
+		}[] = [];
+		for (const maped of this) {
+			const mapedToRange = sourceToTarget ? maped.targetRange : maped.sourceRange;
+			const mapedFromRange = sourceToTarget ? maped.sourceRange : maped.targetRange;
+			if (maped.mode === MapedMode.Gate) {
+				if (fromRange.start === mapedFromRange.start && fromRange.end === mapedFromRange.end) {
+					result.push({
+						maped,
+						range: mapedToRange,
+					});
+					if (returnFirstResult) return result;
+				}
+			}
+			else if (maped.mode === MapedMode.Offset) {
+				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					result.push({
+						maped,
+						range: {
+							start: mapedToRange.start + fromRange.start - mapedFromRange.start,
+							end: mapedToRange.end + fromRange.end - mapedFromRange.end,
+						},
 					});
 					if (returnFirstResult) return result;
 				}
@@ -131,7 +177,7 @@ export class CssSourceMap extends SourceMap<undefined> {
 		public stylesheet: css.Stylesheet,
 		public module: boolean,
 		public scoped: boolean,
-		public links: [TextDocument, css.Stylesheet][],
+		public links: { textDocument: TextDocument, stylesheet: css.Stylesheet}[],
 	) {
 		super(sourceDocument, targetDocument);
 	}

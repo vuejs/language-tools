@@ -6,75 +6,49 @@ import {
 } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
-import { uriToFsPath, sleep, syntaxToLanguageId } from '@volar/shared';
-import { SourceMap, MapedMode, TsSourceMap, CssSourceMap, HtmlSourceMap, Mapping, PugSourceMap } from './utils/sourceMaps';
-import { transformVueHtml } from './utils/vueHtmlConverter';
+import { uriToFsPath, sleep, notEmpty } from '@volar/shared';
+import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import * as ts from 'typescript';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
-import * as vueDom from '@vue/compiler-dom';
 import * as css from 'vscode-css-languageservice';
-import * as html from 'vscode-html-languageservice';
-import * as upath from 'upath';
 import { ref, computed, reactive, pauseTracking, resetTracking, Ref } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
 import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
-
-enum SearchTexts {
-	Context = '/* __VLS_.SearchTexts.Context */',
-	Components = '/* __VLS_.SearchTexts.Components */',
-	Props = '/* __VLS_.SearchTexts.Props */',
-	SetupReturns = '/* __VLS_.SearchTexts.SetupReturns */',
-	ScriptSetupExports = '/* __VLS_.SearchTexts.ScriptSetupExports */',
-	HtmlElements = '/* __VLS_.SearchTexts.HtmlElements */',
-}
+import { IDescriptor, ITemplateScriptData } from './types';
+import { SearchTexts } from './virtuals/common';
+import { useScriptRaw } from './virtuals/script.raw';
+import { useScriptSetupGen } from './virtuals/script.setup.gen';
+import { useScriptSetupRaw } from './virtuals/script.setup.raw';
+import { useScriptOptions } from './virtuals/script.options';
+import { useScriptMain } from './virtuals/script.main';
+import { useTemplateRaw } from './virtuals/template.raw';
+import { useTemplateScript } from './virtuals/template.script.gen';
+import { useStylesRaw } from './virtuals/styles.raw';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
-interface IDescriptorBlock {
-	lang: string;
-	content: string;
-	loc: {
-		start: number;
-		end: number;
-	};
-}
-interface IDescriptor {
-	template: IDescriptorBlock | null;
-	script: IDescriptorBlock | null;
-	scriptSetup: (IDescriptorBlock & {
-		setup: string;
-	}) | null;
-	styles: (IDescriptorBlock & {
-		module: boolean;
-		scoped: boolean;
-	})[];
-}
 
 export function createSourceFile(initialDocument: TextDocument, tsLanguageService: ts2.LanguageService) {
-	let documentVersion = 0;
-
 	// sources
 	const tsProjectVersion = ref<string>();
-	const vue = reactive({
-		uri: initialDocument.uri,
-		fileName: uriToFsPath(initialDocument.uri),
-		document: initialDocument,
-	});
+	const vueDoc = ref(initialDocument);
+	const vueUri = vueDoc.value.uri;
+	const vueFileName = uriToFsPath(vueDoc.value.uri);
 	const descriptor = reactive<IDescriptor>({
 		template: null,
 		script: null,
 		scriptSetup: null,
 		styles: [],
 	});
-	const templateScriptData = reactive({
-		projectVersion: undefined as string | undefined,
-		context: [] as string[],
-		components: [] as string[],
-		props: [] as string[],
-		setupReturns: [] as string[],
-		scriptSetupExports: [] as string[],
-		htmlElements: [] as string[],
+	const templateScriptData = reactive<ITemplateScriptData>({
+		projectVersion: undefined,
+		context: [],
+		components: [],
+		props: [],
+		setupReturns: [],
+		scriptSetupExports: [],
+		htmlElements: [],
 	});
 	const pugData = computed(() => {
 		if (descriptor.template?.lang === 'pug') {
@@ -107,7 +81,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		return {};
 	});
 	const scriptSetupDeclares = computed(() => {
-		const declares = new Map<string, { start: number, end: number }>();
+		const map = new Map<string, { start: number, end: number }>();
 		if (descriptor.scriptSetup) {
 			const sourceFile = ts.createSourceFile('', descriptor.scriptSetup.content, ts.ScriptTarget.Latest);
 			sourceFile.forEachChild(node => {
@@ -115,979 +89,68 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					return
 				if (!node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword))
 					return;
-
 				for (const declaration of node.declarationList.declarations) {
 					if (ts.isIdentifier(declaration.name)) {
-						declares.set(declaration.name.escapedText as string, { start: node.pos, end: node.end });
+						map.set(declaration.name.escapedText as string, { start: node.pos, end: node.end });
 					}
 				}
 			});
 		}
-		return declares;
-	});
-
-	// template script(document + source maps)
-	const templateScript = computed(() => {
-		const interpolations = getInterpolations();
-		if (!interpolations) return;
-
-		const cssModuleMappings: {
-			document: TextDocument,
-			mappingOffset: number,
-			originalOffset: number,
-			originalLength: number,
-			mappingLength: number,
-			mode: MapedMode,
-		}[] = [];
-		const componentMappings: Mapping<undefined>[] = [];
-		const ctxMappings: Mapping<{ isAdditionalReference: boolean }>[] = [];
-
-		let code = [
-			`import { FunctionalComponent as __VLS_Vue_FunctionalComponent } from '@vue/runtime-dom'`,
-			`import { HTMLAttributes as __VLS_Vue_HTMLAttributes } from '@vue/runtime-dom'`,
-			`import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'`,
-			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
-			`import __VLS_VM from './${upath.basename(vue.fileName)}';`,
-			(descriptor.scriptSetup
-				? `import * as __VLS_setups from './${upath.basename(vue.fileName)}.script.setup';`
-				: `// no setups`),
-			`const __VLS_Options = __VLS_VM.__VLS_options`,
-			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
-			`declare var __VLS_vmUnwrap: typeof __VLS_Options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents;`,
-			`declare var __VLS_for_key: string;`,
-			`declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;`,
-			`type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;`,
-			`type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends __VLS_Vue_FunctionalComponent<infer R> ? R : C;`,
-			`type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };`,
-			`type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, __VLS_Vue_HTMLAttributes> & Record<string, unknown> };`,
-			`type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_RemoveAnyFnSet<T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {}> };`,
-			`type __VLS_FirstFunction<F1, F2> = F1 extends undefined ? F2 : (F1 extends (...args: any) => any ? F1 : (F2 extends (...args: any) => any ? F2 : F1));`,
-			`type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;`,
-			`type __VLS_GlobalAttrs = __VLS_Vue_HTMLAttributes & __VLS_Vue_VNodeProps & __VLS_Vue_AllowedComponentProps;`,
-			`type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;`,
-			`type __VLS_OmitGlobalAttrs<T> = { [K in keyof T]: Omit<T[K], keyof __VLS_GlobalAttrs> };`,
-		].join('\n') + `\n`;
-
-		code += `type __VLS_ConstructorOverloads<T> =\n`;
-		for (let i = 8; i >= 1; i--) {
-			code += `// ${i}\n`;
-			code += `T extends {\n`;
-			for (let j = 1; j <= i; j++) {
-				code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`
-			}
-			code += `} ? (\n`
-			for (let j = 1; j <= i; j++) {
-				if (j > 1) code += '& ';
-				code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
-			}
-			code += `) :\n`;
-		}
-		code += `// 0\n`
-		code += `unknown;\n`
-
-		/* CSS Module */
-		code += '/* CSS Module */\n';
-		const cssModuleClasses = getCssClasses('module');
-		code += 'declare var $style: {\n';
-		writeCssClassProperties(cssModuleClasses);
-		code += '};\n';
-
-		/* Style Scoped */
-		code += '/* Style Scoped */\n';
-		const cssScopedClasses = getCssClasses('scoped');
-		code += 'declare var __VLS_styleScopedClasses: {\n';
-		writeCssClassProperties(cssScopedClasses);
-		code += '};\n';
-
-		/* Components */
-		code += '/* Components */\n';
-		code += 'declare var __VLS_components: __VLS_OmitGlobalAttrs<JSX.IntrinsicElements> & {\n';
-		for (const name_1 of templateScriptData.components) {
-			const names = new Set([name_1, hyphenate(name_1)]);
-			for (const name_2 of names) {
-				const start_1 = code.length;
-				const end_1 = code.length + `'${name_2}'`.length;
-				const start_2 = code.length + `'${name_2}': typeof __VLS_Components[`.length;
-				const end_2 = code.length + `'${name_2}': typeof __VLS_Components['${name_1}'`.length;
-				componentMappings.push({
-					data: undefined,
-					mode: MapedMode.Gate,
-					sourceRange: {
-						start: start_1,
-						end: end_1,
-					},
-					targetRange: {
-						start: start_2,
-						end: end_2,
-					},
-				});
-				componentMappings.push({
-					data: undefined,
-					mode: MapedMode.Gate,
-					sourceRange: {
-						start: start_1 + 1,
-						end: end_1 - 1,
-					},
-					targetRange: {
-						start: start_2 + 1,
-						end: end_2 - 1,
-					},
-				});
-				code += `'${name_2}': typeof __VLS_Components['${name_1}'],\n`;
-			}
-		}
-		code += '};\n';
-		code += 'declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n';
-		code += 'declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
-		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
-
-		/* Completion */
-		code += '/* Completion: Emits */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			code += `__VLS_componentEmits['${name}'][''];\n`
-		}
-		code += '/* Completion: Props */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			code += `__VLS_componentPropsBase['${name}'][''];\n`
-		}
-		code += '/* Completion: Global Attrs */\n';
-		code += `({} as __VLS_GlobalAttrs)[''];\n`;
-
-		/* Props */
-		code += `/* Props */\n`;
-		const propsSet = new Set(templateScriptData.props);
-		const scriptSetupExportsSet = new Set(templateScriptData.scriptSetupExports);
-		for (const propName of templateScriptData.context) {
-			const vueRange = {
-				start: code.length + `var `.length,
-				end: code.length + `var ${propName}`.length,
-			};
-			ctxMappings.push({
-				data: { isAdditionalReference: false },
-				mode: MapedMode.Offset,
-				sourceRange: vueRange,
-				targetRange: {
-					start: code.length + `var ${propName} = __VLS_ctx.`.length,
-					end: code.length + `var ${propName} = __VLS_ctx.${propName}`.length,
-				},
-			});
-			code += `var ${propName} = __VLS_ctx.${propName}; `;
-			if (propsSet.has(propName)) {
-				ctxMappings.push({
-					data: { isAdditionalReference: true },
-					mode: MapedMode.Offset,
-					sourceRange: vueRange,
-					targetRange: {
-						start: code.length + `__VLS_Options.props.`.length,
-						end: code.length + `__VLS_Options.props.${propName}`.length,
-					},
-				});
-				code += `__VLS_Options.props.${propName}; `;
-			}
-			if (scriptSetupExportsSet.has(propName)) {
-				ctxMappings.push({
-					data: { isAdditionalReference: true },
-					mode: MapedMode.Offset,
-					sourceRange: vueRange,
-					targetRange: {
-						start: code.length + `__VLS_setups.`.length,
-						end: code.length + `__VLS_setups.${propName}`.length,
-					},
-				});
-				code += `__VLS_setups.${propName}; `
-			}
-			code += `\n`;
-		}
-
-		/* Interpolations */
-		code += `/* Interpolations */\n`;
-		const interpolationsStart = code.length;
-		code += interpolations.text;
-
-		const document = TextDocument.create(vue.uri + '.template.ts', 'typescript', documentVersion++, code);
-		const contextSourceMap = getContextSourceMap();
-		const componentSourceMap = getComponentSourceMap();
-
-		return {
-			document,
-			contextSourceMap,
-			componentSourceMap,
-			getSourceMaps,
-		};
-
-		function writeCssClassProperties(classes: Map<string, [TextDocument, number][]>) {
-			for (const [className, locs] of classes) {
-				for (const loc of locs) {
-					const document = loc[0];
-					const offset = loc[1];
-					cssModuleMappings.push({
-						document,
-						originalOffset: offset,
-						mappingOffset: code.length + 1, // + '
-						originalLength: className.length,
-						mappingLength: className.length,
-						mode: MapedMode.Offset,
-					});
-					cssModuleMappings.push({
-						document,
-						originalOffset: offset,
-						mappingOffset: code.length,
-						originalLength: className.length,
-						mappingLength: className.length + 2,
-						mode: MapedMode.Gate,
-					});
-				}
-				code += `'${className}': string,\n`;
-			}
-		}
-		function hasElement(tags: Set<string>, tagName: string) {
-			return tags.has(tagName) || tags.has(hyphenate(tagName));
-		}
-		function getContextSourceMap() {
-			const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
-				document,
-				document,
-			);
-			for (const maped of ctxMappings) {
-				sourceMap.add(maped);
-			}
-			return sourceMap;
-		}
-		function getComponentSourceMap() {
-			const sourceMap = new SourceMap(
-				document,
-				document,
-			);
-			for (const maped of componentMappings) {
-				sourceMap.add(maped);
-			}
-			return sourceMap;
-		}
-		function getSourceMaps() {
-			if (!descriptor.template) return [];
-			if (!interpolations) return [];
-
-			const sourceMaps = new Map<string, TsSourceMap>();
-			{ // diagnostic for '@vue/runtime-dom' package not exist
-				const sourceMap = getSourceMap(vue.document, document);
-				const text = `'@vue/runtime-dom'`;
-				const textIndex = document.getText().indexOf(text);
-				const virtualRange = {
-					start: textIndex,
-					end: textIndex + text.length,
-				};
-				sourceMap.add({
-					data: {
-						vueTag: 'template',
-						capabilities: {
-							basic: false,
-							references: false,
-							rename: false,
-							diagnostic: true,
-							formatting: false,
-							completion: false,
-							semanticTokens: false,
-						},
-					},
-					mode: MapedMode.Gate,
-					sourceRange: {
-						start: descriptor.template.loc.start,
-						end: descriptor.template.loc.start,
-					},
-					targetRange: virtualRange,
-				});
-			}
-			for (const maped of cssModuleMappings) {
-				const sourceMap = getSourceMap(maped.document, document);
-				sourceMap.add({
-					data: {
-						vueTag: 'style',
-						capabilities: {
-							basic: true,
-							references: true,
-							rename: true,
-							diagnostic: true,
-							formatting: false,
-							completion: true,
-							semanticTokens: false,
-						},
-					},
-					mode: maped.mode,
-					sourceRange: {
-						start: maped.originalOffset,
-						end: maped.originalOffset + maped.originalLength,
-					},
-					targetRange: {
-						start: maped.mappingOffset,
-						end: maped.mappingOffset + maped.mappingLength,
-					},
-				});
-			}
-			for (const maped of interpolations.mappings) {
-				const sourceMap = getSourceMap(vue.document, document);
-				sourceMap.add({
-					data: maped.data,
-					mode: maped.mode,
-					sourceRange: {
-						start: maped.sourceRange.start + descriptor.template.loc.start,
-						end: maped.sourceRange.end + descriptor.template.loc.start,
-					},
-					targetRange: {
-						start: maped.targetRange.start + interpolationsStart,
-						end: maped.targetRange.end + interpolationsStart,
-					},
-				});
-			}
-			return [...sourceMaps.values()];
-
-			function getSourceMap(sourceDoc: TextDocument, targetDoc: TextDocument) {
-				const key = sourceDoc.uri + '=>' + targetDoc.uri;
-				if (!sourceMaps.has(key)) {
-					sourceMaps.set(key, new TsSourceMap(sourceDoc, targetDoc, true, { foldingRanges: false }));
-				}
-				return sourceMaps.get(key)!;
-			}
-		}
-		function getCssClasses(type: 'module' | 'scoped') {
-			const names = new Map<string, [TextDocument, number][]>();
-			for (const sourceMap of cssSourceMaps.value) {
-				if (type === 'module' && !sourceMap.module)
-					continue;
-				if (type === 'scoped' && !sourceMap.scoped)
-					continue;
-				worker(sourceMap, sourceMap.targetDocument, sourceMap.stylesheet);
-				for (const linkStyle of sourceMap.links) {
-					worker(undefined, linkStyle[0], linkStyle[1]);
-				}
-			}
-			return names;
-
-			function worker(sourceMap: CssSourceMap | undefined, doc: TextDocument, ss: css.Stylesheet) {
-				const cssLanguageService = globalServices.getCssService(doc.languageId);
-				const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
-				for (const s of symbols) {
-					if (s.kind === css.SymbolKind.Class) {
-						// https://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
-						const classNames = s.name.matchAll(/(?<=\.)-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g);
-
-						for (const className of classNames) {
-							if (className.index === undefined) continue;
-
-							const text = className.toString();
-							if (!names.has(text)) {
-								names.set(text, []);
-							}
-							if (sourceMap) {
-								const vueLoc = sourceMap.targetToSource(s.location.range);
-								if (vueLoc) {
-									names.get(text)!.push([vue.document, vue.document.offsetAt(vueLoc.range.start) + 1]);
-								}
-							}
-							else {
-								names.get(text)!.push([doc, doc.offsetAt(s.location.range.start) + 1]);
-							}
-						}
-					}
-				}
-			}
-		}
-		function getInterpolations() {
-			if (!descriptor.template) return;
-			try {
-				const html = pugData.value?.html ?? descriptor.template.content;
-				const ast = vueDom.compile(html, { onError: () => { } }).ast;
-				return transformVueHtml(
-					ast,
-					pugData.value?.mapper,
-				);
-			}
-			catch (err) {
-				return {
-					text: '',
-					mappings: [],
-					tags: new Set<string>(),
-				};
-			}
-		}
-	});
-
-	// documents
-	const scriptDocument = computed(() => {
-		if (descriptor.script) {
-			const lang = descriptor.script.lang;
-			const uri = `${vue.uri}.script.${lang}`;
-			const languageId = syntaxToLanguageId(lang);
-			const content = descriptor.script.content;
-			return TextDocument.create(uri, languageId, documentVersion++, content);
-		}
-		if (descriptor.scriptSetup) {
-			const lang = 'ts';
-			const uri = `${vue.uri}.script.${lang}`;
-			const languageId = syntaxToLanguageId(lang);
-			const content = [
-				`import * as __VLS_setups from './${upath.basename(vue.fileName)}.script.setup.declare';`,
-				`import { defineComponent } from '@vue/runtime-dom';`,
-				`type __VLS_DefaultType<T> = T extends { default: infer K } ? K : new () => ({});`,
-				`type __VLS_NonDefaultType<T> = Omit<T, 'default'>;`,
-				`declare const __VLS_default: __VLS_DefaultType<typeof __VLS_setups>;`,
-				`declare const __VLS_nonDefault: __VLS_NonDefaultType<typeof __VLS_setups>;`,
-				`export default defineComponent({`,
-				`	setup() { return {`,
-				`		...new __VLS_default(),`,
-				`		...__VLS_nonDefault,`,
-				`	} }`,
-				`});`,
-			].join('\n')
-			return TextDocument.create(uri, languageId, documentVersion++, content);
-		}
-	});
-	const scriptSetupDeclareDocument = computed(() => {
-		if (descriptor.scriptSetup) {
-			const lang = descriptor.scriptSetup.lang;
-			const uri = `${vue.uri}.script.setup.declare.${lang}`;
-			const languageId = syntaxToLanguageId(lang);
-			const hasDefaultExport = hasExportDefault(descriptor.scriptSetup.content);
-			let content = descriptor.scriptSetup.content;
-			if (!hasDefaultExport) {
-				content += [
-					``,
-					scriptSetupDeclares.value.has('props') ? `// has props` : `declare const props: {};`,
-					scriptSetupDeclares.value.has('emits') ? `// has emits` : `declare const emits: {};`, // TODO
-					`declare const __VLS_defineComponent: (typeof import('@vue/runtime-dom'))['defineComponent'];`,
-					`const __VLS_options = __VLS_defineComponent({ setup: () => { } });`,
-					`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
-					`declare function __VLS_setup(__VLS_props: typeof props, __VLS_ctx: typeof __VLS_parameters[1]): ReturnType<NonNullable<typeof __VLS_options.setup>>;`,
-					`declare const __VLS_export: typeof __VLS_options & {`,
-					`	setup: typeof __VLS_setup,`,
-					`	new(): InstanceType<typeof __VLS_options> & typeof props,`,
-					`}`,
-					`export default __VLS_export;`,
-				].join('\n');
-			}
-			return TextDocument.create(uri, languageId, documentVersion++, content);
-
-			function hasExportDefault(code: string) {
-				const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.Latest);
-				let result = false;
-				sourceFile.forEachChild(node => {
-					if (ts.isExportAssignment(node)) {
-						result = true;
-					}
-				});
-				return result;
-			}
-		}
-	});
-	const scriptSetupDocument = computed(() => {
-		if (descriptor.scriptSetup) {
-			const lang = descriptor.scriptSetup.lang;
-			const uri = `${vue.uri}.script.setup.${lang}`;
-			const languageId = syntaxToLanguageId(lang);
-			const setup = descriptor.scriptSetup.setup;
-			let content = '';
-			let start = 0;
-			const locs = [...scriptSetupDeclares.value.values()].sort((a, b) => a.start - b.start);
-			for (const loc of locs) {
-				content += descriptor.scriptSetup.content.substring(start, loc.start);
-				content += ' '.repeat(loc.end - loc.start);
-				start = loc.end;
-			}
-			content += descriptor.scriptSetup.content.substring(start);
-			content += [
-				`declare const __VLS_options: typeof import('./${upath.basename(vue.fileName)}.script.setup.declare').default;`,
-				`declare const __VLS_parameters: Parameters<NonNullable<typeof __VLS_options.setup>>;`,
-				`declare var [${setup}]: typeof __VLS_parameters;`,
-			].join('\n');
-			return TextDocument.create(uri, languageId, documentVersion++, content);
-		}
-	});
-	const scriptOptionsDocument = computed(() => {
-		if (descriptor.scriptSetup) {
-			const uri = `${vue.uri}.options.ts`;
-			const languageId = 'typescript';
-			const content = [
-				descriptor.scriptSetup.content,
-				`declare function defineComponent<T>(options: T): T;`,
-				`export { };`
-			].join('\n');
-			return TextDocument.create(uri, languageId, documentVersion++, content);
-		}
-		if (descriptor.script) {
-			const uri = `${vue.uri}.options.ts`;
-			const languageId = 'typescript';
-			const content = [
-				descriptor.script.content,
-				`declare function defineComponent<T>(options: T): T;`,
-				`export { };`
-			].join('\n');
-			return TextDocument.create(uri, languageId, documentVersion++, content);
-		}
-	});
-	const scriptMainDocument = computed(() => {
-		const uri = `${vue.uri}.ts`;
-		const content = [
-			`import { defineComponent as __VLS_defineComponent } from '@vue/runtime-dom';`,
-			`import __VLS_VM from './${upath.basename(vue.fileName)}.script';`,
-			`import __VLS_Options from './${upath.basename(vue.fileName)}.options';`,
-			`import __VLS_Slots from './${upath.basename(vue.fileName)}.template';`,
-			`import * as __VLS_Setup from './${upath.basename(vue.fileName)}.script.setup';`,
-			`const __VLS_comp2 = __VLS_defineComponent(__VLS_VM);`,
-			`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_comp2;`,
-			`declare var __VLS_Component: __VLS_ComponentType<typeof __VLS_VM>;`,
-			`declare var __VLS_ctx: InstanceType<typeof __VLS_Component>;`,
-			`declare var __VLS_ComponentsWrap: typeof __VLS_Options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents;`,
-			`__VLS_ctx.${SearchTexts.Context};`,
-			`__VLS_Components.${SearchTexts.Components};`,
-			`__VLS_Options.setup().${SearchTexts.SetupReturns};`,
-			`__VLS_Options.props.${SearchTexts.Props};`,
-			`__VLS_Setup.${SearchTexts.ScriptSetupExports};`,
-			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
-			``,
-			`declare global {`,
-			`interface __VLS_GlobalComponents extends Pick<typeof import('@vue/runtime-dom'),`,
-			`	'Transition'`,
-			`	| 'TransitionGroup'`,
-			`	| 'KeepAlive'`,
-			`	| 'Suspense'`,
-			`	| 'Teleport'`,
-			`	> { }`,
-			`}`,
-			``,
-			`declare const __VLS_exportData: typeof __VLS_Component & {`,
-			`__VLS_options: typeof __VLS_Options,`,
-			`__VLS_slots: typeof __VLS_Slots,`,
-			`};`,
-			`export * from './${upath.basename(vue.fileName)}.script';`,
-			`export default __VLS_exportData;`,
-		].join('\n');
-		return TextDocument.create(uri, 'typescript', documentVersion++, content);
+		return map;
 	});
 	const templateScriptDocument = ref<TextDocument>();
-	const styleDocuments = computed(() => {
-		const compilerHost = ts.createCompilerHost(tsLanguageService.host.getCompilationSettings());
-		const documentContext = {
-			resolveReference: (ref: string, base: string) => {
-				return resolvePath(ref, base);
-			},
-		};
-		const documents: [
-			TextDocument,
-			css.Stylesheet,
-			[TextDocument, css.Stylesheet][],
-		][] = [];
-		for (let i = 0; i < descriptor.styles.length; i++) {
-			const style = descriptor.styles[i];
-			const lang = style.lang;
-			const content = style.content;
-			const documentUri = vue.uri + '.' + i + '.' + lang;
-			const document = TextDocument.create(documentUri, lang, documentVersion++, content);
-			const cssLanguageService = globalServices.getCssService(lang);
-			const stylesheet = cssLanguageService.parseStylesheet(document);
-			const linkStyles: [TextDocument, css.Stylesheet][] = [];
-			findLinks(document, stylesheet);
-			documents.push([document, stylesheet, linkStyles]);
-
-			function findLinks(textDocument: TextDocument, stylesheet: css.Stylesheet) {
-				const links = cssLanguageService.findDocumentLinks(textDocument, stylesheet, documentContext);
-				for (const link of links) {
-					if (!link.target) continue;
-					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
-					if (!ts.sys.fileExists(uriToFsPath(link.target))) continue;
-					if (linkStyles.find(l => l[0].uri === link.target)) continue; // Loop
-
-					const text = ts.sys.readFile(uriToFsPath(link.target));
-					if (text === undefined) continue;
-
-					const lang = upath.extname(link.target).substr(1);
-					const doc = TextDocument.create(link.target, lang, documentVersion++, text);
-					const stylesheet = globalServices.getCssService(lang).parseStylesheet(doc);
-					linkStyles.push([doc, stylesheet]);
-					findLinks(doc, stylesheet);
-				}
-			}
-		}
-		return documents;
-		function resolvePath(ref: string, base: string) {
-			const resolveResult = ts.resolveModuleName(ref, base, tsLanguageService.host.getCompilationSettings(), compilerHost);
-			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
-			for (const failed of failedLookupLocations) {
-				let path = failed;
-				if (path.endsWith('.d.ts')) {
-					path = upath.trimExt(path);
-					path = upath.trimExt(path);
-				}
-				else {
-					path = upath.trimExt(path);
-				}
-				if (ts.sys.fileExists(uriToFsPath(path))) {
-					return path;
-				}
-			}
-			return ref;
-		}
-	});
-	const templateDocument = computed<TextDocument | undefined>(() => {
-		if (descriptor.template) {
-			const lang = syntaxToLanguageId(descriptor.template.lang);
-			const uri = vue.uri + '.' + lang;
-			const content = descriptor.template.content;
-			const document = TextDocument.create(uri, lang, documentVersion++, content);
-			return document;
-		}
-	});
 	const vueHtmlDocument = computed(() => {
-		return globalServices.html.parseHTMLDocument(vue.document);
-	});
-	const templateHtmlDocument = computed<html.HTMLDocument | undefined>(() => {
-		if (templateDocument.value) {
-			return globalServices.html.parseHTMLDocument(templateDocument.value);
-		}
+		return globalServices.html.parseHTMLDocument(vueDoc.value);
 	});
 
-	// source maps
-	const scriptSourceMapes = computed(() => {
-		const sourceMaps: TsSourceMap[] = [];
-		const document = scriptDocument.value;
-		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: true });
-			const start = descriptor.script.loc.start;
-			const end = descriptor.script.loc.end;
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: true,
-						references: true,
-						rename: true,
-						diagnostic: true,
-						formatting: true,
-						completion: true,
-						semanticTokens: true,
-					},
-				},
-				mode: MapedMode.Offset,
-				sourceRange: {
-					start: start,
-					end: end,
-				},
-				targetRange: {
-					start: 0,
-					end: end - start,
-				},
-			});
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
-	});
-	const scriptSetupSourceMaps = computed(() => {
-		const sourceMaps: TsSourceMap[] = [];
-		// .vue.script.setup.declare.ts
-		const document0 = scriptSetupDeclareDocument.value;
-		if (document0 && descriptor.scriptSetup) {
-			for (const [dec, loc] of scriptSetupDeclares.value) {
-				const vueStart = descriptor.scriptSetup.loc.start;
-				const sourceMap = new TsSourceMap(vue.document, document0, false, { foldingRanges: true });
-				sourceMap.add({
-					data: {
-						vueTag: 'script',
-						capabilities: {
-							basic: true,
-							references: true,
-							rename: true,
-							diagnostic: true,
-							formatting: true,
-							completion: true,
-							semanticTokens: true,
-						},
-					},
-					mode: MapedMode.Offset,
-					sourceRange: {
-						start: vueStart + loc.start,
-						end: vueStart + loc.end,
-					},
-					targetRange: loc,
-				});
-				sourceMaps.push(sourceMap);
-			}
-		}
-		// img.vue.setup.ts
-		const document = scriptSetupDocument.value;
-		if (document && descriptor.scriptSetup) {
-			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: true });
-			{
-				const vueStart = descriptor.scriptSetup.loc.start;
-				const vueEnd = descriptor.scriptSetup.loc.end;
-				const virtualRanges: { start: number, end: number }[] = [];
-				let start = 0;
-				const locs = [...scriptSetupDeclares.value.values()].sort((a, b) => a.start - b.start);
-				for (const loc of locs) {
-					virtualRanges.push({ start: start, end: loc.start });
-					start = loc.end;
-				}
-				virtualRanges.push({ start: start, end: vueEnd - vueStart });
-				for (const virtualRange of virtualRanges) {
-					sourceMap.add({
-						data: {
-							vueTag: 'script',
-							capabilities: {
-								basic: true,
-								references: true,
-								rename: true,
-								diagnostic: true,
-								formatting: true,
-								completion: true,
-								semanticTokens: true,
-							},
-						},
-						mode: MapedMode.Offset,
-						sourceRange: {
-							start: vueStart + virtualRange.start,
-							end: vueStart + virtualRange.end,
-						},
-						targetRange: {
-							start: virtualRange.start,
-							end: virtualRange.end,
-						},
-					});
-				}
-			}
-			{
-				const setup = descriptor.scriptSetup.setup;
-				const start = vue.document.getText().substring(0, descriptor.scriptSetup.loc.start).lastIndexOf(setup); // TODO: don't use indexOf()
-				const end = start + setup.length;
-				const start_2 = document.getText().lastIndexOf(`${setup}]: typeof __VLS_parameters;`);
-				const end_2 = start_2 + setup.length;
-				sourceMap.add({
-					data: {
-						vueTag: 'script',
-						capabilities: {
-							basic: true,
-							references: true,
-							rename: true,
-							diagnostic: true,
-							formatting: true,
-							completion: true,
-							semanticTokens: true,
-						},
-					},
-					mode: MapedMode.Offset,
-					sourceRange: {
-						start: start,
-						end: end,
-					},
-					targetRange: {
-						start: start_2,
-						end: end_2,
-					},
-				});
-			}
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
-	});
-	const scriptOptionsSourceMaps = computed(() => {
-		const sourceMaps: TsSourceMap[] = [];
-		const document = scriptOptionsDocument.value;
-		const start = descriptor.scriptSetup?.loc.start ?? descriptor.script?.loc.start;
-		const end = descriptor.scriptSetup?.loc.end ?? descriptor.script?.loc.end;
-		if (document && start !== undefined && end !== undefined) {
-			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: false });
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: false,
-						references: true,
-						rename: true,
-						diagnostic: false,
-						formatting: false,
-						completion: false,
-						semanticTokens: false,
-					},
-				},
-				mode: MapedMode.Offset,
-				sourceRange: {
-					start: start,
-					end: end,
-				},
-				targetRange: {
-					start: 0,
-					end: end - start,
-				},
-			});
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
-	});
-	const scriptMainSourceMapes = computed(() => {
-		const sourceMaps: TsSourceMap[] = [];
-		const document = scriptMainDocument.value;
-		if (document && descriptor.script) {
-			const sourceMap = new TsSourceMap(vue.document, document, false, { foldingRanges: false });
-			sourceMap.add({
-				data: {
-					vueTag: 'script',
-					capabilities: {
-						basic: false,
-						references: false,
-						rename: false,
-						diagnostic: false,
-						formatting: false,
-						completion: false,
-						semanticTokens: false,
-					},
-				},
-				mode: MapedMode.Gate,
-				sourceRange: {
-					start: descriptor.script.loc.start,
-					end: descriptor.script.loc.end,
-				},
-				targetRange: {
-					start: 0,
-					end: document.getText().length,
-				},
-			});
-			const optionsPropertyOffset = document.getText().indexOf('__VLS_options: typeof __VLS_Options,');
-			if (optionsPropertyOffset >= 0) {
-				sourceMap.add({
-					data: {
-						vueTag: 'script',
-						capabilities: {
-							basic: false,
-							references: false,
-							rename: false,
-							diagnostic: false,
-							formatting: false,
-							completion: false,
-							semanticTokens: false,
-						},
-					},
-					mode: MapedMode.Gate,
-					sourceRange: {
-						start: descriptor.script.loc.start,
-						end: descriptor.script.loc.end,
-					},
-					targetRange: {
-						start: optionsPropertyOffset,
-						end: optionsPropertyOffset + '__VLS_options'.length,
-					},
-				});
-			}
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
-	});
-	const templateScriptSourceMaps = computed(() => templateScript.value?.getSourceMaps() ?? []);
+	// virtual scripts
+	const stylesParts = {
+		'raw': useStylesRaw(tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles)),
+	};
+	const templateParts = {
+		'raw': useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), pugData),
+		'script.gen': useTemplateScript(
+			untrack(() => vueDoc.value),
+			computed(() => descriptor.template),
+			computed(() => descriptor.scriptSetup),
+			templateScriptData, stylesParts['raw'].textDocuments,
+			stylesParts['raw'].sourceMaps,
+			pugData,
+		),
+	};
+	const scriptParts = {
+		'raw': useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup)),
+		'options': useScriptOptions(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup)),
+		'setup.gen': useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup), scriptSetupDeclares),
+		'setup.raw': useScriptSetupRaw(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup), scriptSetupDeclares),
+		'main': useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script)),
+	};
 
 	// source map sets
 	const tsSourceMaps = computed(() => {
 		return [
-			...scriptSourceMapes.value,
-			...scriptSetupSourceMaps.value,
-			...scriptOptionsSourceMaps.value,
-			...scriptMainSourceMapes.value,
-			...templateScriptSourceMaps.value,
-		];
-	});
-	const cssSourceMaps = computed(() => {
-		const sourceMaps: CssSourceMap[] = [];
-		for (let i = 0; i < descriptor.styles.length && i < styleDocuments.value.length; i++) {
-			const style = descriptor.styles[i];
-			const document = styleDocuments.value[i][0];
-			const stylesheet = styleDocuments.value[i][1];
-			const linkStyles = styleDocuments.value[i][2];
-			const loc = style.loc;
-			const module = style.module;
-			const scoped = style.scoped;
-
-			const sourceMap = new CssSourceMap(
-				vue.document,
-				document,
-				stylesheet,
-				module,
-				scoped,
-				linkStyles,
-			);
-			sourceMap.add({
-				data: undefined,
-				mode: MapedMode.Offset,
-				sourceRange: {
-					start: loc.start,
-					end: loc.end,
-				},
-				targetRange: {
-					start: 0,
-					end: loc.end - loc.start,
-				},
-			});
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
-	});
-	const htmlSourceMaps = computed(() => {
-		const sourceMaps: HtmlSourceMap[] = [];
-		if (templateDocument.value?.languageId === 'html' && templateHtmlDocument.value && descriptor.template) {
-			const document = templateDocument.value;
-			const htmlDocument = templateHtmlDocument.value;
-			const sourceMap = new HtmlSourceMap(
-				vue.document,
-				document,
-				htmlDocument,
-			);
-			sourceMap.add({
-				data: undefined,
-				mode: MapedMode.Offset,
-				sourceRange: {
-					start: descriptor.template.loc.start,
-					end: descriptor.template.loc.end,
-				},
-				targetRange: {
-					start: 0,
-					end: descriptor.template.loc.end - descriptor.template.loc.start,
-				},
-			});
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
-	});
-	const pugSourceMaps = computed(() => {
-		const sourceMaps: PugSourceMap[] = [];
-		if (templateDocument.value?.languageId === 'jade' && descriptor.template) {
-			const document = templateDocument.value;
-			const sourceMap = new PugSourceMap(
-				vue.document,
-				document,
-				pugData.value.html,
-				pugData.value.mapper,
-			);
-			sourceMap.add({
-				data: undefined,
-				mode: MapedMode.Offset,
-				sourceRange: {
-					start: descriptor.template.loc.start,
-					end: descriptor.template.loc.end,
-				},
-				targetRange: {
-					start: 0,
-					end: descriptor.template.loc.end - descriptor.template.loc.start,
-				},
-			});
-			sourceMaps.push(sourceMap);
-		}
-		return sourceMaps;
+			scriptParts['raw'].sourceMap.value,
+			scriptParts['setup.gen'].sourceMap.value,
+			scriptParts['setup.raw'].sourceMap.value,
+			scriptParts['options'].sourceMap.value,
+			scriptParts['main'].sourceMap.value,
+			templateParts['script.gen'].sourceMap.value,
+		].filter(notEmpty);
 	});
 
 	const tsDocuments = computed(() => {
 		const docs = new Map<string, TextDocument>();
-		if (scriptDocument.value) docs.set(scriptDocument.value.uri, scriptDocument.value);
-		if (scriptSetupDeclareDocument.value) docs.set(scriptSetupDeclareDocument.value.uri, scriptSetupDeclareDocument.value);
-		if (scriptSetupDocument.value) docs.set(scriptSetupDocument.value.uri, scriptSetupDocument.value);
-		if (scriptOptionsDocument.value) docs.set(scriptOptionsDocument.value.uri, scriptOptionsDocument.value);
-		if (scriptMainDocument.value) docs.set(scriptMainDocument.value.uri, scriptMainDocument.value);
+		if (scriptParts['raw'].textDocument.value)
+			docs.set(scriptParts['raw'].textDocument.value.uri, scriptParts['raw'].textDocument.value);
+		if (scriptParts['setup.gen'].textDocument.value)
+			docs.set(scriptParts['setup.gen'].textDocument.value.uri, scriptParts['setup.gen'].textDocument.value);
+		if (scriptParts['setup.raw'].textDocument.value)
+			docs.set(scriptParts['setup.raw'].textDocument.value.uri, scriptParts['setup.raw'].textDocument.value);
+		if (scriptParts['options'].textDocument.value)
+			docs.set(scriptParts['options'].textDocument.value.uri, scriptParts['options'].textDocument.value);
+		if (scriptParts['main'].textDocument.value)
+			docs.set(scriptParts['main'].textDocument.value.uri, scriptParts['main'].textDocument.value);
+
 		if (templateScriptDocument.value) docs.set(templateScriptDocument.value.uri, templateScriptDocument.value);
 		return docs;
 	});
@@ -1095,29 +158,38 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	update(initialDocument);
 
 	return {
-		uri: vue.uri,
-		fileName: vue.fileName,
-		getTextDocument: untrack(() => vue.document),
+		uri: vueUri,
+		fileName: vueFileName,
+		getTextDocument: untrack(() => vueDoc.value),
 		update,
 		updateTemplateScript,
 		getComponentCompletionData: useComponentCompletionData(),
 		getDiagnostics: useDiagnostics(),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
-		getCssSourceMaps: untrack(() => cssSourceMaps.value),
-		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
-		getPugSourceMaps: untrack(() => pugSourceMaps.value),
+		getCssSourceMaps: untrack(() => stylesParts['raw'].sourceMaps.value),
+		getHtmlSourceMaps: untrack(() => templateParts['raw'].htmlSourceMap.value ? [templateParts['raw'].htmlSourceMap.value] : []),
+		getPugSourceMaps: untrack(() => templateParts['raw'].pugSourceMap.value ? [templateParts['raw'].pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getTemplateScript: untrack(() => templateScript.value),
+		getTemplateScript: untrack(() => {
+			const data = templateParts['script.gen'];
+			if (data.textDocument.value && data.sourceMap.value) {
+				return {
+					document: data.textDocument.value,
+					contextSourceMap: data.contextSourceMap.value,
+					componentSourceMap: data.componentSourceMap.value,
+				};
+			}
+		}),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getTsDocuments: untrack(() => tsDocuments.value),
 	};
 
 	function update(newVueDocument: TextDocument) {
-		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vue.fileName }).descriptor;
+		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vueFileName }).descriptor;
 		const versionsBeforeUpdate = [
-			scriptDocument.value?.version,
-			scriptSetupDeclareDocument.value?.version,
+			scriptParts['raw'].textDocument.value?.version,
+			scriptParts['setup.raw'].textDocument.value?.version,
 			templateScriptDocument.value?.version,
 		];
 
@@ -1127,13 +199,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		updateStyles(newDescriptor);
 		updateTemplateScriptDocument();
 
-		if (newVueDocument.getText() !== vue.document.getText()) {
-			vue.document = newVueDocument;
+		if (newVueDocument.getText() !== vueDoc.value.getText()) {
+			vueDoc.value = newVueDocument;
 		}
 
 		const versionsAfterUpdate = [
-			scriptDocument.value?.version,
-			scriptSetupDeclareDocument.value?.version,
+			scriptParts['raw'].textDocument.value?.version,
+			scriptParts['setup.raw'].textDocument.value?.version,
 			templateScriptDocument.value?.version,
 		];
 
@@ -1237,7 +309,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		templateScriptData.projectVersion = tsLanguageService.host.getProjectVersion?.();
 
-		const doc = scriptMainDocument.value;
+		const doc = scriptParts['main'].textDocument.value;
 		const docText = doc.getText();
 		const context = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Context)));
 		const components = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Components)));
@@ -1279,65 +351,55 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 	}
 	function updateTemplateScriptDocument() {
-		if (!templateScript.value) {
+		const doc = templateParts['script.gen'].textDocument.value;
+		if (!doc) {
 			templateScriptDocument.value = undefined;
 		}
-		else if (templateScript.value.document.getText() !== templateScriptDocument.value?.getText()) {
-			templateScriptDocument.value = templateScript.value.document;
+		else if (doc.getText() !== templateScriptDocument.value?.getText()) {
+			templateScriptDocument.value = doc;
 		}
 	}
 	function useDiagnostics() {
 
 		let version = 0;
 
-		const stylesDiags = useStylesValidation();
-		const templateDiags = useTemplateValidation();
-		const templateScriptDiags_1 = useTemplateScriptValidation(1);
-		const templateScriptDiags_2 = useTemplateScriptValidation(2);
-		const templateScriptDiags_3 = useTemplateScriptValidation(3);
-		const scriptDiags_1 = useScriptValidation(scriptDocument, 1);
-		const scriptDiags_2 = useScriptValidation(scriptDocument, 2);
-		const scriptDiags_3 = useScriptValidation(scriptDocument, 3);
-		const scriptSetupDiags_1 = useScriptValidation(scriptSetupDocument, 1);
-		const scriptSetupDiags_2 = useScriptValidation(scriptSetupDocument, 2);
-		const scriptSetupDiags_3 = useScriptValidation(scriptSetupDocument, 3);
-		const scriptSetup0Diags_1 = useScriptValidation(scriptSetupDeclareDocument, 1);
-		const scriptSetup0Diags_2 = useScriptValidation(scriptSetupDeclareDocument, 2);
-		const scriptSetup0Diags_3 = useScriptValidation(scriptSetupDeclareDocument, 3);
+		const stylesDiags = [useStylesValidation(), ref<Diagnostic[]>([])];
+		const templateDiags = [useTemplateValidation(), ref<Diagnostic[]>([])];
+		const templateScriptDiags_1 = [useTemplateScriptValidation(1), ref<Diagnostic[]>([])];
+		const templateScriptDiags_2 = [useTemplateScriptValidation(2), ref<Diagnostic[]>([])];
+		const templateScriptDiags_3 = [useTemplateScriptValidation(3), ref<Diagnostic[]>([])];
+		const scriptDiags_1 = [useScriptValidation(scriptParts['raw'].textDocument, 1), ref<Diagnostic[]>([])];
+		const scriptDiags_2 = [useScriptValidation(scriptParts['raw'].textDocument, 2), ref<Diagnostic[]>([])];
+		const scriptDiags_3 = [useScriptValidation(scriptParts['raw'].textDocument, 3), ref<Diagnostic[]>([])];
+		const scriptSetupDiags_1 = [useScriptValidation(scriptParts['setup.gen'].textDocument, 1), ref<Diagnostic[]>([])];
+		const scriptSetupDiags_2 = [useScriptValidation(scriptParts['setup.gen'].textDocument, 2), ref<Diagnostic[]>([])];
+		const scriptSetupDiags_3 = [useScriptValidation(scriptParts['setup.gen'].textDocument, 3), ref<Diagnostic[]>([])];
+		const scriptSetup0Diags_1 = [useScriptValidation(scriptParts['setup.raw'].textDocument, 1), ref<Diagnostic[]>([])];
+		const scriptSetup0Diags_2 = [useScriptValidation(scriptParts['setup.raw'].textDocument, 2), ref<Diagnostic[]>([])];
+		const scriptSetup0Diags_3 = [useScriptValidation(scriptParts['setup.raw'].textDocument, 3), ref<Diagnostic[]>([])];
 
-		const lastStylesDiags = ref<Diagnostic[]>([]);
-		const lastTemplateDiags = ref<Diagnostic[]>([]);
-		const lastTemplateScriptDiags_1 = ref<Diagnostic[]>([]);
-		const lastTemplateScriptDiags_2 = ref<Diagnostic[]>([]);
-		const lastTemplateScriptDiags_3 = ref<Diagnostic[]>([]);
-		const lastScriptDiags_1 = ref<Diagnostic[]>([]);
-		const lastScriptDiags_2 = ref<Diagnostic[]>([]);
-		const lastScriptDiags_3 = ref<Diagnostic[]>([]);
-		const lastScriptSetupDiags_1 = ref<Diagnostic[]>([]);
-		const lastScriptSetupDiags_2 = ref<Diagnostic[]>([]);
-		const lastScriptSetupDiags_3 = ref<Diagnostic[]>([]);
-		const lastScriptSetup0Diags_1 = ref<Diagnostic[]>([]);
-		const lastScriptSetup0Diags_2 = ref<Diagnostic[]>([]);
-		const lastScriptSetup0Diags_3 = ref<Diagnostic[]>([]);
+		const all = [
+			stylesDiags,
+			templateDiags,
 
-		const result = computed(() => {
-			let result = [
-				...lastStylesDiags.value,
-				...lastTemplateDiags.value,
-				...lastScriptDiags_1.value,
-				...lastScriptDiags_2.value,
-				...lastScriptDiags_3.value,
-				...lastTemplateScriptDiags_1.value,
-				...lastTemplateScriptDiags_2.value,
-				...lastTemplateScriptDiags_3.value,
-				...lastScriptSetupDiags_1.value,
-				...lastScriptSetupDiags_2.value,
-				...lastScriptSetupDiags_3.value,
-				...lastScriptSetup0Diags_1.value,
-				...lastScriptSetup0Diags_2.value,
-				...lastScriptSetup0Diags_3.value,
-			];
-			return result;
+			scriptDiags_2,
+			templateScriptDiags_2,
+			scriptSetupDiags_2,
+			scriptSetup0Diags_2,
+
+			scriptDiags_3,
+			templateScriptDiags_3,
+			scriptSetupDiags_3,
+			scriptSetup0Diags_3,
+
+			scriptDiags_1,
+			templateScriptDiags_1,
+			scriptSetupDiags_1,
+			scriptSetup0Diags_1,
+		];
+
+		const allLast = computed(() => {
+			return all.map(diag => diag[1].value).flat();
 		});
 
 		return worker;
@@ -1346,69 +408,19 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 			let dirty = false;
 
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(stylesDiags, lastStylesDiags);
+			for (const diag of all) {
+				if (dirty) await sleep();
+				if (isCancel?.()) return;
+				dirty = tryProgress(diag[0], diag[1]);
+			}
 
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(templateDiags, lastTemplateDiags);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(templateScriptDiags_2, lastTemplateScriptDiags_2);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptDiags_2, lastScriptDiags_2);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptSetupDiags_2, lastScriptSetupDiags_2);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptSetup0Diags_2, lastScriptSetup0Diags_2);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(templateScriptDiags_3, lastTemplateScriptDiags_3);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptDiags_3, lastScriptDiags_3);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptSetupDiags_3, lastScriptSetupDiags_3);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptSetup0Diags_3, lastScriptSetup0Diags_3);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(templateScriptDiags_1, lastTemplateScriptDiags_1);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptDiags_1, lastScriptDiags_1);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptSetupDiags_1, lastScriptSetupDiags_1);
-
-			if (dirty) await sleep();
-			if (isCancel?.()) return;
-			dirty = tryProgress(scriptSetup0Diags_1, lastScriptSetup0Diags_1);
-
-			return result.value;
+			return allLast.value;
 
 			function tryProgress(data: Ref<Diagnostic[]>, lastData: Ref<Diagnostic[]>) {
 				const oldVersion = version;
 				lastData.value = data.value;
 				if (version !== oldVersion) {
-					onDirty?.(result.value);
+					onDirty?.(allLast.value);
 					return true;
 				}
 				return false;
@@ -1416,8 +428,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
-				if (templateDocument.value?.languageId === 'html') {
-					return getVueCompileErrors(templateDocument.value);
+				if (templateParts['raw'].textDocument.value?.languageId === 'html') {
+					return getVueCompileErrors(templateParts['raw'].textDocument.value);
 				}
 				return [];
 			});
@@ -1426,12 +438,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				if (pugData.value.error) {
 					result.push(pugData.value.error);
 				}
-				if (pugData.value.html && templateDocument.value) {
+				if (pugData.value.html && templateParts['raw'].textDocument.value) {
 					const htmlDoc = TextDocument.create('', 'html', 0, pugData.value.html);
 					const vueCompileErrors = getVueCompileErrors(htmlDoc);
 					const pugDocRange = {
-						start: templateDocument.value.positionAt(0),
-						end: templateDocument.value.positionAt(templateDocument.value.getText().length),
+						start: templateParts['raw'].textDocument.value.positionAt(0),
+						end: templateParts['raw'].textDocument.value.positionAt(templateParts['raw'].textDocument.value.getText().length),
 					};
 					// TODO
 					for (const vueCompileError of vueCompileErrors) {
@@ -1446,10 +458,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			});
 			return computed(() => {
 				version++;
-				if (!templateDocument.value) return [];
+				if (!templateParts['raw'].textDocument.value) return [];
 				return [
-					...getSourceDiags(htmlErrors.value, templateDocument.value.uri, htmlSourceMaps.value),
-					...getSourceDiags(pugErrors.value, templateDocument.value.uri, pugSourceMaps.value),
+					...toSourceDiags(htmlErrors.value, templateParts['raw'].textDocument.value.uri, templateParts['raw'].htmlSourceMap.value ? [templateParts['raw'].htmlSourceMap.value] : []),
+					...toSourceDiags(pugErrors.value, templateParts['raw'].textDocument.value.uri, templateParts['raw'].pugSourceMap.value ? [templateParts['raw'].pugSourceMap.value] : []),
 				];
 			});
 
@@ -1458,7 +470,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				try {
 					const templateResult = vueSfc.compileTemplate({
 						source: doc.getText(),
-						filename: vue.fileName,
+						filename: vueFileName,
 						compilerOptions: {
 							onError: err => {
 								if (!err.loc) return;
@@ -1514,10 +526,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		function useStylesValidation() {
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
-				for (const [document, stylesheet] of styleDocuments.value) {
-					const cssLanguageService = document.languageId === "scss" ? globalServices.scss : globalServices.css;
-					const errs = cssLanguageService.doValidation(document, stylesheet);
-					if (errs) result.set(document.uri, errs);
+				for (const { textDocument, stylesheet } of stylesParts['raw'].textDocuments.value) {
+					const cssLanguageService = textDocument.languageId === "scss" ? globalServices.scss : globalServices.css;
+					const errs = cssLanguageService.doValidation(textDocument, stylesheet);
+					if (errs) result.set(textDocument.uri, errs);
 				}
 				return result;
 			});
@@ -1525,7 +537,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				version++;
 				let result: css.Diagnostic[] = [];
 				for (const [uri, errs] of errors.value) {
-					result = result.concat(getSourceDiags(errs, uri, cssSourceMaps.value));
+					result = result.concat(toSourceDiags(errs, uri, stylesParts['raw'].sourceMaps.value));
 				}
 				return result as Diagnostic[];
 			});
@@ -1551,7 +563,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				version++;
 				const doc = document.value;
 				if (!doc) return [];
-				return getSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
+				return toTsSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
 			});
 		}
 		function useTemplateScriptValidation(mode: number) {
@@ -1573,16 +585,19 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			});
 			const errors_2 = computed(() => {
 				const result: Diagnostic[] = [];
-				if (!templateScript.value || !scriptDocument.value) return result;
+				if (!templateParts['script.gen'].textDocument.value
+					|| !templateParts['script.gen'].contextSourceMap.value
+					|| !scriptParts['raw'].textDocument.value)
+					return result;
 				for (const diag of errors_1.value) {
-					const spanText = templateScript.value.document.getText(diag.range);
+					const spanText = templateParts['script.gen'].textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = templateScript.value.contextSourceMap.sourceToTargets(diag.range);
+					const propRights = templateParts['script.gen'].contextSourceMap.value.sourceToTargets(diag.range);
 					for (const propRight of propRights) {
 						if (propRight.maped.data.isAdditionalReference) continue;
-						const definitions = tsLanguageService.findDefinition(templateScript.value.document, propRight.range.start);
+						const definitions = tsLanguageService.findDefinition(templateParts['script.gen'].textDocument.value, propRight.range.start);
 						for (const definition of definitions) {
-							if (definition.uri !== scriptDocument.value.uri) continue;
+							if (definition.uri !== scriptParts['raw'].textDocument.value.uri) continue;
 							result.push({
 								...diag,
 								range: definition.range,
@@ -1594,25 +609,25 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			})
 			return computed(() => {
 				version++;
-				const result_1 = templateScriptDocument.value ? getSourceDiags(
+				const result_1 = templateScriptDocument.value ? toTsSourceDiags(
 					errors_1.value,
 					templateScriptDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
-				const result_2 = scriptDocument.value ? getSourceDiags(
+				const result_2 = scriptParts['raw'].textDocument.value ? toTsSourceDiags(
 					errors_2.value,
-					scriptDocument.value.uri,
+					scriptParts['raw'].textDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
 		}
-		function getSourceDiags<T = Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+		function toSourceDiags<T = Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
 			const result: T[] = [];
 			for (const error of errors) {
 				for (const sourceMap of sourceMaps) {
 					if (sourceMap.targetDocument.uri === virtualScriptUri) {
-						if (css.Diagnostic.is(error)) {
+						if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
 							const vueLoc = sourceMap.targetToSource(error.range);
 							if (vueLoc) {
 								result.push({
@@ -1621,9 +636,19 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 								});
 							}
 						}
-						else if (Diagnostic.is(error)) {
+					}
+				}
+			}
+			return result;
+		}
+		function toTsSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
+			const result: Diagnostic[] = [];
+			for (const error of errors) {
+				for (const sourceMap of sourceMaps) {
+					if (sourceMap.targetDocument.uri === virtualScriptUri) {
+						if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
 							const vueLoc = sourceMap.targetToSource(error.range);
-							if (vueLoc) {
+							if (vueLoc && vueLoc.maped.data.capabilities.diagnostic) {
 								result.push({
 									...error,
 									range: vueLoc.range,
@@ -1642,7 +667,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				tsProjectVersion.value;
 			}
 			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
-			if (templateScriptDocument.value && templateDocument.value) {
+			if (templateScriptDocument.value && templateParts['raw'].textDocument.value) {
 				const doc = templateScriptDocument.value;
 				const text = doc.getText();
 				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {

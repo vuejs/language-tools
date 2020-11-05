@@ -67,8 +67,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const sourceFile_2 = findSourceFileByTsUri(sourceFiles, tsUri);
 						const templateScript = sourceFile_2?.getTemplateScript();
 						if (templateScript?.document && templateScript?.document.uri === tsLoc.uri) {
-							transfer(templateScript.contextSourceMap, templateScript.document);
-							transfer(templateScript.componentSourceMap, templateScript.document);
+							if (templateScript.contextSourceMap)
+								transfer(templateScript.contextSourceMap, templateScript.document);
+							if (templateScript.componentSourceMap)
+								transfer(templateScript.componentSourceMap, templateScript.document);
 							function transfer(sourceMap: SourceMap, tsDocument: TextDocument) {
 								const leftRange = sourceMap.isSource(tsLoc.range)
 									? tsLoc.range
