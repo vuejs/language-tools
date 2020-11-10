@@ -6,7 +6,7 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Some interesting features:
 
-- [x] RFC #222 support (v0.15.2 added)
+- [x] RFC [#222](https://github.com/vuejs/rfcs/pull/222)([#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) support (v0.15.2 added)
 - [x] Scoped CSS services (v0.15.1 added)
 - [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
