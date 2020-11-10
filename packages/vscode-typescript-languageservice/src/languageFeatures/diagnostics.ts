@@ -39,7 +39,7 @@ export function register(languageService: ts.LanguageService) {
 					message: typeof diag.messageText === 'string' ? diag.messageText : diag.messageText.messageText,
 				};
 
-				if (diagnostic.source === 'ts' && diagnostic.code === 6133) {
+				if (diagnostic.source === 'ts' && (diagnostic.code === 6133 || diagnostic.code === 7028)) {
 					if (diagnostic.tags === undefined) diagnostic.tags = [];
 					diagnostic.tags.push(DiagnosticTag.Unnecessary);
 				}

@@ -8,6 +8,7 @@ import { SearchTexts } from './common';
 export function useScriptMain(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
+	scriptSetup: Ref<IDescriptor['scriptSetup']>,
 ) {
 	let version = 0;
 	const optionsPropertyName = '__VLS_options';
@@ -17,10 +18,10 @@ export function useScriptMain(
 		const uri = `${vueDoc.uri}.ts`;
 		const content = [
 			`import { defineComponent as __VLS_defineComponent } from '@vue/runtime-dom';`,
-			`import __VLS_VM from './${upath.basename(vueDoc.uri)}.script';`,
+			`import __VLS_VM from './${upath.basename(vueDoc.uri)}.${scriptSetup.value ? 'scriptSetup' : 'script'}';`,
 			`import __VLS_Options from './${upath.basename(vueDoc.uri)}.options';`,
 			`import __VLS_Slots from './${upath.basename(vueDoc.uri)}.template';`,
-			`import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.script.setup.gen';`,
+			`import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.scriptSetup';`,
 			`const __VLS_comp2 = __VLS_defineComponent(__VLS_VM);`,
 			`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_comp2;`,
 			`declare var __VLS_Component: __VLS_ComponentType<typeof __VLS_VM>;`,
@@ -54,7 +55,7 @@ export function useScriptMain(
 		return TextDocument.create(uri, 'typescript', version++, content);
 	});
 	const sourceMap = computed(() => {
-		if (textDocument.value && script.value) {
+		if (textDocument.value) {
 			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
 			const rangesToSourceFullScript = [{
@@ -75,7 +76,7 @@ export function useScriptMain(
 					end: exportVarOffset + exportVarName.length,
 				});
 			}
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false });
 			for (const range of rangesToSourceFullScript) {
 				sourceMap.add({
 					data: {
@@ -92,8 +93,8 @@ export function useScriptMain(
 					},
 					mode: MapedMode.Gate,
 					sourceRange: {
-						start: script.value.loc.start,
-						end: script.value.loc.end,
+						start: (scriptSetup.value ?? script.value)?.loc.start ?? 0,
+						end: (scriptSetup.value ?? script.value)?.loc.end ?? 0,
 					},
 					targetRange: range,
 				});

@@ -166,6 +166,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 	function getTsFormattingEdits() {
 		const result: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			if (!sourceMap.capabilities.formatting) continue;
 			const textEdits = tsLanguageService.doFormatting(sourceMap.targetDocument, options);
 			for (const textEdit of textEdits) {
 				for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {

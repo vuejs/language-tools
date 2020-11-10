@@ -18,13 +18,13 @@ import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
 import { IDescriptor, ITemplateScriptData } from './types';
 import { SearchTexts } from './virtuals/common';
-import { useScriptRaw } from './virtuals/script.raw';
-import { useScriptSetupGen } from './virtuals/script.setup.gen';
-import { useScriptSetupRaw } from './virtuals/script.setup.raw';
-import { useScriptOptions } from './virtuals/script.options';
-import { useScriptMain } from './virtuals/script.main';
+import { useScriptRaw } from './virtuals/script';
+import { useScriptSetupGen } from './virtuals/scriptSetup';
+import { useScriptSetupFormat } from './virtuals/scriptSetup.raw';
+import { useScriptOptions } from './virtuals/options';
+import { useScriptMain } from './virtuals/main';
 import { useTemplateRaw } from './virtuals/template.raw';
-import { useTemplateScript } from './virtuals/template.script.gen';
+import { useTemplateScript } from './virtuals/template';
 import { useStylesRaw } from './virtuals/styles.raw';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
@@ -80,24 +80,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		return {};
 	});
-	const scriptSetupDeclares = computed(() => {
-		const map = new Map<string, { start: number, end: number }>();
-		if (descriptor.scriptSetup) {
-			const sourceFile = ts.createSourceFile('', descriptor.scriptSetup.content, ts.ScriptTarget.Latest);
-			sourceFile.forEachChild(node => {
-				if (!ts.isVariableStatement(node))
-					return
-				if (!node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword))
-					return;
-				for (const declaration of node.declarationList.declarations) {
-					if (ts.isIdentifier(declaration.name)) {
-						map.set(declaration.name.escapedText as string, { start: node.pos, end: node.end });
-					}
-				}
-			});
-		}
-		return map;
-	});
 	const templateScriptDocument = ref<TextDocument>();
 	const vueHtmlDocument = computed(() => {
 		return globalServices.html.parseHTMLDocument(vueDoc.value);
@@ -119,19 +101,19 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		),
 	};
 	const scriptParts = {
-		'raw': useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup)),
+		'raw': useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.script)),
 		'options': useScriptOptions(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup)),
-		'setup.gen': useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup), scriptSetupDeclares),
-		'setup.raw': useScriptSetupRaw(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup), scriptSetupDeclares),
-		'main': useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script)),
+		'setup': useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup)),
+		'setup.format': useScriptSetupFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup)),
+		'main': useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup)),
 	};
 
 	// source map sets
 	const tsSourceMaps = computed(() => {
 		return [
 			scriptParts['raw'].sourceMap.value,
-			scriptParts['setup.gen'].sourceMap.value,
-			scriptParts['setup.raw'].sourceMap.value,
+			scriptParts['setup'].sourceMap.value,
+			scriptParts['setup.format'].sourceMap.value,
 			scriptParts['options'].sourceMap.value,
 			scriptParts['main'].sourceMap.value,
 			templateParts['script.gen'].sourceMap.value,
@@ -142,10 +124,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const docs = new Map<string, TextDocument>();
 		if (scriptParts['raw'].textDocument.value)
 			docs.set(scriptParts['raw'].textDocument.value.uri, scriptParts['raw'].textDocument.value);
-		if (scriptParts['setup.gen'].textDocument.value)
-			docs.set(scriptParts['setup.gen'].textDocument.value.uri, scriptParts['setup.gen'].textDocument.value);
-		if (scriptParts['setup.raw'].textDocument.value)
-			docs.set(scriptParts['setup.raw'].textDocument.value.uri, scriptParts['setup.raw'].textDocument.value);
+		if (scriptParts['setup'].textDocument.value)
+			docs.set(scriptParts['setup'].textDocument.value.uri, scriptParts['setup'].textDocument.value);
+		if (scriptParts['setup.format'].textDocument.value)
+			docs.set(scriptParts['setup.format'].textDocument.value.uri, scriptParts['setup.format'].textDocument.value);
 		if (scriptParts['options'].textDocument.value)
 			docs.set(scriptParts['options'].textDocument.value.uri, scriptParts['options'].textDocument.value);
 		if (scriptParts['main'].textDocument.value)
@@ -183,13 +165,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getTsDocuments: untrack(() => tsDocuments.value),
+		getScriptSetupData: untrack(() => scriptParts['setup'].genResult.value),
 	};
 
 	function update(newVueDocument: TextDocument) {
 		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vueFileName }).descriptor;
 		const versionsBeforeUpdate = [
 			scriptParts['raw'].textDocument.value?.version,
-			scriptParts['setup.raw'].textDocument.value?.version,
+			scriptParts['setup'].textDocument.value?.version,
 			templateScriptDocument.value?.version,
 		];
 
@@ -205,7 +188,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		const versionsAfterUpdate = [
 			scriptParts['raw'].textDocument.value?.version,
-			scriptParts['setup.raw'].textDocument.value?.version,
+			scriptParts['setup'].textDocument.value?.version,
 			templateScriptDocument.value?.version,
 		];
 
@@ -371,12 +354,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const scriptDiags_1 = [useScriptValidation(scriptParts['raw'].textDocument, 1), ref<Diagnostic[]>([])];
 		const scriptDiags_2 = [useScriptValidation(scriptParts['raw'].textDocument, 2), ref<Diagnostic[]>([])];
 		const scriptDiags_3 = [useScriptValidation(scriptParts['raw'].textDocument, 3), ref<Diagnostic[]>([])];
-		const scriptSetupDiags_1 = [useScriptValidation(scriptParts['setup.gen'].textDocument, 1), ref<Diagnostic[]>([])];
-		const scriptSetupDiags_2 = [useScriptValidation(scriptParts['setup.gen'].textDocument, 2), ref<Diagnostic[]>([])];
-		const scriptSetupDiags_3 = [useScriptValidation(scriptParts['setup.gen'].textDocument, 3), ref<Diagnostic[]>([])];
-		const scriptSetup0Diags_1 = [useScriptValidation(scriptParts['setup.raw'].textDocument, 1), ref<Diagnostic[]>([])];
-		const scriptSetup0Diags_2 = [useScriptValidation(scriptParts['setup.raw'].textDocument, 2), ref<Diagnostic[]>([])];
-		const scriptSetup0Diags_3 = [useScriptValidation(scriptParts['setup.raw'].textDocument, 3), ref<Diagnostic[]>([])];
+		const scriptSetupDiags_1 = [useScriptValidation(scriptParts['setup'].textDocument, 1), ref<Diagnostic[]>([])];
+		const scriptSetupDiags_2 = [useScriptValidation(scriptParts['setup'].textDocument, 2), ref<Diagnostic[]>([])];
+		const scriptSetupDiags_3 = [useScriptValidation(scriptParts['setup'].textDocument, 3), ref<Diagnostic[]>([])];
 
 		const all = [
 			stylesDiags,
@@ -385,17 +365,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			scriptDiags_2,
 			templateScriptDiags_2,
 			scriptSetupDiags_2,
-			scriptSetup0Diags_2,
 
 			scriptDiags_3,
 			templateScriptDiags_3,
 			scriptSetupDiags_3,
-			scriptSetup0Diags_3,
 
 			scriptDiags_1,
 			templateScriptDiags_1,
 			scriptSetupDiags_1,
-			scriptSetup0Diags_1,
 		];
 
 		const allLast = computed(() => {
@@ -670,7 +647,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			if (templateScriptDocument.value && templateParts['raw'].textDocument.value) {
 				const doc = templateScriptDocument.value;
 				const text = doc.getText();
-				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 					let bind: CompletionItem[] = [];
 					let on: CompletionItem[] = [];
 					{

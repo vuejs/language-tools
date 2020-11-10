@@ -7,7 +7,7 @@ import {
 } from 'vscode-languageserver';
 import { SourceFile } from '../sourceFiles';
 import {
-	tsLocationToVueLocations,
+	tsLocationToVueLocationsRaw,
 	findSourceFileByTsUri,
 } from '../utils/commons';
 import { hyphenate } from '@vue/shared';
@@ -38,23 +38,36 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 		function getTsResult(sourceFile: SourceFile) {
 			let tsEdits: WorkspaceEdit[] = [];
+			let vueEdits: WorkspaceEdit[] = [];
 			let tsLocations: Location[] = [];
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				let _newName = newName;
+				for (const tsLoc of sourceMap.sourceToTargets(range)) {
+					if (
+						tsLoc.maped.data.capabilities.rename
+						&& tsLoc.maped.data.isRawLabelRef
+						&& _newName.startsWith('$') // patching user input
+					) {
+						_newName = _newName.substr(1);
+						break;
+					}
+				}
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.rename) continue;
-					worker(sourceMap.targetDocument, tsLoc.range.start);
+					worker(sourceMap.targetDocument, tsLoc.range.start, _newName);
+					for (const tsEdit of tsEdits) {
+						keepHtmlTagOrAttrStyle(tsEdit);
+						const vueEdit = getSourceWorkspaceEdit(tsEdit);
+						vueEdits.push(vueEdit);
+					}
 				}
 			}
 
-			for (const tsEdit of tsEdits) {
-				keepHtmlTagOrAttrStyle(tsEdit);
-			}
-			const vueEdits = tsEdits.map(edit => getSourceWorkspaceEdit(edit));
 			const vueEdit = margeWorkspaceEdits(vueEdits);
 			return deduplication(vueEdit);
 
-			function worker(doc: TextDocument, pos: Position) {
+			function worker(doc: TextDocument, pos: Position, newName: string) {
 				const rename = tsLanguageService.doRename(doc, pos, newName);
 				if (!rename) return;
 				tsEdits.push(rename);
@@ -78,13 +91,13 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								if (leftRange) {
 									const leftLoc = { uri: tsDocument.uri, range: leftRange };
 									if (!hasLocation(leftLoc)) {
-										worker(tsDocument, leftLoc.range.start);
+										worker(tsDocument, leftLoc.range.start, newName);
 									}
 									const rightLocs = sourceMap.sourceToTargets(leftRange);
 									for (const rightLoc of rightLocs) {
 										const rightLoc_2 = { uri: tsDocument.uri, range: rightLoc.range };
 										if (!hasLocation(rightLoc_2)) {
-											worker(tsDocument, rightLoc_2.range.start);
+											worker(tsDocument, rightLoc_2.range.start, newName);
 										}
 									}
 								}
@@ -95,7 +108,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			// TODO: use map
 			function hasLocation(loc: Location) {
-				return tsLocations.find(tsLoc =>
+				return !!tsLocations.find(tsLoc =>
 					tsLoc.uri === loc.uri
 					&& tsLoc.range.start.line === loc.range.start.line
 					&& tsLoc.range.start.character === loc.range.start.character
@@ -187,9 +200,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const edits = workspaceEdit.changes[uri];
 				for (const edit of edits) {
 					const location = Location.create(uri, edit.range);
-					const sourceLocations = tsLocationToVueLocations(location, sourceFiles);
-					for (const sourceLocation of sourceLocations) {
-						const sourceTextEdit = TextEdit.replace(sourceLocation.range, edit.newText);
+					const sourceLocations = tsLocationToVueLocationsRaw(location, sourceFiles);
+					for (const [sourceLocation, data] of sourceLocations) {
+						if (data && !data.capabilities.rename) continue;
+						let newText = edit.newText;
+						if (data?.isRawLabelRef) {
+							newText = '$' + newText;
+						}
+						const sourceTextEdit = TextEdit.replace(sourceLocation.range, newText);
 						const sourceUri = sourceLocation.uri;
 						if (!newWorkspaceEdit.changes![sourceUri]) {
 							newWorkspaceEdit.changes![sourceUri] = [];

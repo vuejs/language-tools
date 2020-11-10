@@ -56,7 +56,7 @@ export function useTemplateScript(
 			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vueFileName)}';`,
 			(scriptSetup.value
-				? `import * as __VLS_setups from './${upath.basename(vueFileName)}.script.setup.gen';`
+				? `import * as __VLS_setups from './${upath.basename(vueFileName)}.scriptSetup';`
 				: `// no setups`),
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
 			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
@@ -118,12 +118,12 @@ export function useTemplateScript(
 
 		/* Completion */
 		code += '/* Completion: Emits */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			code += `__VLS_componentEmits['${name}'][''];\n`; // TODO
 		}
 		code += '/* Completion: Props */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			code += `__VLS_componentPropsBase['${name}'][''];\n`; // TODO
 		}
@@ -230,6 +230,40 @@ export function useTemplateScript(
 						},
 					});
 					code += `'${name_2}': typeof __VLS_Components['${name_1}'],\n`;
+				}
+			}
+			for (const name_1 of templateScriptData.context) {
+				const names = new Set([name_1, hyphenate(name_1)]);
+				for (const name_2 of names) {
+					const start_1 = code.length;
+					const end_1 = code.length + `'${name_2}'`.length;
+					const start_2 = code.length + `'${name_2}': typeof __VLS_ctx[`.length;
+					const end_2 = code.length + `'${name_2}': typeof __VLS_ctx['${name_1}'`.length;
+					mappings.push({
+						data: undefined,
+						mode: MapedMode.Gate,
+						sourceRange: {
+							start: start_1,
+							end: end_1,
+						},
+						targetRange: {
+							start: start_2,
+							end: end_2,
+						},
+					});
+					mappings.push({
+						data: undefined,
+						mode: MapedMode.Gate,
+						sourceRange: {
+							start: start_1 + 1,
+							end: end_1 - 1,
+						},
+						targetRange: {
+							start: start_2 + 1,
+							end: end_2 - 1,
+						},
+					});
+					code += `'${name_2}': typeof __VLS_ctx['${name_1}'],\n`;
 				}
 			}
 			return mappings;
@@ -340,7 +374,7 @@ export function useTemplateScript(
 	const sourceMap = computed(() => {
 		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: true });
 			{ // diagnostic for '@vue/runtime-dom' package not exist
 				const text = `'@vue/runtime-dom'`;
 				const textIndex = textDocument.value.getText().indexOf(text);

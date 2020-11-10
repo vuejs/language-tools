@@ -6,8 +6,8 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Some interesting features:
 
+- [x] RFC #222 support (v0.15.2 added)
 - [x] Scoped CSS services (v0.15.1 added)
-- [x] JS support (v0.15.0 added)
 - [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
 - [x] v-slot Type-Checking (v0.12.1 added)

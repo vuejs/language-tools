@@ -6,15 +6,19 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as html from 'vscode-html-languageservice';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
+import { rfc } from '../virtuals/scriptSetup';
 
 type TokenData = [number, number, number, number, number | undefined];
 
 const tsLegend = ts2.getSemanticTokenLegend();
 const tokenTypesLegend = [
 	...tsLegend.types,
-	'template/component',
-	'template/conditional',
-	'template/loop',
+	'componentTag',
+	'conditionalDirective',
+	'loopDirective',
+	'refLabel',
+	'refVariable',
+	'ref$',
 ];
 const tokenTypes = new Map(tokenTypesLegend.map((t, i) => [t, i]));
 
@@ -32,19 +36,52 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			end: document.offsetAt(range.end),
 		};
 		const templateScriptData = sourceFile.getTemplateScriptData();
-		const components = new Set([...templateScriptData.components, ...templateScriptData.components.map(hyphenate)]);
+		const components = new Set([
+			...templateScriptData.components,
+			...templateScriptData.components.map(hyphenate),
+			...templateScriptData.context,
+			...templateScriptData.context.map(hyphenate),
+		]);
 
 		// TODO: inconsistent with typescript-language-features
 		// const tsResult = await getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 		const pugResult = getPugResult(sourceFile);
+		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
 
 		return [
 			// ...tsResult,
 			...htmlResult,
 			...pugResult,
+			...scriptSetupResult,
 		];
 
+		function getScriptSetupResult(sourceFile: SourceFile) {
+			const result: TokenData[] = [];
+			const scriptSetupGen = sourceFile.getScriptSetupData();
+			const scriptSetup = sourceFile.getDescriptor().scriptSetup;
+			if (scriptSetupGen && scriptSetup) {
+				const genData = scriptSetupGen.data;
+				for (const label of genData.labels) {
+					const labelPos = document.positionAt(scriptSetup.loc.start + label.label.start);
+					result.push([labelPos.line, labelPos.character, label.label.end - label.label.start + 1, tokenTypes.get('refLabel') ?? -1, undefined]);
+					for (const _var of label.vars) {
+						const varPos = document.positionAt(scriptSetup.loc.start + _var.start);
+						result.push([varPos.line, varPos.character, _var.end - _var.start, tokenTypes.get('refVariable') ?? -1, undefined]);
+						for (const reference of _var.references) {
+							const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
+							result.push([referencePos.line, referencePos.character, reference.end - reference.start, tokenTypes.get('refVariable') ?? -1, undefined]);
+						}
+						for (const reference of _var.rawReferences) {
+							const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
+							result.push([referencePos.line, referencePos.character, 1, tokenTypes.get('ref$') ?? -1, undefined]);
+							result.push([referencePos.line, referencePos.character + 1, reference.end - reference.start - 1, tokenTypes.get('refVariable') ?? -1, undefined]);
+						}
+					}
+				}
+			}
+			return result;
+		}
 		async function getTsResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
@@ -92,15 +129,15 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
 						if (isConditionalToken(token, tokenText)) {
 							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/conditional') ?? -1, undefined]);
+							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('conditionalDirective') ?? -1, undefined]);
 						}
 						else if (isLoopToken(token, tokenText)) {
 							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/loop') ?? -1, undefined]);
+							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('loopDirective') ?? -1, undefined]);
 						}
 						else if (isComponentToken(token, tokenText)) {
 							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/component') ?? -1, undefined]);
+							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
 						}
 						token = scanner.scan();
 					}
@@ -130,15 +167,15 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const tokenText = docText.substr(htmlOffset, tokenLength);
 						if (isConditionalToken(token, tokenText)) {
 							const vuePos = getTokenPosition(htmlOffset, tokenText);
-							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/conditional') ?? -1, undefined]);
+							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('conditionalDirective') ?? -1, undefined]);
 						}
 						else if (isLoopToken(token, tokenText)) {
 							const vuePos = getTokenPosition(htmlOffset, tokenText);
-							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/loop') ?? -1, undefined]);
+							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('loopDirective') ?? -1, undefined]);
 						}
 						else if (isComponentToken(token, tokenText)) {
 							const vuePos = getTokenPosition(htmlOffset, tokenText);
-							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('template/component') ?? -1, undefined]);
+							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
 						}
 						token = scanner.scan();
 					}

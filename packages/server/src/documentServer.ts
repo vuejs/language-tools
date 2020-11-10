@@ -19,7 +19,7 @@ import {
 import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
+import { getSemanticTokensLegend, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import {
 	uriToFsPath,
 	VerifyAllScriptsRequest,
@@ -39,6 +39,7 @@ connection.listen();
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
+		setScriptSetupRfc(params.initializationOptions.scriptSetupRfc);
 		initLanguageService(params.rootPath);
 	}
 	const result: InitializeResult = {

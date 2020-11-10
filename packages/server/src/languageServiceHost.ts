@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import * as upath from 'upath';
-import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
+import { LanguageService, createLanguageService, LanguageServiceHost, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import { uriToFsPath, fsPathToUri, sleep, SemanticTokensChangedNotification } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection } from 'vscode-languageserver';
@@ -128,6 +128,7 @@ export function createLanguageServiceHost(
 			const realTsConfig = ts.sys.realpath!(tsConfig);
 			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
+			content.options.allowJs = true;
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {

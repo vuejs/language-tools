@@ -146,14 +146,15 @@ export enum MapedNodeTypes {
 export interface TsMappingData {
 	vueTag: string,
 	type?: MapedNodeTypes,
+	isRawLabelRef?: boolean,
 	capabilities: {
-		basic: boolean,
-		references: boolean, // references, definitions
-		diagnostic: boolean,
-		formatting: boolean,
-		rename: boolean,
-		completion: boolean,
-		semanticTokens: boolean,
+		basic?: boolean,
+		references?: boolean, // references, definitions
+		diagnostic?: boolean,
+		formatting?: boolean,
+		rename?: boolean,
+		completion?: boolean,
+		semanticTokens?: boolean,
 	},
 }
 
@@ -164,6 +165,7 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 		public isInterpolation: boolean,
 		public capabilities: {
 			foldingRanges: boolean,
+			formatting: boolean,
 		},
 	) {
 		super(sourceDocument, targetDocument);

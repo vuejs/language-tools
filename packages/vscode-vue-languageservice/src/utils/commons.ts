@@ -5,6 +5,7 @@ import {
 	Location,
 } from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFiles';
+import type { TsMappingData } from '../utils/sourceMaps';
 
 export function notEmpty<T>(value: T): value is NonNullable<T> {
 	return value !== null && value !== undefined;
@@ -16,18 +17,21 @@ export function duplicateLocations(locations: Location[]): Location[] {
 	return Object.values(temp);
 }
 export function tsLocationToVueLocations(location: Location, sourceFiles: Map<string, SourceFile>): Location[] {
+	return tsLocationToVueLocationsRaw(location, sourceFiles).map(loc => loc[0]);
+}
+export function tsLocationToVueLocationsRaw(location: Location, sourceFiles: Map<string, SourceFile>): [Location, TsMappingData | undefined][] {
 	const sourceFile = findSourceFileByTsUri(sourceFiles, location.uri);
 	if (!sourceFile)
-		return [location]; // not virtual ts script
+		return [[location, undefined]]; // not virtual ts script
 
-	const result: Location[] = [];
+	const result: [Location, TsMappingData][] = [];
 
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
 		if (sourceMap.targetDocument.uri !== location.uri) continue;
 		const vueLocs = sourceMap.targetToSources(location.range);
 		for (const vueLoc of vueLocs) {
 			const sourceLocation = Location.create(sourceMap.sourceDocument.uri, vueLoc.range)
-			result.push(sourceLocation);
+			result.push([sourceLocation, vueLoc.maped.data]);
 		}
 	}
 

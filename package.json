@@ -68,14 +68,23 @@
 			{
 				"language": "vue",
 				"scopes": {
-					"template/component": [
+					"componentTag": [
 						"support.class.component.vue"
 					],
-					"template/conditional": [
+					"conditionalDirective": [
 						"keyword.control.conditional.vue"
 					],
-					"template/loop": [
+					"loopDirective": [
 						"keyword.control.loop.vue"
+					],
+					"refLabel": [
+						"keyword.other"
+					],
+					"refVariable": [
+						"markup.underline"
+					],
+					"ref$": [
+						"punctuation.definition.tag"
 					]
 				}
 			}
@@ -111,6 +120,19 @@
 						"user-defined"
 					],
 					"description": "Formatter for <template>, <script>, <style> region"
+				},
+				"volar.scriptSetup.supportRfc": {
+					"type": "string",
+					"default": "#182",
+					"enum": [
+						"#182",
+						"#222"
+					],
+					"enumDescriptions": [
+						"SFC Improvements",
+						"New script setup and ref sugar"
+					],
+					"description": "<script setup> support RFC"
 				}
 			}
 		}

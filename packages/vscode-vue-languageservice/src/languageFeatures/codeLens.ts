@@ -5,22 +5,55 @@ import {
 import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { rfc } from '../virtuals/scriptSetup';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 
+		const scriptSetupResult = getScriptSetupResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 		const pugResult = getPugResult(sourceFile);
 
 		return [
+			...scriptSetupResult,
 			...htmlResult,
 			...pugResult,
 		];
 
-		function getHtmlResult(sourceFile: SourceFile) {
+		function getScriptSetupResult(sourceFile: SourceFile) {
 			const result: CodeLens[] = [];
+			const descriptor = sourceFile.getDescriptor();
+			// const data = sourceFile.getScriptSetupData();
+			// if (descriptor.scriptSetup && data) {
+			// 	result.push({
+			// 		range: {
+			// 			start: document.positionAt(descriptor.scriptSetup.loc.start),
+			// 			end: document.positionAt(descriptor.scriptSetup.loc.end),
+			// 		},
+			// 		command: {
+			// 			title: 'ref suger ' + (data.data.labels.length ? '☑' : '☐'),
+			// 			command: data.data.labels.length ? Commands.UNUSE_REF_SUGER : Commands.USE_REF_SUGER,
+			// 			arguments: [document.uri],
+			// 		},
+			// 	});
+			// }
+			if (descriptor.scriptSetup) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.loc.start),
+						end: document.positionAt(descriptor.scriptSetup.loc.end),
+					},
+					command: {
+						title: 'RFC: ' + rfc,
+						command: '',
+					},
+				})
+			}
+			return result;
+		}
+		function getHtmlResult(sourceFile: SourceFile) {
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				for (const maped of sourceMap) {
@@ -33,10 +66,9 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					);
 				}
 			}
-			return result;
+			return [];
 		}
 		function getPugResult(sourceFile: SourceFile) {
-			const result: CodeLens[] = [];
 			const sourceMaps = sourceFile.getPugSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				for (const maped of sourceMap) {
@@ -49,14 +81,14 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 					);
 				}
 			}
-			return result;
+			return [];
 		}
 		function getPugHtmlConvertCodeLens(current: 'html' | 'pug', range: Range) {
 			const result: CodeLens[] = [];
 			result.push({
 				range,
 				command: {
-					title: 'html' + (current === 'html' ? ' (current)' : ''),
+					title: 'html ' + (current === 'html' ? '☑' : '☐'),
 					command: Commands.PUG_TO_HTML,
 					arguments: [document.uri],
 				},
@@ -64,7 +96,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			result.push({
 				range,
 				command: {
-					title: 'pug' + (current === 'pug' ? ' (current)' : ''),
+					title: 'pug ' + (current === 'pug' ? '☑' : '☐'),
 					command: Commands.HTML_TO_PUG,
 					arguments: [document.uri],
 				},

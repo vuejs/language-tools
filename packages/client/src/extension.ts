@@ -125,6 +125,9 @@ function createLanguageService(context: vscode.ExtensionContext, script: string,
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
 		},
+		initializationOptions: {
+			scriptSetupRfc: vscode.workspace.getConfiguration().get('volar.scriptSetup.supportRfc'),
+		},
 	};
 
 

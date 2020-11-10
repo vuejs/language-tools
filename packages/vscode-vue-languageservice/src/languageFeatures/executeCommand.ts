@@ -14,11 +14,49 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 		if (!sourceFile) return;
 
 		const desc = sourceFile.getDescriptor();
-		if (!desc.template) return;
 
-		const lang = desc.template.lang;
-
+		if (command === Commands.UNUSE_REF_SUGER) {
+			if (!desc.scriptSetup) return;
+			const genData = sourceFile.getScriptSetupData();
+			if (!genData) return;
+			let edits: TextEdit[] = [];
+			edits.push(TextEdit.replace({
+				start: document.positionAt(desc.scriptSetup.loc.start),
+				end: document.positionAt(desc.scriptSetup.loc.start),
+			}, `\nimport { ref } from 'vue'\n`));
+			for (const label of genData.data.labels) {
+				edits.push(TextEdit.replace({
+					start: document.positionAt(desc.scriptSetup.loc.start + label.label.start),
+					end: document.positionAt(desc.scriptSetup.loc.start + label.label.end + 1),
+				}, 'const'));
+				edits.push(TextEdit.replace({
+					start: document.positionAt(desc.scriptSetup.loc.start + label.right.start),
+					end: document.positionAt(desc.scriptSetup.loc.start + label.right.start),
+				}, 'ref('));
+				edits.push(TextEdit.replace({
+					start: document.positionAt(desc.scriptSetup.loc.start + label.right.end),
+					end: document.positionAt(desc.scriptSetup.loc.start + label.right.end),
+				}, ')'));
+				for (const _var of label.vars) {
+					for (const reference of _var.references) {
+						edits.push(TextEdit.replace({
+							start: document.positionAt(desc.scriptSetup.loc.start + reference.end),
+							end: document.positionAt(desc.scriptSetup.loc.start + reference.end),
+						}, '.value'));
+					}
+					for (const reference of _var.rawReferences) {
+						edits.push(TextEdit.replace({
+							start: document.positionAt(desc.scriptSetup.loc.start + reference.start),
+							end: document.positionAt(desc.scriptSetup.loc.start + reference.start + 1),
+						}, ''));
+					}
+				}
+			}
+			connection.workspace.applyEdit({ changes: { [document.uri]: edits } });
+		}
 		if (command === Commands.HTML_TO_PUG) {
+			if (!desc.template) return;
+			const lang = desc.template.lang;
 			if (lang !== 'html') return;
 
 			const pug = htmlToPug(desc.template.content) + '\n';
@@ -46,6 +84,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			connection.workspace.applyEdit({ changes: { [document.uri]: [textEdit] } });
 		}
 		if (command === Commands.PUG_TO_HTML) {
+			if (!desc.template) return;
+			const lang = desc.template.lang;
 			if (lang !== 'pug') return;
 
 			let html = pugToHtml(desc.template.content);

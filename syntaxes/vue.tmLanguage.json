@@ -914,7 +914,7 @@
 			]
 		},
 		"vue-directives": {
-			"begin": "(?:\\b(v-)|(:|@|#))([a-zA-Z\\-]+)(?:\\:([a-zA-Z\\-]+))?(?:\\.([a-zA-Z\\-]+))*\\s*(=)",
+			"begin": "(?:\\b(v-)|(:|@|#))([a-zA-Z\\-]+)(?:\\:([a-zA-Z\\-]+))?(?:\\.([a-zA-Z\\-]+))*\\s*|(setup)(=)",
 			"captures": {
 				"1": {
 					"name": "entity.other.attribute-name.html"
@@ -932,6 +932,9 @@
 					"name": "entity.other.attribute-name.html"
 				},
 				"6": {
+					"name": "entity.other.attribute-name.html"
+				},
+				"7": {
 					"name": "punctuation.separator.key-value.html"
 				}
 			},

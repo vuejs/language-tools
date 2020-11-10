@@ -25,7 +25,7 @@ import {
 	CodeLensRequest,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { Commands, triggerCharacter, SourceMap, TsSourceMap } from '@volar/vscode-vue-languageservice';
+import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -58,6 +58,7 @@ connection.listen();
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
+		setScriptSetupRfc(params.initializationOptions.scriptSetupRfc);
 		initLanguageService(params.rootPath);
 	}
 
@@ -263,7 +264,12 @@ function onInitialized() {
 		retriggerCharacters: [')'],
 	});
 	connection.client.register(ExecuteCommandRequest.type, {
-		commands: [Commands.HTML_TO_PUG, Commands.PUG_TO_HTML]
+		commands: [
+			Commands.HTML_TO_PUG,
+			Commands.PUG_TO_HTML,
+			Commands.UNUSE_REF_SUGER,
+			Commands.USE_REF_SUGER,
+		]
 	});
 	connection.client.register(CompletionRequest.type, {
 		documentSelector: vueOnly.documentSelector,

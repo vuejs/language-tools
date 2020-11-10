@@ -38,7 +38,7 @@ export function useScriptOptions(
 		const end = scriptSetup.value?.loc.end ?? script.value?.loc.end;
 		if (textDocument.value && start !== undefined && end !== undefined) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
