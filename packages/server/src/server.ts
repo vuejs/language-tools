@@ -267,8 +267,8 @@ function onInitialized() {
 		commands: [
 			Commands.HTML_TO_PUG,
 			Commands.PUG_TO_HTML,
-			Commands.UNUSE_REF_SUGER,
-			Commands.USE_REF_SUGER,
+			Commands.UNUSE_REF_SUGAR,
+			Commands.USE_REF_SUGAR,
 		]
 	});
 	connection.client.register(CompletionRequest.type, {

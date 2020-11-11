@@ -14,8 +14,11 @@ import { hyphenate } from '@vue/shared';
 import { MapedNodeTypes, SourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import * as getDefinitions from './definitions';
+import ts = require('typescript');
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+	const _getDefinitions = getDefinitions.register(sourceFiles, tsLanguageService);
 	return (document: TextDocument, position: Position, newName: string) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -37,30 +40,31 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 
 		function getTsResult(sourceFile: SourceFile) {
-			let tsEdits: WorkspaceEdit[] = [];
 			let vueEdits: WorkspaceEdit[] = [];
 			let tsLocations: Location[] = [];
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				let _newName = newName;
+				let startWithScriptSetup = false;
+				let startWithNoDollarRef = false;
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
-					if (
-						tsLoc.maped.data.capabilities.rename
-						&& tsLoc.maped.data.isRawLabelRef
-						&& _newName.startsWith('$') // patching user input
-					) {
-						_newName = _newName.substr(1);
-						break;
+					if (tsLoc.maped.data.capabilities.rename) {
+						if (tsLoc.maped.data.vueTag === 'scriptSetup') {
+							startWithScriptSetup = true;
+						}
+						if (tsLoc.maped.data.isNoDollarRef) {
+							startWithNoDollarRef = true;
+						}
 					}
 				}
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.rename) continue;
-					worker(sourceMap.targetDocument, tsLoc.range.start, _newName);
-					for (const tsEdit of tsEdits) {
-						keepHtmlTagOrAttrStyle(tsEdit);
-						const vueEdit = getSourceWorkspaceEdit(tsEdit);
-						vueEdits.push(vueEdit);
-					}
+					const tsEdit = worker(sourceMap.targetDocument, tsLoc.range.start, newName);
+					if (!tsEdit) continue;
+					const hasNoDollarRef = hasScriptRefReference(tsEdit);
+					const startWithDollarRef = startWithScriptSetup && !startWithNoDollarRef && hasNoDollarRef;
+					keepHtmlTagOrAttrStyle(tsEdit);
+					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef);
+					vueEdits.push(vueEdit);
 				}
 			}
 
@@ -68,9 +72,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			return deduplication(vueEdit);
 
 			function worker(doc: TextDocument, pos: Position, newName: string) {
-				const rename = tsLanguageService.doRename(doc, pos, newName);
+				let rename = tsLanguageService.doRename(doc, pos, newName);
 				if (!rename) return;
-				tsEdits.push(rename);
 				for (const tsUri in rename.changes) {
 					const tsEdits = rename.changes[tsUri];
 					for (const tsEdit of tsEdits) {
@@ -91,13 +94,19 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								if (leftRange) {
 									const leftLoc = { uri: tsDocument.uri, range: leftRange };
 									if (!hasLocation(leftLoc)) {
-										worker(tsDocument, leftLoc.range.start, newName);
+										const rename2 = worker(tsDocument, leftLoc.range.start, newName);
+										if (rename && rename2) {
+											rename = margeWorkspaceEdits([rename, rename2]);
+										}
 									}
 									const rightLocs = sourceMap.sourceToTargets(leftRange);
 									for (const rightLoc of rightLocs) {
 										const rightLoc_2 = { uri: tsDocument.uri, range: rightLoc.range };
 										if (!hasLocation(rightLoc_2)) {
-											worker(tsDocument, rightLoc_2.range.start, newName);
+											const rename2 = worker(tsDocument, rightLoc_2.range.start, newName);
+											if (rename && rename2) {
+												rename = margeWorkspaceEdits([rename, rename2]);
+											}
 										}
 									}
 								}
@@ -105,6 +114,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						}
 					}
 				}
+				return rename;
 			}
 			// TODO: use map
 			function hasLocation(loc: Location) {
@@ -192,7 +202,21 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			return result;
 		}
-		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit) {
+		function hasScriptRefReference(workspaceEdit: WorkspaceEdit) {
+			for (const uri in workspaceEdit.changes) {
+				const edits = workspaceEdit.changes[uri];
+				for (const edit of edits) {
+					const location = Location.create(uri, edit.range);
+					const sourceLocations = tsLocationToVueLocationsRaw(location, sourceFiles);
+					for (const [_, data] of sourceLocations) {
+						if (data && !data.capabilities.rename) continue;
+						if (data?.isNoDollarRef) return true;
+					}
+				}
+			}
+			return false;
+		}
+		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean) {
 			const newWorkspaceEdit: WorkspaceEdit = {
 				changes: {}
 			};
@@ -204,8 +228,12 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					for (const [sourceLocation, data] of sourceLocations) {
 						if (data && !data.capabilities.rename) continue;
 						let newText = edit.newText;
-						if (data?.isRawLabelRef) {
+						const isDollarRef = isRefSugarRenaming && data?.vueTag === 'scriptSetup' && !data?.isNoDollarRef;
+						if (isDollarRef && (!newText.startsWith('$') || !startWithDollarRef)) {
 							newText = '$' + newText;
+						}
+						if (!isDollarRef && startWithDollarRef && newText.startsWith('$')) {
+							newText = newText.substr(1);
 						}
 						const sourceTextEdit = TextEdit.replace(sourceLocation.range, newText);
 						const sourceUri = sourceLocation.uri;

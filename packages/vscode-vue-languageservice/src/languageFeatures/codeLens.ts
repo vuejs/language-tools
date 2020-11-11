@@ -33,8 +33,8 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			// 			end: document.positionAt(descriptor.scriptSetup.loc.end),
 			// 		},
 			// 		command: {
-			// 			title: 'ref suger ' + (data.data.labels.length ? '☑' : '☐'),
-			// 			command: data.data.labels.length ? Commands.UNUSE_REF_SUGER : Commands.USE_REF_SUGER,
+			// 			title: 'ref sugar ' + (data.data.labels.length ? '☑' : '☐'),
+			// 			command: data.data.labels.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
 			// 			arguments: [document.uri],
 			// 		},
 			// 	});

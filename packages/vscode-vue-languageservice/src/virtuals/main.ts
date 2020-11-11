@@ -80,7 +80,7 @@ export function useScriptMain(
 			for (const range of rangesToSourceFullScript) {
 				sourceMap.add({
 					data: {
-						vueTag: 'script',
+						vueTag: '',
 						capabilities: {
 							basic: false,
 							references: false,

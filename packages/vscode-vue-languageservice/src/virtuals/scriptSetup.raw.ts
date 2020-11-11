@@ -22,7 +22,7 @@ export function useScriptSetupFormat(
 			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: true, formatting: true });
 			sourceMap.add({
 				data: {
-					vueTag: 'script',
+					vueTag: 'scriptSetup',
 					capabilities: {
 						formatting: true,
 					},

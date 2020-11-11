@@ -18,7 +18,7 @@ const tokenTypesLegend = [
 	'loopDirective',
 	'refLabel',
 	'refVariable',
-	'ref$',
+	'refVariableRaw',
 ];
 const tokenTypes = new Map(tokenTypesLegend.map((t, i) => [t, i]));
 
@@ -43,17 +43,16 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			...templateScriptData.context.map(hyphenate),
 		]);
 
-		// TODO: inconsistent with typescript-language-features
-		// const tsResult = await getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 		const pugResult = getPugResult(sourceFile);
 		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
+		// const tsResult = await getTsResult(sourceFile); // TODO: inconsistent with typescript-language-features
 
 		return [
-			// ...tsResult,
 			...htmlResult,
 			...pugResult,
 			...scriptSetupResult,
+			// ...tsResult,
 		];
 
 		function getScriptSetupResult(sourceFile: SourceFile) {
@@ -71,11 +70,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						for (const reference of _var.references) {
 							const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
 							result.push([referencePos.line, referencePos.character, reference.end - reference.start, tokenTypes.get('refVariable') ?? -1, undefined]);
-						}
-						for (const reference of _var.rawReferences) {
-							const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
-							result.push([referencePos.line, referencePos.character, 1, tokenTypes.get('ref$') ?? -1, undefined]);
-							result.push([referencePos.line, referencePos.character + 1, reference.end - reference.start - 1, tokenTypes.get('refVariable') ?? -1, undefined]);
 						}
 					}
 				}

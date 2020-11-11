@@ -82,9 +82,6 @@
 					],
 					"refVariable": [
 						"markup.underline"
-					],
-					"ref$": [
-						"punctuation.definition.tag"
 					]
 				}
 			}

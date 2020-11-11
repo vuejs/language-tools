@@ -38,8 +38,8 @@ export function useScriptSetupGen(
 			for (const mapping of genResult.value.mappings) {
 				sourceMap.add({
 					data: {
-						vueTag: 'script',
-						isRawLabelRef: mapping.isRawLabelRef,
+						vueTag: 'scriptSetup',
+						isNoDollarRef: mapping.isNoDollarRef,
 						capabilities: mapping.capabilities,
 					},
 					mode: mapping.mode,
@@ -58,7 +58,7 @@ export function useScriptSetupGen(
 				const end_2 = start_2 + setup.length;
 				sourceMap.add({
 					data: {
-						vueTag: 'script',
+						vueTag: 'scriptSetup',
 						capabilities: {
 							basic: true,
 							references: true,
@@ -99,7 +99,7 @@ function gen(
 ) {
 	let sourceCode = originalCode;
 	const mappings: {
-		isRawLabelRef?: boolean,
+		isNoDollarRef?: boolean,
 		capabilities: TsMappingData['capabilities'],
 		scriptSetupRange: MapedRange,
 		genRange: MapedRange,
@@ -273,6 +273,7 @@ function gen(
 			for (const prop of label.vars) {
 				genCode += `let `;
 				addCode(prop.text, {
+					isNoDollarRef: true,
 					capabilities: {
 						basic: true, // hover
 						references: true,
@@ -290,6 +291,7 @@ function gen(
 			for (const prop of label.vars) {
 				genCode += `const `;
 				addCode(`$${prop.text}`, {
+					isNoDollarRef: true,
 					capabilities: {
 						references: true,
 						rename: true,
@@ -335,10 +337,7 @@ function gen(
 			});
 			genCode += ': ';
 			addCode(varName, {
-				capabilities: {
-					references: true,
-					rename: true,
-				},
+				capabilities: {},
 				scriptSetupRange: {
 					start: expose.start,
 					end: expose.end,
@@ -351,6 +350,7 @@ function gen(
 			for (const refVar of ref.vars) {
 				if (refVar.inRoot) {
 					addCode(refVar.text, {
+						isNoDollarRef: true,
 						capabilities: {
 							references: true,
 							rename: true,
@@ -363,10 +363,8 @@ function gen(
 					});
 					genCode += ': ';
 					addCode(refVar.text, {
-						capabilities: {
-							references: true,
-							rename: true,
-						},
+						isNoDollarRef: true,
+						capabilities: {},
 						scriptSetupRange: {
 							start: refVar.start,
 							end: refVar.end,
@@ -431,16 +429,6 @@ function gen(
 						});
 					}
 				}
-				for (const reference of prop.rawReferences) {
-					if (reference.start >= start && reference.end <= end) {
-						insideLabels.push({
-							start: reference.start,
-							end: reference.end,
-							name: prop.text,
-							isRaw: true,
-						});
-					}
-				}
 			}
 		}
 		insideLabels = insideLabels.sort((a, b) => a.start - b.start);
@@ -469,8 +457,9 @@ function gen(
 				});
 			}
 			function writeCenter() {
-				if (!split.isRaw) { // genCode += `$${label.name}.value`; // TODO: mapping
+				if (!split.isRaw) {
 					addCode(`$${split.name}`, {
+						isNoDollarRef: true,
 						capabilities: {
 							basic: true, // hover, TODO: hover display type incorrect
 							references: true,
@@ -496,7 +485,6 @@ function gen(
 				}
 				else {
 					addCode(`$${split.name}`, {
-						isRawLabelRef: true,
 						capabilities: {
 							basic: true, // hover
 							references: true,
@@ -534,7 +522,7 @@ function gen(
 		}
 	}
 	function addCode(code: string, mapping: {
-		isRawLabelRef?: boolean,
+		isNoDollarRef?: boolean,
 		capabilities: TsMappingData['capabilities'],
 		scriptSetupRange: MapedRange,
 		mode: MapedMode,
@@ -558,10 +546,6 @@ function getGenData(sourceCode: string) {
 			start: number,
 			end: number,
 			references: {
-				start: number,
-				end: number,
-			}[],
-			rawReferences: {
 				start: number,
 				end: number,
 			}[],
@@ -616,7 +600,7 @@ function getGenData(sourceCode: string) {
 
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
 	scriptAst.forEachChild(node => {
-		nodeWorker(node, scriptAst, true);
+		findLabels(node, scriptAst, true);
 		if (node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword)) {
 			if (ts.isVariableStatement(node)) {
 				for (const declaration of node.declarationList.declarations) {
@@ -717,6 +701,27 @@ function getGenData(sourceCode: string) {
 		}
 	});
 
+	let noLabelCode = sourceCode;
+	for (const label of labels) {
+		noLabelCode = noLabelCode.substring(0, label.label.start) + 'let' + noLabelCode.substring(label.label.end).replace(':', ' ');
+	}
+	setFindReferencesSource(noLabelCode);
+	for (const label of labels) {
+		for (const _var of label.vars) {
+			const references = findReferences(_var.start);
+			if (references) {
+				for (const reference of references) {
+					for (const reference_2 of reference.references) {
+						_var.references.push({
+							start: reference_2.textSpan.start,
+							end: reference_2.textSpan.start + reference_2.textSpan.length,
+						});
+					}
+				}
+			}
+		}
+	}
+
 	return {
 		labels,
 		exposeVarNames,
@@ -726,7 +731,7 @@ function getGenData(sourceCode: string) {
 		declares,
 	};
 
-	function nodeWorker(node: ts.Node, parent: ts.Node, inRoot: boolean) {
+	function findLabels(node: ts.Node, parent: ts.Node, inRoot: boolean) {
 		if (
 			ts.isLabeledStatement(node)
 			&& node.label.getText(scriptAst) === 'ref'
@@ -743,10 +748,6 @@ function getGenData(sourceCode: string) {
 					start: number,
 					end: number,
 				}[],
-				rawReferences: {
-					start: number,
-					end: number,
-				}[],
 			}[] = [];
 
 			if (binaryExp) {
@@ -758,7 +759,6 @@ function getGenData(sourceCode: string) {
 						start: binaryExp.left.getStart(scriptAst),
 						end: binaryExp.left.getStart(scriptAst) + binaryExp.left.getWidth(scriptAst),
 						references: [],
-						rawReferences: [],
 					});
 				}
 				else if (ts.isObjectLiteralExpression(binaryExp.left)) {
@@ -776,7 +776,6 @@ function getGenData(sourceCode: string) {
 								start: property.name.getStart(scriptAst),
 								end: property.name.getStart(scriptAst) + property.name.getWidth(scriptAst),
 								references: [],
-								rawReferences: [],
 							});
 						}
 						// { foo: foo2 }
@@ -788,7 +787,6 @@ function getGenData(sourceCode: string) {
 								start: property.initializer.getStart(scriptAst),
 								end: property.initializer.getStart(scriptAst) + property.initializer.getWidth(scriptAst),
 								references: [],
-								rawReferences: [],
 							});
 						}
 						// { ...rest }
@@ -800,7 +798,6 @@ function getGenData(sourceCode: string) {
 								start: property.expression.getStart(scriptAst),
 								end: property.expression.getStart(scriptAst) + property.expression.getWidth(scriptAst),
 								references: [],
-								rawReferences: [],
 							});
 						}
 						// { foo: { ... } }
@@ -833,15 +830,6 @@ function getGenData(sourceCode: string) {
 						end: binaryExp.right.getStart(scriptAst) + binaryExp.right.getWidth(scriptAst),
 					},
 				});
-				binaryExp.forEachChild(node_2 => {
-					if (ts.isIdentifier(node_2)) {
-						return;
-					}
-					else {
-						nodeWorker(node_2, node, false);
-					}
-				});
-				return;
 			}
 
 			function findBinaryExpression(node: ts.Expression): ts.BinaryExpression | undefined {
@@ -854,38 +842,25 @@ function getGenData(sourceCode: string) {
 				}
 			}
 		}
-		else if (
-			ts.isIdentifier(node)
-			&& !ts.isPropertyAssignment(parent)
-			&& !ts.isShorthandPropertyAssignment(parent)
-			&& !ts.isSpreadAssignment(parent)
-			&& !ts.isVariableDeclaration(parent)
-			&& !ts.isFunctionDeclaration(parent)
-			&& !(ts.isPropertyAccessExpression(parent) && parent.expression !== node)
-			// TODO
-		) {
-			let isRaw = false;
-			let varName = node.getText(scriptAst);
-			if (varName.startsWith('$')) {
-				isRaw = true;
-				varName = varName.substr(1);
-			}
-			for (const label of labels) {
-				for (const prop of label.vars) {
-					if (
-						prop.text === varName
-						&& node.pos >= label.parent.start
-						&& node.end <= label.parent.end
-					) {
-						const arr = isRaw ? prop.rawReferences : prop.references;
-						arr.push({
-							start: node.getStart(scriptAst),
-							end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-						});
-					}
-				}
-			}
-		}
-		node.forEachChild(child => nodeWorker(child, node, false));
+		node.forEachChild(child => findLabels(child, node, false));
 	}
+}
+
+let fakeVersion = 0;
+let fakeScript = ts.ScriptSnapshot.fromString('');
+const host: ts.LanguageServiceHost = {
+	getCompilationSettings: () => ({}),
+	getScriptFileNames: () => ['fake.ts'],
+	getScriptVersion: () => fakeVersion.toString(),
+	getScriptSnapshot: () => fakeScript,
+	getCurrentDirectory: () => '',
+	getDefaultLibFileName: () => '',
+}
+const fakeLs = ts.createLanguageService(host);
+function setFindReferencesSource(code: string) {
+	fakeVersion++;
+	fakeScript = ts.ScriptSnapshot.fromString(code);
+}
+function findReferences(offset: number) {
+	return fakeLs.findReferences('fake.ts', offset);
 }

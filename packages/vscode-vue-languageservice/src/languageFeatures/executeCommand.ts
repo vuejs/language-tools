@@ -15,7 +15,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 
 		const desc = sourceFile.getDescriptor();
 
-		if (command === Commands.UNUSE_REF_SUGER) {
+		if (command === Commands.UNUSE_REF_SUGAR) {
 			if (!desc.scriptSetup) return;
 			const genData = sourceFile.getScriptSetupData();
 			if (!genData) return;
@@ -43,12 +43,6 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 							start: document.positionAt(desc.scriptSetup.loc.start + reference.end),
 							end: document.positionAt(desc.scriptSetup.loc.start + reference.end),
 						}, '.value'));
-					}
-					for (const reference of _var.rawReferences) {
-						edits.push(TextEdit.replace({
-							start: document.positionAt(desc.scriptSetup.loc.start + reference.start),
-							end: document.positionAt(desc.scriptSetup.loc.start + reference.start + 1),
-						}, ''));
 					}
 				}
 			}

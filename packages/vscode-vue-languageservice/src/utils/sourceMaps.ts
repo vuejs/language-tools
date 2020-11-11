@@ -146,7 +146,7 @@ export enum MapedNodeTypes {
 export interface TsMappingData {
 	vueTag: string,
 	type?: MapedNodeTypes,
-	isRawLabelRef?: boolean,
+	isNoDollarRef?: boolean,
 	capabilities: {
 		basic?: boolean,
 		references?: boolean, // references, definitions
