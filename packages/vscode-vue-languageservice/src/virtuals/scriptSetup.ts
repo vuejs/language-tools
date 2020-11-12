@@ -250,7 +250,7 @@ function gen(
 	}
 
 	genCode += `\n`;
-	genCode += `export default __VLS_defineComponent({\n`;
+	genCode += `const __VLS_exportComponent = __VLS_defineComponent({\n`;
 	if (data.exportDefault) {
 		genCode += `...(`;
 		addCode(originalCode.substring(data.exportDefault.options.start, data.exportDefault.options.end), {
@@ -430,6 +430,19 @@ function gen(
 	}
 	genCode += `};\n`
 	genCode += `}});\n`;
+
+	genCode += `declare const __VLS_export: new (...args: any) => InstanceType<typeof __VLS_exportComponent>`;
+	const addedDeclares = new Set<string>();
+	for (const d of data.declares) {
+		let nameText = originalCode.substring(d.name.start, d.name.end);
+		if (addedDeclares.has(nameText)) continue;
+		addedDeclares.add(nameText);
+		if (['props', 'emit'].includes(nameText)) {
+			genCode += ` & { $${nameText}: typeof __VLS_declares_${nameText} }`
+		}
+	}
+	genCode += `;\n`;
+	genCode += `export default __VLS_export;\n`;
 
 	genCode += `const __VLS_component = __VLS_defineComponent({\n`;
 	if (data.exportDefault) {
