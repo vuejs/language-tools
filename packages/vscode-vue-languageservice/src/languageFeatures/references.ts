@@ -53,27 +53,27 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (hasLocation(reference)) continue;
 					tsLocations.push(reference);
 					const sourceFile_2 = findSourceFileByTsUri(sourceFiles, reference.uri);
-					const templateScript = sourceFile_2?.getTemplateScript();
-					if (templateScript?.document && templateScript?.document.uri === reference.uri) {
-						if (templateScript.contextSourceMap)
-							transfer(templateScript.contextSourceMap, templateScript.document);
-						if (templateScript.componentSourceMap)
-							transfer(templateScript.componentSourceMap, templateScript.document);
-						function transfer(sourceMap: SourceMap, tsDocument: TextDocument) {
-							const leftRange = sourceMap.isSource(reference.range)
-								? reference.range
-								: sourceMap.targetToSource(reference.range)?.range;
-							if (leftRange) {
-								const leftLoc = { uri: tsDocument.uri, range: leftRange };
-								if (!hasLocation(leftLoc)) {
-									worker(tsDocument, leftLoc.range.start);
-								}
-								const rightLocs = sourceMap.sourceToTargets(leftRange);
-								for (const rightLoc of rightLocs) {
-									const rightLoc_2 = { uri: tsDocument.uri, range: rightLoc.range };
-									if (!hasLocation(rightLoc_2)) {
-										worker(tsDocument, rightLoc_2.range.start);
-									}
+					const tsm = sourceFile_2?.getMirrorsSourceMaps();
+					if (tsm?.contextSourceMap?.sourceDocument.uri === reference.uri)
+						transfer(tsm.contextSourceMap);
+					if (tsm?.componentSourceMap?.sourceDocument.uri === reference.uri)
+						transfer(tsm.componentSourceMap);
+					if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === reference.uri)
+						transfer(tsm.scriptSetupSourceMap);
+					function transfer(sourceMap: SourceMap) {
+						const leftRange = sourceMap.isSource(reference.range)
+							? reference.range
+							: sourceMap.targetToSource(reference.range)?.range;
+						if (leftRange) {
+							const leftLoc = { uri: sourceMap.sourceDocument.uri, range: leftRange };
+							if (!hasLocation(leftLoc)) {
+								worker(sourceMap.sourceDocument, leftLoc.range.start);
+							}
+							const rightLocs = sourceMap.sourceToTargets(leftRange);
+							for (const rightLoc of rightLocs) {
+								const rightLoc_2 = { uri: sourceMap.sourceDocument.uri, range: rightLoc.range };
+								if (!hasLocation(rightLoc_2)) {
+									worker(sourceMap.sourceDocument, rightLoc_2.range.start);
 								}
 							}
 						}

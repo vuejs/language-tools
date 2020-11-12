@@ -113,7 +113,7 @@
 					],
 					"enumDescriptions": [
 						"disable formatting",
-						"css (prettier), html (@starptech/prettyhtml), javascript (typescript)",
+						"css (prettier), html (@starptech/prettyhtml), javascript (typescript), pug (pug-beautify)",
 						"user-defined"
 					],
 					"description": "Formatter for <template>, <script>, <style> region"

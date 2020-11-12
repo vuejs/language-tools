@@ -70,23 +70,23 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 				const references = tsLanguageService.findReferences(sourceMap.targetDocument, tsLoc.range.start);
 				for (const reference of references) {
 					const sourceFile_2 = findSourceFileByTsUri(sourceFiles, reference.uri);
-					const templateScript = sourceFile_2?.getTemplateScript();
-					if (templateScript?.document && templateScript?.document.uri === reference.uri) {
-						if (templateScript.contextSourceMap)
-							transfer(templateScript.contextSourceMap, templateScript.document);
-						if (templateScript.componentSourceMap)
-							transfer(templateScript.componentSourceMap, templateScript.document);
-						function transfer(sourceMap: SourceMap, tsDocument: TextDocument) {
-							const leftRange = sourceMap.isSource(reference.range)
-								? reference.range
-								: sourceMap.targetToSource(reference.range)?.range;
-							if (leftRange) {
-								const rightLocs = sourceMap.sourceToTargets(leftRange);
-								for (const rightLoc of rightLocs) {
-									const definitions = worker(tsDocument, rightLoc.range.start);
-									const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
-									result = result.concat(vueDefinitions);
-								}
+					const tsm = sourceFile_2?.getMirrorsSourceMaps();
+					if (tsm?.contextSourceMap?.sourceDocument.uri === reference.uri)
+						transfer(tsm.contextSourceMap);
+					if (tsm?.componentSourceMap?.sourceDocument.uri === reference.uri)
+						transfer(tsm.componentSourceMap);
+					if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === reference.uri)
+						transfer(tsm.scriptSetupSourceMap);
+					function transfer(sourceMap: SourceMap) {
+						const leftRange = sourceMap.isSource(reference.range)
+							? reference.range
+							: sourceMap.targetToSource(reference.range)?.range;
+						if (leftRange) {
+							const rightLocs = sourceMap.sourceToTargets(leftRange);
+							for (const rightLoc of rightLocs) {
+								const definitions = worker(sourceMap.sourceDocument, rightLoc.range.start);
+								const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
+								result = result.concat(vueDefinitions);
 							}
 						}
 					}

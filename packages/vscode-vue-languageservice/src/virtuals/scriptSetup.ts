@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
-import { MapedMode, TsSourceMap, TsMappingData, MapedRange } from '../utils/sourceMaps';
+import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '../utils/sourceMaps';
 import * as ts from 'typescript';
 import { SearchTexts } from './common';
 import * as upath from 'upath';
@@ -82,10 +82,29 @@ export function useScriptSetupGen(
 			return sourceMap;
 		}
 	});
+	const mirrorsSourceMap = computed(() => {
+		if (genResult.value && textDocument.value) {
+			const sourceMap = new SourceMap(
+				textDocument.value,
+				textDocument.value,
+			);
+			for (const maped of genResult.value.mirrors) {
+				sourceMap.add({
+					mode: MapedMode.Offset,
+					sourceRange: maped.left,
+					targetRange: maped.right,
+					data: undefined,
+				});
+			}
+			return sourceMap;
+		}
+	});
+
 	return {
 		genResult: genResult,
 		textDocument,
 		sourceMap,
+		mirrorsSourceMap,
 	};
 }
 
@@ -104,6 +123,10 @@ function gen(
 		scriptSetupRange: MapedRange,
 		genRange: MapedRange,
 		mode: MapedMode,
+	}[] = [];
+	const mirrors: {
+		left: MapedRange,
+		right: MapedRange,
 	}[] = [];
 	const data = getGenData(sourceCode);
 	let genCode = `import { ref as __VLS_ref, defineComponent as __VLS_defineComponent } from '@vue/runtime-dom';\n`;
@@ -272,11 +295,16 @@ function gen(
 
 			for (const prop of label.vars) {
 				genCode += `let `;
+				const leftRange = {
+					start: genCode.length,
+					end: genCode.length + prop.text.length,
+				};
 				addCode(prop.text, {
 					isNoDollarRef: true,
 					capabilities: {
 						basic: true, // hover
 						references: true,
+						rename: true,
 						diagnostic: true,
 					},
 					scriptSetupRange: {
@@ -287,14 +315,15 @@ function gen(
 				});
 				genCode += ` = __VLS_ref(__VLS_refs_${prop.text}).value;`;
 				genCode += ` ${prop.text}; // ignore unused\n`
-			}
-			for (const prop of label.vars) {
+
 				genCode += `const `;
+				const rightRange = {
+					start: genCode.length,
+					end: genCode.length + `$${prop.text}`.length,
+				};
 				addCode(`$${prop.text}`, {
 					isNoDollarRef: true,
 					capabilities: {
-						references: true,
-						rename: true,
 						diagnostic: true,
 					},
 					scriptSetupRange: {
@@ -303,10 +332,11 @@ function gen(
 					},
 					mode: MapedMode.Offset, // TODO
 				});
-				genCode += ` = __VLS_ref(__VLS_refs_${prop.text});\n`;
-				if (prop.inRoot) {
-					genCode += `$${prop.text}; // ignore unused\n`;
-				}
+				genCode += ` = __VLS_ref(__VLS_refs_${prop.text});${prop.inRoot ? `$${prop.text}; // ignore unused\n` : ''}\n`;
+				mirrors.push({
+					left: leftRange,
+					right: rightRange,
+				});
 			}
 
 			tsOffset = label.end;
@@ -324,11 +354,13 @@ function gen(
 	if (rfc === '#222') {
 		for (const expose of data.exposeVarNames) {
 			const varName = originalCode.substring(expose.start, expose.end);
+			const leftRange = {
+				start: genCode.length,
+				end: genCode.length + varName.length,
+			};
+			// TODO: remove this
 			addCode(varName, {
-				capabilities: {
-					references: true,
-					rename: true,
-				},
+				capabilities: {},
 				scriptSetupRange: {
 					start: expose.start,
 					end: expose.end,
@@ -336,6 +368,11 @@ function gen(
 				mode: MapedMode.Offset,
 			});
 			genCode += ': ';
+			const rightRange = {
+				start: genCode.length,
+				end: genCode.length + varName.length,
+			};
+			// TODO: remove this
 			addCode(varName, {
 				capabilities: {},
 				scriptSetupRange: {
@@ -345,16 +382,22 @@ function gen(
 				mode: MapedMode.Offset,
 			});
 			genCode += ', \n';
+			mirrors.push({
+				left: leftRange,
+				right: rightRange,
+			});
 		}
 		for (const ref of data.labels) {
 			for (const refVar of ref.vars) {
 				if (refVar.inRoot) {
+					const leftRange = {
+						start: genCode.length,
+						end: genCode.length + refVar.text.length,
+					};
+					// TODO: remove this
 					addCode(refVar.text, {
 						isNoDollarRef: true,
-						capabilities: {
-							references: true,
-							rename: true,
-						},
+						capabilities: {},
 						scriptSetupRange: {
 							start: refVar.start,
 							end: refVar.end,
@@ -362,6 +405,11 @@ function gen(
 						mode: MapedMode.Offset,
 					});
 					genCode += ': ';
+					const rightRange = {
+						start: genCode.length,
+						end: genCode.length + refVar.text.length,
+					};
+					// TODO: remove this
 					addCode(refVar.text, {
 						isNoDollarRef: true,
 						capabilities: {},
@@ -372,6 +420,10 @@ function gen(
 						mode: MapedMode.Offset,
 					});
 					genCode += ', \n';
+					mirrors.push({
+						left: leftRange,
+						right: rightRange,
+					});
 				}
 			}
 		}
@@ -408,6 +460,7 @@ function gen(
 		data,
 		mappings,
 		code: genCode,
+		mirrors,
 	};
 
 	function mapSubText(start: number, end: number) {

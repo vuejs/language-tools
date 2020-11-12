@@ -1,7 +1,7 @@
 import { Range } from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as html from 'vscode-html-languageservice';
-import * as css from 'vscode-css-languageservice';
+import type * as html from 'vscode-html-languageservice';
+import type * as css from 'vscode-css-languageservice';
 
 export interface MapedRange {
 	start: number,

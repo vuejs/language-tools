@@ -89,7 +89,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				range,
 				command: {
 					title: 'html ' + (current === 'html' ? '☑' : '☐'),
-					command: Commands.PUG_TO_HTML,
+					command: current === 'html' ? '' : Commands.PUG_TO_HTML,
 					arguments: [document.uri],
 				},
 			});
@@ -97,7 +97,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 				range,
 				command: {
 					title: 'pug ' + (current === 'pug' ? '☑' : '☐'),
-					command: Commands.HTML_TO_PUG,
+					command: current === 'pug' ? '' : Commands.HTML_TO_PUG,
 					arguments: [document.uri],
 				},
 			});

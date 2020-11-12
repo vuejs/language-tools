@@ -14,11 +14,8 @@ import { hyphenate } from '@vue/shared';
 import { MapedNodeTypes, SourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
-import * as getDefinitions from './definitions';
-import ts = require('typescript');
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	const _getDefinitions = getDefinitions.register(sourceFiles, tsLanguageService);
 	return (document: TextDocument, position: Position, newName: string) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -81,32 +78,32 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						if (hasLocation(tsLoc)) continue;
 						tsLocations.push(tsLoc);
 						const sourceFile_2 = findSourceFileByTsUri(sourceFiles, tsUri);
-						const templateScript = sourceFile_2?.getTemplateScript();
-						if (templateScript?.document && templateScript?.document.uri === tsLoc.uri) {
-							if (templateScript.contextSourceMap)
-								transfer(templateScript.contextSourceMap, templateScript.document);
-							if (templateScript.componentSourceMap)
-								transfer(templateScript.componentSourceMap, templateScript.document);
-							function transfer(sourceMap: SourceMap, tsDocument: TextDocument) {
-								const leftRange = sourceMap.isSource(tsLoc.range)
-									? tsLoc.range
-									: sourceMap.targetToSource(tsLoc.range)?.range;
-								if (leftRange) {
-									const leftLoc = { uri: tsDocument.uri, range: leftRange };
-									if (!hasLocation(leftLoc)) {
-										const rename2 = worker(tsDocument, leftLoc.range.start, newName);
+						const tsm = sourceFile_2?.getMirrorsSourceMaps();
+						if (tsm?.contextSourceMap?.sourceDocument.uri === tsLoc.uri)
+							transfer(tsm.contextSourceMap);
+						if (tsm?.componentSourceMap?.sourceDocument.uri === tsLoc.uri)
+							transfer(tsm.componentSourceMap);
+						if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === tsLoc.uri)
+							transfer(tsm.scriptSetupSourceMap);
+						function transfer(sourceMap: SourceMap) {
+							const leftRange = sourceMap.isSource(tsLoc.range)
+								? tsLoc.range
+								: sourceMap.targetToSource(tsLoc.range)?.range;
+							if (leftRange) {
+								const leftLoc = { uri: sourceMap.sourceDocument.uri, range: leftRange };
+								if (!hasLocation(leftLoc)) {
+									const rename2 = worker(sourceMap.sourceDocument, leftLoc.range.start, newName);
+									if (rename && rename2) {
+										rename = margeWorkspaceEdits([rename, rename2]);
+									}
+								}
+								const rightLocs = sourceMap.sourceToTargets(leftRange);
+								for (const rightLoc of rightLocs) {
+									const rightLoc_2 = { uri: sourceMap.sourceDocument.uri, range: rightLoc.range };
+									if (!hasLocation(rightLoc_2)) {
+										const rename2 = worker(sourceMap.sourceDocument, rightLoc_2.range.start, newName);
 										if (rename && rename2) {
 											rename = margeWorkspaceEdits([rename, rename2]);
-										}
-									}
-									const rightLocs = sourceMap.sourceToTargets(leftRange);
-									for (const rightLoc of rightLocs) {
-										const rightLoc_2 = { uri: tsDocument.uri, range: rightLoc.range };
-										if (!hasLocation(rightLoc_2)) {
-											const rename2 = worker(tsDocument, rightLoc_2.range.start, newName);
-											if (rename && rename2) {
-												rename = margeWorkspaceEdits([rename, rename2]);
-											}
 										}
 									}
 								}

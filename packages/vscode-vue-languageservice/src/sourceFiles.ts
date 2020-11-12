@@ -152,15 +152,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		getHtmlSourceMaps: untrack(() => templateParts['raw'].htmlSourceMap.value ? [templateParts['raw'].htmlSourceMap.value] : []),
 		getPugSourceMaps: untrack(() => templateParts['raw'].pugSourceMap.value ? [templateParts['raw'].pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getTemplateScript: untrack(() => {
-			const data = templateParts['script.gen'];
-			if (data.textDocument.value && data.sourceMap.value) {
-				return {
-					document: data.textDocument.value,
-					contextSourceMap: data.contextSourceMap.value,
-					componentSourceMap: data.componentSourceMap.value,
-				};
-			}
+		getMirrorsSourceMaps: untrack(() => {
+			return {
+				contextSourceMap: templateParts['script.gen'].contextSourceMap.value,
+				componentSourceMap: templateParts['script.gen'].componentSourceMap.value,
+				scriptSetupSourceMap: scriptParts['setup'].mirrorsSourceMap.value,
+			};
 		}),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
