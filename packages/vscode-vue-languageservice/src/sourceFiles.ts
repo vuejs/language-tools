@@ -8,7 +8,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
 import { uriToFsPath, sleep, notEmpty } from '@volar/shared';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
-import * as ts from 'typescript';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import * as css from 'vscode-css-languageservice';
@@ -198,7 +197,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		function updateScript(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.script ? {
 				lang: newDescriptor.script.lang ?? 'js',
-				content: passScriptRefs(newDescriptor.script),
+				content: newDescriptor.script.content,
 				loc: {
 					start: newDescriptor.script.loc.start.offset,
 					end: newDescriptor.script.loc.end.offset,
@@ -217,7 +216,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		function updateScriptSetup(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.scriptSetup ? {
 				lang: newDescriptor.scriptSetup.lang ?? 'js',
-				content: passScriptRefs(newDescriptor.scriptSetup),
+				content: newDescriptor.scriptSetup.content,
 				loc: {
 					start: newDescriptor.scriptSetup.loc.start.offset,
 					end: newDescriptor.scriptSetup.loc.end.offset,
@@ -649,37 +648,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 			return result.value;
 		};
-	}
-	function passScriptRefs(script: vueSfc.SFCScriptBlock) {
-		let content = script.content;
-		if (script.attrs.refs) {
-			const scriptTarget = tsLanguageService.host.getCompilationSettings().target ?? ts.ScriptTarget.Latest;
-			const variant = (script.lang === 'tsx' || script.lang === 'jsx') ? ts.LanguageVariant.JSX : ts.LanguageVariant.Standard;
-			const tsScanner = ts.createScanner(scriptTarget, true, variant, script.content);
-			let tokenType = tsScanner.scan();
-			while (tokenType !== ts.SyntaxKind.EndOfFileToken) {
-				const tokenText = tsScanner.getTokenText();
-				const tokenPos = tsScanner.getTokenPos();
-				if (tokenType === ts.SyntaxKind.Identifier && tokenText === 'ref') {
-					const nextTokenType = tsScanner.scan();
-					if (nextTokenType === ts.SyntaxKind.Identifier) {
-						content = content.substring(0, tokenPos) + 'let' + content.substring(tokenPos + 'let'.length);
-					}
-					tokenType = nextTokenType;
-				}
-				else if (tokenType === ts.SyntaxKind.Identifier && tokenText === 'computed') {
-					const nextTokenType = tsScanner.scan();
-					if (nextTokenType === ts.SyntaxKind.Identifier) {
-						content = content.substring(0, tokenPos) + '   const' + content.substring(tokenPos + '   const'.length);
-					}
-					tokenType = nextTokenType;
-				}
-				else {
-					tokenType = tsScanner.scan();
-				}
-			}
-		}
-		return content;
 	}
 	function untrack<T>(source: () => T) {
 		return () => {
