@@ -121,7 +121,7 @@ export function useTemplateScript(
 			interpolationsMappings: interpolations.mappings,
 		};
 
-		function writeCssClassProperties(data: Map<string, Map<string, Set<number>>>) {
+		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>) {
 			const mappings = new Map<string, {
 				tsRange: {
 					start: number,
@@ -137,15 +137,15 @@ export function useTemplateScript(
 				if (!mappings.has(uri)) {
 					mappings.set(uri, []);
 				}
-				for (const [className, offsets] of classes) {
+				for (const [className, ranges] of classes) {
 					mappings.get(uri)!.push({
 						tsRange: {
 							start: code.length + 1, // + '
 							end: code.length + 1 + className.length,
 						},
-						cssRanges: [...offsets].map(offset => ({
-							start: offset,
-							end: offset + className.length,
+						cssRanges: [...ranges].map(range => ({
+							start: range[0],
+							end: range[1],
 						})),
 						mode: MapedMode.Offset,
 					});
@@ -154,9 +154,9 @@ export function useTemplateScript(
 							start: code.length,
 							end: code.length + className.length + 2,
 						},
-						cssRanges: [...offsets].map(offset => ({
-							start: offset,
-							end: offset + className.length,
+						cssRanges: [...ranges].map(range => ({
+							start: range[0],
+							end: range[1],
 						})),
 						mode: MapedMode.Gate,
 					});
@@ -288,7 +288,7 @@ export function useTemplateScript(
 			return tags.has(tagName) || tags.has(hyphenate(tagName));
 		}
 		function getCssClasses(type: 'module' | 'scoped') {
-			const result = new Map<string, Map<string, Set<number>>>();
+			const result = new Map<string, Map<string, Set<[number, number]>>>();
 			for (const sourceMap of styleDocuments.value) {
 				if (type === 'module' && !sourceMap.module)
 					continue;
@@ -308,12 +308,12 @@ export function useTemplateScript(
 				}
 			}
 			return result;
-			function addClassName(uri: string, className: string, offset: number) {
+			function addClassName(uri: string, className: string, range: [number, number]) {
 				if (!result.has(uri))
 					result.set(uri, new Map());
 				if (!result.get(uri)!.has(className))
 					result.get(uri)!.set(className, new Set());
-				result.get(uri)!.get(className)?.add(offset);
+				result.get(uri)!.get(className)?.add(range);
 			}
 		}
 		function getInterpolations() {
@@ -449,7 +449,7 @@ export function useTemplateScript(
 }
 
 function finClassNames(doc: TextDocument, ss: css.Stylesheet) {
-	const result = new Map<string, Set<number>>();
+	const result = new Map<string, Set<[number, number]>>();
 	const cssLanguageService = globalServices.getCssService(doc.languageId);
 	const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
 	for (const s of symbols) {
@@ -463,7 +463,7 @@ function finClassNames(doc: TextDocument, ss: css.Stylesheet) {
 				if (!result.has(text)) {
 					result.set(text, new Set());
 				}
-				result.get(text)!.add(doc.offsetAt(s.location.range.start) + 1);
+				result.get(text)!.add([doc.offsetAt(s.location.range.start), doc.offsetAt(s.location.range.start) + text.length + 1]);
 			}
 		}
 	}

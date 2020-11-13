@@ -43,6 +43,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				let startWithScriptSetup = false;
 				let startWithNoDollarRef = false;
+				let startWithStyle= false;
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (tsLoc.maped.data.capabilities.rename) {
 						if (tsLoc.maped.data.vueTag === 'scriptSetup') {
@@ -51,7 +52,13 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						if (tsLoc.maped.data.isNoDollarRef) {
 							startWithNoDollarRef = true;
 						}
+						if (tsLoc.maped.data.vueTag === 'style') {
+							startWithStyle = true;
+						}
 					}
+				}
+				if (startWithStyle && newName.startsWith('.')) {
+					newName = newName.substr(1);
 				}
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.rename) continue;
@@ -60,7 +67,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					const hasNoDollarRef = hasScriptRefReference(tsEdit);
 					const startWithDollarRef = startWithScriptSetup && !startWithNoDollarRef && hasNoDollarRef;
 					keepHtmlTagOrAttrStyle(tsEdit);
-					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef);
+					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef, startWithStyle);
 					vueEdits.push(vueEdit);
 				}
 			}
@@ -213,7 +220,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			return false;
 		}
-		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean) {
+		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean, startWithStyle: boolean) {
 			const newWorkspaceEdit: WorkspaceEdit = {
 				changes: {}
 			};
@@ -231,6 +238,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						}
 						if (!isDollarRef && startWithDollarRef && newText.startsWith('$')) {
 							newText = newText.substr(1);
+						}
+						if (data?.vueTag === 'style') {
+							newText = '.' + newText;
 						}
 						const sourceTextEdit = TextEdit.replace(sourceLocation.range, newText);
 						const sourceUri = sourceLocation.uri;
