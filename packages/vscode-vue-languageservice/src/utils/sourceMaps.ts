@@ -155,6 +155,7 @@ export interface TsMappingData {
 		rename?: boolean,
 		completion?: boolean,
 		semanticTokens?: boolean,
+		foldingRanges?: boolean,
 	},
 }
 

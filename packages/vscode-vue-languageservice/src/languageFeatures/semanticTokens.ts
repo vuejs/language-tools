@@ -6,7 +6,7 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as html from 'vscode-html-languageservice';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
-import { rfc } from '../virtuals/scriptSetup';
+import { rfc } from '../virtuals/script';
 
 type TokenData = [number, number, number, number, number | undefined];
 

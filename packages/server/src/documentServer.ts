@@ -56,6 +56,8 @@ function initLanguageService(rootPath: string) {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Write', 0, '', true);
 		for (const [uri, service] of host.services) {
+			const globalDoc = service.languageService.getGlobalDoc();
+			await fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
 			const sourceFiles = service.languageService.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {

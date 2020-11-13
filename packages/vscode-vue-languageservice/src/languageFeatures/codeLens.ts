@@ -5,7 +5,7 @@ import {
 import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { rfc } from '../virtuals/scriptSetup';
+import { rfc } from '../virtuals/script';
 
 export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument) => {

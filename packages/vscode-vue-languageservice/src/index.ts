@@ -1,6 +1,9 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFiles';
+import { getGlobalDoc } from './virtuals/global';
+import { SearchTexts } from './virtuals/common';
+import { computed } from '@vue/reactivity';
 import * as upath from 'upath';
 import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -33,7 +36,7 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 export { triggerCharacter } from './languageFeatures/completions';
 export * from './utils/sourceMaps';
 export * from './commands';
-export { setScriptSetupRfc } from './virtuals/scriptSetup';
+export { setScriptSetupRfc } from './virtuals/script';
 
 export function getSemanticTokensLegend() {
 	return getSemanticTokens.semanticTokenLegend;
@@ -51,8 +54,19 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost);
 
+	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
+	const globalHtmlElements = computed(() => {
+		// TODO: watch tsProjectVersion
+		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.HtmlElements)));
+	});
+	const globalAttrs = computed(() => {
+		// TODO: watch tsProjectVersion
+		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.GlobalAttrs)));
+	});
+
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
+		getGlobalDoc: () => globalDoc,
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(doValidation.register(sourceFiles)),
@@ -194,6 +208,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
+			tsFileNames.push(uriToFsPath(globalDoc.uri));
 			for (const fileName of vueHost.getScriptFileNames()) {
 				const uri = fsPathToUri(fileName);
 				const sourceFile = sourceFiles.get(uri);
@@ -210,6 +225,9 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		}
 		function getScriptVersion(fileName: string) {
 			const uri = fsPathToUri(fileName);
+			if (uri === globalDoc.uri) {
+				return globalDoc.version.toString();
+			}
 			for (const [_, sourceFile] of sourceFiles) {
 				const doc = sourceFile.getTsDocuments().get(uri);
 				if (doc) {
@@ -225,6 +243,12 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 				return cache[1];
 			}
 			const uri = fsPathToUri(fileName);
+			if (uri === globalDoc.uri) {
+				const text = globalDoc.getText();
+				const snapshot = ts.ScriptSnapshot.fromString(text);
+				scriptSnapshots.set(fileName, [version, snapshot]);
+				return snapshot;
+			}
 			for (const [_, sourceFile] of sourceFiles) {
 				const doc = sourceFile.getTsDocuments().get(uri);
 				if (doc) {
@@ -268,7 +292,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService));
+				sourceFiles.set(uri, createSourceFile(doc, globalHtmlElements, globalAttrs, tsLanguageService));
 				vueScriptsUpdated = true;
 			}
 			else {

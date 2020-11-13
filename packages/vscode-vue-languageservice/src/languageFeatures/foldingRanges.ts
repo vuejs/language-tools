@@ -1,6 +1,6 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFiles';
-import type { SourceMap } from '../utils/sourceMaps';
+import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as globalServices from '../globalServices';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
@@ -32,7 +32,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
 				const foldingRanges = tsLanguageService.getFoldingRanges(sourceMap.targetDocument);
-				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
+				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
 			return result;
 		}
@@ -141,6 +141,25 @@ function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: Sou
 			end: { line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
 		});
 		if (vueLoc) {
+			foldingRange.startLine = vueLoc.range.start.line;
+			foldingRange.endLine = vueLoc.range.end.line;
+			if (foldingRange.startCharacter !== undefined)
+				foldingRange.startCharacter = vueLoc.range.start.character;
+			if (foldingRange.endCharacter !== undefined)
+				foldingRange.endCharacter = vueLoc.range.end.character;
+			result.push(foldingRange);
+		}
+	}
+	return result;
+}
+function toVueFoldingRangesTs(virtualFoldingRanges: FoldingRange[], sourceMap: TsSourceMap) {
+	const result: FoldingRange[] = [];
+	for (const foldingRange of virtualFoldingRanges) {
+		const vueLoc = sourceMap.targetToSource({
+			start: { line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
+			end: { line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
+		});
+		if (vueLoc && vueLoc.maped.data.capabilities.foldingRanges) {
 			foldingRange.startLine = vueLoc.range.start.line;
 			foldingRange.endLine = vueLoc.range.end.line;
 			if (foldingRange.startCharacter !== undefined)
