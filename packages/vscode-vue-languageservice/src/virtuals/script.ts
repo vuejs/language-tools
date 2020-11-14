@@ -37,7 +37,7 @@ export function useScriptSetupGen(
 			const data = scriptSetupData.value;
 			if (data) {
 				const result: MapedRange[] = [];
-				for (const optionsNode of [...data.useOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
+				for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
 					result.push({
 						start: scriptSetup.value.loc.start + optionsNode.options.start,
 						end: scriptSetup.value.loc.start + optionsNode.options.end,
@@ -372,7 +372,7 @@ function genScriptSetup(
 
 	genCode += `\n`;
 	genCode += `const __VLS_exportComponent = __VLS_defineComponent({\n`;
-	for (const optionsNode of [...data.useOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
+	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
 		genCode += `...(`;
 		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
 			capabilities: {
@@ -566,7 +566,7 @@ function genScriptSetup(
 	genCode += `export default __VLS_export;\n`;
 
 	genCode += `const __VLS_component = __VLS_defineComponent({\n`;
-	for (const optionsNode of [...data.useOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
+	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
 		genCode += `...(`;
 		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
 			capabilities: {
@@ -776,7 +776,7 @@ function getScriptSetupData(sourceCode: string) {
 			end: number,
 		},
 	} | undefined;
-	const useOptionsCalls: {
+	const defineOptionsCalls: {
 		start: number,
 		end: number,
 		options: {
@@ -794,7 +794,7 @@ function getScriptSetupData(sourceCode: string) {
 	}[] = [];
 
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
-	let hasImportUseOptions = false;
+	let hasImportDefineOptions = false;
 	scriptAst.forEachChild(node => {
 		if (node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword)) {
 			if (ts.isVariableStatement(node)) {
@@ -859,8 +859,8 @@ function getScriptSetupData(sourceCode: string) {
 						start: element.name.getStart(scriptAst),
 						end: element.name.getStart(scriptAst) + element.name.getWidth(scriptAst),
 					});
-					if (element.name.getText(scriptAst) === 'useOptions') {
-						hasImportUseOptions = true;
+					if (element.name.getText(scriptAst) === 'defineOptions') {
+						hasImportDefineOptions = true;
 					}
 				}
 			}
@@ -929,7 +929,7 @@ function getScriptSetupData(sourceCode: string) {
 		imports,
 		exportKeywords,
 		exportDefault,
-		useOptionsCalls,
+		defineOptionsCalls,
 		declares,
 	};
 
@@ -1045,16 +1045,16 @@ function getScriptSetupData(sourceCode: string) {
 			}
 		}
 		else if (
-			hasImportUseOptions
+			hasImportDefineOptions
 			&& ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
-			&& node.expression.getText(scriptAst) === 'useOptions'
+			&& node.expression.getText(scriptAst) === 'defineOptions'
 		) {
 			// TODO: handle this
 			// import * as vue from 'vue'
 			// const { props } = vue.useProps(...)
 			for (const arg of node.arguments) {
-				useOptionsCalls.push({
+				defineOptionsCalls.push({
 					start: node.getStart(scriptAst),
 					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
 					options: {
