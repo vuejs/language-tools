@@ -156,6 +156,7 @@ export interface TsMappingData {
 		completion?: boolean,
 		semanticTokens?: boolean,
 		foldingRanges?: boolean,
+		referencesCodeLens?: boolean,
 	},
 }
 

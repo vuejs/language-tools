@@ -67,7 +67,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					const hasNoDollarRef = hasScriptRefReference(tsEdit);
 					const startWithDollarRef = startWithScriptSetup && !startWithNoDollarRef && hasNoDollarRef;
 					keepHtmlTagOrAttrStyle(tsEdit);
-					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef, startWithStyle);
+					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef);
 					vueEdits.push(vueEdit);
 				}
 			}
@@ -220,7 +220,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			return false;
 		}
-		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean, startWithStyle: boolean) {
+		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean) {
 			const newWorkspaceEdit: WorkspaceEdit = {
 				changes: {}
 			};

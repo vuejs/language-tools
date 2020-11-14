@@ -23,6 +23,7 @@ import {
 	CompletionItem,
 	WorkspaceEdit,
 	CodeLensRequest,
+	// CodeLensResolveRequest,
 } from 'vscode-languageserver';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
@@ -206,11 +207,16 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.get(document.uri)?.getCodeLens(document);
 	});
+	// connection.onCodeLensResolve(codeLens => {
+	// 	const uri = codeLens.data?.uri;
+	// 	console.log(codeLens);
+	// 	return host.get(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
+	// });
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
 		const document = documents.get(uri);
 		if (!document) return undefined;
-		return host.get(uri)?.doExecuteCommand(document, handler.command, connection);
+		return host.get(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
 	});
 	// vue & ts
 	connection.onReferences(handler => {
@@ -257,7 +263,11 @@ function onInitialized() {
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(RenameRequest.type, vueOnly);
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
-	connection.client.register(CodeLensRequest.type, vueOnly);
+	connection.client.register(CodeLensRequest.type, {
+		documentSelector: vueOnly.documentSelector,
+		// resolveProvider: true,
+	});
+	// connection.client.register(CodeLensResolveRequest.type); // not work: https://github.com/microsoft/vscode-languageserver-node/issues/689
 	connection.client.register(SignatureHelpRequest.type, {
 		documentSelector: vueOnly.documentSelector,
 		triggerCharacters: ['(', ',', '<'],
@@ -269,6 +279,7 @@ function onInitialized() {
 			Commands.PUG_TO_HTML,
 			Commands.UNUSE_REF_SUGAR,
 			Commands.USE_REF_SUGAR,
+			Commands.SHOW_REFERENCES,
 		]
 	});
 	connection.client.register(CompletionRequest.type, {

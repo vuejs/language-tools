@@ -14,12 +14,15 @@ import {
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind,
+	Position,
+	Location,
 } from 'vscode-languageclient';
 import {
 	TagCloseRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
 	WriteAllDebugFilesRequest,
+	ShowReferencesNotification,
 } from '@volar/shared';
 
 let apiClient: LanguageClient;
@@ -84,6 +87,23 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerDocumentFormattingEditProvider(apiClient);
 	registerEmmetConfigurationProvider(apiClient);
 	registerDocumentSemanticTokensProvider(docClient);
+	(async () => {
+		await apiClient.onReady();
+		apiClient.onNotification(ShowReferencesNotification.type, handler => {
+			const uri: string = handler.uri;
+			const pos: Position = handler.position;
+			const refs: Location[] = handler.references;
+			vscode.commands.executeCommand(
+				'editor.action.showReferences',
+				vscode.Uri.parse(uri),
+				new vscode.Position(pos.line, pos.character),
+				refs.map(ref => new vscode.Location(
+					vscode.Uri.parse(ref.uri),
+					new vscode.Range(ref.range.start.line, ref.range.start.character, ref.range.end.line, ref.range.end.character),
+				)),
+			);
+		});
+	})()
 
 	function tagRequestor(document: vscode.TextDocument, position: vscode.Position) {
 		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);

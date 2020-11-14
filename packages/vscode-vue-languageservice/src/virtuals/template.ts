@@ -378,8 +378,8 @@ export function useTemplateScript(
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
 					for (const cssRange of maped.cssRanges) {
-						const vueRange = cssSourceMap.targetToSource2(cssRange);
-						if (!vueRange) continue;
+						const vueLoc = cssSourceMap.targetToSource2(cssRange);
+						if (!vueLoc) continue;
 						sourceMap.add({
 							data: {
 								vueTag: 'style',
@@ -391,10 +391,11 @@ export function useTemplateScript(
 									formatting: false,
 									completion: true,
 									semanticTokens: false,
+									referencesCodeLens: maped.mode === MapedMode.Gate, // has 2 modes
 								},
 							},
 							mode: maped.mode,
-							sourceRange: vueRange.range,
+							sourceRange: vueLoc.range,
 							targetRange: tsRange,
 						});
 					}
@@ -463,7 +464,8 @@ function finClassNames(doc: TextDocument, ss: css.Stylesheet) {
 				if (!result.has(text)) {
 					result.set(text, new Set());
 				}
-				result.get(text)!.add([doc.offsetAt(s.location.range.start), doc.offsetAt(s.location.range.start) + text.length + 1]);
+				const addOffset = s.name.indexOf('.'); // fix: &.foo { }
+				result.get(text)!.add([doc.offsetAt(s.location.range.start) + addOffset, doc.offsetAt(s.location.range.start) + text.length + 1 + addOffset]);
 			}
 		}
 	}

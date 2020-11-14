@@ -6,7 +6,8 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 ## Some interesting features:
 
-- [x] RFC [#222](https://github.com/vuejs/rfcs/pull/222)([#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) support (v0.15.2 added)
+- [x] CSS class codeLens (v0.15.4 added)
+- [x] RFC [#222](https://github.com/vuejs/rfcs/pull/222) ([#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) support (v0.15.2 added) (with `volar.scriptSetup.supportRfc` setting)
 - [x] Scoped CSS services (v0.15.1 added)
 - [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
@@ -37,8 +38,8 @@ import { RouterLink, RouterView } from 'vue-router'
 
 declare global {
 	interface __VLS_GlobalComponents {
-		'RouterLink': typeof RouterLink
-		'RouterView': typeof RouterView
+		RouterLink: typeof RouterLink
+		RouterView: typeof RouterView
 	}
 }
 ```
@@ -54,12 +55,12 @@ import { UnwrapRef, VNode } from 'vue'
 
 declare global {
 	interface __VLS_GlobalComponents {
-		'RouterLink': typeof RouterLink & {
+		RouterLink: typeof RouterLink & {
 			__VLS_slots: {
 				default: UnwrapRef<ReturnType<typeof useLink>>
 			}
 		}
-		'RouterView': typeof RouterView & {
+		RouterView: typeof RouterView & {
 			__VLS_slots: {
 				default: {
 					Component: VNode

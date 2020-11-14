@@ -29,6 +29,7 @@ import * as getColorPresentations from './languageFeatures/colorPresentations';
 import * as getSemanticTokens from './languageFeatures/semanticTokens';
 import * as getFoldingRanges from './languageFeatures/foldingRanges';
 import * as getCodeLens from './languageFeatures/codeLens';
+import * as doCodeLensResolve from './languageFeatures/codeLensResolve';
 import * as doExecuteCommand from './languageFeatures/executeCommand';
 
 export { LanguageServiceHost } from 'typescript';
@@ -86,7 +87,8 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles, tsLanguageService), false),
 		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
-		getCodeLens: apiHook(getCodeLens.register(sourceFiles), false),
+		getCodeLens: apiHook(getCodeLens.register(sourceFiles, tsLanguageService), false),
+		doCodeLensResolve: apiHook(doCodeLensResolve.register(sourceFiles, tsLanguageService), false),
 		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles, tsLanguageService), false),
 		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, vueHost), false),

@@ -6,11 +6,15 @@
 import {
 	RequestType,
 	RequestType0,
+	NotificationType,
 	NotificationType0,
 	TextDocumentPositionParams,
 	TextDocumentIdentifier,
 	Range,
 	FormattingOptions,
+	Position,
+	Location,
+	DocumentUri,
 } from 'vscode-languageserver';
 
 export interface ISourceMap {
@@ -67,4 +71,8 @@ export namespace SemanticTokenLegendRequest {
 }
 export namespace SemanticTokensChangedNotification {
 	export const type: NotificationType0 = new NotificationType0('vue.semanticTokensChanged');
+}
+
+export namespace ShowReferencesNotification {
+	export const type: NotificationType<{ uri: DocumentUri, position: Position, references: Location[] }> = new NotificationType('vue.findReferences');
 }
