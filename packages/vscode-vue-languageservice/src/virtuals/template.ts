@@ -455,17 +455,26 @@ function finClassNames(doc: TextDocument, ss: css.Stylesheet) {
 	const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
 	for (const s of symbols) {
 		if (s.kind === css.SymbolKind.Class) {
+			const nodeText = doc.getText(s.location.range);
 			// https://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
-			const classNames = s.name.matchAll(/(?<=\.)-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g);
+			const classNames_1 = s.name.matchAll(/(?<=\.)-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g);
+			const classNames_2 = nodeText.matchAll(/(?<=\.)-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g);
 
-			for (const className of classNames) {
-				if (className.index === undefined) continue;
-				const text = className.toString();
-				if (!result.has(text)) {
-					result.set(text, new Set());
+			for (const _className_1 of classNames_1) {
+				if (_className_1.index === undefined) continue;
+				const className_1 = _className_1.toString();
+				for (const _className_2 of classNames_2) {
+					if (_className_2.index === undefined) continue;
+					const className_2 = _className_2.toString();
+					if (className_1 === className_2) {
+						if (!result.has(className_1)) {
+							result.set(className_1, new Set());
+						}
+						const startIndex = doc.offsetAt(s.location.range.start) + _className_2.index - 1;
+						result.get(className_1)!.add([startIndex, startIndex + className_1.length + 1]);
+						break;
+					}
 				}
-				const addOffset = s.name.indexOf('.'); // fix: &.foo { }
-				result.get(text)!.add([doc.offsetAt(s.location.range.start) + addOffset, doc.offsetAt(s.location.range.start) + text.length + 1 + addOffset]);
 			}
 		}
 	}
