@@ -26,10 +26,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				return true;
 			});
 			const referencesCount = references?.length ?? 0;
-			console.log(referencesCount);
 			codeLens.command = {
 				title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
-				command: referencesCount ? Commands.SHOW_REFERENCES : '',
+				command: Commands.SHOW_REFERENCES,
 				arguments: [uri, codeLens.range.start, references0],
 			};
 		}
