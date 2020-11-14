@@ -76,9 +76,13 @@ export function useScriptSetupGen(
 		if (scriptSetupGenResult.value) {
 			code += scriptSetupGenResult.value.code;
 		}
+		for (let i = 0; i < optionsVueRanges.value.length; i++) {
+			const optionsVueRange = optionsVueRanges.value[i];
+			code += `\nconst __VLS_options_${i} = ` + vueDoc.getText().substring(optionsVueRange.start, optionsVueRange.end);
+		}
 		code += `\nexport declare const __VLS_options: {}`;
-		for (const optionsVueRange of optionsVueRanges.value) {
-			code += ` & ` + vueDoc.getText().substring(optionsVueRange.start, optionsVueRange.end);
+		for (let i = 0; i < optionsVueRanges.value.length; i++) {
+			code += ` & typeof __VLS_options_${i}`;
 		}
 
 		return TextDocument.create(uri, syntaxToLanguageId(lang), version++, code);
@@ -171,9 +175,9 @@ export function useScriptSetupGen(
 			}
 			pos += scriptSetupGenResult.value.code.length;
 		}
-		pos += `\nexport declare const __VLS_options: {}`.length;
-		for (const optionsVueRange of optionsVueRanges.value) {
-			pos += ` & `.length;
+		for (let i = 0; i < optionsVueRanges.value.length; i++) {
+			const optionsVueRange = optionsVueRanges.value[i];
+			pos += `\nconst __VLS_options_${i} = `.length;
 			sourceMap.add({
 				data: {
 					vueTag: scriptSetup.value ? 'scriptSetup' : 'script',
@@ -194,6 +198,7 @@ export function useScriptSetupGen(
 					end: pos + optionsVueRange.end - optionsVueRange.start,
 				},
 			});
+			pos += optionsVueRange.end - optionsVueRange.start;
 		}
 
 		return sourceMap;
