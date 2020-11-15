@@ -96,7 +96,6 @@ function onInitialize(params: InitializeParams) {
 function initLanguageService(rootPath: string) {
 
 	const host = createLanguageServiceHost(connection, documents, rootPath, false, false);
-	let resolveCache: CompletionItem | undefined;
 
 	// custom requests
 	connection.onRequest(TagCloseRequest.type, handler => {
@@ -164,12 +163,8 @@ function initLanguageService(rootPath: string) {
 		);
 	});
 	connection.onCompletionResolve(async item => {
-		if (resolveCache && resolveCache.label === item.label && resolveCache.kind === item.kind) {
-			return resolveCache;
-		}
 		const uri = item.data?.uri;
-		resolveCache = host.get(uri)?.doCompletionResolve(item) ?? item;
-		return resolveCache;
+		return host.get(uri)?.doCompletionResolve(item) ?? item;
 	});
 	connection.onHover(handler => {
 		const document = documents.get(handler.textDocument.uri);

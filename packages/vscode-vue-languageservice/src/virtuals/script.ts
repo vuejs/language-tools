@@ -255,14 +255,22 @@ function genScriptSetup(
 		right: MapedRange,
 	}[] = [];
 	let genCode = `\n/* <script setup> */\n`;
-	genCode += `import { ref as __VLS_ref, defineComponent as __VLS_defineComponent } from '@vue/runtime-dom';\n`;
 	if (rfc === '#182') {
 		genCode += `import * as __VLS_exports from './${upath.basename(uri)}.scriptSetup.raw'\n`;
 	}
 	if (rfc === '#222') {
-		for (const _import of data.imports) {
-			const importCode = originalCode.substring(_import.start, _import.end);
-			addCode(importCode, {
+		let newLinesOnly = originalCode.split('\n').map(line => ' '.repeat(line.length)).join('\n');
+		let importPos = 0;
+		for (const _import of data.imports.sort((a, b) => a.start - b.start)) {
+			addCode(newLinesOnly.substring(importPos, _import.start), { // for auto import
+				capabilities: {},
+				scriptSetupRange: {
+					start: importPos,
+					end: _import.start,
+				},
+				mode: MapedMode.Offset,
+			});
+			addCode(originalCode.substring(_import.start, _import.end), {
 				capabilities: {
 					basic: true,
 					references: true,
@@ -277,9 +285,17 @@ function genScriptSetup(
 				},
 				mode: MapedMode.Offset,
 			});
-			genCode += ';\n';
 			sourceCode = replaceStringToEmpty(sourceCode, _import.start, _import.end);
+			importPos = _import.end;
 		}
+		addCode(newLinesOnly.substring(importPos, newLinesOnly.length), { // for auto import
+			capabilities: {},
+			scriptSetupRange: {
+				start: importPos,
+				end: newLinesOnly.length,
+			},
+			mode: MapedMode.Offset,
+		});
 		for (const _export of data.exportKeywords) {
 			sourceCode = replaceStringToEmpty(sourceCode, _export.start, _export.end);
 		}
@@ -376,7 +392,8 @@ function genScriptSetup(
 	}
 
 	genCode += `\n`;
-	genCode += `const __VLS_exportComponent = __VLS_defineComponent({\n`;
+	genCode += `// @ts-ignore\n`;
+	genCode += `const __VLS_exportComponent = (await import('@vue/runtime-dom')).defineComponent({\n`;
 	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
 		genCode += `...(`;
 		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
@@ -439,7 +456,7 @@ function genScriptSetup(
 					},
 					mode: MapedMode.Offset,
 				});
-				genCode += ` = __VLS_ref(__VLS_refs_${prop.text}).value;`;
+				genCode += ` = (await import('@vue/runtime-dom')).unref(__VLS_refs_${prop.text});`;
 				genCode += ` ${prop.text}; // ignore unused\n`
 
 				genCode += `const `;
@@ -458,7 +475,7 @@ function genScriptSetup(
 					},
 					mode: MapedMode.Offset, // TODO
 				});
-				genCode += ` = __VLS_ref(__VLS_refs_${prop.text});${prop.inRoot ? `$${prop.text}; // ignore unused\n` : ''}\n`;
+				genCode += ` = (await import('@vue/runtime-dom')).ref(__VLS_refs_${prop.text});${prop.inRoot ? `$${prop.text}; // ignore unused\n` : ''}\n`;
 				mirrors.push({
 					left: leftRange,
 					right: rightRange,
@@ -570,7 +587,8 @@ function genScriptSetup(
 	genCode += `;\n`;
 	genCode += `export default __VLS_export;\n`;
 
-	genCode += `const __VLS_component = __VLS_defineComponent({\n`;
+	genCode += `// @ts-ignore\n`;
+	genCode += `const __VLS_component = (await import('@vue/runtime-dom')).defineComponent({\n`;
 	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
 		genCode += `...(`;
 		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {

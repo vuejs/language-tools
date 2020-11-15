@@ -30,13 +30,13 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		if (detail?.codeActions) {
 			if (!item.additionalTextEdits) item.additionalTextEdits = [];
 			for (const action of detail.codeActions) {
-				for (const change of action.changes) {
-					const entries = change.textChanges.map(textChange => {
+				for (const changes of action.changes) {
+					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span }
 					});
 					const locs = entriesToLocations(entries, getTextDocument);
 					locs.forEach((loc, index) => {
-						item.additionalTextEdits?.push(TextEdit.insert(loc.range.start, change.textChanges[index].newText))
+						item.additionalTextEdits?.push(TextEdit.replace(loc.range, changes.textChanges[index].newText))
 					});
 				}
 			}
