@@ -145,6 +145,10 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getTsDocuments: untrack(() => tsDocuments.value),
+		getVirtualScript: untrack(() => ({
+			document: virtualScriptGen.textDocument.value,
+			sourceMap: virtualScriptGen.sourceMap.value,
+		})),
 		getScriptSetupData: untrack(() => virtualScriptGen.genResult.value),
 	};
 

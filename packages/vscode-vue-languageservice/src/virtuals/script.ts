@@ -6,6 +6,7 @@ import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '..
 import * as ts from 'typescript';
 import { SearchTexts } from './common';
 import * as upath from 'upath';
+import { tsDefinitionWorker } from '../languageFeatures/definitions';
 
 export let rfc: '#182' | '#222' = '#182';
 export function setScriptSetupRfc(_rfc: string) {
@@ -613,6 +614,9 @@ function genScriptSetup(
 		}
 	]`;
 
+	genCode += `\n// @ts-ignore`
+	genCode += `\nref${SearchTexts.Ref}`; // for execute auto import
+
 	return {
 		data,
 		mappings,
@@ -777,6 +781,7 @@ function getScriptSetupData(sourceCode: string) {
 		right: {
 			start: number,
 			end: number,
+			isComputedCall: boolean,
 		},
 	}[] = [];
 	const exposeVarNames: {
@@ -811,6 +816,22 @@ function getScriptSetupData(sourceCode: string) {
 		start: number,
 		end: number,
 		name: {
+			start: number,
+			end: number,
+		},
+	}[] = [];
+	const refCalls: {
+		start: number,
+		end: number,
+		vars: {
+			start: number,
+			end: number,
+		}[],
+		left: {
+			start: number,
+			end: number,
+		},
+		rightExpression: {
 			start: number,
 			end: number,
 		},
@@ -936,6 +957,10 @@ function getScriptSetupData(sourceCode: string) {
 			if (references) {
 				for (const reference of references) {
 					for (const reference_2 of reference.references) {
+						if ( // remove definition
+							reference_2.textSpan.start === _var.start
+							&& reference_2.textSpan.start + reference_2.textSpan.length === _var.end
+						) continue;
 						_var.references.push({
 							start: reference_2.textSpan.start,
 							end: reference_2.textSpan.start + reference_2.textSpan.length,
@@ -954,6 +979,7 @@ function getScriptSetupData(sourceCode: string) {
 		exportDefault,
 		defineOptionsCalls,
 		declares,
+		refCalls,
 	};
 
 	function deepLoop(node: ts.Node, parent: ts.Node, inRoot: boolean) {
@@ -990,47 +1016,10 @@ function getScriptSetupData(sourceCode: string) {
 					for (const property of binaryExp.left.properties) {
 						propertyWalker(property);
 					}
-
-					function propertyWalker(property: ts.ObjectLiteralElementLike) {
-						// { foo }
-						if (ts.isShorthandPropertyAssignment(property)) {
-							vars.push({
-								isShortand: true,
-								inRoot,
-								text: property.name.getText(scriptAst),
-								start: property.name.getStart(scriptAst),
-								end: property.name.getStart(scriptAst) + property.name.getWidth(scriptAst),
-								references: [],
-							});
-						}
-						// { foo: foo2 }
-						else if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.initializer)) {
-							vars.push({
-								isShortand: false,
-								inRoot,
-								text: property.initializer.getText(scriptAst),
-								start: property.initializer.getStart(scriptAst),
-								end: property.initializer.getStart(scriptAst) + property.initializer.getWidth(scriptAst),
-								references: [],
-							});
-						}
-						// { ...rest }
-						else if (ts.isSpreadAssignment(property) && ts.isIdentifier(property.expression)) {
-							vars.push({
-								isShortand: false,
-								inRoot,
-								text: property.expression.getText(scriptAst),
-								start: property.expression.getStart(scriptAst),
-								end: property.expression.getStart(scriptAst) + property.expression.getWidth(scriptAst),
-								references: [],
-							});
-						}
-						// { foo: { ... } }
-						else if (ts.isPropertyAssignment(property) && ts.isObjectLiteralExpression(property.initializer)) {
-							for (const property_2 of property.initializer.properties) {
-								propertyWalker(property_2);
-							}
-						}
+				}
+				else if (ts.isArrayLiteralExpression(binaryExp.left)) {
+					for (const property of binaryExp.left.elements) {
+						propertyWalker(property);
 					}
 				}
 
@@ -1053,6 +1042,7 @@ function getScriptSetupData(sourceCode: string) {
 					right: {
 						start: binaryExp.right.getStart(scriptAst),
 						end: binaryExp.right.getStart(scriptAst) + binaryExp.right.getWidth(scriptAst),
+						isComputedCall: ts.isCallExpression(binaryExp.right) && ts.isIdentifier(binaryExp.right.expression) && binaryExp.right.expression.getText(scriptAst) === 'computed',
 					},
 				});
 			}
@@ -1064,6 +1054,58 @@ function getScriptSetupData(sourceCode: string) {
 				else if (ts.isParenthesizedExpression(node)) {
 					// unwrap (...)
 					return findBinaryExpression(node.expression);
+				}
+			}
+			function propertyWalker(property: ts.Node) {
+				// { foo } = ...
+				if (ts.isShorthandPropertyAssignment(property)) {
+					vars.push({
+						isShortand: true,
+						inRoot,
+						text: property.name.getText(scriptAst),
+						start: property.name.getStart(scriptAst),
+						end: property.name.getStart(scriptAst) + property.name.getWidth(scriptAst),
+						references: [],
+					});
+				}
+				// { foo: foo2 } = ...
+				else if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.initializer)) {
+					vars.push({
+						isShortand: false,
+						inRoot,
+						text: property.initializer.getText(scriptAst),
+						start: property.initializer.getStart(scriptAst),
+						end: property.initializer.getStart(scriptAst) + property.initializer.getWidth(scriptAst),
+						references: [],
+					});
+				}
+				// { ...rest } = ...
+				else if (ts.isSpreadAssignment(property) && ts.isIdentifier(property.expression)) {
+					vars.push({
+						isShortand: false,
+						inRoot,
+						text: property.expression.getText(scriptAst),
+						start: property.expression.getStart(scriptAst),
+						end: property.expression.getStart(scriptAst) + property.expression.getWidth(scriptAst),
+						references: [],
+					});
+				}
+				// { foo: { ... } } = ...
+				else if (ts.isPropertyAssignment(property) && ts.isObjectLiteralExpression(property.initializer)) {
+					for (const property_2 of property.initializer.properties) {
+						propertyWalker(property_2);
+					}
+				}
+				// [foo] = ...
+				else if (ts.isIdentifier(property)) {
+					vars.push({
+						isShortand: false,
+						inRoot,
+						text: property.getText(scriptAst),
+						start: property.getStart(scriptAst),
+						end: property.getStart(scriptAst) + property.getWidth(scriptAst),
+						references: [],
+					});
 				}
 			}
 		}
@@ -1086,6 +1128,48 @@ function getScriptSetupData(sourceCode: string) {
 					},
 				});
 			}
+		}
+		else if (
+			ts.isVariableDeclarationList(node)
+			&& node.declarations.length === 1
+			&& node.declarations[0].initializer
+			&& ts.isCallExpression(node.declarations[0].initializer)
+			&& ts.isIdentifier(node.declarations[0].initializer.expression)
+			&& ['ref', 'computed'].includes(node.declarations[0].initializer.expression.getText(scriptAst))
+		) {
+			const declaration = node.declarations[0];
+			const refCall = node.declarations[0].initializer;
+			const isRef = refCall.expression.getText(scriptAst) === 'ref';
+			const wrapContant = isRef && refCall.arguments.length === 1 ? refCall.arguments[0] : refCall;
+			const vars: typeof refCalls[0]['vars'] = [];
+			if (ts.isObjectBindingPattern(declaration.name) || ts.isArrayBindingPattern(declaration.name)) {
+				for (const element of declaration.name.elements) {
+					vars.push({
+						start: element.getStart(scriptAst),
+						end: element.getStart(scriptAst) + element.getWidth(scriptAst),
+					});
+				}
+			}
+			else if (ts.isIdentifier(declaration.name)) {
+				vars.push({
+					start: declaration.name.getStart(scriptAst),
+					end: declaration.name.getStart(scriptAst) + declaration.name.getWidth(scriptAst),
+				});
+			}
+			refCalls.push({
+				start: node.getStart(scriptAst),
+				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+				vars,
+				left: {
+					start: declaration.name.getStart(scriptAst),
+					end: declaration.name.getStart(scriptAst) + declaration.name.getWidth(scriptAst),
+				},
+				rightExpression: {
+					// TODO: computed
+					start: wrapContant.getStart(scriptAst),
+					end: wrapContant.getStart(scriptAst) + wrapContant.getWidth(scriptAst),
+				},
+			});
 		}
 		node.forEachChild(child => deepLoop(child, node, false));
 	}

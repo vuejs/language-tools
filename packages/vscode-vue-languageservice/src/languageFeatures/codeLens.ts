@@ -52,20 +52,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getScriptSetupResult(sourceFile: SourceFile) {
 			const result: CodeLens[] = [];
 			const descriptor = sourceFile.getDescriptor();
-			// const data = sourceFile.getScriptSetupData();
-			// if (descriptor.scriptSetup && data) {
-			// 	result.push({
-			// 		range: {
-			// 			start: document.positionAt(descriptor.scriptSetup.loc.start),
-			// 			end: document.positionAt(descriptor.scriptSetup.loc.end),
-			// 		},
-			// 		command: {
-			// 			title: 'ref sugar ' + (data.data.labels.length ? '☑' : '☐'),
-			// 			command: data.data.labels.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
-			// 			arguments: [document.uri],
-			// 		},
-			// 	});
-			// }
 			if (descriptor.scriptSetup) {
 				result.push({
 					range: {
@@ -77,6 +63,20 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						command: '',
 					},
 				})
+			}
+			const data = sourceFile.getScriptSetupData();
+			if (descriptor.scriptSetup && data) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.loc.start),
+						end: document.positionAt(descriptor.scriptSetup.loc.end),
+					},
+					command: {
+						title: 'ref sugar ' + (data.data.labels.length ? '☑' : '☐'),
+						command: Commands.SWITCH_REF_SUGAR,
+						arguments: [document.uri],
+					},
+				});
 			}
 			return result;
 		}

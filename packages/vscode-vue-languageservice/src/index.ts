@@ -79,7 +79,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles, tsLanguageService)),
 		doRename: apiHook(doRename.register(sourceFiles, tsLanguageService)),
 		getSemanticTokens: apiHook(getSemanticTokens.register(sourceFiles, tsLanguageService)),
-		doExecuteCommand: apiHook(doExecuteCommand.register(sourceFiles), false),
+		doExecuteCommand: apiHook(doExecuteCommand.register(sourceFiles, tsLanguageService), false),
 		doComplete: apiHook(doComplete.register(sourceFiles, tsLanguageService), false),
 		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles, tsLanguageService), false),
 		doAutoClose: apiHook(doAutoClose.register(sourceFiles), false),

@@ -15,9 +15,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		});
 		const details: string[] = [];
 		if (detail?.source) {
-			const importPath = `'${ts.displayPartsToString(detail.source)}'`;
+			const importModule = ts.displayPartsToString(detail.source);
+			const importPath = `'${importModule}'`;
 			const autoImportLabel = `Auto import from ${importPath}`;
 			details.push(autoImportLabel);
+			item.data.importModule = importModule;
 		}
 		if (detail?.displayParts) {
 			details.push(ts.displayPartsToString(detail.displayParts));

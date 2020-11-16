@@ -7,4 +7,5 @@ export enum SearchTexts {
 	ScriptSetupExports = '/* __VLS_.SearchTexts.ScriptSetupExports */',
 	HtmlElements = '/* __VLS_.SearchTexts.HtmlElements */',
 	GlobalAttrs = '/* __VLS_.SearchTexts.GlobalAttrs */',
+	Ref = '/* __VLS_.SearchTexts.ref */',
 }

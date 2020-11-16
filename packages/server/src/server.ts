@@ -20,7 +20,6 @@ import {
 	createConnection,
 	SelectionRangeRequest,
 	SignatureHelpRequest,
-	CompletionItem,
 	WorkspaceEdit,
 	CodeLensRequest,
 } from 'vscode-languageserver';
@@ -262,8 +261,7 @@ function onInitialized() {
 		commands: [
 			Commands.HTML_TO_PUG,
 			Commands.PUG_TO_HTML,
-			Commands.UNUSE_REF_SUGAR,
-			Commands.USE_REF_SUGAR,
+			Commands.SWITCH_REF_SUGAR,
 			Commands.SHOW_REFERENCES,
 		]
 	});
