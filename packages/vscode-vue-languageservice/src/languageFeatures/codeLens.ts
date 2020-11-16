@@ -65,7 +65,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				})
 			}
 			const data = sourceFile.getScriptSetupData();
-			if (descriptor.scriptSetup && data) {
+			if (descriptor.scriptSetup && rfc === '#222' && data) {
 				result.push({
 					range: {
 						start: document.positionAt(descriptor.scriptSetup.loc.start),
