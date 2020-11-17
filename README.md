@@ -27,6 +27,11 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 - [x] Component tag services
 - [x] Multi root support
 
+## Requirements
+
+- tsconfig.json
+- `lang="ts"`
+
 ## Components service
 
 By default, Local components, Built-in components, native html elements Type-Checking are active.
