@@ -924,7 +924,7 @@ function getScriptSetupData(sourceCode: string) {
 			if (ts.isObjectLiteralExpression(node.expression)) {
 				obj = node.expression;
 			}
-			else if (ts.isCallExpression(node.expression)) {
+			else if (ts.isCallExpression(node.expression) && node.expression.arguments.length) {
 				const arg0 = node.expression.arguments[0];
 				if (ts.isObjectLiteralExpression(arg0)) {
 					obj = arg0;
@@ -1191,7 +1191,7 @@ function getScriptData(sourceCode: string) {
 			if (ts.isObjectLiteralExpression(node.expression)) {
 				obj = node.expression;
 			}
-			else if (ts.isCallExpression(node.expression)) {
+			else if (ts.isCallExpression(node.expression) && node.expression.arguments.length) {
 				const arg0 = node.expression.arguments[0];
 				if (ts.isObjectLiteralExpression(arg0)) {
 					obj = arg0;
