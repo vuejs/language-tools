@@ -6,7 +6,6 @@ import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '..
 import * as ts from 'typescript';
 import { SearchTexts } from './common';
 import * as upath from 'upath';
-import { tsDefinitionWorker } from '../languageFeatures/definitions';
 
 export let rfc: '#182' | '#222' = '#182';
 export function setScriptSetupRfc(_rfc: string) {

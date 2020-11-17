@@ -95,7 +95,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	);
 	const virtualScriptGen = useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup));
 	const virtualScriptSetupRaw = useScriptSetupFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
-	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup));
+	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
 	// source map sets
 	const tsSourceMaps = computed(() => {
@@ -276,11 +276,11 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 
 		const doc = virtualScriptMain.textDocument.value;
 		const docText = doc.getText();
-		const context = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Context)));
-		const components = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Components)));
-		const props = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Props)));
-		const setupReturns = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns)));
-		const scriptSetupExports = tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.ScriptSetupExports)));
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
+		const components = docText.indexOf(SearchTexts.Components) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
+		const scriptSetupExports = docText.indexOf(SearchTexts.ScriptSetupExports) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.ScriptSetupExports))) : [];
 
 		const contextNames = context.map(entry => entry.data.name);
 		const componentNames = components.map(entry => entry.data.name);
