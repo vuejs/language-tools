@@ -1,9 +1,9 @@
 import * as ts from 'typescript';
 import * as upath from 'upath';
-import { LanguageService, createLanguageService, LanguageServiceHost, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
+import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
 import { uriToFsPath, fsPathToUri, sleep, SemanticTokensChangedNotification } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection } from 'vscode-languageserver';
+import type { Connection, Disposable } from 'vscode-languageserver';
 import type { TextDocuments } from 'vscode-languageserver';
 
 export function createLanguageServiceHost(
@@ -24,16 +24,21 @@ export function createLanguageServiceHost(
 	}>();
 
 	for (const tsConfig of tsConfigs) {
-		add(tsConfig);
+		languageServices.set(tsConfig, createLs(tsConfig));
 	}
 
-	ts.sys.watchDirectory!(rootPath, fileName => {
-		if (searchFiles.includes(upath.basename(fileName))) {
-			if (ts.sys.fileExists(fileName)) {
-				add(fileName);
+	ts.sys.watchDirectory!(rootPath, tsConfig => {
+		if (searchFiles.includes(upath.basename(tsConfig))) {
+			if (ts.sys.fileExists(tsConfig)) {
+				if (!languageServices.has(tsConfig)) {
+					languageServices.set(tsConfig, createLs(tsConfig));
+				}
 			}
 			else {
-				remove(fileName);
+				if (languageServices.has(tsConfig)) {
+					languageServices.get(tsConfig)?.dispose();
+					languageServices.delete(tsConfig);
+				}
 			}
 		}
 	}, true);
@@ -74,7 +79,7 @@ export function createLanguageServiceHost(
 			return languageServices.get(tsConfig)?.languageService;
 		}
 	}
-	function add(tsConfig: string) {
+	function createLs(tsConfig: string) {
 		let projectCurrentReq = 0;
 		let projectVersion = 0;
 		let disposed = false;
@@ -87,6 +92,7 @@ export function createLanguageServiceHost(
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const languageServiceHost = createLanguageServiceHost();
 		const vueLanguageService = createLanguageService(languageServiceHost);
+		const disposables: Disposable[] = [];
 
 		onParsedCommandLineUpdate();
 		const tsConfigWatcher = ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
@@ -105,14 +111,14 @@ export function createLanguageServiceHost(
 			}
 		}, true);
 
-		documents.onDidChangeContent(change => onDidChangeContent(change.document));
-		documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
+		disposables.push(documents.onDidChangeContent(change => onDidChangeContent(change.document)));
+		disposables.push(documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] })));
 
-		languageServices.set(tsConfig, {
+		return {
 			languageService: vueLanguageService,
 			getParsedCommandLine: () => parsedCommandLine,
 			dispose: dispose,
-		});
+		};
 
 		function createParsedCommandLine() {
 			const parseConfigHost: ts.ParseConfigHost = {
@@ -132,6 +138,7 @@ export function createLanguageServiceHost(
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
+			if (disposed) return;
 			const fileName = uriToFsPath(document.uri);
 			if (new Set(parsedCommandLine.fileNames).has(fileName)) {
 				const newVersion = ts.sys.createHash!(document.getText());
@@ -286,10 +293,9 @@ export function createLanguageServiceHost(
 			directoryWatcher.close();
 			tsConfigWatcher.close();
 			vueLanguageService.dispose();
+			for (const disposable of disposables) {
+				disposable.dispose();
+			}
 		}
-	}
-	function remove(tsConfig: string) {
-		languageServices.get(tsConfig)?.dispose();
-		languageServices.delete(tsConfig);
 	}
 }
