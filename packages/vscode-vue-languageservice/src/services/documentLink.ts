@@ -34,6 +34,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 				// TODO: move to vscode-typescript-languageservice
 				const scriptContent = sourceMap.targetDocument.getText();
 				const root = jsonc.parseTree(scriptContent);
+				if (!root) continue;
 				const scriptDoc = TextDocument.create(document.uri, 'typescript', 0, scriptContent);
 
 				result = result.concat([

@@ -35,7 +35,7 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	const getEmbeddedDoc = getEmbeddedDocument.register(sourceFiles);
 
-	return (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.EmmetConfiguration>) => {
+	return (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 		const range = Range.create(position, position);
