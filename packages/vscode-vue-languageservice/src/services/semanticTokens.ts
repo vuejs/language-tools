@@ -46,13 +46,13 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		const htmlResult = getHtmlResult(sourceFile);
 		const pugResult = getPugResult(sourceFile);
 		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
-		// const tsResult = await getTsResult(sourceFile); // TODO: inconsistent with typescript-language-features
+		const tsResult = await getTsResult(sourceFile); // TODO: inconsistent with typescript-language-features
 
 		return [
 			...htmlResult,
 			...pugResult,
 			...scriptSetupResult,
-			// ...tsResult,
+			...tsResult,
 		];
 
 		function getScriptSetupResult(sourceFile: SourceFile) {
