@@ -672,6 +672,16 @@ function genScriptSetup(
 			}
 			function writeCenter() {
 				if (!split.isRaw) {
+					addCode(`$${split.name}.value`, {
+						capabilities: {
+							diagnostic: true,
+						},
+						scriptSetupRange: {
+							start: split.start,
+							end: split.end,
+						},
+						mode: MapedMode.Gate,
+					}, false);
 					addCode(`$${split.name}`, {
 						isNoDollarRef: true,
 						capabilities: {
@@ -740,7 +750,7 @@ function genScriptSetup(
 		capabilities: TsMappingData['capabilities'],
 		scriptSetupRange: MapedRange,
 		mode: MapedMode,
-	}) {
+	}, write = true) {
 		mappings.push({
 			...mapping,
 			genRange: {
@@ -748,7 +758,9 @@ function genScriptSetup(
 				end: genCode.length + code.length,
 			},
 		});
-		genCode += code;
+		if (write) {
+			genCode += code;
+		}
 	}
 }
 function getScriptSetupData(sourceCode: string) {
