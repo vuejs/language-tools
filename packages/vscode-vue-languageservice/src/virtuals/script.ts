@@ -301,7 +301,8 @@ function genScriptSetup(
 		}
 	}
 	if (data.exportDefault) {
-		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.start, data.exportDefault.end);
+		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.start, data.exportDefault.expression.start);
+		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.expression.end, data.exportDefault.end);
 	}
 
 	const declaresNames = new Set<string>();
@@ -613,8 +614,8 @@ function genScriptSetup(
 		}
 	]`;
 
-	genCode += `\n// @ts-ignore`
-	genCode += `\nref${SearchTexts.Ref}`; // for execute auto import
+	genCode += `\n// @ts-ignore\n`
+	genCode += `ref${SearchTexts.Ref}\n`; // for execute auto import
 
 	return {
 		data,
@@ -798,6 +799,10 @@ function getScriptSetupData(sourceCode: string) {
 	let exportDefault: {
 		start: number,
 		end: number,
+		expression: {
+			start: number,
+			end: number,
+		},
 		options: {
 			start: number,
 			end: number,
@@ -933,6 +938,10 @@ function getScriptSetupData(sourceCode: string) {
 				exportDefault = {
 					start: node.getStart(scriptAst),
 					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+					expression: {
+						start: node.expression.getStart(scriptAst),
+						end: node.expression.getStart(scriptAst) + node.expression.getWidth(scriptAst),
+					},
 					options: {
 						start: obj.getStart(scriptAst),
 						end: obj.getStart(scriptAst) + obj.getWidth(scriptAst),
