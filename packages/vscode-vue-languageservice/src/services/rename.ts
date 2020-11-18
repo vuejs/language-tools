@@ -43,7 +43,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				let startWithScriptSetup = false;
 				let startWithNoDollarRef = false;
-				let startWithStyle= false;
+				let startWithStyle = false;
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (tsLoc.maped.data.capabilities.rename) {
 						if (tsLoc.maped.data.vueTag === 'scriptSetup') {
@@ -67,7 +67,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					const hasNoDollarRef = hasScriptRefReference(tsEdit);
 					const startWithDollarRef = startWithScriptSetup && !startWithNoDollarRef && hasNoDollarRef;
 					keepHtmlTagOrAttrStyle(tsEdit);
-					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef);
+					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef, sourceFile);
 					vueEdits.push(vueEdit);
 				}
 			}
@@ -220,7 +220,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			return false;
 		}
-		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean) {
+		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean, sourceFile: SourceFile) {
+			const desc = sourceFile.getDescriptor();
+			const genData = sourceFile.getScriptSetupData();
 			const newWorkspaceEdit: WorkspaceEdit = {
 				changes: {}
 			};
@@ -232,13 +234,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					for (const [sourceLocation, data] of sourceLocations) {
 						if (data && !data.capabilities.rename) continue;
 						let newText = edit.newText;
-						const isDollarRef = isRefSugarRenaming && data?.vueTag === 'scriptSetup' && !data?.isNoDollarRef;
-						if (isDollarRef && (!newText.startsWith('$') || !startWithDollarRef)) {
-							newText = '$' + newText;
-						}
-						if (!isDollarRef && startWithDollarRef && newText.startsWith('$')) {
-							newText = newText.substr(1);
-						}
+						patchRefSugar();
 						if (data?.vueTag === 'style') {
 							newText = '.' + newText;
 						}
@@ -248,6 +244,55 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							newWorkspaceEdit.changes![sourceUri] = [];
 						}
 						newWorkspaceEdit.changes![sourceUri].push(sourceTextEdit);
+
+						function patchRefSugar() {
+							const isDollarRef = isRefSugarRenaming && data?.vueTag === 'scriptSetup' && !data?.isNoDollarRef;
+							let shouldAddDollar = false;
+							if (isDollarRef) {
+								if (!startWithDollarRef)
+									shouldAddDollar = true;
+								else if (newText.indexOf(': ') === -1 && !newText.startsWith('$'))
+									shouldAddDollar = true;
+								else if (newText.indexOf(': ') >= 0 && newText.indexOf(': $') === -1)
+									shouldAddDollar = true;
+							}
+							if (isDollarRef && (!newText.startsWith('$') || !startWithDollarRef)) {
+								shouldAddDollar = true;
+							}
+							let isShorthand = false;
+							if (genData && desc.scriptSetup) {
+								const renameRange = {
+									start: sourceFile.getTextDocument().offsetAt(sourceLocation.range.start),
+									end: sourceFile.getTextDocument().offsetAt(sourceLocation.range.end),
+								};
+								for (const shorthandProperty of genData.data.shorthandPropertys) {
+									if (
+										renameRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
+										&& renameRange.end === desc.scriptSetup.loc.start + shorthandProperty.end
+									) {
+										isShorthand = true;
+										break;
+									}
+								}
+							}
+							if (isShorthand) {
+								if (newText.indexOf(': ') >= 0) {
+									if (shouldAddDollar) {
+										newText = newText.replace(': ', ': $');
+									}
+								}
+								else {
+									const originalText = sourceFile.getTextDocument().getText(sourceLocation.range);
+									newText = originalText + ': ' + newText;
+								}
+							}
+							else if (shouldAddDollar) {
+								newText = '$' + newText;
+							}
+							if (!isDollarRef && startWithDollarRef && newText.startsWith('$')) {
+								newText = newText.substr(1);
+							}
+						}
 					}
 				}
 			}
