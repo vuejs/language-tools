@@ -648,12 +648,12 @@ function genScriptSetup(
 		insideLabels = insideLabels.sort((a, b) => a.start - b.start);
 
 		let pos = start;
-		for (const split of insideLabels) {
+		for (const label of insideLabels) {
 			writeStartText();
 			writeCenter();
 
 			function writeStartText() {
-				const startText = sourceCode.substring(pos, split.start);
+				const startText = sourceCode.substring(pos, label.start);
 				addCode(startText, {
 					capabilities: {
 						basic: true,
@@ -671,18 +671,41 @@ function genScriptSetup(
 				});
 			}
 			function writeCenter() {
-				if (!split.isRaw) {
-					addCode(`$${split.name}.value`, {
+				let isShorthand = false;
+				for (const shorthandProperty of data.shorthandPropertys) {
+					if (
+						label.start === shorthandProperty.start
+						&& label.end === shorthandProperty.end
+					) {
+						isShorthand = true;
+						break;
+					}
+				}
+				if (isShorthand) {
+					addCode(label.name, {
 						capabilities: {
 							diagnostic: true,
 						},
 						scriptSetupRange: {
-							start: split.start,
-							end: split.end,
+							start: label.start,
+							end: label.end,
+						},
+						mode: MapedMode.Offset,
+					});
+					genCode += ': ';
+				}
+				if (!label.isRaw) {
+					addCode(`$${label.name}.value`, {
+						capabilities: {
+							diagnostic: true,
+						},
+						scriptSetupRange: {
+							start: label.start,
+							end: label.end,
 						},
 						mode: MapedMode.Gate,
 					}, false);
-					addCode(`$${split.name}`, {
+					addCode(`$${label.name}`, {
 						isNoDollarRef: true,
 						capabilities: {
 							basic: true, // hover, TODO: hover display type incorrect
@@ -690,8 +713,8 @@ function genScriptSetup(
 							rename: true,
 						},
 						scriptSetupRange: {
-							start: split.start,
-							end: split.end,
+							start: label.start,
+							end: label.end,
 						},
 						mode: MapedMode.Offset,
 					});
@@ -701,27 +724,27 @@ function genScriptSetup(
 							diagnostic: true,
 						},
 						scriptSetupRange: {
-							start: split.start,
-							end: split.end,
+							start: label.start,
+							end: label.end,
 						},
 						mode: MapedMode.Gate,
 					});
 				}
 				else {
-					addCode(`$${split.name}`, {
+					addCode(`$${label.name}`, {
 						capabilities: {
 							basic: true, // hover
 							references: true,
 							rename: true,
 						},
 						scriptSetupRange: {
-							start: split.start,
-							end: split.end,
+							start: label.start,
+							end: label.end,
 						},
 						mode: MapedMode.Offset,
 					});
 				}
-				pos = split.end;
+				pos = label.end;
 			}
 		}
 		writeEndText();
@@ -851,6 +874,10 @@ function getScriptSetupData(sourceCode: string) {
 			start: number,
 			end: number,
 		},
+	}[] = [];
+	const shorthandPropertys: {
+		start: number,
+		end: number,
 	}[] = [];
 
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
@@ -1000,6 +1027,7 @@ function getScriptSetupData(sourceCode: string) {
 		defineOptionsCalls,
 		declares,
 		refCalls,
+		shorthandPropertys,
 	};
 
 	function deepLoop(node: ts.Node, parent: ts.Node, inRoot: boolean) {
@@ -1189,6 +1217,12 @@ function getScriptSetupData(sourceCode: string) {
 					start: wrapContant.getStart(scriptAst),
 					end: wrapContant.getStart(scriptAst) + wrapContant.getWidth(scriptAst),
 				},
+			});
+		}
+		else if (ts.isShorthandPropertyAssignment(node)) {
+			shorthandPropertys.push({
+				start: node.getStart(scriptAst),
+				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
 			});
 		}
 		node.forEachChild(child => deepLoop(child, node, false));

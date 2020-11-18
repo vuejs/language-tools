@@ -66,11 +66,21 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							if (refernceRange.start >= desc.scriptSetup.loc.start && refernceRange.end <= desc.scriptSetup.loc.end) {
 								const referenceText = document.getText().substring(refernceRange.start, refernceRange.end);
 								const isRaw = `$${varText}` === referenceText;
+								let isShorthand = false;
+								for (const shorthandProperty of genData.data.shorthandPropertys) {
+									if (
+										refernceRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
+										&& refernceRange.end === desc.scriptSetup.loc.start + shorthandProperty.end
+									) {
+										isShorthand = true;
+										break;
+									}
+								}
 								if (isRaw) {
-									edits.push(TextEdit.replace(reference.range, varText));
+									edits.push(TextEdit.replace(reference.range, isShorthand ? `$${varText}: ${varText}` : varText));
 								}
 								else {
-									edits.push(TextEdit.replace(reference.range, varText + '.value'));
+									edits.push(TextEdit.replace(reference.range, isShorthand ? `${varText}: ${varText}.value` : `${varText}.value`));
 								}
 							}
 						}
