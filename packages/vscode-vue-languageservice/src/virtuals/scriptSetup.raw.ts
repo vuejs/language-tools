@@ -25,6 +25,7 @@ export function useScriptSetupFormat(
 					vueTag: 'scriptSetup',
 					capabilities: {
 						formatting: true,
+						foldingRanges: true,
 					},
 				},
 				mode: MapedMode.Offset,
