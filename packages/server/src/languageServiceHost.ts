@@ -160,6 +160,9 @@ export function createLanguageServiceHost(
 			}
 		}
 		async function sendDiagnostics(document: TextDocument) {
+			const matchLs = get(document.uri);
+			if (matchLs !== vueLanguageService) return;
+
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
 			fileCurrentReqs.set(document.uri, req);
 			const isCancel = () => fileCurrentReqs.get(document.uri) !== req;
