@@ -7,7 +7,7 @@ import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { pugToHtml, htmlToPug } from '@volar/pug';
-import { ShowReferencesNotification } from '@volar/shared';
+import { ShowReferencesNotification, sleep } from '@volar/shared';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import { SearchTexts } from '../virtuals/common';
 import * as findReferences from './references';
@@ -32,6 +32,13 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let edits: TextEdit[] = [];
 			if (genData.data.labels.length) {
 				// unuse ref sugar
+				let varsNum = 0;
+				let varsCur = 0;
+				for (const label of genData.data.labels) {
+					varsNum += label.vars.length;
+				}
+				const progress = await connection.window.createWorkDoneProgress();
+				progress.begin('Unuse Ref Sugar', 0, '', true);
 				for (const label of genData.data.labels) {
 					edits.push(TextEdit.replace({
 						start: document.positionAt(desc.scriptSetup.loc.start + label.label.start),
@@ -48,11 +55,16 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						}, ')'));
 					}
 					for (const _var of label.vars) {
+						if (progress.token.isCancellationRequested) {
+							return;
+						}
 						const varRange = {
 							start: document.positionAt(desc.scriptSetup.loc.start + _var.start),
 							end: document.positionAt(desc.scriptSetup.loc.start + _var.end),
 						};
 						const varText = document.getText(varRange);
+						progress.report(++varsCur / varsNum * 100, varText);
+						await sleep();
 						const references = _findReferences(document, varRange.start) ?? [];
 						for (const reference of references) {
 							if (reference.uri !== document.uri)
@@ -108,9 +120,17 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						});
 					}
 				}
+				progress.done();
 			}
 			else {
 				// use ref sugar
+				let varsNum = 0;
+				let varsCur = 0;
+				for (const label of genData.data.refCalls) {
+					varsNum += label.vars.length;
+				}
+				const progress = await connection.window.createWorkDoneProgress();
+				progress.begin('Use Ref Sugar', 0, '', true);
 				for (const refCall of genData.data.refCalls) {
 					const left = document.getText().substring(
 						desc.scriptSetup.loc.start + refCall.left.start,
@@ -125,11 +145,16 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
 					}, `ref: ${left} = ${right}`));
 					for (const _var of refCall.vars) {
+						if (progress.token.isCancellationRequested) {
+							return;
+						}
 						const varRange = {
 							start: document.positionAt(desc.scriptSetup.loc.start + _var.start),
 							end: document.positionAt(desc.scriptSetup.loc.start + _var.end),
 						};
 						const varText = document.getText(varRange);
+						progress.report(++varsCur / varsNum * 100, varText);
+						await sleep();
 						const references = _findReferences(document, varRange.start) ?? [];
 						for (const reference of references) {
 							if (reference.uri !== document.uri)
@@ -155,6 +180,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						}
 					}
 				}
+				progress.done();
 			}
 			connection.workspace.applyEdit({ changes: { [document.uri]: edits } });
 		}
