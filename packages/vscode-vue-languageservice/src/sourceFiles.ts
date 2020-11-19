@@ -88,7 +88,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	const virtualTemplateGen = useTemplateScript(
 		untrack(() => vueDoc.value),
 		computed(() => descriptor.template),
-		computed(() => descriptor.scriptSetup),
 		templateScriptData, virtualStyles.textDocuments,
 		virtualStyles.sourceMaps,
 		pugData,

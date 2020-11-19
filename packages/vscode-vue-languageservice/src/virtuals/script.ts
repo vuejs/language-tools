@@ -919,6 +919,14 @@ function getScriptSetupData(sourceCode: string) {
 						end: node_2.name.getStart(scriptAst) + node_2.name.getWidth(scriptAst),
 					});
 				}
+				else if (ts.isObjectBindingPattern(node_2.name) || ts.isArrayBindingPattern(node_2.name)) {
+					for (const element of node_2.name.elements) {
+						exposeVarNames.push({
+							start: element.getStart(scriptAst),
+							end: element.getStart(scriptAst) + element.getWidth(scriptAst),
+						});
+					}
+				}
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {

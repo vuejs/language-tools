@@ -13,7 +13,7 @@ export function useScriptSetupFormat(
 			const vueDoc = getUnreactiveDoc();
 			const lang = getValidScriptSyntax(scriptSetup.value.lang);
 			const uri = `${vueDoc.uri}.scriptSetup.raw.${lang}`;
-			return TextDocument.create(uri, syntaxToLanguageId(lang), version++, scriptSetup.value.content);
+			return TextDocument.create(uri, syntaxToLanguageId(lang), version++, scriptSetup.value.content + '\n\nexport {}');
 		}
 	});
 	const sourceMap = computed(() => {

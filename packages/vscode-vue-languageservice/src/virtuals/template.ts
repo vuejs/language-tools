@@ -14,7 +14,6 @@ import * as vueDom from '@vue/compiler-dom';
 export function useTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
-	scriptSetup: Ref<IDescriptor['scriptSetup']>,
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
@@ -55,7 +54,7 @@ export function useTemplateScript(
 			`import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'`,
 			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import __VLS_VM from './${upath.basename(vueFileName)}';`,
-			(scriptSetup.value
+			(templateScriptData.scriptSetupExports.length
 				? `import * as __VLS_setups from './${upath.basename(vueFileName)}.scriptSetup.raw';`
 				: `// no setups`),
 			`const __VLS_Options = __VLS_VM.__VLS_options`,
