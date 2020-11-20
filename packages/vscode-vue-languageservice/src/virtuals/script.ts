@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
+import { syntaxToLanguageId, getValidScriptSyntax, notEmpty } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '../utils/sourceMaps';
@@ -38,10 +38,11 @@ export function useScriptSetupGen(
 			if (data) {
 				const result: MapedRange[] = [];
 				for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
+					if (!optionsNode.options) continue;
 					result.push({
 						start: scriptSetup.value.loc.start + optionsNode.options.start,
 						end: scriptSetup.value.loc.start + optionsNode.options.end,
-					})
+					});
 				}
 				return result;
 			}
@@ -396,6 +397,7 @@ function genScriptSetup(
 	genCode += `// @ts-ignore\n`;
 	genCode += `const __VLS_exportComponent = (await import('@vue/runtime-dom')).defineComponent({\n`;
 	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
+		if (!optionsNode.options) continue;
 		genCode += `...(`;
 		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
 			capabilities: {
@@ -507,6 +509,20 @@ function genScriptSetup(
 	if (declaresNames.has('props')) {
 		genCode += `...__VLS_declares_props,\n`;
 	}
+	for (const call of data.defineOptionsCalls) {
+		if (call.typeOptions?.keys.has('props')) {
+			genCode += `...({} as `;
+			addCode(originalCode.substring(call.typeOptions.start, call.typeOptions.end), {
+				capabilities: {},
+				scriptSetupRange: {
+					start: call.typeOptions.start,
+					end: call.typeOptions.end,
+				},
+				mode: MapedMode.Offset,
+			});
+			genCode += `['props']),\n`
+		}
+	}
 	if (rfc === '#182') {
 		genCode += `...__VLS_exports,\n`;
 	}
@@ -608,6 +624,7 @@ function genScriptSetup(
 	genCode += `// @ts-ignore\n`;
 	genCode += `const __VLS_component = (await import('@vue/runtime-dom')).defineComponent({\n`;
 	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
+		if (!optionsNode.options) continue;
 		genCode += `...(`;
 		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
 			capabilities: {
@@ -630,6 +647,45 @@ function genScriptSetup(
 			${declaresNames.has('slots') ? 'slots: typeof __VLS_declares_slots,' : ''}
 		}
 	]`;
+	for (const call of data.defineOptionsCalls) {
+		if (!call.typeOptions) continue;
+		genCode += ` & [\n`;
+		if (call.typeOptions.keys.has('props')) {
+			addCode(originalCode.substring(call.typeOptions.start, call.typeOptions.end), {
+				capabilities: {},
+				scriptSetupRange: {
+					start: call.typeOptions.start,
+					end: call.typeOptions.end,
+				},
+				mode: MapedMode.Offset,
+			});
+			genCode += `['props'],\n`;
+		}
+		else {
+			genCode += `{},\n`
+		}
+		const addOptions: string[] = [];
+		if (call.typeOptions.keys.has('emit')) addOptions.push('emit');
+		if (call.typeOptions.keys.has('slots')) addOptions.push('slots');
+		if (addOptions.length) {
+			genCode += `Pick<(`;
+			addCode(originalCode.substring(call.typeOptions.start, call.typeOptions.end), {
+				capabilities: {},
+				scriptSetupRange: {
+					start: call.typeOptions.start,
+					end: call.typeOptions.end,
+				},
+				mode: MapedMode.Offset,
+			});
+			genCode += `), `;
+			genCode += addOptions.map(option => `'${option}'`).join(' | ');
+			genCode += `>,\n`;
+		}
+		else {
+			genCode += `{},\n`
+		}
+		genCode += `]`;
+	}
 
 	genCode += `\n// @ts-ignore\n`
 	genCode += `ref${SearchTexts.Ref}\n`; // for execute auto import
@@ -871,9 +927,14 @@ function getScriptSetupData(sourceCode: string) {
 	const defineOptionsCalls: {
 		start: number,
 		end: number,
-		options: {
+		options?: {
 			start: number,
 			end: number,
+		},
+		typeOptions?: {
+			start: number,
+			end: number,
+			keys: Set<string>,
 		},
 	}[] = [];
 	const declares: {
@@ -1091,17 +1152,22 @@ function getScriptSetupData(sourceCode: string) {
 		) {
 			// TODO: handle this
 			// import * as vue from 'vue'
-			// const { props } = vue.useProps(...)
-			for (const arg of node.arguments) {
-				defineOptionsCalls.push({
-					start: node.getStart(scriptAst),
-					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-					options: {
-						start: arg.getStart(scriptAst),
-						end: arg.getStart(scriptAst) + arg.getWidth(scriptAst),
-					},
-				});
-			}
+			// const { props } = vue.defineOptions(...)
+			const arg: ts.Expression | undefined = node.arguments.length ? node.arguments[0] : undefined;
+			const typeArg: ts.TypeNode | undefined = node.typeArguments?.length ? node.typeArguments[0] : undefined;
+			defineOptionsCalls.push({
+				start: node.getStart(scriptAst),
+				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+				options: arg ? {
+					start: arg.getStart(scriptAst),
+					end: arg.getStart(scriptAst) + arg.getWidth(scriptAst),
+				} : undefined,
+				typeOptions: typeArg && ts.isTypeLiteralNode(typeArg) ? {
+					start: typeArg.getStart(scriptAst),
+					end: typeArg.getStart(scriptAst) + typeArg.getWidth(scriptAst),
+					keys: new Set(typeArg.members.map(member => member.name?.getText(scriptAst)).filter(notEmpty)),
+				} : undefined,
+			});
 		}
 		else if (
 			ts.isVariableDeclarationList(node)
