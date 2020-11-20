@@ -75,12 +75,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const label of genData.labels) {
 					const labelPos = document.positionAt(scriptSetup.loc.start + label.label.start);
 					result.push([labelPos.line, labelPos.character, label.label.end - label.label.start + 1, tokenTypes.get('refLabel') ?? -1, undefined]);
-					for (const _var of label.vars) {
-						const varPos = document.positionAt(scriptSetup.loc.start + _var.start);
-						result.push([varPos.line, varPos.character, _var.end - _var.start, tokenTypes.get('refVariable') ?? -1, undefined]);
-						for (const reference of _var.references) {
-							const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
-							result.push([referencePos.line, referencePos.character, reference.end - reference.start, tokenTypes.get('refVariable') ?? -1, undefined]);
+					for (const binary of label.binarys) {
+						for (const _var of binary.vars) {
+							const varPos = document.positionAt(scriptSetup.loc.start + _var.start);
+							result.push([varPos.line, varPos.character, _var.end - _var.start, tokenTypes.get('refVariable') ?? -1, undefined]);
+							for (const reference of _var.references) {
+								const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
+								result.push([referencePos.line, referencePos.character, reference.end - reference.start, tokenTypes.get('refVariable') ?? -1, undefined]);
+							}
 						}
 					}
 				}

@@ -35,7 +35,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				let varsNum = 0;
 				let varsCur = 0;
 				for (const label of genData.data.labels) {
-					varsNum += label.vars.length;
+					for (const binary of label.binarys) {
+						varsNum += binary.vars.length;
+					}
 				}
 				const progress = await connection.window.createWorkDoneProgress();
 				progress.begin('Unuse Ref Sugar', 0, '', true);
@@ -44,55 +46,63 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						start: document.positionAt(desc.scriptSetup.loc.start + label.label.start),
 						end: document.positionAt(desc.scriptSetup.loc.start + label.label.end + 1),
 					}, 'const'));
-					if (!label.right.isComputedCall) {
-						edits.push(TextEdit.replace({
-							start: document.positionAt(desc.scriptSetup.loc.start + label.right.start),
-							end: document.positionAt(desc.scriptSetup.loc.start + label.right.start),
-						}, 'ref('));
-						edits.push(TextEdit.replace({
-							start: document.positionAt(desc.scriptSetup.loc.start + label.right.end),
-							end: document.positionAt(desc.scriptSetup.loc.start + label.right.end),
-						}, ')'));
-					}
-					for (const _var of label.vars) {
-						if (progress.token.isCancellationRequested) {
-							return;
+					for (const binary of label.binarys) {
+						if (!binary.right) {
+							edits.push(TextEdit.insert(
+								document.positionAt(desc.scriptSetup.loc.start + binary.left.end),
+								' = ref()'
+							));
 						}
-						const varRange = {
-							start: document.positionAt(desc.scriptSetup.loc.start + _var.start),
-							end: document.positionAt(desc.scriptSetup.loc.start + _var.end),
-						};
-						const varText = document.getText(varRange);
-						progress.report(++varsCur / varsNum * 100, varText);
-						await sleep();
-						const references = _findReferences(document, varRange.start) ?? [];
-						for (const reference of references) {
-							if (reference.uri !== document.uri)
-								continue;
-							const refernceRange = {
-								start: document.offsetAt(reference.range.start),
-								end: document.offsetAt(reference.range.end),
+						else if (!binary.right.isComputedCall) {
+							edits.push(TextEdit.insert(
+								document.positionAt(desc.scriptSetup.loc.start + binary.right.start),
+								'ref('
+							));
+							edits.push(TextEdit.insert(
+								document.positionAt(desc.scriptSetup.loc.start + binary.right.end),
+								')'
+							));
+						}
+						for (const _var of binary.vars) {
+							if (progress.token.isCancellationRequested) {
+								return;
+							}
+							const varRange = {
+								start: document.positionAt(desc.scriptSetup.loc.start + _var.start),
+								end: document.positionAt(desc.scriptSetup.loc.start + _var.end),
 							};
-							if (refernceRange.start === desc.scriptSetup.loc.start + _var.start && refernceRange.end === desc.scriptSetup.loc.start + _var.end)
-								continue;
-							if (refernceRange.start >= desc.scriptSetup.loc.start && refernceRange.end <= desc.scriptSetup.loc.end) {
-								const referenceText = document.getText().substring(refernceRange.start, refernceRange.end);
-								const isRaw = `$${varText}` === referenceText;
-								let isShorthand = false;
-								for (const shorthandProperty of genData.data.shorthandPropertys) {
-									if (
-										refernceRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
-										&& refernceRange.end === desc.scriptSetup.loc.start + shorthandProperty.end
-									) {
-										isShorthand = true;
-										break;
+							const varText = document.getText(varRange);
+							progress.report(++varsCur / varsNum * 100, varText);
+							await sleep();
+							const references = _findReferences(document, varRange.start) ?? [];
+							for (const reference of references) {
+								if (reference.uri !== document.uri)
+									continue;
+								const refernceRange = {
+									start: document.offsetAt(reference.range.start),
+									end: document.offsetAt(reference.range.end),
+								};
+								if (refernceRange.start === desc.scriptSetup.loc.start + _var.start && refernceRange.end === desc.scriptSetup.loc.start + _var.end)
+									continue;
+								if (refernceRange.start >= desc.scriptSetup.loc.start && refernceRange.end <= desc.scriptSetup.loc.end) {
+									const referenceText = document.getText().substring(refernceRange.start, refernceRange.end);
+									const isRaw = `$${varText}` === referenceText;
+									let isShorthand = false;
+									for (const shorthandProperty of genData.data.shorthandPropertys) {
+										if (
+											refernceRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
+											&& refernceRange.end === desc.scriptSetup.loc.start + shorthandProperty.end
+										) {
+											isShorthand = true;
+											break;
+										}
 									}
-								}
-								if (isRaw) {
-									edits.push(TextEdit.replace(reference.range, isShorthand ? `$${varText}: ${varText}` : varText));
-								}
-								else {
-									edits.push(TextEdit.replace(reference.range, isShorthand ? `${varText}: ${varText}.value` : `${varText}.value`));
+									if (isRaw) {
+										edits.push(TextEdit.replace(reference.range, isShorthand ? `$${varText}: ${varText}` : varText));
+									}
+									else {
+										edits.push(TextEdit.replace(reference.range, isShorthand ? `${varText}: ${varText}.value` : `${varText}.value`));
+									}
 								}
 							}
 						}

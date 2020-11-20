@@ -421,66 +421,81 @@ function genScriptSetup(
 		let tsOffset = 0;
 		for (const label of labels) {
 			mapSubText(tsOffset, label.start);
-			genCode += `const `;
+			let first = true;
 
-			let left = '';
-			let leftPos = label.left.start;
-			for (const prop of label.vars.sort((a, b) => a.start - b.start)) {
-				const propText = prop.isShortand ? `${prop.text}: __VLS_refs_${prop.text}` : `__VLS_refs_${prop.text}`;
-				left += originalCode.substring(leftPos, prop.start);
-				left += propText;
-				leftPos = prop.end;
+			for (const binary of label.binarys) {
+				if (first) {
+					first = false;
+					genCode += `const `;
+				}
+				else {
+					genCode += `, `;
+				}
+
+				let left = '';
+				let leftPos = binary.left.start;
+				for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
+					const propText = prop.isShortand ? `${prop.text}: __VLS_refs_${prop.text}` : `__VLS_refs_${prop.text}`;
+					left += originalCode.substring(leftPos, prop.start);
+					left += propText;
+					leftPos = prop.end;
+				}
+				left += originalCode.substring(leftPos, binary.left.end);
+
+				genCode += left;
+				if (binary.right) {
+					genCode += ` = `;
+					mapSubText(binary.right.start, binary.right.end);
+				}
 			}
-			left += originalCode.substring(leftPos, label.left.end);
-
-			genCode += `${left} = `;
-			mapSubText(label.right.start, label.right.end);
 			genCode += `;\n`;
 
-			for (const prop of label.vars) {
-				genCode += `let `;
-				const leftRange = {
-					start: genCode.length,
-					end: genCode.length + prop.text.length,
-				};
-				addCode(prop.text, {
-					isNoDollarRef: true,
-					capabilities: {
-						basic: true, // hover
-						references: true,
-						rename: true,
-						diagnostic: true,
-					},
-					scriptSetupRange: {
-						start: prop.start,
-						end: prop.end,
-					},
-					mode: MapedMode.Offset,
-				});
-				genCode += ` = (await import('@vue/runtime-dom')).unref(__VLS_refs_${prop.text});`;
-				genCode += ` ${prop.text}; // ignore unused\n`
+			for (const binary of label.binarys) {
+				for (const prop of binary.vars) {
+					genCode += `let `;
+					const leftRange = {
+						start: genCode.length,
+						end: genCode.length + prop.text.length,
+					};
+					addCode(prop.text, {
+						isNoDollarRef: true,
+						capabilities: {
+							basic: true, // hover
+							references: true,
+							rename: true,
+							diagnostic: true,
+						},
+						scriptSetupRange: {
+							start: prop.start,
+							end: prop.end,
+						},
+						mode: MapedMode.Offset,
+					});
+					genCode += ` = (await import('@vue/runtime-dom')).unref(__VLS_refs_${prop.text});`;
+					genCode += ` ${prop.text}; // ignore unused\n`
 
-				genCode += `const `;
-				const rightRange = {
-					start: genCode.length,
-					end: genCode.length + `$${prop.text}`.length,
-				};
-				addCode(`$${prop.text}`, {
-					isNoDollarRef: true,
-					capabilities: {
-						diagnostic: true,
-					},
-					scriptSetupRange: {
-						start: prop.start,
-						end: prop.end,
-					},
-					mode: MapedMode.Offset, // TODO
-				});
-				genCode += ` = (await import('@vue/runtime-dom')).ref(__VLS_refs_${prop.text});${prop.inRoot ? `$${prop.text}; // ignore unused\n` : ''}\n`;
-				mirrors.push({
-					left: leftRange,
-					right: rightRange,
-				});
+					genCode += `const `;
+					const rightRange = {
+						start: genCode.length,
+						end: genCode.length + `$${prop.text}`.length,
+					};
+					addCode(`$${prop.text}`, {
+						isNoDollarRef: true,
+						capabilities: {
+							diagnostic: true,
+						},
+						scriptSetupRange: {
+							start: prop.start,
+							end: prop.end,
+						},
+						mode: MapedMode.Offset, // TODO
+					});
+					genCode += ` = (await import('@vue/runtime-dom')).ref(__VLS_refs_${prop.text});${prop.inRoot ? ` $${prop.text}; // ignore unused\n` : '\n'}`;
+					mirrors.push({
+						left: leftRange,
+						right: rightRange,
+					});
+				}
 			}
 
 			tsOffset = label.end;
@@ -531,43 +546,45 @@ function genScriptSetup(
 				right: rightRange,
 			});
 		}
-		for (const ref of data.labels) {
-			for (const refVar of ref.vars) {
-				if (refVar.inRoot) {
-					const leftRange = {
-						start: genCode.length,
-						end: genCode.length + refVar.text.length,
-					};
-					// TODO: remove this
-					addCode(refVar.text, {
-						isNoDollarRef: true,
-						capabilities: {},
-						scriptSetupRange: {
-							start: refVar.start,
-							end: refVar.end,
-						},
-						mode: MapedMode.Offset,
-					});
-					genCode += ': ';
-					const rightRange = {
-						start: genCode.length,
-						end: genCode.length + refVar.text.length,
-					};
-					// TODO: remove this
-					addCode(refVar.text, {
-						isNoDollarRef: true,
-						capabilities: {},
-						scriptSetupRange: {
-							start: refVar.start,
-							end: refVar.end,
-						},
-						mode: MapedMode.Offset,
-					});
-					genCode += ', \n';
-					mirrors.push({
-						left: leftRange,
-						right: rightRange,
-					});
+		for (const label of data.labels) {
+			for (const binary of label.binarys) {
+				for (const refVar of binary.vars) {
+					if (refVar.inRoot) {
+						const leftRange = {
+							start: genCode.length,
+							end: genCode.length + refVar.text.length,
+						};
+						// TODO: remove this
+						addCode(refVar.text, {
+							isNoDollarRef: true,
+							capabilities: {},
+							scriptSetupRange: {
+								start: refVar.start,
+								end: refVar.end,
+							},
+							mode: MapedMode.Offset,
+						});
+						genCode += ': ';
+						const rightRange = {
+							start: genCode.length,
+							end: genCode.length + refVar.text.length,
+						};
+						// TODO: remove this
+						addCode(refVar.text, {
+							isNoDollarRef: true,
+							capabilities: {},
+							scriptSetupRange: {
+								start: refVar.start,
+								end: refVar.end,
+							},
+							mode: MapedMode.Offset,
+						});
+						genCode += ', \n';
+						mirrors.push({
+							left: leftRange,
+							right: rightRange,
+						});
+					}
 				}
 			}
 		}
@@ -632,15 +649,17 @@ function genScriptSetup(
 			isRaw: boolean,
 		}[] = [];
 		for (const label of data.labels) {
-			for (const prop of label.vars) {
-				for (const reference of prop.references) {
-					if (reference.start >= start && reference.end <= end) {
-						insideLabels.push({
-							start: reference.start,
-							end: reference.end,
-							name: prop.text,
-							isRaw: false,
-						});
+			for (const binary of label.binarys) {
+				for (const prop of binary.vars) {
+					for (const reference of prop.references) {
+						if (reference.start >= start && reference.end <= end) {
+							insideLabels.push({
+								start: reference.start,
+								end: reference.end,
+								name: prop.text,
+								isRaw: false,
+							});
+						}
 					}
 				}
 			}
@@ -788,19 +807,34 @@ function genScriptSetup(
 }
 function getScriptSetupData(sourceCode: string) {
 	const labels: {
-		vars: {
-			isShortand: boolean,
-			inRoot: boolean,
-			text: string,
-			start: number,
-			end: number,
-			references: {
-				start: number,
-				end: number,
-			}[],
-		}[],
 		start: number,
 		end: number,
+		binarys: {
+			parent: {
+				start: number,
+				end: number,
+			},
+			vars: {
+				isShortand: boolean,
+				inRoot: boolean,
+				text: string,
+				start: number,
+				end: number,
+				references: {
+					start: number,
+					end: number,
+				}[],
+			}[],
+			left: {
+				start: number,
+				end: number,
+			},
+			right?: {
+				start: number,
+				end: number,
+				isComputedCall: boolean,
+			},
+		}[],
 		label: {
 			start: number,
 			end: number,
@@ -808,15 +842,6 @@ function getScriptSetupData(sourceCode: string) {
 		parent: {
 			start: number,
 			end: number,
-		},
-		left: {
-			start: number,
-			end: number,
-		},
-		right: {
-			start: number,
-			end: number,
-			isComputedCall: boolean,
 		},
 	}[] = [];
 	const exposeVarNames: {
@@ -913,19 +938,9 @@ function getScriptSetupData(sourceCode: string) {
 		}
 		else if (ts.isVariableStatement(node)) {
 			for (const node_2 of node.declarationList.declarations) {
-				if (ts.isIdentifier(node_2.name)) {
-					exposeVarNames.push({
-						start: node_2.name.getStart(scriptAst),
-						end: node_2.name.getStart(scriptAst) + node_2.name.getWidth(scriptAst),
-					});
-				}
-				else if (ts.isObjectBindingPattern(node_2.name) || ts.isArrayBindingPattern(node_2.name)) {
-					for (const element of node_2.name.elements) {
-						exposeVarNames.push({
-							start: element.getStart(scriptAst),
-							end: element.getStart(scriptAst) + element.getWidth(scriptAst),
-						});
-					}
+				const vars = findBindingVars(node_2.name);
+				for (const _var of vars) {
+					exposeVarNames.push(_var);
 				}
 			}
 		}
@@ -1004,22 +1019,32 @@ function getScriptSetupData(sourceCode: string) {
 	let noLabelCode = sourceCode;
 	for (const label of labels) {
 		noLabelCode = noLabelCode.substring(0, label.label.start) + 'let' + noLabelCode.substring(label.label.end).replace(':', ' ');
+		for (const binary of label.binarys) {
+			if (binary.parent.start !== binary.left.start) {
+				noLabelCode = replaceStringToEmpty(noLabelCode, binary.parent.start, binary.left.start);
+			}
+			if (binary.parent.end !== binary.left.end) {
+				noLabelCode = replaceStringToEmpty(noLabelCode, (binary.right ?? binary.left).end, binary.parent.end);
+			}
+		}
 	}
 	setFindReferencesSource(noLabelCode);
 	for (const label of labels) {
-		for (const _var of label.vars) {
-			const references = findReferences(_var.start);
-			if (references) {
-				for (const reference of references) {
-					for (const reference_2 of reference.references) {
-						if ( // remove definition
-							reference_2.textSpan.start === _var.start
-							&& reference_2.textSpan.start + reference_2.textSpan.length === _var.end
-						) continue;
-						_var.references.push({
-							start: reference_2.textSpan.start,
-							end: reference_2.textSpan.start + reference_2.textSpan.length,
-						});
+		for (const binary of label.binarys) {
+			for (const _var of binary.vars) {
+				const references = findReferences(_var.start);
+				if (references) {
+					for (const reference of references) {
+						for (const reference_2 of reference.references) {
+							if ( // remove definition
+								reference_2.textSpan.start === _var.start
+								&& reference_2.textSpan.start + reference_2.textSpan.length === _var.end
+							) continue;
+							_var.references.push({
+								start: reference_2.textSpan.start,
+								end: reference_2.textSpan.start + reference_2.textSpan.length,
+							});
+						}
 					}
 				}
 			}
@@ -1044,126 +1069,19 @@ function getScriptSetupData(sourceCode: string) {
 			&& node.label.getText(scriptAst) === 'ref'
 			&& ts.isExpressionStatement(node.statement)
 		) {
-			let binaryExp = findBinaryExpression(node.statement.expression);
-			const vars: {
-				isShortand: boolean,
-				inRoot: boolean,
-				text: string,
-				start: number,
-				end: number,
-				references: {
-					start: number,
-					end: number,
-				}[],
-			}[] = [];
-
-			if (binaryExp) {
-				if (ts.isIdentifier(binaryExp.left)) {
-					vars.push({
-						isShortand: false,
-						inRoot,
-						text: binaryExp.left.getText(scriptAst),
-						start: binaryExp.left.getStart(scriptAst),
-						end: binaryExp.left.getStart(scriptAst) + binaryExp.left.getWidth(scriptAst),
-						references: [],
-					});
-				}
-				else if (ts.isObjectLiteralExpression(binaryExp.left)) {
-					for (const property of binaryExp.left.properties) {
-						propertyWalker(property);
-					}
-				}
-				else if (ts.isArrayLiteralExpression(binaryExp.left)) {
-					for (const property of binaryExp.left.elements) {
-						propertyWalker(property);
-					}
-				}
-
-				labels.push({
-					start: node.getStart(scriptAst),
-					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-					vars,
-					label: {
-						start: node.label.getStart(scriptAst),
-						end: node.label.getStart(scriptAst) + node.label.getWidth(scriptAst),
-					},
-					parent: {
-						start: parent.getStart(scriptAst),
-						end: parent.getStart(scriptAst) + parent.getWidth(scriptAst),
-					},
-					left: {
-						start: binaryExp.left.getStart(scriptAst),
-						end: binaryExp.left.getStart(scriptAst) + binaryExp.left.getWidth(scriptAst),
-					},
-					right: {
-						start: binaryExp.right.getStart(scriptAst),
-						end: binaryExp.right.getStart(scriptAst) + binaryExp.right.getWidth(scriptAst),
-						isComputedCall: ts.isCallExpression(binaryExp.right) && ts.isIdentifier(binaryExp.right.expression) && binaryExp.right.expression.getText(scriptAst) === 'computed',
-					},
-				});
-			}
-
-			function findBinaryExpression(node: ts.Expression): ts.BinaryExpression | undefined {
-				if (ts.isBinaryExpression(node)) {
-					return node;
-				}
-				else if (ts.isParenthesizedExpression(node)) {
-					// unwrap (...)
-					return findBinaryExpression(node.expression);
-				}
-			}
-			function propertyWalker(property: ts.Node) {
-				// { foo } = ...
-				if (ts.isShorthandPropertyAssignment(property)) {
-					vars.push({
-						isShortand: true,
-						inRoot,
-						text: property.name.getText(scriptAst),
-						start: property.name.getStart(scriptAst),
-						end: property.name.getStart(scriptAst) + property.name.getWidth(scriptAst),
-						references: [],
-					});
-				}
-				// { foo: foo2 } = ...
-				else if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.initializer)) {
-					vars.push({
-						isShortand: false,
-						inRoot,
-						text: property.initializer.getText(scriptAst),
-						start: property.initializer.getStart(scriptAst),
-						end: property.initializer.getStart(scriptAst) + property.initializer.getWidth(scriptAst),
-						references: [],
-					});
-				}
-				// { ...rest } = ...
-				else if (ts.isSpreadAssignment(property) && ts.isIdentifier(property.expression)) {
-					vars.push({
-						isShortand: false,
-						inRoot,
-						text: property.expression.getText(scriptAst),
-						start: property.expression.getStart(scriptAst),
-						end: property.expression.getStart(scriptAst) + property.expression.getWidth(scriptAst),
-						references: [],
-					});
-				}
-				// { foo: { ... } } = ...
-				else if (ts.isPropertyAssignment(property) && ts.isObjectLiteralExpression(property.initializer)) {
-					for (const property_2 of property.initializer.properties) {
-						propertyWalker(property_2);
-					}
-				}
-				// [foo] = ...
-				else if (ts.isIdentifier(property)) {
-					vars.push({
-						isShortand: false,
-						inRoot,
-						text: property.getText(scriptAst),
-						start: property.getStart(scriptAst),
-						end: property.getStart(scriptAst) + property.getWidth(scriptAst),
-						references: [],
-					});
-				}
-			}
+			labels.push({
+				start: node.getStart(scriptAst),
+				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+				label: {
+					start: node.label.getStart(scriptAst),
+					end: node.label.getStart(scriptAst) + node.label.getWidth(scriptAst),
+				},
+				parent: {
+					start: parent.getStart(scriptAst),
+					end: parent.getStart(scriptAst) + parent.getWidth(scriptAst),
+				},
+				binarys: findBinaryExpressions(node.statement.expression, inRoot),
+			});
 		}
 		else if (
 			hasImportDefineOptions
@@ -1197,25 +1115,10 @@ function getScriptSetupData(sourceCode: string) {
 			const refCall = node.declarations[0].initializer;
 			const isRef = refCall.expression.getText(scriptAst) === 'ref';
 			const wrapContant = isRef && refCall.arguments.length === 1 ? refCall.arguments[0] : refCall;
-			const vars: typeof refCalls[0]['vars'] = [];
-			if (ts.isObjectBindingPattern(declaration.name) || ts.isArrayBindingPattern(declaration.name)) {
-				for (const element of declaration.name.elements) {
-					vars.push({
-						start: element.getStart(scriptAst),
-						end: element.getStart(scriptAst) + element.getWidth(scriptAst),
-					});
-				}
-			}
-			else if (ts.isIdentifier(declaration.name)) {
-				vars.push({
-					start: declaration.name.getStart(scriptAst),
-					end: declaration.name.getStart(scriptAst) + declaration.name.getWidth(scriptAst),
-				});
-			}
 			refCalls.push({
 				start: node.getStart(scriptAst),
 				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-				vars,
+				vars: findBindingVars(declaration.name),
 				left: {
 					start: declaration.name.getStart(scriptAst),
 					end: declaration.name.getStart(scriptAst) + declaration.name.getWidth(scriptAst),
@@ -1234,6 +1137,146 @@ function getScriptSetupData(sourceCode: string) {
 			});
 		}
 		node.forEachChild(child => deepLoop(child, node, false));
+	}
+	function findBinaryExpressions(exp: ts.Expression, inRoot: boolean) {
+		const binaryExps: typeof labels[0]['binarys'] = [];
+		worker(exp);
+		return binaryExps;
+		function worker(node: ts.Expression, parenthesized?: ts.ParenthesizedExpression) {
+			if (ts.isIdentifier(node)) {
+				binaryExps.push({
+					vars: findLabelVars(node, inRoot),
+					left: {
+						start: node.getStart(scriptAst),
+						end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+					},
+					parent: {
+						start: node.getStart(scriptAst),
+						end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+					},
+				});
+			}
+			if (ts.isBinaryExpression(node)) {
+				if (ts.isBinaryExpression(node.left) || ts.isBinaryExpression(node.right) || ts.isParenthesizedExpression(node.left) || ts.isParenthesizedExpression(node.right)) {
+					worker(node.left);
+					worker(node.right);
+				}
+				else {
+					let parent: ts.Node = parenthesized ?? node;
+					binaryExps.push({
+						vars: findLabelVars(node.left, inRoot),
+						left: {
+							start: node.left.getStart(scriptAst),
+							end: node.left.getStart(scriptAst) + node.left.getWidth(scriptAst),
+						},
+						right: {
+							start: node.right.getStart(scriptAst),
+							end: node.right.getStart(scriptAst) + node.right.getWidth(scriptAst),
+							isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(scriptAst) === 'computed'
+						},
+						parent: {
+							start: parent.getStart(scriptAst),
+							end: parent.getStart(scriptAst) + parent.getWidth(scriptAst),
+						},
+					});
+				}
+			}
+			else if (ts.isParenthesizedExpression(node)) {
+				// unwrap (...)
+				worker(node.expression, parenthesized ?? node);
+			}
+		}
+	}
+	function findLabelVars(exp: ts.Expression, inRoot: boolean) {
+		const vars: typeof labels[0]['binarys'][0]['vars'] = [];
+		worker(exp);
+		return vars;
+		function worker(_node: ts.Node) {
+			if (ts.isIdentifier(_node)) {
+				vars.push({
+					isShortand: false,
+					inRoot,
+					text: _node.getText(scriptAst),
+					start: _node.getStart(scriptAst),
+					end: _node.getStart(scriptAst) + _node.getWidth(scriptAst),
+					references: [],
+				});
+			}
+			// { ? } = ...
+			else if (ts.isObjectLiteralExpression(_node)) {
+				for (const property of _node.properties) {
+					worker(property);
+				}
+			}
+			// [ ? ] = ...
+			else if (ts.isArrayLiteralExpression(_node)) {
+				for (const property of _node.elements) {
+					worker(property);
+				}
+			}
+			// { foo: ? } = ...
+			else if (ts.isPropertyAssignment(_node)) {
+				worker(_node.initializer);
+			}
+			// { e: f = 2 } = ...
+			else if (ts.isBinaryExpression(_node) && ts.isIdentifier(_node.left)) {
+				worker(_node.left);
+			}
+			// { foo } = ...
+			else if (ts.isShorthandPropertyAssignment(_node)) {
+				vars.push({
+					isShortand: true,
+					inRoot,
+					text: _node.name.getText(scriptAst),
+					start: _node.name.getStart(scriptAst),
+					end: _node.name.getStart(scriptAst) + _node.name.getWidth(scriptAst),
+					references: [],
+				});
+			}
+			// { ...? } = ...
+			// [ ...? ] = ...
+			else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
+				worker(_node.expression);
+			}
+		}
+	}
+	function findBindingVars(left: ts.BindingName) {
+		const vars: MapedRange[] = [];
+		worker(left);
+		return vars;
+		function worker(_node: ts.Node) {
+			if (ts.isIdentifier(_node)) {
+				vars.push({
+					start: _node.getStart(scriptAst),
+					end: _node.getStart(scriptAst) + _node.getWidth(scriptAst),
+				});
+			}
+			// { ? } = ...
+			// [ ? ] = ...
+			else if (ts.isObjectBindingPattern(_node) || ts.isArrayBindingPattern(_node)) {
+				for (const property of _node.elements) {
+					if (ts.isBindingElement(property)) {
+						worker(property.name);
+					}
+				}
+			}
+			// { foo: ? } = ...
+			else if (ts.isPropertyAssignment(_node)) {
+				worker(_node.initializer);
+			}
+			// { foo } = ...
+			else if (ts.isShorthandPropertyAssignment(_node)) {
+				vars.push({
+					start: _node.name.getStart(scriptAst),
+					end: _node.name.getStart(scriptAst) + _node.name.getWidth(scriptAst),
+				});
+			}
+			// { ...? } = ...
+			// [ ...? ] = ...
+			else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
+				worker(_node.expression);
+			}
+		}
 	}
 }
 function getScriptData(sourceCode: string) {
