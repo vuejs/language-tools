@@ -325,59 +325,35 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	}
 	function useDiagnostics() {
 
-		let version = 0;
-
-		const stylesDiags = [useStylesValidation(), ref<Diagnostic[]>([])];
-		const templateDiags = [useTemplateValidation(), ref<Diagnostic[]>([])];
-		const templateScriptDiags_1 = [useTemplateScriptValidation(1), ref<Diagnostic[]>([])];
-		const templateScriptDiags_2 = [useTemplateScriptValidation(2), ref<Diagnostic[]>([])];
-		const templateScriptDiags_3 = [useTemplateScriptValidation(3), ref<Diagnostic[]>([])];
-		const scriptSetupDiags_1 = [useScriptValidation(virtualScriptGen.textDocument, 1), ref<Diagnostic[]>([])];
-		const scriptSetupDiags_2 = [useScriptValidation(virtualScriptGen.textDocument, 2), ref<Diagnostic[]>([])];
-		const scriptSetupDiags_3 = [useScriptValidation(virtualScriptGen.textDocument, 3), ref<Diagnostic[]>([])];
-
 		const all = [
-			stylesDiags,
-			templateDiags,
-
-			templateScriptDiags_2,
-			scriptSetupDiags_2,
-
-			templateScriptDiags_3,
-			scriptSetupDiags_3,
-
-			templateScriptDiags_1,
-			scriptSetupDiags_1,
+			useStylesValidation(),
+			useTemplateValidation(),
+			useTemplateScriptValidation(1),
+			useTemplateScriptValidation(2),
+			useTemplateScriptValidation(3),
+			useScriptValidation(virtualScriptGen.textDocument, 1),
+			useScriptValidation(virtualScriptGen.textDocument, 2),
+			useScriptValidation(virtualScriptGen.textDocument, 3),
 		];
 
-		const allLast = computed(() => {
-			return all.map(diag => diag[1].value).flat();
-		});
-
-		return worker;
-
-		async function worker(isCancel?: () => boolean, onDirty?: (diags: Diagnostic[]) => void) {
+		return async (isCancel?: () => boolean) => {
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
-			let dirty = false;
+			let lastSleepAt = Date.now();
 
 			for (const diag of all) {
-				if (dirty) await sleep();
-				if (isCancel?.()) return;
-				dirty = tryProgress(diag[0], diag[1]);
-			}
-
-			return allLast.value;
-
-			function tryProgress(data: Ref<Diagnostic[]>, lastData: Ref<Diagnostic[]>) {
-				const oldVersion = version;
-				lastData.value = data.value;
-				if (version !== oldVersion) {
-					onDirty?.(allLast.value);
-					return true;
+				if (Date.now() - lastSleepAt > 100) {
+					lastSleepAt = Date.now();
+					await sleep(10);
 				}
-				return false;
+				if (isCancel?.()) {
+					return;
+				}
+				diag.value; // update
 			}
+
+			return all.map(diag => diag.value).flat();
 		}
+
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
 				if (virtualTemplateRaw.textDocument.value?.languageId === 'html') {
@@ -409,7 +385,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				return result;
 			});
 			return computed(() => {
-				version++;
 				if (!virtualTemplateRaw.textDocument.value) return [];
 				return [
 					...toSourceDiags(htmlErrors.value, virtualTemplateRaw.textDocument.value.uri, virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
@@ -486,7 +461,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				return result;
 			});
 			return computed(() => {
-				version++;
 				let result: css.Diagnostic[] = [];
 				for (const [uri, errs] of errors.value) {
 					result = result.concat(toSourceDiags(errs, uri, virtualStyles.sourceMaps.value));
@@ -512,7 +486,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				}
 			});
 			return computed(() => {
-				version++;
 				const doc = document.value;
 				if (!doc) return [];
 				return toTsSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
@@ -539,7 +512,8 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				const result: Diagnostic[] = [];
 				if (!virtualTemplateGen.textDocument.value
 					|| !virtualTemplateGen.contextSourceMap.value
-					|| !virtualScriptGen.textDocument.value)
+					|| !virtualScriptGen.textDocument.value
+				)
 					return result;
 				for (const diag of errors_1.value) {
 					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
@@ -560,7 +534,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				return result;
 			})
 			return computed(() => {
-				version++;
 				const result_1 = templateScriptDocument.value ? toTsSourceDiags(
 					errors_1.value,
 					templateScriptDocument.value.uri,

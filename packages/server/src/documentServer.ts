@@ -83,8 +83,9 @@ function initLanguageService(rootPath: string) {
 					continue;
 				}
 				const doc = sourceFile.getTextDocument();
-				const diags = await service.languageService.doValidation(doc) ?? [];
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: diags });
+				await service.languageService.doValidation(doc, result => {
+					connection.sendDiagnostics({ uri: doc.uri, diagnostics: result });
+				});
 				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, sourceFile.fileName));
 			}
 		}

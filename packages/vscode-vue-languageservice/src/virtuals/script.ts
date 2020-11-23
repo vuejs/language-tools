@@ -3,8 +3,8 @@ import { syntaxToLanguageId, getValidScriptSyntax, notEmpty } from '@volar/share
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '../utils/sourceMaps';
-import * as ts from 'typescript';
 import { SearchTexts } from './common';
+import * as ts from 'typescript';
 import * as upath from 'upath';
 
 export let rfc: '#182' | '#222' = '#182';
@@ -32,16 +32,18 @@ export function useScriptSetupGen(
 			return getScriptSetupData(scriptSetup.value.content);
 		}
 	});
-	const optionsVueRanges = computed(() => {
+	const optionsRanges = computed(() => {
 		if (scriptSetup.value) {
 			const data = scriptSetupData.value;
 			if (data) {
-				const result: MapedRange[] = [];
+				const result: (MapedRange & { tag: string, text: string })[] = [];
 				for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
 					if (!optionsNode.options) continue;
 					result.push({
-						start: scriptSetup.value.loc.start + optionsNode.options.start,
-						end: scriptSetup.value.loc.start + optionsNode.options.end,
+						tag: 'scriptSetup',
+						text: scriptSetup.value.content.substring(optionsNode.options.start, optionsNode.options.end),
+						start: optionsNode.options.start,
+						end: optionsNode.options.end,
 					});
 				}
 				return result;
@@ -50,8 +52,10 @@ export function useScriptSetupGen(
 		else if (script.value) {
 			if (scriptData.value?.exportDefault) {
 				return [{
-					start: script.value.loc.start + scriptData.value.exportDefault.options.start,
-					end: script.value.loc.start + scriptData.value.exportDefault.options.end,
+					tag: 'script',
+					text: script.value.content.substring(scriptData.value.exportDefault.options.start, scriptData.value.exportDefault.options.end),
+					start: scriptData.value.exportDefault.options.start,
+					end: scriptData.value.exportDefault.options.end,
 				}];
 			}
 		}
@@ -77,12 +81,12 @@ export function useScriptSetupGen(
 		if (scriptSetupGenResult.value) {
 			code += scriptSetupGenResult.value.code;
 		}
-		for (let i = 0; i < optionsVueRanges.value.length; i++) {
-			const optionsVueRange = optionsVueRanges.value[i];
-			code += `\nconst __VLS_options_${i} = ` + vueDoc.getText().substring(optionsVueRange.start, optionsVueRange.end);
+		for (let i = 0; i < optionsRanges.value.length; i++) {
+			const optionsRange = optionsRanges.value[i];
+			code += `\nconst __VLS_options_${i} = ` + optionsRange.text;
 		}
 		code += `\nexport declare const __VLS_options: {}`;
-		for (let i = 0; i < optionsVueRanges.value.length; i++) {
+		for (let i = 0; i < optionsRanges.value.length; i++) {
 			code += ` & typeof __VLS_options_${i}`;
 		}
 
@@ -176,8 +180,14 @@ export function useScriptSetupGen(
 			}
 			pos += scriptSetupGenResult.value.code.length;
 		}
-		for (let i = 0; i < optionsVueRanges.value.length; i++) {
-			const optionsVueRange = optionsVueRanges.value[i];
+		for (let i = 0; i < optionsRanges.value.length; i++) {
+			const optionsRange = optionsRanges.value[i];
+			const block = optionsRange.tag === 'scriptSetup' ? scriptSetup.value : script.value;
+			if (!block) continue;
+			const optionsVueRange = {
+				start: block.loc.start + optionsRange.start,
+				end: block.loc.start + optionsRange.end,
+			};
 			pos += `\nconst __VLS_options_${i} = `.length;
 			sourceMap.add({
 				data: {

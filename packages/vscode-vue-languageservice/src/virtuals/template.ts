@@ -10,6 +10,7 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as css from 'vscode-css-languageservice';
 import * as vueDom from '@vue/compiler-dom';
+import { cheapComputed } from '../utils/cheapComputed';
 
 export function useTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
@@ -41,6 +42,8 @@ export function useTemplateScript(
 	}>,
 ) {
 	let version = 0;
+	let contextSourceMapVersion: number | undefined;
+	let componentSourceMapVersion: number | undefined;
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = uriToFsPath(_vueDoc.uri);
@@ -316,9 +319,9 @@ export function useTemplateScript(
 			}
 		}
 		function getInterpolations() {
-			if (!template.value) return;
+			const html = pugData.value?.html ?? template.value?.content;
+			if (!html) return;
 			try {
-				const html = pugData.value?.html ?? template.value.content;
 				const ast = vueDom.compile(html, { onError: () => { } }).ast;
 				return transformVueHtml(
 					ast,
@@ -334,11 +337,11 @@ export function useTemplateScript(
 			}
 		}
 	});
-	const textDocument = computed(() => {
+	const textDocument = cheapComputed(() => {
 		if (data.value) {
-			return TextDocument.create(vueUri + '.template.ts', 'typescript', version++, data.value?.text);
+			return TextDocument.create(vueUri + '.template.ts', 'typescript', version++, data.value.text);
 		}
-	});
+	}, old => old?.getText() !== data.value?.text);
 	const sourceMap = computed(() => {
 		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
@@ -415,8 +418,9 @@ export function useTemplateScript(
 			return sourceMap;
 		}
 	});
-	const contextSourceMap = computed(() => {
-		if (data.value && textDocument.value && template.value) {
+	const contextSourceMap = cheapComputed(() => {
+		contextSourceMapVersion = textDocument.value?.version;
+		if (data.value && textDocument.value) {
 			const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
 				textDocument.value,
 				textDocument.value,
@@ -426,8 +430,9 @@ export function useTemplateScript(
 			}
 			return sourceMap;
 		}
-	});
-	const componentSourceMap = computed(() => {
+	}, () => contextSourceMapVersion !== textDocument.value?.version);
+	const componentSourceMap = cheapComputed(() => {
+		componentSourceMapVersion = textDocument.value?.version;
 		if (data.value && textDocument.value && template.value) {
 			const sourceMap = new SourceMap(
 				textDocument.value,
@@ -438,7 +443,7 @@ export function useTemplateScript(
 			}
 			return sourceMap;
 		}
-	});
+	}, () => componentSourceMapVersion !== textDocument.value?.version);
 
 	return {
 		textDocument,

@@ -164,15 +164,15 @@ export function createLanguageServiceHost(
 			if (matchLs !== vueLanguageService) return;
 
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
+			const docVersion = document.version;
 			fileCurrentReqs.set(document.uri, req);
-			const isCancel = () => fileCurrentReqs.get(document.uri) !== req;
+			const isCancel = () => fileCurrentReqs.get(document.uri) !== req || docVersion !== document.version;
 
-			const diagnostics = await vueLanguageService.doValidation(document, isCancel, diagnostics => {
-				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // dirty
-			});
-			if (diagnostics !== undefined) {
-				connection.sendDiagnostics({ uri: document.uri, diagnostics }); // finish
-			}
+			setTimeout(() => {
+				vueLanguageService.doValidation(document, result => {
+					connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
+				}, isCancel);
+			}, 200);
 		}
 		function onParsedCommandLineUpdate() {
 			const fileNames = new Set(parsedCommandLine.fileNames);
