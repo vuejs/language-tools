@@ -1,7 +1,7 @@
 import {
 	TextDocument,
 	Diagnostic,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 
 export function register(sourceFiles: Map<string, SourceFile>) {

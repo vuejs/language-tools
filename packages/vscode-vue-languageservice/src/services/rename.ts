@@ -4,7 +4,7 @@ import {
 	WorkspaceEdit,
 	Location,
 	TextEdit,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import {
 	tsLocationToVueLocationsRaw,

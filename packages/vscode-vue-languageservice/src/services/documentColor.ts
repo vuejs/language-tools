@@ -1,7 +1,7 @@
 import {
 	TextDocument,
 	ColorInformation,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import * as globalServices from '../globalServices';
 

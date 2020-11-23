@@ -1,16 +1,13 @@
 import {
 	CodeLens,
 	Range,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver-types';
 import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { rfc } from '../virtuals/script';
-import * as resolve from './codeLensResolve';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	const doResolve = resolve.register(sourceFiles, tsLanguageService);
+export function register(sourceFiles: Map<string, SourceFile>) {
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -39,11 +36,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						},
 						data: {
 							uri: document.uri,
-							tsDoc: sourceMap.targetDocument,
-							tsPos: sourceMap.targetDocument.positionAt(maped.targetRange.start),
+							tsUri: sourceMap.targetDocument.uri,
+							tsOffset: maped.targetRange.start,
 						},
 					};
-					doResolve(codeLens); // TODO
 					result.push(codeLens);
 				}
 			}

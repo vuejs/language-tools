@@ -4,22 +4,22 @@ import {
 	CompletionList,
 	Range,
 	TextEdit,
-	CompletionContext,
 	CompletionItemKind,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver-types';
+import { CompletionContext } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import { CompletionData } from '../types';
-import * as html from 'vscode-html-languageservice';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts from 'typescript';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import { getWordRange } from '../utils/commons';
+import { languageIdToSyntax } from '@volar/shared';
+import * as html from 'vscode-html-languageservice';
 import * as globalServices from '../globalServices';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as emmet from 'vscode-emmet-helper';
 import * as getEmbeddedDocument from './embeddedDocument';
-import { languageIdToSyntax } from '@volar/shared';
+import type * as ts from 'typescript';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
@@ -35,7 +35,7 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	const getEmbeddedDoc = getEmbeddedDocument.register(sourceFiles);
 
-	return (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig>) => {
+	return async (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 		const range = Range.create(position, position);
@@ -49,7 +49,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult.items.length) return cssResult;
 
-		return getEmmetResult();
+		const emmetResult = await getEmmetResult();
+		if (emmetResult?.items.length) return emmetResult;
 
 		function getTsResult(sourceFile: SourceFile) {
 			const result: CompletionList = {

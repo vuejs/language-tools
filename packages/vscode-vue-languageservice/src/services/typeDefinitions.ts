@@ -1,7 +1,7 @@
 import {
 	Position,
 	TextDocument,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import { tsDefinitionWorker } from './definitions';
 import { tsLocationToVueLocations } from '../utils/commons';

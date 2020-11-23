@@ -22,10 +22,10 @@ import {
 	SignatureHelpRequest,
 	WorkspaceEdit,
 	CodeLensRequest,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
-import { TextDocuments } from 'vscode-languageserver';
+import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	TagCloseRequest,
@@ -200,6 +200,10 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.get(document.uri)?.getCodeLens(document);
 	});
+	connection.onCodeLensResolve(codeLens => {
+		const uri = codeLens.data?.uri;
+		return host.get(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
+	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
 		const document = documents.get(uri);
@@ -251,7 +255,10 @@ function onInitialized() {
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(RenameRequest.type, vueOnly);
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
-	connection.client.register(CodeLensRequest.type, vueOnly);
+	connection.client.register(CodeLensRequest.type, {
+		documentSelector: vueOnly.documentSelector,
+		resolveProvider: true,
+	});
 	connection.client.register(SignatureHelpRequest.type, {
 		documentSelector: vueOnly.documentSelector,
 		triggerCharacters: ['(', ',', '<'],

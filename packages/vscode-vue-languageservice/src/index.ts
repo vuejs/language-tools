@@ -87,7 +87,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles, tsLanguageService), false),
 		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
-		getCodeLens: apiHook(getCodeLens.register(sourceFiles, tsLanguageService), false),
+		getCodeLens: apiHook(getCodeLens.register(sourceFiles), false),
 		doCodeLensResolve: apiHook(doCodeLensResolve.register(sourceFiles, tsLanguageService), false),
 		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles, tsLanguageService), false),
 		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles, tsLanguageService), false),

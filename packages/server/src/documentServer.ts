@@ -15,9 +15,9 @@ import {
 	DocumentLinkRequest,
 	DocumentColorRequest,
 	FoldingRangeRequest,
-} from 'vscode-languageserver';
+	TextDocuments,
+} from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { TextDocuments } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getSemanticTokensLegend, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import {

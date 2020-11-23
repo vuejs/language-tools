@@ -2,7 +2,7 @@ import {
 	Range,
 	TextEdit,
 	Connection,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';

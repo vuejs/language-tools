@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { LanguageClient } from 'vscode-languageclient';
+import type { LanguageClient } from 'vscode-languageclient/node';
 import {
 	SemanticTokensRequest,
 	SemanticTokenLegendRequest,

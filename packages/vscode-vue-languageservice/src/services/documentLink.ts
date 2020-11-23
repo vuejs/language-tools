@@ -2,7 +2,7 @@ import {
 	Range,
 	TextDocument,
 	DocumentLink,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import * as jsonc from 'jsonc-parser';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';

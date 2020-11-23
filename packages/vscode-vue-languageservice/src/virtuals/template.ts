@@ -1,4 +1,4 @@
-import { Diagnostic } from 'vscode-languageserver';
+import { Diagnostic } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';

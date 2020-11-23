@@ -3,7 +3,7 @@ import {
 	TextDocument,
 	WorkspaceEdit,
 	Position,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {

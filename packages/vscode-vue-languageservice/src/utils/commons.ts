@@ -3,7 +3,7 @@ import {
 	Range,
 	TextDocument,
 	Location,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFiles';
 import type { TsMappingData } from '../utils/sourceMaps';
 

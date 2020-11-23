@@ -1,4 +1,4 @@
-import { CompletionItem, MarkupKind } from 'vscode-languageserver';
+import { CompletionItem, MarkupKind } from 'vscode-languageserver/node';
 import { CompletionData, TsCompletionData, HtmlCompletionData } from '../types';
 import { SourceFile } from '../sourceFiles';
 import { translateAdditionalTextEdits } from './completions';

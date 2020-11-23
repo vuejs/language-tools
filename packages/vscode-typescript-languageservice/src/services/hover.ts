@@ -6,7 +6,7 @@ import {
 	MarkupKind,
 	Range,
 	Position,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import * as previewer from '../utils/previewer';
 import { uriToFsPath } from '@volar/shared';
 

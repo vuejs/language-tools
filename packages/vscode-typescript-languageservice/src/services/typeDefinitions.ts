@@ -3,7 +3,7 @@ import {
 	Location,
 	TextDocument,
 	Position,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { entriesToLocations } from '../utils/transforms';
 import { uriToFsPath } from '@volar/shared';
 

@@ -4,7 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
     LanguageClient,
     DocumentFormattingRequest,
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 import {
     GetFormattingSourceMapsRequest,
     languageIdToSyntax,

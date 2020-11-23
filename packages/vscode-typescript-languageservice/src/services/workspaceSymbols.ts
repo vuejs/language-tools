@@ -5,7 +5,7 @@ import {
 	Range,
 	SymbolInformation,
 	SymbolKind,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { parseKindModifier } from '../utils/modifiers';
 import { uriToFsPath } from '@volar/shared';
 

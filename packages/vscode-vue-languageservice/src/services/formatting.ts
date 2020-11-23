@@ -2,7 +2,7 @@ import {
 	TextDocument,
 	FormattingOptions,
 	Range,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import { formattingWorker } from './rangeFormatting';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';

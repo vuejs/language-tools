@@ -1,6 +1,6 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts from 'typescript';
-import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver';
+import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
 export function register(languageService: ts.LanguageService) {

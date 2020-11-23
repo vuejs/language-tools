@@ -1,4 +1,4 @@
-import type { Range } from 'vscode-languageserver';
+import type { Range } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFiles';
 import { MapedMode } from '../utils/sourceMaps';

@@ -13,7 +13,7 @@
 		"vscode-html-languageservice": "latest",
 		"typescript": "latest",
 		"vscode-languageserver-textdocument": "latest",
-		"vscode-languageserver": "latest",
+		"vscode-languageserver": "next",
 		"@vue/reactivity": "latest",
 		"@vue/shared": "latest",
 		"upath": "latest",

@@ -7,7 +7,7 @@
  * Helpers for converting FROM vscode types TO ts types
  */
 
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver/node';
 import type * as Proto from '../protocol';
 import * as PConst from '../protocol.const';
 

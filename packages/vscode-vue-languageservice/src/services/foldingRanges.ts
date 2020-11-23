@@ -4,7 +4,7 @@ import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as globalServices from '../globalServices';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
-import { FoldingRange } from 'vscode-languageserver';
+import { FoldingRange } from 'vscode-languageserver/node';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument) => {

@@ -2,7 +2,7 @@ import {
 	FormattingOptions,
 	TextEdit,
 	Range,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFile } from '../sourceFiles';
 import * as prettier from 'prettier';

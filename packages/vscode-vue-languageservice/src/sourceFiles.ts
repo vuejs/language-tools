@@ -3,7 +3,7 @@ import {
 	DiagnosticSeverity,
 	Position,
 	CompletionItem,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
 import { uriToFsPath, sleep, notEmpty } from '@volar/shared';
@@ -88,7 +88,8 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	const virtualTemplateGen = useTemplateScript(
 		untrack(() => vueDoc.value),
 		computed(() => descriptor.template),
-		templateScriptData, virtualStyles.textDocuments,
+		templateScriptData,
+		virtualStyles.textDocuments,
 		virtualStyles.sourceMaps,
 		pugData,
 	);

@@ -4,7 +4,7 @@ import {
 	DocumentHighlight,
 	DocumentHighlightKind,
 	Position,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
 export function register(languageService: ts.LanguageService) {

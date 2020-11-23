@@ -6,7 +6,7 @@
 	"dependencies": {
 		"typescript": "latest",
 		"vscode-languageserver-textdocument": "latest",
-		"vscode-languageserver": "latest",
+		"vscode-languageserver": "next",
 		"typescript-vscode-sh-plugin": "latest"
 	}
 }

@@ -1,4 +1,4 @@
-import { Range } from 'vscode-languageserver';
+import { Range } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as html from 'vscode-html-languageservice';
 import type * as css from 'vscode-css-languageservice';

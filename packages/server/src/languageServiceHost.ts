@@ -3,8 +3,8 @@ import * as upath from 'upath';
 import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
 import { uriToFsPath, fsPathToUri, sleep, SemanticTokensChangedNotification } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection, Disposable } from 'vscode-languageserver';
-import type { TextDocuments } from 'vscode-languageserver';
+import type { Connection, Disposable } from 'vscode-languageserver/node';
+import type { TextDocuments } from 'vscode-languageserver/node';
 
 export function createLanguageServiceHost(
 	connection: Connection,

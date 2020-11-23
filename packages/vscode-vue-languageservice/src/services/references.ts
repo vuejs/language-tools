@@ -3,7 +3,7 @@ import {
 	TextDocument,
 	Location,
 	Range,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import {
 	tsLocationToVueLocations,

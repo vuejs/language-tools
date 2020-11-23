@@ -16,7 +16,7 @@ import {
 	TransportKind,
 	Position,
 	Location,
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 import {
 	TagCloseRequest,
 	VerifyAllScriptsRequest,

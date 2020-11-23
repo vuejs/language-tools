@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { CompletionItem, TextEdit } from 'vscode-languageserver';
+import { CompletionItem, TextEdit } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 

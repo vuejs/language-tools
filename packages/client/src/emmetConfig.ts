@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { EmmetConfigurationRequest } from '@volar/shared';
-import type { LanguageClient } from 'vscode-languageclient';
+import type { LanguageClient } from 'vscode-languageclient/node';
 
 export async function registerEmmetConfigurationProvider(client: LanguageClient) {
 	await client.onReady();

@@ -1,7 +1,7 @@
 import {
 	Position,
 	Range,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFiles';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as getEmbeddedDocument from './embeddedDocument';

@@ -1,7 +1,7 @@
 import {
 	Position,
 	TextDocument,
-} from 'vscode-languageserver';
+} from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFiles';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
