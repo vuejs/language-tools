@@ -46,24 +46,24 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		const htmlResult = getHtmlResult(sourceFile);
 		const pugResult = getPugResult(sourceFile);
 		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
-		let tsResult = await getTsResult(sourceFile); // TODO: inconsistent with typescript-language-features
+		// let tsResult = await getTsResult(sourceFile); // TODO: inconsistent with typescript-language-features
 
-		tsResult = tsResult.filter(tsToken => {
-			for (const setupToken of scriptSetupResult) {
-				if (setupToken[0] === tsToken[0]
-					&& setupToken[1] >= tsToken[1]
-					&& setupToken[2] <= tsToken[2]) {
-					return false;
-				}
-			}
-			return true;
-		});
+		// tsResult = tsResult.filter(tsToken => {
+		// 	for (const setupToken of scriptSetupResult) {
+		// 		if (setupToken[0] === tsToken[0]
+		// 			&& setupToken[1] >= tsToken[1]
+		// 			&& setupToken[2] <= tsToken[2]) {
+		// 			return false;
+		// 		}
+		// 	}
+		// 	return true;
+		// });
 
 		return [
 			...htmlResult,
 			...pugResult,
 			...scriptSetupResult,
-			...tsResult,
+			// ...tsResult,
 		];
 
 		function getScriptSetupResult(sourceFile: SourceFile) {
