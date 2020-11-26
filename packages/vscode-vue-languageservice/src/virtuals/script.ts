@@ -97,32 +97,35 @@ export function useScriptSetupGen(
 			code += `{}`;
 		}
 		code += `),\n`
+		if (scriptSetupGenResult.value?.declaresNames.has('props')) {
+			code += `props: __VLS_declares_props,\n`;
+		}
 		if (scriptSetupData.value?.defineProps?.args && scriptSetup.value) {
-			code += `props: `;
+			code += `props: (`;
 			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineProps.args.start, scriptSetupData.value.defineProps.args.end);
 			definePropsRange = {
 				partRange: scriptSetupData.value.defineProps.args,
 				genRange: addCode(text),
 			};
-			code += `,\n`;
+			code += `),\n`;
 		}
 		if (scriptSetupData.value?.defineProps?.typeArgs && scriptSetup.value) {
-			code += `props: {} as `;
+			code += `props: ({} as `;
 			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineProps.typeArgs.start, scriptSetupData.value.defineProps.typeArgs.end);
 			definePropsRange = {
 				partRange: scriptSetupData.value.defineProps.typeArgs,
 				genRange: addCode(text),
 			};
-			code += `,\n`;
+			code += `),\n`;
 		}
 		if (scriptSetupData.value?.defineEmit?.args && scriptSetup.value) {
-			code += `emits: `;
+			code += `emits: (`;
 			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineEmit.args.start, scriptSetupData.value.defineEmit.args.end);
 			defineEmitRange = {
 				partRange: scriptSetupData.value.defineEmit.args,
 				genRange: addCode(text),
 			};
-			code += `,\n`;
+			code += `),\n`;
 		}
 		code += `};\n`;
 
@@ -499,17 +502,12 @@ function genScriptSetup(
 	}
 
 	genCode += `\n`;
-	genCode += `export default (await import('@vue/runtime-dom')).defineComponent<`;
-	let addProps = 0;
+	genCode += `export default (await import('@vue/runtime-dom')).defineComponent({\n`;
 	if (declaresNames.has('props')) {
-		addProps++;
-		genCode += `typeof __VLS_declares_props`;
+		genCode += `props: ({} as __VLS_DefinePropsToOptions<typeof __VLS_declares_props>),\n`;
 	}
 	if (data.defineProps?.typeArgs) {
-		if (addProps > 0) {
-			genCode += ` & `
-		}
-		addProps++;
+		genCode += `props: ({} as __VLS_DefinePropsToOptions<`
 		addCode(originalCode.substring(data.defineProps.typeArgs.start, data.defineProps.typeArgs.end), {
 			capabilities: {},
 			scriptSetupRange: {
@@ -518,9 +516,9 @@ function genScriptSetup(
 			},
 			mode: MapedMode.Offset,
 		});
+		genCode += `>),\n`;
 	}
 	// TODO: emit types
-	genCode += `>({\n`;
 	if (data.exportDefault) {
 		genCode += `...(`;
 		addCode(originalCode.substring(data.exportDefault.args.start, data.exportDefault.args.end), {
@@ -757,6 +755,7 @@ function genScriptSetup(
 	genCode += `ref${SearchTexts.Ref}\n`; // for execute auto import
 
 	return {
+		declaresNames,
 		data,
 		mappings,
 		code: genCode,

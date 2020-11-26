@@ -9,6 +9,7 @@ import { FunctionalComponent as __VLS_Vue_FunctionalComponent } from '@vue/runti
 import { HTMLAttributes as __VLS_Vue_HTMLAttributes } from '@vue/runtime-dom'
 import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'
 import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'
+import { PropType as __VLS_Vue_PropType } from '@vue/runtime-dom'
 		
 declare global {
 	interface __VLS_GlobalComponents extends Pick<typeof import('@vue/runtime-dom'),
@@ -30,6 +31,7 @@ declare global {
 	type __VLS_GlobalAttrs = __VLS_Vue_HTMLAttributes & __VLS_Vue_VNodeProps & __VLS_Vue_AllowedComponentProps;
 	type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;
 	type __VLS_OmitGlobalAttrs<T> = { [K in keyof T]: Omit<T[K], keyof __VLS_GlobalAttrs> };
+	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]: { type: __VLS_Vue_PropType<T[K]>, required: true } };
 	
 	/* Completion: Global Attrs */
 	({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};
