@@ -32,34 +32,24 @@ export function useScriptSetupGen(
 			return getScriptSetupData(scriptSetup.value.content);
 		}
 	});
-	const optionsRanges = computed(() => {
-		if (scriptSetup.value) {
-			const data = scriptSetupData.value;
-			if (data) {
-				const result: (MapedRange & { tag: string, text: string })[] = [];
-				for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
-					if (!optionsNode.options) continue;
-					result.push({
-						tag: 'scriptSetup',
-						text: scriptSetup.value.content.substring(optionsNode.options.start, optionsNode.options.end),
-						start: optionsNode.options.start,
-						end: optionsNode.options.end,
-					});
-				}
-				return result;
-			}
+	const defaultExport = computed(() => {
+		if (scriptSetupData.value?.exportDefault) {
+			return {
+				tag: 'scriptSetup',
+				text: scriptSetupData.value.exportDefault.args.text,
+				start: scriptSetupData.value.exportDefault.args.start,
+				end: scriptSetupData.value.exportDefault.args.end,
+			};
 		}
-		else if (script.value) {
-			if (scriptData.value?.exportDefault) {
-				return [{
-					tag: 'script',
-					text: script.value.content.substring(scriptData.value.exportDefault.options.start, scriptData.value.exportDefault.options.end),
-					start: scriptData.value.exportDefault.options.start,
-					end: scriptData.value.exportDefault.options.end,
-				}];
-			}
+		if (scriptData.value?.exportDefault) {
+			return {
+				tag: 'script',
+				text: scriptData.value.exportDefault.args.text,
+				start: scriptData.value.exportDefault.args.start,
+				end: scriptData.value.exportDefault.args.end,
+			};
 		}
-		return [];
+		return undefined;
 	});
 	const scriptSetupGenResult = computed(() => {
 		if (scriptSetup.value && scriptSetupData.value) {
@@ -67,42 +57,110 @@ export function useScriptSetupGen(
 			return genScriptSetup(vueDoc.uri, scriptSetup.value.content, scriptSetup.value.setup, scriptSetupData.value);
 		}
 	});
-	const textDocument = computed(() => {
+	const docGen = computed(() => {
 		if (!script.value && !scriptSetup.value) return;
+
+		let code = '';
+		let scriptRange: MapedRange | undefined;
+		let scriptSetupRange: MapedRange | undefined;
+		let defaultExportRange: {
+			partRange: MapedRange,
+			genRange: MapedRange,
+			tag: string,
+		} | undefined;
+		let definePropsRange: {
+			partRange: MapedRange,
+			genRange: MapedRange,
+		} | undefined;
+		let defineEmitRange: {
+			partRange: MapedRange,
+			genRange: MapedRange,
+		} | undefined;
+
+		if (script.value) {
+			scriptRange = addCode(script.value.content);
+		}
+		if (scriptSetupGenResult.value) {
+			scriptSetupRange = addCode(scriptSetupGenResult.value.code);
+		}
+		code += `\n`;
+		code += `export const __VLS_options = {\n`;
+		code += `...(`
+		if (defaultExport.value) {
+			defaultExportRange = {
+				tag: defaultExport.value.tag,
+				partRange: defaultExport.value,
+				genRange: addCode(defaultExport.value.text),
+			};
+		}
+		else {
+			code += `{}`;
+		}
+		code += `),\n`
+		if (scriptSetupData.value?.defineProps?.args && scriptSetup.value) {
+			code += `props: `;
+			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineProps.args.start, scriptSetupData.value.defineProps.args.end);
+			definePropsRange = {
+				partRange: scriptSetupData.value.defineProps.args,
+				genRange: addCode(text),
+			};
+			code += `,\n`;
+		}
+		if (scriptSetupData.value?.defineProps?.typeArgs && scriptSetup.value) {
+			code += `props: {} as `;
+			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineProps.typeArgs.start, scriptSetupData.value.defineProps.typeArgs.end);
+			definePropsRange = {
+				partRange: scriptSetupData.value.defineProps.typeArgs,
+				genRange: addCode(text),
+			};
+			code += `,\n`;
+		}
+		if (scriptSetupData.value?.defineEmit?.args && scriptSetup.value) {
+			code += `emits: `;
+			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineEmit.args.start, scriptSetupData.value.defineEmit.args.end);
+			defineEmitRange = {
+				partRange: scriptSetupData.value.defineEmit.args,
+				genRange: addCode(text),
+			};
+			code += `,\n`;
+		}
+		code += `};\n`;
+
+		return {
+			code,
+			scriptRange,
+			scriptSetupRange,
+			defaultExportRange,
+			definePropsRange,
+			defineEmitRange,
+		};
+
+		function addCode(str: string) {
+			const start = code.length;
+			code += str;
+			return {
+				start,
+				end: code.length
+			};
+		}
+	});
+	const textDocument = computed(() => {
+		if (!docGen.value) return;
 
 		const vueDoc = getUnreactiveDoc();
 		const lang = getValidScriptSyntax(scriptSetup.value?.lang ?? script.value?.lang ?? 'js');
 		const uri = `${vueDoc.uri}.script.${lang}`;
-		let code = '';
 
-		if (script.value) {
-			code += script.value.content;
-		}
-		if (scriptSetupGenResult.value) {
-			code += scriptSetupGenResult.value.code;
-		}
-		for (let i = 0; i < optionsRanges.value.length; i++) {
-			const optionsRange = optionsRanges.value[i];
-			code += `\nconst __VLS_options_${i} = ` + optionsRange.text;
-		}
-		code += `\nexport declare const __VLS_options: {}`;
-		for (let i = 0; i < optionsRanges.value.length; i++) {
-			code += ` & typeof __VLS_options_${i}`;
-		}
-
-		return TextDocument.create(uri, syntaxToLanguageId(lang), version++, code);
+		return TextDocument.create(uri, syntaxToLanguageId(lang), version++, docGen.value.code);
 	});
 	const sourceMap = computed(() => {
-		if (!script.value && !scriptSetup.value) return;
+		if (!docGen.value) return;
 		if (!textDocument.value) return;
 
 		const vueDoc = getUnreactiveDoc();
 		const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: true, formatting: true });
-		let pos = 0;
 
-		if (script.value) {
-			const start = script.value.loc.start;
-			const end = script.value.loc.end;
+		if (script.value && docGen.value.scriptRange) {
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -119,17 +177,13 @@ export function useScriptSetupGen(
 				},
 				mode: MapedMode.Offset,
 				sourceRange: {
-					start: start,
-					end: end,
+					start: script.value.loc.start,
+					end: script.value.loc.end,
 				},
-				targetRange: {
-					start: 0,
-					end: end - start,
-				},
+				targetRange: docGen.value.scriptRange,
 			});
-			pos += script.value.content.length;
 		}
-		if (scriptSetup.value && scriptSetupGenResult.value) {
+		if (scriptSetup.value && scriptSetupGenResult.value && docGen.value.scriptSetupRange) {
 			const vueDoc = getUnreactiveDoc();
 			for (const mapping of scriptSetupGenResult.value.mappings) {
 				sourceMap.add({
@@ -144,17 +198,17 @@ export function useScriptSetupGen(
 						end: scriptSetup.value.loc.start + mapping.scriptSetupRange.end,
 					},
 					targetRange: {
-						start: pos + mapping.genRange.start,
-						end: pos + mapping.genRange.end,
+						start: docGen.value.scriptSetupRange.start + mapping.genRange.start,
+						end: docGen.value.scriptSetupRange.start + mapping.genRange.end,
 					},
 				});
 			}
 			{
 				const setup = scriptSetup.value.setup;
-				const start = vueDoc.getText().substring(0, scriptSetup.value.loc.start).lastIndexOf(setup); // TODO: don't use indexOf()
-				const end = start + setup.length;
-				const start_2 = textDocument.value.getText().lastIndexOf(`${setup}${SearchTexts.SetupParams}`);
-				const end_2 = start_2 + setup.length;
+				const vueStart = vueDoc.getText().substring(0, scriptSetup.value.loc.start).lastIndexOf(setup); // TODO: don't use indexOf()
+				const vueEnd = vueStart + setup.length;
+				const tsStart = docGen.value.code.indexOf(`${setup}${SearchTexts.SetupParams}`);
+				const tsEnd = tsStart + setup.length;
 				sourceMap.add({
 					data: {
 						vueTag: 'scriptSetup',
@@ -169,29 +223,51 @@ export function useScriptSetupGen(
 					},
 					mode: MapedMode.Offset,
 					sourceRange: {
-						start: start,
-						end: end,
+						start: vueStart,
+						end: vueEnd,
 					},
 					targetRange: {
-						start: start_2,
-						end: end_2,
+						start: tsStart,
+						end: tsEnd,
 					},
 				});
 			}
-			pos += scriptSetupGenResult.value.code.length;
 		}
-		for (let i = 0; i < optionsRanges.value.length; i++) {
-			const optionsRange = optionsRanges.value[i];
+		if (docGen.value.defaultExportRange) {
+			const optionsRange = docGen.value.defaultExportRange;
 			const block = optionsRange.tag === 'scriptSetup' ? scriptSetup.value : script.value;
-			if (!block) continue;
+			if (block) {
+				const optionsVueRange = {
+					start: block.loc.start + optionsRange.partRange.start,
+					end: block.loc.start + optionsRange.partRange.end,
+				};
+				sourceMap.add({
+					data: {
+						vueTag: scriptSetup.value ? 'scriptSetup' : 'script',
+						capabilities: {
+							basic: false,
+							references: true,
+							rename: true,
+							diagnostic: false,
+							formatting: false,
+							completion: false,
+							semanticTokens: false,
+						},
+					},
+					mode: MapedMode.Offset,
+					sourceRange: optionsVueRange,
+					targetRange: optionsRange.genRange,
+				});
+			}
+		}
+		if (docGen.value.definePropsRange && scriptSetup.value) {
 			const optionsVueRange = {
-				start: block.loc.start + optionsRange.start,
-				end: block.loc.start + optionsRange.end,
+				start: scriptSetup.value.loc.start + docGen.value.definePropsRange.partRange.start,
+				end: scriptSetup.value.loc.start + docGen.value.definePropsRange.partRange.end,
 			};
-			pos += `\nconst __VLS_options_${i} = `.length;
 			sourceMap.add({
 				data: {
-					vueTag: scriptSetup.value ? 'scriptSetup' : 'script',
+					vueTag: 'scriptSetup',
 					capabilities: {
 						basic: false,
 						references: true,
@@ -204,12 +280,31 @@ export function useScriptSetupGen(
 				},
 				mode: MapedMode.Offset,
 				sourceRange: optionsVueRange,
-				targetRange: {
-					start: pos,
-					end: pos + optionsVueRange.end - optionsVueRange.start,
-				},
+				targetRange: docGen.value.definePropsRange.genRange,
 			});
-			pos += optionsVueRange.end - optionsVueRange.start;
+		}
+		if (docGen.value.defineEmitRange && scriptSetup.value) {
+			const optionsVueRange = {
+				start: scriptSetup.value.loc.start + docGen.value.defineEmitRange.partRange.start,
+				end: scriptSetup.value.loc.start + docGen.value.defineEmitRange.partRange.end,
+			};
+			sourceMap.add({
+				data: {
+					vueTag: 'scriptSetup',
+					capabilities: {
+						basic: false,
+						references: true,
+						rename: true,
+						diagnostic: false,
+						formatting: false,
+						completion: false,
+						semanticTokens: false,
+					},
+				},
+				mode: MapedMode.Offset,
+				sourceRange: optionsVueRange,
+				targetRange: docGen.value.defineEmitRange.genRange,
+			});
 		}
 
 		return sourceMap;
@@ -404,12 +499,31 @@ function genScriptSetup(
 	}
 
 	genCode += `\n`;
-	genCode += `// @ts-ignore\n`;
-	genCode += `const __VLS_exportComponent = (await import('@vue/runtime-dom')).defineComponent({\n`;
-	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
-		if (!optionsNode.options) continue;
+	genCode += `export default (await import('@vue/runtime-dom')).defineComponent<`;
+	let addProps = 0;
+	if (declaresNames.has('props')) {
+		addProps++;
+		genCode += `typeof __VLS_declares_props`;
+	}
+	if (data.defineProps?.typeArgs) {
+		if (addProps > 0) {
+			genCode += ` & `
+		}
+		addProps++;
+		addCode(originalCode.substring(data.defineProps.typeArgs.start, data.defineProps.typeArgs.end), {
+			capabilities: {},
+			scriptSetupRange: {
+				start: data.defineProps.typeArgs.start,
+				end: data.defineProps.typeArgs.end,
+			},
+			mode: MapedMode.Offset,
+		});
+	}
+	// TODO: emit types
+	genCode += `>({\n`;
+	if (data.exportDefault) {
 		genCode += `...(`;
-		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
+		addCode(originalCode.substring(data.exportDefault.args.start, data.exportDefault.args.end), {
 			capabilities: {
 				basic: true,
 				references: true,
@@ -420,13 +534,51 @@ function genScriptSetup(
 			},
 			mode: MapedMode.Offset,
 			scriptSetupRange: {
-				start: optionsNode.options.start,
-				end: optionsNode.options.end,
+				start: data.exportDefault.args.start,
+				end: data.exportDefault.args.end,
 			},
 		});
 		genCode += `),\n`;
 	}
-	genCode += `async setup() {\n`;
+	if (data.defineProps?.args) {
+		genCode += `props: `;
+		addCode(originalCode.substring(data.defineProps.args.start, data.defineProps.args.end), {
+			capabilities: {
+				basic: true,
+				references: true,
+				diagnostic: true,
+				rename: true,
+				completion: true,
+				semanticTokens: true,
+			},
+			mode: MapedMode.Offset,
+			scriptSetupRange: {
+				start: data.defineProps.args.start,
+				end: data.defineProps.args.end,
+			},
+		});
+		genCode += `,\n`;
+	}
+	if (data.defineEmit?.args) {
+		genCode += `emits: `;
+		addCode(originalCode.substring(data.defineEmit.args.start, data.defineEmit.args.end), {
+			capabilities: {
+				basic: true,
+				references: true,
+				diagnostic: true,
+				rename: true,
+				completion: true,
+				semanticTokens: true,
+			},
+			mode: MapedMode.Offset,
+			scriptSetupRange: {
+				start: data.defineEmit.args.start,
+				end: data.defineEmit.args.end,
+			},
+		});
+		genCode += `,\n`;
+	}
+	genCode += `async setup(${setupParams}${SearchTexts.SetupParams}) {\n`;
 
 	if (rfc === '#222') {
 		const labels = data.labels.sort((a, b) => a.start - b.start);
@@ -516,23 +668,6 @@ function genScriptSetup(
 	}
 
 	genCode += `return {\n`;
-	if (declaresNames.has('props')) {
-		genCode += `...__VLS_declares_props,\n`;
-	}
-	for (const call of data.defineOptionsCalls) {
-		if (call.typeOptions?.keys.has('props')) {
-			genCode += `...({} as `;
-			addCode(originalCode.substring(call.typeOptions.start, call.typeOptions.end), {
-				capabilities: {},
-				scriptSetupRange: {
-					start: call.typeOptions.start,
-					end: call.typeOptions.end,
-				},
-				mode: MapedMode.Offset,
-			});
-			genCode += `['props']),\n`
-		}
-	}
 	if (rfc === '#182') {
 		genCode += `...__VLS_exports,\n`;
 	}
@@ -617,85 +752,6 @@ function genScriptSetup(
 	}
 	genCode += `};\n`
 	genCode += `}});\n`;
-
-	genCode += `declare const __VLS_export: new (...args: any) => InstanceType<typeof __VLS_exportComponent>`;
-	const addedDeclares = new Set<string>();
-	for (const d of data.declares) {
-		let nameText = originalCode.substring(d.name.start, d.name.end);
-		if (addedDeclares.has(nameText)) continue;
-		addedDeclares.add(nameText);
-		if (['props', 'emit'].includes(nameText)) {
-			genCode += ` & { $${nameText}: typeof __VLS_declares_${nameText} }`
-		}
-	}
-	genCode += `;\n`;
-	genCode += `export default __VLS_export;\n`;
-
-	genCode += `// @ts-ignore\n`;
-	genCode += `const __VLS_component = (await import('@vue/runtime-dom')).defineComponent({\n`;
-	for (const optionsNode of [...data.defineOptionsCalls, ...(data.exportDefault ? [data.exportDefault] : [])]) {
-		if (!optionsNode.options) continue;
-		genCode += `...(`;
-		addCode(originalCode.substring(optionsNode.options.start, optionsNode.options.end), {
-			capabilities: {
-				references: true,
-				rename: true,
-			},
-			mode: MapedMode.Offset,
-			scriptSetupRange: {
-				start: optionsNode.options.start,
-				end: optionsNode.options.end,
-			},
-		});
-		genCode += `),\n`;
-	}
-	genCode += `});\n`;
-	genCode += `declare var [${setupParams}${SearchTexts.SetupParams}]: Parameters<NonNullable<typeof __VLS_component.setup>> & [
-		${declaresNames.has('props') ? 'typeof __VLS_declares_props' : '{}'},
-		{
-			${declaresNames.has('emit') ? 'emit: typeof __VLS_declares_emit,' : ''}
-			${declaresNames.has('slots') ? 'slots: typeof __VLS_declares_slots,' : ''}
-		}
-	]`;
-	for (const call of data.defineOptionsCalls) {
-		if (!call.typeOptions) continue;
-		genCode += ` & [\n`;
-		if (call.typeOptions.keys.has('props')) {
-			addCode(originalCode.substring(call.typeOptions.start, call.typeOptions.end), {
-				capabilities: {},
-				scriptSetupRange: {
-					start: call.typeOptions.start,
-					end: call.typeOptions.end,
-				},
-				mode: MapedMode.Offset,
-			});
-			genCode += `['props'],\n`;
-		}
-		else {
-			genCode += `{},\n`
-		}
-		const addOptions: string[] = [];
-		if (call.typeOptions.keys.has('emit')) addOptions.push('emit');
-		if (call.typeOptions.keys.has('slots')) addOptions.push('slots');
-		if (addOptions.length) {
-			genCode += `Pick<(`;
-			addCode(originalCode.substring(call.typeOptions.start, call.typeOptions.end), {
-				capabilities: {},
-				scriptSetupRange: {
-					start: call.typeOptions.start,
-					end: call.typeOptions.end,
-				},
-				mode: MapedMode.Offset,
-			});
-			genCode += `), `;
-			genCode += addOptions.map(option => `'${option}'`).join(' | ');
-			genCode += `>,\n`;
-		}
-		else {
-			genCode += `{},\n`
-		}
-		genCode += `]`;
-	}
 
 	genCode += `\n// @ts-ignore\n`
 	genCode += `ref${SearchTexts.Ref}\n`; // for execute auto import
@@ -929,24 +985,25 @@ function getScriptSetupData(sourceCode: string) {
 			start: number,
 			end: number,
 		},
-		options: {
+		args: {
+			text: string,
 			start: number,
 			end: number,
 		},
 	} | undefined;
-	const defineOptionsCalls: {
+	let defineProps: {
 		start: number,
 		end: number,
-		options?: {
+		args?: {
 			start: number,
 			end: number,
 		},
-		typeOptions?: {
+		typeArgs?: {
 			start: number,
 			end: number,
-			keys: Set<string>,
 		},
-	}[] = [];
+	} | undefined;
+	let defineEmit: typeof defineProps;
 	const declares: {
 		start: number,
 		end: number,
@@ -977,7 +1034,6 @@ function getScriptSetupData(sourceCode: string) {
 	}[] = [];
 
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
-	let hasImportDefineOptions = false;
 	scriptAst.forEachChild(node => {
 		if (node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword)) {
 			if (ts.isVariableStatement(node)) {
@@ -1040,9 +1096,6 @@ function getScriptSetupData(sourceCode: string) {
 						start: element.name.getStart(scriptAst),
 						end: element.name.getStart(scriptAst) + element.name.getWidth(scriptAst),
 					});
-					if (element.name.getText(scriptAst) === 'defineOptions') {
-						hasImportDefineOptions = true;
-					}
 				}
 			}
 		}
@@ -1075,7 +1128,8 @@ function getScriptSetupData(sourceCode: string) {
 						start: node.expression.getStart(scriptAst),
 						end: node.expression.getStart(scriptAst) + node.expression.getWidth(scriptAst),
 					},
-					options: {
+					args: {
+						text: obj.getText(scriptAst),
 						start: obj.getStart(scriptAst),
 						end: obj.getStart(scriptAst) + obj.getWidth(scriptAst),
 					},
@@ -1128,7 +1182,8 @@ function getScriptSetupData(sourceCode: string) {
 		imports,
 		exportKeywords,
 		exportDefault,
-		defineOptionsCalls,
+		defineProps,
+		defineEmit,
 		declares,
 		refCalls,
 		shorthandPropertys,
@@ -1155,29 +1210,36 @@ function getScriptSetupData(sourceCode: string) {
 			});
 		}
 		else if (
-			hasImportDefineOptions
-			&& ts.isCallExpression(node)
+			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
-			&& node.expression.getText(scriptAst) === 'defineOptions'
+			&& (
+				node.expression.getText(scriptAst) === 'defineProps'
+				|| node.expression.getText(scriptAst) === 'defineEmit'
+			)
 		) {
 			// TODO: handle this
 			// import * as vue from 'vue'
-			// const { props } = vue.defineOptions(...)
+			// const props = vue.defineProps...
 			const arg: ts.Expression | undefined = node.arguments.length ? node.arguments[0] : undefined;
 			const typeArg: ts.TypeNode | undefined = node.typeArguments?.length ? node.typeArguments[0] : undefined;
-			defineOptionsCalls.push({
+			const call = {
 				start: node.getStart(scriptAst),
 				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-				options: arg ? {
+				args: arg ? {
 					start: arg.getStart(scriptAst),
 					end: arg.getStart(scriptAst) + arg.getWidth(scriptAst),
 				} : undefined,
-				typeOptions: typeArg && ts.isTypeLiteralNode(typeArg) ? {
+				typeArgs: typeArg ? {
 					start: typeArg.getStart(scriptAst),
 					end: typeArg.getStart(scriptAst) + typeArg.getWidth(scriptAst),
-					keys: new Set(typeArg.members.map(member => member.name?.getText(scriptAst)).filter(notEmpty)),
 				} : undefined,
-			});
+			};
+			if (node.expression.getText(scriptAst) === 'defineProps') {
+				defineProps = call;
+			}
+			else if (node.expression.getText(scriptAst) === 'defineEmit') {
+				defineEmit = call;
+			}
 		}
 		else if (
 			ts.isVariableDeclarationList(node)
@@ -1359,7 +1421,8 @@ function getScriptData(sourceCode: string) {
 	let exportDefault: {
 		start: number,
 		end: number,
-		options: {
+		args: {
+			text: string,
 			start: number,
 			end: number,
 		},
@@ -1382,7 +1445,8 @@ function getScriptData(sourceCode: string) {
 				exportDefault = {
 					start: node.getStart(scriptAst),
 					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-					options: {
+					args: {
+						text: obj.getText(scriptAst),
 						start: obj.getStart(scriptAst),
 						end: obj.getStart(scriptAst) + obj.getWidth(scriptAst),
 					},
