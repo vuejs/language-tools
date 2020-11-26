@@ -543,17 +543,17 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		function toSourceDiags<T = Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
 			const result: T[] = [];
 			for (const error of errors) {
-				for (const sourceMap of sourceMaps) {
-					if (sourceMap.targetDocument.uri === virtualScriptUri) {
-						if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
-							const vueLoc = sourceMap.targetToSource(error.range);
-							if (vueLoc) {
-								result.push({
-									...error,
-									range: vueLoc.range,
-								});
-							}
-						}
+				if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
+					for (const sourceMap of sourceMaps) {
+						if (sourceMap.targetDocument.uri !== virtualScriptUri)
+							continue;
+						const vueLoc = sourceMap.targetToSource(error.range);
+						if (!vueLoc)
+							continue;
+						result.push({
+							...error,
+							range: vueLoc.range,
+						});
 					}
 				}
 			}
@@ -562,16 +562,43 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		function toTsSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
 			const result: Diagnostic[] = [];
 			for (const error of errors) {
-				for (const sourceMap of sourceMaps) {
-					if (sourceMap.targetDocument.uri === virtualScriptUri) {
-						if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
-							const vueLoc = sourceMap.targetToSource(error.range);
-							if (vueLoc && vueLoc.maped.data.capabilities.diagnostic) {
-								result.push({
-									...error,
-									range: vueLoc.range,
-								});
-							}
+				if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
+					let found = false;
+					for (const sourceMap of sourceMaps) {
+						if (sourceMap.targetDocument.uri !== virtualScriptUri)
+							continue;
+						const vueLoc = sourceMap.targetToSource(error.range);
+						if (!vueLoc || !vueLoc.maped.data.capabilities.diagnostic)
+							continue;
+						result.push({
+							...error,
+							range: vueLoc.range,
+						});
+						found = true;
+					}
+					if (!found) { // patching for ref sugar
+						for (const sourceMap of sourceMaps) {
+							if (sourceMap.targetDocument.uri !== virtualScriptUri)
+								continue;
+							const vueLocStart = sourceMap.targetToSource({
+								start: error.range.start,
+								end: error.range.start,
+							});
+							const vueLocEnd = sourceMap.targetToSource({
+								start: error.range.end,
+								end: error.range.end,
+							});
+							if (!vueLocStart || !vueLocStart.maped.data.capabilities.diagnostic)
+								continue;
+							if (!vueLocEnd || !vueLocEnd.maped.data.capabilities.diagnostic)
+								continue;
+							result.push({
+								...error,
+								range: {
+									start: vueLocStart.range.start,
+									end: vueLocEnd.range.start,
+								},
+							});
 						}
 					}
 				}
