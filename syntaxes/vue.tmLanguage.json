@@ -735,7 +735,7 @@
 					"name": "entity.name.tag.other.html"
 				}
 			},
-			"end": "(>)",
+			"end": "(/?>)",
 			"endCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.end.html"
