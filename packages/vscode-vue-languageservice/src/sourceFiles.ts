@@ -77,7 +77,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		}
 		return {};
 	});
-	const templateScriptDocument = ref<TextDocument>();
 	const vueHtmlDocument = computed(() => {
 		return globalServices.html.parseHTMLDocument(vueDoc.value);
 	});
@@ -97,7 +96,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	const virtualScriptSetupRaw = useScriptSetupFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
 	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
-	// source map sets
+	// map / set
 	const tsSourceMaps = computed(() => {
 		return [
 			virtualScriptGen.sourceMap.value,
@@ -106,7 +105,6 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 			virtualTemplateGen.sourceMap.value,
 		].filter(notEmpty);
 	});
-
 	const tsDocuments = computed(() => {
 		const docs = new Map<string, TextDocument>();
 		if (virtualScriptGen.textDocument.value)
@@ -115,21 +113,25 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 			docs.set(virtualScriptSetupRaw.textDocument.value.uri, virtualScriptSetupRaw.textDocument.value);
 		if (virtualScriptMain.textDocument.value)
 			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
-
-		if (templateScriptDocument.value) docs.set(templateScriptDocument.value.uri, templateScriptDocument.value);
+		if (virtualTemplateGen.textDocument.value)
+			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
 		return docs;
 	});
 
 	update(initialDocument);
 
+	// getters
+	const getComponentCompletionData = useComponentCompletionData();
+	const getDiagnostics = useDiagnostics();
+
 	return {
 		uri: vueUri,
 		fileName: vueFileName,
 		getTextDocument: untrack(() => vueDoc.value),
-		update,
-		updateTemplateScript,
-		getComponentCompletionData: useComponentCompletionData(),
-		getDiagnostics: useDiagnostics(),
+		update: untrack(update),
+		updateTemplateScript: untrack(updateTemplateScript),
+		getComponentCompletionData: untrack(getComponentCompletionData),
+		getDiagnostics: untrack(getDiagnostics),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => virtualStyles.sourceMaps.value),
 		getHtmlSourceMaps: untrack(() => virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
@@ -156,14 +158,14 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vueFileName }).descriptor;
 		const versionsBeforeUpdate = [
 			virtualScriptGen.textDocument.value?.version,
-			templateScriptDocument.value?.version,
+			virtualTemplateGen.textDocument.value?.version,
 		];
 
 		updateTemplate(newDescriptor);
 		updateScript(newDescriptor);
 		updateScriptSetup(newDescriptor);
 		updateStyles(newDescriptor);
-		updateTemplateScriptDocument();
+		virtualTemplateGen.update(); // TODO
 
 		if (newVueDocument.getText() !== vueDoc.value.getText()) {
 			vueDoc.value = newVueDocument;
@@ -171,7 +173,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 
 		const versionsAfterUpdate = [
 			virtualScriptGen.textDocument.value?.version,
-			templateScriptDocument.value?.version,
+			virtualTemplateGen.textDocument.value?.version,
 		];
 
 		return {
@@ -305,22 +307,13 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		templateScriptData.setupReturns = setupReturnNames;
 		templateScriptData.scriptSetupExports = scriptSetupExportNames;
 		templateScriptData.htmlElements = htmlElementNames;
-		updateTemplateScriptDocument();
+		virtualTemplateGen.update(); // TODO
 		return true;
 
 		function eqSet<T>(as: Set<T>, bs: Set<T>) {
 			if (as.size !== bs.size) return false;
 			for (const a of as) if (!bs.has(a)) return false;
 			return true;
-		}
-	}
-	function updateTemplateScriptDocument() {
-		const doc = virtualTemplateGen.textDocument.value;
-		if (!doc) {
-			templateScriptDocument.value = undefined;
-		}
-		else if (doc.getText() !== templateScriptDocument.value?.getText()) {
-			templateScriptDocument.value = doc;
 		}
 	}
 	function useDiagnostics() {
@@ -496,7 +489,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
 				}
-				const doc = templateScriptDocument.value;
+				const doc = virtualTemplateGen.textDocument.value;
 				if (!doc) return [];
 				if (mode === 1) {
 					return tsLanguageService.doValidation(doc, { semantic: true });
@@ -534,9 +527,9 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				return result;
 			})
 			return computed(() => {
-				const result_1 = templateScriptDocument.value ? toTsSourceDiags(
+				const result_1 = virtualTemplateGen.textDocument.value ? toTsSourceDiags(
 					errors_1.value,
-					templateScriptDocument.value.uri,
+					virtualTemplateGen.textDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				const result_2 = virtualScriptGen.textDocument.value ? toTsSourceDiags(
@@ -592,8 +585,8 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				tsProjectVersion.value;
 			}
 			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
-			if (templateScriptDocument.value && virtualTemplateRaw.textDocument.value) {
-				const doc = templateScriptDocument.value;
+			if (virtualTemplateGen.textDocument.value && virtualTemplateRaw.textDocument.value) {
+				const doc = virtualTemplateGen.textDocument.value;
 				const text = doc.getText();
 				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 					let bind: CompletionItem[] = [];
@@ -626,12 +619,12 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 			return result.value;
 		};
 	}
-	function untrack<T>(source: () => T) {
-		return () => {
+	function untrack<T extends (...args: any[]) => any>(source: T) {
+		return ((...args: any[]) => {
 			pauseTracking();
-			const result = source();
+			const result = source(...args);
 			resetTracking();
 			return result;
-		};
+		}) as T;
 	}
 }

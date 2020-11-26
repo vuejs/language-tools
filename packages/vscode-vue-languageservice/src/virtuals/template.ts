@@ -1,7 +1,7 @@
 import { Diagnostic } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-import { computed, Ref } from '@vue/reactivity';
+import { computed, ref, Ref } from '@vue/reactivity';
 import { IDescriptor, ITemplateScriptData } from '../types';
 import * as upath from 'upath';
 import { SourceMap, MapedMode, TsSourceMap, Mapping, CssSourceMap } from '../utils/sourceMaps';
@@ -10,7 +10,6 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as css from 'vscode-css-languageservice';
 import * as vueDom from '@vue/compiler-dom';
-import { cheapComputed } from '../utils/cheapComputed';
 
 export function useTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
@@ -42,8 +41,6 @@ export function useTemplateScript(
 	}>,
 ) {
 	let version = 0;
-	let contextSourceMapVersion: number | undefined;
-	let componentSourceMapVersion: number | undefined;
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = uriToFsPath(_vueDoc.uri);
@@ -296,13 +293,13 @@ export function useTemplateScript(
 					continue;
 				if (type === 'scoped' && !sourceMap.scoped)
 					continue;
-				for (const [className, offsets] of finClassNames(sourceMap.textDocument, sourceMap.stylesheet)) {
+				for (const [className, offsets] of findClassNames(sourceMap.textDocument, sourceMap.stylesheet)) {
 					for (const offset of offsets) {
 						addClassName(sourceMap.textDocument.uri, className, offset);
 					}
 				}
 				for (const link of sourceMap.links) {
-					for (const [className, offsets] of finClassNames(link.textDocument, link.stylesheet)) {
+					for (const [className, offsets] of findClassNames(link.textDocument, link.stylesheet)) {
 						for (const offset of offsets) {
 							addClassName(sourceMap.textDocument.uri, className, offset);
 						}
@@ -337,11 +334,6 @@ export function useTemplateScript(
 			}
 		}
 	});
-	const textDocument = cheapComputed(() => {
-		if (data.value) {
-			return TextDocument.create(vueUri + '.template.ts', 'typescript', version++, data.value.text);
-		}
-	}, old => old?.getText() !== data.value?.text);
 	const sourceMap = computed(() => {
 		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
@@ -418,42 +410,55 @@ export function useTemplateScript(
 			return sourceMap;
 		}
 	});
-	const contextSourceMap = cheapComputed(() => {
-		contextSourceMapVersion = textDocument.value?.version;
-		if (data.value && textDocument.value) {
-			const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
-				textDocument.value,
-				textDocument.value,
-			);
-			for (const maped of data.value.ctxMappings) {
-				sourceMap.add(maped);
-			}
-			return sourceMap;
-		}
-	}, () => contextSourceMapVersion !== textDocument.value?.version);
-	const componentSourceMap = cheapComputed(() => {
-		componentSourceMapVersion = textDocument.value?.version;
-		if (data.value && textDocument.value && template.value) {
-			const sourceMap = new SourceMap(
-				textDocument.value,
-				textDocument.value,
-			);
-			for (const maped of data.value.componentMappings) {
-				sourceMap.add(maped);
-			}
-			return sourceMap;
-		}
-	}, () => componentSourceMapVersion !== textDocument.value?.version);
+	const textDocument = ref<TextDocument>();
+	const contextSourceMap = ref<SourceMap<{
+		isAdditionalReference: boolean;
+	}>>();
+	const componentSourceMap = ref<SourceMap<unknown>>();
 
 	return {
-		textDocument,
 		sourceMap,
+		textDocument,
 		contextSourceMap,
 		componentSourceMap,
+		update, // TODO: cheapComputed
 	};
+
+	function update() {
+		if (data.value?.text !== textDocument.value?.getText()) {
+			if (data.value) {
+				textDocument.value = TextDocument.create(vueUri + '.template.ts', 'typescript', version++, data.value.text);
+				{
+					const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
+						textDocument.value,
+						textDocument.value,
+					);
+					for (const maped of data.value.ctxMappings) {
+						sourceMap.add(maped);
+					}
+					contextSourceMap.value = sourceMap;
+				}
+				{
+					const sourceMap = new SourceMap(
+						textDocument.value,
+						textDocument.value,
+					);
+					for (const maped of data.value.componentMappings) {
+						sourceMap.add(maped);
+					}
+					componentSourceMap.value = sourceMap;
+				}
+			}
+			else {
+				textDocument.value = undefined;
+				contextSourceMap.value = undefined;
+				componentSourceMap.value = undefined;
+			}
+		}
+	}
 }
 
-function finClassNames(doc: TextDocument, ss: css.Stylesheet) {
+function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
 	const result = new Map<string, Set<[number, number]>>();
 	const cssLanguageService = globalServices.getCssService(doc.languageId);
 	const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
