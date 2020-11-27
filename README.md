@@ -4,6 +4,10 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
+## :warning: Warning!
+
+The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/182)) is planning to remove: https://github.com/johnsoncodehk/volar/issues/27
+
 ## Some interesting features:
 
 - [x] ref sugar convert tool (v0.15.6 added)
