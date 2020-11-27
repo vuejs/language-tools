@@ -1,4 +1,3 @@
-import * as ts from 'typescript';
 import {
 	TextDocument,
 	Diagnostic,
@@ -6,6 +5,19 @@ import {
 	DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
+import * as ts from 'typescript';
+import * as errorCodes from '../utils/errorCodes';
+
+// Style check diagnostics that can be reported as warnings
+const styleCheckDiagnostics = new Set([
+	...errorCodes.variableDeclaredButNeverUsed,
+	...errorCodes.propertyDeclaretedButNeverUsed,
+	...errorCodes.allImportsAreUnused,
+	...errorCodes.unreachableCode,
+	...errorCodes.unusedLabel,
+	...errorCodes.fallThroughCaseInSwitch,
+	...errorCodes.notAllCodePathsReturnAValue,
+]);
 
 export function register(languageService: ts.LanguageService) {
 	return (document: TextDocument, options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true }): Diagnostic[] => {
@@ -39,7 +51,7 @@ export function register(languageService: ts.LanguageService) {
 					message: typeof diag.messageText === 'string' ? diag.messageText : diag.messageText.messageText,
 				};
 
-				if (diagnostic.source === 'ts' && (diagnostic.code === 6133 || diagnostic.code === 7028)) {
+				if (diagnostic.source === 'ts' && typeof diagnostic.code === 'number' && styleCheckDiagnostics.has(diagnostic.code)) {
 					if (diagnostic.tags === undefined) diagnostic.tags = [];
 					diagnostic.tags.push(DiagnosticTag.Unnecessary);
 				}
