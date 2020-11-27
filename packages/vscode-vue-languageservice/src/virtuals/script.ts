@@ -1083,18 +1083,20 @@ function getScriptSetupData(sourceCode: string) {
 				start: node.getStart(scriptAst),
 				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
 			});
-			if (node.importClause?.name) {
-				exposeVarNames.push({
-					start: node.importClause.name.getStart(scriptAst),
-					end: node.importClause.name.getStart(scriptAst) + node.importClause.name.getWidth(scriptAst),
-				});
-			}
-			if (node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
-				for (const element of node.importClause.namedBindings.elements) {
+			if (node.importClause && !node.importClause.isTypeOnly) {
+				if (node.importClause.name) {
 					exposeVarNames.push({
-						start: element.name.getStart(scriptAst),
-						end: element.name.getStart(scriptAst) + element.name.getWidth(scriptAst),
+						start: node.importClause.name.getStart(scriptAst),
+						end: node.importClause.name.getStart(scriptAst) + node.importClause.name.getWidth(scriptAst),
 					});
+				}
+				if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+					for (const element of node.importClause.namedBindings.elements) {
+						exposeVarNames.push({
+							start: element.name.getStart(scriptAst),
+							end: element.name.getStart(scriptAst) + element.name.getWidth(scriptAst),
+						});
+					}
 				}
 			}
 		}
