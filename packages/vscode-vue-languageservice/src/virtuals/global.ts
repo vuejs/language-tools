@@ -31,7 +31,8 @@ declare global {
 	type __VLS_GlobalAttrs = __VLS_Vue_HTMLAttributes & __VLS_Vue_VNodeProps & __VLS_Vue_AllowedComponentProps;
 	type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;
 	type __VLS_OmitGlobalAttrs<T> = { [K in keyof T]: Omit<T[K], keyof __VLS_GlobalAttrs> };
-	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]: { type: __VLS_Vue_PropType<T[K]>, required: true } };
+	type __VLS_RequiredType<T> = [Extract<T, undefined>] extends [never] ? true : false;
+	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: __VLS_Vue_PropType<T[K]>, required: __VLS_RequiredType<T[K]> } };
 	
 	/* Completion: Global Attrs */
 	({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};
