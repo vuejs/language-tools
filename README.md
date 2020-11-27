@@ -4,6 +4,8 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
+Roadmap: https://github.com/johnsoncodehk/volar/issues/28
+
 ## :warning: Warning!
 
 The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/182)) is planning to remove: https://github.com/johnsoncodehk/volar/issues/27
