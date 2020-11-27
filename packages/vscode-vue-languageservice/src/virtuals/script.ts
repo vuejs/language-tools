@@ -7,7 +7,7 @@ import { SearchTexts } from './common';
 import * as ts from 'typescript';
 import * as upath from 'upath';
 
-export let rfc: '#182' | '#222' = '#182';
+export let rfc: '#182' | '#222' = '#222';
 export function setScriptSetupRfc(_rfc: string) {
 	switch (_rfc) {
 		case '#182':
@@ -85,7 +85,7 @@ export function useScriptSetupGen(
 		}
 		code += `\n`;
 		code += `export const __VLS_options = {\n`;
-		code += `...(`
+		code += `...(`;
 		if (defaultExport.value) {
 			defaultExportRange = {
 				tag: defaultExport.value.tag,
@@ -96,7 +96,7 @@ export function useScriptSetupGen(
 		else {
 			code += `{}`;
 		}
-		code += `),\n`
+		code += `),\n`;
 		if (scriptSetupGenResult.value?.declaresNames.has('props')) {
 			code += `props: __VLS_declares_props,\n`;
 		}

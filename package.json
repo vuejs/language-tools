@@ -121,7 +121,7 @@
 				},
 				"volar.scriptSetup.supportRfc": {
 					"type": "string",
-					"default": "#182",
+					"default": "#222",
 					"enum": [
 						"#182",
 						"#222"
