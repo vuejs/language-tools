@@ -318,18 +318,19 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	}
 	function useDiagnostics() {
 
-		const all = [
-			useStylesValidation(),
-			useTemplateValidation(),
-			useTemplateScriptValidation(1),
-			useTemplateScriptValidation(2),
-			useTemplateScriptValidation(3),
-			useScriptValidation(virtualScriptGen.textDocument, 1),
-			useScriptValidation(virtualScriptGen.textDocument, 2),
-			useScriptValidation(virtualScriptGen.textDocument, 3),
+		const all: [Ref<Diagnostic[]>, Diagnostic[]][] = [
+			// sort by cost
+			[useStylesValidation(), []],
+			[useTemplateValidation(), []],
+			[useTemplateScriptValidation(2), []],
+			[useScriptValidation(virtualScriptGen.textDocument, 2), []],
+			[useTemplateScriptValidation(3), []],
+			[useScriptValidation(virtualScriptGen.textDocument, 3), []],
+			[useTemplateScriptValidation(1), []],
+			[useScriptValidation(virtualScriptGen.textDocument, 1), []],
 		];
 
-		return async (isCancel?: () => boolean) => {
+		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => boolean) => {
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 			let lastSleepAt = Date.now();
 
@@ -338,13 +339,11 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 					lastSleepAt = Date.now();
 					await sleep(10);
 				}
-				if (isCancel?.()) {
-					return;
-				}
-				diag.value; // update
+				if (isCancel?.()) return;
+				diag[1] = diag[0].value;
+				if (isCancel?.()) return;
+				response(all.map(diag => diag[1]).flat());
 			}
-
-			return all.map(diag => diag.value).flat();
 		}
 
 		function useTemplateValidation() {

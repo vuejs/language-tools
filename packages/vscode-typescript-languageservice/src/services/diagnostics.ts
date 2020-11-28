@@ -67,10 +67,10 @@ export function register(languageService: ts.LanguageService) {
 		}
 		function translateErrorType(input: ts.DiagnosticCategory): DiagnosticSeverity {
 			switch (input) {
-				case ts.DiagnosticCategory.Error: return DiagnosticSeverity.Error;
-				case ts.DiagnosticCategory.Message: return DiagnosticSeverity.Information;
-				case ts.DiagnosticCategory.Suggestion: return DiagnosticSeverity.Hint;
 				case ts.DiagnosticCategory.Warning: return DiagnosticSeverity.Warning;
+				case ts.DiagnosticCategory.Error: return DiagnosticSeverity.Error;
+				case ts.DiagnosticCategory.Suggestion: return DiagnosticSeverity.Hint;
+				case ts.DiagnosticCategory.Message: return DiagnosticSeverity.Information;
 			}
 		}
 	};
