@@ -1,15 +1,16 @@
 import {
 	Position,
-	TextDocument,
 	WorkspaceEdit,
 	Location,
 	TextEdit,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
 import {
+	tsLocationToVueLocations,
 	tsLocationToVueLocationsRaw,
 	findSourceFileByTsUri,
 } from '../utils/commons';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { SourceFile } from '../sourceFiles';
 import { hyphenate } from '@vue/shared';
 import { MapedNodeTypes, SourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
@@ -75,9 +76,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const vueEdit = margeWorkspaceEdits(vueEdits);
 			return deduplication(vueEdit);
 
-			function worker(doc: TextDocument, pos: Position, newName: string) {
+			function worker(doc: TextDocument, pos: Position, newName: string, direction = 0) {
 				let rename = tsLanguageService.doRename(doc, pos, newName);
-				if (!rename) return;
+				if (!rename) return rename;
 				for (const tsUri in rename.changes) {
 					const tsEdits = rename.changes[tsUri];
 					for (const tsEdit of tsEdits) {
@@ -93,22 +94,40 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === tsLoc.uri)
 							transfer(tsm.scriptSetupSourceMap);
 						function transfer(sourceMap: SourceMap) {
-							const leftRange = sourceMap.isSource(tsLoc.range)
-								? tsLoc.range
-								: sourceMap.targetToSource(tsLoc.range)?.range;
-							if (leftRange) {
-								const leftLoc = { uri: sourceMap.sourceDocument.uri, range: leftRange };
-								if (!hasLocation(leftLoc)) {
-									const rename2 = worker(sourceMap.sourceDocument, leftLoc.range.start, newName);
-									if (rename && rename2) {
-										rename = margeWorkspaceEdits([rename, rename2]);
+							if (direction === 0 || direction === 1) {
+								if (sourceMap.isSource(tsLoc.range)) {
+									const rightLocs = sourceMap.sourceToTargets(tsLoc.range);
+									for (const rightLoc of rightLocs) {
+										const definitions = tsLanguageService.findDefinition(sourceMap.targetDocument, rightLoc.range.start);
+										for (const definition of definitions) {
+											const vueLocs = tsLocationToVueLocations(definition, sourceFiles);
+											for (const vueLoc of vueLocs) {
+												const sourceFile = sourceFiles.get(vueLoc.uri);
+												if (!sourceFile) continue;
+												for (const sourceMap of sourceFile.getTsSourceMaps()) {
+													const tsLocs = sourceMap.sourceToTargets(vueLoc.range);
+													for (const tsLoc of tsLocs) {
+														if (!tsLoc.maped.data.capabilities.rename) continue;
+														const rename2 = worker(sourceMap.targetDocument, tsLoc.range.start, newName, 1);
+														if (rename && rename2) {
+															rename = margeWorkspaceEdits([rename, rename2]);
+															break;
+														}
+													}
+												}
+											}
+										}
+										if (definitions.length) {
+											break;
+										}
 									}
 								}
-								const rightLocs = sourceMap.sourceToTargets(leftRange);
-								for (const rightLoc of rightLocs) {
-									const rightLoc_2 = { uri: sourceMap.sourceDocument.uri, range: rightLoc.range };
-									if (!hasLocation(rightLoc_2)) {
-										const rename2 = worker(sourceMap.sourceDocument, rightLoc_2.range.start, newName);
+							}
+							if (direction === 0 || direction === -1) {
+								if (sourceMap.isTarget(tsLoc.range)) {
+									const leftLoc = sourceMap.targetToSource(tsLoc.range);
+									if (leftLoc) {
+										const rename2 = worker(sourceMap.targetDocument, leftLoc.range.start, newName, -1);
 										if (rename && rename2) {
 											rename = margeWorkspaceEdits([rename, rename2]);
 										}
