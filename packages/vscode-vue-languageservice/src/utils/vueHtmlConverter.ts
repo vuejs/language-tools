@@ -8,6 +8,7 @@ const capabilitiesSet = {
 	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true, semanticTokens: false },
 	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
+	propRaw: { basic: false, diagnostic: false, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
 	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
 
@@ -47,6 +48,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				writeElReferences(node); // <el ref="foo" />
 				writeProps(node, false);
 				writeProps(node, true);
+				writePropsLinkToOptions(node);
 				writeClassScopeds(node);
 				writeOns(node);
 				writeOptionReferences(node);
@@ -160,6 +162,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			}
 			function writeProps(node: ElementNode, forDuplicateClassOrStyleAttr: boolean) {
 				// +1 to remove '<' from html tag
+				_code += `// forDuplicateClassOrStyleAttr: ${forDuplicateClassOrStyleAttr}\n`;
 				const sourceRanges = [{
 					start: node.loc.start.offset + 1,
 					end: node.loc.start.offset + 1 + node.tag.length,
@@ -265,6 +268,27 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				}
 
 				_code += '};\n';
+			}
+			function writePropsLinkToOptions(node: ElementNode) {
+				for (const prop of node.props) {
+					const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
+					const propName2 = prop.name;
+					_code += `__VLS_components['NavDropdownLink'].__VLS_options.props[`;
+					mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.propRaw, [{
+						start: prop.loc.start.offset,
+						end: prop.loc.start.offset + propName2.length,
+					}]);
+					_code += `];\n`;
+
+					if (propName2 !== propName) {
+						_code += `__VLS_components['NavDropdownLink'].__VLS_options.props[`;
+						mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.propRaw, [{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + propName2.length,
+						}]);
+						_code += `];\n`;
+					}
+				}
 			}
 			function writeClassScopeds(node: ElementNode) {
 				for (const prop of node.props) {

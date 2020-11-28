@@ -67,8 +67,7 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 				result = result.concat(vueDefinitions);
 			}
 			else {
-				const references = tsLanguageService.findReferences(sourceMap.targetDocument, tsLoc.range.start);
-				for (const reference of references) {
+				for (const reference of definitions) {
 					const sourceFile_2 = findSourceFileByTsUri(sourceFiles, reference.uri);
 					const tsm = sourceFile_2?.getMirrorsSourceMaps();
 					if (tsm?.contextSourceMap?.sourceDocument.uri === reference.uri)
@@ -87,6 +86,9 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 								const definitions = worker(sourceMap.sourceDocument, rightLoc.range.start);
 								const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
 								result = result.concat(vueDefinitions);
+								if (definitions.length) {
+									break;
+								}
 							}
 						}
 					}
