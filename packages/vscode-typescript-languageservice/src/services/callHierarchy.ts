@@ -39,7 +39,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];
-		return items.map(item => fromProtocolCallHierchyOutgoingCall(item));
+		return items.map(item => fromProtocolCallHierchyOutgoingCall(item, document));
 	}
 
 	return {
@@ -81,7 +81,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	}
 
 	function fromProtocolCallHierchyIncomingCall(item: ts.CallHierarchyIncomingCall): vscode.CallHierarchyIncomingCall {
-		const document = getTextDocument(fsPathToUri(item.from.file))!; // TODO
+		const document = getTextDocument(fsPathToUri(item.from.file))!;
 		return {
 			from: fromProtocolCallHierarchyItem(item.from),
 			fromRanges: item.fromSpans.map(fromSpan => ({
@@ -91,8 +91,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		};
 	}
 
-	function fromProtocolCallHierchyOutgoingCall(item: ts.CallHierarchyOutgoingCall): vscode.CallHierarchyOutgoingCall {
-		const document = getTextDocument(fsPathToUri(item.to.file))!; // TODO
+	function fromProtocolCallHierchyOutgoingCall(item: ts.CallHierarchyOutgoingCall, document: TextDocument): vscode.CallHierarchyOutgoingCall {
 		return {
 			to: fromProtocolCallHierarchyItem(item.to),
 			fromRanges: item.fromSpans.map(fromSpan => ({

@@ -33,7 +33,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 
 		return duplicateLocations(vueItems);
-
 	}
 	function provideCallHierarchyIncomingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
