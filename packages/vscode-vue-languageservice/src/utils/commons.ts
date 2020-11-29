@@ -3,6 +3,8 @@ import {
 	Range,
 	TextDocument,
 	Location,
+	CallHierarchyIncomingCall,
+	CallHierarchyOutgoingCall,
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFiles';
 import type { TsMappingData } from '../utils/sourceMaps';
@@ -10,10 +12,28 @@ import type { TsMappingData } from '../utils/sourceMaps';
 export function notEmpty<T>(value: T): value is NonNullable<T> {
 	return value !== null && value !== undefined;
 }
-export function duplicateLocations(locations: Location[]): Location[] {
+export function duplicateLocations<T extends Location>(locations: T[]): T[] {
 	const temp: any = {};
 	for (const loc of locations)
 		temp[loc.uri + ':' + loc.range.start.line + ':' + loc.range.start.character + ':' + loc.range.end.line + ':' + loc.range.end.character] = loc;
+	return Object.values(temp);
+}
+export function duplicateCallHierarchyIncomingCall(locations: CallHierarchyIncomingCall[]): CallHierarchyIncomingCall[] {
+	const temp: any = {};
+	for (const loc of locations)
+		temp[loc.from.uri + ':' + loc.from.range.start.line + ':' + loc.from.range.start.character + ':' + loc.from.range.end.line + ':' + loc.from.range.end.character] = loc;
+	return Object.values(temp);
+}
+export function duplicateCallHierarchyOutgoingCall(locations: CallHierarchyOutgoingCall[]): CallHierarchyOutgoingCall[] {
+	const temp: any = {};
+	for (const loc of locations)
+		temp[loc.to.uri + ':' + loc.to.range.start.line + ':' + loc.to.range.start.character + ':' + loc.to.range.end.line + ':' + loc.to.range.end.character] = loc;
+	return Object.values(temp);
+}
+export function duplicateRanges<T extends Range>(ranges: T[]): T[] {
+	const temp: any = {};
+	for (const range of ranges)
+		temp[range.start.line + ':' + range.start.character + ':' + range.end.line + ':' + range.end.character] = range;
 	return Object.values(temp);
 }
 export function tsLocationToVueLocations(location: Location, sourceFiles: Map<string, SourceFile>): Location[] {

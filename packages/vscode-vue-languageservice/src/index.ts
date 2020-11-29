@@ -3,34 +3,35 @@ import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFiles';
 import { getGlobalDoc } from './virtuals/global';
 import { SearchTexts } from './virtuals/common';
-import { computed } from '@vue/reactivity';
+import { computed, pauseTracking, resetTracking, ref, effect } from '@vue/reactivity';
 import * as upath from 'upath';
 import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
-import * as doComplete from './services/completions';
-import * as doCompletionResolve from './services/completionResolve';
-import * as doAutoClose from './services/autoClose';
-import * as getEmbeddedDocument from './services/embeddedDocument';
-import * as doHover from './services/hover';
-import * as doValidation from './services/diagnostics';
-import * as doRangeFormatting from './services/rangeFormatting';
-import * as doFormatting from './services/formatting';
-import * as findDefinition from './services/definitions';
-import * as findReferences from './services/references';
-import * as findTypeDefinition from './services/typeDefinitions';
-import * as doRename from './services/rename';
-import * as findDocumentHighlights from './services/documentHighlight';
-import * as findDocumentSymbols from './services/documentSymbol';
-import * as findDocumentLinks from './services/documentLink';
-import * as findDocumentColors from './services/documentColor';
-import * as getSelectionRanges from './services/selectionRanges';
-import * as getSignatureHelp from './services/signatureHelp';
-import * as getColorPresentations from './services/colorPresentations';
-import * as getSemanticTokens from './services/semanticTokens';
-import * as getFoldingRanges from './services/foldingRanges';
-import * as getCodeLens from './services/codeLens';
-import * as doCodeLensResolve from './services/codeLensResolve';
-import * as doExecuteCommand from './services/executeCommand';
+import * as completions from './services/completions';
+import * as completionResolve from './services/completionResolve';
+import * as autoClose from './services/autoClose';
+import * as embeddedDocument from './services/embeddedDocument';
+import * as hover from './services/hover';
+import * as diagnostics from './services/diagnostics';
+import * as rangeFormatting from './services/rangeFormatting';
+import * as formatting from './services/formatting';
+import * as definitions from './services/definitions';
+import * as references from './services/references';
+import * as typeDefinitions from './services/typeDefinitions';
+import * as rename from './services/rename';
+import * as documentHighlight from './services/documentHighlight';
+import * as documentSymbol from './services/documentSymbol';
+import * as documentLink from './services/documentLink';
+import * as documentColor from './services/documentColor';
+import * as selectionRanges from './services/selectionRanges';
+import * as signatureHelp from './services/signatureHelp';
+import * as colorPresentations from './services/colorPresentations';
+import * as semanticTokens from './services/semanticTokens';
+import * as foldingRanges from './services/foldingRanges';
+import * as codeLens from './services/codeLens';
+import * as codeLensResolve from './services/codeLensResolve';
+import * as executeCommand from './services/executeCommand';
+import * as callHierarchy from './services/callHierarchy';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -40,13 +41,13 @@ export * from './commands';
 export { setScriptSetupRfc } from './virtuals/script';
 
 export function getSemanticTokensLegend() {
-	return getSemanticTokens.semanticTokenLegend;
+	return semanticTokens.semanticTokenLegend;
 }
 export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
-	let tsProjectVersion = 0;
+	let tsProjectVersion = ref(0);
 	let initTemplateScript = false; // html components completion require template data
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
@@ -57,43 +58,52 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const globalHtmlElements = computed(() => {
-		// TODO: watch tsProjectVersion
+		{ // watching
+			tsProjectVersion.value
+		}
 		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.HtmlElements)));
 	});
 	const globalAttrs = computed(() => {
-		// TODO: watch tsProjectVersion
+		{ // watching
+			tsProjectVersion.value
+		}
 		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.GlobalAttrs)));
 	});
+
+	const _callHierarchy = callHierarchy.register(sourceFiles, tsLanguageService);
 
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		getGlobalDoc: () => globalDoc,
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
-		doValidation: apiHook(doValidation.register(sourceFiles)),
-		doHover: apiHook(doHover.register(sourceFiles, tsLanguageService)),
-		doRangeFormatting: apiHook(doRangeFormatting.register(sourceFiles, tsLanguageService)),
-		doFormatting: apiHook(doFormatting.register(sourceFiles, tsLanguageService)),
-		findDefinition: apiHook(findDefinition.register(sourceFiles, tsLanguageService)),
-		findReferences: apiHook(findReferences.register(sourceFiles, tsLanguageService)),
-		findTypeDefinition: apiHook(findTypeDefinition.register(sourceFiles, tsLanguageService)),
-		doRename: apiHook(doRename.register(sourceFiles, tsLanguageService)),
-		getSemanticTokens: apiHook(getSemanticTokens.register(sourceFiles, tsLanguageService)),
-		doExecuteCommand: apiHook(doExecuteCommand.register(sourceFiles, tsLanguageService), false),
-		doComplete: apiHook(doComplete.register(sourceFiles, tsLanguageService), false),
-		doCompletionResolve: apiHook(doCompletionResolve.register(sourceFiles, tsLanguageService), false),
-		doAutoClose: apiHook(doAutoClose.register(sourceFiles), false),
-		getEmbeddedDocument: apiHook(getEmbeddedDocument.register(sourceFiles), false),
-		getSignatureHelp: apiHook(getSignatureHelp.register(sourceFiles, tsLanguageService), false),
-		getSelectionRanges: apiHook(getSelectionRanges.register(sourceFiles, tsLanguageService), false),
-		getColorPresentations: apiHook(getColorPresentations.register(sourceFiles), false),
-		getCodeLens: apiHook(getCodeLens.register(sourceFiles), false),
-		doCodeLensResolve: apiHook(doCodeLensResolve.register(sourceFiles, tsLanguageService), false),
-		findDocumentHighlights: apiHook(findDocumentHighlights.register(sourceFiles, tsLanguageService), false),
-		findDocumentSymbols: apiHook(findDocumentSymbols.register(sourceFiles, tsLanguageService), false),
-		findDocumentLinks: apiHook(findDocumentLinks.register(sourceFiles, vueHost), false),
-		findDocumentColors: apiHook(findDocumentColors.register(sourceFiles), false),
-		getFoldingRanges: apiHook(getFoldingRanges.register(sourceFiles, tsLanguageService), false),
+		doValidation: apiHook(diagnostics.register(sourceFiles)),
+		doHover: apiHook(hover.register(sourceFiles, tsLanguageService)),
+		doRangeFormatting: apiHook(rangeFormatting.register(sourceFiles, tsLanguageService)),
+		doFormatting: apiHook(formatting.register(sourceFiles, tsLanguageService)),
+		findDefinition: apiHook(definitions.register(sourceFiles, tsLanguageService)),
+		findReferences: apiHook(references.register(sourceFiles, tsLanguageService)),
+		findTypeDefinition: apiHook(typeDefinitions.register(sourceFiles, tsLanguageService)),
+		prepareCallHierarchy: apiHook(_callHierarchy.prepareCallHierarchy),
+		provideCallHierarchyIncomingCalls: apiHook(_callHierarchy.provideCallHierarchyIncomingCalls),
+		provideCallHierarchyOutgoingCalls: apiHook(_callHierarchy.provideCallHierarchyOutgoingCalls),
+		doRename: apiHook(rename.register(sourceFiles, tsLanguageService)),
+		getSemanticTokens: apiHook(semanticTokens.register(sourceFiles, tsLanguageService)),
+		doExecuteCommand: apiHook(executeCommand.register(sourceFiles, tsLanguageService), false),
+		doComplete: apiHook(completions.register(sourceFiles, tsLanguageService), false),
+		doCompletionResolve: apiHook(completionResolve.register(sourceFiles, tsLanguageService), false),
+		doAutoClose: apiHook(autoClose.register(sourceFiles), false),
+		getEmbeddedDocument: apiHook(embeddedDocument.register(sourceFiles), false),
+		getSignatureHelp: apiHook(signatureHelp.register(sourceFiles, tsLanguageService), false),
+		getSelectionRanges: apiHook(selectionRanges.register(sourceFiles, tsLanguageService), false),
+		getColorPresentations: apiHook(colorPresentations.register(sourceFiles), false),
+		getCodeLens: apiHook(codeLens.register(sourceFiles), false),
+		doCodeLensResolve: apiHook(codeLensResolve.register(sourceFiles, tsLanguageService), false),
+		findDocumentHighlights: apiHook(documentHighlight.register(sourceFiles, tsLanguageService), false),
+		findDocumentSymbols: apiHook(documentSymbol.register(sourceFiles, tsLanguageService), false),
+		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),
+		findDocumentColors: apiHook(documentColor.register(sourceFiles), false),
+		getFoldingRanges: apiHook(foldingRanges.register(sourceFiles, tsLanguageService), false),
 		dispose: tsLanguageService.dispose,
 	};
 
@@ -161,7 +171,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			}
 
 			if (tsFileChanged) {
-				tsProjectVersion++;
+				tsProjectVersion.value++;
 				updates.length = 0;
 				for (const fileName of oldFiles) {
 					if (newFiles.has(fileName)) {
@@ -183,7 +193,12 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
-			getProjectVersion: () => tsProjectVersion.toString(),
+			getProjectVersion: () => {
+				pauseTracking();
+				const version = tsProjectVersion.toString();
+				resetTracking();
+				return version;
+			},
 			getScriptFileNames,
 			getScriptVersion,
 			getScriptSnapshot,
@@ -309,7 +324,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			templateScriptUpdateUris.add(uri);
 		}
 		if (vueScriptsUpdated) {
-			tsProjectVersion++;
+			tsProjectVersion.value++;
 		}
 		if (shouldUpdateTemplateScript) {
 			for (const uri of templateScriptUpdateUris) {
@@ -322,7 +337,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			templateScriptUpdateUris.clear();
 		}
 		if (vueTemplageScriptUpdated) {
-			tsProjectVersion++;
+			tsProjectVersion.value++;
 		}
 	}
 	function unsetSourceFiles(uris: string[]) {
@@ -333,7 +348,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			}
 		}
 		if (count > 0) {
-			tsProjectVersion++;
+			tsProjectVersion.value++;
 		}
 	}
 }

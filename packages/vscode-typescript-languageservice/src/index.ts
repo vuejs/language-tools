@@ -13,8 +13,9 @@ import * as documentHighlight from './services/documentHighlight';
 import * as documentSymbol from './services/documentSymbol';
 import * as workspaceSymbols from './services/workspaceSymbols';
 import * as formatting from './services/formatting';
-import * as getSemanticTokens from './services/semanticTokens';
-import * as getFoldingRanges from './services/foldingRanges';
+import * as semanticTokens from './services/semanticTokens';
+import * as foldingRanges from './services/foldingRanges';
+import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 
@@ -45,8 +46,10 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 		getSignatureHelp: signatureHelp.register(languageService),
 		getSelectionRange: selectionRanges.register(languageService),
 		doValidation: diagnostics.register(languageService),
-		getFoldingRanges: getFoldingRanges.register(languageService),
-		getDocumentSemanticTokens: getSemanticTokens.register(languageService),
+		getFoldingRanges: foldingRanges.register(languageService),
+		getDocumentSemanticTokens: semanticTokens.register(languageService),
+		...callHierarchy.register(languageService, getTextDocument),
+
 		getTextDocument,
 		dispose,
 	};

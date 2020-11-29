@@ -22,6 +22,7 @@ import {
 	SignatureHelpRequest,
 	WorkspaceEdit,
 	CodeLensRequest,
+	CallHierarchyPrepareRequest,
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
@@ -226,6 +227,21 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.get(document.uri)?.findTypeDefinition(document, handler.position);
 	});
+	connection.languages.callHierarchy.onPrepare(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return [];
+		return host.get(document.uri)?.prepareCallHierarchy(document, handler.position) ?? [];
+	});
+	connection.languages.callHierarchy.onIncomingCalls(handler => {
+		const document = documents.get(handler.item.uri);
+		if (!document) return [];
+		return host.get(document.uri)?.provideCallHierarchyIncomingCalls(handler.item) ?? [];
+	});
+	connection.languages.callHierarchy.onOutgoingCalls(handler => {
+		const document = documents.get(handler.item.uri);
+		if (!document) return [];
+		return host.get(document.uri)?.provideCallHierarchyOutgoingCalls(handler.item) ?? [];
+	});
 }
 function onInitialized() {
 	if (hasConfigurationCapability) {
@@ -251,6 +267,7 @@ function onInitialized() {
 
 	connection.client.register(ReferencesRequest.type, both);
 	connection.client.register(DefinitionRequest.type, both);
+	connection.client.register(CallHierarchyPrepareRequest.type, both);
 	connection.client.register(TypeDefinitionRequest.type, both);
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(RenameRequest.type, vueOnly);
