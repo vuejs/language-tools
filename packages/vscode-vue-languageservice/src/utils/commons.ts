@@ -7,7 +7,7 @@ import {
 	CallHierarchyOutgoingCall,
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFiles';
-import type { TsMappingData } from '../utils/sourceMaps';
+import type { TsMappingData, TsSourceMap } from '../utils/sourceMaps';
 
 export function notEmpty<T>(value: T): value is NonNullable<T> {
 	return value !== null && value !== undefined;
@@ -36,10 +36,19 @@ export function duplicateRanges<T extends Range>(ranges: T[]): T[] {
 		temp[range.start.line + ':' + range.start.character + ':' + range.end.line + ':' + range.end.character] = range;
 	return Object.values(temp);
 }
-export function tsLocationToVueLocations(location: Location, sourceFiles: Map<string, SourceFile>): Location[] {
-	return tsLocationToVueLocationsRaw(location, sourceFiles).map(loc => loc[0]);
+export function tsLocationToVueLocations(location: Location, sourceFiles: Map<string, SourceFile>, globalTsSourceMaps?: Map<string, { sourceMap: TsSourceMap }>): Location[] {
+	return tsLocationToVueLocationsRaw(location, sourceFiles, globalTsSourceMaps).map(loc => loc[0]);
 }
-export function tsLocationToVueLocationsRaw(location: Location, sourceFiles: Map<string, SourceFile>): [Location, TsMappingData | undefined][] {
+export function tsLocationToVueLocationsRaw(location: Location, sourceFiles: Map<string, SourceFile>, globalTsSourceMaps?: Map<string, { sourceMap: TsSourceMap }>): [Location, TsMappingData | undefined][] {
+	// patch global components call
+	const globalTs = globalTsSourceMaps?.get(location.uri);
+	if (globalTs) {
+		const tsLoc2 = globalTs.sourceMap.targetToSource(location.range);
+		if (tsLoc2) {
+			location.range = tsLoc2.range;
+		}
+	}
+
 	const sourceFile = findSourceFileByTsUri(sourceFiles, location.uri);
 	if (!sourceFile)
 		return [[location, undefined]]; // not virtual ts script

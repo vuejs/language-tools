@@ -12,9 +12,9 @@ import {
 } from '../utils/commons';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as globalServices from '../globalServices';
-import { SourceMap } from '../utils/sourceMaps';
+import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService, getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>) {
 	return (document: TextDocument, position: Position) => {
 		const range = { start: position, end: position };
 
@@ -45,7 +45,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getTsResultWorker(tsDoc: TextDocument, tsRange: Range) {
 			const tsLocations: Location[] = [];
 			worker(tsDoc, tsRange.start);
-			return tsLocations.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles)).flat();
+			const globalTsSourceMaps = getGlobalTsSourceMaps?.();
+			return tsLocations.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles, globalTsSourceMaps)).flat();
 
 			function worker(doc: TextDocument, pos: Position) {
 				const references = tsLanguageService.findReferences(doc, pos);

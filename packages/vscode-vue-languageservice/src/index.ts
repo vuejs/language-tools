@@ -3,7 +3,8 @@ import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFiles';
 import { getGlobalDoc } from './virtuals/global';
 import { SearchTexts } from './virtuals/common';
-import { computed, pauseTracking, resetTracking, ref, effect } from '@vue/reactivity';
+import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
+import { MapedMode, MapedRange, Mapping, TsMappingData, TsSourceMap } from './utils/sourceMaps';
 import * as upath from 'upath';
 import * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -32,6 +33,7 @@ import * as codeLens from './services/codeLens';
 import * as codeLensResolve from './services/codeLensResolve';
 import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
+import { CompletionItem } from 'vscode-css-languageservice';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -57,18 +59,142 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost);
 
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
-	const globalHtmlElements = computed(() => {
+	const _globalHtmlElements = computed(() => {
 		{ // watching
 			tsProjectVersion.value
 		}
 		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.HtmlElements)));
 	});
-	const globalAttrs = computed(() => {
+	const _globalAttrs = computed(() => {
 		{ // watching
 			tsProjectVersion.value
 		}
 		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.GlobalAttrs)));
 	});
+	const globalComponentCalls = computed(() => {
+		{ // watching
+			tsProjectVersion.value
+		}
+		const items = tsLanguageService.prepareCallHierarchy(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.AppComponentCall)));
+		return items.map(tsLanguageService.provideCallHierarchyIncomingCalls).flat().filter(item => item.from.uri !== globalDoc.uri);
+	});
+	const globalComponentCallsData = computed(() => {
+
+		const calls = globalComponentCalls.value;
+		const result = new Map<string, (MapedRange & { text: string })[][]>();
+
+		for (const call of calls) {
+
+			const script = vueHost.getScriptSnapshot(uriToFsPath(call.from.uri));
+			if (!script) continue;
+
+			const docLength = script.getLength();
+			const doc = TextDocument.create(call.from.uri, 'typescript', 0, script.getText(0, docLength));
+			const rangeText = ' '.repeat(doc.offsetAt(call.from.range.start)) + doc.getText(call.from.range);
+			const rangeAst = ts.createSourceFile(uriToFsPath(call.from.uri), rangeText, ts.ScriptTarget.Latest);
+			const offsets = new Set(call.fromRanges.map(range => doc.offsetAt(range.start)));
+
+			if (!result.has(call.from.uri)) {
+				result.set(call.from.uri, []);
+			}
+			const callArgs = result.get(call.from.uri)!;
+
+			checkNode(rangeAst);
+
+			function checkNode(node: ts.Node) {
+				if (
+					ts.isCallExpression(node)
+					&& ts.isPropertyAccessExpression(node.expression)
+					&& offsets.has(node.expression.name.getStart(rangeAst)) // is app.component(...) call
+					&& node.arguments.length >= 2
+				) {
+					const args = node.arguments.map(arg => ({
+						text: arg.getText(rangeAst),
+						start: arg.getStart(rangeAst),
+						end: arg.getStart(rangeAst) + arg.getWidth(rangeAst),
+					}));
+					callArgs.push(args);
+				}
+				else {
+					node.forEachChild(child => {
+						checkNode(child);
+					});
+				}
+			}
+		}
+
+		return result;
+	});
+	const globalComponentCallsGen = computed(() => {
+		globalComponentCallsGenVersion = '';
+		const data = globalComponentCallsData.value;
+		const result = new Map<string, {
+			addText: string,
+			version: string,
+			sourceMap: TsSourceMap,
+		}>();
+		for (const [uri, argsArr] of data) {
+
+			const script = vueHost.getScriptSnapshot(uriToFsPath(uri));
+			if (!script) continue;
+
+			const docLength = script.getLength();
+			let addText = '\ndeclare global { interface __VLS_GlobalComponents {\n';
+
+			const mappings: Mapping<TsMappingData>[] = [];
+			for (const args of argsArr) {
+				mappingText(args[0].start, args[0].end, args[0].text);
+				addText += `: typeof ${args[1].text};\n`;
+			}
+
+			addText += `} }\n`;
+
+			const fullText = script.getText(0, docLength) + addText;
+			const doc = TextDocument.create(uri, 'typescript', 0, fullText);
+			const sourceMap = new TsSourceMap(doc, doc, false, { foldingRanges: false, formatting: false });
+			for (const maped of mappings) {
+				sourceMap.add(maped);
+			}
+
+			const fullVersion = ts.sys.createHash?.(fullText) ?? fullText;
+			globalComponentCallsGenVersion += uri + ':' + fullVersion;
+			result.set(uri, {
+				addText,
+				version: fullVersion,
+				sourceMap,
+			});
+
+			function mappingText(start: number, end: number, text: string) {
+				const _start = docLength + addText.length;
+				addText += text;
+				const _end = docLength + addText.length;
+				mappings.push({
+					data: {
+						vueTag: '',
+						capabilities: {
+							references: true,
+							// TODO: rename
+						},
+					},
+					mode: MapedMode.Offset,
+					sourceRange: {
+						start: start,
+						end: end,
+					},
+					targetRange: {
+						start: _start,
+						end: _end,
+					},
+				});
+			}
+		}
+
+		return result;
+	});
+	let _globalComponentCallsGen: typeof globalComponentCallsGen.value = new Map();
+	let globalComponentCallsGenVersion = '';
+	const globalHtmlElements = ref<CompletionItem[]>([]);
+	const globalAttrs = ref<CompletionItem[]>([]);
 
 	const _callHierarchy = callHierarchy.register(sourceFiles, tsLanguageService);
 
@@ -81,8 +207,8 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		doHover: apiHook(hover.register(sourceFiles, tsLanguageService)),
 		doRangeFormatting: apiHook(rangeFormatting.register(sourceFiles, tsLanguageService)),
 		doFormatting: apiHook(formatting.register(sourceFiles, tsLanguageService)),
-		findDefinition: apiHook(definitions.register(sourceFiles, tsLanguageService)),
-		findReferences: apiHook(references.register(sourceFiles, tsLanguageService)),
+		findDefinition: apiHook(definitions.register(sourceFiles, tsLanguageService, () => _globalComponentCallsGen)),
+		findReferences: apiHook(references.register(sourceFiles, tsLanguageService, () => _globalComponentCallsGen)),
 		findTypeDefinition: apiHook(typeDefinitions.register(sourceFiles, tsLanguageService)),
 		prepareCallHierarchy: apiHook(_callHierarchy.prepareCallHierarchy),
 		provideCallHierarchyIncomingCalls: apiHook(_callHierarchy.provideCallHierarchyIncomingCalls),
@@ -195,7 +321,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			...vueHost,
 			getProjectVersion: () => {
 				pauseTracking();
-				const version = tsProjectVersion.toString();
+				const version = tsProjectVersion.value.toString();
 				resetTracking();
 				return version;
 			},
@@ -242,16 +368,17 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		}
 		function getScriptVersion(fileName: string) {
 			const uri = fsPathToUri(fileName);
+			const addVersion = _globalComponentCallsGen.get(uri)?.version ?? '';
 			if (uri === globalDoc.uri) {
-				return globalDoc.version.toString();
+				return globalDoc.version.toString() + addVersion;
 			}
 			for (const [_, sourceFile] of sourceFiles) {
 				const doc = sourceFile.getTsDocuments().get(uri);
 				if (doc) {
-					return doc.version.toString();
+					return doc.version.toString() + addVersion;
 				}
 			}
-			return vueHost.getScriptVersion(fileName);
+			return vueHost.getScriptVersion(fileName) + addVersion;
 		}
 		function getScriptSnapshot(fileName: string) {
 			const version = getScriptVersion(fileName);
@@ -266,16 +393,24 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 				scriptSnapshots.set(fileName, [version, snapshot]);
 				return snapshot;
 			}
+			const addText = _globalComponentCallsGen.get(uri)?.addText ?? '';
 			for (const [_, sourceFile] of sourceFiles) {
 				const doc = sourceFile.getTsDocuments().get(uri);
 				if (doc) {
-					const text = doc.getText();
+					const text = doc.getText() + addText;
 					const snapshot = ts.ScriptSnapshot.fromString(text);
 					scriptSnapshots.set(fileName, [version, snapshot]);
 					return snapshot;
 				}
 			}
-			return vueHost.getScriptSnapshot(fileName);
+			let tsScript = vueHost.getScriptSnapshot(fileName);
+			if (tsScript) {
+				if (addText !== '') {
+					tsScript = ts.ScriptSnapshot.fromString(tsScript.getText(0, tsScript.getLength()) + addText);
+				}
+				scriptSnapshots.set(fileName, [version, tsScript]);
+				return tsScript;
+			}
 		}
 	}
 	function getTextDocument(uri: string): TextDocument | undefined {
@@ -327,6 +462,16 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			tsProjectVersion.value++;
 		}
 		if (shouldUpdateTemplateScript) {
+			// update global elements / attrs
+			globalHtmlElements.value = _globalHtmlElements.value;
+			globalAttrs.value = _globalAttrs.value;
+			// update global components
+			const _version = globalComponentCallsGenVersion;
+			_globalComponentCallsGen = globalComponentCallsGen.value;
+			if (_version !== globalComponentCallsGenVersion) {
+				tsProjectVersion.value++;
+			}
+
 			for (const uri of templateScriptUpdateUris) {
 				const sourceFile = sourceFiles.get(uri);
 				if (!sourceFile) continue;

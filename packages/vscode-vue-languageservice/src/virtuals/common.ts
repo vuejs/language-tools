@@ -8,4 +8,5 @@ export enum SearchTexts {
 	HtmlElements = '/* __VLS_.SearchTexts.HtmlElements */',
 	GlobalAttrs = '/* __VLS_.SearchTexts.GlobalAttrs */',
 	Ref = '/* __VLS_.SearchTexts.ref */',
+	AppComponentCall = '/* __VLS_.SearchTexts.AppComponentCall */'
 }

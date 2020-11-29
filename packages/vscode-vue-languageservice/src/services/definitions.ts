@@ -4,17 +4,17 @@ import {
 	Location,
 	Range,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
 import {
 	findSourceFileByTsUri,
 	tsLocationToVueLocations,
 	duplicateLocations,
 } from '../utils/commons';
+import { SourceFile } from '../sourceFiles';
+import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
-import { SourceMap } from '../utils/sourceMaps';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService, getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>) {
 	return (document: TextDocument, position: Position) => {
 
 		if (document.languageId !== 'vue') {
@@ -26,7 +26,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const tsResult = tsDefinitionWorker(sourceFile, position, sourceFiles, false, tsLanguageService);
+		const tsResult = tsDefinitionWorker(sourceFile, position, sourceFiles, tsLanguageService.findDefinition, getGlobalTsSourceMaps?.());
 		const cssResult = getCssResult(sourceFile);
 
 		const result = [...tsResult, ...cssResult];
@@ -51,18 +51,17 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	}
 }
 
-export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, sourceFiles: Map<string, SourceFile>, isTypeDefinition: boolean, tsLanguageService: ts2.LanguageService) {
+export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, sourceFiles: Map<string, SourceFile>, worker: (document: TextDocument, position: Position) => Location[], globalTsSourceMaps?: Map<string, { sourceMap: TsSourceMap }>) {
 	const range = {
 		start: position,
 		end: position,
 	};
 	let result: Location[] = [];
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
-		const worker = isTypeDefinition ? tsLanguageService.findTypeDefinition : tsLanguageService.findDefinition;
 		for (const tsLoc of sourceMap.sourceToTargets(range)) {
 			if (!tsLoc.maped.data.capabilities.references) continue;
 			const definitions = worker(sourceMap.targetDocument, tsLoc.range.start);
-			const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
+			const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles, globalTsSourceMaps)).flat();
 			if (vueDefinitions.length) {
 				result = result.concat(vueDefinitions);
 			}
@@ -84,7 +83,7 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 							const rightLocs = sourceMap.sourceToTargets(leftRange);
 							for (const rightLoc of rightLocs) {
 								const definitions = worker(sourceMap.sourceDocument, rightLoc.range.start);
-								const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles)).flat();
+								const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles, globalTsSourceMaps)).flat();
 								result = result.concat(vueDefinitions);
 								if (definitions.length) {
 									break;

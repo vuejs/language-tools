@@ -19,7 +19,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const tsResult = tsDefinitionWorker(sourceFile, position, sourceFiles, true, tsLanguageService);
+		const tsResult = tsDefinitionWorker(sourceFile, position, sourceFiles, tsLanguageService.findTypeDefinition);
 		return tsResult;
 	}
 }
