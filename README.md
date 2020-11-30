@@ -6,6 +6,10 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 Roadmap: https://github.com/johnsoncodehk/volar/issues/28
 
+## What is this?
+
+Volar is a fast implementation to try to create faster Vue Language Service to near to native TypeScript Language Service performance. (How? use Composition API!)
+
 ## :warning: Warning!
 
 The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/182)) is planning to remove: https://github.com/johnsoncodehk/volar/issues/27
