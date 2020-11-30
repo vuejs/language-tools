@@ -1,9 +1,10 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { syntaxToLanguageId, getValidScriptSyntax, notEmpty } from '@volar/shared';
+import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from './common';
+import { getCheapTsService } from '../globalServices';
 import * as ts from 'typescript';
 import * as upath from 'upath';
 
@@ -1163,11 +1164,11 @@ function getScriptSetupData(sourceCode: string) {
 			}
 		}
 	}
-	setFindReferencesSource(noLabelCode);
+	const cheapTs = getCheapTsService(noLabelCode);
 	for (const label of labels) {
 		for (const binary of label.binarys) {
 			for (const _var of binary.vars) {
-				const references = findReferences(_var.start);
+				const references = cheapTs.service.findReferences(cheapTs.scriptName, _var.start);
 				if (references) {
 					for (const reference of references) {
 						for (const reference_2 of reference.references) {
@@ -1471,22 +1472,4 @@ function getScriptData(sourceCode: string) {
 }
 function replaceStringToEmpty(str: string, start: number, end: number) {
 	return str.substring(0, start) + ' '.repeat(end - start) + str.substring(end);
-}
-
-let fakeVersion = 0;
-let fakeScript = ts.ScriptSnapshot.fromString('');
-const fakeLs = ts.createLanguageService({
-	getCompilationSettings: () => ({}),
-	getScriptFileNames: () => ['fake.ts'],
-	getScriptVersion: () => fakeVersion.toString(),
-	getScriptSnapshot: () => fakeScript,
-	getCurrentDirectory: () => '',
-	getDefaultLibFileName: () => '',
-});
-function setFindReferencesSource(code: string) {
-	fakeVersion++;
-	fakeScript = ts.ScriptSnapshot.fromString(code);
-}
-function findReferences(offset: number) {
-	return fakeLs.findReferences('fake.ts', offset);
 }

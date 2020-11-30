@@ -17,7 +17,7 @@ import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
 import { IDescriptor, ITemplateScriptData } from './types';
 import { SearchTexts } from './virtuals/common';
-import { useScriptSetupGen } from './virtuals/script';
+import { rfc, useScriptSetupGen } from './virtuals/script';
 import { useScriptSetupFormat } from './virtuals/scriptSetup.raw';
 import { useScriptMain } from './virtuals/main';
 import { useTemplateRaw } from './virtuals/template.raw';
@@ -98,23 +98,26 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 
 	// map / set
 	const tsSourceMaps = computed(() => {
-		return [
+		const result = [
 			virtualScriptGen.sourceMap.value,
-			virtualScriptSetupRaw.sourceMap.value,
 			virtualScriptMain.sourceMap.value,
 			virtualTemplateGen.sourceMap.value,
 		].filter(notEmpty);
+		if (rfc === '#182' && virtualScriptSetupRaw.sourceMap.value) {
+			result.push(virtualScriptSetupRaw.sourceMap.value);
+		}
+		return result;
 	});
 	const tsDocuments = computed(() => {
 		const docs = new Map<string, TextDocument>();
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
-		if (virtualScriptSetupRaw.textDocument.value)
-			docs.set(virtualScriptSetupRaw.textDocument.value.uri, virtualScriptSetupRaw.textDocument.value);
 		if (virtualScriptMain.textDocument.value)
 			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 		if (virtualTemplateGen.textDocument.value)
 			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
+		if (rfc === '#182' && virtualScriptSetupRaw.textDocument.value)
+			docs.set(virtualScriptSetupRaw.textDocument.value.uri, virtualScriptSetupRaw.textDocument.value);
 		return docs;
 	});
 
@@ -152,6 +155,10 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 			sourceMap: virtualScriptGen.sourceMap.value,
 		})),
 		getScriptSetupData: untrack(() => virtualScriptGen.genResult.value),
+		getScriptSetupRaw: untrack(() => ({
+			document: virtualScriptSetupRaw.textDocument.value,
+			sourceMap: virtualScriptSetupRaw.sourceMap.value,
+		})),
 	};
 
 	function update(newVueDocument: TextDocument) {

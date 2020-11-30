@@ -5,6 +5,8 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFile } from '../sourceFiles';
+import { getCheapTsService2 } from '../globalServices';
+import { rfc } from '../virtuals/script';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -180,6 +182,29 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 						range: vueLoc.range,
 					});
 				}
+			}
+		}
+		if (rfc === '#222') {
+			const scriptSetupRaw = sourceFile.getScriptSetupRaw();
+			if (scriptSetupRaw.sourceMap?.capabilities.formatting) {
+				const sourceMap = scriptSetupRaw.sourceMap;
+				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
+				const textEdits = cheapTs.service.doFormatting(cheapTs.doc, options);
+				/* copy from upside */
+				for (const textEdit of textEdits) {
+					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
+						if (!vueLoc.maped.data.capabilities.formatting) continue;
+						if (vueLoc.range.start.line < range.start.line) continue;
+						if (vueLoc.range.end.line > range.end.line) continue;
+						if (vueLoc.range.start.line === range.start.line && vueLoc.range.start.character < range.start.character) continue;
+						if (vueLoc.range.end.line === range.end.line && vueLoc.range.end.character > range.end.character) continue;
+						result.push({
+							newText: textEdit.newText,
+							range: vueLoc.range,
+						});
+					}
+				}
+				/* copy from upside */
 			}
 		}
 		return result;

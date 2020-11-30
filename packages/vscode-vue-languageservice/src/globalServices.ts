@@ -1,5 +1,8 @@
 import * as CSS from 'vscode-css-languageservice';
 import * as HTML from 'vscode-html-languageservice';
+import * as TS from 'typescript';
+import * as TS2 from '@volar/vscode-typescript-languageservice';
+import { TextDocument } from 'vscode-css-languageservice';
 
 export const html = HTML.getLanguageService();
 export const css = CSS.getCSSLanguageService();
@@ -13,4 +16,45 @@ export function getCssService(lang: string) {
         case 'less': return less;
         default: return css;
     }
+}
+
+// a cheap ts language service, only has one script
+let tsScriptVersion = 0;
+let tsScript = TS.ScriptSnapshot.fromString('');
+const tsService = TS.createLanguageService({
+    getCompilationSettings: () => ({}),
+    getScriptFileNames: () => ['fake.ts'],
+    getScriptVersion: () => tsScriptVersion.toString(),
+    getScriptSnapshot: () => tsScript,
+    getCurrentDirectory: () => '',
+    getDefaultLibFileName: () => '',
+});
+export function getCheapTsService(code: string) {
+    tsScriptVersion++;
+    tsScript = TS.ScriptSnapshot.fromString(code);
+    return {
+        service: tsService,
+        scriptName: 'fake.ts',
+    };
+}
+
+let tsScriptVersion2 = 0;
+let tsScript2 = TS.ScriptSnapshot.fromString('');
+let tsDoc2 = TextDocument.create('', '', 0, '');
+const tsService2 = TS2.createLanguageService({
+    getCompilationSettings: () => ({}),
+    getScriptFileNames: () => ['fake.ts'],
+    getScriptVersion: () => tsScriptVersion.toString(),
+    getScriptSnapshot: () => tsScript,
+    getCurrentDirectory: () => '',
+    getDefaultLibFileName: () => '',
+});
+export function getCheapTsService2(doc: TextDocument) {
+    tsScriptVersion2++;
+    tsScript2 = TS.ScriptSnapshot.fromString(doc.getText());
+    tsDoc2 = doc;
+    return {
+        service: tsService2,
+        doc: doc,
+    };
 }
