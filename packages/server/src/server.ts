@@ -230,7 +230,8 @@ function initLanguageService(rootPath: string) {
 	connection.languages.callHierarchy.onPrepare(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return [];
-		return host.all(document.uri).map(ls => ls.prepareCallHierarchy(document, handler.position)).flat();
+		const items = host.all(document.uri).map(ls => ls.prepareCallHierarchy(document, handler.position)).flat();
+		return items.length ? items : null;
 	});
 	connection.languages.callHierarchy.onIncomingCalls(handler => {
 		const { uri } = handler.item.data as { uri: string };
