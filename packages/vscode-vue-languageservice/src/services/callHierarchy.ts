@@ -37,7 +37,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			vueItem.data = {
 				uri: document.uri,
 				offset: document.offsetAt(position),
-				languageId: document.languageId,
 			};
 		}
 
@@ -129,7 +128,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 	}
 	function tsTsCallHierarchyItem(item: CallHierarchyItem) {
-		if ((item.data as { languageId: string }).languageId !== 'vue') {
+		if (upath.extname(item.uri) !== '.vue') {
 			return [item];
 		}
 
@@ -142,6 +141,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const tsSelectionLocs = sourceMap.sourceToTargets(item.selectionRange);
 				if (tsLocs.length) {
 					for (const tsLoc of tsLocs) {
+						if (!tsLoc.maped.data.capabilities.references) continue;
 						for (const tsSelectionLoc of tsSelectionLocs) {
 							tsItems.push({
 								...item,
@@ -153,16 +153,21 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					}
 				}
 				else {
-					for (const tsSelectionLoc of tsSelectionLocs) {
-						tsItems.push({
-							...item,
-							uri: sourceMap.targetDocument.uri,
-							range: {
-								start: sourceMap.targetDocument.positionAt(0),
-								end: sourceMap.targetDocument.positionAt(sourceMap.targetDocument.getText().length),
-							},
-							selectionRange: tsSelectionLoc.range,
-						});
+					for (const maped of sourceMap) {
+						if (maped.data.capabilities.references) {
+							for (const tsSelectionLoc of tsSelectionLocs) {
+								tsItems.push({
+									...item,
+									uri: sourceMap.targetDocument.uri,
+									range: {
+										start: sourceMap.targetDocument.positionAt(0),
+										end: sourceMap.targetDocument.positionAt(sourceMap.targetDocument.getText().length),
+									},
+									selectionRange: tsSelectionLoc.range,
+								});
+							}
+							break;
+						}
 					}
 				}
 			}

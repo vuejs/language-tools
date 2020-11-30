@@ -230,16 +230,16 @@ function initLanguageService(rootPath: string) {
 	connection.languages.callHierarchy.onPrepare(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return [];
-		const items = host.all(document.uri).map(ls => ls.prepareCallHierarchy(document, handler.position)).flat();
-		return items.length ? items : null;
+		const items = host.best(document.uri)?.prepareCallHierarchy(document, handler.position);
+		return items?.length ? items : null;
 	});
 	connection.languages.callHierarchy.onIncomingCalls(handler => {
 		const { uri } = handler.item.data as { uri: string };
-		return host.all(uri).map(ls => ls.provideCallHierarchyIncomingCalls(handler.item)).flat();
+		return host.best(uri)?.provideCallHierarchyIncomingCalls(handler.item) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(handler => {
 		const { uri } = handler.item.data as { uri: string };
-		return host.all(uri).map(ls => ls.provideCallHierarchyOutgoingCalls(handler.item)).flat();
+		return host.best(uri)?.provideCallHierarchyOutgoingCalls(handler.item) ?? [];
 	});
 }
 function onInitialized() {

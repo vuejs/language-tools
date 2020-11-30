@@ -576,7 +576,16 @@ function genScriptSetup(
 		});
 		genCode += `,\n`;
 	}
-	genCode += `async setup(${setupParams}${SearchTexts.SetupParams}) {\n`;
+	genCode += `async `;
+	addCode('setup', {
+		capabilities: {},
+		mode: MapedMode.Gate,
+		scriptSetupRange: {
+			start: 0,
+			end: 0,
+		},
+	});
+	genCode += `(${setupParams}${SearchTexts.SetupParams}) {\n`;
 
 	if (rfc === '#222') {
 		const labels = data.labels.sort((a, b) => a.start - b.start);
