@@ -37,6 +37,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			vueItem.data = {
 				uri: document.uri,
 				offset: document.offsetAt(position),
+				languageId: document.languageId,
 			};
 		}
 
@@ -115,7 +116,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const vueRanges = tsRanges.map(tsRange => sourceMap.targetToSource(tsRange)?.range).filter(notEmpty);
 				const vueItem: CallHierarchyItem = {
 					...tsItem,
-					name: upath.basename(sourceMap.sourceDocument.uri),
+					name: tsItem.name === upath.basename(sourceMap.targetDocument.uri) ? upath.basename(sourceMap.sourceDocument.uri) : tsItem.name,
 					uri: sourceMap.sourceDocument.uri,
 					range: vueRange,
 					selectionRange: vueSelectionLoc.range,
@@ -128,6 +129,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 	}
 	function tsTsCallHierarchyItem(item: CallHierarchyItem) {
+		if ((item.data as { languageId: string }).languageId !== 'vue') {
+			return [item];
+		}
+
 		const tsItems: CallHierarchyItem[] = [];
 
 		const sourceFile = sourceFiles.get(item.uri);
@@ -135,20 +140,32 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const tsLocs = sourceMap.sourceToTargets(item.range);
 				const tsSelectionLocs = sourceMap.sourceToTargets(item.selectionRange);
-				for (const tsLoc of tsLocs) {
+				if (tsLocs.length) {
+					for (const tsLoc of tsLocs) {
+						for (const tsSelectionLoc of tsSelectionLocs) {
+							tsItems.push({
+								...item,
+								uri: sourceMap.targetDocument.uri,
+								range: tsLoc.range,
+								selectionRange: tsSelectionLoc.range,
+							});
+						}
+					}
+				}
+				else {
 					for (const tsSelectionLoc of tsSelectionLocs) {
 						tsItems.push({
 							...item,
 							uri: sourceMap.targetDocument.uri,
-							range: tsLoc.range,
+							range: {
+								start: sourceMap.targetDocument.positionAt(0),
+								end: sourceMap.targetDocument.positionAt(sourceMap.targetDocument.getText().length),
+							},
 							selectionRange: tsSelectionLoc.range,
 						});
 					}
 				}
 			}
-		}
-		else {
-			tsItems.push(item);
 		}
 
 		return tsItems;
