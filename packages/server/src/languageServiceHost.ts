@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import * as upath from 'upath';
 import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
-import { uriToFsPath, fsPathToUri, sleep, SemanticTokensChangedNotification } from '@volar/shared';
+import { uriToFsPath, fsPathToUri, sleep, SemanticTokensChangedNotification, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection, Disposable } from 'vscode-languageserver/node';
 import type { TextDocuments } from 'vscode-languageserver/node';
@@ -45,13 +45,25 @@ export function createLanguageServiceHost(
 
 	return {
 		services: languageServices,
-		get,
+		best,
+		all,
 	};
 
-	function get(uri: string) {
+	function best(uri: string) {
+		const matches = _all(uri);
+		if (matches.first.length)
+			return languageServices.get(matches.first[0])?.languageService;
+		if (matches.second.length)
+			return languageServices.get(matches.second[0])?.languageService;
+	}
+	function all(uri: string) {
+		const matches = _all(uri);
+		return [...matches.first, ...matches.second].map(tsConfig => languageServices.get(tsConfig)?.languageService).filter(notEmpty);
+	}
+	function _all(uri: string) {
 		const fileName = uriToFsPath(uri);
-		const firstMatchTsConfigs: string[] = [];
-		const secondMatchTsConfigs: string[] = [];
+		let firstMatchTsConfigs: string[] = [];
+		let secondMatchTsConfigs: string[] = [];
 
 		for (const kvp of languageServices) {
 			const tsConfig = upath.resolve(kvp[0]);
@@ -67,17 +79,13 @@ export function createLanguageServiceHost(
 				}
 			}
 		}
-		let tsConfig = firstMatchTsConfigs
-			.sort((a, b) => b.split('/').length - a.split('/').length)
-			.shift()
-		if (!tsConfig) {
-			tsConfig = secondMatchTsConfigs
-				.sort((a, b) => b.split('/').length - a.split('/').length)
-				.shift()
-		}
-		if (tsConfig) {
-			return languageServices.get(tsConfig)?.languageService;
-		}
+		firstMatchTsConfigs = firstMatchTsConfigs.sort((a, b) => b.split('/').length - a.split('/').length)
+		secondMatchTsConfigs = secondMatchTsConfigs.sort((a, b) => b.split('/').length - a.split('/').length)
+
+		return {
+			first: firstMatchTsConfigs,
+			second: secondMatchTsConfigs,
+		};
 	}
 	function createLs(tsConfig: string) {
 		let projectCurrentReq = 0;
@@ -160,7 +168,7 @@ export function createLanguageServiceHost(
 			}
 		}
 		async function sendDiagnostics(document: TextDocument) {
-			const matchLs = get(document.uri);
+			const matchLs = best(document.uri);
 			if (matchLs !== vueLanguageService) return;
 
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;

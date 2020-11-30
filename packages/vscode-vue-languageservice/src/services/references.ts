@@ -25,7 +25,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 
 		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return;
+		if (!sourceFile) return [];
 
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);

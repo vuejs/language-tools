@@ -94,7 +94,7 @@ function initLanguageService(rootPath: string) {
 	connection.onRequest(SemanticTokensRequest.type, async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return await host.get(document.uri)?.getSemanticTokens(document, handler.range);
+		return await host.best(document.uri)?.getSemanticTokens(document, handler.range);
 	});
 	connection.onRequest(SemanticTokenLegendRequest.type, () => {
 		return getSemanticTokensLegend();
@@ -103,32 +103,32 @@ function initLanguageService(rootPath: string) {
 	connection.onDocumentColor(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findDocumentColors(document);
+		return host.best(document.uri)?.findDocumentColors(document);
 	});
 	connection.onColorPresentation(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.getColorPresentations(document, handler.color, handler.range);
+		return host.best(document.uri)?.getColorPresentations(document, handler.color, handler.range);
 	});
 	connection.onDocumentHighlight(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findDocumentHighlights(document, handler.position);
+		return host.best(document.uri)?.findDocumentHighlights(document, handler.position);
 	});
 	connection.onDocumentSymbol(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findDocumentSymbols(document);
+		return host.best(document.uri)?.findDocumentSymbols(document);
 	});
 	connection.onDocumentLinks(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findDocumentLinks(document);
+		return host.best(document.uri)?.findDocumentLinks(document);
 	});
 	connection.onFoldingRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.getFoldingRanges(document);
+		return host.best(document.uri)?.getFoldingRanges(document);
 	});
 }
 function onInitialized() {

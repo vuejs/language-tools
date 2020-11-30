@@ -10,6 +10,7 @@ import { SourceFile } from '../sourceFiles';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import { notEmpty } from '@volar/shared';
 import { duplicateLocations, duplicateCallHierarchyIncomingCall, duplicateCallHierarchyOutgoingCall } from '../utils/commons';
+import * as upath from 'upath';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	function prepareCallHierarchy(document: TextDocument, position: Position) {
@@ -30,6 +31,13 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					}
 				}
 			}
+		}
+
+		for (const vueItem of vueItems) {
+			vueItem.data = {
+				uri: document.uri,
+				offset: document.offsetAt(position),
+			};
 		}
 
 		return duplicateLocations(vueItems);
@@ -92,16 +100,24 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					continue;
 				}
 				isVirtual = true;
-				const vueLoc = sourceMap.targetToSource(tsItem.range);
+				let vueRange = sourceMap.targetToSource(tsItem.range)?.range;
+				if (!vueRange) {
+					// TODO: <script> range
+					vueRange = {
+						start: sourceMap.sourceDocument.positionAt(0),
+						end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
+					};
+				}
 				const vueSelectionLoc = sourceMap.targetToSource(tsItem.selectionRange);
-				if (!vueLoc || !vueSelectionLoc) {
+				if (!vueSelectionLoc) {
 					continue;
 				}
 				const vueRanges = tsRanges.map(tsRange => sourceMap.targetToSource(tsRange)?.range).filter(notEmpty);
 				const vueItem: CallHierarchyItem = {
 					...tsItem,
+					name: upath.basename(sourceMap.sourceDocument.uri),
 					uri: sourceMap.sourceDocument.uri,
-					range: vueLoc.range,
+					range: vueRange,
 					selectionRange: vueSelectionLoc.range,
 				}
 				return [vueItem, vueRanges];

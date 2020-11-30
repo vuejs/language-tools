@@ -101,12 +101,12 @@ function initLanguageService(rootPath: string) {
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host.get(document.uri)?.doAutoClose(document, handler.position);
+		return host.best(document.uri)?.doAutoClose(document, handler.position);
 	});
 	connection.onRequest(GetFormattingSourceMapsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		const sourceFile = host.get(document.uri)?.getSourceFile(document.uri);
+		const sourceFile = host.best(document.uri)?.getSourceFile(document.uri);
 		if (!sourceFile) return;
 		const result = {
 			templates: [...sourceFile.getHtmlSourceMaps().map(s => translateSourceMap(s, 'template')), ...sourceFile.getPugSourceMaps().map(s => translateSourceMap(s, 'template'))],
@@ -155,7 +155,7 @@ function initLanguageService(rootPath: string) {
 	connection.onCompletion(async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host.get(document.uri)?.doComplete(
+		return host.best(document.uri)?.doComplete(
 			document,
 			handler.position,
 			handler.context,
@@ -164,83 +164,81 @@ function initLanguageService(rootPath: string) {
 	});
 	connection.onCompletionResolve(async item => {
 		const uri = item.data?.uri;
-		return host.get(uri)?.doCompletionResolve(item) ?? item;
+		return host.best(uri)?.doCompletionResolve(item) ?? item;
 	});
 	connection.onHover(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.doHover(document, handler.position);
+		return host.best(document.uri)?.doHover(document, handler.position);
 	});
 	connection.onSignatureHelp(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.getSignatureHelp(document, handler.position);
+		return host.best(document.uri)?.getSignatureHelp(document, handler.position);
 	});
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.doFormatting(document, handler.options);
+		return host.best(document.uri)?.doFormatting(document, handler.options);
 	});
 	connection.onDocumentRangeFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.doRangeFormatting(document, handler.range, handler.options);
+		return host.best(document.uri)?.doRangeFormatting(document, handler.range, handler.options);
 	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.getSelectionRanges(document, handler.positions);
+		return host.best(document.uri)?.getSelectionRanges(document, handler.positions);
 	});
 	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.doRename(document, handler.position, handler.newName);
+		return host.best(document.uri)?.doRename(document, handler.position, handler.newName);
 	});
 	connection.onCodeLens(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.getCodeLens(document);
+		return host.best(document.uri)?.getCodeLens(document);
 	});
 	connection.onCodeLensResolve(codeLens => {
 		const uri = codeLens.data?.uri;
-		return host.get(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
+		return host.best(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
 		const document = documents.get(uri);
 		if (!document) return undefined;
-		return host.get(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
+		return host.best(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
 	});
 	// vue & ts
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findReferences(document, handler.position);
+		return host.all(document.uri).map(ls => ls.findReferences(document, handler.position)).flat();
 	});
 	connection.onDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findDefinition(document, handler.position);
+		return host.best(document.uri)?.findDefinition(document, handler.position);
 	});
 	connection.onTypeDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.get(document.uri)?.findTypeDefinition(document, handler.position);
+		return host.best(document.uri)?.findTypeDefinition(document, handler.position);
 	});
 	connection.languages.callHierarchy.onPrepare(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return [];
-		return host.get(document.uri)?.prepareCallHierarchy(document, handler.position) ?? [];
+		return host.all(document.uri).map(ls => ls.prepareCallHierarchy(document, handler.position)).flat();
 	});
 	connection.languages.callHierarchy.onIncomingCalls(handler => {
-		const document = documents.get(handler.item.uri);
-		if (!document) return [];
-		return host.get(document.uri)?.provideCallHierarchyIncomingCalls(handler.item) ?? [];
+		const { uri } = handler.item.data as { uri: string };
+		return host.all(uri).map(ls => ls.provideCallHierarchyIncomingCalls(handler.item)).flat();
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(handler => {
-		const document = documents.get(handler.item.uri);
-		if (!document) return [];
-		return host.get(document.uri)?.provideCallHierarchyOutgoingCalls(handler.item) ?? [];
+		const { uri } = handler.item.data as { uri: string };
+		return host.all(uri).map(ls => ls.provideCallHierarchyOutgoingCalls(handler.item)).flat();
 	});
 }
 function onInitialized() {
