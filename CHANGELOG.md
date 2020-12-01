@@ -1,21 +1,18 @@
-## 0.16.1 (2020-12-01)
+### 0.16.2
 
-### Bug Fixes
+- fix: `<script setup>` formatting wrongly replace `ref:` to `ref`
 
-- fix some Call Hierarchy failed cases
+### 0.16.1
 
-### Performance Improvements
+- fix: fix some Call Hierarchy failed cases
+- pref: faster typescript language service for new `<script setup>`
 
-- faster typescript language service for new `<script setup>`
 
+### 0.16.0
 
-## 0.16.0 (2020-11-30)
+- feat: [Call Hierarchy](https://code.visualstudio.com/updates/v1_33#_call-hierarchy) support
+- feat: auto declare `__VLS_GlobalComponents` by `app.component()` calls
 
-### Features
+### 0.15.x
 
-- [Call Hierarchy](https://code.visualstudio.com/updates/v1_33#_call-hierarchy) support
-- auto declare `__VLS_GlobalComponents` by `app.component()` calls
-
-## 0.15.x
-
-todo
+TODO
