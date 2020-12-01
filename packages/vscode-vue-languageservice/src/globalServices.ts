@@ -40,19 +40,17 @@ export function getCheapTsService(code: string) {
 
 let tsScriptVersion2 = 0;
 let tsScript2 = TS.ScriptSnapshot.fromString('');
-let tsDoc2 = TextDocument.create('', '', 0, '');
 const tsService2 = TS2.createLanguageService({
     getCompilationSettings: () => ({}),
     getScriptFileNames: () => ['fake.ts'],
-    getScriptVersion: () => tsScriptVersion.toString(),
-    getScriptSnapshot: () => tsScript,
+    getScriptVersion: () => tsScriptVersion2.toString(),
+    getScriptSnapshot: () => tsScript2,
     getCurrentDirectory: () => '',
     getDefaultLibFileName: () => '',
 });
 export function getCheapTsService2(doc: TextDocument) {
     tsScriptVersion2++;
     tsScript2 = TS.ScriptSnapshot.fromString(doc.getText());
-    tsDoc2 = doc;
     return {
         service: tsService2,
         doc: doc,
