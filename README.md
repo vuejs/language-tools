@@ -18,6 +18,7 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 
 ## Some interesting features:
 
+- [x] inline css services (v0.16.3 added)
 - [x] ref sugar convert tool (v0.15.6 added)
 - [x] CSS class codeLens (v0.15.4 added)
 - [x] RFC [#222](https://github.com/vuejs/rfcs/pull/222) ([#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) support (v0.15.2 added) (with `volar.scriptSetup.supportRfc` setting)
