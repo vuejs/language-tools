@@ -117,7 +117,7 @@ export function useTemplateScript(
 			cssScopedMappings,
 			componentMappings,
 			ctxMappings,
-			interpolationsMappings: interpolations.mappings,
+			interpolations,
 		};
 
 		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>) {
@@ -329,6 +329,8 @@ export function useTemplateScript(
 				return {
 					text: '',
 					mappings: [],
+					cssCode: '',
+					cssMappings: [],
 					tags: new Set<string>(),
 				};
 			}
@@ -395,7 +397,7 @@ export function useTemplateScript(
 					}
 				}
 			}
-			for (const maped of data.value.interpolationsMappings) {
+			for (const maped of data.value.interpolations.mappings) {
 				sourceMap.add({
 					data: maped.data,
 					mode: maped.mode,
@@ -410,6 +412,45 @@ export function useTemplateScript(
 			return sourceMap;
 		}
 	});
+	const cssTextDocument = computed(() => {
+		if (data.value) {
+			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, data.value.interpolations.cssCode);
+			const stylesheet = globalServices.css.parseStylesheet(textDocument);
+			return {
+				textDocument,
+				stylesheet,
+				links: [],
+				module: false,
+				scoped: false,
+			};
+		}
+	})
+	const cssSourceMap = computed(() => {
+		if (data.value && cssTextDocument.value && template.value) {
+			const vueDoc = getUnreactiveDoc();
+			const sourceMap = new CssSourceMap(
+				vueDoc,
+				cssTextDocument.value.textDocument,
+				cssTextDocument.value.stylesheet,
+				false,
+				false,
+				[],
+				{ foldingRanges: false, formatting: false },
+			);
+			for (const maped of data.value.interpolations.cssMappings) {
+				sourceMap.add({
+					data: undefined,
+					mode: maped.mode,
+					sourceRange: {
+						start: maped.sourceRange.start + template.value.loc.start,
+						end: maped.sourceRange.end + template.value.loc.start,
+					},
+					targetRange: maped.targetRange,
+				});
+			}
+			return sourceMap;
+		}
+	});
 	const textDocument = ref<TextDocument>();
 	const contextSourceMap = ref<SourceMap<{
 		isAdditionalReference: boolean;
@@ -421,6 +462,8 @@ export function useTemplateScript(
 		textDocument,
 		contextSourceMap,
 		componentSourceMap,
+		cssTextDocument,
+		cssSourceMap,
 		update, // TODO: cheapComputed
 	};
 

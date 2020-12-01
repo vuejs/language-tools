@@ -916,10 +916,13 @@
 		"vue-directives": {
 			"patterns": [
 				{
-					"include": "#vue-directives-original"
+					"include": "#vue-directives-scriptSetup"
 				},
 				{
-					"include": "#vue-directives-scriptSetup"
+					"include": "#vue-directives-style-attr"
+				},
+				{
+					"include": "#vue-directives-original"
 				}
 			]
 		},
@@ -994,7 +997,7 @@
 			]
 		},
 		"vue-directives-scriptSetup": {
-			"begin": "(?:\\b(setup))\\s*(=)",
+			"begin": "\\b(setup)\\s*(=)",
 			"captures": {
 				"1": {
 					"name": "entity.other.attribute-name.html"
@@ -1043,6 +1046,155 @@
 					"patterns": [
 						{
 							"include": "source.js"
+						}
+					]
+				}
+			]
+		},
+		"vue-directives-style-attr": {
+			"begin": "\\b(style)\\s*(=)",
+			"captures": {
+				"1": {
+					"name": "entity.other.attribute-name.html"
+				},
+				"2": {
+					"name": "punctuation.separator.key-value.html"
+				}
+			},
+			"end": "(?<='|\")",
+			"name": "meta.directive.vue",
+			"patterns": [
+				{
+					"begin": "\"",
+					"beginCaptures": [
+						{
+							"name": "punctuation.definition.string.begin.html"
+						}
+					],
+					"end": "\"",
+					"endCaptures": [
+						{
+							"name": "punctuation.definition.string.end.html"
+						}
+					],
+					"name": "css.embbeded.vue",
+					"patterns": [
+						{
+							"include": "source.css#comment-block"
+						},
+						{
+							"include": "source.css#escapes"
+						},
+						{
+							"include": "source.css#font-features"
+						},
+						{
+							"match": "(?x) (?<![\\w-])\n--\n(?:[-a-zA-Z_]    | [^\\x00-\\x7F])     # First letter\n(?:[-a-zA-Z0-9_] | [^\\x00-\\x7F]      # Remainder of identifier\n  |\\\\(?:[0-9a-fA-F]{1,6}|.)\n)*",
+							"name": "variable.css"
+						},
+						{
+							"begin": "(?<![-a-zA-Z])(?=[-a-zA-Z])",
+							"end": "$|(?![-a-zA-Z])",
+							"name": "meta.property-name.css",
+							"patterns": [
+								{
+									"include": "source.css#property-names"
+								}
+							]
+						},
+						{
+							"begin": "(:)\\s*",
+							"beginCaptures": {
+								"1": {
+									"name": "punctuation.separator.key-value.css"
+								}
+							},
+							"end": "\\s*(;)|\\s*(?=\")",
+							"endCaptures": {
+								"1": {
+									"name": "punctuation.terminator.rule.css"
+								}
+							},
+							"contentName": "meta.property-value.css",
+							"patterns": [
+								{
+									"include": "source.css#comment-block"
+								},
+								{
+									"include": "source.css#property-values"
+								}
+							]
+						},
+						{
+							"match": ";",
+							"name": "punctuation.terminator.rule.css"
+						}
+					]
+				},
+				{
+					"begin": "'",
+					"beginCaptures": [
+						{
+							"name": "punctuation.definition.string.begin.html"
+						}
+					],
+					"end": "'",
+					"endCaptures": [
+						{
+							"name": "punctuation.definition.string.end.html"
+						}
+					],
+					"name": "css.embbeded.vue",
+					"patterns": [
+						{
+							"include": "source.css#comment-block"
+						},
+						{
+							"include": "source.css#escapes"
+						},
+						{
+							"include": "source.css#font-features"
+						},
+						{
+							"match": "(?x) (?<![\\w-])\n--\n(?:[-a-zA-Z_]    | [^\\x00-\\x7F])     # First letter\n(?:[-a-zA-Z0-9_] | [^\\x00-\\x7F]      # Remainder of identifier\n  |\\\\(?:[0-9a-fA-F]{1,6}|.)\n)*",
+							"name": "variable.css"
+						},
+						{
+							"begin": "(?<![-a-zA-Z])(?=[-a-zA-Z])",
+							"end": "$|(?![-a-zA-Z])",
+							"name": "meta.property-name.css",
+							"patterns": [
+								{
+									"include": "source.css#property-names"
+								}
+							]
+						},
+						{
+							"begin": "(:)\\s*",
+							"beginCaptures": {
+								"1": {
+									"name": "punctuation.separator.key-value.css"
+								}
+							},
+							"end": "\\s*(;)|\\s*(?=')",
+							"endCaptures": {
+								"1": {
+									"name": "punctuation.terminator.rule.css"
+								}
+							},
+							"contentName": "meta.property-value.css",
+							"patterns": [
+								{
+									"include": "source.css#comment-block"
+								},
+								{
+									"include": "source.css#property-values"
+								}
+							]
+						},
+						{
+							"match": ";",
+							"name": "punctuation.terminator.rule.css"
 						}
 					]
 				}

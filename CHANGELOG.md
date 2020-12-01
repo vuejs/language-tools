@@ -1,3 +1,7 @@
+### 0.16.3
+
+- feat: inline css service within `<template>`
+
 ### 0.16.2
 
 - fix: `<script setup>` formatting wrongly replace `ref:` to `ref`

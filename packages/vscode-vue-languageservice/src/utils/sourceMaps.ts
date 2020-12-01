@@ -182,6 +182,10 @@ export class CssSourceMap extends SourceMap<undefined> {
 		public module: boolean,
 		public scoped: boolean,
 		public links: { textDocument: TextDocument, stylesheet: css.Stylesheet}[],
+		public capabilities: {
+			foldingRanges: boolean,
+			formatting: boolean,
+		},
 	) {
 		super(sourceDocument, targetDocument);
 	}

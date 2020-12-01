@@ -25,16 +25,18 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 
 	const pugEdits = getPugFormattingEdits();
 	const htmlEdits = getHtmlFormattingEdits();
-	const cssEdits = getCssFormattingEdits();
 	newDocument = applyTextEdits(document, filterEditsByRange([
 		...pugEdits,
 		...htmlEdits,
-		...cssEdits,
 	]));
 	sourceFile.update(newDocument);
 
 	const tsEdits = getTsFormattingEdits();
-	newDocument = applyTextEdits(newDocument, filterEditsByRange(tsEdits));
+	const cssEdits = getCssFormattingEdits();
+	newDocument = applyTextEdits(newDocument, filterEditsByRange([
+		...tsEdits,
+		...cssEdits,
+	]));
 	sourceFile.update(newDocument);
 
 	const indentTextEdits = patchInterpolationIndent();
@@ -100,6 +102,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 	function getCssFormattingEdits() {
 		const textEdits: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
+			if (!sourceMap.capabilities.formatting) continue;
 			for (const maped of sourceMap) {
 				const newStyleText = prettier.format(sourceMap.targetDocument.getText(), {
 					tabWidth: options.tabSize,

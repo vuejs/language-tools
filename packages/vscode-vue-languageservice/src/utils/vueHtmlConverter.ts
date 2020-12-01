@@ -14,9 +14,11 @@ const capabilitiesSet = {
 
 export function transformVueHtml(node: RootNode, pugMapper?: (code: string, htmlOffset: number) => number | undefined) {
 	const mappings: Mapping<TsMappingData>[] = [];
+	const cssMappings: Mapping<undefined>[] = [];
 	const tags = new Set<string>();
 	const slots = new Map<string, string>();
 	let elementIndex = 0;
+	let cssCode = '';
 	let text = worker('', node, []);
 
 	text += `export default {\n`
@@ -26,8 +28,10 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 	text += `};\n`
 
 	return {
-		mappings,
-		text,
+		mappings: mappings,
+		text: text,
+		cssMappings,
+		cssCode,
 		tags,
 	};
 
@@ -43,6 +47,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			_code += `{\n`;
 			{
 				tags.add(node.tag);
+				writeInlineCss(node);
 				writeImportSlots(node);
 				writeVshow(node);
 				writeElReferences(node); // <el ref="foo" />
@@ -59,6 +64,46 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			}
 			_code += '}\n';
 
+			function writeInlineCss(node: ElementNode) {
+				for (const prop of node.props) {
+					if (
+						prop.type === NodeTypes.DIRECTIVE
+						&& prop.name === 'bind'
+						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
+						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+						&& prop.arg.content === 'style'
+						&& prop.exp.isConstant
+					) {
+						const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]; // " | '
+						const start = prop.arg.loc.source.indexOf(endCrt) + 1;
+						const end = prop.arg.loc.source.lastIndexOf(endCrt);
+						const content = prop.arg.loc.source.substring(start, end);
+						const sourceRange = {
+							start: prop.arg.loc.start.offset + start,
+							end: prop.arg.loc.start.offset + end,
+						};
+						if (pugMapper) {
+							const newStart = pugMapper(content, sourceRange.start);
+							if (newStart === undefined) continue;
+							const offset = newStart - sourceRange.start;
+							sourceRange.start += offset;
+							sourceRange.end += offset;
+						}
+						cssCode += `${node.tag} { `;
+						cssMappings.push({
+							data: undefined,
+							mode: MapedMode.Offset,
+							sourceRange,
+							targetRange: {
+								start: cssCode.length,
+								end: cssCode.length + content.length,
+							},
+						});
+						cssCode += content;
+						cssCode += ` }\n`;
+					}
+				}
+			}
 			function writeImportSlots(node: ElementNode) {
 				for (const prop of node.props) {
 					if (

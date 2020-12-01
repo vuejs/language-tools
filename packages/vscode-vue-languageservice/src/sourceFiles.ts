@@ -82,16 +82,20 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	});
 
 	// virtual scripts
-	const virtualStyles = useStylesRaw(tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles));
+	const _virtualStyles = useStylesRaw(tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles));
 	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), pugData);
 	const virtualTemplateGen = useTemplateScript(
 		untrack(() => vueDoc.value),
 		computed(() => descriptor.template),
 		templateScriptData,
-		virtualStyles.textDocuments,
-		virtualStyles.sourceMaps,
+		_virtualStyles.textDocuments,
+		_virtualStyles.sourceMaps,
 		pugData,
 	);
+	const virtualStyles = {
+		textDocuments: computed(() => [virtualTemplateGen.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(notEmpty)),
+		sourceMaps: computed(() => [virtualTemplateGen.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
+	};
 	const virtualScriptGen = useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup));
 	const virtualScriptSetupRaw = useScriptSetupFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
 	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));

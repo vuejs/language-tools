@@ -39,6 +39,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getCssResult(sourceFile: SourceFile) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				if (!sourceMap.capabilities.foldingRanges) continue;
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
 				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.targetDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));

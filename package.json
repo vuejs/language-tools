@@ -53,7 +53,8 @@
 					"source.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
 					"source.directive.vue": "javascript",
-					"expression.embbeded.vue": "javascript"
+					"expression.embbeded.vue": "javascript",
+					"css.embbeded.vue": "css"
 				}
 			},
 			{

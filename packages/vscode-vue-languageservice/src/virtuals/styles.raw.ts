@@ -10,13 +10,13 @@ import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
 
 export function useStylesRaw(
-    tsLanguageService: ts2.LanguageService,
+	tsLanguageService: ts2.LanguageService,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
-        const vueDoc = getUnreactiveDoc();
+		const vueDoc = getUnreactiveDoc();
 		const compilerHost = ts.createCompilerHost(tsLanguageService.host.getCompilationSettings());
 		const documentContext = {
 			resolveReference: (ref: string, base: string) => {
@@ -98,7 +98,7 @@ export function useStylesRaw(
 		}
 	});
 	const sourceMaps = computed(() => {
-        const vueDoc = getUnreactiveDoc();
+		const vueDoc = getUnreactiveDoc();
 		const sourceMaps: CssSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
 			const style = styles.value[i];
@@ -116,6 +116,7 @@ export function useStylesRaw(
 				module,
 				scoped,
 				linkStyles,
+				{ foldingRanges: true, formatting: true },
 			);
 			sourceMap.add({
 				data: undefined,
