@@ -62,6 +62,31 @@ declare global {
 }
 ```
 
+v0.16.0 new feature:
+
+Now will detact Vue 3 global component registeres to declare `__VLS_GlobalComponents`.
+
+```typescript
+// my-global-components-plugin.ts
+import Foo from '@/my-global-components/foo.vue'
+import Bar from '@/my-global-components/bar.vue'
+
+export const plugin: Plugin = {
+    install(app) {
+        app.component('f-o-o', Foo);
+        app.component('BAR', Bar);
+    }
+}
+
+/* The following code will be automatically generated */
+declare global {
+	interface __VLS_GlobalComponents {
+		'f-o-o': typeof Foo
+		'BAR': typeof Bar
+	}
+}
+```
+
 ## v-slot Type-Checking
 
 v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
