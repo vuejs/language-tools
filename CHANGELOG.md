@@ -1,3 +1,11 @@
+### 0.16.4
+
+- fix: can't use export default with `<script>` when `<script setup>` exist
+- fix: auto import items should not show virtual files
+- fix: style attr services broke
+- fix: v-for elements types incorrect
+- refactor: sensitive semantic tokens update
+
 ### 0.16.3
 
 - feat: inline css service within `<template>`
