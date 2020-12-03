@@ -100,7 +100,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					result.items = result.items.concat(vueItems);
 				}
 			}
-			result.items = result.items.filter(result => !result.label.startsWith('__VLS_'));
+			result.items = result.items.filter(result => result.label.indexOf('__VLS_') === -1);
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {

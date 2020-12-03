@@ -12,7 +12,7 @@ export function useScriptSetupFormat(
 		if (scriptSetup.value) {
 			const vueDoc = getUnreactiveDoc();
 			const lang = getValidScriptSyntax(scriptSetup.value.lang);
-			const uri = `${vueDoc.uri}.scriptSetup.raw.${lang}`;
+			const uri = `${vueDoc.uri}.__VLS_scriptSetup.raw.${lang}`;
 			return TextDocument.create(uri, syntaxToLanguageId(lang), version++, scriptSetup.value.content + '\n\nexport {}');
 		}
 	});

@@ -22,9 +22,9 @@ export function useScriptMain(
 		const hasScriptSetupExports = rfc === '#182' && !!scriptSetup.value;
 		const content = [
 			`import { defineComponent } from '@vue/runtime-dom';`,
-			hasScript ? `import __VLS_componentRaw from './${upath.basename(vueDoc.uri)}.script';` : `// no script`,
-			hasScriptSetupExports ? `import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.scriptSetup.raw';` : `// no scriptSetup #182`,
-			hasScript ? `import { __VLS_options } from './${upath.basename(vueDoc.uri)}.script';` : `var __VLS_options = {};`,
+			hasScript ? `import __VLS_componentRaw from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
+			hasScriptSetupExports ? `import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.__VLS_scriptSetup.raw';` : `// no scriptSetup #182`,
+			hasScript ? `import { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `var __VLS_options = {};`,
 			...(hasScript
 				? [`const __VLS_componentReserve = defineComponent(__VLS_componentRaw);`,
 					`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;`,
@@ -41,9 +41,9 @@ export function useScriptMain(
 			``,
 			`declare const ${exportVarName}: typeof __VLS_component & {`,
 			`${optionsPropertyName}: typeof __VLS_options,`,
-			template.value ? `__VLS_slots: typeof import ('./${upath.basename(vueDoc.uri)}.template').default,` : `// no template`,
+			template.value ? `__VLS_slots: typeof import ('./${upath.basename(vueDoc.uri)}.__VLS_template').default,` : `// no template`,
 			`};`,
-			hasScript ? `export * from './${upath.basename(vueDoc.uri)}.script';` : `// no script`,
+			hasScript ? `export * from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
 			`export default ${exportVarName};`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', version++, content);

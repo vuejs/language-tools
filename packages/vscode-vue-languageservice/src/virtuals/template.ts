@@ -470,7 +470,7 @@ export function useTemplateScript(
 	function update() {
 		if (data.value?.text !== textDocument.value?.getText()) {
 			if (data.value) {
-				textDocument.value = TextDocument.create(vueUri + '.template.ts', 'typescript', version++, data.value.text);
+				textDocument.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', version++, data.value.text);
 				{
 					const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
 						textDocument.value,
