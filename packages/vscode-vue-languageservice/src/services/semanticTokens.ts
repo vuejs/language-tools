@@ -14,8 +14,6 @@ const tsLegend = ts2.getSemanticTokenLegend();
 const tokenTypesLegend = [
 	...tsLegend.types,
 	'componentTag',
-	'conditionalDirective',
-	'loopDirective',
 	'refLabel',
 	'refVariable',
 	'refVariableRaw',
@@ -134,15 +132,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(tokenOffset, tokenLength);
 						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
-						if (isConditionalToken(token, tokenText)) {
-							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('conditionalDirective') ?? -1, undefined]);
-						}
-						else if (isLoopToken(token, tokenText)) {
-							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('loopDirective') ?? -1, undefined]);
-						}
-						else if (isComponentToken(token, tokenText)) {
+						if (isComponentToken(token, tokenText)) {
 							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
 							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
 						}
@@ -172,15 +162,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const htmlOffset = scanner.getTokenOffset();
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(htmlOffset, tokenLength);
-						if (isConditionalToken(token, tokenText)) {
-							const vuePos = getTokenPosition(htmlOffset, tokenText);
-							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('conditionalDirective') ?? -1, undefined]);
-						}
-						else if (isLoopToken(token, tokenText)) {
-							const vuePos = getTokenPosition(htmlOffset, tokenText);
-							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('loopDirective') ?? -1, undefined]);
-						}
-						else if (isComponentToken(token, tokenText)) {
+						if (isComponentToken(token, tokenText)) {
 							const vuePos = getTokenPosition(htmlOffset, tokenText);
 							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
 						}
@@ -203,22 +185,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function isComponentToken(token: html.TokenType, tokenText: string) {
 			if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
 				if (components.has(tokenText)) {
-					return true;
-				}
-			}
-			return false;
-		}
-		function isLoopToken(token: html.TokenType, tokenText: string) {
-			if (token === html.TokenType.AttributeName) {
-				if (tokenText === 'v-for') {
-					return true;
-				}
-			}
-			return false;
-		}
-		function isConditionalToken(token: html.TokenType, tokenText: string) {
-			if (token === html.TokenType.AttributeName) {
-				if (['v-if', 'v-else-if', 'v-else'].includes(tokenText)) {
 					return true;
 				}
 			}

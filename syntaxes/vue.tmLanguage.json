@@ -919,6 +919,9 @@
 					"include": "#vue-directives-scriptSetup"
 				},
 				{
+					"include": "#vue-directives-control"
+				},
+				{
 					"include": "#vue-directives-style-attr"
 				},
 				{
@@ -991,6 +994,72 @@
 					"patterns": [
 						{
 							"include": "source.js"
+						}
+					]
+				}
+			]
+		},
+		"vue-directives-control": {
+			"begin": "(v-for)|(v-if|v-if-else|v-else)(?![\\w:-])",
+			"captures": {
+				"0": {
+					"name": "keyword.control.loop.vue"
+				},
+				"1": {
+					"name": "keyword.control.conditional.vue"
+				}
+			},
+			"end": "(?=\\s*+[^=\\s])",
+			"name": "meta.directive.vue",
+			"patterns": [
+				{
+					"begin": "=",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.separator.key-value.html"
+						}
+					},
+					"end": "(?<=[^\\s=])(?!\\s*=)|(?=/?>)",
+					"patterns": [
+						{
+							"begin": "\"",
+							"beginCaptures": [
+								{
+									"name": "punctuation.definition.string.begin.html"
+								}
+							],
+							"end": "\"",
+							"endCaptures": [
+								{
+									"name": "punctuation.definition.string.end.html"
+								}
+							],
+							"name": "source.directive.vue",
+							"patterns": [
+								{
+									"include": "source.js"
+								}
+							]
+						},
+						{
+							"begin": "'",
+							"beginCaptures": [
+								{
+									"name": "punctuation.definition.string.begin.html"
+								}
+							],
+							"end": "'",
+							"endCaptures": [
+								{
+									"name": "punctuation.definition.string.end.html"
+								}
+							],
+							"name": "source.directive.vue",
+							"patterns": [
+								{
+									"include": "source.js"
+								}
+							]
 						}
 					]
 				}
