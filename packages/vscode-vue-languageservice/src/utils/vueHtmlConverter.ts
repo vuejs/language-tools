@@ -53,7 +53,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				writeElReferences(node); // <el ref="foo" />
 				writeProps(node, false);
 				writeProps(node, true);
-				writePropsLinkToOptions(node);
 				writeClassScopeds(node);
 				writeOns(node);
 				writeOptionReferences(node);
@@ -239,7 +238,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						&& prop.arg
 						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-						&& !prop.exp?.isConstant // TODO: style='z-index: 2' will compile to {'z-index':'2'}
 					) {
 						if (forDuplicateClassOrStyleAttr) continue;
 
@@ -258,7 +256,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 								end: prop.arg.loc.end.offset,
 							}]);
 							_code += `: (`;
-							if (prop.exp) {
+							if (prop.exp && !prop.exp.isConstant) { // style='z-index: 2' will compile to {'z-index':'2'}
 								mapping(undefined, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
@@ -313,27 +311,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				}
 
 				_code += '};\n';
-			}
-			function writePropsLinkToOptions(node: ElementNode) {
-				for (const prop of node.props) {
-					const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-					const propName2 = prop.name;
-					_code += `__VLS_components['NavDropdownLink'].__VLS_options.props[`;
-					mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.propRaw, [{
-						start: prop.loc.start.offset,
-						end: prop.loc.start.offset + propName2.length,
-					}]);
-					_code += `];\n`;
-
-					if (propName2 !== propName) {
-						_code += `__VLS_components['NavDropdownLink'].__VLS_options.props[`;
-						mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.propRaw, [{
-							start: prop.loc.start.offset,
-							end: prop.loc.start.offset + propName2.length,
-						}]);
-						_code += `];\n`;
-					}
-				}
 			}
 			function writeClassScopeds(node: ElementNode) {
 				for (const prop of node.props) {
