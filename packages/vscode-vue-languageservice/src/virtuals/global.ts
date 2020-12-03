@@ -22,6 +22,8 @@ declare global {
 		> { }
 	declare var __VLS_for_key: string;
 	declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
+	declare function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
+	declare function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
 	type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };

@@ -603,7 +603,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						start: start_key,
 						end: start_key + key.content.length,
 					}]);
-					_code += ` = 0 as any;\n`;
+					_code += ` = __VLS_getVforKeyType(${sourceVarName});\n`;
 				}
 				if (index && index.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
@@ -612,7 +612,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						start: start_index,
 						end: start_index + index.content.length,
 					}]);
-					_code += ` = 0;\n`;
+					_code += ` = __VLS_getVforIndexType(${sourceVarName});\n`;
 				}
 				for (const childNode of node.children) {
 					_code = worker(_code, childNode, parents.concat(node));
