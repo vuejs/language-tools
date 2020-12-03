@@ -5,12 +5,9 @@
 
 import {
 	RequestType,
-	RequestType0,
 	NotificationType,
-	NotificationType0,
 	TextDocumentPositionParams,
 	TextDocumentIdentifier,
-	Range,
 	FormattingOptions,
 	Position,
 	Location,
@@ -56,21 +53,6 @@ export namespace WriteAllDebugFilesRequest {
 }
 export namespace EmmetConfigurationRequest {
 	export const type: RequestType<string, any, any> = new RequestType('volar.getEmmetConfiguration');
-}
-
-// semantic tokens
-export interface SemanticTokenParams {
-	textDocument: TextDocumentIdentifier;
-	range: Range;
-}
-export namespace SemanticTokensRequest {
-	export const type: RequestType<SemanticTokenParams, [number, number, number, number, number | undefined | null][], any> = new RequestType('vue.semanticTokens');
-}
-export namespace SemanticTokenLegendRequest {
-	export const type: RequestType0<{ types: string[]; modifiers: string[] }, any> = new RequestType0('vue.semanticTokenLegend');
-}
-export namespace SemanticTokensChangedNotification {
-	export const type: NotificationType0 = new NotificationType0('vue.semanticTokensChanged');
 }
 
 export namespace ShowReferencesNotification {

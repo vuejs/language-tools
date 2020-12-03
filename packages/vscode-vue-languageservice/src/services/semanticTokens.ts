@@ -1,4 +1,4 @@
-import type { Range } from 'vscode-languageserver/node';
+import { Range, SemanticTokensBuilder, SemanticTokensLegend } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFiles';
 import { MapedMode } from '../utils/sourceMaps';
@@ -20,19 +20,19 @@ const tokenTypesLegend = [
 ];
 const tokenTypes = new Map(tokenTypesLegend.map((t, i) => [t, i]));
 
-export const semanticTokenLegend = {
-	types: tokenTypesLegend,
-	modifiers: tsLegend.modifiers,
+export const semanticTokenLegend: SemanticTokensLegend = {
+	tokenTypes: tokenTypesLegend,
+	tokenModifiers: tsLegend.modifiers,
 };
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	return async (document: TextDocument, range: Range) => {
+	return async (document: TextDocument, range?: Range) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const offsetRange = {
+		const offsetRange = range ? {
 			start: document.offsetAt(range.start),
 			end: document.offsetAt(range.end),
-		};
+		} : undefined;
 		const templateScriptData = sourceFile.getTemplateScriptData();
 		const components = new Set([
 			...templateScriptData.components,
@@ -57,12 +57,18 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		// 	return true;
 		// });
 
-		return [
+		const tokens = [
 			...htmlResult,
 			...pugResult,
 			...scriptSetupResult,
 			// ...tsResult,
 		];
+		const builder = new SemanticTokensBuilder();
+		for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
+			builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+		}
+
+		return builder.build();
 
 		function getScriptSetupResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
@@ -93,9 +99,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (!maped.data.capabilities.semanticTokens)
 						continue;
-					if (maped.sourceRange.end < offsetRange.start)
+					if (offsetRange && maped.sourceRange.end < offsetRange.start)
 						continue;
-					if (maped.sourceRange.start > offsetRange.end)
+					if (offsetRange && maped.sourceRange.start > offsetRange.end)
 						continue;
 					const tsRange = {
 						start: sourceMap.targetDocument.positionAt(maped.targetRange.start),
@@ -120,9 +126,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
-					if (maped.sourceRange.end < offsetRange.start)
+					if (offsetRange && maped.sourceRange.end < offsetRange.start)
 						continue;
-					if (maped.sourceRange.start > offsetRange.end)
+					if (offsetRange && maped.sourceRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.targetDocument.getText();
 					const scanner = globalServices.html.createScanner(docText, maped.targetRange.start);
@@ -151,9 +157,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
-					if (maped.sourceRange.end < offsetRange.start)
+					if (offsetRange && maped.sourceRange.end < offsetRange.start)
 						continue;
-					if (maped.sourceRange.start > offsetRange.end)
+					if (offsetRange && maped.sourceRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.html;
 					const scanner = globalServices.html.createScanner(docText, 0);

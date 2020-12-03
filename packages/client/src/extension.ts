@@ -7,7 +7,6 @@ import * as path from 'upath';
 import * as vscode from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { registerDocumentFormattingEditProvider } from './format';
-import { registerDocumentSemanticTokensProvider } from './semanticTokens';
 import { registerEmmetConfigurationProvider } from './emmetConfig';
 import {
 	LanguageClient,
@@ -86,7 +85,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	startEmbeddedLanguageServices();
 	registerDocumentFormattingEditProvider(apiClient);
 	registerEmmetConfigurationProvider(apiClient);
-	registerDocumentSemanticTokensProvider(docClient);
 	(async () => {
 		await apiClient.onReady();
 		apiClient.onNotification(ShowReferencesNotification.type, handler => {

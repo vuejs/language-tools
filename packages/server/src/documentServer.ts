@@ -19,12 +19,10 @@ import {
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getSemanticTokensLegend, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
+import { setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import {
 	uriToFsPath,
 	VerifyAllScriptsRequest,
-	SemanticTokensRequest,
-	SemanticTokenLegendRequest,
 	WriteAllDebugFilesRequest,
 } from '@volar/shared';
 import * as upath from 'upath';
@@ -36,6 +34,10 @@ connection.onInitialized(onInitialized);
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 connection.listen();
+
+const vueOnly: TextDocumentRegistrationOptions = {
+	documentSelector: [{ language: 'vue' }],
+};
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
@@ -50,7 +52,7 @@ function onInitialize(params: InitializeParams) {
 	return result;
 }
 function initLanguageService(rootPath: string) {
-	const host = createLanguageServiceHost(connection, documents, rootPath, true, true);
+	const host = createLanguageServiceHost(connection, documents, rootPath, true);
 
 	connection.onRequest(WriteAllDebugFilesRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
@@ -91,14 +93,6 @@ function initLanguageService(rootPath: string) {
 		}
 		progress.done();
 	});
-	connection.onRequest(SemanticTokensRequest.type, async handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return await host.best(document.uri)?.getSemanticTokens(document, handler.range);
-	});
-	connection.onRequest(SemanticTokenLegendRequest.type, () => {
-		return getSemanticTokensLegend();
-	});
 
 	connection.onDocumentColor(handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -131,11 +125,7 @@ function initLanguageService(rootPath: string) {
 		return host.best(document.uri)?.getFoldingRanges(document);
 	});
 }
-function onInitialized() {
-	const vueOnly: TextDocumentRegistrationOptions = {
-		documentSelector: [{ language: 'vue' }],
-	};
-
+async function onInitialized() {
 	connection.client.register(DocumentHighlightRequest.type, vueOnly);
 	connection.client.register(DocumentSymbolRequest.type, vueOnly);
 	connection.client.register(DocumentLinkRequest.type, vueOnly);
