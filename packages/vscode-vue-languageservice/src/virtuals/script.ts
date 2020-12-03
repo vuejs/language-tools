@@ -79,7 +79,12 @@ export function useScriptSetupGen(
 		} | undefined;
 
 		if (script.value) {
-			scriptRange = addCode(script.value.content);
+			if (scriptSetup.value && scriptData.value?.exportDefault) {
+				scriptRange = addCode(replaceStringToEmpty(script.value.content, scriptData.value.exportDefault.start, scriptData.value.exportDefault.end));
+			}
+			else {
+				scriptRange = addCode(script.value.content);
+			}
 		}
 		if (scriptSetupGenResult.value) {
 			scriptSetupRange = addCode(scriptSetupGenResult.value.code);
