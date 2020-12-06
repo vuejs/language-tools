@@ -62,7 +62,7 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-				const document = TextDocument.create(uri, 'typescript', version, scriptText);
+				const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', version, scriptText);
 				documents.set(uri, document);
 			}
 		}
