@@ -72,12 +72,6 @@
 					"componentTag": [
 						"support.class.component.vue"
 					],
-					"conditionalDirective": [
-						"keyword.control.conditional.vue"
-					],
-					"loopDirective": [
-						"keyword.control.loop.vue"
-					],
 					"refLabel": [
 						"storage.type.vue"
 					],
