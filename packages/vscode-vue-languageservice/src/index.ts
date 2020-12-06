@@ -200,7 +200,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
-		getTsHost: () => tsLanguageServiceHost,
+		getTsService: () => tsLanguageService,
 		getGlobalDoc: () => globalDoc,
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),

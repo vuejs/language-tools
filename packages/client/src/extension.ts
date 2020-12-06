@@ -29,8 +29,8 @@ let apiClient: LanguageClient;
 let docClient: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'server.js'), 'Volar - Basic', 6009);
-	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
+	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009);
+	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010);
 
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {

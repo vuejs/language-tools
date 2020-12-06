@@ -30,6 +30,7 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 
 	return {
 		host,
+		raw: languageService,
 
 		findDefinition: definitions.register(languageService, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getTextDocument),
