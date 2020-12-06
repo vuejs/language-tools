@@ -13,8 +13,6 @@ export function useScriptMain(
 	template: Ref<IDescriptor['template']>,
 ) {
 	let version = 0;
-	const optionsPropertyName = '__VLS_options';
-	const exportVarName = '__VLS_exportData';
 	const textDocument = computed(() => {
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
@@ -39,12 +37,11 @@ export function useScriptMain(
 			`__VLS_options.props.${SearchTexts.Props};`,
 			hasScriptSetupExports ? `__VLS_Setup.${SearchTexts.ScriptSetupExports};` : `// no scriptSetup #182`,
 			``,
-			`declare const ${exportVarName}: typeof __VLS_component & {`,
-			`${optionsPropertyName}: typeof __VLS_options,`,
+			`export default {} as typeof __VLS_component & {`,
+			`__VLS_options: typeof __VLS_options,`,
 			template.value ? `__VLS_slots: typeof import ('./${upath.basename(vueDoc.uri)}.__VLS_template').default,` : `// no template`,
 			`};`,
 			hasScript ? `export * from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
-			`export default ${exportVarName};`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', version++, content);
 	});
@@ -52,47 +49,22 @@ export function useScriptMain(
 		if (textDocument.value) {
 			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
-			const rangesToSourceFullScript = [{
-				start: 0,
-				end: docText.length,
-			}];
-			const optionsPropertyOffset = docText.indexOf(optionsPropertyName);
-			if (optionsPropertyOffset >= 0) {
-				rangesToSourceFullScript.push({
-					start: optionsPropertyOffset,
-					end: optionsPropertyOffset + optionsPropertyName.length,
-				});
-			}
-			const exportVarOffset = docText.indexOf(exportVarName);
-			if (exportVarOffset >= 0) {
-				rangesToSourceFullScript.push({
-					start: exportVarOffset,
-					end: exportVarOffset + exportVarName.length,
-				});
-			}
 			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false });
-			for (const range of rangesToSourceFullScript) {
-				sourceMap.add({
-					data: {
-						vueTag: '',
-						capabilities: {
-							basic: false,
-							references: false,
-							rename: false,
-							diagnostic: false,
-							formatting: false,
-							completion: false,
-							semanticTokens: false,
-						},
-					},
-					mode: MapedMode.Gate,
-					sourceRange: {
-						start: (scriptSetup.value ?? script.value)?.loc.start ?? 0,
-						end: (scriptSetup.value ?? script.value)?.loc.end ?? 0,
-					},
-					targetRange: range,
-				});
-			}
+			sourceMap.add({
+				data: {
+					vueTag: '',
+					capabilities: {},
+				},
+				mode: MapedMode.In,
+				sourceRange: {
+					start: (scriptSetup.value ?? script.value)?.loc.start ?? 0,
+					end: (scriptSetup.value ?? script.value)?.loc.end ?? 0,
+				},
+				targetRange: {
+					start: 0,
+					end: docText.length,
+				},
+			});
 			return sourceMap;
 		}
 	});

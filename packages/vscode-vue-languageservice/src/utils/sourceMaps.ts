@@ -11,6 +11,7 @@ export interface MapedRange {
 export enum MapedMode {
 	Offset,
 	Gate,
+	In,
 }
 
 export interface Mapping<T = undefined> {
@@ -101,6 +102,19 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 					if (returnFirstResult) return result;
 				}
 			}
+			else if (maped.mode === MapedMode.In) {
+				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					const toRange = Range.create(
+						toDoc.positionAt(mapedToRange.start),
+						toDoc.positionAt(mapedToRange.end),
+					);
+					result.push({
+						maped,
+						range: toRange,
+					});
+					if (returnFirstResult) return result;
+				}
+			}
 		}
 		return result;
 	}
@@ -129,6 +143,15 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 							start: mapedToRange.start + fromRange.start - mapedFromRange.start,
 							end: mapedToRange.end + fromRange.end - mapedFromRange.end,
 						},
+					});
+					if (returnFirstResult) return result;
+				}
+			}
+			else if (maped.mode === MapedMode.In) {
+				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					result.push({
+						maped,
+						range: mapedToRange,
 					});
 					if (returnFirstResult) return result;
 				}
