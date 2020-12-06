@@ -48,13 +48,16 @@ export namespace VerifyAllScriptsRequest {
 export namespace FormatAllScriptsRequest {
 	export const type: RequestType<FormattingOptions, undefined, any> = new RequestType('volar.action.formatAllScripts');
 }
-export namespace WriteAllDebugFilesRequest {
-	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.writeAllDebugFiles');
+export namespace WriteVirtualFilesRequest {
+	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.writeVirtualFiles');
 }
 export namespace EmmetConfigurationRequest {
 	export const type: RequestType<string, any, any> = new RequestType('volar.getEmmetConfiguration');
 }
 
+export namespace RestartServerNotification {
+	export const type: NotificationType<undefined> = new NotificationType('volar.action.restartServer');
+}
 export namespace ShowReferencesNotification {
 	export const type: NotificationType<{ uri: DocumentUri, position: Position, references: Location[] }> = new NotificationType('vue.findReferences');
 }

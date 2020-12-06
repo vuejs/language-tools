@@ -1,3 +1,8 @@
+### 0.16.5
+
+- feat: restart server command
+- fix: auto import not working for .vue files
+
 ### 0.16.4
 
 - fix: can't use export default with `<script>` when `<script setup>` exist

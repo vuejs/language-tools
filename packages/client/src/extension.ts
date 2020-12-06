@@ -20,7 +20,8 @@ import {
 	TagCloseRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
-	WriteAllDebugFilesRequest,
+	WriteVirtualFilesRequest,
+	RestartServerNotification,
 	ShowReferencesNotification,
 } from '@volar/shared';
 
@@ -32,11 +33,15 @@ export async function activate(context: vscode.ExtensionContext) {
 	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'documentServer.js'), 'Volar - Document', 6010);
 
 	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {
+		apiClient.sendNotification(RestartServerNotification.type, undefined);
+		docClient.sendNotification(RestartServerNotification.type, undefined);
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
 		docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeAllDebugFiles', () => {
-		docClient.sendRequest(WriteAllDebugFilesRequest.type, undefined);
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeVirtualFiles', () => {
+		docClient.sendRequest(WriteVirtualFilesRequest.type, undefined);
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.formatAllScripts', async () => {
 		const useTabsOptions = new Map<boolean, string>();

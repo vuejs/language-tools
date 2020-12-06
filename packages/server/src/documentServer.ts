@@ -23,7 +23,8 @@ import { setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import {
 	uriToFsPath,
 	VerifyAllScriptsRequest,
-	WriteAllDebugFilesRequest,
+	WriteVirtualFilesRequest,
+	RestartServerNotification,
 } from '@volar/shared';
 import * as upath from 'upath';
 import * as fs from 'fs-extra';
@@ -54,7 +55,10 @@ function onInitialize(params: InitializeParams) {
 function initLanguageService(rootPath: string) {
 	const host = createLanguageServiceHost(connection, documents, rootPath, true);
 
-	connection.onRequest(WriteAllDebugFilesRequest.type, async () => {
+	connection.onNotification(RestartServerNotification.type, async () => {
+		host.restart();
+	});
+	connection.onRequest(WriteVirtualFilesRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Write', 0, '', true);
 		for (const [uri, service] of host.services) {

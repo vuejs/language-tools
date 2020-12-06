@@ -47,8 +47,20 @@ export function createLanguageServiceHost(
 		services: languageServices,
 		best,
 		all,
+		restart,
 	};
 
+	function restart() {
+		for (const [tsConfig, service] of languageServices) {
+			for (const doc of documents.all()) {
+				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] })
+			}
+			service.dispose();
+			const newLs = createLs(tsConfig);
+			languageServices.set(tsConfig, newLs);
+			newLs.onProjectFilesUpdate([]);
+		}
+	}
 	function best(uri: string) {
 		const matches = _all(uri);
 		if (matches.first.length)
@@ -126,6 +138,7 @@ export function createLanguageServiceHost(
 			languageService: vueLanguageService,
 			getParsedCommandLine: () => parsedCommandLine,
 			dispose: dispose,
+			onProjectFilesUpdate,
 		};
 
 		function createParsedCommandLine() {

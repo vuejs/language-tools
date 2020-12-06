@@ -36,6 +36,7 @@ import {
 	GetFormattingSourceMapsRequest,
 	uriToFsPath,
 	EmmetConfigurationRequest,
+	RestartServerNotification,
 } from '@volar/shared';
 import * as upath from 'upath';
 
@@ -122,6 +123,9 @@ function initLanguageService(rootPath: string) {
 	});
 
 	// custom requests
+	connection.onNotification(RestartServerNotification.type, async () => {
+		host.restart();
+	});
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;

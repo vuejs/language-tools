@@ -84,6 +84,10 @@
 		],
 		"commands": [
 			{
+				"command": "volar.action.restartServer",
+				"title": "Volar: Restart Vue server"
+			},
+			{
 				"command": "volar.action.verifyAllScripts",
 				"title": "Volar: Verify all scripts"
 			},
@@ -92,8 +96,8 @@
 				"title": "Volar: Format all scripts"
 			},
 			{
-				"command": "volar.action.writeAllDebugFiles",
-				"title": "Volar: Write all debug files"
+				"command": "volar.action.writeVirtualFiles",
+				"title": "Volar: Write virtual files"
 			}
 		],
 		"configuration": {
