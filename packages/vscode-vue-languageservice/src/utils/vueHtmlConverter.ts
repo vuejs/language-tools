@@ -366,12 +366,30 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						}
 
 						function addClass(className: string, offset: number) {
+							const diagStart = _code.length;
 							_code += `__VLS_styleScopedClasses[`
 							mappingWithQuotes(MapedNodeTypes.Prop, className, className, capabilitiesSet.htmlTagOrAttr, [{
 								start: offset,
 								end: offset + className.length,
 							}]);
-							_code += `];\n`;
+							_code += `]`;
+							const diagEnd = _code.length;
+							mappings.push({
+								mode: MapedMode.Gate,
+								sourceRange: {
+									start: offset,
+									end: offset + className.length,
+								},
+								targetRange: {
+									start: diagStart,
+									end: diagEnd,
+								},
+								data: {
+									vueTag: 'template',
+									capabilities: capabilitiesSet.diagnosticOnly,
+								},
+							});
+							_code += `;\n`;
 						}
 					}
 				}
