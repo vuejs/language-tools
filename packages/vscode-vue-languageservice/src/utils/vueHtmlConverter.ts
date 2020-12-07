@@ -285,7 +285,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							}], false);
 							mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
+								end: prop.arg.loc.start.offset + propName2.length, // patch style attr
 							}]);
 							_code += `: (`;
 							if (prop.exp && !prop.exp.isConstant) { // style='z-index: 2' will compile to {'z-index':'2'}
