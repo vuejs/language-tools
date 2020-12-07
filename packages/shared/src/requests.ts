@@ -30,6 +30,9 @@ export interface ISourceMap {
 	}[],
 }
 
+export namespace D3Request {
+	export const type: RequestType<TextDocumentIdentifier, string | null | undefined, any> = new RequestType('volar/d3');
+}
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any> = new RequestType('html/tag');
 }

@@ -648,8 +648,19 @@ function genScriptSetup(
 						},
 						mode: MapedMode.Offset,
 					});
-					genCode += ` = (await import('@vue/runtime-dom')).unref(__VLS_refs_${prop.text});`;
-					genCode += ` ${prop.text}; // ignore unused\n`
+					genCode += ` = (await import('@vue/reactivity')).unref(`;
+					if (binary.right) {
+						addCode(`__VLS_refs_${prop.text}`, {
+							isNoDollarRef: false,
+							capabilities: {},
+							scriptSetupRange: binary.right,
+							mode: MapedMode.Offset, // TODO
+						});
+					}
+					else {
+						genCode += `__VLS_refs_${prop.text}`;
+					}
+					genCode += `); ${prop.text}; // ignore unused\n`;
 
 					genCode += `const `;
 					const rightRange = {
@@ -667,7 +678,19 @@ function genScriptSetup(
 						},
 						mode: MapedMode.Offset, // TODO
 					});
-					genCode += ` = (await import('@vue/runtime-dom')).ref(__VLS_refs_${prop.text});${prop.inRoot ? ` $${prop.text}; // ignore unused\n` : '\n'}`;
+					genCode += ` = (await import('@vue/reactivity')).ref(`;
+					if (binary.right) {
+						addCode(`__VLS_refs_${prop.text}`, {
+							isNoDollarRef: false,
+							capabilities: {},
+							scriptSetupRange: binary.right,
+							mode: MapedMode.Offset, // TODO
+						});
+					}
+					else {
+						genCode += `__VLS_refs_${prop.text}`;
+					}
+					genCode += `);${prop.inRoot ? ` $${prop.text}; // ignore unused\n` : '\n'}`;
 					mirrors.push({
 						left: leftRange,
 						right: rightRange,

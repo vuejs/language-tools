@@ -23,6 +23,7 @@ import {
 	WriteVirtualFilesRequest,
 	RestartServerNotification,
 	ShowReferencesNotification,
+	D3Request,
 } from '@volar/shared';
 
 let apiClient: LanguageClient;
@@ -84,6 +85,41 @@ export async function activate(context: vscode.ExtensionContext) {
 				quickPick.show();
 			});
 		}
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
+		const document = vscode.window.activeTextEditor?.document;
+		if (!document) return;
+		let param = apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
+		const d3 = await apiClient.sendRequest(D3Request.type, param);
+		
+		const panel = vscode.window.createWebviewPanel(
+			'vueCallGraph',
+			'Vue Call Graph',
+			vscode.ViewColumn.One,
+			{
+				enableScripts: true
+			}
+		);
+		panel.webview.html = `
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/viz.js@1.8.1/viz.js" type="javascript/worker"></script>
+<script src="https://unpkg.com/d3-graphviz@2.1.0/build/d3-graphviz.min.js"></script>
+<div id="graph" style="text-align: center;"></div>
+<script>
+
+	var dotIndex = 0;
+	var graphviz = d3.select("#graph").graphviz()
+		.zoom(false)
+		.on("initEnd", render)
+
+	function render() {
+		var dot = \`${d3}\`;
+		graphviz
+			.renderDot(dot)
+	}
+
+</script>
+`
 	}));
 
 	// TODO: active by vue block lang

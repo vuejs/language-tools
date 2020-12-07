@@ -33,6 +33,7 @@ import * as codeLens from './services/codeLens';
 import * as codeLensResolve from './services/codeLensResolve';
 import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
+import * as d3 from './services/d3';
 import { CompletionItem } from 'vscode-css-languageservice';
 
 export { LanguageServiceHost } from 'typescript';
@@ -216,6 +217,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		provideCallHierarchyOutgoingCalls: apiHook(_callHierarchy.provideCallHierarchyOutgoingCalls),
 		doRename: apiHook(rename.register(sourceFiles, tsLanguageService)),
 		getSemanticTokens: apiHook(semanticTokens.register(sourceFiles, tsLanguageService)),
+		getD3: apiHook(d3.register(sourceFiles, tsLanguageService)),
 		doExecuteCommand: apiHook(executeCommand.register(sourceFiles, tsLanguageService), false),
 		doComplete: apiHook(completions.register(sourceFiles, tsLanguageService), false),
 		doCompletionResolve: apiHook(completionResolve.register(sourceFiles, tsLanguageService), false),

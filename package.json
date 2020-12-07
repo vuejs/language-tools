@@ -98,6 +98,10 @@
 			{
 				"command": "volar.action.writeVirtualFiles",
 				"title": "Volar: Write virtual files"
+			},
+			{
+				"command": "volar.action.showCallGraph",
+				"title": "Volar: Show call graph (Experimental)"
 			}
 		],
 		"configuration": {

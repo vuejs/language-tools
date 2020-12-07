@@ -31,6 +31,7 @@ import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc, 
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
+	D3Request,
 	TagCloseRequest,
 	FormatAllScriptsRequest,
 	GetFormattingSourceMapsRequest,
@@ -125,6 +126,11 @@ function initLanguageService(rootPath: string) {
 	// custom requests
 	connection.onNotification(RestartServerNotification.type, async () => {
 		host.restart();
+	});
+	connection.onRequest(D3Request.type, handler => {
+		const document = documents.get(handler.uri);
+		if (!document) return;
+		return host.best(document.uri)?.getD3(document);
 	});
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);

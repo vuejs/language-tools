@@ -1,3 +1,7 @@
+### 0.16.6
+
+- fix: find references crash in node_modules files
+
 ### 0.16.5
 
 - feat: restart server command
