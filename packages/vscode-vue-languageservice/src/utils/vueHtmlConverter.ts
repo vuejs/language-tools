@@ -29,7 +29,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 
 	_code += `export default {\n`
 	for (const [name, slot] of slots) {
-		mappingWithQuotes(MapedNodeTypes.Slot, name, name, capabilitiesSet.slotName, [slot.loc]);
+		mappingObjectProperty(MapedNodeTypes.Slot, name, name, capabilitiesSet.slotName, [slot.loc]);
 		_code += `: ${slot.varName},\n`;
 	}
 	_code += `};\n`
@@ -132,12 +132,11 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							slotName = prop.arg.content;
 						}
 						const diagStart = _code.length;
-						_code += `__VLS_components['${parent.tag}'].__VLS_slots[`;
-						mappingWithQuotes(MapedNodeTypes.Slot, slotName, slotName, capabilitiesSet.slotName, [{
+						_code += `__VLS_components['${parent.tag}'].__VLS_slots`;
+						mappingPropertyAccess(MapedNodeTypes.Slot, slotName, slotName, capabilitiesSet.slotName, [{
 							start: prop.arg?.loc.start.offset ?? prop.loc.start.offset,
 							end: prop.arg?.loc.end.offset ?? prop.loc.end.offset,
 						}]);
-						_code += `]`;
 						const diagEnd = _code.length;
 						mappings.push({
 							mode: MapedMode.Gate,
@@ -197,7 +196,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					const type = option === 'props' ? MapedNodeTypes.Prop : undefined;
 					_code += `// @ts-ignore\n`;
 					_code += `__VLS_components['${node.tag}'].__VLS_options.${option} = { `;
-					mappingWithQuotes(type, camelizeName, originalName, capabilitiesSet.htmlTagOrAttr, [{
+					mappingObjectProperty(type, camelizeName, originalName, capabilitiesSet.htmlTagOrAttr, [{
 						start,
 						end,
 					}]);
@@ -256,9 +255,9 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						start: node.loc.start.offset + 1,
 						end: node.loc.start.offset + 1 + node.tag.length,
 					}], false);
-					_code += `__VLS_componentProps[`;
-					mappingWithQuotes(MapedNodeTypes.ElementTag, node.tag, node.tag, capabilitiesSet.htmlTagOrAttr, sourceRanges);
-					_code += `] = {\n`;
+					_code += `__VLS_componentProps`;
+					mappingPropertyAccess(MapedNodeTypes.ElementTag, node.tag, node.tag, capabilitiesSet.htmlTagOrAttr, sourceRanges);
+					_code += ` = {\n`;
 				}
 				else {
 					_code += `// @ts-ignore\n`;
@@ -284,7 +283,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}], false);
-							mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
+							mappingObjectProperty(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.start.offset + propName2.length, // patch style attr
 							}]);
@@ -301,7 +300,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							_code += `),\n`;
 							// original name
 							if (propName2 !== propName) {
-								mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
+								mappingObjectProperty(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.end.offset,
 								}]);
@@ -324,14 +323,14 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						}], false);
-						mappingWithQuotes(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
+						mappingObjectProperty(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
 						}]);
 						_code += `: ${propValue},\n`;
 						// original name
 						if (propName2 !== propName) {
-							mappingWithQuotes(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
+							mappingObjectProperty(MapedNodeTypes.Prop, propName2, propName2, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.loc.start.offset,
 								end: prop.loc.start.offset + propName2.length,
 							}]);
@@ -367,12 +366,12 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						}
 
 						function addClass(className: string, offset: number) {
-							_code += `__VLS_styleScopedClasses[`
-							mappingWithQuotes(MapedNodeTypes.Prop, className, className, capabilitiesSet.className, [{
+							_code += `__VLS_styleScopedClasses`
+							mappingPropertyAccess(MapedNodeTypes.Prop, className, className, capabilitiesSet.className, [{
 								start: offset,
 								end: offset + className.length,
 							}]);
-							_code += `];\n`;
+							_code += `;\n`;
 						}
 					}
 				}
@@ -415,7 +414,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						for (const prop_2 of transformResult.props) {
 							const value = prop_2.value;
 							_code += `${var_on} = {\n`
-							mappingWithQuotes(undefined, key_1, key_1, capabilitiesSet.htmlTagOrAttr, [{
+							mappingObjectProperty(undefined, key_1, key_1, capabilitiesSet.htmlTagOrAttr, [{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							}]);
@@ -482,7 +481,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
-						mappingWithQuotes(MapedNodeTypes.Prop, prop.arg.content, prop.arg.content, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
+						mappingObjectProperty(MapedNodeTypes.Prop, prop.arg.content, prop.arg.content, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
 						_code += `: (`;
 						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
 						_code += `),\n`;
@@ -663,6 +662,25 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 		}
 		return _code;
 	};
+	function mappingObjectProperty(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[]) {
+		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
+			mapping(type, mapCode, pugSearchCode, MapedMode.Offset, capabilities, sourceRanges);
+		}
+		else {
+			mappingWithQuotes(type, mapCode, pugSearchCode, capabilities, sourceRanges);
+		}
+	}
+	function mappingPropertyAccess(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[]) {
+		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
+			_code += `.`;
+			mapping(type, mapCode, pugSearchCode, MapedMode.Offset, capabilities, sourceRanges);
+		}
+		else {
+			_code += `[`;
+			mappingWithQuotes(type, mapCode, pugSearchCode, capabilities, sourceRanges);
+			_code += `]`;
+		}
+	}
 	function mappingWithQuotes(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[]) {
 		mapping(type, `'${mapCode}'`, pugSearchCode, MapedMode.Gate, {
 			...capabilities,
