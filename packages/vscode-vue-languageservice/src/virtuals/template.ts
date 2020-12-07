@@ -97,6 +97,11 @@ export function useTemplateScript(
 			if (!hasElement(interpolations.tags, name)) continue;
 			code += `__VLS_componentPropsBase['${name}'][''];\n`; // TODO
 		}
+		code += '/* Completion: Slots */\n';
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
+			if (!hasElement(interpolations.tags, name)) continue;
+			code += `__VLS_components['${name}'].__VLS_slots[''];\n`; // TODO
+		}
 
 		/* Props */
 		code += `/* Props */\n`;

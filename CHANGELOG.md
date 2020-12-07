@@ -1,3 +1,7 @@
+### 0.16.8
+
+- feat: slot name services (find references, goto definition, diagnostic, completion, hover info)
+
 ### 0.16.7
 
 - fix: call graph links incomplete

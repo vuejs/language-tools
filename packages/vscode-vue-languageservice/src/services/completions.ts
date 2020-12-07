@@ -122,7 +122,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					{ name: 'v-else' },
 					{ name: 'v-for' },
 				];
-				for (const [componentName, { bind, on }] of componentCompletion) {
+				const slots: html.IAttributeData[] = [];
+				for (const [componentName, { bind, on, slot }] of componentCompletion) {
 					if (componentName === '*') {
 						for (const prop of bind) {
 							const name: string = prop.data.name;
@@ -131,7 +132,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								const propKey = componentName + ':' + propName;
 								globalAttributes.push({
 									name: propName,
-									description: propKey, // TODO: should not show in hover
+									description: propKey,
 								});
 								tsItems.set(propKey, prop);
 							}
@@ -140,7 +141,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								const propKey = componentName + ':' + propName;
 								globalAttributes.push({
 									name: propName,
-									description: propKey, // TODO: should not show in hover
+									description: propKey,
 								});
 								tsItems.set(propKey, prop);
 							}
@@ -155,7 +156,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								const propKey = componentName + ':' + propName;
 								attributes.push({
 									name: propName,
-									description: propKey, // TODO: should not show in hover
+									description: propKey,
 								});
 								tsItems.set(propKey, prop);
 							}
@@ -164,7 +165,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								const propKey = componentName + ':' + propName;
 								attributes.push({
 									name: propName,
-									description: propKey, // TODO: should not show in hover
+									description: propKey,
 								});
 								tsItems.set(propKey, prop);
 							}
@@ -174,9 +175,18 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							const propKey = componentName + ':' + propName;
 							attributes.push({
 								name: propName,
-								description: propKey, // TODO: should not show in hover
+								description: propKey,
 							});
 							tsItems.set(propKey, event);
+						}
+						for (const _slot of slot) {
+							const propName = '#' + _slot.data.name;
+							const propKey = componentName + ':' + propName;
+							slots.push({
+								name: propName,
+								description: propKey,
+							});
+							tsItems.set(propKey, _slot);
 						}
 						tags.push({
 							name: componentName,
@@ -185,6 +195,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						});
 					}
 				}
+				tags.push({
+					name: 'template',
+					attributes: slots,
+				});
 				const dataProvider = html.newHTMLDataProvider(document.uri, {
 					version: 1.1,
 					tags,

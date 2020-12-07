@@ -164,6 +164,7 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 export enum MapedNodeTypes {
 	ElementTag,
 	Prop,
+	Slot,
 }
 
 export interface TsMappingData {

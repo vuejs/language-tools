@@ -621,13 +621,14 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 			{ // watching
 				tsProjectVersion.value;
 			}
-			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[] }>();
+			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
 			if (virtualTemplateGen.textDocument.value && virtualTemplateRaw.textDocument.value) {
 				const doc = virtualTemplateGen.textDocument.value;
 				const text = doc.getText();
 				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 					let bind: CompletionItem[] = [];
 					let on: CompletionItem[] = [];
+					let slot: CompletionItem[] = [];
 					{
 						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
 						let offset = text.indexOf(searchText);
@@ -644,10 +645,18 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 							on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
 						}
 					}
-					data.set(tagName, { bind, on });
-					data.set(hyphenate(tagName), { bind, on });
+					{
+						const searchText = `__VLS_components['${tagName}'].__VLS_slots['`;
+						let offset = text.indexOf(searchText);
+						if (offset >= 0) {
+							offset += searchText.length;
+							slot = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+						}
+					}
+					data.set(tagName, { bind, on, slot });
+					data.set(hyphenate(tagName), { bind, on, slot });
 				}
-				data.set('*', { bind: globalBind.value, on: [] });
+				data.set('*', { bind: globalBind.value, on: [], slot: [] });
 			}
 			return data;
 		});

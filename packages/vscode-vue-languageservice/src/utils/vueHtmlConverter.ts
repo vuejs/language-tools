@@ -1,6 +1,6 @@
 import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
 import { TransformContext, transformOn } from '@vue/compiler-core';
-import { MapedMode, TsMappingData, Mapping, MapedNodeTypes } from './sourceMaps';
+import { MapedMode, TsMappingData, Mapping, MapedNodeTypes, MapedRange } from './sourceMaps';
 import { camelize, hyphenate } from '@vue/shared';
 
 const capabilitiesSet = {
@@ -8,6 +8,7 @@ const capabilitiesSet = {
 	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true, semanticTokens: false },
 	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
+	slotName: { basic: true, diagnostic: true, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
 	propRaw: { basic: false, diagnostic: false, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
 	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
@@ -16,30 +17,35 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 	const mappings: Mapping<TsMappingData>[] = [];
 	const cssMappings: Mapping<undefined>[] = [];
 	const tags = new Set<string>();
-	const slots = new Map<string, string>();
+	const slots = new Map<string, {
+		varName: string,
+		loc: MapedRange,
+	}>();
 	let elementIndex = 0;
 	let cssCode = '';
-	let text = worker('', node, []);
+	let _code = '';
+	worker(node, []);
 
-	text += `export default {\n`
-	for (const [name, bind] of slots) {
-		text += `'${name}': ${bind},\n`;
+	_code += `export default {\n`
+	for (const [name, slot] of slots) {
+		mappingWithQuotes(MapedNodeTypes.Slot, name, name, capabilitiesSet.slotName, [slot.loc]);
+		_code += `: ${slot.varName},\n`;
 	}
-	text += `};\n`
+	_code += `};\n`
 
 	return {
 		mappings: mappings,
-		text: text,
+		text: _code,
 		cssMappings,
 		cssCode,
 		tags,
 	};
 
-	function worker(_code: string, node: TemplateChildNode | RootNode, parents: (TemplateChildNode | RootNode)[]): string {
+	function worker(node: TemplateChildNode | RootNode, parents: (TemplateChildNode | RootNode)[]) {
 		if (node.type === NodeTypes.ROOT) {
 			for (const childNode of node.children) {
 				_code += `{\n`;
-				_code = worker(_code, childNode, parents.concat(node));
+				_code = worker(childNode, parents.concat(node));
 				_code += `}\n`;
 			}
 		}
@@ -58,7 +64,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				writeOptionReferences(node);
 				writeSlots(node);
 				for (const childNode of node.children) {
-					_code = worker(_code, childNode, parents.concat(node));
+					_code = worker(childNode, parents.concat(node));
 				}
 			}
 			_code += '}\n';
@@ -108,21 +114,47 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					if (
 						prop.type === NodeTypes.DIRECTIVE
 						&& prop.name === 'slot'
-						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
 						const parent = findParentElement(parents.concat(node));
 						if (!parent) continue;
 
-						_code += `let `;
-						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
-							start: prop.exp.loc.start.offset,
-							end: prop.exp.loc.end.offset,
-						}]);
+						if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+							_code += `let `;
+							mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+								start: prop.exp.loc.start.offset,
+								end: prop.exp.loc.end.offset,
+							}]);
+							_code += ` = `;
+						}
 						let slotName = 'default';
 						if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
 							slotName = prop.arg.content;
 						}
-						_code += ` = __VLS_components['${parent.tag}'].__VLS_slots['${slotName}'];\n`;
+						const diagStart = _code.length;
+						_code += `__VLS_components['${parent.tag}'].__VLS_slots[`;
+						mappingWithQuotes(MapedNodeTypes.Slot, slotName, slotName, capabilitiesSet.slotName, [{
+							start: prop.arg?.loc.start.offset ?? prop.loc.start.offset,
+							end: prop.arg?.loc.end.offset ?? prop.loc.end.offset,
+						}]);
+						_code += `]`;
+						const diagEnd = _code.length;
+						mappings.push({
+							mode: MapedMode.Gate,
+							sourceRange: {
+								start: prop.arg?.loc.start.offset ?? prop.loc.start.offset,
+								end: prop.arg?.loc.end.offset ?? prop.loc.end.offset,
+							},
+							targetRange: {
+								start: diagStart,
+								end: diagEnd,
+							},
+							data: {
+								type: MapedNodeTypes.Slot,
+								vueTag: 'template',
+								capabilities: capabilitiesSet.diagnosticOnly,
+							},
+						});
+						_code += `;\n`;
 					}
 
 					function findParentElement(parents: (TemplateChildNode | RootNode)[]): ElementNode | undefined {
@@ -425,9 +457,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				const varDefaultBind = `__VLS_${elementIndex++}`;
 				const varBinds = `__VLS_${elementIndex++}`;
 				const varSlot = `__VLS_${elementIndex++}`;
-				const slotName = getSlotName();
+				const { name: slotName, loc: slotLoc } = getSlotName();
 				let hasDefaultBind = false;
-				let hasBinds = false;
 
 				for (const prop of node.props) {
 					if (
@@ -450,7 +481,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
-						hasBinds = true;
 						mappingWithQuotes(MapedNodeTypes.Prop, prop.arg.content, prop.arg.content, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
 						_code += `: (`;
 						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
@@ -459,44 +489,45 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				}
 				_code += `};\n`;
 
-				if (hasDefaultBind && hasBinds) {
+				if (hasDefaultBind) {
 					_code += `var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`
 				}
-				else if (hasDefaultBind) {
-					_code += `var ${varSlot}!: typeof ${varDefaultBind};\n`
-				}
-				else if (hasBinds) {
+				else {
 					_code += `var ${varSlot}!: typeof ${varBinds};\n`
 				}
 
-				if (hasDefaultBind || hasBinds) {
-					slots.set(slotName, varSlot);
-				}
+				slots.set(slotName, {
+					varName: varSlot,
+					loc: {
+						start: slotLoc.start.offset,
+						end: slotLoc.end.offset,
+					},
+				});
 
 				function getSlotName() {
 					for (const prop2 of node.props) {
 						if (prop2.name === 'name' && prop2.type === NodeTypes.ATTRIBUTE && prop2.value) {
 							if (prop2.value.content === '') {
-								return 'default';
+								return { name: 'default', loc: prop2.value.loc };
 							}
 							else {
-								return prop2.value.content;
+								return { name: prop2.value.content, loc: prop2.value.loc };
 							}
 						}
 					}
-					return 'default';
+					return { name: 'default', loc: node.loc };
 				}
 			}
 		}
 		else if (node.type === NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			_code = worker(_code, node.content, parents.concat(node));
+			_code = worker(node.content, parents.concat(node));
 		}
 		else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					_code = worker(_code, childNode as TemplateChildNode, parents.concat(node));
+					_code = worker(childNode as TemplateChildNode, parents.concat(node));
 				}
 			}
 		}
@@ -545,7 +576,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							_code += `) {\n`;
 						}
 						for (const childNode of branch.children) {
-							_code = worker(_code, childNode, parents.concat([node, branch]));
+							_code = worker(childNode, parents.concat([node, branch]));
 						}
 						_code += '}\n';
 					}
@@ -553,7 +584,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				else {
 					_code += 'else {\n';
 					for (const childNode of branch.children) {
-						_code = worker(_code, childNode, parents.concat([node, branch]));
+						_code = worker(childNode, parents.concat([node, branch]));
 					}
 					_code += '}\n';
 				}
@@ -615,7 +646,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					_code += ` = __VLS_getVforIndexType(${sourceVarName});\n`;
 				}
 				for (const childNode of node.children) {
-					_code = worker(_code, childNode, parents.concat(node));
+					_code = worker(childNode, parents.concat(node));
 				}
 				_code += '}\n';
 			}
@@ -630,48 +661,53 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			_code += `// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`
 		}
 		return _code;
-
-		function mappingWithQuotes(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[]) {
-			mapping(type, `'${mapCode}'`, pugSearchCode, MapedMode.Gate, capabilities, sourceRanges, false);
-			_code += `'`;
-			mapping(type, mapCode, pugSearchCode, MapedMode.Offset, capabilities, sourceRanges);
-			_code += `'`;
-		}
-		function mapping(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
-			if (pugMapper) {
-				sourceRanges = sourceRanges.map(range => ({ ...range })); // clone
-				for (const sourceRange of sourceRanges) {
-					const newStart = pugMapper(pugSearchCode, sourceRange.start);
-					if (newStart !== undefined) {
-						const offset = newStart - sourceRange.start;
-						sourceRange.start += offset;
-						sourceRange.end += offset;
-					}
-					else {
-						sourceRange.start = -1;
-						sourceRange.end = -1;
-					}
-				}
-				sourceRanges = sourceRanges.filter(range => range.start !== -1);
-			}
-			for (const sourceRange of sourceRanges) {
-				mappings.push({
-					mode,
-					sourceRange: sourceRange,
-					targetRange: {
-						start: _code.length,
-						end: _code.length + mapCode.length,
-					},
-					data: {
-						type,
-						vueTag: 'template',
-						capabilities: capabilities,
-					},
-				});
-			}
-			if (addCode) {
-				_code += mapCode;
-			}
-		}
 	};
+	function mappingWithQuotes(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[]) {
+		mapping(type, `'${mapCode}'`, pugSearchCode, MapedMode.Gate, {
+			...capabilities,
+			rename: false,
+			formatting: false,
+			completion: false,
+			semanticTokens: false,
+		}, sourceRanges, false);
+		_code += `'`;
+		mapping(type, mapCode, pugSearchCode, MapedMode.Offset, capabilities, sourceRanges);
+		_code += `'`;
+	}
+	function mapping(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
+		if (pugMapper) {
+			sourceRanges = sourceRanges.map(range => ({ ...range })); // clone
+			for (const sourceRange of sourceRanges) {
+				const newStart = pugMapper(pugSearchCode, sourceRange.start);
+				if (newStart !== undefined) {
+					const offset = newStart - sourceRange.start;
+					sourceRange.start += offset;
+					sourceRange.end += offset;
+				}
+				else {
+					sourceRange.start = -1;
+					sourceRange.end = -1;
+				}
+			}
+			sourceRanges = sourceRanges.filter(range => range.start !== -1);
+		}
+		for (const sourceRange of sourceRanges) {
+			mappings.push({
+				mode,
+				sourceRange: sourceRange,
+				targetRange: {
+					start: _code.length,
+					end: _code.length + mapCode.length,
+				},
+				data: {
+					type,
+					vueTag: 'template',
+					capabilities: capabilities,
+				},
+			});
+		}
+		if (addCode) {
+			_code += mapCode;
+		}
+	}
 };
