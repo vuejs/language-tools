@@ -609,17 +609,20 @@ function genScriptSetup(
 					genCode += `, `;
 				}
 
-				let left = '';
 				let leftPos = binary.left.start;
 				for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
 					const propText = prop.isShortand ? `${prop.text}: __VLS_refs_${prop.text}` : `__VLS_refs_${prop.text}`;
-					left += originalCode.substring(leftPos, prop.start);
-					left += propText;
+					genCode += originalCode.substring(leftPos, prop.start);
+					addCode(propText, {
+						isNoDollarRef: false,
+						capabilities: {},
+						scriptSetupRange: binary.left,
+						mode: MapedMode.Offset, // TODO
+					});
 					leftPos = prop.end;
 				}
-				left += originalCode.substring(leftPos, binary.left.end);
+				genCode += originalCode.substring(leftPos, binary.left.end);
 
-				genCode += left;
 				if (binary.right) {
 					genCode += ` = `;
 					mapSubText(binary.right.start, binary.right.end);

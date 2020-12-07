@@ -8,12 +8,14 @@ import { tsLocationToVueLocations } from '../utils/commons';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	return (document: TextDocument, position: Position) => {
+	return (document: TextDocument, position: Position, ignoreTsResult = false) => {
 
 		if (document.languageId !== 'vue') {
 			const tsLocs = tsLanguageService.findTypeDefinition(document, position);
 			let result = tsLocs.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles)).flat();
-			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			if (ignoreTsResult) {
+				result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			}
 			return result;
 		}
 

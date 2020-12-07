@@ -1,3 +1,7 @@
+### 0.16.7
+
+- fix: call graph links incomplete
+
 ### 0.16.6
 
 - fix: find references crash in node_modules files

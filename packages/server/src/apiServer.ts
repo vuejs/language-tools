@@ -249,17 +249,17 @@ function initLanguageService(rootPath: string) {
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.all(document.uri).map(ls => ls.findReferences(document, handler.position)).flat();
+		return host.all(document.uri).map(ls => ls.findReferences(document, handler.position, true)).flat();
 	});
 	connection.onDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findDefinition(document, handler.position);
+		return host.best(document.uri)?.findDefinition(document, handler.position, true);
 	});
 	connection.onTypeDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findTypeDefinition(document, handler.position);
+		return host.best(document.uri)?.findTypeDefinition(document, handler.position, true);
 	});
 	connection.languages.callHierarchy.onPrepare(handler => {
 		const document = documents.get(handler.textDocument.uri);

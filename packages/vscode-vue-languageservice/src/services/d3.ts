@@ -18,6 +18,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	return async (document: TextDocument) => {
 
 		const usedNames = new Set<string>();
+		const usedNamesMap = new Map<number, string>();
 		const refs: {
 			type: 'ref',
 			name: string,
@@ -88,7 +89,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						if (loc && argsStartLoc && argsEndLoc) {
 							refs.push({
 								type: 'ref',
-								name: getNodeName(sourceMap.sourceDocument.getText(loc.range)),
+								name: getNodeName(loc.range),
 								range: loc.range,
 								blockRange: {
 									start: argsStartLoc.range.start,
@@ -121,7 +122,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						if (loc && blockStartLoc && blockEndLoc) {
 							funcs.push({
 								type: 'func',
-								name: getNodeName(sourceMap.sourceDocument.getText(loc.range)),
+								name: getNodeName(loc.range),
 								range: loc.range,
 								blockRange: {
 									start: blockStartLoc.range.start,
@@ -138,6 +139,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						&& ts.isIdentifier(node.name)
 						&& ts.isArrowFunction(node.initializer)
 					) {
+						const nameLoc = sourceMap.targetToSource({
+							start: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
+							end: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
+						});
 						const startLoc = sourceMap.targetToSource({
 							start: sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst)),
 							end: sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst)),
@@ -154,10 +159,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							start: sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
 							end: sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
 						});
-						if (startLoc && endLoc && blockStartLoc && blockEndLoc) {
+						if (nameLoc && startLoc && endLoc && blockStartLoc && blockEndLoc) {
 							funcs.push({
 								type: 'func',
-								name: getNodeName(node.name.getText(scriptAst)),
+								name: getNodeName(nameLoc.range),
 								range: {
 									start: startLoc.range.start,
 									end: endLoc.range.start,
@@ -229,7 +234,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (loc && argsStartLoc && argsEndLoc) {
 						refs.push({
 							type: 'ref',
-							name: getNodeName(tsDoc.getText(loc)),
+							name: _getNodeName(tsDoc.getText(loc)),
 							range: loc,
 							blockRange: {
 								start: argsStartLoc.start,
@@ -262,7 +267,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (loc && blockStartLoc && blockEndLoc) {
 						funcs.push({
 							type: 'func',
-							name: getNodeName(tsDoc.getText(loc)),
+							name: _getNodeName(tsDoc.getText(loc)),
 							range: loc,
 							blockRange: {
 								start: blockStartLoc.start,
@@ -298,7 +303,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (startLoc && endLoc && blockStartLoc && blockEndLoc) {
 						funcs.push({
 							type: 'func',
-							name: getNodeName(node.name.getText(scriptAst)),
+							name: _getNodeName(node.name.getText(scriptAst)),
 							range: {
 								start: startLoc.start,
 								end: endLoc.start,
@@ -364,7 +369,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				}
 				else {
 					// TODO
-					const fileName = upath.basename(reference.uri).replace(/\./g, '_');
+					// const fileName = upath.basename(reference.uri).replace(/\./g, '_');
+					const fileName = '__out_of_file__';
 					if (!fileLinks.has(fileName)) {
 						fileLinks.set(fileName, new Set());
 					}
@@ -393,14 +399,15 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				}
 				else {
 					// TODO
-					const fileName = upath.basename(definition.uri).replace(/\./g, '_');
+					// const fileName = upath.basename(definition.uri).replace(/\./g, '_');
+					const fileName = '__out_of_file__';
 					const match = findBestMatchBlock(funcCall.range);
 					if (match) {
 						if (match.type === 'ref') {
-							refsLinks.get(match.name)?.add(funcCall.name + '__' + fileName);
+							refsLinks.get(match.name)?.add(fileName);
 						}
 						else if (match.type === 'func') {
-							funcsLinks.get(match.name)?.add(funcCall.name + '__' + fileName);
+							funcsLinks.get(match.name)?.add(fileName);
 						}
 					}
 				}
@@ -414,7 +421,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 		}
 		for (const [source, targets] of funcsLinks) {
-			outStr += `    ${source}`;
 			for (const target of targets) {
 				outStr += `    ${source} -> ${target}`;
 			}
@@ -449,7 +455,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				end: endArg.getStart(scriptAst) + endArg.getWidth(scriptAst),
 			};
 		}
-		function getNodeName(name: string) {
+		function _getNodeName(name: string) {
 			if (!usedNames.has(name)) {
 				usedNames.add(name);
 				return name;
@@ -462,6 +468,15 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			usedNames.add(newName);
 			return newName;
+		}
+		function getNodeName(range: Range) {
+			const offset = document.offsetAt(range.start);
+			if (usedNamesMap.has(offset)) {
+				return usedNamesMap.get(offset)!;
+			}
+			const name = _getNodeName(document.getText(range));
+			usedNamesMap.set(offset, name);
+			return name;
 		}
 		function findBestMatchBlock(range: Range) {
 			const _refs = refs.filter(ref =>

@@ -15,12 +15,14 @@ import * as globalServices from '../globalServices';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService, getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>) {
-	return (document: TextDocument, position: Position) => {
+	return (document: TextDocument, position: Position, ingoreTsResult = false) => {
 		const range = { start: position, end: position };
 
 		if (document.languageId !== 'vue') {
 			let result = getTsResultWorker(document, range);
-			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			if (ingoreTsResult) {
+				result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			}
 			return duplicateLocations(result);
 		}
 

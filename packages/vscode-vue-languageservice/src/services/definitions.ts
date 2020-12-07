@@ -15,12 +15,14 @@ import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService, getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>) {
-	return (document: TextDocument, position: Position) => {
+	return (document: TextDocument, position: Position, ingoreTsResult = false) => {
 
 		if (document.languageId !== 'vue') {
 			const tsLocs = tsLanguageService.findDefinition(document, position);
 			let result = tsLocs.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles)).flat();
-			result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			if (ingoreTsResult) {
+				result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
+			}
 			return result;
 		}
 
