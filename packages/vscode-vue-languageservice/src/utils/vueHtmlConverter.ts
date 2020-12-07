@@ -457,7 +457,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				const varDefaultBind = `__VLS_${elementIndex++}`;
 				const varBinds = `__VLS_${elementIndex++}`;
 				const varSlot = `__VLS_${elementIndex++}`;
-				const { name: slotName, loc: slotLoc } = getSlotName();
+				const slotName = getSlotName();
 				let hasDefaultBind = false;
 
 				for (const prop of node.props) {
@@ -499,8 +499,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				slots.set(slotName, {
 					varName: varSlot,
 					loc: {
-						start: slotLoc.start.offset,
-						end: slotLoc.end.offset,
+						start: node.loc.start.offset,
+						end: node.loc.end.offset,
 					},
 				});
 
@@ -508,14 +508,14 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					for (const prop2 of node.props) {
 						if (prop2.name === 'name' && prop2.type === NodeTypes.ATTRIBUTE && prop2.value) {
 							if (prop2.value.content === '') {
-								return { name: 'default', loc: prop2.value.loc };
+								return 'default';
 							}
 							else {
-								return { name: prop2.value.content, loc: prop2.value.loc };
+								return prop2.value.content;
 							}
 						}
 					}
-					return { name: 'default', loc: node.loc };
+					return 'default';
 				}
 			}
 		}
