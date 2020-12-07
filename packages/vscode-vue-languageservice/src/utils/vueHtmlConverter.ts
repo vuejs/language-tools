@@ -8,6 +8,7 @@ const capabilitiesSet = {
 	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true, semanticTokens: false },
 	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
+	className: { basic: true, diagnostic: false, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
 	slotName: { basic: true, diagnostic: true, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
 	propRaw: { basic: false, diagnostic: false, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
 	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
@@ -366,30 +367,12 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						}
 
 						function addClass(className: string, offset: number) {
-							const diagStart = _code.length;
 							_code += `__VLS_styleScopedClasses[`
-							mappingWithQuotes(MapedNodeTypes.Prop, className, className, capabilitiesSet.htmlTagOrAttr, [{
+							mappingWithQuotes(MapedNodeTypes.Prop, className, className, capabilitiesSet.className, [{
 								start: offset,
 								end: offset + className.length,
 							}]);
-							_code += `]`;
-							const diagEnd = _code.length;
-							mappings.push({
-								mode: MapedMode.Gate,
-								sourceRange: {
-									start: offset,
-									end: offset + className.length,
-								},
-								targetRange: {
-									start: diagStart,
-									end: diagEnd,
-								},
-								data: {
-									vueTag: 'template',
-									capabilities: capabilitiesSet.diagnosticOnly,
-								},
-							});
-							_code += `;\n`;
+							_code += `];\n`;
 						}
 					}
 				}
