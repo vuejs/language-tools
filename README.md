@@ -18,6 +18,7 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 
 ## Some interesting features:
 
+- [x] v-slot services (v0.12.1 added, v0.16.8 updated)
 - [x] inline css services (v0.16.3 added)
 - [x] ref sugar convert tool (v0.15.6 added)
 - [x] CSS class codeLens (v0.15.4 added)
@@ -25,7 +26,6 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 - [x] Scoped CSS services (v0.15.1 added)
 - [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
-- [x] v-slot Type-Checking (v0.12.1 added)
 - [x] Component props auto completion (v0.11.6 added)
 - [x] emits Type-Checking (v0.11.4 added)
 - [x] Interpolation formatting + commenting (v0.11.2 added)
