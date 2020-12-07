@@ -1,3 +1,9 @@
+### 0.16.9
+
+- feat: better js support
+- fix: should not error when css class not exist
+- fix: inline style hover info wrong mapping
+
 ### 0.16.8
 
 - feat: slot name services (find references, goto definition, diagnostic, completion, hover info)
