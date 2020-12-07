@@ -104,6 +104,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 	const tsSourceMaps = computed(() => {
 		const result = [
 			virtualScriptGen.sourceMap.value,
+			virtualScriptGen.shadowTsSourceMap.value,
 			virtualScriptMain.sourceMap.value,
 			virtualTemplateGen.sourceMap.value,
 		].filter(notEmpty);
@@ -116,6 +117,8 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		const docs = new Map<string, TextDocument>();
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
+		if (virtualScriptGen.shadowTsTextDocument.value)
+			docs.set(virtualScriptGen.shadowTsTextDocument.value.uri, virtualScriptGen.shadowTsTextDocument.value);
 		if (virtualScriptMain.textDocument.value)
 			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 		if (virtualTemplateGen.textDocument.value)

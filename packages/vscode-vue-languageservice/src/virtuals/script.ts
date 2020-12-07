@@ -342,12 +342,42 @@ export function useScriptSetupGen(
 			return sourceMap;
 		}
 	});
+	const shadowTsTextDocument = computed(() => {
+		if (textDocument.value?.languageId === 'javascript') {
+			const vueDoc = getUnreactiveDoc();
+			const lang = 'ts';
+			const uri = `${vueDoc.uri}.__VLS_script.${lang}`;
+			return TextDocument.create(uri, syntaxToLanguageId(lang), textDocument.value.version, textDocument.value.getText());
+		}
+	});
+	const shadowTsSourceMap = computed(() => {
+		if (shadowTsTextDocument.value && sourceMap.value) {
+			const newSourceMap = new TsSourceMap(
+				sourceMap.value.sourceDocument,
+				shadowTsTextDocument.value,
+				sourceMap.value.isInterpolation,
+				{ foldingRanges: false, formatting: false },
+			);
+			for (const maped of sourceMap.value) {
+				newSourceMap.add({
+					...maped,
+					data: {
+						...maped.data,
+						capabilities: {},
+					},
+				})
+			}
+			return newSourceMap;
+		}
+	});
 
 	return {
 		genResult: scriptSetupGenResult,
 		textDocument,
 		sourceMap,
 		mirrorsSourceMap,
+		shadowTsTextDocument,
+		shadowTsSourceMap,
 	};
 }
 

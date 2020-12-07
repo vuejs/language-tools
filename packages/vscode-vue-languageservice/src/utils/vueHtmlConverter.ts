@@ -283,10 +283,18 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}], false);
-							mappingObjectProperty(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.start.offset + propName2.length, // patch style attr
-							}]);
+							if (prop.exp?.isConstant) {
+								mappingObjectProperty(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.start.offset + propName2.length, // patch style attr
+								}]);
+							}
+							else {
+								mappingObjectProperty(MapedNodeTypes.Prop, propName, propName2, capabilitiesSet.htmlTagOrAttr, [{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								}]);
+							}
 							_code += `: (`;
 							if (prop.exp && !prop.exp.isConstant) { // style='z-index: 2' will compile to {'z-index':'2'}
 								mapping(undefined, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{

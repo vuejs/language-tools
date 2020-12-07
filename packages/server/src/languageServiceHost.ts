@@ -155,7 +155,6 @@ export function createLanguageServiceHost(
 			const realTsConfig = ts.sys.realpath!(tsConfig);
 			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
-			content.options.allowJs = true;
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
