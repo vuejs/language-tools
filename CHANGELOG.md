@@ -1,3 +1,8 @@
+### 0.16.13
+
+- fix: crash if allowJs not set and working on js script block
+- fix: crash with user action when server not ready
+
 ### 0.16.12
 
 - feat: auto rename html tag

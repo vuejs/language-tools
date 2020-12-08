@@ -7,8 +7,11 @@ import {
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument, options: FormattingOptions, range?: Range): TextEdit[] => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string, options: FormattingOptions, range?: Range): TextEdit[] => {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const tsOptions: ts.FormatCodeOptions | ts.FormatCodeSettings = {
 			tabSize: options.tabSize,

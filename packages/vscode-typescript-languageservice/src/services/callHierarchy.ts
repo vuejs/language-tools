@@ -9,7 +9,10 @@ import * as typeConverters from '../utils/typeConverters';
 import * as upath from 'upath';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	function prepareCallHierarchy(document: TextDocument, position: vscode.Position) {
+	function prepareCallHierarchy(uri: string, position: vscode.Position) {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const calls = languageService.prepareCallHierarchy(fileName, offset);

@@ -30,16 +30,20 @@ const getSymbolKind = (kind: string): SymbolKind => {
 	return SymbolKind.Variable;
 };
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument): DocumentSymbol[] => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string): DocumentSymbol[] => {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const barItems = languageService.getNavigationTree(fileName);
 		const result: DocumentSymbol[] = [];
-		convertNavTree(barItems);
+		convertNavTree(document, barItems);
 
 		return result;
 
 		function convertNavTree(
+			document: TextDocument,
 			item: ts.NavigationTree,
 		): boolean {
 			let shouldInclude = shouldInclueEntry(item);

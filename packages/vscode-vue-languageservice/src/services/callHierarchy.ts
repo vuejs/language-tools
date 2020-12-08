@@ -81,7 +81,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 
 	function worker(tsDoc: TextDocument, tsPos: Position) {
 		const vueOrTsItems: CallHierarchyItem[] = [];
-		const tsItems = tsLanguageService.prepareCallHierarchy(tsDoc, tsPos);
+		const tsItems = tsLanguageService.prepareCallHierarchy(tsDoc.uri, tsPos);
 		for (const tsItem of tsItems) {
 			const result = toVueCallHierarchyItem(tsItem, []);
 			if (!result) continue;

@@ -31,7 +31,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const foldingRanges = tsLanguageService.getFoldingRanges(sourceMap.targetDocument);
+				const foldingRanges = tsLanguageService.getFoldingRanges(sourceMap.targetDocument.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
 			return result;

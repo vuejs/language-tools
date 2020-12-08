@@ -7,8 +7,11 @@ import {
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument, position: Position): DocumentHighlight[] => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string, position: Position): DocumentHighlight[] => {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const highlights = languageService.getDocumentHighlights(fileName, offset, [fileName]);

@@ -65,19 +65,19 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		{ // watching
 			tsProjectVersion.value
 		}
-		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.HtmlElements)));
+		return tsLanguageService.doComplete(globalDoc.uri, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.HtmlElements)));
 	});
 	const _globalAttrs = computed(() => {
 		{ // watching
 			tsProjectVersion.value
 		}
-		return tsLanguageService.doComplete(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.GlobalAttrs)));
+		return tsLanguageService.doComplete(globalDoc.uri, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.GlobalAttrs)));
 	});
 	const globalComponentCalls = computed(() => {
 		{ // watching
 			tsProjectVersion.value
 		}
-		const items = tsLanguageService.prepareCallHierarchy(globalDoc, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.AppComponentCall)));
+		const items = tsLanguageService.prepareCallHierarchy(globalDoc.uri, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.AppComponentCall)));
 		return items.map(tsLanguageService.provideCallHierarchyIncomingCalls).flat().filter(item => item.from.uri !== globalDoc.uri);
 	});
 	const globalComponentCallsData = computed(() => {

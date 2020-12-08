@@ -3,6 +3,7 @@ import {
 	Diagnostic,
 	DiagnosticTag,
 	DiagnosticSeverity,
+	Range,
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 import * as ts from 'typescript';
@@ -19,8 +20,26 @@ const styleCheckDiagnostics = new Set([
 	...errorCodes.notAllCodePathsReturnAValue,
 ]);
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument, options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true }): Diagnostic[] => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string, options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true }): Diagnostic[] => {
+		const document = getTextDocument(uri);
+		if (!document) {
+			if (options.suggestion) {
+				return [
+					Diagnostic.create(
+						Range.create(0, 0, 0, 0),
+						'services not working for this script block because virtual file not found in TS server, maybe try to add lang="ts" to <script>, or add `"allowJs": true` to tsconfig.json',
+						DiagnosticSeverity.Warning,
+						undefined,
+						'volar', // TODO
+					)
+				];
+			}
+			else {
+				return [];
+			}
+		}
+
 		const fileName = uriToFsPath(document.uri);
 
 		const diags_1 = options.semantic ? languageService.getSemanticDiagnostics(fileName) : [];
@@ -28,12 +47,12 @@ export function register(languageService: ts.LanguageService) {
 		const diags_3 = options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [];
 
 		return [
-			...translateDiagnostics(diags_1),
-			...translateDiagnostics(diags_2),
-			...translateDiagnostics(diags_3),
+			...translateDiagnostics(document, diags_1),
+			...translateDiagnostics(document, diags_2),
+			...translateDiagnostics(document, diags_3),
 		];
 
-		function translateDiagnostics(input: ts.Diagnostic[]) {
+		function translateDiagnostics(document: TextDocument, input: ts.Diagnostic[]) {
 			let output: Diagnostic[] = [];
 
 			for (const diag of input) {

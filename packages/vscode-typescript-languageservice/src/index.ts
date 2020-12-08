@@ -30,25 +30,24 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 
 	return {
 		host,
-		raw: languageService,
 
 		findDefinition: definitions.register(languageService, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getTextDocument),
 		findReferences: references.register(languageService, getTextDocument),
 		doRename: rename.register(languageService, getTextDocument),
 
-		findDocumentHighlights: documentHighlight.register(languageService),
-		findDocumentSymbols: documentSymbol.register(languageService),
-		findWorkspaceSymbols: workspaceSymbols.register(languageService),
-		doComplete: completions.register(languageService),
+		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument),
+		findDocumentSymbols: documentSymbol.register(languageService, getTextDocument),
+		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
+		doComplete: completions.register(languageService, getTextDocument),
 		doCompletionResolve: completionResolve.register(languageService, getTextDocument),
-		doHover: hover.register(languageService),
-		doFormatting: formatting.register(languageService),
-		getSignatureHelp: signatureHelp.register(languageService),
-		getSelectionRange: selectionRanges.register(languageService),
-		doValidation: diagnostics.register(languageService),
-		getFoldingRanges: foldingRanges.register(languageService),
-		getDocumentSemanticTokens: semanticTokens.register(languageService),
+		doHover: hover.register(languageService, getTextDocument),
+		doFormatting: formatting.register(languageService, getTextDocument),
+		getSignatureHelp: signatureHelp.register(languageService, getTextDocument),
+		getSelectionRange: selectionRanges.register(languageService, getTextDocument),
+		doValidation: diagnostics.register(languageService, getTextDocument),
+		getFoldingRanges: foldingRanges.register(languageService, getTextDocument),
+		getDocumentSemanticTokens: semanticTokens.register(languageService, getTextDocument),
 		...callHierarchy.register(languageService, getTextDocument),
 
 		getTextDocument,
@@ -57,6 +56,9 @@ export function createLanguageService(host: ts.LanguageServiceHost) {
 
 	function getTextDocument(uri: string) {
 		const fileName = uriToFsPath(uri);
+		if (!languageService.getProgram()?.getSourceFile(fileName)) {
+			return;
+		}
 		const version = Number(host.getScriptVersion(fileName));
 		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);

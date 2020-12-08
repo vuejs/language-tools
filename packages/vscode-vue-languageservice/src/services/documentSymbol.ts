@@ -65,7 +65,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const map = new Map<string, SymbolInformation>();
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.targetDocument);
+				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.targetDocument.uri);
 				for (const s of symbols) {
 					const vueLoc = sourceMap.targetToSource(s.location.range);
 					if (vueLoc) {

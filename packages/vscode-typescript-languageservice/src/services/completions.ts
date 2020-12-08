@@ -10,8 +10,11 @@ import {
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const defaultOptions: ts.GetCompletionsAtPositionOptions = {
@@ -45,14 +48,14 @@ export function register(languageService: ts.LanguageService) {
 					},
 				}
 
-				item = fuzzyCompletionItem(entry, item);
+				item = fuzzyCompletionItem(document, entry, item);
 
 				return item;
 			});
 		return entries;
 
 		// from vscode typescript
-		function fuzzyCompletionItem(entry: ts.CompletionEntry, item: CompletionItem) {
+		function fuzzyCompletionItem(document: TextDocument, entry: ts.CompletionEntry, item: CompletionItem) {
 			if (entry.kindModifiers) {
 				const kindModifiers = entry.kindModifiers.split(/,|\s+/g);
 				if (kindModifiers.includes(PConst.KindModifiers.optional)) {

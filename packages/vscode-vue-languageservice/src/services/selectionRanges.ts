@@ -24,7 +24,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
 					for (const tsLoc of sourceMap.sourceToTargets(range)) {
 						if (!tsLoc.maped.data.capabilities.basic) continue;
-						const selectRange = tsLanguageService.getSelectionRange(sourceMap.targetDocument, tsLoc.range.start);
+						const selectRange = tsLanguageService.getSelectionRange(sourceMap.targetDocument.uri, tsLoc.range.start);
 						if (selectRange) {
 							const vueLoc = sourceMap.targetToSource(selectRange.range);
 							if (vueLoc) {

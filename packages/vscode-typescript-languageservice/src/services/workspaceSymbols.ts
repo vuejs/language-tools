@@ -27,28 +27,31 @@ function getSymbolKind(item: ts.NavigationBarItem): SymbolKind {
 	}
 }
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument): SymbolInformation[] => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string): SymbolInformation[] => {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const barItems = languageService.getNavigationBarItems(fileName);
 		const output: SymbolInformation[] = [];
-		barItemsWorker(barItems);
+		barItemsWorker(document, barItems);
 
 		return output;
 
-		function barItemsWorker(barItems: ts.NavigationBarItem[], parentName?: string) {
+		function barItemsWorker(document: TextDocument, barItems: ts.NavigationBarItem[], parentName?: string) {
 			for (const barItem of barItems) {
-				barItemWorker(barItem, parentName);
+				barItemWorker(document, barItem, parentName);
 			}
 		}
-		function barItemWorker(barItem: ts.NavigationBarItem, parentName?: string) {
+		function barItemWorker(document: TextDocument, barItem: ts.NavigationBarItem, parentName?: string) {
 			for (const span of barItem.spans) {
-				const item = toSymbolInformation(barItem, span, parentName);
+				const item = toSymbolInformation(document, barItem, span, parentName);
 				output.push(item);
-				barItemsWorker(barItem.childItems, barItem.text);
+				barItemsWorker(document, barItem.childItems, barItem.text);
 			}
 		}
-		function toSymbolInformation(item: ts.NavigationBarItem, span: ts.TextSpan, containerName?: string) {
+		function toSymbolInformation(document: TextDocument, item: ts.NavigationBarItem, span: ts.TextSpan, containerName?: string) {
 			const label = getLabel(item);
 			const info = SymbolInformation.create(
 				label,

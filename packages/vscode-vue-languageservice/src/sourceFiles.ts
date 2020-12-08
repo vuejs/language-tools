@@ -292,11 +292,11 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 
 		const doc = virtualScriptMain.textDocument.value;
 		const docText = doc.getText();
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
-		const components = docText.indexOf(SearchTexts.Components) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
-		const scriptSetupExports = docText.indexOf(SearchTexts.ScriptSetupExports) >= 0 ? tsLanguageService.doComplete(doc, doc.positionAt(docText.indexOf(SearchTexts.ScriptSetupExports))) : [];
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
+		const components = docText.indexOf(SearchTexts.Components) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
+		const scriptSetupExports = docText.indexOf(SearchTexts.ScriptSetupExports) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.ScriptSetupExports))) : [];
 
 		const contextNames = context.map(entry => entry.data.name);
 		const componentNames = components.map(entry => entry.data.name);
@@ -482,13 +482,13 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				const doc = document.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLanguageService.doValidation(doc, { semantic: true });
+					return tsLanguageService.doValidation(doc.uri, { semantic: true });
 				}
 				else if (mode === 2) {
-					return tsLanguageService.doValidation(doc, { syntactic: true });
+					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
 				}
 				else {
-					return tsLanguageService.doValidation(doc, { suggestion: true });
+					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
 				}
 			});
 			return computed(() => {
@@ -505,13 +505,13 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 				const doc = virtualTemplateGen.textDocument.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLanguageService.doValidation(doc, { semantic: true });
+					return tsLanguageService.doValidation(doc.uri, { semantic: true });
 				}
 				else if (mode === 2) {
-					return tsLanguageService.doValidation(doc, { syntactic: true });
+					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
 				}
 				else {
-					return tsLanguageService.doValidation(doc, { suggestion: true });
+					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
 				}
 			});
 			const errors_2 = computed(() => {
@@ -527,7 +527,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 					const propRights = virtualTemplateGen.contextSourceMap.value.sourceToTargets(diag.range);
 					for (const propRight of propRights) {
 						if (propRight.maped.data.isAdditionalReference) continue;
-						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value, propRight.range.start);
+						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.range.start);
 						for (const definition of definitions) {
 							if (definition.uri !== virtualScriptGen.textDocument.value.uri) continue;
 							result.push({
@@ -637,7 +637,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							bind = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+							bind = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -645,7 +645,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							on = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+							on = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -653,7 +653,7 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							slot = tsLanguageService.doComplete(doc, doc.positionAt(offset));
+							slot = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					data.set(tagName, { bind, on, slot });

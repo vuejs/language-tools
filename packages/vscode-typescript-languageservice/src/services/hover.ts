@@ -10,12 +10,15 @@ import {
 import * as previewer from '../utils/previewer';
 import { uriToFsPath } from '@volar/shared';
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument, position: Position): Hover | undefined => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string, position: Position): Hover | undefined => {
+		const document = getTextDocument(uri);
+		if (!document) return;
+
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const info = languageService.getQuickInfoAtPosition(fileName, offset);
-		if (!info) return undefined;
+		if (!info) return;
 
 		const parts: string[] = [];
 		const displayString = ts.displayPartsToString(info.displayParts);

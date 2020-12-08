@@ -111,7 +111,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const script = sourceFile.getVirtualScript();
 				if (!script.document || !script.sourceMap) return;
 				const refOffset = script.document.getText().indexOf(SearchTexts.Ref);
-				const items = tsLanguageService.doComplete(script.document, script.document.positionAt(refOffset), { includeCompletionsForModuleExports: true });
+				const items = tsLanguageService.doComplete(script.document.uri, script.document.positionAt(refOffset), { includeCompletionsForModuleExports: true });
 				for (let item of items) {
 					if (item.label !== 'ref')
 						continue;

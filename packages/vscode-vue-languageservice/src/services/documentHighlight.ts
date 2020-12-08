@@ -30,7 +30,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.basic) continue;
-					const highlights = tsLanguageService.findDocumentHighlights(sourceMap.targetDocument, tsLoc.range.start);
+					const highlights = tsLanguageService.findDocumentHighlights(sourceMap.targetDocument.uri, tsLoc.range.start);
 					for (const highlight of highlights) {
 						const vueLoc = sourceMap.targetToSource(highlight.range);
 						if (vueLoc) {

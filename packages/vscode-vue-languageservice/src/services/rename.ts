@@ -77,7 +77,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			return deduplication(vueEdit);
 
 			function worker(doc: TextDocument, pos: Position, newName: string, direction = 0) {
-				let rename = tsLanguageService.doRename(doc, pos, newName);
+				let rename = tsLanguageService.doRename(doc.uri, pos, newName);
 				if (!rename) return rename;
 				for (const tsUri in rename.changes) {
 					const tsEdits = rename.changes[tsUri];
@@ -98,7 +98,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 								if (sourceMap.isSource(tsLoc.range)) {
 									const rightLocs = sourceMap.sourceToTargets(tsLoc.range);
 									for (const rightLoc of rightLocs) {
-										const definitions = tsLanguageService.findDefinition(sourceMap.targetDocument, rightLoc.range.start);
+										const definitions = tsLanguageService.findDefinition(sourceMap.targetDocument.uri, rightLoc.range.start);
 										for (const definition of definitions) {
 											const vueLocs = tsLocationToVueLocations(definition, sourceFiles);
 											for (const vueLoc of vueLocs) {

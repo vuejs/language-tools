@@ -7,17 +7,20 @@ import {
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (document: TextDocument, position: Position, newText: string): WorkspaceEdit | undefined => {
+	return (uri: string, position: Position, newText: string): WorkspaceEdit | undefined => {
+		const document = getTextDocument(uri);
+		if (!document) return;
+
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		try {
 			const entries = languageService.findRenameLocations(fileName, offset, false, false, true);
-			if (!entries) return undefined;
+			if (!entries) return;
 
 			const locations = locationsToWorkspaceEdit(newText, entries, getTextDocument);
 			return locations;
 		} catch {
-			return undefined;
+			return;
 		}
 	};
 }

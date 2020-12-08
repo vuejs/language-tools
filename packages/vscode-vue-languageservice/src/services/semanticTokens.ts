@@ -107,7 +107,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						start: sourceMap.targetDocument.positionAt(maped.targetRange.start),
 						end: sourceMap.targetDocument.positionAt(maped.targetRange.end),
 					};
-					const tokens = await tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument, tsRange);
+					const tokens = await tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument.uri, tsRange);
 					if (!tokens) continue;
 					for (const token of tokens) {
 						const tokenOffset = sourceMap.targetDocument.offsetAt(token.start);

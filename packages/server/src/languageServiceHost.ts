@@ -81,7 +81,7 @@ export function createLanguageServiceHost(
 			const tsConfig = upath.resolve(kvp[0]);
 			const parsedCommandLine = kvp[1].getParsedCommandLine();
 			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].languageService.getTsService().raw.getProgram()?.getSourceFile(fileName)) {
+			if (fileNames.has(fileName) || kvp[1].languageService.getTsService().getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
 				if (fileName.startsWith(tsConfigDir)) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);

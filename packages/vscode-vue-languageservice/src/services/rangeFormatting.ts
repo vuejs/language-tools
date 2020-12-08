@@ -173,7 +173,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 		const result: TextEdit[] = [];
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
 			if (!sourceMap.capabilities.formatting) continue;
-			const textEdits = tsLanguageService.doFormatting(sourceMap.targetDocument, options);
+			const textEdits = tsLanguageService.doFormatting(sourceMap.targetDocument.uri, options);
 			for (const textEdit of textEdits) {
 				for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
 					if (!vueLoc.maped.data.capabilities.formatting) continue;
@@ -190,7 +190,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 			if (scriptSetupRaw.sourceMap?.capabilities.formatting) {
 				const sourceMap = scriptSetupRaw.sourceMap;
 				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
-				const textEdits = cheapTs.service.doFormatting(cheapTs.doc, options);
+				const textEdits = cheapTs.service.doFormatting(cheapTs.doc.uri, options);
 				/* copy from upside */
 				for (const textEdit of textEdits) {
 					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {

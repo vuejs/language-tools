@@ -18,9 +18,12 @@ export function getSemanticTokenLegend() {
 	return { types: tokenTypes, modifiers: tokenModifiers };
 }
 
-export function register(languageService: ts.LanguageService) {
-	return (currentTextDocument: TextDocument, range: Range) => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string, range: Range) => {
 		//https://ts-ast-viewer.com/#code/AQ0g2CmAuwGbALzAJwG4BQZQGNwEMBnQ4AQQEYBmYAb2C22zgEtJwATJVTRxgcwD27AQAp8AGmAAjAJS0A9POB8+7NQ168oscAJz5wANXwAnLug2bsJmAFcTAO2XAA1MHyvgu-UdOeWbOw8ViAAvpagocBAA
+
+		const currentTextDocument = getTextDocument(uri);
+		if (!currentTextDocument) return [];
 
 		let resultTokens: { start: Position, length: number, typeIdx: number, modifierSet: number }[] = [];
 		const collector = (node: ts.Node, typeIdx: number, modifierSet: number) => {

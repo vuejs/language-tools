@@ -51,7 +51,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			return tsLocations.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles, globalTsSourceMaps)).flat();
 
 			function worker(doc: TextDocument, pos: Position) {
-				const references = tsLanguageService.findReferences(doc, pos);
+				const references = tsLanguageService.findReferences(doc.uri, pos);
 				for (const reference of references) {
 					if (hasLocation(reference)) continue;
 					tsLocations.push(reference);

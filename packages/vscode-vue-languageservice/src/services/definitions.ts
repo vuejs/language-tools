@@ -18,7 +18,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	return (document: TextDocument, position: Position, ingoreTsResult = false) => {
 
 		if (document.languageId !== 'vue') {
-			const tsLocs = tsLanguageService.findDefinition(document, position);
+			const tsLocs = tsLanguageService.findDefinition(document.uri, position);
 			let result = tsLocs.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles)).flat();
 			if (ingoreTsResult) {
 				result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
@@ -53,7 +53,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	}
 }
 
-export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, sourceFiles: Map<string, SourceFile>, worker: (document: TextDocument, position: Position) => Location[], globalTsSourceMaps?: Map<string, { sourceMap: TsSourceMap }>) {
+export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, sourceFiles: Map<string, SourceFile>, worker: (uri: string, position: Position) => Location[], globalTsSourceMaps?: Map<string, { sourceMap: TsSourceMap }>) {
 	const range = {
 		start: position,
 		end: position,
@@ -62,7 +62,7 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
 		for (const tsLoc of sourceMap.sourceToTargets(range)) {
 			if (!tsLoc.maped.data.capabilities.references) continue;
-			const definitions = worker(sourceMap.targetDocument, tsLoc.range.start);
+			const definitions = worker(sourceMap.targetDocument.uri, tsLoc.range.start);
 			const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles, globalTsSourceMaps)).flat();
 			if (vueDefinitions.length) {
 				result = result.concat(vueDefinitions);
@@ -84,7 +84,7 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 						if (leftRange) {
 							const rightLocs = sourceMap.sourceToTargets(leftRange);
 							for (const rightLoc of rightLocs) {
-								const definitions = worker(sourceMap.sourceDocument, rightLoc.range.start);
+								const definitions = worker(sourceMap.sourceDocument.uri, rightLoc.range.start);
 								const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles, globalTsSourceMaps)).flat();
 								result = result.concat(vueDefinitions);
 								if (definitions.length) {

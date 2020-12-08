@@ -3,8 +3,11 @@ import * as ts from 'typescript';
 import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
-export function register(languageService: ts.LanguageService) {
-	return (document: TextDocument) => {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	return (uri: string) => {
+		const document = getTextDocument(uri);
+		if (!document) return [];
+
 		const fileName = uriToFsPath(document.uri);
 		const outliningSpans = languageService.getOutliningSpans(fileName);
 		const foldingRanges: FoldingRange[] = [];

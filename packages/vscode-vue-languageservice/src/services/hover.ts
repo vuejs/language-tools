@@ -13,7 +13,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	return (document: TextDocument, position: Position) => {
 
 		if (document.languageId !== 'vue') {
-			return tsLanguageService.doHover(document, position);
+			return tsLanguageService.doHover(document.uri, position);
 		}
 
 		const sourceFile = sourceFiles.get(document.uri);
@@ -57,7 +57,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.basic) continue;
-					const result = tsLanguageService.doHover(sourceMap.targetDocument, tsLoc.range.start);
+					const result = tsLanguageService.doHover(sourceMap.targetDocument.uri, tsLoc.range.start);
 					if (result?.range) {
 						const vueLoc = sourceMap.targetToSource(result.range);
 						if (vueLoc) result.range = vueLoc.range;
