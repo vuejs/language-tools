@@ -494,6 +494,16 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
 						_code += `),\n`;
 					}
+					else if (
+						prop.type === NodeTypes.ATTRIBUTE
+						&& prop.name !== 'name' // slot name
+					) {
+						const propValue = prop.value ? `\`${prop.value?.content.replace(/`/g, '\\`')}\`` : 'true';
+						mappingObjectProperty(MapedNodeTypes.Prop, prop.name, prop.name, capabilitiesSet.htmlTagOrAttr, [{ start: prop.loc.start.offset, end: prop.loc.start.offset + prop.name.length }]);
+						_code += `: (`;
+						_code += propValue;
+						_code += `),\n`;
+					}
 				}
 				_code += `};\n`;
 
