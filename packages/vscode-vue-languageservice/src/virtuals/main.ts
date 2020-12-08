@@ -22,13 +22,19 @@ export function useScriptMain(
 			`import { defineComponent } from '@vue/runtime-dom';`,
 			hasScript ? `import __VLS_componentRaw from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
 			hasScriptSetupExports ? `import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.__VLS_scriptSetup.raw';` : `// no scriptSetup #182`,
-			hasScript ? `import { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `var __VLS_options = {};`,
 			...(hasScript
-				? [`const __VLS_componentReserve = defineComponent(__VLS_componentRaw);`,
+				? [
+					`import { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';`,
+					`export { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';`,
+					`const __VLS_componentReserve = defineComponent(__VLS_componentRaw);`,
 					`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;`,
-					`declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;`,
-					`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`]
-				: [`var __VLS_component = defineComponent({});`]),
+					`export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;`,
+					`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
+				]
+				: [
+					`export var __VLS_options = {};`,
+					`export var __VLS_component = defineComponent({});`,
+				]),
 			`declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents;`,
 			hasScript ? `__VLS_ctx.${SearchTexts.Context};` : `// no script`,

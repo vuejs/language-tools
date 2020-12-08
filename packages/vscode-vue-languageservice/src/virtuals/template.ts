@@ -53,13 +53,12 @@ export function useTemplateScript(
 			`import { HTMLAttributes as __VLS_Vue_HTMLAttributes } from '@vue/runtime-dom'`,
 			`import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'`,
 			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
-			`import __VLS_VM from './${upath.basename(vueFileName)}';`,
+			`import { __VLS_options, __VLS_component } from './${upath.basename(vueFileName)}';`,
 			(templateScriptData.scriptSetupExports.length
 				? `import * as __VLS_setups from './${upath.basename(vueFileName)}.scriptSetup.raw';`
 				: `// no setups`),
-			`const __VLS_Options = __VLS_VM.__VLS_options`,
-			`declare var __VLS_ctx: InstanceType<typeof __VLS_VM>;`,
-			`declare var __VLS_vmUnwrap: typeof __VLS_Options & { components: { } };`,
+			`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
+			`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents;`,
 		].join('\n') + `\n`;
 
@@ -266,11 +265,11 @@ export function useTemplateScript(
 						mode: MapedMode.Offset,
 						sourceRange: vueRange,
 						targetRange: {
-							start: code.length + `__VLS_Options.props.`.length,
-							end: code.length + `__VLS_Options.props.${propName}`.length,
+							start: code.length + `__VLS_options.props.`.length,
+							end: code.length + `__VLS_options.props.${propName}`.length,
 						},
 					});
-					code += `__VLS_Options.props.${propName}; `;
+					code += `__VLS_options.props.${propName}; `;
 				}
 				if (scriptSetupExportsSet.has(propName)) {
 					mappings.push({
