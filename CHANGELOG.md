@@ -1,3 +1,10 @@
+### 0.16.11
+
+- feat: support directives syntax `:=`, `@=`, `#=`
+- fix: v-slot bind properties missing attribute values
+- fix: template validation broke with v-slot bind properties
+- fix: slot services disturbed slot element hover info
+
 ### 0.16.10
 
 - feat: reference, rename, definition support to js
