@@ -34,101 +34,99 @@ export async function activate(context: vscode.ExtensionContext) {
 	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009);
 	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010);
 
-	context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
-	context.subscriptions.push(activateTagEditing(tagEditRequestor, { vue: true }, 'volar.html.autoEditingTags'));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {
-		apiClient.sendNotification(RestartServerNotification.type, undefined);
-		docClient.sendNotification(RestartServerNotification.type, undefined);
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
-		docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeVirtualFiles', () => {
-		docClient.sendRequest(WriteVirtualFilesRequest.type, undefined);
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.formatAllScripts', async () => {
-		const useTabsOptions = new Map<boolean, string>();
-		useTabsOptions.set(true, 'Indent Using Tabs');
-		useTabsOptions.set(false, 'Indent Using Spaces');
-		const useTabs = await userPick(useTabsOptions);
-		if (useTabs === undefined) return; // cancle
-
-		const tabSizeOptions = new Map<number, string>();
-		for (let i = 1; i <= 8; i++) {
-			tabSizeOptions.set(i, i.toString());
-		}
-		const tabSize = await userPick(tabSizeOptions, 'Select Tab Size');
-		if (tabSize === undefined) return; // cancle
-
-		apiClient.sendRequest(FormatAllScriptsRequest.type, {
-			insertSpaces: !useTabs,
-			tabSize,
-		});
-
-		function userPick<K>(options: Map<K, string>, placeholder?: string) {
-			return new Promise<K | undefined>(resolve => {
-				const quickPick = vscode.window.createQuickPick();
-				quickPick.items = [...options.values()].map(option => ({ label: option }));
-				quickPick.placeholder = placeholder;
-				quickPick.onDidChangeSelection(selection => {
-					if (selection[0]) {
-						for (const [key, label] of options) {
-							if (selection[0].label === label) {
-								resolve(key);
-								quickPick.hide();
-							}
-						}
-					}
-				});
-				quickPick.onDidHide(() => {
-					quickPick.dispose();
-					resolve(undefined);
-				})
-				quickPick.show();
-			});
-		}
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
-		const document = vscode.window.activeTextEditor?.document;
-		if (!document) return;
-		let param = apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
-		const d3 = await apiClient.sendRequest(D3Request.type, param);
-
-		const panel = vscode.window.createWebviewPanel(
-			'vueCallGraph',
-			'Vue Call Graph',
-			vscode.ViewColumn.One,
-			{
-				enableScripts: true
-			}
-		);
-		panel.webview.html = `
-<script src="https://d3js.org/d3.v5.min.js"></script>
-<script src="https://unpkg.com/viz.js@1.8.1/viz.js" type="javascript/worker"></script>
-<script src="https://unpkg.com/d3-graphviz@2.1.0/build/d3-graphviz.min.js"></script>
-<div id="graph" style="text-align: center;"></div>
-<script>
-
-	var dotIndex = 0;
-	var graphviz = d3.select("#graph").graphviz()
-		.zoom(false)
-		.on("initEnd", render)
-
-	function render() {
-		var dot = \`${d3}\`;
-		graphviz
-			.renderDot(dot)
-	}
-
-</script>
-`
-	}));
-
-	// TODO: active by vue block lang
-	startEmbeddedLanguageServices();
-	registerDocumentFormattingEditProvider(apiClient);
 	(async () => {
 		await apiClient.onReady();
+		await docClient.onReady();
+
+		context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
+		context.subscriptions.push(activateTagEditing(tagEditRequestor, { vue: true }, 'volar.html.autoEditingTags'));
+		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {
+			apiClient.sendNotification(RestartServerNotification.type, undefined);
+			docClient.sendNotification(RestartServerNotification.type, undefined);
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('volar.action.verifyAllScripts', () => {
+			docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeVirtualFiles', () => {
+			docClient.sendRequest(WriteVirtualFilesRequest.type, undefined);
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('volar.action.formatAllScripts', async () => {
+			const useTabsOptions = new Map<boolean, string>();
+			useTabsOptions.set(true, 'Indent Using Tabs');
+			useTabsOptions.set(false, 'Indent Using Spaces');
+			const useTabs = await userPick(useTabsOptions);
+			if (useTabs === undefined) return; // cancle
+
+			const tabSizeOptions = new Map<number, string>();
+			for (let i = 1; i <= 8; i++) {
+				tabSizeOptions.set(i, i.toString());
+			}
+			const tabSize = await userPick(tabSizeOptions, 'Select Tab Size');
+			if (tabSize === undefined) return; // cancle
+
+			apiClient.sendRequest(FormatAllScriptsRequest.type, {
+				insertSpaces: !useTabs,
+				tabSize,
+			});
+
+			function userPick<K>(options: Map<K, string>, placeholder?: string) {
+				return new Promise<K | undefined>(resolve => {
+					const quickPick = vscode.window.createQuickPick();
+					quickPick.items = [...options.values()].map(option => ({ label: option }));
+					quickPick.placeholder = placeholder;
+					quickPick.onDidChangeSelection(selection => {
+						if (selection[0]) {
+							for (const [key, label] of options) {
+								if (selection[0].label === label) {
+									resolve(key);
+									quickPick.hide();
+								}
+							}
+						}
+					});
+					quickPick.onDidHide(() => {
+						quickPick.dispose();
+						resolve(undefined);
+					})
+					quickPick.show();
+				});
+			}
+		}));
+		context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
+			const document = vscode.window.activeTextEditor?.document;
+			if (!document) return;
+			let param = apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
+			const d3 = await apiClient.sendRequest(D3Request.type, param);
+
+			const panel = vscode.window.createWebviewPanel(
+				'vueCallGraph',
+				'Vue Call Graph',
+				vscode.ViewColumn.One,
+				{
+					enableScripts: true
+				}
+			);
+			panel.webview.html = `
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<script src="https://unpkg.com/viz.js@1.8.1/viz.js" type="javascript/worker"></script>
+	<script src="https://unpkg.com/d3-graphviz@2.1.0/build/d3-graphviz.min.js"></script>
+	<div id="graph" style="text-align: center;"></div>
+	<script>
+	
+		var dotIndex = 0;
+		var graphviz = d3.select("#graph").graphviz()
+			.zoom(false)
+			.on("initEnd", render)
+	
+		function render() {
+			var dot = \`${d3}\`;
+			graphviz
+				.renderDot(dot)
+		}
+	
+	</script>
+	`
+		}));
 		apiClient.onNotification(ShowReferencesNotification.type, handler => {
 			const uri: string = handler.uri;
 			const pos: Position = handler.position;
@@ -143,7 +141,11 @@ export async function activate(context: vscode.ExtensionContext) {
 				)),
 			);
 		});
-	})()
+	})();
+
+	// TODO: active by vue block lang
+	startEmbeddedLanguageServices();
+	registerDocumentFormattingEditProvider(apiClient);
 
 	function tagRequestor(document: vscode.TextDocument, position: vscode.Position) {
 		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
