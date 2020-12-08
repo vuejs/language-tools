@@ -7,7 +7,6 @@ import * as path from 'upath';
 import * as vscode from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { registerDocumentFormattingEditProvider } from './format';
-import { registerEmmetConfigurationProvider } from './emmetConfig';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -125,7 +124,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
 	registerDocumentFormattingEditProvider(apiClient);
-	registerEmmetConfigurationProvider(apiClient);
 	(async () => {
 		await apiClient.onReady();
 		apiClient.onNotification(ShowReferencesNotification.type, handler => {

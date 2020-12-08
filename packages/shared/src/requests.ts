@@ -54,9 +54,6 @@ export namespace FormatAllScriptsRequest {
 export namespace WriteVirtualFilesRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.writeVirtualFiles');
 }
-export namespace EmmetConfigurationRequest {
-	export const type: RequestType<string, any, any> = new RequestType('volar.getEmmetConfiguration');
-}
 
 export namespace RestartServerNotification {
 	export const type: NotificationType<undefined> = new NotificationType('volar.action.restartServer');

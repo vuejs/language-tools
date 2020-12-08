@@ -36,7 +36,6 @@ import {
 	FormatAllScriptsRequest,
 	GetFormattingSourceMapsRequest,
 	uriToFsPath,
-	EmmetConfigurationRequest,
 	RestartServerNotification,
 } from '@volar/shared';
 import * as upath from 'upath';
@@ -189,12 +188,42 @@ function initLanguageService(rootPath: string) {
 	connection.onCompletion(async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
+
 		return host.best(document.uri)?.doComplete(
 			document,
 			handler.position,
 			handler.context,
-			syntax => connection.sendRequest(EmmetConfigurationRequest.type, syntax),
+			async syntax => await getEmmetConfiguration(syntax),
 		);
+
+		async function getEmmetConfiguration(syntax: string) {
+			const emmetConfig = await connection.workspace.getConfiguration('emmet');
+			const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
+			const preferences = Object.assign({}, emmetConfig['preferences'] || {});
+			// jsx, xml and xsl syntaxes need to have self closing tags unless otherwise configured by user
+			if (syntax === 'jsx' || syntax === 'xml' || syntax === 'xsl') {
+				syntaxProfiles[syntax] = syntaxProfiles[syntax] || {};
+				if (typeof syntaxProfiles[syntax] === 'object'
+					&& !syntaxProfiles[syntax].hasOwnProperty('self_closing_tag') // Old Emmet format
+					&& !syntaxProfiles[syntax].hasOwnProperty('selfClosingStyle') // Emmet 2.0 format
+				) {
+					syntaxProfiles[syntax] = {
+						...syntaxProfiles[syntax],
+						selfClosingStyle: 'xml'
+					};
+				}
+			}
+
+			return {
+				preferences,
+				showExpandedAbbreviation: emmetConfig['showExpandedAbbreviation'],
+				showAbbreviationSuggestions: emmetConfig['showAbbreviationSuggestions'],
+				syntaxProfiles,
+				variables: emmetConfig['variables'],
+				excludeLanguages: emmetConfig['excludeLanguages'],
+				showSuggestionsAsSnippets: emmetConfig['showSuggestionsAsSnippets']
+			};
+		}
 	});
 	connection.onCompletionResolve(async item => {
 		const uri = item.data?.uri;
