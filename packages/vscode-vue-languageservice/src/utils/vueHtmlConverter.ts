@@ -517,8 +517,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 				slots.set(slotName, {
 					varName: varSlot,
 					loc: {
-						start: node.loc.start.offset,
-						end: node.loc.end.offset,
+						start: node.loc.start.offset + 1,
+						end: node.loc.start.offset + 1 + node.tag.length,
 					},
 				});
 
