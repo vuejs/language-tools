@@ -1,6 +1,10 @@
+### 0.16.10
+
+- feat: reference, rename, definition support to js
+
 ### 0.16.9
 
-- feat: better js support
+- feat: template validation support to js
 - fix: should not error when css class not exist
 - fix: inline style hover info wrong mapping
 

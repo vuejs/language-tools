@@ -319,11 +319,12 @@ export function useScriptSetupGen(
 		return sourceMap;
 	});
 	const mirrorsSourceMap = computed(() => {
-		if (scriptSetupGenResult.value && textDocument.value) {
+		const doc = shadowTsTextDocument.value ?? textDocument.value;
+		if (scriptSetupGenResult.value && doc) {
 			const startOffset = script.value?.content.length ?? 0;
 			const sourceMap = new SourceMap(
-				textDocument.value,
-				textDocument.value,
+				doc,
+				doc,
 			);
 			for (const maped of scriptSetupGenResult.value.mirrors) {
 				sourceMap.add({
@@ -363,7 +364,15 @@ export function useScriptSetupGen(
 					...maped,
 					data: {
 						...maped.data,
-						capabilities: {},
+						capabilities: {
+							...maped.data.capabilities,
+							basic: false,
+							diagnostic: false,
+							formatting: false,
+							completion: false,
+							semanticTokens: false,
+							foldingRanges: false,
+						},
 					},
 				})
 			}
