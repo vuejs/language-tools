@@ -1,3 +1,7 @@
+### 0.16.12
+
+- feat: auto rename html tag
+
 ### 0.16.11
 
 - feat: support directives syntax `:=`, `@=`, `#=`

@@ -16,10 +16,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			end: position,
 		};
 
-		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
+		if (htmlResult.length) return htmlResult;
+
 		const cssResult = getCssResult(sourceFile);
-		return [...cssResult, ...htmlResult, ...tsResult];
+		if (cssResult.length) return cssResult;
+
+		const tsResult = getTsResult(sourceFile);
+		if (tsResult.length) return tsResult;
 
 		function getTsResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];

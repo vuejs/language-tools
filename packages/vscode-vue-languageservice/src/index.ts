@@ -11,6 +11,7 @@ import * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
 import * as autoClose from './services/autoClose';
+import * as autoEditTag from './services/tagEdit';
 import * as embeddedDocument from './services/embeddedDocument';
 import * as hover from './services/hover';
 import * as diagnostics from './services/diagnostics';
@@ -222,6 +223,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		doComplete: apiHook(completions.register(sourceFiles, tsLanguageService), false),
 		doCompletionResolve: apiHook(completionResolve.register(sourceFiles, tsLanguageService), false),
 		doAutoClose: apiHook(autoClose.register(sourceFiles), false),
+		doAutoEditTag: apiHook(autoEditTag.register(sourceFiles), false),
 		getEmbeddedDocument: apiHook(embeddedDocument.register(sourceFiles), false),
 		getSignatureHelp: apiHook(signatureHelp.register(sourceFiles, tsLanguageService), false),
 		getSelectionRanges: apiHook(selectionRanges.register(sourceFiles, tsLanguageService), false),

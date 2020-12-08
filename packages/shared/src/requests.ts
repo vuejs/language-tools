@@ -12,6 +12,7 @@ import {
 	Position,
 	Location,
 	DocumentUri,
+	Range,
 } from 'vscode-languageserver/node';
 
 export interface ISourceMap {
@@ -35,6 +36,12 @@ export namespace D3Request {
 }
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any> = new RequestType('html/tag');
+}
+export namespace TagEditRequest {
+	export const type: RequestType<{
+		textDocument: TextDocumentIdentifier,
+		range: Range,
+	}, Range | null | undefined, any> = new RequestType('html/tag_edit');
 }
 export namespace GetFormattingSourceMapsRequest {
 	export const type: RequestType<{

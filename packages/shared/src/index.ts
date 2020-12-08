@@ -1,5 +1,6 @@
 export * from './path';
 export * from './requests';
+import type { Range } from 'vscode-languageserver/node';
 
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
@@ -37,4 +38,11 @@ export function randomStr() {
 }
 export function notEmpty<T>(value: T | null | undefined): value is T {
     return value !== null && value !== undefined;
+}
+export function isInsideRange(parent: Range, child: Range) {
+    if (child.start.line < parent.start.line) return false;
+    if (child.end.line > parent.end.line) return false;
+    if (child.start.line === parent.start.line && child.start.character < parent.start.character) return false;
+    if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
+    return true;
 }

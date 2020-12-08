@@ -10,6 +10,7 @@ import { rfc } from '../virtuals/script';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import { isInsideRange } from '@volar/shared';
 const pugBeautify = require('pug-beautify');
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
@@ -176,10 +177,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 			for (const textEdit of textEdits) {
 				for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
 					if (!vueLoc.maped.data.capabilities.formatting) continue;
-					if (vueLoc.range.start.line < range.start.line) continue;
-					if (vueLoc.range.end.line > range.end.line) continue;
-					if (vueLoc.range.start.line === range.start.line && vueLoc.range.start.character < range.start.character) continue;
-					if (vueLoc.range.end.line === range.end.line && vueLoc.range.end.character > range.end.character) continue;
+					if (!isInsideRange(range, vueLoc.range)) continue;
 					result.push({
 						newText: textEdit.newText,
 						range: vueLoc.range,
@@ -197,10 +195,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 				for (const textEdit of textEdits) {
 					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
 						if (!vueLoc.maped.data.capabilities.formatting) continue;
-						if (vueLoc.range.start.line < range.start.line) continue;
-						if (vueLoc.range.end.line > range.end.line) continue;
-						if (vueLoc.range.start.line === range.start.line && vueLoc.range.start.character < range.start.character) continue;
-						if (vueLoc.range.end.line === range.end.line && vueLoc.range.end.character > range.end.character) continue;
+						if (!isInsideRange(range, vueLoc.range)) continue;
 						result.push({
 							newText: textEdit.newText,
 							range: vueLoc.range,

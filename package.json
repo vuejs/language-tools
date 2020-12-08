@@ -107,11 +107,15 @@
 		"configuration": {
 			"title": "Volar",
 			"properties": {
+				"volar.html.autoEditingTags": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto edit html tags pair"
+				},
 				"volar.format.formatter": {
 					"type": "string",
 					"default": "default",
 					"enum": [
-						"none",
 						"default",
 						"workspaceExtensions"
 					],
