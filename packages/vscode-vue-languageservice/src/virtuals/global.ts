@@ -34,8 +34,7 @@ declare global {
 	type __VLS_GlobalAttrs = HTMLAttributes & VNodeProps & AllowedComponentProps;
 	type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;
 	type __VLS_OmitGlobalAttrs<T> = { [K in keyof T]: Omit<T[K], keyof __VLS_GlobalAttrs> };
-	type __VLS_RequiredType<T> = [Extract<T, undefined>] extends [never] ? true : false;
-	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: __VLS_RequiredType<T[K]> } };
+	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
 	
 `;
 	{
