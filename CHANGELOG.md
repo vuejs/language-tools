@@ -4,6 +4,7 @@
 - feat: increase support emits overloads nums to 16
 - fix: pure type defineProps properties required incorrect
 - fix: monorepo services can't update cross root scripts
+- fix: `<script setup>` formatting broke in 0.16.13
 
 ### 0.16.13
 

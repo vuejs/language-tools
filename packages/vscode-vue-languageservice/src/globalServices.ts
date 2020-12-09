@@ -3,6 +3,7 @@ import * as HTML from 'vscode-html-languageservice';
 import * as TS from 'typescript';
 import * as TS2 from '@volar/vscode-typescript-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
+import { fsPathToUri, uriToFsPath } from '@volar/shared';
 
 export const html = HTML.getLanguageService();
 export const css = CSS.getCSSLanguageService();
@@ -42,7 +43,7 @@ let tsScriptVersion2 = 0;
 let tsScript2 = TS.ScriptSnapshot.fromString('');
 const tsService2 = TS2.createLanguageService({
     getCompilationSettings: () => ({}),
-    getScriptFileNames: () => ['fake.ts'],
+    getScriptFileNames: () => [uriToFsPath(fsPathToUri('fake.ts'))],
     getScriptVersion: () => tsScriptVersion2.toString(),
     getScriptSnapshot: () => tsScript2,
     getCurrentDirectory: () => '',
@@ -53,6 +54,6 @@ export function getCheapTsService2(doc: TextDocument) {
     tsScript2 = TS.ScriptSnapshot.fromString(doc.getText());
     return {
         service: tsService2,
-        doc: doc,
+        uri: fsPathToUri('fake.ts'),
     };
 }

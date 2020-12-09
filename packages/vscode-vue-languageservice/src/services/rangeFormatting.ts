@@ -190,7 +190,7 @@ export function formattingWorker(sourceFile: SourceFile, document: TextDocument,
 			if (scriptSetupRaw.sourceMap?.capabilities.formatting) {
 				const sourceMap = scriptSetupRaw.sourceMap;
 				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
-				const textEdits = cheapTs.service.doFormatting(cheapTs.doc.uri, options);
+				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
 				/* copy from upside */
 				for (const textEdit of textEdits) {
 					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
