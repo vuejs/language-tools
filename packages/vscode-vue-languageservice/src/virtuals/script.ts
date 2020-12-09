@@ -563,6 +563,18 @@ function genScriptSetup(
 		});
 		genCode += `>),\n`;
 	}
+	if (data.defineEmit?.typeArgs) {
+		genCode += `emits: ({} as __VLS_ConstructorOverloads<`
+		addCode(originalCode.substring(data.defineEmit.typeArgs.start, data.defineEmit.typeArgs.end), {
+			capabilities: {},
+			scriptSetupRange: {
+				start: data.defineEmit.typeArgs.start,
+				end: data.defineEmit.typeArgs.end,
+			},
+			mode: MapedMode.Offset,
+		});
+		genCode += `>),\n`;
+	}
 	// TODO: emit types
 	if (data.exportDefault) {
 		genCode += `...(`;
