@@ -42,8 +42,7 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 
 ## Requirements
 
-- tsconfig.json
-- `lang="ts"`
+- tsconfig.json / jsconfig.json
 
 ## Components service
 
