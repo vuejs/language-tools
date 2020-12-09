@@ -326,7 +326,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			...vueHost,
 			getProjectVersion: () => {
 				pauseTracking();
-				const version = tsProjectVersion.value.toString();
+				const version = vueHost.getProjectVersion?.() + ':' + tsProjectVersion.value.toString();
 				resetTracking();
 				return version;
 			},

@@ -160,16 +160,19 @@ export function createLanguageServiceHost(
 		async function onDidChangeContent(document: TextDocument) {
 			if (disposed) return;
 			const fileName = uriToFsPath(document.uri);
-			if (new Set(parsedCommandLine.fileNames).has(fileName)) {
+			const isProjectFile = new Set(parsedCommandLine.fileNames).has(fileName);
+			const isReferenceFile = scriptSnapshots.has(fileName);
+			if (isProjectFile || isReferenceFile) {
 				const newVersion = ts.sys.createHash!(document.getText());
 				scriptVersions.set(fileName, newVersion);
-				await onProjectFilesUpdate([document]);
+				await onProjectFilesUpdate(isProjectFile ? [document] : []);
 			}
 		}
 		async function doValidation(changedDocs: TextDocument[]) {
 			const req = ++projectCurrentReq;
 			const docs = [...changedDocs];
-			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue');
+			const fileNames = new Set(parsedCommandLine.fileNames);
+			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue' && fileNames.has(uriToFsPath(doc.uri)));
 			for (const document of openedDocs) {
 				if (changedDocs.find(doc => doc.uri === document.uri)) continue;
 				docs.push(document);
