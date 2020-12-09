@@ -132,7 +132,7 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 
 ## Limitations
 
-- Due to TypeScript limitations and performance considerations, if component emits events count greater than 8, emits type-checking will stop work for this component. (https://github.com/microsoft/TypeScript/issues/26591, https://github.com/microsoft/TypeScript/issues/37079#issuecomment-592078751)
+- Due to TypeScript limitations and performance considerations, emits type-checking only working to 16 overloads for each component. (https://github.com/microsoft/TypeScript/issues/26591, https://github.com/microsoft/TypeScript/issues/37079#issuecomment-592078751)
 
 ## Note
 

@@ -39,7 +39,7 @@ declare global {
 `;
 	{
 		code += `type __VLS_ConstructorOverloads<T> =\n`;
-		for (let i = 8; i >= 1; i--) {
+		for (let i = 16; i >= 1; i--) {
 			code += `// ${i}\n`;
 			code += `T extends {\n`;
 			for (let j = 1; j <= i; j++) {
