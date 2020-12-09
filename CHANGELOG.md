@@ -1,3 +1,10 @@
+### 0.16.14
+
+- feat: pure type defineEmit() syntax support
+- feat: increase support emits overloads nums to 16
+- fix: pure type defineProps properties required incorrect
+- fix: monorepo services can't update cross root scripts
+
 ### 0.16.13
 
 - fix: crash if allowJs not set and working on js script block
