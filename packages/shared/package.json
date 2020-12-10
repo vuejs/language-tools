@@ -2,10 +2,8 @@
 	"name": "@volar/shared",
 	"version": "1.0.0",
 	"main": "out/index.js",
-	"devDependencies": {
-		"vscode-languageserver": "next"
-	},
 	"dependencies": {
+		"vscode-languageserver": "next",
 		"upath": "latest"
 	}
 }

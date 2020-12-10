@@ -77,17 +77,3 @@ export function findSourceFileByTsUri(sourceFiles: Map<string, SourceFile>, uri:
 export function isStartWithText(document: TextDocument, position: Position, text: string) {
 	return document.getText(Range.create(document.positionAt(document.offsetAt(position) - text.length), position)) === text;
 }
-export function getWordRange(wordPattern: RegExp, range: Range, document: TextDocument) {
-	const docText = document.getText();
-	const startOffset = document.offsetAt(range.start);
-	const endOffset = document.offsetAt(range.end);
-	for (const match of docText.matchAll(wordPattern)) {
-		if (match.index === undefined) continue;
-		const startIndex = match.index;
-		const endIndex = match.index + match[0].length;
-		if (startOffset >= startIndex && endOffset <= endIndex) {
-			return Range.create(document.positionAt(startIndex), document.positionAt(endIndex));
-		}
-	}
-	return range;
-}

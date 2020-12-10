@@ -8,7 +8,14 @@ import {
 	TextDocument,
 	TextEdit,
 } from 'vscode-languageserver/node';
-import { uriToFsPath } from '@volar/shared';
+import { uriToFsPath, getWordRange } from '@volar/shared';
+
+export const wordPatterns: { [lang: string]: RegExp } = {
+	javascript: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+	typescript: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+	javascriptreact: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+	typescriptreact: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+};
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
@@ -30,6 +37,9 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const completions = languageService.getCompletionsAtPosition(fileName, offset, { ...defaultOptions, ...options });
 		if (completions === undefined) return [];
+
+		const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.javascript;
+		const wordRange = getWordRange(wordPattern, { start: position, end: position }, document);
 
 		const entries = completions.entries
 			.map(entry => {
@@ -107,35 +117,12 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				 * @after
 				 * $f + $foo => $foo
 				 */
-				const range = getFuzzyWordRange(
-					document.getText(Range.create(
-						Position.create(position.line, 0),
-						position
-					)),
-					item.label,
-					position
-				);
-				if (range) {
-					item.textEdit = TextEdit.replace(range, item.insertText ?? item.label);
+				if (wordRange) {
+					item.textEdit = TextEdit.replace(wordRange, item.insertText ?? item.label);
 				}
 			}
 
 			return item;
-		}
-		function getFuzzyWordRange(line: string, label: string, position: Position) {
-			// Try getting longer, prefix based range for completions that span words
-			const text = line.slice(Math.max(0, position.character - label.length), position.character).toLowerCase();
-			const entryName = label.toLowerCase();
-			for (let i = entryName.length; i > 0; --i) {
-				if (text.endsWith(entryName.substr(0, i))) {
-					return Range.create(
-						Position.create(position.line, Math.max(0, position.character - i)),
-						position
-					)
-				}
-			}
-
-			return undefined;
 		}
 		function convertKind(kind: string): CompletionItemKind {
 			switch (kind) {

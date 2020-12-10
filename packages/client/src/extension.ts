@@ -141,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	</script>
 	`
 		}));
-		apiClient.onNotification(ShowReferencesNotification.type, handler => {
+		context.subscriptions.push(apiClient.onNotification(ShowReferencesNotification.type, handler => {
 			const uri: string = handler.uri;
 			const pos: Position = handler.position;
 			const refs: Location[] = handler.references;
@@ -154,7 +154,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					new vscode.Range(ref.range.start.line, ref.range.start.character, ref.range.end.line, ref.range.end.character),
 				)),
 			);
-		});
+		}));
 	})();
 
 	// TODO: active by vue block lang

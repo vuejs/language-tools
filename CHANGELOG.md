@@ -1,6 +1,7 @@
 ### 0.16.15
 
 - pref: prevent semantic tokens request block autocomplete request (occurred in 0.16.4)
+- feat: improve ts autocomplete
 
 ### 0.16.14
 

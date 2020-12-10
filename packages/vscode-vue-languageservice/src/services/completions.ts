@@ -12,8 +12,7 @@ import { CompletionData } from '../types';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
-import { getWordRange } from '../utils/commons';
-import { languageIdToSyntax } from '@volar/shared';
+import { languageIdToSyntax, getWordRange } from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as globalServices from '../globalServices';
 import * as emmet from 'vscode-emmet-helper';
@@ -267,7 +266,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;
-					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.targetDocument);
+					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.targetDocument) ?? virtualLoc.range;
 					const cssResult = cssLanguageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;

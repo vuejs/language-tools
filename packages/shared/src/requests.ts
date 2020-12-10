@@ -53,7 +53,7 @@ export namespace GetFormattingSourceMapsRequest {
 		templates: ISourceMap[],
 		scripts: ISourceMap[],
 		styles: ISourceMap[],
-	} | undefined, any> = new RequestType('vue.descriptor');
+	} | undefined, any> = new RequestType('vue/descriptor');
 }
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.verifyAllScripts');

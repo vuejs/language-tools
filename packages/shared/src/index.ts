@@ -1,6 +1,6 @@
 export * from './path';
 export * from './requests';
-import type { Range } from 'vscode-languageserver/node';
+import { Position, Range, TextDocument } from 'vscode-languageserver/node';
 
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
@@ -45,4 +45,18 @@ export function isInsideRange(parent: Range, child: Range) {
     if (child.start.line === parent.start.line && child.start.character < parent.start.character) return false;
     if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
     return true;
+}
+export function getWordRange(wordPattern: RegExp, range: Range, document: TextDocument) {
+	const docText = document.getText();
+	const startOffset = document.offsetAt(range.start);
+	const endOffset = document.offsetAt(range.end);
+	for (const match of docText.matchAll(wordPattern)) {
+		if (match.index === undefined) continue;
+		const startIndex = match.index;
+		const endIndex = match.index + match[0].length;
+		if (startOffset >= startIndex && endOffset <= endIndex) {
+			return Range.create(document.positionAt(startIndex), document.positionAt(endIndex));
+		}
+	}
+	return undefined;
 }
