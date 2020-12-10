@@ -23,11 +23,9 @@ import {
 	WorkspaceEdit,
 	CodeLensRequest,
 	CallHierarchyPrepareRequest,
-	Disposable,
-	SemanticTokensRegistrationType,
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc, getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
+import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -71,7 +69,6 @@ const both: TextDocumentRegistrationOptions = {
 		{ language: 'typescriptreact' },
 	],
 };
-let semanticTokensRequest: Disposable | undefined;
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
@@ -112,17 +109,7 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, false, async () => {
-		if (semanticTokensRequest) {
-			semanticTokensRequest.dispose();
-			semanticTokensRequest = await connection.client.register(SemanticTokensRegistrationType.type, {
-				documentSelector: vueOnly.documentSelector,
-				legend: getSemanticTokensLegend(),
-				range: true,
-				full: true,
-			});
-		}
-	});
+	const host = createLanguageServiceHost(connection, documents, rootPath, false);
 
 	// custom requests
 	connection.onNotification(RestartServerNotification.type, async () => {
@@ -316,20 +303,6 @@ function initLanguageService(rootPath: string) {
 		const { uri } = handler.item.data as { uri: string };
 		return host.best(uri)?.provideCallHierarchyOutgoingCalls(handler.item) ?? [];
 	});
-	connection.languages.semanticTokens.on(async handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return { data: [] };
-		const tokens = await host.best(document.uri)?.getSemanticTokens(document);
-		if (!tokens) return { data: [] };
-		return tokens;
-	});
-	connection.languages.semanticTokens.onRange(async handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return { data: [] };
-		const tokens = await host.best(document.uri)?.getSemanticTokens(document, handler.range);
-		if (!tokens) return { data: [] };
-		return tokens;
-	});
 }
 async function onInitialized() {
 	if (hasConfigurationCapability) {
@@ -370,11 +343,5 @@ async function onInitialized() {
 		documentSelector: vueOnly.documentSelector,
 		triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
 		resolveProvider: true,
-	});
-	semanticTokensRequest = await connection.client.register(SemanticTokensRegistrationType.type, {
-		documentSelector: vueOnly.documentSelector,
-		legend: getSemanticTokensLegend(),
-		range: true,
-		full: true,
 	});
 }

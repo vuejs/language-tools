@@ -16,10 +16,12 @@ import {
 	DocumentColorRequest,
 	FoldingRangeRequest,
 	TextDocuments,
+	Disposable,
+	SemanticTokensRegistrationType,
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
+import { setScriptSetupRfc, getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
 import {
 	uriToFsPath,
 	VerifyAllScriptsRequest,
@@ -39,6 +41,7 @@ connection.listen();
 const vueOnly: TextDocumentRegistrationOptions = {
 	documentSelector: [{ language: 'vue' }],
 };
+let semanticTokensRequest: Disposable | undefined;
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
@@ -53,7 +56,18 @@ function onInitialize(params: InitializeParams) {
 	return result;
 }
 function initLanguageService(rootPath: string) {
-	const host = createLanguageServiceHost(connection, documents, rootPath, true);
+
+	const host = createLanguageServiceHost(connection, documents, rootPath, true, async () => {
+		if (semanticTokensRequest) {
+			semanticTokensRequest.dispose();
+			semanticTokensRequest = await connection.client.register(SemanticTokensRegistrationType.type, {
+				documentSelector: vueOnly.documentSelector,
+				legend: getSemanticTokensLegend(),
+				range: true,
+				full: true,
+			});
+		}
+	});
 
 	connection.onNotification(RestartServerNotification.type, async () => {
 		host.restart();
@@ -128,6 +142,20 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.best(document.uri)?.getFoldingRanges(document);
 	});
+	connection.languages.semanticTokens.on(async handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return { data: [] };
+		const tokens = await host.best(document.uri)?.getSemanticTokens(document);
+		if (!tokens) return { data: [] };
+		return tokens;
+	});
+	connection.languages.semanticTokens.onRange(async handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return { data: [] };
+		const tokens = await host.best(document.uri)?.getSemanticTokens(document, handler.range);
+		if (!tokens) return { data: [] };
+		return tokens;
+	});
 }
 async function onInitialized() {
 	connection.client.register(DocumentHighlightRequest.type, vueOnly);
@@ -135,4 +163,10 @@ async function onInitialized() {
 	connection.client.register(DocumentLinkRequest.type, vueOnly);
 	connection.client.register(DocumentColorRequest.type, vueOnly);
 	connection.client.register(FoldingRangeRequest.type, vueOnly);
+	semanticTokensRequest = await connection.client.register(SemanticTokensRegistrationType.type, {
+		documentSelector: vueOnly.documentSelector,
+		legend: getSemanticTokensLegend(),
+		range: true,
+		full: true,
+	});
 }

@@ -1,3 +1,7 @@
+### 0.16.15
+
+- pref: prevent semantic tokens request block autocomplete request (occurred in 0.16.4)
+
 ### 0.16.14
 
 - feat: pure type defineEmit() syntax support
