@@ -19,6 +19,7 @@ import {
 import {
 	TagCloseRequest,
 	TagEditRequest,
+	// LinkedEditingRangeRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
 	WriteVirtualFilesRequest,
@@ -38,6 +39,19 @@ export async function activate(context: vscode.ExtensionContext) {
 		await apiClient.onReady();
 		await docClient.onReady();
 
+		// context.subscriptions.push(vscode.languages.registerOnTypeRenameProvider({ language: 'vue' }, {
+		// 	async provideOnTypeRenameRanges(document, position) {
+		// 		const param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+		// 		return apiClient.sendRequest(OnTypeRenameRequest.type, param).then(response => {
+		// 			if (response) {
+		// 				return {
+		// 					ranges: response.map(r => apiClient.protocol2CodeConverter.asRange(r))
+		// 				};
+		// 			}
+		// 			return undefined;
+		// 		});
+		// 	}
+		// }));
 		context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
 		context.subscriptions.push(activateTagEditing(tagEditRequestor, { vue: true }, 'volar.html.autoEditingTags'));
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {

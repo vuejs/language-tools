@@ -34,6 +34,7 @@ import * as codeLens from './services/codeLens';
 import * as codeLensResolve from './services/codeLensResolve';
 import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
+import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
 import { CompletionItem } from 'vscode-css-languageservice';
 
@@ -224,17 +225,18 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		doCompletionResolve: apiHook(completionResolve.register(sourceFiles, tsLanguageService), false),
 		doAutoClose: apiHook(autoClose.register(sourceFiles), false),
 		doAutoEditTag: apiHook(autoEditTag.register(sourceFiles), false),
+		doCodeLensResolve: apiHook(codeLensResolve.register(sourceFiles, tsLanguageService), false),
 		getEmbeddedDocument: apiHook(embeddedDocument.register(sourceFiles), false),
 		getSignatureHelp: apiHook(signatureHelp.register(sourceFiles, tsLanguageService), false),
 		getSelectionRanges: apiHook(selectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(colorPresentations.register(sourceFiles), false),
 		getCodeLens: apiHook(codeLens.register(sourceFiles), false),
-		doCodeLensResolve: apiHook(codeLensResolve.register(sourceFiles, tsLanguageService), false),
+		getFoldingRanges: apiHook(foldingRanges.register(sourceFiles, tsLanguageService), false),
 		findDocumentHighlights: apiHook(documentHighlight.register(sourceFiles, tsLanguageService), false),
 		findDocumentSymbols: apiHook(documentSymbol.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(documentColor.register(sourceFiles), false),
-		getFoldingRanges: apiHook(foldingRanges.register(sourceFiles, tsLanguageService), false),
+		findLinkedEditingRanges: apiHook(linkedEditingRanges.register(sourceFiles), false),
 		dispose: tsLanguageService.dispose,
 	};
 
