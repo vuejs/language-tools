@@ -1,3 +1,7 @@
+### 1.17.3
+
+- feat: improve html mirror cursor
+
 ### 0.17.2
 
 - fix: `<script setup>` crash corner cases
@@ -34,7 +38,7 @@
 
 ### 0.16.12
 
-- feat: auto rename html tag
+- feat: html mirror cursor
 
 ### 0.16.11
 

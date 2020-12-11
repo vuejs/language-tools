@@ -10,6 +10,7 @@ import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	TagCloseRequest,
+	TagEditRequest,
 } from '@volar/shared';
 
 const connection = createConnection(ProposedFeatures.all);
@@ -37,5 +38,10 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return host.best(document.uri)?.doAutoClose(document, handler.position);
+	});
+	connection.onRequest(TagEditRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return host.best(document.uri)?.doAutoEditTag(document, handler.range);
 	});
 }

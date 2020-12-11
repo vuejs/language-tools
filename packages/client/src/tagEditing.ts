@@ -11,6 +11,7 @@ export function activateTagEditing(tagProvider: (document: TextDocument, range: 
 	window.onDidChangeTextEditorSelection(event => onDidChangeTextEditorSelection(event.kind, event.textEditor, event.selections), null, disposables);
 
 	let isEnabled = false;
+	let autoSelection = -1;
 	updateEnabledState();
 	window.onDidChangeActiveTextEditor(updateEnabledState, null, disposables);
 
@@ -31,32 +32,73 @@ export function activateTagEditing(tagProvider: (document: TextDocument, range: 
 	}
 
 	async function onDidChangeTextEditorSelection(kind: TextEditorSelectionChangeKind | undefined, textEditor: TextEditor, selections: readonly Selection[]) {
-		if (kind !== TextEditorSelectionChangeKind.Mouse) {
+		const allowAdd = kind === TextEditorSelectionChangeKind.Mouse || kind === TextEditorSelectionChangeKind.Keyboard;
+		const allowRemove = kind === TextEditorSelectionChangeKind.Mouse || kind === TextEditorSelectionChangeKind.Keyboard;
+		if (!allowAdd && !allowRemove) {
 			return;
 		}
 		if (!isEnabled) {
 			return;
 		}
-		if (selections.length !== 1) {
-			return;
+		if (selections.length === 1) {
+			if (allowAdd) {
+				const document = textEditor.document;
+				const selection = selections[0];
+				const auto = await tagProvider(document, selection);
+				if (auto) {
+					textEditor.selections = [selection, isReverse(selection) ? new Selection(auto.end, auto.start) : new Selection(auto.start, auto.end)];
+					autoSelection = 1;
+				}
+			}
 		}
-		const document = textEditor.document;
-		const selection = selections[0];
-		const otherRange = await tagProvider(document, selection);
-		if (otherRange) {
-			if (
-				selection.anchor.line > selection.active.line
-				|| (
-					selection.anchor.line === selection.active.line
-					&& selection.anchor.character > selection.active.character
-				)
-			) {
-				textEditor.selections = [selection, new Selection(otherRange.end, otherRange.start)];
+		else if (autoSelection >= 0 && selections.length > autoSelection) {
+			const selection = selections.find((s, i) => i !== autoSelection);
+			if (selection) {
+				const document = textEditor.document;
+				const newAuto = await tagProvider(document, selection);
+				if (newAuto) {
+					if (allowAdd) {
+						const newSelections: Selection[] = [];
+						for (let i = 0; i < selections.length; i++) {
+							if (i === autoSelection) {
+								newSelections.push(isReverse(selection) ? new Selection(newAuto.end, newAuto.start) : new Selection(newAuto.start, newAuto.end));
+							}
+							else {
+								newSelections.push(selections[i]);
+							}
+						}
+						textEditor.selections = newSelections;
+					}
+				}
+				else {
+					if (allowRemove) {
+						textEditor.selections = textEditor.selections.filter((s, i) => i !== autoSelection);
+						autoSelection = -1;
+					}
+				}
 			}
 			else {
-				textEditor.selections = [selection, new Selection(otherRange.start, otherRange.end)];
+				autoSelection = -1; // never
+			}
+		}
+		else {
+			if (allowRemove) {
+				autoSelection = -1;
 			}
 		}
 	}
 	return Disposable.from(...disposables);
+}
+
+function isReverse(selection: Selection) {
+	if (
+		selection.anchor.line > selection.active.line
+		|| (
+			selection.anchor.line === selection.active.line
+			&& selection.anchor.character > selection.active.character
+		)
+	) {
+		return true;
+	}
+	return false;
 }

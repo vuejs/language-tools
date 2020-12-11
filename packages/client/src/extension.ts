@@ -62,12 +62,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			return cheapClient.sendRequest(TagCloseRequest.type, param);
 		}, { vue: true }, 'html.autoClosingTags'));
 		context.subscriptions.push(activateTagEditing(async (document: vscode.TextDocument, range: vscode.Range) => {
-			const result = await apiClient.sendRequest(TagEditRequest.type, {
-				textDocument: apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-				range: apiClient.code2ProtocolConverter.asRange(range),
+			const result = await cheapClient.sendRequest(TagEditRequest.type, {
+				textDocument: cheapClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
+				range: cheapClient.code2ProtocolConverter.asRange(range),
 			});
 			if (result) {
-				return apiClient.protocol2CodeConverter.asRange(result);
+				return cheapClient.protocol2CodeConverter.asRange(result);
 			}
 		}, { vue: true }, 'volar.html.autoEditingTags'));
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {
