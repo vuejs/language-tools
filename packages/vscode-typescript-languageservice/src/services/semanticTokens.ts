@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position, Range } from 'vscode-languageserver/node';
+import { Range, CancellationToken, /* SemanticTokensBuilder */ } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts from 'typescript';
 import { uriToFsPath } from '@volar/shared';
+import { TokenEncodingConsts, TokenType, TokenModifier } from 'typescript-vscode-sh-plugin/lib/constants';
 
 export function getSemanticTokenLegend() {
 	if (tokenTypes.length !== TokenType._) {
@@ -19,100 +20,77 @@ export function getSemanticTokenLegend() {
 }
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string, range: Range) => {
-		//https://ts-ast-viewer.com/#code/AQ0g2CmAuwGbALzAJwG4BQZQGNwEMBnQ4AQQEYBmYAb2C22zgEtJwATJVTRxgcwD27AQAp8AGmAAjAJS0A9POB8+7NQ168oscAJz5wANXwAnLug2bsJmAFcTAO2XAA1MHyvgu-UdOeWbOw8ViAAvpagocBAA
+	return (uri: string, range: Range, cancle?: CancellationToken) => {
 
-		const currentTextDocument = getTextDocument(uri);
-		if (!currentTextDocument) return [];
+		const document = getTextDocument(uri);
+		if (!document) return;
 
-		let resultTokens: { start: Position, length: number, typeIdx: number, modifierSet: number }[] = [];
-		const collector = (node: ts.Node, typeIdx: number, modifierSet: number) => {
-			resultTokens.push({ start: currentTextDocument.positionAt(node.getStart()), length: node.getWidth(), typeIdx, modifierSet });
-		};
-		const startOffset = currentTextDocument.offsetAt(range.start);
-		const endOffset = currentTextDocument.offsetAt(range.end);
-		collectTokens(languageService, uriToFsPath(currentTextDocument.uri), { start: startOffset, length: endOffset - startOffset }, collector);
+		const file = uriToFsPath(uri);
+		const start = document.offsetAt(range.start);
+		const length = document.offsetAt(range.end) - start;
 
-		return resultTokens;
-	}
-}
+		if (cancle?.isCancellationRequested) return;
+		const response1 = languageService.getEncodedSemanticClassifications(file, { start, length });
+		if (cancle?.isCancellationRequested) return;
+		const response2 = languageService.getEncodedSyntacticClassifications(file, { start, length });
 
-function collectTokens(jsLanguageService: ts.LanguageService, fileName: string, span: ts.TextSpan, collector: (node: ts.Node, tokenType: number, tokenModifier: number) => void) {
+		const tokenSpan = [...response1.spans, ...response2.spans];
 
-	const program = jsLanguageService.getProgram();
-	if (program) {
-		const typeChecker = program.getTypeChecker();
+		// const builder = new SemanticTokensBuilder();
+		const tokens: [number, number, number, number, number][] = [];
+		let i = 0;
+		while (i < tokenSpan.length) {
+			const offset = tokenSpan[i++];
+			const length = tokenSpan[i++];
+			const tsClassification = tokenSpan[i++];
 
-		function visit(node: ts.Node) {
-			if (!node || !ts.textSpanIntersectsWith(span, node.pos, node.getFullWidth())) {
-				return;
-			}
-			if (ts.isIdentifier(node)) {
-				let symbol = typeChecker.getSymbolAtLocation(node);
-				if (symbol) {
-					if (symbol.flags & ts.SymbolFlags.Alias) {
-						symbol = typeChecker.getAliasedSymbol(symbol);
-					}
-					let typeIdx = classifySymbol(symbol);
-					if (typeIdx !== undefined) {
-						let modifierSet = 0;
-						if (node.parent) {
-							const parentTypeIdx = tokenFromDeclarationMapping[node.parent.kind];
-							if (parentTypeIdx === typeIdx && (<ts.NamedDeclaration>node.parent).name === node) {
-								modifierSet = 1 << TokenModifier.declaration;
-							}
-						}
-						const decl = symbol.valueDeclaration;
-						const modifiers = decl ? ts.getCombinedModifierFlags(decl) : 0;
-						const nodeFlags = decl ? ts.getCombinedNodeFlags(decl) : 0;
-						if (modifiers & ts.ModifierFlags.Static) {
-							modifierSet |= 1 << TokenModifier.static;
-						}
-						if (modifiers & ts.ModifierFlags.Async) {
-							modifierSet |= 1 << TokenModifier.async;
-						}
-						if ((modifiers & ts.ModifierFlags.Readonly) || (nodeFlags & ts.NodeFlags.Const) || (symbol.getFlags() & ts.SymbolFlags.EnumMember)) {
-							modifierSet |= 1 << TokenModifier.readonly;
-						}
-						collector(node, typeIdx, modifierSet);
-					}
+			let tokenModifiers = 0;
+			let tokenType = getTokenTypeFromClassification(tsClassification);
+			if (tokenType !== undefined) {
+				// it's a classification as returned by the typescript-vscode-sh-plugin
+				tokenModifiers = getTokenModifierFromClassification(tsClassification);
+			} else {
+				// typescript-vscode-sh-plugin is not present
+				tokenType = tokenTypeMap[tsClassification];
+				if (tokenType === undefined) {
+					continue;
 				}
 			}
 
-			ts.forEachChild(node, visit);
+			// we can use the document's range conversion methods because the result is at the same version as the document
+			const startPos = document.positionAt(offset);
+			const endPos = document.positionAt(offset + length);
+
+			for (let line = startPos.line; line <= endPos.line; line++) {
+				const startCharacter = (line === startPos.line ? startPos.character : 0);
+				const endCharacter = (line === endPos.line ? endPos.character : docLineLength(document, line));
+				// builder.push(line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers);
+				tokens.push([line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers]);
+			}
 		}
-		const sourceFile = program.getSourceFile(fileName);
-		if (sourceFile) {
-			visit(sourceFile);
-		}
+		// return builder.build();
+		return tokens;
 	}
 }
 
-function classifySymbol(symbol: ts.Symbol) {
-	const flags = symbol.getFlags();
-	if (flags & ts.SymbolFlags.Class) {
-		return TokenType.class;
-	} else if (flags & ts.SymbolFlags.Enum) {
-		return TokenType.enum;
-	} else if (flags & ts.SymbolFlags.TypeAlias) {
-		return TokenType.type;
-	} else if (flags & ts.SymbolFlags.Type) {
-		if (flags & ts.SymbolFlags.Interface) {
-			return TokenType.interface;
-		} if (flags & ts.SymbolFlags.TypeParameter) {
-			return TokenType.typeParameter;
-		}
+function docLineLength(document: TextDocument, line: number) {
+	const currentLineOffset = document.offsetAt({ line, character: 0 });
+	const nextLineOffset = document.offsetAt({ line: line + 1, character: 0 });
+	return nextLineOffset - currentLineOffset;
+}
+
+// typescript-vscode-sh-plugin encodes type and modifiers in the classification:
+// TSClassification = (TokenType + 1) << 8 + TokenModifier
+
+function getTokenTypeFromClassification(tsClassification: number): number | undefined {
+	if (tsClassification > TokenEncodingConsts.modifierMask) {
+		return (tsClassification >> TokenEncodingConsts.typeOffset) - 1;
 	}
-	const decl = symbol.valueDeclaration || symbol.declarations && symbol.declarations[0];
-	return decl && tokenFromDeclarationMapping[decl.kind];
+	return undefined;
 }
 
-export const enum TokenType {
-	class, enum, interface, namespace, typeParameter, type, parameter, variable, property, function, member, _
-}
-
-export const enum TokenModifier {
-	declaration, static, async, readonly, _
+function getTokenModifierFromClassification(tsClassification: number) {
+	return tsClassification & TokenEncodingConsts.modifierMask;
 }
 
 const tokenTypes: string[] = [];
@@ -124,6 +102,7 @@ tokenTypes[TokenType.typeParameter] = 'typeParameter';
 tokenTypes[TokenType.type] = 'type';
 tokenTypes[TokenType.parameter] = 'parameter';
 tokenTypes[TokenType.variable] = 'variable';
+tokenTypes[TokenType.enumMember] = 'enumMember';
 tokenTypes[TokenType.property] = 'property';
 tokenTypes[TokenType.function] = 'function';
 tokenTypes[TokenType.member] = 'member';
@@ -133,21 +112,65 @@ tokenModifiers[TokenModifier.async] = 'async';
 tokenModifiers[TokenModifier.declaration] = 'declaration';
 tokenModifiers[TokenModifier.readonly] = 'readonly';
 tokenModifiers[TokenModifier.static] = 'static';
+tokenModifiers[TokenModifier.local] = 'local';
+tokenModifiers[TokenModifier.defaultLibrary] = 'defaultLibrary';
 
-const tokenFromDeclarationMapping: { [name: string]: TokenType } = {
-	[ts.SyntaxKind.VariableDeclaration]: TokenType.variable,
-	[ts.SyntaxKind.Parameter]: TokenType.parameter,
-	[ts.SyntaxKind.PropertyDeclaration]: TokenType.property,
-	[ts.SyntaxKind.ModuleDeclaration]: TokenType.namespace,
-	[ts.SyntaxKind.EnumDeclaration]: TokenType.enum,
-	[ts.SyntaxKind.EnumMember]: TokenType.property,
-	[ts.SyntaxKind.ClassDeclaration]: TokenType.class,
-	[ts.SyntaxKind.MethodDeclaration]: TokenType.member,
-	[ts.SyntaxKind.FunctionDeclaration]: TokenType.function,
-	[ts.SyntaxKind.MethodSignature]: TokenType.member,
-	[ts.SyntaxKind.GetAccessor]: TokenType.property,
-	[ts.SyntaxKind.PropertySignature]: TokenType.property,
-	[ts.SyntaxKind.InterfaceDeclaration]: TokenType.interface,
-	[ts.SyntaxKind.TypeAliasDeclaration]: TokenType.type,
-	[ts.SyntaxKind.TypeParameter]: TokenType.typeParameter
-};
+// make sure token types and modifiers are complete
+if (tokenTypes.filter(t => !!t).length !== TokenType._) {
+	console.warn('typescript-vscode-sh-plugin has added new tokens types.');
+}
+if (tokenModifiers.filter(t => !!t).length !== TokenModifier._) {
+	console.warn('typescript-vscode-sh-plugin has added new tokens modifiers.');
+}
+
+// mapping for the original ExperimentalProtocol.ClassificationType from TypeScript (only used when plugin is not available)
+const tokenTypeMap: number[] = [];
+tokenTypeMap[ExperimentalProtocol.ClassificationType.className] = TokenType.class;
+tokenTypeMap[ExperimentalProtocol.ClassificationType.enumName] = TokenType.enum;
+tokenTypeMap[ExperimentalProtocol.ClassificationType.interfaceName] = TokenType.interface;
+tokenTypeMap[ExperimentalProtocol.ClassificationType.moduleName] = TokenType.namespace;
+tokenTypeMap[ExperimentalProtocol.ClassificationType.typeParameterName] = TokenType.typeParameter;
+tokenTypeMap[ExperimentalProtocol.ClassificationType.typeAliasName] = TokenType.type;
+tokenTypeMap[ExperimentalProtocol.ClassificationType.parameterName] = TokenType.parameter;
+
+
+namespace ExperimentalProtocol {
+
+	export const enum EndOfLineState {
+		None,
+		InMultiLineCommentTrivia,
+		InSingleQuoteStringLiteral,
+		InDoubleQuoteStringLiteral,
+		InTemplateHeadOrNoSubstitutionTemplate,
+		InTemplateMiddleOrTail,
+		InTemplateSubstitutionPosition,
+	}
+
+	export const enum ClassificationType {
+		comment = 1,
+		identifier = 2,
+		keyword = 3,
+		numericLiteral = 4,
+		operator = 5,
+		stringLiteral = 6,
+		regularExpressionLiteral = 7,
+		whiteSpace = 8,
+		text = 9,
+		punctuation = 10,
+		className = 11,
+		enumName = 12,
+		interfaceName = 13,
+		moduleName = 14,
+		typeParameterName = 15,
+		typeAliasName = 16,
+		parameterName = 17,
+		docCommentTagName = 18,
+		jsxOpenTagName = 19,
+		jsxCloseTagName = 20,
+		jsxSelfClosingTagName = 21,
+		jsxAttribute = 22,
+		jsxText = 23,
+		jsxAttributeStringLiteralValue = 24,
+		bigintLiteral = 25,
+	}
+}

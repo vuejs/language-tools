@@ -142,17 +142,17 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.best(document.uri)?.getFoldingRanges(document);
 	});
-	connection.languages.semanticTokens.on(async handler => {
+	connection.languages.semanticTokens.on(async (handler, token, workDoneProgress, resultProgress) => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return { data: [] };
-		const tokens = await host.best(document.uri)?.getSemanticTokens(document);
+		const tokens = await host.best(document.uri)?.getSemanticTokens(document, undefined, token, resultProgress);
 		if (!tokens) return { data: [] };
 		return tokens;
 	});
-	connection.languages.semanticTokens.onRange(async handler => {
+	connection.languages.semanticTokens.onRange(async (handler, token, workDoneProgress, resultProgress) => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return { data: [] };
-		const tokens = await host.best(document.uri)?.getSemanticTokens(document, handler.range);
+		const tokens = await host.best(document.uri)?.getSemanticTokens(document, handler.range, token, resultProgress);
 		if (!tokens) return { data: [] };
 		return tokens;
 	});

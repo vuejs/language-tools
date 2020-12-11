@@ -1,4 +1,6 @@
 import * as ts from 'typescript';
+import * as tsLib from 'typescript/lib/tsserverlibrary';
+import * as ShPlugin from 'typescript-vscode-sh-plugin';
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
 import * as definitions from './services/definitions';
@@ -19,6 +21,8 @@ import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 
+const shPlugin = ShPlugin({ typescript: tsLib });
+
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
@@ -26,7 +30,8 @@ export { getSemanticTokenLegend } from './services/semanticTokens';
 export function createLanguageService(host: ts.LanguageServiceHost) {
 
 	const documents = new Map<string, TextDocument>();
-	const languageService = ts.createLanguageService(host);
+	let languageService = ts.createLanguageService(host);
+	languageService = shPlugin.decorate(languageService);
 
 	return {
 		host,

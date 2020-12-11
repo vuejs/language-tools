@@ -1,4 +1,4 @@
-import { Range, SemanticTokensBuilder, SemanticTokensLegend } from 'vscode-languageserver/node';
+import { CancellationToken, Range, ResultProgressReporter, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensPartialResult } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFiles';
 import { MapedMode } from '../utils/sourceMaps';
@@ -26,7 +26,7 @@ export const semanticTokenLegend: SemanticTokensLegend = {
 };
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	return async (document: TextDocument, range?: Range) => {
+	return async (document: TextDocument, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 		const offsetRange = range ? {
@@ -41,35 +41,56 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			...templateScriptData.context.map(hyphenate),
 		]);
 
+		let tokens: TokenData[] = [];
+
+		if (cancle?.isCancellationRequested) return;
 		const htmlResult = getHtmlResult(sourceFile);
-		const pugResult = getPugResult(sourceFile);
-		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
-		// let tsResult = await getTsResult(sourceFile); // TODO: inconsistent with typescript-language-features
-
-		// tsResult = tsResult.filter(tsToken => {
-		// 	for (const setupToken of scriptSetupResult) {
-		// 		if (setupToken[0] === tsToken[0]
-		// 			&& setupToken[1] >= tsToken[1]
-		// 			&& setupToken[2] <= tsToken[2]) {
-		// 			return false;
-		// 		}
-		// 	}
-		// 	return true;
-		// });
-
-		const tokens = [
-			...htmlResult,
-			...pugResult,
-			...scriptSetupResult,
-			// ...tsResult,
-		];
-		const builder = new SemanticTokensBuilder();
-		for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
-			builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+		if (htmlResult.length) {
+			tokens = tokens.concat(htmlResult);
+			resultProgress?.report(buildTokens(tokens));
 		}
 
-		return builder.build();
+		if (cancle?.isCancellationRequested) return;
+		const pugResult = getPugResult(sourceFile);
+		if (pugResult.length) {
+			tokens = tokens.concat(pugResult);
+			resultProgress?.report(buildTokens(tokens));
+		}
 
+		if (cancle?.isCancellationRequested) return;
+		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
+		if (scriptSetupResult.length) {
+			tokens = tokens.concat(scriptSetupResult);
+			resultProgress?.report(buildTokens(tokens));
+		}
+
+		if (cancle?.isCancellationRequested) return;
+		let tsResult = getTsResult(sourceFile);
+		tsResult = tsResult.filter(tsToken => {
+			for (const setupToken of scriptSetupResult) {
+				if (setupToken[0] === tsToken[0]
+					&& setupToken[1] >= tsToken[1]
+					&& setupToken[2] <= tsToken[2]) {
+					return false;
+				}
+			}
+			return true;
+		});
+		if (tsResult.length) {
+			tokens = tokens.concat(tsResult);
+			resultProgress?.report(buildTokens(tokens));
+		}
+
+		return buildTokens(tokens);
+
+		function buildTokens(tokens: TokenData[]) {
+			const builder = new SemanticTokensBuilder();
+			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
+				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+			}
+	
+			return builder.build();
+		}
 		function getScriptSetupResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 			const scriptSetupGen = sourceFile.getScriptSetupData();
@@ -93,7 +114,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			return result;
 		}
-		async function getTsResult(sourceFile: SourceFile) {
+		function getTsResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const maped of sourceMap) {
@@ -107,13 +128,13 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						start: sourceMap.targetDocument.positionAt(maped.targetRange.start),
 						end: sourceMap.targetDocument.positionAt(maped.targetRange.end),
 					};
-					const tokens = await tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument.uri, tsRange);
+					const tokens = tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument.uri, tsRange, cancle);
 					if (!tokens) continue;
 					for (const token of tokens) {
-						const tokenOffset = sourceMap.targetDocument.offsetAt(token.start);
+						const tokenOffset = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] });
 						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
 						const vuePos = document.positionAt(vueOffset);
-						result.push([vuePos.line, vuePos.character, token.length, token.typeIdx, token.modifierSet]);
+						result.push([vuePos.line, vuePos.character, token[2], token[3], token[4]]);
 					}
 				}
 			}
