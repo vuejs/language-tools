@@ -1,3 +1,7 @@
+### 0.17.2
+
+- fix: `<script setup>` crash corner cases
+
 ### 0.17.1
 
 - pref: prevent auto close tag blocked by autocomplete

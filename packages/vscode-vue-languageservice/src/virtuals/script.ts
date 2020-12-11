@@ -1553,5 +1553,5 @@ function getScriptData(sourceCode: string) {
 	};
 }
 function replaceStringToEmpty(str: string, start: number, end: number) {
-	return str.substring(0, start) + ' '.repeat(end - start) + str.substring(end);
+	return str.substring(0, start) + ' '.repeat(Math.abs(end - start)) + str.substring(end);
 }
