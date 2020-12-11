@@ -3,7 +3,7 @@
 	"name": "volar",
 	"displayName": "Volar",
 	"description": "TypeScript support for Vue 3",
-	"version": "0.16.15",
+	"version": "0.17.0",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
