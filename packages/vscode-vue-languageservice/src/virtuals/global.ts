@@ -57,10 +57,6 @@ declare global {
 	}
 	code += `\n}\n`;
 	code += `
-/* Completion: Global Attrs */
-({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};
-({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};
-
 declare const app: App;
 app.component${SearchTexts.AppComponentCall};
 `

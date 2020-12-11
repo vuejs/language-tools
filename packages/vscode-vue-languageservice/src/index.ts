@@ -54,6 +54,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);
 	let initTemplateScript = false; // html components completion require template data
+	let shouldCheckGlobalComponentsUpdate = false;
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
@@ -62,18 +63,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost);
 
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
-	const _globalHtmlElements = computed(() => {
-		{ // watching
-			tsProjectVersion.value
-		}
-		return tsLanguageService.doComplete(globalDoc.uri, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.HtmlElements)));
-	});
-	const _globalAttrs = computed(() => {
-		{ // watching
-			tsProjectVersion.value
-		}
-		return tsLanguageService.doComplete(globalDoc.uri, globalDoc.positionAt(globalDoc.getText().indexOf(SearchTexts.GlobalAttrs)));
-	});
 	const globalComponentCalls = computed(() => {
 		{ // watching
 			tsProjectVersion.value
@@ -196,8 +185,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	});
 	let _globalComponentCallsGen: typeof globalComponentCallsGen.value = new Map();
 	let globalComponentCallsGenVersion = '';
-	const globalHtmlElements = ref<CompletionItem[]>([]);
-	const globalAttrs = ref<CompletionItem[]>([]);
 
 	const _callHierarchy = callHierarchy.register(sourceFiles, tsLanguageService);
 
@@ -304,6 +291,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			}
 
 			if (tsFileChanged) {
+				shouldCheckGlobalComponentsUpdate = true;
 				tsProjectVersion.value++;
 				updates.length = 0;
 				for (const fileName of oldFiles) {
@@ -451,7 +439,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, globalHtmlElements, globalAttrs, tsLanguageService));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService));
 				vueScriptsUpdated = true;
 			}
 			else {
@@ -469,14 +457,13 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			tsProjectVersion.value++;
 		}
 		if (shouldUpdateTemplateScript) {
-			// update global elements / attrs
-			globalHtmlElements.value = _globalHtmlElements.value;
-			globalAttrs.value = _globalAttrs.value;
-			// update global components
-			const _version = globalComponentCallsGenVersion;
-			_globalComponentCallsGen = globalComponentCallsGen.value;
-			if (_version !== globalComponentCallsGenVersion) {
-				tsProjectVersion.value++;
+			if (shouldCheckGlobalComponentsUpdate) {
+				shouldCheckGlobalComponentsUpdate = false;
+				const _version = globalComponentCallsGenVersion;
+				_globalComponentCallsGen = globalComponentCallsGen.value;
+				if (_version !== globalComponentCallsGenVersion) {
+					tsProjectVersion.value++;
+				}
 			}
 
 			for (const uri of templateScriptUpdateUris) {

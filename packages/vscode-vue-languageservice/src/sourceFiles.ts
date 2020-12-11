@@ -26,7 +26,7 @@ import { useStylesRaw } from './virtuals/styles.raw';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
-export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<CompletionItem[]>, globalBind: Ref<CompletionItem[]>, tsLanguageService: ts2.LanguageService) {
+export function createSourceFile(initialDocument: TextDocument, tsLanguageService: ts2.LanguageService) {
 	// sources
 	const tsProjectVersion = ref<string>();
 	const vueDoc = ref(initialDocument);
@@ -297,13 +297,14 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
 		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
 		const scriptSetupExports = docText.indexOf(SearchTexts.ScriptSetupExports) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.ScriptSetupExports))) : [];
+		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
 
 		const contextNames = context.map(entry => entry.data.name);
 		const componentNames = components.map(entry => entry.data.name);
 		const propNames = props.map(entry => entry.data.name);
 		const setupReturnNames = setupReturns.map(entry => entry.data.name);
 		const scriptSetupExportNames = scriptSetupExports.map(entry => entry.data.name);
-		const htmlElementNames = globalEls.value.map(entry => entry.data.name);
+		const htmlElementNames = globalEls.map(entry => entry.data.name);
 
 		if (eqSet(new Set(contextNames), new Set(templateScriptData.context))
 			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
@@ -659,7 +660,8 @@ export function createSourceFile(initialDocument: TextDocument, globalEls: Ref<C
 					data.set(tagName, { bind, on, slot });
 					data.set(hyphenate(tagName), { bind, on, slot });
 				}
-				data.set('*', { bind: globalBind.value, on: [], slot: [] });
+				const globalBind = tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
+				data.set('*', { bind: globalBind, on: [], slot: [] });
 			}
 			return data;
 		});

@@ -10,6 +10,7 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as css from 'vscode-css-languageservice';
 import * as vueDom from '@vue/compiler-dom';
+import { SearchTexts } from './common';
 
 export function useTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
@@ -86,6 +87,8 @@ export function useTemplateScript(
 		code += 'declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
 
 		/* Completion */
+		code += `({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
+
 		code += '/* Completion: Emits */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 			if (!hasElement(interpolations.tags, name)) continue;

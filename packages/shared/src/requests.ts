@@ -13,6 +13,10 @@ import {
 	Location,
 	DocumentUri,
 	Range,
+	RequestType0,
+	NotificationType0,
+	SemanticTokensLegend,
+	SemanticTokens,
 } from 'vscode-languageserver/node';
 
 export interface ISourceMap {
@@ -70,4 +74,18 @@ export namespace RestartServerNotification {
 }
 export namespace ShowReferencesNotification {
 	export const type: NotificationType<{ uri: DocumentUri, position: Position, references: Location[] }> = new NotificationType('vue.findReferences');
+}
+
+// semantic tokens
+export namespace RangeSemanticTokensRequest {
+	export const type: RequestType<{
+		textDocument: TextDocumentIdentifier;
+		range: Range;
+	}, SemanticTokens | undefined, any> = new RequestType('vue.semanticTokens');
+}
+export namespace SemanticTokenLegendRequest {
+	export const type: RequestType0<SemanticTokensLegend, any> = new RequestType0('vue.semanticTokenLegend');
+}
+export namespace SemanticTokensChangedNotification {
+	export const type: NotificationType0 = new NotificationType0('vue.semanticTokensChanged');
 }

@@ -41,6 +41,7 @@ export function useScriptMain(
 			`__VLS_Components.${SearchTexts.Components};`,
 			`__VLS_options.setup().${SearchTexts.SetupReturns};`,
 			`__VLS_options.props.${SearchTexts.Props};`,
+			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
 			hasScriptSetupExports ? `__VLS_Setup.${SearchTexts.ScriptSetupExports};` : `// no scriptSetup #182`,
 			``,
 			`export default {} as typeof __VLS_component & {`,

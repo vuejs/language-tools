@@ -7,6 +7,7 @@ import * as path from 'upath';
 import * as vscode from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { activateTagEditing } from './tagEditing';
+import { registerDocumentSemanticTokensProvider } from './semanticTokens';
 import { registerDocumentFormattingEditProvider } from './format';
 import {
 	LanguageClient,
@@ -55,6 +56,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		// 		});
 		// 	}
 		// }));
+		context.subscriptions.push(await registerDocumentSemanticTokensProvider(docClient));
 		context.subscriptions.push(activateTagClosing((document, position) => {
 			let param = cheapClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
 			return cheapClient.sendRequest(TagCloseRequest.type, param);

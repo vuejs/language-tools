@@ -1,6 +1,7 @@
 ### 0.17.1
 
 - pref: prevent auto close tag blocked by autocomplete
+- pref: faster semantic tokens
 
 ### 0.17.0
 
