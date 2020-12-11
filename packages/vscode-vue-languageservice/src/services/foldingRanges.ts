@@ -1,15 +1,18 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFiles';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as globalServices from '../globalServices';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
 import { FoldingRange } from 'vscode-languageserver/node';
+import { createSourceFile } from '../sourceFiles';
+import { getCheapTsService2 } from '../globalServices';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	return (document: TextDocument) => {
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return;
+export function register() {
+	return (_document: TextDocument) => {
+		const tsService2 = getCheapTsService2(_document);
+		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText());
+
+		const sourceFile = createSourceFile(document, tsService2.service);
 
 		const vueResult = getVueResult(); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
@@ -31,7 +34,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const foldingRanges = tsLanguageService.getFoldingRanges(sourceMap.targetDocument.uri);
+				const foldingRanges = tsService2.service.getFoldingRanges(sourceMap.targetDocument.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
 			return result;

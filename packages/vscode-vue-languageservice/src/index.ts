@@ -51,6 +51,7 @@ export function createNoStateLanguageService() {
 		doAutoClose: autoClose.register(),
 		doAutoEditTag: autoEditTag.register(),
 		doFormatting: formatting.register(),
+		getFoldingRanges: foldingRanges.register(),
 	}
 }
 export function createLanguageService(vueHost: ts.LanguageServiceHost) {
@@ -219,7 +220,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		getSelectionRanges: apiHook(selectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(colorPresentations.register(sourceFiles), false),
 		getCodeLens: apiHook(codeLens.register(sourceFiles), false),
-		getFoldingRanges: apiHook(foldingRanges.register(sourceFiles, tsLanguageService), false),
 		findDocumentHighlights: apiHook(documentHighlight.register(sourceFiles, tsLanguageService), false),
 		findDocumentSymbols: apiHook(documentSymbol.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),

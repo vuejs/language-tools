@@ -1,6 +1,7 @@
 ### 1.17.4
 
 - fix: can't disable html mirror cursor
+- feat: improve folding range
 
 ### 1.17.3
 

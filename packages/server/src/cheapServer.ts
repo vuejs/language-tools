@@ -4,6 +4,8 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	createConnection,
+	FoldingRangeRequest,
+	TextDocumentRegistrationOptions,
 } from 'vscode-languageserver/node';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -16,6 +18,7 @@ import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice'
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 connection.onInitialize(onInitialize);
+connection.onInitialized(onInitialized);
 documents.listen(connection);
 connection.listen();
 
@@ -49,4 +52,15 @@ function initLanguageService() {
 		if (!document) return undefined;
 		return ls.doFormatting(document, handler.options);
 	});
+	connection.onFoldingRanges(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return ls.getFoldingRanges(document);
+	});
+}
+function onInitialized() {
+	const vueOnly: TextDocumentRegistrationOptions = {
+		documentSelector: [{ language: 'vue' }],
+	};
+	connection.client.register(FoldingRangeRequest.type, vueOnly);
 }

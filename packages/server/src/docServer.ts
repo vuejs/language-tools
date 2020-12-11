@@ -14,7 +14,6 @@ import {
 	DocumentSymbolRequest,
 	DocumentLinkRequest,
 	DocumentColorRequest,
-	FoldingRangeRequest,
 	TextDocuments,
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
@@ -129,11 +128,6 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.best(document.uri)?.findDocumentLinks(document);
 	});
-	connection.onFoldingRanges(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.best(document.uri)?.getFoldingRanges(document);
-	});
 	connection.onRequest(RangeSemanticTokensRequest.type, async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
@@ -141,10 +135,9 @@ function initLanguageService(rootPath: string) {
 	});
 	connection.onRequest(SemanticTokenLegendRequest.type, getSemanticTokensLegend);
 }
-async function onInitialized() {
+function onInitialized() {
 	connection.client.register(DocumentHighlightRequest.type, vueOnly);
 	connection.client.register(DocumentSymbolRequest.type, vueOnly);
 	connection.client.register(DocumentLinkRequest.type, vueOnly);
 	connection.client.register(DocumentColorRequest.type, vueOnly);
-	connection.client.register(FoldingRangeRequest.type, vueOnly);
 }
