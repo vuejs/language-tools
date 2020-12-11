@@ -32,7 +32,7 @@ export function activateTagEditing(tagProvider: (document: TextDocument, range: 
 	}
 
 	async function onDidChangeTextEditorSelection(kind: TextEditorSelectionChangeKind | undefined, textEditor: TextEditor, selections: readonly Selection[]) {
-		const allowAdd = kind === TextEditorSelectionChangeKind.Mouse || kind === TextEditorSelectionChangeKind.Keyboard;
+		const allowAdd = kind === TextEditorSelectionChangeKind.Mouse;
 		const allowRemove = kind === TextEditorSelectionChangeKind.Mouse || kind === TextEditorSelectionChangeKind.Keyboard;
 		if (!allowAdd && !allowRemove) {
 			return;
@@ -57,7 +57,7 @@ export function activateTagEditing(tagProvider: (document: TextDocument, range: 
 				const document = textEditor.document;
 				const newAuto = await tagProvider(document, selection);
 				if (newAuto) {
-					if (allowAdd) {
+					if (autoSelection >= 0 || allowAdd) { // autoSelection >= 0 is for update
 						const newSelections: Selection[] = [];
 						for (let i = 0; i < selections.length; i++) {
 							if (i === autoSelection) {

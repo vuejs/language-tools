@@ -1,3 +1,7 @@
+### 1.17.4
+
+- fix: can't disable html mirror cursor
+
 ### 1.17.3
 
 - feat: improve html mirror cursor
