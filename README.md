@@ -10,11 +10,13 @@ Roadmap: https://github.com/johnsoncodehk/volar/issues/28
 
 Volar is a fast implementation to try to create faster Vue Language Service to near to native TypeScript Language Service performance. (How? use Composition API!)
 
-You can ask [here](https://github.com/johnsoncodehk/volar/issues/17), if you are not sure whether to use. :)
+Currently autocomplete is fast enough, but there is room for speeding up. Next I will speed up the diagnosis, it still has a lot of room for improvement.
 
-## :warning: Warning!
+## Sponsors
 
-The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/182)) is planning to remove: https://github.com/johnsoncodehk/volar/issues/27
+If you like this extension and you can afford, you can consider becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). I can reduce other work and move time to Volar, so this will definitely speed up this project. Thanks!
+
+https://github.com/sponsors/johnsoncodehk
 
 ## Some interesting features:
 
@@ -22,7 +24,7 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 - [x] inline css services (v0.16.3 added)
 - [x] ref sugar convert tool (v0.15.6 added)
 - [x] CSS class codeLens (v0.15.4 added)
-- [x] RFC [#222](https://github.com/vuejs/rfcs/pull/222) ([#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) support (v0.15.2 added) (with `volar.scriptSetup.supportRfc` setting)
+- [x] new `<script setup>` support ([#222](https://github.com/vuejs/rfcs/pull/222), [#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) (v0.15.2 added) (with `volar.scriptSetup.supportRfc` setting)
 - [x] Scoped CSS services (v0.15.1 added)
 - [x] Format all scripts command (v0.13.5 added)
 - [x] Verify all scripts command (v0.13.3 added)
@@ -30,7 +32,7 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 - [x] emits Type-Checking (v0.11.4 added)
 - [x] Interpolation formatting + commenting (v0.11.2 added)
 - [x] Native html tag services (v0.11.0 added)
-- [x] `<script setup>` support (v0.10.0 added)
+- [x] ~~`<script setup>` support (v0.10.0 added)~~ see https://github.com/johnsoncodehk/volar/issues/27
 - [x] Unused highlight for setup() return properties (v0.7.0 added)
 - [x] pug-html convert tool
 - [x] Asset url link jump
@@ -48,7 +50,9 @@ The old `<script setup>` support ([RFC #182](https://github.com/vuejs/rfcs/pull/
 
 By default, Local components, Built-in components, native html elements Type-Checking are active.
 
-For Global components, you need to add the `__VLS_GlobalComponents` interface definition, for example:
+For Global components, you need to have  `__VLS_GlobalComponents` interface definition or component registeres call, for example:
+
+- `__VLS_GlobalComponents` interface definition:
 
 ```typescript
 // shims-volar.d.ts
@@ -62,9 +66,7 @@ declare global {
 }
 ```
 
-v0.16.0 new feature:
-
-Now will detact Vue 3 global component registeres to declare `__VLS_GlobalComponents`.
+- component registeres call:
 
 ```typescript
 // my-global-components-plugin.ts
