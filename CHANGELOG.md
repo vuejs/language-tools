@@ -1,3 +1,7 @@
+### 0.16.16
+
+- chore: remove icon avoid it like a virus in marketplace
+
 ### 0.16.15
 
 - pref: prevent semantic tokens request block autocomplete request (occurred in 0.16.4)
