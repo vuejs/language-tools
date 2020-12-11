@@ -69,7 +69,7 @@ export function activateTagClosing(tagProvider: (document: TextDocument, positio
 				}
 			});
 			timeout = undefined;
-		}, 100);
+		}, /* 100 */ 0);
 	}
 	return Disposable.from(...disposables);
 }

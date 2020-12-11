@@ -1,6 +1,7 @@
 ### 0.17.0
 
 - feat: ts semantic tokens
+- feat: faster auto close tag
 - chore: remove icon avoid it like a virus in marketplace
 
 ### 0.16.15
