@@ -1,6 +1,7 @@
 ### 0.17.2
 
 - fix: `<script setup>` crash corner cases
+- fix: diagnostic feature was accidentally disabled in v0.17.1
 
 ### 0.17.1
 

@@ -57,7 +57,7 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, false, async () => {
+	const host = createLanguageServiceHost(connection, documents, rootPath, true, async () => {
 		connection.sendNotification(SemanticTokensChangedNotification.type);
 	});
 
