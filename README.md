@@ -10,7 +10,9 @@ Roadmap: https://github.com/johnsoncodehk/volar/issues/28
 
 Volar is a fast implementation to try to create faster Vue Language Service to near to native TypeScript Language Service performance. (How? use Composition API!)
 
-Currently autocomplete is fast enough, but there is room for speeding up. Next I will speed up the diagnosis, it still has a lot of room for improvement.
+You can think of Volar as a branch of Vetur (In fact, far from...), Volar focuses on performance and TS support, but Vetur has more language support (vue2, sass...).
+
+You can try Volar if performance or `<script setup>` are your main considerations. Otherwise Vetur can solve all your problems.
 
 ## Sponsors
 
