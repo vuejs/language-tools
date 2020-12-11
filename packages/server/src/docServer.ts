@@ -145,14 +145,14 @@ function initLanguageService(rootPath: string) {
 	connection.languages.semanticTokens.on(async (handler, token, workDoneProgress, resultProgress) => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return { data: [] };
-		const tokens = await host.best(document.uri)?.getSemanticTokens(document, undefined, token, resultProgress);
+		const tokens = host.best(document.uri)?.getSemanticTokens(document, undefined, token, resultProgress);
 		if (!tokens) return { data: [] };
 		return tokens;
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, workDoneProgress, resultProgress) => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return { data: [] };
-		const tokens = await host.best(document.uri)?.getSemanticTokens(document, handler.range, token, resultProgress);
+		const tokens = host.best(document.uri)?.getSemanticTokens(document, handler.range, token, resultProgress);
 		if (!tokens) return { data: [] };
 		return tokens;
 	});

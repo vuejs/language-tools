@@ -30,14 +30,17 @@ import {
 
 let apiClient: LanguageClient;
 let docClient: LanguageClient;
+let cheapClient: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
 	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009);
 	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010);
+	cheapClient = createLanguageService(context, path.join('packages', 'server', 'out', 'cheapServer.js'), 'Volar - HTML', 6011);
 
 	(async () => {
 		await apiClient.onReady();
 		await docClient.onReady();
+		await cheapClient.onReady();
 
 		// context.subscriptions.push(vscode.languages.registerOnTypeRenameProvider({ language: 'vue' }, {
 		// 	async provideOnTypeRenameRanges(document, position) {
@@ -52,8 +55,19 @@ export async function activate(context: vscode.ExtensionContext) {
 		// 		});
 		// 	}
 		// }));
-		context.subscriptions.push(activateTagClosing(tagRequestor, { vue: true }, 'html.autoClosingTags'));
-		context.subscriptions.push(activateTagEditing(tagEditRequestor, { vue: true }, 'volar.html.autoEditingTags'));
+		context.subscriptions.push(activateTagClosing((document, position) => {
+			let param = cheapClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+			return cheapClient.sendRequest(TagCloseRequest.type, param);
+		}, { vue: true }, 'html.autoClosingTags'));
+		context.subscriptions.push(activateTagEditing(async (document: vscode.TextDocument, range: vscode.Range) => {
+			const result = await apiClient.sendRequest(TagEditRequest.type, {
+				textDocument: apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
+				range: apiClient.code2ProtocolConverter.asRange(range),
+			});
+			if (result) {
+				return apiClient.protocol2CodeConverter.asRange(result);
+			}
+		}, { vue: true }, 'volar.html.autoEditingTags'));
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {
 			apiClient.sendNotification(RestartServerNotification.type, undefined);
 			docClient.sendNotification(RestartServerNotification.type, undefined);
@@ -160,24 +174,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
 	registerDocumentFormattingEditProvider(apiClient);
-
-	function tagRequestor(document: vscode.TextDocument, position: vscode.Position) {
-		let param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-		return apiClient.sendRequest(TagCloseRequest.type, param);
-	}
-	async function tagEditRequestor(document: vscode.TextDocument, range: vscode.Range) {
-		const result = await apiClient.sendRequest(TagEditRequest.type, {
-			textDocument: apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-			range: apiClient.code2ProtocolConverter.asRange(range),
-		});
-		if (result) {
-			return apiClient.protocol2CodeConverter.asRange(result);
-		}
-	}
 }
 
 export function deactivate(): Thenable<void> | undefined {
-	return apiClient?.stop() && docClient?.stop();
+	return apiClient?.stop() && docClient?.stop() && cheapClient?.stop();
 }
 
 function createLanguageService(context: vscode.ExtensionContext, script: string, name: string, port: number) {

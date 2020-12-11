@@ -223,7 +223,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		doExecuteCommand: apiHook(executeCommand.register(sourceFiles, tsLanguageService), false),
 		doComplete: apiHook(completions.register(sourceFiles, tsLanguageService), false),
 		doCompletionResolve: apiHook(completionResolve.register(sourceFiles, tsLanguageService), false),
-		doAutoClose: apiHook(autoClose.register(sourceFiles), false),
 		doAutoEditTag: apiHook(autoEditTag.register(sourceFiles), false),
 		doCodeLensResolve: apiHook(codeLensResolve.register(sourceFiles, tsLanguageService), false),
 		getEmbeddedDocument: apiHook(embeddedDocument.register(sourceFiles), false),
@@ -237,6 +236,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(documentColor.register(sourceFiles), false),
 		findLinkedEditingRanges: apiHook(linkedEditingRanges.register(sourceFiles), false),
+		doAutoClose: autoClose.register(),
 		dispose: tsLanguageService.dispose,
 	};
 

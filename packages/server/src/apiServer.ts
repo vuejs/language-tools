@@ -30,7 +30,6 @@ import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	D3Request,
-	TagCloseRequest,
 	TagEditRequest,
 	FormatAllScriptsRequest,
 	GetFormattingSourceMapsRequest,
@@ -119,11 +118,6 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.uri);
 		if (!document) return;
 		return host.best(document.uri)?.getD3(document);
-	});
-	connection.onRequest(TagCloseRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return host.best(document.uri)?.doAutoClose(document, handler.position);
 	});
 	connection.onRequest(LinkedEditingRangeRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);

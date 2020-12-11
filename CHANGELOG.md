@@ -1,3 +1,7 @@
+### 0.17.1
+
+- pref: prevent auto close tag blocked by autocomplete
+
 ### 0.17.0
 
 - feat: ts semantic tokens
