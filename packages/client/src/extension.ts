@@ -34,9 +34,9 @@ let docClient: LanguageClient;
 let cheapClient: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009);
-	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010);
-	cheapClient = createLanguageService(context, path.join('packages', 'server', 'out', 'cheapServer.js'), 'Volar - HTML', 6011);
+	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009, true);
+	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010, true);
+	cheapClient = createLanguageService(context, path.join('packages', 'server', 'out', 'cheapServer.js'), 'Volar - HTML', 6011, false);
 
 	(async () => {
 		await apiClient.onReady();
@@ -175,14 +175,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
-	registerDocumentFormattingEditProvider(apiClient);
+	registerDocumentFormattingEditProvider(cheapClient, apiClient);
 }
 
 export function deactivate(): Thenable<void> | undefined {
 	return apiClient?.stop() && docClient?.stop() && cheapClient?.stop();
 }
 
-function createLanguageService(context: vscode.ExtensionContext, script: string, name: string, port: number) {
+function createLanguageService(context: vscode.ExtensionContext, script: string, name: string, port: number, fileOnly: boolean) {
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(script);
 	// The debug options for the server
@@ -203,11 +203,16 @@ function createLanguageService(context: vscode.ExtensionContext, script: string,
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for plain text documents
-		documentSelector: [
-			{ scheme: 'file', language: 'vue' },
-			{ scheme: 'file', language: 'typescript' },
-			{ scheme: 'file', language: 'typescriptreact' },
-		],
+		documentSelector: fileOnly ?
+			[
+				{ scheme: 'file', language: 'vue' },
+				{ scheme: 'file', language: 'typescript' },
+				{ scheme: 'file', language: 'typescriptreact' },
+			] : [
+				{ language: 'vue' },
+				{ language: 'typescript' },
+				{ language: 'typescriptreact' },
+			],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')

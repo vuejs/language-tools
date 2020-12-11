@@ -5,13 +5,13 @@ import {
 	InitializeResult,
 	createConnection,
 } from 'vscode-languageserver/node';
-import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	TagCloseRequest,
 	TagEditRequest,
 } from '@volar/shared';
+import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -21,7 +21,7 @@ connection.listen();
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
-		initLanguageService(params.rootPath);
+		initLanguageService();
 	}
 	const result: InitializeResult = {
 		capabilities: {
@@ -30,18 +30,23 @@ function onInitialize(params: InitializeParams) {
 	};
 	return result;
 }
-function initLanguageService(rootPath: string) {
+function initLanguageService() {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, false);
+	const ls = createNoStateLanguageService();
 
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host.best(document.uri)?.doAutoClose(document, handler.position);
+		return ls.doAutoClose(document, handler.position);
 	});
 	connection.onRequest(TagEditRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host.best(document.uri)?.doAutoEditTag(document, handler.range);
+		return ls.doAutoEditTag(document, handler.range);
+	});
+	connection.onDocumentFormatting(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return ls.doFormatting(document, handler.options);
 	});
 }

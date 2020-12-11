@@ -1,6 +1,7 @@
 ### 1.17.3
 
 - feat: improve html mirror cursor
+- feat: improve default formatter
 
 ### 0.17.2
 

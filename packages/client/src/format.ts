@@ -15,13 +15,14 @@ import {
 let currentFormatterSetting: string | undefined;
 let currentFormatter: vscode.Disposable | undefined;
 
-export async function registerDocumentFormattingEditProvider(client: LanguageClient) {
+export async function registerDocumentFormattingEditProvider(cheapClient: LanguageClient, apiClient: LanguageClient) {
 
     class DefaultFormattingProvider implements vscode.DocumentFormattingEditProvider {
         async provideDocumentFormattingEdits(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken) {
-            await client.onReady();
-            const result = await client.sendRequest(DocumentFormattingRequest.type, {
-                textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
+            await cheapClient.onReady();
+
+            const result = await cheapClient.sendRequest(DocumentFormattingRequest.type, {
+                textDocument: cheapClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 options,
             });
             if (!result) return;
@@ -39,10 +40,10 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
         startupFormatters = new Set<string>();
 
         async provideDocumentFormattingEdits(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken) {
-            await client.onReady();
+            await apiClient.onReady();
 
-            const sourceMaps = await client.sendRequest(GetFormattingSourceMapsRequest.type, {
-                textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
+            const sourceMaps = await apiClient.sendRequest(GetFormattingSourceMapsRequest.type, {
+                textDocument: apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
             });
             if (!sourceMaps) return;
             if (token.isCancellationRequested) return;
@@ -187,7 +188,7 @@ export async function registerDocumentFormattingEditProvider(client: LanguageCli
             currentFormatter = undefined;
         }
         if (formatter === 'default') {
-            currentFormatter = vscode.languages.registerDocumentFormattingEditProvider([{ scheme: 'file', language: 'vue' }], new DefaultFormattingProvider());
+            currentFormatter = vscode.languages.registerDocumentFormattingEditProvider([{ language: 'vue' }], new DefaultFormattingProvider());
         }
         if (formatter === 'workspaceExtensions') {
             currentFormatter = vscode.languages.registerDocumentFormattingEditProvider([{ scheme: 'file', language: 'vue' }], new WorkspaceExtensionsFormattingProvider());

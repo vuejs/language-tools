@@ -15,7 +15,6 @@ import * as autoEditTag from './services/tagEdit';
 import * as embeddedDocument from './services/embeddedDocument';
 import * as hover from './services/hover';
 import * as diagnostics from './services/diagnostics';
-import * as rangeFormatting from './services/rangeFormatting';
 import * as formatting from './services/formatting';
 import * as definitions from './services/definitions';
 import * as references from './services/references';
@@ -36,7 +35,6 @@ import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
-import { CompletionItem } from 'vscode-css-languageservice';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -47,6 +45,13 @@ export { setScriptSetupRfc } from './virtuals/script';
 
 export function getSemanticTokensLegend() {
 	return semanticTokens.semanticTokenLegend;
+}
+export function createNoStateLanguageService() {
+	return {
+		doAutoClose: autoClose.register(),
+		doAutoEditTag: autoEditTag.register(),
+		doFormatting: formatting.register(),
+	}
 }
 export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 
@@ -196,8 +201,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(diagnostics.register(sourceFiles)),
 		doHover: apiHook(hover.register(sourceFiles, tsLanguageService)),
-		doRangeFormatting: apiHook(rangeFormatting.register(sourceFiles, tsLanguageService)),
-		doFormatting: apiHook(formatting.register(sourceFiles, tsLanguageService)),
 		findDefinition: apiHook(definitions.register(sourceFiles, tsLanguageService, () => _globalComponentCallsGen)),
 		findReferences: apiHook(references.register(sourceFiles, tsLanguageService, () => _globalComponentCallsGen)),
 		findTypeDefinition: apiHook(typeDefinitions.register(sourceFiles, tsLanguageService)),
@@ -222,8 +225,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(documentColor.register(sourceFiles), false),
 		findLinkedEditingRanges: apiHook(linkedEditingRanges.register(sourceFiles), false),
-		doAutoClose: autoClose.register(),
-		doAutoEditTag: autoEditTag.register(),
+		...createNoStateLanguageService(),
 		dispose: tsLanguageService.dispose,
 	};
 

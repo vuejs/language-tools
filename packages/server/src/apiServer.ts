@@ -226,16 +226,6 @@ function initLanguageService(rootPath: string) {
 		if (!document) return undefined;
 		return host.best(document.uri)?.getSignatureHelp(document, handler.position);
 	});
-	connection.onDocumentFormatting(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.best(document.uri)?.doFormatting(document, handler.options);
-	});
-	connection.onDocumentRangeFormatting(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.best(document.uri)?.doRangeFormatting(document, handler.range, handler.options);
-	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
