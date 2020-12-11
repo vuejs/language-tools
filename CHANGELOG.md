@@ -1,3 +1,7 @@
+### 1.17.5
+
+- pref: faster default formatter
+
 ### 1.17.4
 
 - fix: can't disable html mirror cursor

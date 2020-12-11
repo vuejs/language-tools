@@ -166,6 +166,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			document: virtualScriptSetupRaw.textDocument.value,
 			sourceMap: virtualScriptSetupRaw.sourceMap.value,
 		})),
+		getTemplateScriptFormat: untrack(() => ({
+			document: virtualTemplateGen.textDocumentForFormatting.value,
+			sourceMap: virtualTemplateGen.sourceMapForFormatting.value,
+		})),
 	};
 
 	function update(newVueDocument: TextDocument) {

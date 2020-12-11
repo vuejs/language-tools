@@ -4,18 +4,19 @@ import { MapedMode, TsMappingData, Mapping, MapedNodeTypes, MapedRange } from '.
 import { camelize, hyphenate } from '@vue/shared';
 
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, formatting: true, references: true, rename: true, completion: true, semanticTokens: true },
-	noFormatting: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: true, semanticTokens: true },
-	diagnosticOnly: { basic: false, diagnostic: true, formatting: false, references: false, rename: false, completion: true, semanticTokens: false },
-	htmlTagOrAttr: { basic: true, diagnostic: true, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
-	className: { basic: true, diagnostic: false, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
-	slotName: { basic: true, diagnostic: true, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
-	propRaw: { basic: false, diagnostic: false, formatting: false, references: true, rename: true, completion: false, semanticTokens: false },
-	referencesOnly: { basic: false, diagnostic: false, formatting: false, references: true, rename: false, completion: false, semanticTokens: false },
+	all: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
+	noFormatting: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
+	diagnosticOnly: { basic: false, diagnostic: true, references: false, rename: false, completion: true, semanticTokens: false },
+	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, rename: true, completion: false, semanticTokens: false },
+	className: { basic: true, diagnostic: false, references: true, rename: true, completion: false, semanticTokens: false },
+	slotName: { basic: true, diagnostic: true, references: true, rename: false, completion: false, semanticTokens: false },
+	propRaw: { basic: false, diagnostic: false, references: true, rename: true, completion: false, semanticTokens: false },
+	referencesOnly: { basic: false, diagnostic: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
 
 export function transformVueHtml(node: RootNode, pugMapper?: (code: string, htmlOffset: number) => number | undefined) {
 	const mappings: Mapping<TsMappingData>[] = [];
+	const formapMappings: Mapping<TsMappingData>[] = [];
 	const cssMappings: Mapping<undefined>[] = [];
 	const tags = new Set<string>();
 	const slots = new Map<string, {
@@ -25,6 +26,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 	let elementIndex = 0;
 	let cssCode = '';
 	let _code = '';
+	let formatCode = '';
 	worker(node, []);
 
 	_code += `export default {\n`
@@ -40,6 +42,8 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 		cssMappings,
 		cssCode,
 		tags,
+		formatCode,
+		formapMappings,
 	};
 
 	function worker(node: TemplateChildNode | RootNode, parents: (TemplateChildNode | RootNode)[]) {
@@ -124,7 +128,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 								start: prop.exp.loc.start.offset,
 								end: prop.exp.loc.end.offset,
-							}]);
+							}], true, ['(', ')']);
 							_code += ` = `;
 						}
 						let slotName = 'default';
@@ -214,7 +218,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
-						}]);
+						}], true, ['(', ')']);
 						_code += `);\n`;
 					}
 				}
@@ -300,7 +304,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 								mapping(undefined, propValue, propValue, MapedMode.Offset, capabilitiesSet.all, [{
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
-								}])
+								}], true, ['(', ')'])
 							}
 							else {
 								_code += propValue;
@@ -432,7 +436,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 								mapping(undefined, value.content, value.content, MapedMode.Offset, capabilitiesSet.all, [{
 									start: value.loc.start.offset,
 									end: value.loc.end.offset,
-								}])
+								}], true, ['', '']);
 							}
 							else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
 								for (const child of value.children) {
@@ -447,7 +451,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 											mapping(undefined, child.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
 												start: child.loc.start.offset,
 												end: child.loc.end.offset,
-											}])
+											}], true, ['', '']);
 										}
 										else {
 											_code += child.content;
@@ -476,7 +480,10 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					) {
 						hasDefaultBind = true;
 						_code += `const ${varDefaultBind} = (`;
-						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
+						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						}], true, ['(', ')']);
 						_code += `);\n`;
 						break;
 					}
@@ -489,9 +496,15 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
-						mappingObjectProperty(MapedNodeTypes.Prop, prop.arg.content, prop.arg.content, capabilitiesSet.htmlTagOrAttr, [{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }]);
+						mappingObjectProperty(MapedNodeTypes.Prop, prop.arg.content, prop.arg.content, capabilitiesSet.htmlTagOrAttr, [{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						}]);
 						_code += `: (`;
-						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{ start: prop.exp.loc.start.offset, end: prop.exp.loc.end.offset }]);
+						mapping(undefined, prop.exp.content, prop.exp.content, MapedMode.Offset, capabilitiesSet.all, [{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						}], true, ['(', ')']);
 						_code += `),\n`;
 					}
 					else if (
@@ -558,7 +571,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			mapping(undefined, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 				start: start,
 				end: start + context.length,
-			}]);
+			}], true, ['{', '}']);
 			_code += `};\n`;
 		}
 		else if (node.type === NodeTypes.IF) {
@@ -579,7 +592,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							mapping(undefined, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 								start: start,
 								end: start + context.length,
-							}]);
+							}], true, ['(', ')']);
 							_code += `)\n`;
 							_code += `) {\n`;
 						}
@@ -589,7 +602,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 							mapping(undefined, context, context, MapedMode.Offset, capabilitiesSet.all, [{
 								start: start,
 								end: start + context.length,
-							}]);
+							}], true, ['(', ')']);
 							_code += `)\n`;
 							_code += `) {\n`;
 						}
@@ -711,7 +724,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 		mapping(type, mapCode, pugSearchCode, MapedMode.Offset, capabilities, sourceRanges);
 		_code += `'`;
 	}
-	function mapping(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true) {
+	function mapping(type: MapedNodeTypes | undefined, mapCode: string, pugSearchCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRanges: { start: number, end: number }[], addCode = true, formatWrapper?: [string, string]) {
 		if (pugMapper) {
 			sourceRanges = sourceRanges.map(range => ({ ...range })); // clone
 			for (const sourceRange of sourceRanges) {
@@ -729,6 +742,27 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 			sourceRanges = sourceRanges.filter(range => range.start !== -1);
 		}
 		for (const sourceRange of sourceRanges) {
+			if (formatWrapper) {
+				formapMappings.push({
+					mode,
+					sourceRange: sourceRange,
+					targetRange: {
+						start: formatCode.length,
+						end: formatCode.length + mapCode.length,
+					},
+					data: {
+						type,
+						vueTag: 'template',
+						capabilities: {
+							formatting: true,
+						},
+					},
+				});
+				formatCode += formatWrapper[0];
+				formatCode += mapCode;
+				formatCode += formatWrapper[1];
+				formatCode += `;\n`;
+			}
 			mappings.push({
 				mode,
 				sourceRange: sourceRange,

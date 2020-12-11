@@ -339,6 +339,8 @@ export function useTemplateScript(
 					cssCode: '',
 					cssMappings: [],
 					tags: new Set<string>(),
+					formatCode: '',
+					formapMappings: [],
 				};
 			}
 		}
@@ -346,7 +348,7 @@ export function useTemplateScript(
 	const sourceMap = computed(() => {
 		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: true });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: false });
 			{ // diagnostic for '@vue/runtime-dom' package not exist
 				const text = `'@vue/runtime-dom'`;
 				const textIndex = textDocument.value.getText().indexOf(text);
@@ -419,6 +421,24 @@ export function useTemplateScript(
 			return sourceMap;
 		}
 	});
+	const sourceMapForFormatting = computed(() => {
+		if (data.value && textDocumentForFormatting.value && template.value) {
+			const vueDoc = getUnreactiveDoc();
+			const sourceMap = new TsSourceMap(vueDoc, textDocumentForFormatting.value, true, { foldingRanges: false, formatting: true });
+			for (const maped of data.value.interpolations.formapMappings) {
+				sourceMap.add({
+					data: maped.data,
+					mode: maped.mode,
+					sourceRange: {
+						start: maped.sourceRange.start + template.value.loc.start,
+						end: maped.sourceRange.end + template.value.loc.start,
+					},
+					targetRange: maped.targetRange,
+				});
+			}
+			return sourceMap;
+		}
+	});
 	const cssTextDocument = computed(() => {
 		if (data.value) {
 			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, data.value.interpolations.cssCode);
@@ -431,7 +451,7 @@ export function useTemplateScript(
 				scoped: false,
 			};
 		}
-	})
+	});
 	const cssSourceMap = computed(() => {
 		if (data.value && cssTextDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
@@ -459,6 +479,7 @@ export function useTemplateScript(
 		}
 	});
 	const textDocument = ref<TextDocument>();
+	const textDocumentForFormatting = ref<TextDocument>();
 	const contextSourceMap = ref<SourceMap<{
 		isAdditionalReference: boolean;
 	}>>();
@@ -467,6 +488,8 @@ export function useTemplateScript(
 	return {
 		sourceMap,
 		textDocument,
+		textDocumentForFormatting,
+		sourceMapForFormatting,
 		contextSourceMap,
 		componentSourceMap,
 		cssTextDocument,
@@ -478,6 +501,7 @@ export function useTemplateScript(
 		if (data.value?.text !== textDocument.value?.getText()) {
 			if (data.value) {
 				textDocument.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', version++, data.value.text);
+				textDocumentForFormatting.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', textDocument.value.version, data.value.interpolations.formatCode);
 				{
 					const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
 						textDocument.value,
@@ -503,6 +527,7 @@ export function useTemplateScript(
 				textDocument.value = undefined;
 				contextSourceMap.value = undefined;
 				componentSourceMap.value = undefined;
+				textDocumentForFormatting.value = undefined;
 			}
 		}
 	}

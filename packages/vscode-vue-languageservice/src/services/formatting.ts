@@ -9,36 +9,39 @@ import { getCheapTsService2 } from '../globalServices';
 import { rfc } from '../virtuals/script';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
+import { notEmpty } from '@volar/shared';
 const pugBeautify = require('pug-beautify');
 
 export function register() {
 	return (_document: TextDocument, options: FormattingOptions) => {
 		const tsService2 = getCheapTsService2(_document);
-		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText());
+		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText()); // TODO: high cost
 
 		const sourceFile = createSourceFile(document, tsService2.service);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();
 		const htmlEdits = getHtmlFormattingEdits();
-		newDocument = applyTextEdits(document, [
-			...pugEdits,
-			...htmlEdits,
-		]);
-		sourceFile.update(newDocument);
+		if (pugEdits.length + htmlEdits.length > 0) {
+			newDocument = applyTextEdits(document, [
+				...pugEdits,
+				...htmlEdits,
+			]);
+			sourceFile.update(newDocument); // TODO: high cost
+		}
 
 		const tsEdits = getTsFormattingEdits();
 		const cssEdits = getCssFormattingEdits();
-		newDocument = applyTextEdits(newDocument, [
-			...tsEdits,
-			...cssEdits,
-		]);
-		sourceFile.update(newDocument);
+		if (tsEdits.length + cssEdits.length > 0) {
+			newDocument = applyTextEdits(newDocument, [
+				...tsEdits,
+				...cssEdits,
+			]);
+			sourceFile.update(newDocument); // TODO: high cost
+		}
 
 		const indentTextEdits = patchInterpolationIndent();
 		newDocument = applyTextEdits(newDocument, indentTextEdits);
-		sourceFile.update(document);
-
 		if (newDocument.getText() === document.getText()) return;
 
 		const editRange = Range.create(
@@ -163,10 +166,35 @@ export function register() {
 		}
 		function getTsFormattingEdits() {
 			const result: TextEdit[] = [];
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			const tsSourceMaps = [
+				...sourceFile.getTsSourceMaps(),
+				sourceFile.getTemplateScriptFormat().sourceMap,
+			].filter(notEmpty);
+
+			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
 				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
-				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
+				let _range: undefined | {
+					start: number,
+					end: number,
+				};
+				for (const maped of sourceMap) {
+					if (!maped.data.capabilities.formatting) continue;
+					if (!_range) {
+						_range = maped.targetRange;
+					}
+					else {
+						_range = {
+							start: Math.min(_range.start, maped.targetRange.start),
+							end: Math.max(_range.end, maped.targetRange.end),
+						};
+					}
+				}
+				if (!_range) continue;
+				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options, {
+					start: sourceMap.targetDocument.positionAt(_range.start),
+					end: sourceMap.targetDocument.positionAt(_range.end),
+				});
 				for (const textEdit of textEdits) {
 					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
 						if (!vueLoc.maped.data.capabilities.formatting) continue;
