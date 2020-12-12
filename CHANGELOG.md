@@ -1,3 +1,13 @@
+### 1.17.6
+
+- fix: ref sugar variable renaming no effect to template
+- fix: `v-else-if` semantic token
+- pref: split `<script>` and `<template>` to speed up current editing block diagnostics
+
+  > when editing `<script>`, `<template>` block delay 1000ms make diagnosis
+
+  > when editing `<template>`, `<script>` block delay 1000ms make diagnosis
+
 ### 1.17.5
 
 - pref: faster default formatter
