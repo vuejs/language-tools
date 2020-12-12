@@ -108,7 +108,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 													const tsLocs = sourceMap.sourceToTargets(vueLoc.range);
 													for (const tsLoc of tsLocs) {
 														if (!tsLoc.maped.data.capabilities.rename) continue;
-														const rename2 = worker(sourceMap.targetDocument, tsLoc.range.start, newName, 1);
+														const rename2 = worker(sourceMap.targetDocument, tsLoc.range.start, newName, 0); // TODO: direction should be 1?
 														if (rename && rename2) {
 															rename = margeWorkspaceEdits([rename, rename2]);
 															break;
