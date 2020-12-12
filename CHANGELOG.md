@@ -1,5 +1,6 @@
-### 0.17.8
+### 0.18.0
 
+- feat: [Linked Editing](https://code.visualstudio.com/updates/v1_44#_synced-regions)
 - fix: script not found error not working for `<script setup>`
 
 ### 0.17.7

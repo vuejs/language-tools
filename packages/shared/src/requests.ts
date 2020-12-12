@@ -42,13 +42,7 @@ export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any> = new RequestType('html/tag');
 }
 export namespace LinkedEditingRangeRequest {
-	export const type: RequestType<TextDocumentPositionParams, Range[] | null, any> = new RequestType('html/onTypeRename');
-}
-export namespace TagEditRequest {
-	export const type: RequestType<{
-		textDocument: TextDocumentIdentifier,
-		range: Range,
-	}, Range | null | undefined, any> = new RequestType('html/tag_edit');
+	export const type: RequestType<TextDocumentPositionParams, Range[] | null, any> = new RequestType('html/linkedEditingRange');
 }
 export namespace DocumentVersionRequest {
 	export const type: RequestType<{

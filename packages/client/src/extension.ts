@@ -6,7 +6,6 @@
 import * as path from 'upath';
 import * as vscode from 'vscode';
 import { activateTagClosing } from './tagClosing';
-import { activateTagEditing } from './tagEditing';
 import { registerDocumentSemanticTokensProvider } from './semanticTokens';
 import { registerDocumentFormattingEditProvider } from './format';
 import {
@@ -19,8 +18,7 @@ import {
 } from 'vscode-languageclient/node';
 import {
 	TagCloseRequest,
-	TagEditRequest,
-	// LinkedEditingRangeRequest,
+	LinkedEditingRangeRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
 	WriteVirtualFilesRequest,
@@ -44,19 +42,19 @@ export async function activate(context: vscode.ExtensionContext) {
 		await docClient.onReady();
 		await cheapClient.onReady();
 
-		// context.subscriptions.push(vscode.languages.registerOnTypeRenameProvider({ language: 'vue' }, {
-		// 	async provideOnTypeRenameRanges(document, position) {
-		// 		const param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-		// 		return apiClient.sendRequest(OnTypeRenameRequest.type, param).then(response => {
-		// 			if (response) {
-		// 				return {
-		// 					ranges: response.map(r => apiClient.protocol2CodeConverter.asRange(r))
-		// 				};
-		// 			}
-		// 			return undefined;
-		// 		});
-		// 	}
-		// }));
+		context.subscriptions.push(vscode.languages.registerLinkedEditingRangeProvider({ language: 'vue' }, {
+			async provideLinkedEditingRanges(document: vscode.TextDocument, position: vscode.Position) {
+				const param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+				return apiClient.sendRequest(LinkedEditingRangeRequest.type, param).then(response => {
+					if (response) {
+						return {
+							ranges: response.map(r => apiClient.protocol2CodeConverter.asRange(r))
+						};
+					}
+					return undefined;
+				});
+			}
+		}));
 		context.subscriptions.push(docClient.onRequest(DocumentVersionRequest.type, handler => {
 			const doc = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === handler.uri);
 			return doc?.version;
@@ -66,15 +64,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			let param = cheapClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
 			return cheapClient.sendRequest(TagCloseRequest.type, param);
 		}, { vue: true }, 'html.autoClosingTags'));
-		context.subscriptions.push(activateTagEditing(async (document: vscode.TextDocument, range: vscode.Range) => {
-			const result = await cheapClient.sendRequest(TagEditRequest.type, {
-				textDocument: cheapClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-				range: cheapClient.code2ProtocolConverter.asRange(range),
-			});
-			if (result) {
-				return cheapClient.protocol2CodeConverter.asRange(result);
-			}
-		}, { vue: true }, 'volar.html.autoEditingTags'));
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', () => {
 			apiClient.sendNotification(RestartServerNotification.type, undefined);
 			docClient.sendNotification(RestartServerNotification.type, undefined);

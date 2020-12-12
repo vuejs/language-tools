@@ -12,7 +12,7 @@
 		"url": "https://github.com/johnsoncodehk/volar.git"
 	},
 	"engines": {
-		"vscode": "^1.32.0"
+		"vscode": "^1.52.0"
 	},
 	"keywords": [
 		"volar",
@@ -130,11 +130,6 @@
 		"configuration": {
 			"title": "Vue 3",
 			"properties": {
-				"volar.html.autoEditingTags": {
-					"type": "boolean",
-					"default": true,
-					"description": "Auto edit html tags pair"
-				},
 				"volar.format.formatter": {
 					"type": "string",
 					"default": "default",

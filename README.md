@@ -22,7 +22,8 @@ https://github.com/sponsors/johnsoncodehk
 
 ## Some interesting features:
 
-- [x] HTML mirror cursor (v0.16.2 ~ v0.17.4) (this feature is temporary and will be replace)
+- [x] [Linked Editing](https://code.visualstudio.com/updates/v1_44#_synced-regions) (v0.18.0) (enabled with `editor.linkedEditing`) (required VSCode 1.52)
+- [x] ~~HTML mirror cursor (v0.16.2 ~ v0.17.4)~~ (replace with Linked Editing)
 - [x] v-slot services (v0.12.1 ~ v0.16.8)
 - [x] inline css services (v0.16.3)
 - [x] ref sugar convert tool (v0.15.6)

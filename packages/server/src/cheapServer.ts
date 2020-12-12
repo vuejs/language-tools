@@ -11,7 +11,6 @@ import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	TagCloseRequest,
-	TagEditRequest,
 } from '@volar/shared';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
 
@@ -41,11 +40,6 @@ function initLanguageService() {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return ls.doAutoClose(document, handler.position);
-	});
-	connection.onRequest(TagEditRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return ls.doAutoEditTag(document, handler.range);
 	});
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
