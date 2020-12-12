@@ -371,28 +371,44 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			[useScriptValidation(virtualScriptGen.textDocument, 1), []],
 		];
 
-		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>, withSideEffect = true) => {
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 
 			let all = [...nonTs];
+			let keep: typeof all = [];
 			if (lastUpdateChanged.script || lastUpdateChanged.scriptSetup) {
 				all = all.concat(scriptTs);
-				all = all.concat(templateTs);
+				if (withSideEffect) {
+					all = all.concat(templateTs);
+				}
+				else {
+					keep = keep.concat(templateTs);
+				}
 			}
 			else if (lastUpdateChanged.template) {
 				all = all.concat(templateTs);
-				all = all.concat(scriptTs);
+				if (withSideEffect) {
+					all = all.concat(scriptTs);
+				}
+				else {
+					keep = keep.concat(scriptTs);
+				}
 			}
 			else {
-				// whatever~
-				all = all.concat(scriptTs);
-				all = all.concat(templateTs);
+				if (withSideEffect) {
+					all = all.concat(scriptTs);
+					all = all.concat(templateTs);
+				}
+				else {
+					keep = keep.concat(scriptTs);
+					keep = keep.concat(templateTs);
+				}
 			}
 
 			for (const diag of all) {
 				if (await isCancel?.()) return;
 				diag[1] = diag[0].value;
-				response(all.map(diag => diag[1]).flat());
+				response([...all, ...keep].map(diag => diag[1]).flat());
 			}
 		}
 

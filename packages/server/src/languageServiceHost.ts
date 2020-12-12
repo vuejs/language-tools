@@ -173,20 +173,28 @@ export function createLanguageServiceHost(
 
 			for (const doc of changedDocs) {
 				if (req !== projectCurrentReq) break;
-				await sendDiagnostics(doc);
+				await sendDiagnostics(doc, false);
 			}
 
 			const fileNames = new Set(parsedCommandLine.fileNames);
 			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue' && fileNames.has(uriToFsPath(doc.uri)));
 			setTimeout(async () => {
-				for (const doc of openedDocs) {
-					if (changedDocs.find(changeDoc => changeDoc.uri === doc.uri)) continue;
+
+				for (const doc of changedDocs) {
 					if (req !== projectCurrentReq) break;
-					await sendDiagnostics(doc);
+					await sendDiagnostics(doc, true);
 				}
-			}, 2000);
+
+				setTimeout(async () => {
+					for (const doc of openedDocs) {
+						if (changedDocs.find(changeDoc => changeDoc.uri === doc.uri)) continue;
+						if (req !== projectCurrentReq) break;
+						await sendDiagnostics(doc, true);
+					}
+				}, 1000);
+			}, 1000);
 		}
-		async function sendDiagnostics(document: TextDocument) {
+		async function sendDiagnostics(document: TextDocument, withSideEffect: boolean) {
 			const matchLs = best(document.uri);
 			if (matchLs !== vueLanguageService) return;
 
@@ -214,7 +222,7 @@ export function createLanguageServiceHost(
 
 			await vueLanguageService.doValidation(document, async result => {
 				connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
-			}, isCancel);
+			}, isCancel, withSideEffect);
 		}
 		function onParsedCommandLineUpdate() {
 			const fileNames = new Set(parsedCommandLine.fileNames);
