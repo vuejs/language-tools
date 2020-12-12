@@ -41,7 +41,6 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		}
 
 		const fileName = uriToFsPath(document.uri);
-
 		const diags_1 = options.semantic ? languageService.getSemanticDiagnostics(fileName) : [];
 		const diags_2 = options.syntactic ? languageService.getSyntacticDiagnostics(fileName) : [];
 		const diags_3 = options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [];

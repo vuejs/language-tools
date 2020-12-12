@@ -107,7 +107,7 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, false);
+	const host = createLanguageServiceHost(connection, documents, rootPath);
 
 	// custom requests
 	connection.onNotification(RestartServerNotification.type, async () => {

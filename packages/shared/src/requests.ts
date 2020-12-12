@@ -50,6 +50,11 @@ export namespace TagEditRequest {
 		range: Range,
 	}, Range | null | undefined, any> = new RequestType('html/tag_edit');
 }
+export namespace DocumentVersionRequest {
+	export const type: RequestType<{
+		uri: string,
+	}, number | undefined, any> = new RequestType('vue/docUpdated');
+}
 export namespace GetFormattingSourceMapsRequest {
 	export const type: RequestType<{
 		textDocument: TextDocumentIdentifier,

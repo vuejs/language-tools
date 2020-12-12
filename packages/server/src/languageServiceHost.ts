@@ -10,7 +10,7 @@ export function createLanguageServiceHost(
 	connection: Connection,
 	documents: TextDocuments<TextDocument>,
 	rootPath: string,
-	diagEvent: boolean,
+	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
 	_onProjectFilesUpdate?: () => void,
 ) {
 	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
@@ -170,17 +170,21 @@ export function createLanguageServiceHost(
 		}
 		async function doValidation(changedDocs: TextDocument[]) {
 			const req = ++projectCurrentReq;
-			const docs = [...changedDocs];
-			const fileNames = new Set(parsedCommandLine.fileNames);
-			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue' && fileNames.has(uriToFsPath(doc.uri)));
-			for (const document of openedDocs) {
-				if (changedDocs.find(doc => doc.uri === document.uri)) continue;
-				docs.push(document);
-			}
-			for (const doc of docs) {
+
+			for (const doc of changedDocs) {
 				if (req !== projectCurrentReq) break;
 				await sendDiagnostics(doc);
 			}
+
+			const fileNames = new Set(parsedCommandLine.fileNames);
+			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue' && fileNames.has(uriToFsPath(doc.uri)));
+			setTimeout(async () => {
+				for (const doc of openedDocs) {
+					if (changedDocs.find(changeDoc => changeDoc.uri === doc.uri)) continue;
+					if (req !== projectCurrentReq) break;
+					await sendDiagnostics(doc);
+				}
+			}, 2000);
 		}
 		async function sendDiagnostics(document: TextDocument) {
 			const matchLs = best(document.uri);
@@ -189,13 +193,28 @@ export function createLanguageServiceHost(
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
 			const docVersion = document.version;
 			fileCurrentReqs.set(document.uri, req);
-			const isCancel = () => fileCurrentReqs.get(document.uri) !== req || docVersion !== document.version;
+			let _isCancle = false;
+			const isCancel = async () => {
+				if (_isCancle) {
+					return true;
+				}
+				if (fileCurrentReqs.get(document.uri) !== req) {
+					_isCancle = true;
+					return true;
+				}
+				if (getDocVersionForDiag) {
+					const clientDocVersion = await getDocVersionForDiag(document.uri);
+					if (clientDocVersion !== undefined && docVersion !== clientDocVersion) {
+						_isCancle = true;
+						return true;
+					}
+				}
+				return false;
+			};
 
-			setTimeout(() => {
-				vueLanguageService.doValidation(document, result => {
-					connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
-				}, isCancel);
-			}, 200);
+			await vueLanguageService.doValidation(document, async result => {
+				connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
+			}, isCancel);
 		}
 		function onParsedCommandLineUpdate() {
 			const fileNames = new Set(parsedCommandLine.fileNames);
@@ -244,7 +263,7 @@ export function createLanguageServiceHost(
 			if (_onProjectFilesUpdate) {
 				_onProjectFilesUpdate();
 			}
-			if (diagEvent) {
+			if (getDocVersionForDiag) {
 				while (currentValidation) {
 					await currentValidation;
 				}

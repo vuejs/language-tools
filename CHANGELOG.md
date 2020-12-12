@@ -1,6 +1,7 @@
 ### 1.17.5
 
 - pref: faster default formatter
+- pref: faster diagnostics
 
 ### 1.17.4
 

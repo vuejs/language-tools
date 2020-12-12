@@ -27,6 +27,7 @@ import {
 	RestartServerNotification,
 	ShowReferencesNotification,
 	D3Request,
+	DocumentVersionRequest,
 } from '@volar/shared';
 
 let apiClient: LanguageClient;
@@ -56,6 +57,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		// 		});
 		// 	}
 		// }));
+		context.subscriptions.push(docClient.onRequest(DocumentVersionRequest.type, handler => {
+			const doc = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === handler.uri);
+			return doc?.version;
+		}));
 		context.subscriptions.push(await registerDocumentSemanticTokensProvider(docClient));
 		context.subscriptions.push(activateTagClosing((document, position) => {
 			let param = cheapClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);

@@ -38,6 +38,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		scriptSetup: null,
 		styles: [],
 	});
+	const lastUpdateChanged = {
+		template: false,
+		script: false,
+		scriptSetup: false,
+	};
 	const templateScriptData = reactive<ITemplateScriptData>({
 		projectVersion: undefined,
 		context: [],
@@ -121,8 +126,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			docs.set(virtualScriptGen.shadowTsTextDocument.value.uri, virtualScriptGen.shadowTsTextDocument.value);
 		if (virtualScriptMain.textDocument.value)
 			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
-		if (virtualTemplateGen.textDocument.value)
-			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
+		if (virtualTemplateGen.textDocument1.value)
+			docs.set(virtualTemplateGen.textDocument1.value.uri, virtualTemplateGen.textDocument1.value);
+		if (virtualTemplateGen.textDocument2.value)
+			docs.set(virtualTemplateGen.textDocument2.value.uri, virtualTemplateGen.textDocument2.value);
 		if (rfc === '#182' && virtualScriptSetupRaw.textDocument.value)
 			docs.set(virtualScriptSetupRaw.textDocument.value.uri, virtualScriptSetupRaw.textDocument.value);
 		return docs;
@@ -176,7 +183,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vueFileName }).descriptor;
 		const versionsBeforeUpdate = [
 			virtualScriptGen.textDocument.value?.version,
-			virtualTemplateGen.textDocument.value?.version,
+			virtualTemplateGen.textDocument1.value?.version,
+			virtualTemplateGen.textDocument2.value?.version,
 		];
 
 		updateTemplate(newDescriptor);
@@ -191,12 +199,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		const versionsAfterUpdate = [
 			virtualScriptGen.textDocument.value?.version,
-			virtualTemplateGen.textDocument.value?.version,
+			virtualTemplateGen.textDocument1.value?.version,
+			virtualTemplateGen.textDocument2.value?.version,
 		];
 
 		return {
 			scriptUpdated: versionsBeforeUpdate[0] !== versionsAfterUpdate[0],
-			templateScriptUpdated: versionsBeforeUpdate[1] !== versionsAfterUpdate[1],
+			templateScriptUpdated: versionsBeforeUpdate[1] !== versionsAfterUpdate[1] || versionsBeforeUpdate[2] !== versionsAfterUpdate[2],
 		};
 
 		function updateTemplate(newDescriptor: vueSfc.SFCDescriptor) {
@@ -208,6 +217,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					end: newDescriptor.template.loc.end.offset,
 				},
 			} : null;
+
+			lastUpdateChanged.template = descriptor.template?.content !== newData?.content;
+
 			if (descriptor.template && newData) {
 				descriptor.template.lang = newData.lang;
 				descriptor.template.content = newData.content;
@@ -227,6 +239,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					end: newDescriptor.script.loc.end.offset,
 				},
 			} : null;
+
+			lastUpdateChanged.script = descriptor.script?.content !== newData?.content;
+
 			if (descriptor.script && newData) {
 				descriptor.script.lang = newData.lang;
 				descriptor.script.content = newData.content;
@@ -247,6 +262,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				},
 				setup: typeof newDescriptor.scriptSetup.setup === 'string' ? newDescriptor.scriptSetup.setup : '',
 			} : null;
+
+			lastUpdateChanged.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
+
 			if (descriptor.scriptSetup && newData) {
 				descriptor.scriptSetup.lang = newData.lang;
 				descriptor.scriptSetup.content = newData.content;
@@ -337,30 +355,43 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	}
 	function useDiagnostics() {
 
-		const all: [Ref<Diagnostic[]>, Diagnostic[]][] = [
-			// sort by cost
+		// sort by cost
+		const nonTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
 			[useStylesValidation(), []],
 			[useTemplateValidation(), []],
+		];
+		const templateTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
 			[useTemplateScriptValidation(2), []],
-			[useScriptValidation(virtualScriptGen.textDocument, 2), []],
 			[useTemplateScriptValidation(3), []],
-			[useScriptValidation(virtualScriptGen.textDocument, 3), []],
 			[useTemplateScriptValidation(1), []],
+		];
+		const scriptTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
+			[useScriptValidation(virtualScriptGen.textDocument, 2), []],
+			[useScriptValidation(virtualScriptGen.textDocument, 3), []],
 			[useScriptValidation(virtualScriptGen.textDocument, 1), []],
 		];
 
-		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => boolean) => {
+		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
-			let lastSleepAt = Date.now();
+
+			let all = [...nonTs];
+			if (lastUpdateChanged.script || lastUpdateChanged.scriptSetup) {
+				all = all.concat(scriptTs);
+				all = all.concat(templateTs);
+			}
+			else if (lastUpdateChanged.template) {
+				all = all.concat(templateTs);
+				all = all.concat(scriptTs);
+			}
+			else {
+				// whatever~
+				all = all.concat(scriptTs);
+				all = all.concat(templateTs);
+			}
 
 			for (const diag of all) {
-				if (Date.now() - lastSleepAt > 100) {
-					lastSleepAt = Date.now();
-					await sleep(10);
-				}
-				if (isCancel?.()) return;
+				if (await isCancel?.()) return;
 				diag[1] = diag[0].value;
-				if (isCancel?.()) return;
 				response(all.map(diag => diag[1]).flat());
 			}
 		}
@@ -507,7 +538,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
 				}
-				const doc = virtualTemplateGen.textDocument.value;
+				const doc = virtualTemplateGen.textDocument2.value;
 				if (!doc) return [];
 				if (mode === 1) {
 					return tsLanguageService.doValidation(doc.uri, { semantic: true });
@@ -521,18 +552,18 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			});
 			const errors_2 = computed(() => {
 				const result: Diagnostic[] = [];
-				if (!virtualTemplateGen.textDocument.value
+				if (!virtualTemplateGen.textDocument2.value
 					|| !virtualTemplateGen.contextSourceMap.value
 					|| !virtualScriptGen.textDocument.value
 				)
 					return result;
 				for (const diag of errors_1.value) {
-					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
+					const spanText = virtualTemplateGen.textDocument2.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
 					const propRights = virtualTemplateGen.contextSourceMap.value.sourceToTargets(diag.range);
 					for (const propRight of propRights) {
 						if (propRight.maped.data.isAdditionalReference) continue;
-						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.range.start);
+						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument2.value.uri, propRight.range.start);
 						for (const definition of definitions) {
 							if (definition.uri !== virtualScriptGen.textDocument.value.uri) continue;
 							result.push({
@@ -545,9 +576,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result;
 			})
 			return computed(() => {
-				const result_1 = virtualTemplateGen.textDocument.value ? toTsSourceDiags(
+				const result_1 = virtualTemplateGen.textDocument2.value ? toTsSourceDiags(
 					errors_1.value,
-					virtualTemplateGen.textDocument.value.uri,
+					virtualTemplateGen.textDocument2.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				const result_2 = virtualScriptGen.textDocument.value ? toTsSourceDiags(
@@ -630,8 +661,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				tsProjectVersion.value;
 			}
 			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
-			if (virtualTemplateGen.textDocument.value && virtualTemplateRaw.textDocument.value) {
-				const doc = virtualTemplateGen.textDocument.value;
+			if (virtualTemplateGen.textDocument1.value && virtualTemplateRaw.textDocument.value) {
+				const doc = virtualTemplateGen.textDocument1.value;
 				const text = doc.getText();
 				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
 					let bind: CompletionItem[] = [];

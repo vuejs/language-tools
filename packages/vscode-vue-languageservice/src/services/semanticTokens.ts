@@ -78,7 +78,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		});
 		if (tsResult.length) {
 			tokens = tokens.concat(tsResult);
-			resultProgress?.report(buildTokens(tokens));
 		}
 
 		return buildTokens(tokens);

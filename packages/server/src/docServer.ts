@@ -27,6 +27,7 @@ import {
 	SemanticTokenLegendRequest,
 	SemanticTokensChangedNotification,
 	RangeSemanticTokensRequest,
+	DocumentVersionRequest,
 } from '@volar/shared';
 import * as upath from 'upath';
 import * as fs from 'fs-extra';
@@ -56,8 +57,10 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, true, async () => {
-		connection.sendNotification(SemanticTokensChangedNotification.type);
+	const host = createLanguageServiceHost(connection, documents, rootPath, async (uri: string) => {
+		return await connection.sendRequest(DocumentVersionRequest.type, { uri });
+	}, async () => {
+		await connection.sendNotification(SemanticTokensChangedNotification.type);
 	});
 
 	connection.onNotification(RestartServerNotification.type, async () => {
@@ -129,6 +132,7 @@ function initLanguageService(rootPath: string) {
 		return host.best(document.uri)?.findDocumentLinks(document);
 	});
 	connection.onRequest(RangeSemanticTokensRequest.type, async handler => {
+		// TODO: blocked diagnostics request
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return host.best(document.uri)?.getSemanticTokens(document, handler.range);
