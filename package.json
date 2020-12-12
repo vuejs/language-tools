@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"displayName": "Volar",
+	"displayName": "Vue 3",
 	"description": "TypeScript support for Vue 3",
 	"version": "0.17.6",
 	"author": "johnsoncodehk",
@@ -127,7 +127,7 @@
 			}
 		],
 		"configuration": {
-			"title": "Volar",
+			"title": "Vue 3",
 			"properties": {
 				"volar.html.autoEditingTags": {
 					"type": "boolean",
