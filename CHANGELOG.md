@@ -1,3 +1,7 @@
+### 0.17.7
+
+- chore: rename extension in marketplace [#35](https://github.com/johnsoncodehk/volar/discussions/35)
+
 ### 0.17.6
 
 - fix: ref sugar variable renaming no effect to template
