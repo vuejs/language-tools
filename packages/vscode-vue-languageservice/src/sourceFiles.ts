@@ -359,6 +359,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const nonTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
 			[useStylesValidation(), []],
 			[useTemplateValidation(), []],
+			[useScriptExistValidation(), []],
 		];
 		const templateTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
 			[useTemplateScriptValidation(2), []],
@@ -524,6 +525,30 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					result = result.concat(toSourceDiags(errs, uri, virtualStyles.sourceMaps.value));
 				}
 				return result as Diagnostic[];
+			});
+		}
+		function useScriptExistValidation() {
+			return computed(() => {
+				const diags: Diagnostic[] = [];
+				if (
+					virtualScriptGen.textDocument.value
+					&& !tsLanguageService.getTextDocument(virtualScriptGen.textDocument.value.uri)
+				) {
+					for (const script of [descriptor.script, descriptor.scriptSetup]) {
+						if (!script) continue;
+						diags.push(Diagnostic.create(
+							{
+								start: vueDoc.value.positionAt(script.loc.start),
+								end: vueDoc.value.positionAt(script.loc.end),
+							},
+							'services are not working for this script block because virtual file is not found in TS server, maybe try to add lang="ts" to <script> or add `"allowJs": true` to tsconfig.json',
+							DiagnosticSeverity.Warning,
+							undefined,
+							'volar',
+						))
+					}
+				}
+				return diags;
 			});
 		}
 		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: number) {

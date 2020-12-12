@@ -23,22 +23,7 @@ const styleCheckDiagnostics = new Set([
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (uri: string, options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true }): Diagnostic[] => {
 		const document = getTextDocument(uri);
-		if (!document) {
-			if (options.suggestion) {
-				return [
-					Diagnostic.create(
-						Range.create(0, 0, 0, 0),
-						'services not working for this script block because virtual file not found in TS server, maybe try to add lang="ts" to <script>, or add `"allowJs": true` to tsconfig.json',
-						DiagnosticSeverity.Warning,
-						undefined,
-						'volar', // TODO
-					)
-				];
-			}
-			else {
-				return [];
-			}
-		}
+		if (!document) return [];
 
 		const fileName = uriToFsPath(document.uri);
 		const diags_1 = options.semantic ? languageService.getSemanticDiagnostics(fileName) : [];

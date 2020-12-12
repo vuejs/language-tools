@@ -1,3 +1,7 @@
+### 0.17.8
+
+- fix: script not found error not working for `<script setup>`
+
 ### 0.17.7
 
 - chore: rename extension in marketplace [#35](https://github.com/johnsoncodehk/volar/discussions/35)

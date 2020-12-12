@@ -157,7 +157,9 @@ export function useScriptSetupGen(
 		if (!docGen.value) return;
 
 		const vueDoc = getUnreactiveDoc();
-		const lang = getValidScriptSyntax(scriptSetup.value?.lang ?? script.value?.lang ?? 'js');
+		const lang = scriptSetup.value && scriptSetup.value?.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang)
+			: script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang)
+				: getValidScriptSyntax('js')
 		const uri = `${vueDoc.uri}.__VLS_script.${lang}`;
 
 		return TextDocument.create(uri, syntaxToLanguageId(lang), version++, docGen.value.code);
