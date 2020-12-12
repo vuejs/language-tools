@@ -1,4 +1,4 @@
-### 1.17.6
+### 0.17.6
 
 - fix: ref sugar variable renaming no effect to template
 - fix: `v-else-if` semantic token
@@ -8,17 +8,17 @@
 
   > when editing `<template>`, `<script>` block delay 1000ms make diagnosis
 
-### 1.17.5
+### 0.17.5
 
 - pref: faster default formatter
 - pref: faster diagnostics
 
-### 1.17.4
+### 0.17.4
 
 - fix: can't disable html mirror cursor
 - feat: improve folding range
 
-### 1.17.3
+### 0.17.3
 
 - feat: improve html mirror cursor
 - feat: improve default formatter
