@@ -747,6 +747,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (htmlStart: number,
 			}
 		}
 		if (formatWrapper) {
+			formatCode += formatWrapper[0];
 			formapMappings.push({
 				mode,
 				sourceRange: sourceRange,
@@ -762,7 +763,6 @@ export function transformVueHtml(node: RootNode, pugMapper?: (htmlStart: number,
 					},
 				},
 			});
-			formatCode += formatWrapper[0];
 			formatCode += mapCode;
 			formatCode += formatWrapper[1];
 			formatCode += `;\n`;
