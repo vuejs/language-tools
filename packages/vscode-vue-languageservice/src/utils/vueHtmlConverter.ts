@@ -253,19 +253,18 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 						end: node.loc.end.offset - 1,
 					});
 				}
+				const varName = `__VLS_${elementIndex++}`;
 
 				if (!forDuplicateClassOrStyleAttr) {
-					mapping(undefined, `__VLS_componentProps['${node.tag}']`, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, [{
-						start: node.loc.start.offset + 1,
-						end: node.loc.start.offset + 1 + node.tag.length,
-					}], false);
-					_code += `__VLS_componentProps`;
+					_code += `const `;
+					mapping(undefined, varName, node.tag, MapedMode.Gate, capabilitiesSet.diagnosticOnly, sourceRanges);
+					_code += `: typeof __VLS_componentProps`;
 					mappingPropertyAccess(MapedNodeTypes.ElementTag, node.tag, node.tag, capabilitiesSet.htmlTagOrAttr, sourceRanges);
 					_code += ` = {\n`;
 				}
 				else {
 					_code += `// @ts-ignore\n`;
-					_code += `__VLS_componentProps['${node.tag}'] = {\n`;
+					_code += `const ${varName}: typeof __VLS_componentProps['${node.tag}'] = {\n`;
 				}
 
 				for (const prop of node.props) {
@@ -354,7 +353,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (code: string, html
 					}
 				}
 
-				_code += '};\n';
+				_code += `}; ${varName};\n`;
 			}
 			function writeClassScopeds(node: ElementNode) {
 				for (const prop of node.props) {
