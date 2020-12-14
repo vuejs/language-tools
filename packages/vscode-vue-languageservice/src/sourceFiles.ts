@@ -355,21 +355,20 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	}
 	function useDiagnostics() {
 
-		// sort by cost
-		const nonTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
-			[useStylesValidation(), []],
-			[useTemplateValidation(), []],
-			[useScriptExistValidation(), []],
+		const nonTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
+			[useStylesValidation(), [], 0],
+			[useTemplateValidation(), [], 0],
+			[useScriptExistValidation(), [], 0],
 		];
-		const templateTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
-			[useTemplateScriptValidation(2), []],
-			[useTemplateScriptValidation(3), []],
-			[useTemplateScriptValidation(1), []],
+		let templateTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
+			[useTemplateScriptValidation(1), [], 0],
+			[useTemplateScriptValidation(2), [], 0],
+			[useTemplateScriptValidation(3), [], 0],
 		];
-		const scriptTs: [Ref<Diagnostic[]>, Diagnostic[]][] = [
-			[useScriptValidation(virtualScriptGen.textDocument, 2), []],
-			[useScriptValidation(virtualScriptGen.textDocument, 3), []],
-			[useScriptValidation(virtualScriptGen.textDocument, 1), []],
+		let scriptTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
+			[useScriptValidation(virtualScriptGen.textDocument, 1), [], 0],
+			[useScriptValidation(virtualScriptGen.textDocument, 2), [], 0],
+			[useScriptValidation(virtualScriptGen.textDocument, 3), [], 0],
 		];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>, withSideEffect = true) => {
@@ -377,6 +376,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 			let all = [...nonTs];
 			let keep: typeof all = [];
+
+			// sort by cost
+			templateTs = templateTs.sort((a, b) => a[2] - b[2]);
+			scriptTs = scriptTs.sort((a, b) => a[2] - b[2]);
+
 			if (lastUpdateChanged.script || lastUpdateChanged.scriptSetup) {
 				all = all.concat(scriptTs);
 				if (withSideEffect) {
@@ -408,7 +412,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 			for (const diag of all) {
 				if (await isCancel?.()) return;
+				const startTime = Date.now();
 				diag[1] = diag[0].value;
+				diag[2] = Date.now() - startTime;
 				response([...all, ...keep].map(diag => diag[1]).flat());
 			}
 		}
