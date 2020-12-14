@@ -1,3 +1,7 @@
+### 0.18.3
+
+- fix: interpolations formatting indent broke
+
 ### 0.18.2
 
 - fix: interpolations formatting broke

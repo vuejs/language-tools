@@ -53,44 +53,42 @@ export function register() {
 
 		function patchInterpolationIndent() {
 			const indentTextEdits: TextEdit[] = [];
-			for (const tsSourceMap of sourceFile.getTsSourceMaps()) {
-				if (!tsSourceMap.isInterpolation)
+			const tsSourceMap = sourceFile.getTemplateScriptFormat().sourceMap;
+			if (!tsSourceMap) return indentTextEdits;
+
+			for (const maped of tsSourceMap) {
+				if (!maped.data.capabilities.formatting)
 					continue;
 
-				for (const maped of tsSourceMap) {
-					if (!maped.data.capabilities.formatting)
-						continue;
+				const textRange = {
+					start: newDocument.positionAt(maped.sourceRange.start),
+					end: newDocument.positionAt(maped.sourceRange.end),
+				};
+				const text = newDocument.getText(textRange);
+				if (text.indexOf('\n') === -1)
+					continue;
+				const lines = text.split('\n');
+				const removeIndent = getRemoveIndent();
+				const baseIndent = getBaseIndent();
+				for (let i = 1; i < lines.length; i++) {
+					const line = lines[i];
+					if (line.startsWith(removeIndent)) {
+						lines[i] = line.replace(removeIndent, baseIndent);
+					}
+				}
+				indentTextEdits.push({
+					newText: lines.join('\n'),
+					range: textRange,
+				});
 
-					const textRange = {
-						start: newDocument.positionAt(maped.sourceRange.start),
-						end: newDocument.positionAt(maped.sourceRange.end),
-					};
-					const text = newDocument.getText(textRange);
-					if (text.indexOf('\n') === -1)
-						continue;
-					const lines = text.split('\n');
-					const removeIndent = getRemoveIndent();
-					const baseIndent = getBaseIndent();
-					for (let i = 1; i < lines.length; i++) {
-						const line = lines[i];
-						if (line.startsWith(removeIndent)) {
-							lines[i] = line.replace(removeIndent, baseIndent);
-						}
-					}
-					indentTextEdits.push({
-						newText: lines.join('\n'),
-						range: textRange,
-					});
-
-					function getRemoveIndent() {
-						const lastLine = lines[lines.length - 1];
-						return lastLine.substr(0, lastLine.length - lastLine.trimStart().length);
-					}
-					function getBaseIndent() {
-						const startPos = newDocument.positionAt(maped.sourceRange.start);
-						const startLineText = newDocument.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
-						return startLineText.substr(0, startLineText.length - startLineText.trimStart().length);
-					}
+				function getRemoveIndent() {
+					const lastLine = lines[lines.length - 1];
+					return lastLine.substr(0, lastLine.length - lastLine.trimStart().length);
+				}
+				function getBaseIndent() {
+					const startPos = newDocument.positionAt(maped.sourceRange.start);
+					const startLineText = newDocument.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
+					return startLineText.substr(0, startLineText.length - startLineText.trimStart().length);
 				}
 			}
 			return indentTextEdits;
@@ -191,6 +189,8 @@ export function register() {
 					}
 				}
 				if (!_range) continue;
+				_range.start--;
+				_range.end++;
 				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options, {
 					start: sourceMap.targetDocument.positionAt(_range.start),
 					end: sourceMap.targetDocument.positionAt(_range.end),
