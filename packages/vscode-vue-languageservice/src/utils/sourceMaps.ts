@@ -230,7 +230,7 @@ export class PugSourceMap extends SourceMap<undefined> {
 		public sourceDocument: TextDocument,
 		public targetDocument: TextDocument,
 		public html: string | undefined,
-		public mapper: ((code: string, htmlOffset: number) => number | undefined) | undefined,
+		public mapper: ((htmlStart: number, htmlEnd: number) => number | undefined) | undefined,
 	) {
 		super(sourceDocument, targetDocument);
 	}

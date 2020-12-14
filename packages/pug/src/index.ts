@@ -30,7 +30,7 @@ export function pugToHtml(pugCode: string) {
 	for (const htmlLine of htmlLines) {
 		const htmlLineTrimed = htmlLine.trimStart();
 		htmlOffset += htmlLine.length - htmlLineTrimed.length;
-		const pugOffset = mapper(htmlLineTrimed, htmlOffset)
+		const pugOffset = mapper(htmlOffset, htmlOffset + htmlLineTrimed.length)
 		htmlOffset += htmlLineTrimed.length + 1; // +1 is \n
 		if (pugOffset) {
 			let pugTrimed = '';
@@ -163,12 +163,13 @@ export function createHtmlPugMapper(pug: string, html: string) {
 	function removeEndTags(template: string) {
 		return template.replace(/\<\/[^\>]*\>/g, s => ' '.repeat(s.length));
 	}
-	function searchPugOffset(code: string, htmlOffset: number) {
+	function searchPugOffset(htmlStart: number, htmlEnd: number) {
+		const code = html.substring(htmlStart, htmlEnd);
 		const htmlMatches = getMatchOffsets(html, code);
 		const pugMatches = getMatchOffsets(pug, code);
 
 		if (htmlMatches.length === pugMatches.length) {
-			const matchIndex = htmlMatches.indexOf(htmlOffset);
+			const matchIndex = htmlMatches.indexOf(htmlStart);
 			if (matchIndex >= 0) {
 				return pugMatches[matchIndex];
 			}

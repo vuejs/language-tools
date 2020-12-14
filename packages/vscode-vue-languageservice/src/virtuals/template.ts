@@ -29,7 +29,7 @@ export function useTemplateScript(
 	styleSourceMaps: Ref<CssSourceMap[]>,
 	pugData: Ref<{
 		html: string;
-		mapper: (code: string, htmlOffset: number) => number | undefined;
+		mapper: (htmlStart: number, htmlEnd: number) => number | undefined;
 		error?: undefined;
 	} | {
 		error: Diagnostic;

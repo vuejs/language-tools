@@ -11,7 +11,7 @@ export function useTemplateRaw(
 	template: Ref<IDescriptor['template']>,
 	pugData: Ref<{
 		html: string;
-		mapper: (code: string, htmlOffset: number) => number | undefined;
+		mapper: (htmlStart: number, htmlEnd: number) => number | undefined;
 		error?: undefined;
 	} | {
 		error: Diagnostic;

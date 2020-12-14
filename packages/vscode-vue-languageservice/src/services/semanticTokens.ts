@@ -196,7 +196,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					}
 
 					function getTokenPosition(htmlOffset: number, tokenText: string) {
-						const tokenOffset = sourceMap.mapper?.(tokenText, htmlOffset);
+						const tokenOffset = sourceMap.mapper?.(htmlOffset, htmlOffset + tokenText.length);
 						if (tokenOffset !== undefined) {
 							const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
 							const vuePos = document.positionAt(vueOffset);
