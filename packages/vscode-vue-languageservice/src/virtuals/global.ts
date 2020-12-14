@@ -20,14 +20,13 @@ declare global {
 		| 'Suspense'
 		| 'Teleport'
 		> { }
-	declare var __VLS_for_key: string;
-	declare function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
-	declare function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
-	declare function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
-	type __VLS_PickProp<A, B> = A & Omit<B, keyof A>;
+	var __VLS_for_key: string;
+	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
+	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
+	function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PickProp<__VLS_PropsType<T[K]>, HTMLAttributes> & Record<string, unknown> };
+	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Record<string, unknown> /* & Omit<__VLS_PropsType<T[K], keyof HTMLAttributes> */ };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_RemoveAnyFnSet<T[K] extends new (...args: any) => { $emit: infer Emit } ? __VLS_ConstructorOverloads<Emit> : {}> };
 	type __VLS_FirstFunction<F1, F2> = F1 extends undefined ? F2 : (F1 extends (...args: any) => any ? F1 : (F2 extends (...args: any) => any ? F2 : F1));
 	type __VLS_RemoveAnyFnSet<T> = ({ 'Catch Me If You Can~!': any } extends T ? {} : T) & Record<string, undefined>;
