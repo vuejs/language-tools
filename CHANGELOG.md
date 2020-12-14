@@ -1,3 +1,9 @@
+### 0.18.2
+
+- fix: interpolations formatting broke
+- fix: props missing checking not working for non hyphenate component
+- pref: emit overloads support nums 16 -> 4 (faster template diagnostics when using v-on)
+
 ### 0.18.1
 
 - pref: faster template diagnostics
