@@ -1,3 +1,7 @@
+### 0.18.1
+
+- pref: faster template diagnostics
+
 ### 0.18.0
 
 - feat: [Linked Editing](https://code.visualstudio.com/updates/v1_44#_synced-regions)
