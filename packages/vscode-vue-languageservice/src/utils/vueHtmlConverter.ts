@@ -328,7 +328,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (htmlStart: number,
 						prop.type === NodeTypes.ATTRIBUTE
 					) {
 						const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-						const propValue = prop.value ? `\`${prop.value?.content.replace(/`/g, '\\`')}\`` : 'true';
+						const propValue = prop.value !== undefined ? `\`${prop.value.content.replace(/`/g, '\\`')}\`` : 'true';
 						const propName2 = prop.name;
 						const isClassOrStyleAttr = ['style', 'class'].includes(propName);
 
@@ -515,7 +515,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (htmlStart: number,
 						prop.type === NodeTypes.ATTRIBUTE
 						&& prop.name !== 'name' // slot name
 					) {
-						const propValue = prop.value ? `\`${prop.value?.content.replace(/`/g, '\\`')}\`` : 'true';
+						const propValue = prop.value !== undefined ? `\`${prop.value.content.replace(/`/g, '\\`')}\`` : 'true';
 						mappingObjectProperty(MapedNodeTypes.Prop, prop.name, capabilitiesSet.htmlTagOrAttr, {
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + prop.name.length
