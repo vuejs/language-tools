@@ -793,7 +793,7 @@ function genScriptSetup(
 				},
 				mode: MapedMode.Offset,
 			});
-			genCode += ', \n';
+			genCode += ' as typeof ' + varName + ', \n';
 			mirrors.push({
 				left: leftRange,
 				right: rightRange,
