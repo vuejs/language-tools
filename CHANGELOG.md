@@ -1,4 +1,4 @@
-### 0.18.3
+### 0.18.4
 
 - fix: script formatting broke
 - fix: when return `foo: foo as true` in setup(), template context should get `foo: true` not `foo: boolean`
