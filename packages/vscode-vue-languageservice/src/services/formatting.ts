@@ -172,29 +172,7 @@ export function register() {
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
 				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
-				let _range: undefined | {
-					start: number,
-					end: number,
-				};
-				for (const maped of sourceMap) {
-					if (!maped.data.capabilities.formatting) continue;
-					if (!_range) {
-						_range = maped.targetRange;
-					}
-					else {
-						_range = {
-							start: Math.min(_range.start, maped.targetRange.start),
-							end: Math.max(_range.end, maped.targetRange.end),
-						};
-					}
-				}
-				if (!_range) continue;
-				_range.start--;
-				_range.end++;
-				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options, {
-					start: sourceMap.targetDocument.positionAt(_range.start),
-					end: sourceMap.targetDocument.positionAt(_range.end),
-				});
+				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
 						if (!vueLoc.maped.data.capabilities.formatting) continue;
