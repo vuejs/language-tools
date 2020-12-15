@@ -1,5 +1,10 @@
 ### 0.18.3
 
+- fix: script formatting broke
+- fix: when return `foo: foo as true` in setup(), template context should get `foo: true` not `foo: boolean`
+
+### 0.18.3
+
 - fix: interpolations formatting indent broke
 
 ### 0.18.2
