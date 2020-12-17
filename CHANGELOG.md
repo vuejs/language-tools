@@ -1,3 +1,8 @@
+### 0.18.5
+
+- feat(experiment): added a new typescript diagnostic mode and default enabled (not prompt for unused variables)
+- fix: `foo=""` attribute should not detect as `true` type
+
 ### 0.18.4
 
 - fix: script formatting broke
