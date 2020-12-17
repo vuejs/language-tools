@@ -73,7 +73,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							};
 							const varText = document.getText(varRange);
 							progress.report(++varsCur / varsNum * 100, varText);
-							await sleep();
+							await sleep(0);
 							const references = _findReferences(document, varRange.start) ?? [];
 							for (const reference of references) {
 								if (reference.uri !== document.uri)
@@ -164,7 +164,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						};
 						const varText = document.getText(varRange);
 						progress.report(++varsCur / varsNum * 100, varText);
-						await sleep();
+						await sleep(0);
 						const references = _findReferences(document, varRange.start) ?? [];
 						for (const reference of references) {
 							if (reference.uri !== document.uri)

@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
-import { uriToFsPath, sleep, notEmpty } from '@volar/shared';
+import { uriToFsPath, notEmpty } from '@volar/shared';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
@@ -23,6 +23,9 @@ import { useScriptMain } from './virtuals/main';
 import { useTemplateRaw } from './virtuals/template.raw';
 import { useTemplateScript } from './virtuals/template';
 import { useStylesRaw } from './virtuals/styles.raw';
+import * as ts from 'typescript';
+import * as wt from 'worker_threads';
+import * as cp from 'child_process';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
@@ -355,6 +358,15 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	}
 	function useDiagnostics() {
 
+		let cancled = false;
+		let cancleToken: ts.CancellationToken = {
+			isCancellationRequested: () => cancled,
+			throwIfCancellationRequested: () => {
+				if (cancled) {
+					throw new ts.OperationCanceledException();
+				}
+			},
+		};
 		const nonTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
 			[useStylesValidation(), [], 0],
 			[useTemplateValidation(), [], 0],
@@ -565,13 +577,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				const doc = document.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLanguageService.doValidation(doc.uri, { semantic: true });
+					return tsLanguageService.doValidation(doc.uri, { semantic: true }, cancleToken);
 				}
 				else if (mode === 2) {
-					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
+					return tsLanguageService.doValidation(doc.uri, { syntactic: true }, cancleToken);
 				}
 				else {
-					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
+					return tsLanguageService.doValidation(doc.uri, { suggestion: true }, cancleToken);
 				}
 			});
 			return computed(() => {
@@ -588,13 +600,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				const doc = virtualTemplateGen.textDocument2.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLanguageService.doValidation(doc.uri, { semantic: true });
+					return tsLanguageService.doValidation(doc.uri, { semantic: true }, cancleToken);
 				}
 				else if (mode === 2) {
-					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
+					return tsLanguageService.doValidation(doc.uri, { syntactic: true }, cancleToken);
 				}
 				else {
-					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
+					return tsLanguageService.doValidation(doc.uri, { suggestion: true }, cancleToken);
 				}
 			});
 			const errors_2 = computed(() => {

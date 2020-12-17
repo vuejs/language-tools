@@ -123,7 +123,7 @@ export function createLanguageServiceHost(
 		});
 		const directoryWatcher = ts.sys.watchDirectory!(upath.dirname(tsConfig), async fileName => {
 			parsedCommandLineUpdateTrigger = true;
-			await sleep();
+			await sleep(0);
 			if (parsedCommandLineUpdateTrigger && !disposed) {
 				parsedCommandLineUpdateTrigger = false;
 				parsedCommandLine = createParsedCommandLine();

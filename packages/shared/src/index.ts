@@ -1,12 +1,11 @@
 export * from './path';
 export * from './requests';
-import { Position, Range, TextDocument } from 'vscode-languageserver/node';
+import { Range, TextDocument } from 'vscode-languageserver/node';
+import { promisify } from 'util';
 
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
-export function sleep(ms = 0) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+export const sleep = promisify(setTimeout);
 export function syntaxToLanguageId(syntax: string) {
     switch (syntax) {
         case 'js': return 'javascript';

@@ -3,7 +3,6 @@ import {
 	Diagnostic,
 	DiagnosticTag,
 	DiagnosticSeverity,
-	Range,
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 import * as ts from 'typescript';
@@ -20,23 +19,49 @@ const styleCheckDiagnostics = new Set([
 	...errorCodes.notAllCodePathsReturnAValue,
 ]);
 
+let mode: 'fast' | 'full' = 'fast';
+
+export function setMode(newMode: 'fast' | 'full') {
+	mode = newMode;
+}
+
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string, options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true }): Diagnostic[] => {
+	return (
+		uri: string,
+		options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true },
+		cancellationToken?: ts.CancellationToken,
+	): Diagnostic[] => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = uriToFsPath(document.uri);
-		const diags_1 = options.semantic ? languageService.getSemanticDiagnostics(fileName) : [];
-		const diags_2 = options.syntactic ? languageService.getSyntacticDiagnostics(fileName) : [];
-		const diags_3 = options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [];
+		const program = languageService.getProgram();
+		const sourceFile = program?.getSourceFile(fileName);
+		if (!program || !sourceFile) return [];
 
-		return [
-			...translateDiagnostics(document, diags_1),
-			...translateDiagnostics(document, diags_2),
-			...translateDiagnostics(document, diags_3),
-		];
+		let errors: ts.Diagnostic[] = [];
 
-		function translateDiagnostics(document: TextDocument, input: ts.Diagnostic[]) {
+		try {
+			if (mode === 'fast') {
+				errors = [
+					...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
+					...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
+					// ...options.suggestion ? program.getDeclarationDiagnostics(sourceFile, cancellationToken) : [],
+				];
+			}
+			else if (mode === 'full') {
+				errors = [
+					...options.semantic ? languageService.getSemanticDiagnostics(fileName) : [],
+					...options.syntactic ? languageService.getSyntacticDiagnostics(fileName) : [],
+					...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
+				];
+			}
+		}
+		catch { }
+
+		return translateDiagnostics(document, errors);
+
+		function translateDiagnostics(document: TextDocument, input: readonly ts.Diagnostic[]) {
 			let output: Diagnostic[] = [];
 
 			for (const diag of input) {
