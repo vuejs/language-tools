@@ -15,7 +15,7 @@
 		"vscode-html-languageservice": "latest",
 		"typescript": "latest",
 		"vscode-languageserver-textdocument": "latest",
-		"vscode-languageserver": "next",
+		"vscode-languageserver": "latest",
 		"upath": "latest",
 		"jsonc-parser": "latest",
 		"prettier": "latest",

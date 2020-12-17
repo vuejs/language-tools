@@ -6,7 +6,7 @@
 	},
 	"dependencies": {
 		"upath": "latest",
-		"vscode-languageclient": "next"
+		"vscode-languageclient": "latest"
 	},
 	"devDependencies": {
 		"@types/vscode": "latest",
