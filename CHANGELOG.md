@@ -1,3 +1,11 @@
+### 0.18.8
+
+- feat: improve pug diagnosis
+- fix: find emits references not working with hyphenate
+- fix: hover info not working for hyphenate component tag tail
+- pert: faster script setup gen
+- perf: faster pug mapper
+
 ### 0.18.7
 
 - chore: change component tag hover info
