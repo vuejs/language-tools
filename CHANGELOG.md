@@ -1,7 +1,7 @@
 ### 0.18.6
 
 - revoke: rollback typescript diagnostic modes
-- pref: faster diagnostics
+- perf: faster diagnostics
 
 ### 0.18.5
 
@@ -21,11 +21,11 @@
 
 - fix: interpolations formatting broke
 - fix: props missing checking not working for non hyphenate component
-- pref: emit overloads support nums 16 -> 4 (faster template diagnostics when using v-on)
+- perf: emit overloads support nums 16 -> 4 (faster template diagnostics when using v-on)
 
 ### 0.18.1
 
-- pref: faster template diagnostics
+- perf: faster template diagnostics
 
 ### 0.18.0
 
@@ -40,7 +40,7 @@
 
 - fix: ref sugar variable renaming no effect to template
 - fix: `v-else-if` semantic token
-- pref: split `<script>` and `<template>` to speed up current editing block diagnostics
+- perf: split `<script>` and `<template>` to speed up current editing block diagnostics
 
   > when editing `<script>`, `<template>` block delay 1000ms make diagnosis
 
@@ -48,8 +48,8 @@
 
 ### 0.17.5
 
-- pref: faster default formatter
-- pref: faster diagnostics
+- perf: faster default formatter
+- perf: faster diagnostics
 
 ### 0.17.4
 
@@ -68,8 +68,8 @@
 
 ### 0.17.1
 
-- pref: prevent auto close tag blocked by autocomplete
-- pref: faster semantic tokens
+- perf: prevent auto close tag blocked by autocomplete
+- perf: faster semantic tokens
 
 ### 0.17.0
 
@@ -79,7 +79,7 @@
 
 ### 0.16.15
 
-- pref: prevent semantic tokens request block autocomplete request (occurred in 0.16.4)
+- perf: prevent semantic tokens request block autocomplete request (occurred in 0.16.4)
 - feat: improve ts autocomplete
 
 ### 0.16.14
@@ -152,7 +152,7 @@
 ### 0.16.1
 
 - fix: fix some Call Hierarchy failed cases
-- pref: faster typescript language service for new `<script setup>`
+- perf: faster typescript language service for new `<script setup>`
 
 
 ### 0.16.0
