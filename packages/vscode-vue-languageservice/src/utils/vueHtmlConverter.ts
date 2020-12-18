@@ -255,8 +255,16 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 
 				if (!forDuplicateClassOrStyleAttr) {
 
-					if (!node.isSelfClosing && !pugMapper) {
-						text += `__VLS_componentProps`
+					{ // start tag
+						text += `__VLS_components`
+						mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
+							start: node.loc.start.offset + 1,
+							end: node.loc.start.offset + 1 + node.tag.length,
+						});
+						text += `;\n`
+					}
+					if (!node.isSelfClosing && !pugMapper) { // end tag
+						text += `__VLS_components`
 						mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
 							start: node.loc.end.offset - 1 - node.tag.length,
 							end: node.loc.end.offset - 1,
@@ -269,12 +277,7 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 						start: node.loc.start.offset + 1,
 						end: node.loc.start.offset + 1 + node.tag.length,
 					});
-					text += `: typeof __VLS_componentProps`;
-					mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
-						start: node.loc.start.offset + 1,
-						end: node.loc.start.offset + 1 + node.tag.length,
-					});
-					text += ` = {\n`;
+					text += `: typeof __VLS_componentProps['${node.tag}'] = {\n`;
 				}
 				else {
 					text += `// @ts-ignore\n`;
