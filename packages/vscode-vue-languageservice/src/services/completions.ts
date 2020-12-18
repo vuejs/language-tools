@@ -211,7 +211,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
-					const vueItems: CompletionItem[] = htmlResult.items.map(htmlItem => ({
+					let vueItems: CompletionItem[] = htmlResult.items.map(htmlItem => ({
 						...htmlItem,
 						additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
 						textEdit: translateTextEdit(htmlItem.textEdit, sourceMap),
@@ -247,6 +247,15 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							tsItem: tsItem,
 						};
 						vueItem.data = data;
+					}
+					{ // filter HTMLAttributes
+						const temp = new Map<string, CompletionItem>();
+						for (const item of vueItems) {
+							if (!temp.get(item.label)?.documentation) {
+								temp.set(item.label, item);
+							}
+						}
+						vueItems = [...temp.values()];
 					}
 					result.items = result.items.concat(vueItems);
 				}
