@@ -447,13 +447,27 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						start: virtualTemplateRaw.textDocument.value.positionAt(0),
 						end: virtualTemplateRaw.textDocument.value.positionAt(virtualTemplateRaw.textDocument.value.getText().length),
 					};
-					// TODO
+					const mapper = pugData.value.mapper;
 					for (const vueCompileError of vueCompileErrors) {
-						let errorText = htmlDoc.getText(vueCompileError.range);
-						errorText = prettyhtml(errorText).contents;
-						vueCompileError.range = pugDocRange;
-						vueCompileError.message += '\n```html\n' + errorText + '```';
-						result.push(vueCompileError);
+						const htmlRange = {
+							start: htmlDoc.offsetAt(vueCompileError.range.start),
+							end: htmlDoc.offsetAt(vueCompileError.range.end),
+						};
+						const pugOffset = mapper(htmlRange.start, htmlRange.end);
+						if (pugOffset !== undefined) {
+							vueCompileError.range = {
+								start: virtualTemplateRaw.textDocument.value.positionAt(pugOffset),
+								end: virtualTemplateRaw.textDocument.value.positionAt(pugOffset + htmlRange.end - htmlRange.start),
+							};
+							result.push(vueCompileError);
+						}
+						else {
+							let errorText = htmlDoc.getText(vueCompileError.range);
+							errorText = prettyhtml(errorText).contents;
+							vueCompileError.range = pugDocRange;
+							vueCompileError.message += '\n```html\n' + errorText + '```';
+							result.push(vueCompileError);
+						}
 					}
 				}
 				return result;
