@@ -191,8 +191,8 @@ export function createLanguageServiceHost(
 						if (req !== projectCurrentReq) break;
 						await sendDiagnostics(doc, true);
 					}
-				}, 1000);
-			}, 1000);
+				}, 0);
+			}, 0);
 		}
 		async function sendDiagnostics(document: TextDocument, withSideEffect: boolean) {
 			const matchLs = best(document.uri);
