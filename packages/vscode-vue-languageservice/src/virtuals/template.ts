@@ -62,7 +62,7 @@ export function useTemplateScript(
 
 		/* Components */
 		text1 += '/* Components */\n';
-		text1 += 'export declare var __VLS_components: __VLS_OmitGlobalAttrs<JSX.IntrinsicElements> & typeof __VLS_Components;\n';
+		text1 += 'export declare var __VLS_components: JSX.IntrinsicElements & typeof __VLS_Components;\n';
 		text1 += 'export declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n';
 		text1 += 'export declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
 		text1 += 'export declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
