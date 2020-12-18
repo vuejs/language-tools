@@ -1,3 +1,8 @@
+### 0.18.6
+
+- revoke: rollback typescript diagnostic modes
+- pref: faster diagnostics
+
 ### 0.18.5
 
 - feat(experiment): added a new typescript diagnostic mode and default enabled (not prompt for unused variables)
