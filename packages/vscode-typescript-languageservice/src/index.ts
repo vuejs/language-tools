@@ -26,7 +26,6 @@ const shPlugin = ShPlugin({ typescript: tsLib });
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
-export { setMode as setDiagnosticMode } from './services/diagnostics'
 
 export function createLanguageService(host: ts.LanguageServiceHost) {
 

@@ -213,7 +213,6 @@ function createLanguageService(context: vscode.ExtensionContext, script: string,
 		},
 		initializationOptions: {
 			scriptSetupRfc: vscode.workspace.getConfiguration().get('volar.scriptSetup.supportRfc'),
-			tsDiagnosticMode: vscode.workspace.getConfiguration().get('volar.typescript.diagnosticMode'),
 		},
 	};
 

@@ -144,19 +144,6 @@
 					],
 					"description": "Formatter for <template>, <script>, <style> region"
 				},
-				"volar.typescript.diagnosticMode": {
-					"type": "string",
-					"default": "fast",
-					"enum": [
-						"fast",
-						"full"
-					],
-					"enumDescriptions": [
-						"Performance first diagnostic mode",
-						"Full diagnosis mode (may be slower in a large project)"
-					],
-					"description": "TypeScript diagnostic mode (reload VSCode required)"
-				},
 				"volar.scriptSetup.supportRfc": {
 					"type": "string",
 					"default": "#222",

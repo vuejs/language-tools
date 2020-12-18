@@ -26,7 +26,6 @@ import {
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter, SourceMap, TsSourceMap, setScriptSetupRfc } from '@volar/vscode-vue-languageservice';
-import { setDiagnosticMode } from '@volar/vscode-typescript-languageservice';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -72,7 +71,6 @@ const both: TextDocumentRegistrationOptions = {
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
 		setScriptSetupRfc(params.initializationOptions.scriptSetupRfc);
-		setDiagnosticMode(params.initializationOptions.tsDiagnosticMode)
 		initLanguageService(params.rootPath);
 	}
 

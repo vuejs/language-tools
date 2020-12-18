@@ -19,12 +19,6 @@ const styleCheckDiagnostics = new Set([
 	...errorCodes.notAllCodePathsReturnAValue,
 ]);
 
-let mode: 'fast' | 'full' = 'fast';
-
-export function setMode(newMode: 'fast' | 'full') {
-	mode = newMode;
-}
-
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (
 		uri: string,
@@ -42,20 +36,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		let errors: ts.Diagnostic[] = [];
 
 		try {
-			if (mode === 'fast') {
-				errors = [
-					...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
-					...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
-					// ...options.suggestion ? program.getDeclarationDiagnostics(sourceFile, cancellationToken) : [],
-				];
-			}
-			else if (mode === 'full') {
-				errors = [
-					...options.semantic ? languageService.getSemanticDiagnostics(fileName) : [],
-					...options.syntactic ? languageService.getSyntacticDiagnostics(fileName) : [],
-					...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
-				];
-			}
+			errors = [
+				...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
+				...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
+				...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
+			];
 		}
 		catch { }
 

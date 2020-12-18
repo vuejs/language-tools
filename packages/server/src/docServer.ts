@@ -19,7 +19,6 @@ import {
 import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { setScriptSetupRfc, getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
-import { setDiagnosticMode } from '@volar/vscode-typescript-languageservice';
 import {
 	uriToFsPath,
 	VerifyAllScriptsRequest,
@@ -47,7 +46,6 @@ const vueOnly: TextDocumentRegistrationOptions = {
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
 		setScriptSetupRfc(params.initializationOptions.scriptSetupRfc);
-		setDiagnosticMode(params.initializationOptions.tsDiagnosticMode);
 		initLanguageService(params.rootPath);
 	}
 	const result: InitializeResult = {
