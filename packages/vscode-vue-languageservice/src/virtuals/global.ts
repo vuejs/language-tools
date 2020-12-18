@@ -34,6 +34,7 @@ declare global {
 	type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;
 	type __VLS_OmitGlobalAttrs<T> = { [K in keyof T]: Omit<T[K], keyof __VLS_GlobalAttrs> };
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
+	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends new (...args: any) => any ? K : never]: T[K] };
 	
 `;
 	{

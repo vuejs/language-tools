@@ -160,7 +160,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		getMirrorsSourceMaps: untrack(() => {
 			return {
 				contextSourceMap: virtualTemplateGen.contextSourceMap.value,
-				componentSourceMap: virtualTemplateGen.componentSourceMap.value,
 				scriptSetupSourceMap: virtualScriptGen.mirrorsSourceMap.value,
 			};
 		}),
@@ -723,7 +722,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			if (virtualTemplateGen.textDocument1.value && virtualTemplateRaw.textDocument.value) {
 				const doc = virtualTemplateGen.textDocument1.value;
 				const text = doc.getText();
-				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements, ...templateScriptData.context]) {
+				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 					let bind: CompletionItem[] = [];
 					let on: CompletionItem[] = [];
 					let slot: CompletionItem[] = [];

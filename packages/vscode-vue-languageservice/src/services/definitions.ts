@@ -73,8 +73,6 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 					const tsm = sourceFile_2?.getMirrorsSourceMaps();
 					if (tsm?.contextSourceMap?.sourceDocument.uri === reference.uri)
 						transfer(tsm.contextSourceMap);
-					if (tsm?.componentSourceMap?.sourceDocument.uri === reference.uri)
-						transfer(tsm.componentSourceMap);
 					if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === reference.uri)
 						transfer(tsm.scriptSetupSourceMap);
 					function transfer(sourceMap: SourceMap) {

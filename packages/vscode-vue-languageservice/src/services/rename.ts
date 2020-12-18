@@ -89,8 +89,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const tsm = sourceFile_2?.getMirrorsSourceMaps();
 						if (tsm?.contextSourceMap?.sourceDocument.uri === tsLoc.uri)
 							transfer(tsm.contextSourceMap);
-						if (tsm?.componentSourceMap?.sourceDocument.uri === tsLoc.uri)
-							transfer(tsm.componentSourceMap);
 						if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === tsLoc.uri)
 							transfer(tsm.scriptSetupSourceMap);
 						function transfer(sourceMap: SourceMap) {
