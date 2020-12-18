@@ -832,7 +832,7 @@ function genScriptSetup(
 							},
 							mode: MapedMode.Offset,
 						});
-						genCode += ', \n';
+						genCode += ' as typeof ' + refVar.text + ', \n';
 						mirrors.push({
 							left: leftRange,
 							right: rightRange,
