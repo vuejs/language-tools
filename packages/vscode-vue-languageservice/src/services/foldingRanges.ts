@@ -6,6 +6,8 @@ import { FoldingRangeKind } from 'vscode-css-languageservice';
 import { FoldingRange } from 'vscode-languageserver/node';
 import { createSourceFile } from '../sourceFiles';
 import { getCheapTsService2 } from '../globalServices';
+import { notEmpty } from '@volar/shared';
+import { rfc } from '../virtuals/script';
 
 export function register() {
 	return (_document: TextDocument) => {
@@ -30,11 +32,24 @@ export function register() {
 			return globalServices.html.getFoldingRanges(document);
 		}
 		function getTsResult(sourceFile: SourceFile) {
+			const tsSourceMaps = [
+				...sourceFile.getTsSourceMaps(),
+				sourceFile.getTemplateScriptFormat().sourceMap,
+			].filter(notEmpty);
+
+			if (rfc === '#222') {
+				const scriptSetupRaw = sourceFile.getScriptSetupRaw();
+				if (scriptSetupRaw.sourceMap) {
+					tsSourceMaps.push(scriptSetupRaw.sourceMap);
+				}
+			}
+
 			let result: FoldingRange[] = [];
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const foldingRanges = tsService2.service.getFoldingRanges(sourceMap.targetDocument.uri);
+				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
+				const foldingRanges = cheapTs.service.getFoldingRanges(cheapTs.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
 			return result;

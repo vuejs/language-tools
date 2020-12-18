@@ -169,6 +169,13 @@ export function register() {
 				sourceFile.getTemplateScriptFormat().sourceMap,
 			].filter(notEmpty);
 
+			if (rfc === '#222') {
+				const scriptSetupRaw = sourceFile.getScriptSetupRaw();
+				if (scriptSetupRaw.sourceMap) {
+					tsSourceMaps.push(scriptSetupRaw.sourceMap);
+				}
+			}
+
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
 				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
@@ -181,25 +188,6 @@ export function register() {
 							range: vueLoc.range,
 						});
 					}
-				}
-			}
-			if (rfc === '#222') {
-				const scriptSetupRaw = sourceFile.getScriptSetupRaw();
-				if (scriptSetupRaw.sourceMap?.capabilities.formatting) {
-					const sourceMap = scriptSetupRaw.sourceMap;
-					const cheapTs = getCheapTsService2(sourceMap.targetDocument);
-					const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
-					/* copy from upside */
-					for (const textEdit of textEdits) {
-						for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
-							if (!vueLoc.maped.data.capabilities.formatting) continue;
-							result.push({
-								newText: textEdit.newText,
-								range: vueLoc.range,
-							});
-						}
-					}
-					/* copy from upside */
 				}
 			}
 			return result;
