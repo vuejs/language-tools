@@ -204,15 +204,34 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 					}
 				}
 				function write(option: 'props' | 'emits', propName: string, start: number, end: number) {
-					const camelizeName = hyphenate(propName) === propName ? camelize(propName) : propName;
-					const type = option === 'props' ? MapedNodeTypes.Prop : undefined;
-					text += `// @ts-ignore\n`;
-					text += `__VLS_components['${getComponentName(node.tag)}'].__VLS_options.${option} = { `;
-					mappingObjectProperty(type, camelizeName, capabilitiesSet.htmlTagOrAttr, {
-						start,
-						end,
-					});
-					text += `: {} as any };\n`;
+					const props = new Set<string>();
+					const emits = new Set<string>();
+					if (option === 'props') {
+						props.add(propName);
+						props.add(camelize(propName));
+					}
+					else if (option === 'emits') {
+						emits.add(propName);
+						props.add(camelize('on-' + propName));
+					}
+					for (const name of props.values()) {
+						text += `// @ts-ignore\n`;
+						text += `__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`;
+						mappingPropertyAccess(MapedNodeTypes.Prop, name, capabilitiesSet.htmlTagOrAttr, {
+							start,
+							end,
+						});
+						text += `;\n`;
+					}
+					for (const name of emits.values()) {
+						text += `// @ts-ignore\n`;
+						text += `__VLS_components['${getComponentName(node.tag)}'].__VLS_options.emits`;
+						mappingPropertyAccess(undefined, name, capabilitiesSet.htmlTagOrAttr, {
+							start,
+							end,
+						});
+						text += `;\n`;
+					}
 				}
 			}
 			function writeVshow(node: ElementNode) {
