@@ -246,7 +246,7 @@ export function transformVueHtml(node: RootNode, pugMapper?: (htmlStart: number,
 
 				if (!forDuplicateClassOrStyleAttr) {
 
-					if (!node.isSelfClosing) {
+					if (!node.isSelfClosing && !pugMapper) {
 						_code += `__VLS_componentProps`
 						mappingPropertyAccess(MapedNodeTypes.ElementTag, node.tag, capabilitiesSet.htmlTagOrAttr, {
 							start: node.loc.end.offset - 1 - node.tag.length,
