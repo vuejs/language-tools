@@ -78,9 +78,10 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 			const mapedFromRange = sourceToTarget ? maped.sourceRange : maped.targetRange;
 			if (maped.mode === MapedMode.Gate) {
 				if (fromRange.start === mapedFromRange.start && fromRange.end === mapedFromRange.end) {
+					const offsets = [mapedToRange.start, mapedToRange.end];
 					const toRange = Range.create(
-						toDoc.positionAt(mapedToRange.start),
-						toDoc.positionAt(mapedToRange.end),
+						toDoc.positionAt(Math.min(offsets[0], offsets[1])),
+						toDoc.positionAt(Math.max(offsets[0], offsets[1])),
 					);
 					result.push({
 						maped,
@@ -91,9 +92,10 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 			}
 			else if (maped.mode === MapedMode.Offset) {
 				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					const offsets = [mapedToRange.start + fromRange.start - mapedFromRange.start, mapedToRange.end + fromRange.end - mapedFromRange.end];
 					const toRange = Range.create(
-						toDoc.positionAt(mapedToRange.start + fromRange.start - mapedFromRange.start),
-						toDoc.positionAt(mapedToRange.end + fromRange.end - mapedFromRange.end),
+						toDoc.positionAt(Math.min(offsets[0], offsets[1])),
+						toDoc.positionAt(Math.max(offsets[0], offsets[1])),
 					);
 					result.push({
 						maped,
@@ -104,9 +106,10 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 			}
 			else if (maped.mode === MapedMode.In) {
 				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					const offsets = [mapedToRange.start, mapedToRange.end];
 					const toRange = Range.create(
-						toDoc.positionAt(mapedToRange.start),
-						toDoc.positionAt(mapedToRange.end),
+						toDoc.positionAt(Math.min(offsets[0], offsets[1])),
+						toDoc.positionAt(Math.max(offsets[0], offsets[1])),
 					);
 					result.push({
 						maped,
@@ -128,20 +131,25 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 			const mapedFromRange = sourceToTarget ? maped.sourceRange : maped.targetRange;
 			if (maped.mode === MapedMode.Gate) {
 				if (fromRange.start === mapedFromRange.start && fromRange.end === mapedFromRange.end) {
+					const offsets = [mapedToRange.start, mapedToRange.end];
 					result.push({
 						maped,
-						range: mapedToRange,
+						range: {
+							start: Math.min(offsets[0], offsets[1]),
+							end: Math.max(offsets[0], offsets[1]),
+						},
 					});
 					if (returnFirstResult) return result;
 				}
 			}
 			else if (maped.mode === MapedMode.Offset) {
 				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					const offsets = [mapedToRange.start + fromRange.start - mapedFromRange.start, mapedToRange.end + fromRange.end - mapedFromRange.end];
 					result.push({
 						maped,
 						range: {
-							start: mapedToRange.start + fromRange.start - mapedFromRange.start,
-							end: mapedToRange.end + fromRange.end - mapedFromRange.end,
+							start: Math.min(offsets[0], offsets[1]),
+							end: Math.max(offsets[0], offsets[1]),
 						},
 					});
 					if (returnFirstResult) return result;
@@ -149,9 +157,13 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 			}
 			else if (maped.mode === MapedMode.In) {
 				if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					const offsets = [mapedToRange.start, mapedToRange.end];
 					result.push({
 						maped,
-						range: mapedToRange,
+						range: {
+							start: Math.min(offsets[0], offsets[1]),
+							end: Math.max(offsets[0], offsets[1]),
+						},
 					});
 					if (returnFirstResult) return result;
 				}
