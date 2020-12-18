@@ -1,3 +1,11 @@
+### 0.18.7
+
+- chore: change component tag hover info
+- fix: filter same html tag in completion
+- fix: ctx properties types incorrect corner cases
+- fix: should not detect all ctx properties as component
+- fix: `@click` event type check broke
+
 ### 0.18.6
 
 - revoke: rollback typescript diagnostic modes
