@@ -1126,19 +1126,17 @@ function getScriptSetupData(sourceCode: string) {
 		end: number,
 	}[] = [];
 
+	// TODO: use sourceFile.update()
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
+
 	scriptAst.forEachChild(node => {
 		if (node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword)) {
 			if (ts.isVariableStatement(node)) {
 				for (const declaration of node.declarationList.declarations) {
 					if (ts.isIdentifier(declaration.name)) {
 						declares.push({
-							start: node.getStart(scriptAst),
-							end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-							name: {
-								start: declaration.name.getStart(scriptAst),
-								end: declaration.name.getStart(scriptAst) + declaration.name.getWidth(scriptAst),
-							},
+							...getStartEnd(node),
+							name: getStartEnd(declaration.name),
 						});
 					}
 				}
@@ -1146,12 +1144,8 @@ function getScriptSetupData(sourceCode: string) {
 			else if (ts.isFunctionDeclaration(node)) {
 				if (node.name) {
 					declares.push({
-						start: node.getStart(scriptAst),
-						end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-						name: {
-							start: node.name.getStart(scriptAst),
-							end: node.name.getStart(scriptAst) + node.name.getWidth(scriptAst),
-						},
+						...getStartEnd(node),
+						name: getStartEnd(node.name),
 					});
 				}
 			}
@@ -1166,30 +1160,18 @@ function getScriptSetupData(sourceCode: string) {
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				exposeVarNames.push({
-					start: node.name.getStart(scriptAst),
-					end: node.name.getStart(scriptAst) + node.name.getWidth(scriptAst),
-				});
+				exposeVarNames.push(getStartEnd(node.name));
 			}
 		}
 		else if (ts.isImportDeclaration(node)) {
-			imports.push({
-				start: node.getStart(scriptAst),
-				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-			});
+			imports.push(getStartEnd(node));
 			if (node.importClause && !node.importClause.isTypeOnly) {
 				if (node.importClause.name) {
-					exposeVarNames.push({
-						start: node.importClause.name.getStart(scriptAst),
-						end: node.importClause.name.getStart(scriptAst) + node.importClause.name.getWidth(scriptAst),
-					});
+					exposeVarNames.push(getStartEnd(node.importClause.name));
 				}
 				if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
 					for (const element of node.importClause.namedBindings.elements) {
-						exposeVarNames.push({
-							start: element.name.getStart(scriptAst),
-							end: element.name.getStart(scriptAst) + element.name.getWidth(scriptAst),
-						});
+						exposeVarNames.push(getStartEnd(element.name));
 					}
 				}
 			}
@@ -1197,10 +1179,7 @@ function getScriptSetupData(sourceCode: string) {
 		else if (ts.isExportDeclaration(node)) {
 			node.forEachChild(node_2 => {
 				if (node_2.kind === ts.SyntaxKind.ExportKeyword) {
-					exportKeywords.push({
-						start: node_2.getStart(scriptAst),
-						end: node_2.getStart(scriptAst) + node_2.getWidth(scriptAst),
-					});
+					exportKeywords.push(getStartEnd(node_2));
 				}
 			});
 		}
@@ -1217,16 +1196,11 @@ function getScriptSetupData(sourceCode: string) {
 			}
 			if (obj) {
 				exportDefault = {
-					start: node.getStart(scriptAst),
-					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-					expression: {
-						start: node.expression.getStart(scriptAst),
-						end: node.expression.getStart(scriptAst) + node.expression.getWidth(scriptAst),
-					},
+					...getStartEnd(node),
+					expression: getStartEnd(node.expression),
 					args: {
-						text: obj.getText(scriptAst),
-						start: obj.getStart(scriptAst),
-						end: obj.getStart(scriptAst) + obj.getWidth(scriptAst),
+						...getStartEnd(obj),
+						text: obj.getText(scriptAst), // TODO: remove
 					},
 				};
 			}
@@ -1284,6 +1258,15 @@ function getScriptSetupData(sourceCode: string) {
 		shorthandPropertys,
 	};
 
+	function getStartEnd(node: ts.Node) {
+		// TODO: high cost
+		const start = node.getStart(scriptAst);
+		const end = node.getEnd();
+		return {
+			start: start,
+			end: end,
+		};
+	}
 	function deepLoop(node: ts.Node, parent: ts.Node, inRoot: boolean) {
 		if (
 			ts.isLabeledStatement(node)
@@ -1291,16 +1274,9 @@ function getScriptSetupData(sourceCode: string) {
 			&& ts.isExpressionStatement(node.statement)
 		) {
 			labels.push({
-				start: node.getStart(scriptAst),
-				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-				label: {
-					start: node.label.getStart(scriptAst),
-					end: node.label.getStart(scriptAst) + node.label.getWidth(scriptAst),
-				},
-				parent: {
-					start: parent.getStart(scriptAst),
-					end: parent.getStart(scriptAst) + parent.getWidth(scriptAst),
-				},
+				...getStartEnd(node),
+				label: getStartEnd(node.label),
+				parent: getStartEnd(parent),
 				binarys: findBinaryExpressions(node.statement.expression, inRoot),
 			});
 		}
@@ -1318,16 +1294,9 @@ function getScriptSetupData(sourceCode: string) {
 			const arg: ts.Expression | undefined = node.arguments.length ? node.arguments[0] : undefined;
 			const typeArg: ts.TypeNode | undefined = node.typeArguments?.length ? node.typeArguments[0] : undefined;
 			const call = {
-				start: node.getStart(scriptAst),
-				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-				args: arg ? {
-					start: arg.getStart(scriptAst),
-					end: arg.getStart(scriptAst) + arg.getWidth(scriptAst),
-				} : undefined,
-				typeArgs: typeArg ? {
-					start: typeArg.getStart(scriptAst),
-					end: typeArg.getStart(scriptAst) + typeArg.getWidth(scriptAst),
-				} : undefined,
+				...getStartEnd(node),
+				args: arg ? getStartEnd(arg) : undefined,
+				typeArgs: typeArg ? getStartEnd(typeArg) : undefined,
 			};
 			if (node.expression.getText(scriptAst) === 'defineProps') {
 				defineProps = call;
@@ -1349,25 +1318,14 @@ function getScriptSetupData(sourceCode: string) {
 			const isRef = refCall.expression.getText(scriptAst) === 'ref';
 			const wrapContant = isRef && refCall.arguments.length === 1 ? refCall.arguments[0] : refCall;
 			refCalls.push({
-				start: node.getStart(scriptAst),
-				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+				...getStartEnd(node),
 				vars: findBindingVars(declaration.name),
-				left: {
-					start: declaration.name.getStart(scriptAst),
-					end: declaration.name.getStart(scriptAst) + declaration.name.getWidth(scriptAst),
-				},
-				rightExpression: {
-					// TODO: computed
-					start: wrapContant.getStart(scriptAst),
-					end: wrapContant.getStart(scriptAst) + wrapContant.getWidth(scriptAst),
-				},
+				left: getStartEnd(declaration.name),
+				rightExpression: getStartEnd(wrapContant),
 			});
 		}
 		else if (ts.isShorthandPropertyAssignment(node)) {
-			shorthandPropertys.push({
-				start: node.getStart(scriptAst),
-				end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-			});
+			shorthandPropertys.push(getStartEnd(node));
 		}
 		node.forEachChild(child => deepLoop(child, node, false));
 	}
@@ -1377,16 +1335,11 @@ function getScriptSetupData(sourceCode: string) {
 		return binaryExps;
 		function worker(node: ts.Expression, parenthesized?: ts.ParenthesizedExpression) {
 			if (ts.isIdentifier(node)) {
+				const range = getStartEnd(node);
 				binaryExps.push({
 					vars: findLabelVars(node, inRoot),
-					left: {
-						start: node.getStart(scriptAst),
-						end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-					},
-					parent: {
-						start: node.getStart(scriptAst),
-						end: node.getStart(scriptAst) + node.getWidth(scriptAst),
-					},
+					left: range,
+					parent: range,
 				});
 			}
 			if (ts.isBinaryExpression(node)) {
@@ -1398,19 +1351,12 @@ function getScriptSetupData(sourceCode: string) {
 					let parent: ts.Node = parenthesized ?? node;
 					binaryExps.push({
 						vars: findLabelVars(node.left, inRoot),
-						left: {
-							start: node.left.getStart(scriptAst),
-							end: node.left.getStart(scriptAst) + node.left.getWidth(scriptAst),
-						},
+						left: getStartEnd(node.left),
 						right: {
-							start: node.right.getStart(scriptAst),
-							end: node.right.getStart(scriptAst) + node.right.getWidth(scriptAst),
+							...getStartEnd(node.right),
 							isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(scriptAst) === 'computed'
 						},
-						parent: {
-							start: parent.getStart(scriptAst),
-							end: parent.getStart(scriptAst) + parent.getWidth(scriptAst),
-						},
+						parent: getStartEnd(parent),
 					});
 				}
 			}
@@ -1429,9 +1375,8 @@ function getScriptSetupData(sourceCode: string) {
 				vars.push({
 					isShortand: false,
 					inRoot,
-					text: _node.getText(scriptAst),
-					start: _node.getStart(scriptAst),
-					end: _node.getStart(scriptAst) + _node.getWidth(scriptAst),
+					text: _node.getText(scriptAst), // TODO: remove
+					...getStartEnd(_node),
 					references: [],
 				});
 			}
@@ -1460,9 +1405,8 @@ function getScriptSetupData(sourceCode: string) {
 				vars.push({
 					isShortand: true,
 					inRoot,
-					text: _node.name.getText(scriptAst),
-					start: _node.name.getStart(scriptAst),
-					end: _node.name.getStart(scriptAst) + _node.name.getWidth(scriptAst),
+					text: _node.name.getText(scriptAst), // TODO: remove
+					...getStartEnd(_node.name),
 					references: [],
 				});
 			}
@@ -1479,10 +1423,7 @@ function getScriptSetupData(sourceCode: string) {
 		return vars;
 		function worker(_node: ts.Node) {
 			if (ts.isIdentifier(_node)) {
-				vars.push({
-					start: _node.getStart(scriptAst),
-					end: _node.getStart(scriptAst) + _node.getWidth(scriptAst),
-				});
+				vars.push(getStartEnd(_node));
 			}
 			// { ? } = ...
 			// [ ? ] = ...
@@ -1499,10 +1440,7 @@ function getScriptSetupData(sourceCode: string) {
 			}
 			// { foo } = ...
 			else if (ts.isShorthandPropertyAssignment(_node)) {
-				vars.push({
-					start: _node.name.getStart(scriptAst),
-					end: _node.name.getStart(scriptAst) + _node.name.getWidth(scriptAst),
-				});
+				vars.push(getStartEnd(_node.name));
 			}
 			// { ...? } = ...
 			// [ ...? ] = ...
@@ -1538,12 +1476,10 @@ function getScriptData(sourceCode: string) {
 			}
 			if (obj) {
 				exportDefault = {
-					start: node.getStart(scriptAst),
-					end: node.getStart(scriptAst) + node.getWidth(scriptAst),
+					...getStartEnd(node),
 					args: {
 						text: obj.getText(scriptAst),
-						start: obj.getStart(scriptAst),
-						end: obj.getStart(scriptAst) + obj.getWidth(scriptAst),
+						...getStartEnd(obj),
 					},
 				};
 			}
@@ -1553,6 +1489,16 @@ function getScriptData(sourceCode: string) {
 	return {
 		exportDefault,
 	};
+
+	function getStartEnd(node: ts.Node) {
+		// TODO: high cost
+		const start = node.getStart(scriptAst);
+		const end = node.getEnd();
+		return {
+			start: start,
+			end: end,
+		};
+	}
 }
 function replaceStringToEmpty(str: string, start: number, end: number) {
 	return str.substring(0, start) + ' '.repeat(Math.abs(end - start)) + str.substring(end);
