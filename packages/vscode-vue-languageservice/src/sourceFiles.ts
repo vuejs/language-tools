@@ -24,8 +24,6 @@ import { useTemplateRaw } from './virtuals/template.raw';
 import { useTemplateScript } from './virtuals/template';
 import { useStylesRaw } from './virtuals/styles.raw';
 import * as ts from 'typescript';
-import * as wt from 'worker_threads';
-import * as cp from 'child_process';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 

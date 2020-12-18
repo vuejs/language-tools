@@ -156,6 +156,7 @@ export function htmlToPug(html: string) {
 	}
 }
 export function createHtmlPugMapper(pug: string, html: string) {
+	const cache = new Map<string, { htmlOffsets: number[], pugOffset: number[] }>();
 	html = removeEndTags(html);
 
 	return searchPugOffset;
@@ -165,13 +166,19 @@ export function createHtmlPugMapper(pug: string, html: string) {
 	}
 	function searchPugOffset(htmlStart: number, htmlEnd: number) {
 		const code = html.substring(htmlStart, htmlEnd);
-		const htmlMatches = getMatchOffsets(html, code);
-		const pugMatches = getMatchOffsets(pug, code);
 
-		if (htmlMatches.length === pugMatches.length) {
-			const matchIndex = htmlMatches.indexOf(htmlStart);
+		if (!cache.has(code)) {
+			cache.set(code, {
+				htmlOffsets: getMatchOffsets(html, code),
+				pugOffset: getMatchOffsets(pug, code),
+			});
+		}
+		const { htmlOffsets, pugOffset } = cache.get(code)!;
+
+		if (htmlOffsets.length === pugOffset.length) {
+			const matchIndex = htmlOffsets.indexOf(htmlStart);
 			if (matchIndex >= 0) {
-				return pugMatches[matchIndex];
+				return pugOffset[matchIndex];
 			}
 		}
 	}
