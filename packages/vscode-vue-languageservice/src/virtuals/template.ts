@@ -50,10 +50,6 @@ export function useTemplateScript(
 		if (!interpolations) return;
 
 		let text1 = [
-			`import { FunctionalComponent as __VLS_Vue_FunctionalComponent } from '@vue/runtime-dom'`,
-			`import { HTMLAttributes as __VLS_Vue_HTMLAttributes } from '@vue/runtime-dom'`,
-			`import { VNodeProps as __VLS_Vue_VNodeProps } from '@vue/runtime-dom'`,
-			`import { AllowedComponentProps as __VLS_Vue_AllowedComponentProps } from '@vue/runtime-dom'`,
 			`import { __VLS_options, __VLS_component } from './${upath.basename(vueFileName)}';`,
 			`export declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
 			`export declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };`,
@@ -73,17 +69,17 @@ export function useTemplateScript(
 		text1 += '/* Completion: Emits */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
-			text1 += `__VLS_componentEmits['${name}'][''];\n`; // TODO
+			text1 += `__VLS_componentEmits['${name}'].;\n`; // TODO
 		}
 		text1 += '/* Completion: Props */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
-			text1 += `__VLS_componentPropsBase['${name}'][''];\n`; // TODO
+			text1 += `__VLS_componentPropsBase['${name}'].;\n`; // TODO
 		}
 		text1 += '/* Completion: Slots */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
-			text1 += `__VLS_components['${name}'].__VLS_slots[''];\n`; // TODO
+			text1 += `__VLS_components['${name}'].__VLS_slots.;\n`; // TODO
 		}
 
 		let text2 = [
