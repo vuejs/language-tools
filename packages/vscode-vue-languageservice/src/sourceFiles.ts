@@ -127,10 +127,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			docs.set(virtualScriptGen.shadowTsTextDocument.value.uri, virtualScriptGen.shadowTsTextDocument.value);
 		if (virtualScriptMain.textDocument.value)
 			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
-		if (virtualTemplateGen.textDocument1.value)
-			docs.set(virtualTemplateGen.textDocument1.value.uri, virtualTemplateGen.textDocument1.value);
-		if (virtualTemplateGen.textDocument2.value)
-			docs.set(virtualTemplateGen.textDocument2.value.uri, virtualTemplateGen.textDocument2.value);
+		if (virtualTemplateGen.textDocument.value)
+			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
 		if (rfc === '#182' && virtualScriptSetupRaw.textDocument.value)
 			docs.set(virtualScriptSetupRaw.textDocument.value.uri, virtualScriptSetupRaw.textDocument.value);
 		return docs;
@@ -183,8 +181,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const newDescriptor = vueSfc.parse(newVueDocument.getText(), { filename: vueFileName }).descriptor;
 		const versionsBeforeUpdate = [
 			virtualScriptGen.textDocument.value?.version,
-			virtualTemplateGen.textDocument1.value?.version,
-			virtualTemplateGen.textDocument2.value?.version,
+			virtualTemplateGen.textDocument.value?.version,
 		];
 
 		updateTemplate(newDescriptor);
@@ -199,13 +196,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		const versionsAfterUpdate = [
 			virtualScriptGen.textDocument.value?.version,
-			virtualTemplateGen.textDocument1.value?.version,
-			virtualTemplateGen.textDocument2.value?.version,
+			virtualTemplateGen.textDocument.value?.version,
 		];
 
 		return {
 			scriptUpdated: versionsBeforeUpdate[0] !== versionsAfterUpdate[0],
-			templateScriptUpdated: versionsBeforeUpdate[1] !== versionsAfterUpdate[1] || versionsBeforeUpdate[2] !== versionsAfterUpdate[2],
+			templateScriptUpdated: versionsBeforeUpdate[1] !== versionsAfterUpdate[1],
 		};
 
 		function updateTemplate(newDescriptor: vueSfc.SFCDescriptor) {
@@ -608,7 +604,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
 				}
-				const doc = virtualTemplateGen.textDocument2.value;
+				const doc = virtualTemplateGen.textDocument.value;
 				if (!doc) return [];
 				if (mode === 1) {
 					return tsLanguageService.doValidation(doc.uri, { semantic: true }, cancleToken);
@@ -622,18 +618,18 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			});
 			const errors_2 = computed(() => {
 				const result: Diagnostic[] = [];
-				if (!virtualTemplateGen.textDocument2.value
+				if (!virtualTemplateGen.textDocument.value
 					|| !virtualTemplateGen.contextSourceMap.value
 					|| !virtualScriptGen.textDocument.value
 				)
 					return result;
 				for (const diag of errors_1.value) {
-					const spanText = virtualTemplateGen.textDocument2.value.getText(diag.range);
+					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
 					const propRights = virtualTemplateGen.contextSourceMap.value.sourceToTargets(diag.range);
 					for (const propRight of propRights) {
 						if (propRight.maped.data.isAdditionalReference) continue;
-						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument2.value.uri, propRight.range.start);
+						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.range.start);
 						for (const definition of definitions) {
 							if (definition.uri !== virtualScriptGen.textDocument.value.uri) continue;
 							result.push({
@@ -646,9 +642,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result;
 			})
 			return computed(() => {
-				const result_1 = virtualTemplateGen.textDocument2.value ? toTsSourceDiags(
+				const result_1 = virtualTemplateGen.textDocument.value ? toTsSourceDiags(
 					errors_1.value,
-					virtualTemplateGen.textDocument2.value.uri,
+					virtualTemplateGen.textDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				const result_2 = virtualScriptGen.textDocument.value ? toTsSourceDiags(
@@ -731,8 +727,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				tsProjectVersion.value;
 			}
 			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
-			if (virtualTemplateGen.textDocument1.value && virtualTemplateRaw.textDocument.value) {
-				const doc = virtualTemplateGen.textDocument1.value;
+			if (virtualTemplateGen.textDocument.value && virtualTemplateRaw.textDocument.value) {
+				const doc = virtualTemplateGen.textDocument.value;
 				const text = doc.getText();
 				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 					let bind: CompletionItem[] = [];

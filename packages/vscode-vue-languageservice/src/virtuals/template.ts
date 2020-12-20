@@ -49,82 +49,74 @@ export function useTemplateScript(
 		const interpolations = getInterpolations();
 		if (!interpolations) return;
 
-		let text1 = [
-			`import { __VLS_options, __VLS_component } from './${upath.basename(vueFileName)}';`,
-			`export declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
-			`export declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };`,
-			`export declare var __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
-		].join('\n') + `\n`;
-
-		/* Components */
-		text1 += '/* Components */\n';
-		text1 += 'export declare var __VLS_components: JSX.IntrinsicElements & typeof __VLS_Components;\n';
-		text1 += 'export declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n';
-		text1 += 'export declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
-		text1 += 'export declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
-
-		/* Completion */
-		text1 += `({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
-
-		text1 += '/* Completion: Emits */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			text1 += `__VLS_componentEmits['${name}'].;\n`; // TODO
-		}
-		text1 += '/* Completion: Props */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			text1 += `__VLS_componentPropsBase['${name}'].;\n`; // TODO
-		}
-		text1 += '/* Completion: Slots */\n';
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			text1 += `__VLS_components['${name}'].__VLS_slots.;\n`; // TODO
-		}
-
-		let text2 = [
+		let text = [
 			(templateScriptData.scriptSetupExports.length
 				? `import * as __VLS_setups from './${upath.basename(vueFileName)}.scriptSetup.raw';`
 				: `// no setups`),
-			`import { __VLS_options } from './${upath.basename(vueFileName)}';`,
-			`import { __VLS_ctx } from './${upath.basename(vueFileName)}.__VLS_template.context';`,
-			`import { __VLS_vmUnwrap } from './${upath.basename(vueFileName)}.__VLS_template.context';`,
-			`import { __VLS_components } from './${upath.basename(vueFileName)}.__VLS_template.context';`,
-			`import { __VLS_componentPropsBase } from './${upath.basename(vueFileName)}.__VLS_template.context';`,
-			`import { __VLS_componentProps } from './${upath.basename(vueFileName)}.__VLS_template.context';`,
-			`import { __VLS_componentEmits } from './${upath.basename(vueFileName)}.__VLS_template.context';`,
-		].join('\n') + '\n';
+			`import { __VLS_options, __VLS_component } from './${upath.basename(vueFileName)}';`,
+			`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;`,
+			`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };`,
+			`declare const __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
+		].join('\n') + `\n`;
+
+		/* Components */
+		text += '/* Components */\n';
+		text += 'declare const __VLS_components: JSX.IntrinsicElements & typeof __VLS_Components;\n';
+		text += 'declare const __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n';
+		text += 'declare const __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
+		text += 'declare const __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
+
+		/* Completion */
+		text += `({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
+
+		text += '/* Completion: Emits */\n';
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+			if (!hasElement(interpolations.tags, name)) continue;
+			text += `// @ts-ignore\n`;
+			text += `__VLS_componentEmits['${name}'].;\n`; // TODO
+		}
+		text += '/* Completion: Props */\n';
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+			if (!hasElement(interpolations.tags, name)) continue;
+			text += `// @ts-ignore\n`;
+			text += `__VLS_componentPropsBase['${name}'].;\n`; // TODO
+		}
+		text += '/* Completion: Slots */\n';
+		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+			if (!hasElement(interpolations.tags, name)) continue;
+			text += `// @ts-ignore\n`;
+			text += `__VLS_components['${name}'].__VLS_slots.;\n`; // TODO
+		}
 
 		/* CSS Module */
-		text2 += '/* CSS Module */\n';
-		text2 += 'declare var $style: {\n';
+		text += '/* CSS Module */\n';
+		text += 'declare const $style: {\n';
 		const cssModuleClasses = getCssClasses('module');
 		const cssModuleMappings = writeCssClassProperties(cssModuleClasses);
-		text2 += '};\n';
+		text += '};\n';
 
 		/* Style Scoped */
-		text2 += '/* Style Scoped */\n';
-		text2 += 'declare var __VLS_styleScopedClasses: {\n';
+		text += '/* Style Scoped */\n';
+		text += 'declare const __VLS_styleScopedClasses: {\n';
 		const cssScopedClasses = getCssClasses('scoped');
 		const cssScopedMappings = writeCssClassProperties(cssScopedClasses);
-		text2 += '};\n';
+		text += '};\n';
 
 		/* Props */
-		text2 += `/* Props */\n`;
+		text += `/* Props */\n`;
 		const ctxMappings = writeProps();
 
 		/* Interpolations */
-		text2 += `/* Interpolations */\n`;
+		text += `/* Interpolations */\n`;
 		// patch
 		for (const maped of interpolations.mappings) {
-			maped.targetRange.start += text2.length;
-			maped.targetRange.end += text2.length;
+			maped.targetRange.start += text.length;
+			maped.targetRange.end += text.length;
 		}
-		text2 += interpolations.text;
+		text += interpolations.text;
 
 		return {
-			text1,
-			text2,
+			text,
 			cssModuleMappings,
 			cssScopedMappings,
 			ctxMappings,
@@ -150,8 +142,8 @@ export function useTemplateScript(
 				for (const [className, ranges] of classes) {
 					mappings.get(uri)!.push({
 						tsRange: {
-							start: text2.length + 1, // + '
-							end: text2.length + 1 + className.length,
+							start: text.length + 1, // + '
+							end: text.length + 1 + className.length,
 						},
 						cssRanges: [...ranges].map(range => ({
 							start: range[0],
@@ -161,8 +153,8 @@ export function useTemplateScript(
 					});
 					mappings.get(uri)!.push({
 						tsRange: {
-							start: text2.length,
-							end: text2.length + className.length + 2,
+							start: text.length,
+							end: text.length + className.length + 2,
 						},
 						cssRanges: [...ranges].map(range => ({
 							start: range[0],
@@ -170,7 +162,7 @@ export function useTemplateScript(
 						})),
 						mode: MapedMode.Gate,
 					});
-					text2 += `'${className}': string,\n`;
+					text += `'${className}': string,\n`;
 				}
 			}
 			return mappings;
@@ -181,30 +173,30 @@ export function useTemplateScript(
 			const mappings: Mapping<{ isAdditionalReference: boolean }>[] = [];
 			for (const propName of templateScriptData.context) {
 				const vueRange = {
-					start: text2.length + `declare let `.length,
-					end: text2.length + `declare let ${propName}`.length,
+					start: text.length + `declare let `.length,
+					end: text.length + `declare let ${propName}`.length,
 				};
 				mappings.push({
 					data: { isAdditionalReference: false },
 					mode: MapedMode.Offset,
 					sourceRange: vueRange,
 					targetRange: {
-						start: text2.length + `declare let ${propName}: typeof __VLS_ctx.`.length,
-						end: text2.length + `declare let ${propName}: typeof __VLS_ctx.${propName}`.length,
+						start: text.length + `declare let ${propName}: typeof __VLS_ctx.`.length,
+						end: text.length + `declare let ${propName}: typeof __VLS_ctx.${propName}`.length,
 					},
 				});
-				text2 += `declare let ${propName}: typeof __VLS_ctx.${propName}; `;
+				text += `declare let ${propName}: typeof __VLS_ctx.${propName}; `;
 				if (propsSet.has(propName)) {
 					mappings.push({
 						data: { isAdditionalReference: true },
 						mode: MapedMode.Offset,
 						sourceRange: vueRange,
 						targetRange: {
-							start: text2.length + `__VLS_options.props.`.length,
-							end: text2.length + `__VLS_options.props.${propName}`.length,
+							start: text.length + `__VLS_options.props.`.length,
+							end: text.length + `__VLS_options.props.${propName}`.length,
 						},
 					});
-					text2 += `__VLS_options.props.${propName}; `;
+					text += `__VLS_options.props.${propName}; `;
 				}
 				if (scriptSetupExportsSet.has(propName)) {
 					mappings.push({
@@ -212,13 +204,13 @@ export function useTemplateScript(
 						mode: MapedMode.Offset,
 						sourceRange: vueRange,
 						targetRange: {
-							start: text2.length + `__VLS_setups.`.length,
-							end: text2.length + `__VLS_setups.${propName}`.length,
+							start: text.length + `__VLS_setups.`.length,
+							end: text.length + `__VLS_setups.${propName}`.length,
 						},
 					});
-					text2 += `__VLS_setups.${propName}; `
+					text += `__VLS_setups.${propName}; `
 				}
-				text2 += `\n`;
+				text += `\n`;
 			}
 			return mappings;
 		}
@@ -279,9 +271,9 @@ export function useTemplateScript(
 		}
 	});
 	const sourceMap = computed(() => {
-		if (data.value && textDocument2.value && template.value) {
+		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument2.value, true, { foldingRanges: false, formatting: false });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: false });
 			for (const [uri, mappings] of [...data.value.cssModuleMappings, ...data.value.cssScopedMappings]) {
 				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.targetDocument.uri === uri);
 				if (!cssSourceMap) continue;
@@ -383,8 +375,7 @@ export function useTemplateScript(
 			return sourceMap;
 		}
 	});
-	const textDocument1 = ref<TextDocument>();
-	const textDocument2 = ref<TextDocument>();
+	const textDocument = ref<TextDocument>();
 	const textDocumentForFormatting = ref<TextDocument>();
 	const contextSourceMap = ref<SourceMap<{
 		isAdditionalReference: boolean;
@@ -392,8 +383,7 @@ export function useTemplateScript(
 
 	return {
 		sourceMap,
-		textDocument1,
-		textDocument2,
+		textDocument,
 		textDocumentForFormatting,
 		sourceMapForFormatting,
 		contextSourceMap,
@@ -403,16 +393,15 @@ export function useTemplateScript(
 	};
 
 	function update() {
-		if (data.value?.text1 !== textDocument1.value?.getText() || data.value?.text2 !== textDocument2.value?.getText()) {
+		if (data.value?.text !== textDocument.value?.getText()) {
 			if (data.value) {
 				const _version = version++;
-				textDocument1.value = TextDocument.create(vueUri + '.__VLS_template.context.ts', 'typescript', _version, data.value.text1);
-				textDocument2.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.text2);
+				textDocument.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.text);
 				textDocumentForFormatting.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, data.value.interpolations.formatCode);
 				{
 					const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
-						textDocument2.value,
-						textDocument2.value,
+						textDocument.value,
+						textDocument.value,
 					);
 					for (const maped of data.value.ctxMappings) {
 						sourceMap.add(maped);
@@ -421,8 +410,7 @@ export function useTemplateScript(
 				}
 			}
 			else {
-				textDocument1.value = undefined;
-				textDocument2.value = undefined;
+				textDocument.value = undefined;
 				contextSourceMap.value = undefined;
 				textDocumentForFormatting.value = undefined;
 			}

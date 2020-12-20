@@ -60,5 +60,5 @@ declare const app: App;
 app.component${SearchTexts.AppComponentCall};
 `
 
-	return TextDocument.create(fsPathToUri(join(root, '__VLS_global.ts')), 'typescript', 0, code);
+	return TextDocument.create(fsPathToUri(join(root, '__VLS_globals.ts')), 'typescript', 0, code);
 }

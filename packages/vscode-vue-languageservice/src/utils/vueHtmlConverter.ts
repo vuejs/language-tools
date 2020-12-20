@@ -268,39 +268,11 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 				}
 			}
 			function writeProps(node: ElementNode, forDuplicateClassOrStyleAttr: boolean) {
-				// +1 to remove '<' from html tag
-				text += `// forDuplicateClassOrStyleAttr: ${forDuplicateClassOrStyleAttr}\n`;
 				const varName = `__VLS_${elementIndex++}`;
+				let wrap = false;
 
 				if (!forDuplicateClassOrStyleAttr) {
-
-					{ // start tag
-						text += `__VLS_components`
-						mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
-							start: node.loc.start.offset + 1,
-							end: node.loc.start.offset + 1 + node.tag.length,
-						});
-						text += `;\n`
-					}
-					if (!node.isSelfClosing && !pugMapper) { // end tag
-						text += `__VLS_components`
-						mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
-							start: node.loc.end.offset - 1 - node.tag.length,
-							end: node.loc.end.offset - 1,
-						});
-						text += `;\n`
-					}
-
-					text += `const `;
-					mapping(undefined, varName, MapedMode.Gate, capabilitiesSet.diagnosticOnly, {
-						start: node.loc.start.offset + 1,
-						end: node.loc.start.offset + 1 + node.tag.length,
-					});
-					text += `: typeof __VLS_componentProps['${node.tag}'] = {\n`;
-				}
-				else {
-					text += `// @ts-ignore\n`;
-					text += `const ${varName}: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`;
+					addStartWrap();
 				}
 
 				for (const prop of node.props) {
@@ -311,6 +283,10 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
 					) {
 						if (forDuplicateClassOrStyleAttr) continue;
+
+						if (!wrap) {
+							addStartWrap();
+						}
 
 						const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
 						const propValue = prop.exp?.content ?? 'undefined';
@@ -365,6 +341,10 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 
 						if (isClassOrStyleAttr !== forDuplicateClassOrStyleAttr) continue;
 
+						if (!wrap) {
+							addStartWrap();
+						}
+
 						// camelize name
 						mapping(undefined, `'${propName}': ${propValue}`, MapedMode.Gate, capabilitiesSet.diagnosticOnly, {
 							start: prop.loc.start.offset,
@@ -389,7 +369,50 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 					}
 				}
 
-				text += `}; ${varName};\n`;
+				if (wrap) {
+					addEndWrap();
+				}
+
+				function addStartWrap() {
+					wrap = true;
+					if (!forDuplicateClassOrStyleAttr) {
+						{ // start tag
+							text += `__VLS_components`
+							mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
+								start: node.loc.start.offset + 1,
+								end: node.loc.start.offset + 1 + node.tag.length,
+							});
+							text += `;\n`
+						}
+						if (!node.isSelfClosing && !pugMapper) { // end tag
+							text += `__VLS_components`
+							mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
+								start: node.loc.end.offset - 1 - node.tag.length,
+								end: node.loc.end.offset - 1,
+							});
+							text += `;\n`
+						}
+
+						text += `const `;
+						mapping(undefined, varName, MapedMode.Gate, capabilitiesSet.diagnosticOnly, {
+							start: node.loc.start.offset + 1,
+							end: node.loc.start.offset + 1 + node.tag.length,
+						});
+						text += `: typeof __VLS_componentProps['${node.tag}'] = {\n`;
+					}
+					else {
+						text += `// @ts-ignore\n`;
+						text += `__VLS_componentProps['${getComponentName(node.tag)}'] = {\n`;
+					}
+				}
+				function addEndWrap() {
+					if (!forDuplicateClassOrStyleAttr) {
+						text += `}; ${varName};\n`;
+					}
+					else {
+						text += `};\n`;
+					}
+				}
 			}
 			function writeClassScopeds(node: ElementNode) {
 				for (const prop of node.props) {
@@ -413,6 +436,7 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 						}
 
 						function addClass(className: string, offset: number) {
+							text += `// @ts-ignore\n`;
 							text += `__VLS_styleScopedClasses`
 							mappingPropertyAccess(MapedNodeTypes.Prop, className, capabilitiesSet.className, {
 								start: offset,
