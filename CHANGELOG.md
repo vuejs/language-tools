@@ -1,3 +1,7 @@
+### 0.18.9
+
+- fix: folding ranges not working in `<script setup>` block
+
 ### 0.18.8
 
 - feat: improve pug diagnosis
