@@ -398,7 +398,7 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 							start: node.loc.start.offset + 1,
 							end: node.loc.start.offset + 1 + node.tag.length,
 						});
-						text += `: typeof __VLS_componentProps['${node.tag}'] = {\n`;
+						text += `: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`;
 					}
 					else {
 						text += `// @ts-ignore\n`;
