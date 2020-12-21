@@ -47,13 +47,24 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						end: document.positionAt(desc.scriptSetup.loc.start + label.label.end + 1),
 					}, 'const'));
 					for (const binary of label.binarys) {
+						edits.push(TextEdit.del({
+							start: document.positionAt(desc.scriptSetup.loc.start + binary.parent.start),
+							end: document.positionAt(desc.scriptSetup.loc.start + binary.left.start),
+						}));
+						edits.push(TextEdit.del({
+							start: document.positionAt(desc.scriptSetup.loc.start + binary.parent.end),
+							end: document.positionAt(desc.scriptSetup.loc.start + (binary.right ?? binary.left).end),
+						}));
 						if (!binary.right) {
 							edits.push(TextEdit.insert(
 								document.positionAt(desc.scriptSetup.loc.start + binary.left.end),
 								' = ref()'
 							));
 						}
-						else if (!binary.right.isComputedCall) {
+						else if (
+							!binary.right.isComputedCall
+							&& !document.getText().substring(desc.scriptSetup.loc.start + binary.left.start, desc.scriptSetup.loc.start + binary.left.end).startsWith('{') // TODO
+						) {
 							edits.push(TextEdit.insert(
 								document.positionAt(desc.scriptSetup.loc.start + binary.right.start),
 								'ref('
@@ -150,10 +161,18 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						desc.scriptSetup.loc.start + refCall.rightExpression.start,
 						desc.scriptSetup.loc.start + refCall.rightExpression.end,
 					);
-					edits.push(TextEdit.replace({
-						start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
-						end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
-					}, `ref: ${left} = ${right}`));
+					if (left.trim().startsWith('{')) {
+						edits.push(TextEdit.replace({
+							start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
+							end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
+						}, `ref: (${left} = ${right})`));
+					}
+					else {
+						edits.push(TextEdit.replace({
+							start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
+							end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
+						}, `ref: ${left} = ${right}`));
+					}
 					for (const _var of refCall.vars) {
 						if (progress.token.isCancellationRequested) {
 							return;
