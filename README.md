@@ -135,10 +135,6 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 }
 ```
 
-## Limitations
-
-- Due to TypeScript limitations and performance considerations, emits type-checking only working to 4 overloads for each component. (https://github.com/microsoft/TypeScript/issues/26591, https://github.com/microsoft/TypeScript/issues/37079#issuecomment-592078751)
-
 ## Note
 
 > Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)

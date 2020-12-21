@@ -73,19 +73,19 @@ export function useTemplateScript(
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			text += `// @ts-ignore\n`;
-			text += `__VLS_componentEmits['${name}'].;\n`; // TODO
+			text += `__VLS_componentEmits['${name}']('');\n`; // TODO
 		}
 		text += '/* Completion: Props */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			text += `// @ts-ignore\n`;
-			text += `__VLS_componentPropsBase['${name}'].;\n`; // TODO
+			text += `__VLS_componentPropsBase['${name}'][''];\n`; // TODO
 		}
 		text += '/* Completion: Slots */\n';
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
 			if (!hasElement(interpolations.tags, name)) continue;
 			text += `// @ts-ignore\n`;
-			text += `__VLS_components['${name}'].__VLS_slots.;\n`; // TODO
+			text += `__VLS_components['${name}'].__VLS_slots[''];\n`; // TODO
 		}
 
 		/* CSS Module */

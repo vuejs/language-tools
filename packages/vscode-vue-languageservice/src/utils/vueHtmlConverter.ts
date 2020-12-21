@@ -469,17 +469,12 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 						const key_1 = prop.arg.content;
 						const key_2 = camelize('on-' + key_1);
 
-						text += `let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentEmits['${getComponentName(node.tag)}'][`;
-						mappingWithQuotes(undefined, key_1, capabilitiesSet.htmlTagOrAttr, {
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						});
-						text += `], typeof __VLS_componentProps['${getComponentName(node.tag)}'][`;
+						text += `let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentProps['${getComponentName(node.tag)}'][`;
 						mappingWithQuotes(undefined, key_2, capabilitiesSet.htmlTagOrAttr, {
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
 						});
-						text += `]> };\n`;
+						text += `], __VLS_PickEmitFunction<typeof __VLS_componentEmits['${getComponentName(node.tag)}'], '${key_1}'>> };\n`;
 
 						const transformResult = transformOn(prop, node, context);
 						for (const prop_2 of transformResult.props) {

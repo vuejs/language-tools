@@ -735,7 +735,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					let on: CompletionItem[] = [];
 					let slot: CompletionItem[] = [];
 					{
-						const searchText = `__VLS_componentPropsBase['${tagName}'].`;
+						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
@@ -743,7 +743,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						}
 					}
 					{
-						const searchText = `__VLS_componentEmits['${tagName}'].`;
+						const searchText = `__VLS_componentEmits['${tagName}']('`;
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
@@ -751,7 +751,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						}
 					}
 					{
-						const searchText = `__VLS_components['${tagName}'].__VLS_slots.`;
+						const searchText = `__VLS_components['${tagName}'].__VLS_slots['`;
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
