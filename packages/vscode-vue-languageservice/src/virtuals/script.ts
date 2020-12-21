@@ -801,7 +801,7 @@ function genScriptSetup(
 				},
 				mode: MapedMode.Offset,
 			});
-			genCode += ' as typeof ' + varName + ', \n';
+			genCode += ',\n';
 			mirrors.push({
 				left: leftRange,
 				right: rightRange,
@@ -840,7 +840,7 @@ function genScriptSetup(
 							},
 							mode: MapedMode.Offset,
 						});
-						genCode += ' as typeof ' + refVar.text + ', \n';
+						genCode += ', \n';
 						mirrors.push({
 							left: leftRange,
 							right: rightRange,
