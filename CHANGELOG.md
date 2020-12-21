@@ -1,3 +1,7 @@
+### 0.18.10
+
+- fix: props services fail for `DefineComponent<...>` declare component
+
 ### 0.18.9
 
 - fix: folding ranges not working in `<script setup>` block
