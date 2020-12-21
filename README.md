@@ -4,53 +4,14 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
+Volar is a Language Support plugin built specifically for Vue 3. This is based on Composition API to calculate on-demand, so as to achieve performance close to native TypeScript script.
+
 Roadmap: https://github.com/johnsoncodehk/volar/issues/28
 
-## What is this?
+## Using
 
-Volar is a fast implementation to try to create faster Vue Language Service to near to native TypeScript Language Service performance. (How? use Composition API!)
-
-You can think of Volar as a branch of Vetur (In fact, far from...), Volar focuses on performance and TS support, but Vetur has more language support (vue2, sass...).
-
-You can try Volar if performance or `<script setup>` are your main considerations. Otherwise Vetur can solve all your problems.
-
-## Sponsors
-
-If you like this extension and you can afford, you can consider becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). I can reduce other work and move time to Volar, so this will definitely speed up this project. Thanks!
-
-https://github.com/sponsors/johnsoncodehk
-
-## Some interesting features:
-
-- [x] [Linked Editing](https://code.visualstudio.com/updates/v1_44#_synced-regions) (v0.18.0) (enabled with `editor.linkedEditing`) (required VSCode 1.52)
-- [x] ~~HTML mirror cursor (v0.16.2 ~ v0.17.4)~~ (replace with Linked Editing)
-- [x] v-slot services (v0.12.1 ~ v0.16.8)
-- [x] inline css services (v0.16.3)
-- [x] ref sugar convert tool (v0.15.6)
-- [x] CSS class codeLens (v0.15.4)
-- [x] new `<script setup>` support ([#222](https://github.com/vuejs/rfcs/pull/222), [#227](https://github.com/vuejs/rfcs/pull/227), [#228](https://github.com/vuejs/rfcs/pull/228)) (v0.15.2 added) (with `volar.scriptSetup.supportRfc` setting)
-- [x] Scoped CSS services (v0.15.1)
-- [x] Format all scripts command (v0.13.5)
-- [x] Verify all scripts command (v0.13.3)
-- [x] Component props auto completion (v0.11.6)
-- [x] emits Type-Checking (v0.11.4)
-- [x] Interpolation formatting + commenting (v0.11.2)
-- [x] Native html tag services (v0.11.0)
-- [x] ~~`<script setup>` support (v0.10.0)~~ see https://github.com/johnsoncodehk/volar/issues/27
-- [x] Unused highlight for setup() return properties (v0.7.0)
-- [x] pug-html convert tool
-- [x] Asset url link jump
-- [x] Css Module services
-- [x] Pug interpolation services
-- [x] Component props services (v0.5.0)
-- [x] Component tag services
-- [x] Multi root support
-
-## Requirements
-
-- tsconfig.json / jsconfig.json
-
-## Components service
+<details>
+<summary>Components services</summary>
 
 By default, Local components, Built-in components, native html elements Type-Checking are active.
 
@@ -93,7 +54,10 @@ declare global {
 }
 ```
 
-## v-slot Type-Checking
+</details>
+
+<details>
+<summary>Slots services</summary>
 
 v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
 
@@ -121,7 +85,10 @@ declare global {
 }
 ```
 
-## Work with Vue 2?
+</details>
+
+<details>
+<summary>Work with Vue 2?</summary>
 
 This tool uses Vue 3 types from '@vue/runtime-dom' module to calculate completion.
 
@@ -135,6 +102,8 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 }
 ```
 
+</details>
+
 ## Note
 
 > Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
@@ -145,3 +114,12 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 > - template: html, pug
 > - script: js, ts, jsx, tsx
 > - style: css, scss, less
+
+> You need to disable Vetur to avoid functional conflicts.
+
+> tsconfig.json / jsconfig.json is required.
+
+
+## Sponsors
+
+If you like this extension and you can afford, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). I can reduce other work and move time to Volar, so this will definitely speed up this project.
