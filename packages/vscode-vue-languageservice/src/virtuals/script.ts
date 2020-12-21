@@ -664,13 +664,21 @@ function genScriptSetup(
 
 				let leftPos = binary.left.start;
 				for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
-					const propText = prop.isShortand ? `${prop.text}: __VLS_refs_${prop.text}` : `__VLS_refs_${prop.text}`;
 					genCode += originalCode.substring(leftPos, prop.start);
-					addCode(propText, {
+					if (prop.isShortand) {
+						addCode(prop.text, {
+							isNoDollarRef: false,
+							capabilities: { diagnostic: true },
+							scriptSetupRange: prop,
+							mode: MapedMode.Offset,
+						});
+						genCode += `: `;
+					}
+					addCode(`__VLS_refs_${prop.text}`, {
 						isNoDollarRef: false,
-						capabilities: {},
-						scriptSetupRange: binary.left,
-						mode: MapedMode.Offset, // TODO
+						capabilities: { diagnostic: true },
+						scriptSetupRange: prop,
+						mode: MapedMode.Gate,
 					});
 					leftPos = prop.end;
 				}
