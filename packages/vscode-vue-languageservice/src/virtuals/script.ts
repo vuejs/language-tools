@@ -157,7 +157,7 @@ export function useScriptSetupGen(
 		if (!docGen.value) return;
 
 		const vueDoc = getUnreactiveDoc();
-		const lang = scriptSetup.value && scriptSetup.value?.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang)
+		const lang = scriptSetup.value && scriptSetup.value.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang)
 			: script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang)
 				: getValidScriptSyntax('js')
 		const uri = `${vueDoc.uri}.__VLS_script.${lang}`;
@@ -169,7 +169,7 @@ export function useScriptSetupGen(
 		if (!textDocument.value) return;
 
 		const vueDoc = getUnreactiveDoc();
-		const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: true, formatting: true });
+		const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false });
 
 		if (script.value && docGen.value.scriptRange) {
 			sourceMap.add({

@@ -18,7 +18,7 @@ import * as prettyhtml from '@starptech/prettyhtml';
 import { IDescriptor, ITemplateScriptData } from './types';
 import { SearchTexts } from './virtuals/common';
 import { rfc, useScriptSetupGen } from './virtuals/script';
-import { useScriptSetupFormat } from './virtuals/scriptSetup.raw';
+import { useScriptFormat } from './virtuals/script.raw';
 import { useScriptMain } from './virtuals/main';
 import { useTemplateRaw } from './virtuals/template.raw';
 import { useTemplateScript } from './virtuals/template';
@@ -103,7 +103,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		sourceMaps: computed(() => [virtualTemplateGen.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
 	};
 	const virtualScriptGen = useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup));
-	const virtualScriptSetupRaw = useScriptSetupFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
+	const virtualScriptRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.script));
+	const virtualScriptSetupRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
 	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
 	// map / set
@@ -114,9 +115,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			virtualScriptMain.sourceMap.value,
 			virtualTemplateGen.sourceMap.value,
 		].filter(notEmpty);
-		if (rfc === '#182' && virtualScriptSetupRaw.sourceMap.value) {
-			result.push(virtualScriptSetupRaw.sourceMap.value);
-		}
 		return result;
 	});
 	const tsDocuments = computed(() => {
@@ -129,8 +127,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 		if (virtualTemplateGen.textDocument.value)
 			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
-		if (rfc === '#182' && virtualScriptSetupRaw.textDocument.value)
-			docs.set(virtualScriptSetupRaw.textDocument.value.uri, virtualScriptSetupRaw.textDocument.value);
 		return docs;
 	});
 
@@ -167,9 +163,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			sourceMap: virtualScriptGen.sourceMap.value,
 		})),
 		getScriptSetupData: untrack(() => virtualScriptGen.genResult.value),
-		getScriptSetupRaw: untrack(() => ({
-			document: virtualScriptSetupRaw.textDocument.value,
-			sourceMap: virtualScriptSetupRaw.sourceMap.value,
+		getScriptsRaw: untrack(() => ({
+			documents: [virtualScriptRaw.textDocument.value, virtualScriptSetupRaw.textDocument.value].filter(notEmpty),
+			sourceMaps: [virtualScriptRaw.sourceMap.value, virtualScriptSetupRaw.sourceMap.value].filter(notEmpty),
 		})),
 		getTemplateScriptFormat: untrack(() => ({
 			document: virtualTemplateGen.textDocumentForFormatting.value,

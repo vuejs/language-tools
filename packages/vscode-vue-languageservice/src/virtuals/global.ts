@@ -43,11 +43,10 @@ declare global {
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends new (...args: any) => any ? K : never]: T[K] };
 }
-`;
-	code += `
+
 declare const app: App;
 app.component${SearchTexts.AppComponentCall};
-`
+`;
 
 	return TextDocument.create(fsPathToUri(join(root, '__VLS_globals.ts')), 'typescript', 0, code);
 }

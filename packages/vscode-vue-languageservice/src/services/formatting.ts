@@ -167,14 +167,8 @@ export function register() {
 			const tsSourceMaps = [
 				...sourceFile.getTsSourceMaps(),
 				sourceFile.getTemplateScriptFormat().sourceMap,
+				...sourceFile.getScriptsRaw().sourceMaps,
 			].filter(notEmpty);
-
-			if (rfc === '#222') {
-				const scriptSetupRaw = sourceFile.getScriptSetupRaw();
-				if (scriptSetupRaw.sourceMap) {
-					tsSourceMaps.push(scriptSetupRaw.sourceMap);
-				}
-			}
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
