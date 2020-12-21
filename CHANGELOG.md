@@ -1,3 +1,9 @@
+### 0.18.11
+
+- fix: ref sugar variable define diagnostic not working
+- fix: `ref: foo = false` should be `boolean` not `false` type in template
+- fix: ref sugar convert tool fail with `()`
+
 ### 0.18.10
 
 - fix: props services fail for `DefineComponent<...>` declare component
