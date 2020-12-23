@@ -712,7 +712,7 @@ function genScriptSetup(
 						},
 						mode: MapedMode.Offset,
 					});
-					genCode += ` = (await import('@vue/reactivity')).unref(`;
+					genCode += ` = (await import('@vue/runtime-dom')).unref(`;
 					if (binary.right) {
 						addCode(`__VLS_refs_${prop.text}`, {
 							isNoDollarRef: false,
@@ -742,7 +742,7 @@ function genScriptSetup(
 						},
 						mode: MapedMode.Offset, // TODO
 					});
-					genCode += ` = (await import('@vue/reactivity')).ref(`;
+					genCode += ` = (await import('@vue/runtime-dom')).ref(`;
 					if (binary.right) {
 						addCode(`__VLS_refs_${prop.text}`, {
 							isNoDollarRef: false,
