@@ -1,3 +1,9 @@
+### 0.18.12
+
+- feat: pnpm support
+- feat: unlimited emits overloads support
+- fix: formatting remove `export default {}` if exist two `<script>` block
+
 ### 0.18.11
 
 - fix: ref sugar variable define diagnostic not working
