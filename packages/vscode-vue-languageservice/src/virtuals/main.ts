@@ -19,7 +19,7 @@ export function useScriptMain(
 		const hasScript = !!script.value || !!scriptSetup.value;
 		const hasScriptSetupExports = rfc === '#182' && !!scriptSetup.value;
 		const content = [
-			`import { defineComponent } from '@vue/runtime-dom';`,
+			`import { defineComponent } from '__VLS_vue';`,
 			hasScript ? `import __VLS_componentRaw from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
 			hasScriptSetupExports ? `import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.__VLS_scriptSetup.raw';` : `// no scriptSetup #182`,
 			...(hasScript

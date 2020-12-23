@@ -3,17 +3,28 @@ import { SearchTexts } from './common';
 import { fsPathToUri } from '@volar/shared';
 import { join } from 'upath';
 
+export function getGlobalDTs(root: string) {
+	let code = `
+declare module '__VLS_vue' {
+	export * from 'vue'; // #37
+	export * from '@vue/runtime-dom';
+}
+`;
+
+	return TextDocument.create(fsPathToUri(join(root, '__VLS_vue.d.ts')), 'typescript', 0, code);
+}
+
 export function getGlobalDoc(root: string) {
 	let code = `
-import { FunctionalComponent } from '@vue/runtime-dom'
-import { HTMLAttributes } from '@vue/runtime-dom'
-import { VNodeProps } from '@vue/runtime-dom'
-import { AllowedComponentProps } from '@vue/runtime-dom'
-import { PropType } from '@vue/runtime-dom'
-import { App } from '@vue/runtime-dom'
+import { FunctionalComponent } from '__VLS_vue'
+import { HTMLAttributes } from '__VLS_vue'
+import { VNodeProps } from '__VLS_vue'
+import { AllowedComponentProps } from '__VLS_vue'
+import { PropType } from '__VLS_vue'
+import { App } from '__VLS_vue'
 
 declare global {
-	interface __VLS_GlobalComponents extends Pick<typeof import('@vue/runtime-dom'),
+	interface __VLS_GlobalComponents extends Pick<typeof import('__VLS_vue'),
 		'Transition'
 		| 'TransitionGroup'
 		| 'KeepAlive'

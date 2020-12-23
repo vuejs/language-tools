@@ -549,7 +549,7 @@ function genScriptSetup(
 	}
 
 	genCode += `\n`;
-	genCode += `export default (await import('@vue/runtime-dom')).defineComponent({\n`;
+	genCode += `export default (await import('__VLS_vue')).defineComponent({\n`;
 	if (declaresNames.has('props')) {
 		genCode += `props: ({} as __VLS_DefinePropsToOptions<typeof __VLS_declares_props>),\n`;
 	}
@@ -712,7 +712,7 @@ function genScriptSetup(
 						},
 						mode: MapedMode.Offset,
 					});
-					genCode += ` = (await import('@vue/runtime-dom')).unref(`;
+					genCode += ` = (await import('__VLS_vue')).unref(`;
 					if (binary.right) {
 						addCode(`__VLS_refs_${prop.text}`, {
 							isNoDollarRef: false,
@@ -742,7 +742,7 @@ function genScriptSetup(
 						},
 						mode: MapedMode.Offset, // TODO
 					});
-					genCode += ` = (await import('@vue/runtime-dom')).ref(`;
+					genCode += ` = (await import('__VLS_vue')).ref(`;
 					if (binary.right) {
 						addCode(`__VLS_refs_${prop.text}`, {
 							isNoDollarRef: false,

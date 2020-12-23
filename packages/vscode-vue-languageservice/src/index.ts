@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFiles';
-import { getGlobalDoc } from './virtuals/global';
+import { getGlobalDoc, getGlobalDTs } from './virtuals/global';
 import { SearchTexts } from './virtuals/common';
 import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { MapedMode, MapedRange, Mapping, TsMappingData, TsSourceMap } from './utils/sourceMaps';
@@ -66,6 +66,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost);
 
+	const globalDTsDoc = getGlobalDTs(vueHost.getCurrentDirectory());
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const globalComponentCalls = computed(() => {
 		{ // watching
@@ -195,7 +196,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		getTsService: () => tsLanguageService,
-		getGlobalDoc: () => globalDoc,
+		getGlobalDocs: () => [globalDoc, globalDTsDoc],
 		getSourceFile: apiHook(getSourceFile),
 		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(diagnostics.register(sourceFiles)),
@@ -347,6 +348,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
 			tsFileNames.push(uriToFsPath(globalDoc.uri));
+			tsFileNames.push(uriToFsPath(globalDTsDoc.uri));
 			for (const fileName of vueHost.getScriptFileNames()) {
 				const uri = fsPathToUri(fileName);
 				const sourceFile = sourceFiles.get(uri);
@@ -367,6 +369,9 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			if (uri === globalDoc.uri) {
 				return globalDoc.version.toString() + addVersion;
 			}
+			if (uri === globalDTsDoc.uri) {
+				return globalDTsDoc.version.toString() + addVersion;
+			}
 			for (const [_, sourceFile] of sourceFiles) {
 				const doc = sourceFile.getTsDocuments().get(uri);
 				if (doc) {
@@ -384,6 +389,12 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			const uri = fsPathToUri(fileName);
 			if (uri === globalDoc.uri) {
 				const text = globalDoc.getText();
+				const snapshot = ts.ScriptSnapshot.fromString(text);
+				scriptSnapshots.set(fileName, [version, snapshot]);
+				return snapshot;
+			}
+			if (uri === globalDTsDoc.uri) {
+				const text = globalDTsDoc.getText();
 				const snapshot = ts.ScriptSnapshot.fromString(text);
 				scriptSnapshots.set(fileName, [version, snapshot]);
 				return snapshot;
