@@ -1,3 +1,7 @@
+### 0.18.13
+
+- feat: unused variables report for `<script setup>`
+
 ### 0.18.12
 
 - feat: pnpm support
