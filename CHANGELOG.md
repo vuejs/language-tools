@@ -1,6 +1,7 @@
 ### 0.18.13
 
 - feat: unused variables report for `<script setup>`
+- fix: `<script setup>` imports should not have global completion
 
 ### 0.18.12
 
