@@ -6,18 +6,6 @@ import {
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 import * as ts from 'typescript';
-import * as errorCodes from '../utils/errorCodes';
-
-// Style check diagnostics that can be reported as warnings
-const styleCheckDiagnostics = new Set([
-	...errorCodes.variableDeclaredButNeverUsed,
-	...errorCodes.propertyDeclaretedButNeverUsed,
-	...errorCodes.allImportsAreUnused,
-	...errorCodes.unreachableCode,
-	...errorCodes.unusedLabel,
-	...errorCodes.fallThroughCaseInSwitch,
-	...errorCodes.notAllCodePathsReturnAValue,
-]);
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (
@@ -64,11 +52,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					message: typeof diag.messageText === 'string' ? diag.messageText : diag.messageText.messageText,
 				};
 
-				if (diagnostic.source === 'ts' && typeof diagnostic.code === 'number' && styleCheckDiagnostics.has(diagnostic.code)) {
+				if (diag.reportsUnnecessary) {
 					if (diagnostic.tags === undefined) diagnostic.tags = [];
 					diagnostic.tags.push(DiagnosticTag.Unnecessary);
 				}
-				if (diagnostic.source === 'ts' && diagnostic.code === 6385) {
+				if (diag.reportsDeprecated) {
 					if (diagnostic.tags === undefined) diagnostic.tags = [];
 					diagnostic.tags.push(DiagnosticTag.Deprecated);
 				}

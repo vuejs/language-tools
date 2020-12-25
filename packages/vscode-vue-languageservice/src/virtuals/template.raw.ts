@@ -1,4 +1,3 @@
-import { Diagnostic } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
@@ -9,19 +8,10 @@ import * as globalServices from '../globalServices';
 export function useTemplateRaw(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
-	pugData: Ref<{
-		html: string;
-		mapper: (htmlStart: number, htmlEnd: number) => number | undefined;
-		error?: undefined;
-	} | {
-		error: Diagnostic;
-		html?: undefined;
-		mapper?: undefined;
-	} | {
-		html?: undefined;
-		mapper?: undefined;
-		error?: undefined;
-	}>,
+	templateData: Ref<{
+		html?: string,
+		htmlToTemplate?: (start: number, end: number) => number | undefined,
+	} | undefined>,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
@@ -59,13 +49,13 @@ export function useTemplateRaw(
 		}
 	});
 	const pugSourceMap = computed(() => {
-		if (textDocument.value?.languageId === 'jade' && template.value) {
+		if (textDocument.value?.languageId === 'jade' && template.value && templateData.value && templateData.value.htmlToTemplate) {
 			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new PugSourceMap(
 				vueDoc,
 				textDocument.value,
-				pugData.value.html,
-				pugData.value.mapper,
+				templateData.value.html,
+				templateData.value.htmlToTemplate,
 			);
 			sourceMap.add({
 				data: undefined,

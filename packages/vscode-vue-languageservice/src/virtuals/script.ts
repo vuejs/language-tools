@@ -7,6 +7,7 @@ import { SearchTexts } from './common';
 import { getCheapTsService } from '../globalServices';
 import * as ts from 'typescript';
 import * as upath from 'upath';
+import { transformVueHtml } from '../utils/vueHtmlConverter';
 
 export let rfc: '#182' | '#222' = '#222';
 export function setScriptSetupRfc(_rfc: string) {
@@ -21,6 +22,7 @@ export function useScriptSetupGen(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,
+	html: Ref<string | undefined>,
 ) {
 	let version = 0;
 	const scriptData = computed(() => {
@@ -56,6 +58,61 @@ export function useScriptSetupGen(
 		if (scriptSetup.value && scriptSetupData.value) {
 			const vueDoc = getUnreactiveDoc();
 			return genScriptSetup(vueDoc.uri, scriptSetup.value.content, scriptSetup.value.setup, scriptSetupData.value);
+		}
+	});
+	const scriptForSuggestion = computed(() => {
+		if (!scriptSetup.value) return;
+
+		let code = '';
+		let scriptRange: MapedRange | undefined;
+		let scriptSetupRange: MapedRange | undefined;
+
+		if (script.value) {
+			scriptRange = addCode(script.value.content);
+			code += '\n';
+		}
+		if (scriptSetup.value && scriptSetupData.value) {
+			let noDollarCode = scriptSetup.value.content;
+			for (const dollar of scriptSetupData.value.dollars) {
+				noDollarCode = noDollarCode.substring(0, dollar) + ' ' + noDollarCode.substring(dollar + 1); // replace '$'
+			}
+			for (const label of scriptSetupData.value.labels) {
+				noDollarCode = noDollarCode.substring(0, label.label.start) + 'let' + noDollarCode.substring(label.label.end).replace(':', ' '); // replace 'ref:'
+				if (label.binarys.length) {
+					const start = label.binarys[0];
+					const end = label.binarys[label.binarys.length - 1];
+					if (start.parent.start !== start.left.start) {
+						noDollarCode = noDollarCode.substring(0, start.parent.start) + ' '.repeat(start.left.start - start.parent.start) + noDollarCode.substring(start.left.start); // replace '('
+					}
+					const endOffset = (end.right ?? end.left).end;
+					if (end.parent.end !== endOffset) {
+						noDollarCode = noDollarCode.substring(0, endOffset) + ' '.repeat(end.parent.end - endOffset) + noDollarCode.substring(end.parent.end); // replace ')'
+					}
+				}
+			}
+			scriptSetupRange = addCode(noDollarCode);
+
+			if (html.value) {
+				const interpolations = transformVueHtml(html.value);
+				code += '{\n';
+				code += interpolations.textWithoutSlots;
+				code += '}\n';
+			}
+		}
+
+		return {
+			code,
+			scriptRange,
+			scriptSetupRange,
+		}
+
+		function addCode(str: string) {
+			const start = code.length;
+			code += str;
+			return {
+				start,
+				end: code.length
+			};
 		}
 	});
 	const docGen = computed(() => {
@@ -163,6 +220,18 @@ export function useScriptSetupGen(
 		const uri = `${vueDoc.uri}.__VLS_script.${lang}`;
 
 		return TextDocument.create(uri, syntaxToLanguageId(lang), version++, docGen.value.code);
+	});
+	const textDocumentForSuggestion = computed(() => {
+		if (!scriptForSuggestion.value) return;
+
+		const vueDoc = getUnreactiveDoc();
+		// TODO
+		const lang = scriptSetup.value && scriptSetup.value.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang)
+			: script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang)
+				: getValidScriptSyntax('js')
+		const uri = `${vueDoc.uri}.__VLS_script.suggestion.${lang}`;
+
+		return TextDocument.create(uri, syntaxToLanguageId(lang), version++, scriptForSuggestion.value.code);
 	});
 	const sourceMap = computed(() => {
 		if (!docGen.value) return;
@@ -320,6 +389,48 @@ export function useScriptSetupGen(
 
 		return sourceMap;
 	});
+	const sourceMapForSuggestion = computed(() => {
+		if (!scriptForSuggestion.value) return;
+		if (!textDocumentForSuggestion.value) return;
+
+		const vueDoc = getUnreactiveDoc();
+		const sourceMap = new TsSourceMap(vueDoc, textDocumentForSuggestion.value, false, { foldingRanges: false, formatting: false });
+
+		if (script.value && scriptForSuggestion.value.scriptRange) {
+			sourceMap.add({
+				data: {
+					vueTag: 'script',
+					capabilities: {
+						diagnostic: true,
+					},
+				},
+				mode: MapedMode.Offset,
+				sourceRange: {
+					start: script.value.loc.start,
+					end: script.value.loc.end,
+				},
+				targetRange: scriptForSuggestion.value.scriptRange,
+			});
+		}
+		if (scriptSetup.value && scriptForSuggestion.value.scriptSetupRange) {
+			sourceMap.add({
+				data: {
+					vueTag: 'scriptSetup',
+					capabilities: {
+						diagnostic: true,
+					},
+				},
+				mode: MapedMode.Offset,
+				sourceRange: {
+					start: scriptSetup.value.loc.start,
+					end: scriptSetup.value.loc.end,
+				},
+				targetRange: scriptForSuggestion.value.scriptSetupRange,
+			});
+		}
+
+		return sourceMap;
+	});
 	const mirrorsSourceMap = computed(() => {
 		const doc = shadowTsTextDocument.value ?? textDocument.value;
 		if (scriptSetupGenResult.value && doc) {
@@ -383,12 +494,15 @@ export function useScriptSetupGen(
 	});
 
 	return {
+		scriptForSuggestion,
 		genResult: scriptSetupGenResult,
 		textDocument,
 		sourceMap,
 		mirrorsSourceMap,
 		shadowTsTextDocument,
 		shadowTsSourceMap,
+		textDocumentForSuggestion,
+		sourceMapForSuggestion,
 	};
 }
 
@@ -724,7 +838,7 @@ function genScriptSetup(
 					else {
 						genCode += `__VLS_refs_${prop.text}`;
 					}
-					genCode += `); ${prop.text}; // ignore unused\n`;
+					genCode += `);\n`;
 
 					genCode += `const `;
 					const rightRange = {
@@ -754,7 +868,7 @@ function genScriptSetup(
 					else {
 						genCode += `__VLS_refs_${prop.text}`;
 					}
-					genCode += `);${prop.inRoot ? ` $${prop.text}; // ignore unused\n` : '\n'}`;
+					genCode += `);\n`;
 					mirrors.push({
 						left: leftRange,
 						right: rightRange,
@@ -1133,6 +1247,7 @@ function getScriptSetupData(sourceCode: string) {
 		start: number,
 		end: number,
 	}[] = [];
+	const dollars: number[] = [];
 
 	// TODO: use sourceFile.update()
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
@@ -1264,6 +1379,7 @@ function getScriptSetupData(sourceCode: string) {
 		declares,
 		refCalls,
 		shorthandPropertys,
+		dollars,
 	};
 
 	function getStartEnd(node: ts.Node) {
@@ -1276,6 +1392,12 @@ function getScriptSetupData(sourceCode: string) {
 		};
 	}
 	function deepLoop(node: ts.Node, parent: ts.Node, inRoot: boolean) {
+		if (
+			ts.isIdentifier(node)
+			&& node.getText(scriptAst).startsWith('$')
+		) {
+			dollars.push(node.getStart(scriptAst));
+		}
 		if (
 			ts.isLabeledStatement(node)
 			&& node.label.getText(scriptAst) === 'ref'

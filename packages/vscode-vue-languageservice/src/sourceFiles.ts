@@ -17,7 +17,7 @@ import * as globalServices from './globalServices';
 import * as prettyhtml from '@starptech/prettyhtml';
 import { IDescriptor, ITemplateScriptData } from './types';
 import { SearchTexts } from './virtuals/common';
-import { rfc, useScriptSetupGen } from './virtuals/script';
+import { useScriptSetupGen } from './virtuals/script';
 import { useScriptFormat } from './virtuals/script.raw';
 import { useScriptMain } from './virtuals/main';
 import { useTemplateRaw } from './virtuals/template.raw';
@@ -83,26 +83,42 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		return {};
 	});
+	const templateData = computed<undefined | {
+		html?: string,
+		htmlToTemplate?: (start: number, end: number) => number | undefined,
+	}>(() => {
+		if (pugData.value) {
+			return {
+				html: pugData.value.html,
+				htmlToTemplate: pugData.value.mapper,
+			}
+		}
+		if (descriptor.template) {
+			return {
+				html: descriptor.template.content,
+			}
+		}
+	});
 	const vueHtmlDocument = computed(() => {
 		return globalServices.html.parseHTMLDocument(vueDoc.value);
 	});
 
 	// virtual scripts
 	const _virtualStyles = useStylesRaw(tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles));
-	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), pugData);
+	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), templateData);
 	const virtualTemplateGen = useTemplateScript(
 		untrack(() => vueDoc.value),
 		computed(() => descriptor.template),
 		templateScriptData,
 		_virtualStyles.textDocuments,
 		_virtualStyles.sourceMaps,
-		pugData,
+		templateData,
 	);
 	const virtualStyles = {
 		textDocuments: computed(() => [virtualTemplateGen.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(notEmpty)),
 		sourceMaps: computed(() => [virtualTemplateGen.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
 	};
-	const virtualScriptGen = useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup));
+	const virtualScriptGen = useScriptSetupGen(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
 	const virtualScriptRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.script));
 	const virtualScriptSetupRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
 	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
@@ -111,6 +127,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	const tsSourceMaps = computed(() => {
 		const result = [
 			virtualScriptGen.sourceMap.value,
+			virtualScriptGen.sourceMapForSuggestion.value,
 			virtualScriptGen.shadowTsSourceMap.value,
 			virtualScriptMain.sourceMap.value,
 			virtualTemplateGen.sourceMap.value,
@@ -121,6 +138,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		const docs = new Map<string, TextDocument>();
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
+		if (virtualScriptGen.textDocumentForSuggestion.value)
+			docs.set(virtualScriptGen.textDocumentForSuggestion.value.uri, virtualScriptGen.textDocumentForSuggestion.value);
 		if (virtualScriptGen.shadowTsTextDocument.value)
 			docs.set(virtualScriptGen.shadowTsTextDocument.value.uri, virtualScriptGen.shadowTsTextDocument.value);
 		if (virtualScriptMain.textDocument.value)
@@ -369,7 +388,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		let scriptTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
 			[useScriptValidation(virtualScriptGen.textDocument, 1), [], 0],
 			[useScriptValidation(virtualScriptGen.textDocument, 2), [], 0],
-			[useScriptValidation(virtualScriptGen.textDocument, 3), [], 0],
+			[useScriptValidation(computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), [], 0],
 		];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>, withSideEffect = true) => {
@@ -673,44 +692,42 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		function toTsSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
 			const result: Diagnostic[] = [];
 			for (const error of errors) {
-				if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
-					let found = false;
+				let found = false;
+				for (const sourceMap of sourceMaps) {
+					if (sourceMap.targetDocument.uri !== virtualScriptUri)
+						continue;
+					const vueLoc = sourceMap.targetToSource(error.range);
+					if (!vueLoc || !vueLoc.maped.data.capabilities.diagnostic)
+						continue;
+					result.push({
+						...error,
+						range: vueLoc.range,
+					});
+					found = true;
+				}
+				if (!found) { // patching for ref sugar
 					for (const sourceMap of sourceMaps) {
 						if (sourceMap.targetDocument.uri !== virtualScriptUri)
 							continue;
-						const vueLoc = sourceMap.targetToSource(error.range);
-						if (!vueLoc || !vueLoc.maped.data.capabilities.diagnostic)
+						const vueLocStart = sourceMap.targetToSource({
+							start: error.range.start,
+							end: error.range.start,
+						});
+						const vueLocEnd = sourceMap.targetToSource({
+							start: error.range.end,
+							end: error.range.end,
+						});
+						if (!vueLocStart || !vueLocStart.maped.data.capabilities.diagnostic)
+							continue;
+						if (!vueLocEnd || !vueLocEnd.maped.data.capabilities.diagnostic)
 							continue;
 						result.push({
 							...error,
-							range: vueLoc.range,
+							range: {
+								start: vueLocStart.range.start,
+								end: vueLocEnd.range.start,
+							},
 						});
-						found = true;
-					}
-					if (!found) { // patching for ref sugar
-						for (const sourceMap of sourceMaps) {
-							if (sourceMap.targetDocument.uri !== virtualScriptUri)
-								continue;
-							const vueLocStart = sourceMap.targetToSource({
-								start: error.range.start,
-								end: error.range.start,
-							});
-							const vueLocEnd = sourceMap.targetToSource({
-								start: error.range.end,
-								end: error.range.end,
-							});
-							if (!vueLocStart || !vueLocStart.maped.data.capabilities.diagnostic)
-								continue;
-							if (!vueLocEnd || !vueLocEnd.maped.data.capabilities.diagnostic)
-								continue;
-							result.push({
-								...error,
-								range: {
-									start: vueLocStart.range.start,
-									end: vueLocEnd.range.start,
-								},
-							});
-						}
 					}
 				}
 			}

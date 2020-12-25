@@ -1,4 +1,3 @@
-import { Diagnostic } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
@@ -9,7 +8,6 @@ import { transformVueHtml } from '../utils/vueHtmlConverter';
 import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as css from 'vscode-css-languageservice';
-import * as vueDom from '@vue/compiler-dom';
 import { SearchTexts } from './common';
 
 export function useTemplateScript(
@@ -27,27 +25,24 @@ export function useTemplateScript(
 		scoped: boolean;
 	}[]>,
 	styleSourceMaps: Ref<CssSourceMap[]>,
-	pugData: Ref<{
-		html: string;
-		mapper: (htmlStart: number, htmlEnd: number) => number | undefined;
-		error?: undefined;
-	} | {
-		error: Diagnostic;
-		html?: undefined;
-		mapper?: undefined;
-	} | {
-		html?: undefined;
-		mapper?: undefined;
-		error?: undefined;
-	}>,
+	templateData: Ref<{
+		html?: string,
+		htmlToTemplate?: (start: number, end: number) => number | undefined,
+	} | undefined>,
 ) {
 	let version = 0;
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = uriToFsPath(_vueDoc.uri);
 	const data = computed(() => {
-		const interpolations = getInterpolations();
-		if (!interpolations) return;
+		if (!templateData.value?.html) {
+			return;
+		}
+		const interpolations = transformVueHtml(
+			templateData.value.html,
+			templateScriptData.components,
+			templateData.value.htmlToTemplate,
+		);
 
 		let text = [
 			(templateScriptData.scriptSetupExports.length
@@ -244,29 +239,6 @@ export function useTemplateScript(
 				if (!result.get(uri)!.has(className))
 					result.get(uri)!.set(className, new Set());
 				result.get(uri)!.get(className)?.add(range);
-			}
-		}
-		function getInterpolations() {
-			const html = pugData.value?.html ?? template.value?.content;
-			if (!html) return;
-			try {
-				const ast = vueDom.compile(html, { onError: () => { } }).ast;
-				return transformVueHtml(
-					ast,
-					templateScriptData.components,
-					pugData.value?.mapper,
-				);
-			}
-			catch (err) {
-				return {
-					text: '',
-					mappings: [],
-					cssCode: '',
-					cssMappings: [],
-					tags: new Set<string>(),
-					formatCode: '',
-					formapMappings: [],
-				};
 			}
 		}
 	});

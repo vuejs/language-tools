@@ -2,6 +2,7 @@ import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compil
 import { TransformContext, transformOn } from '@vue/compiler-core';
 import { MapedMode, TsMappingData, Mapping, MapedNodeTypes, MapedRange } from './sourceMaps';
 import { camelize, hyphenate } from '@vue/shared';
+import * as vueDom from '@vue/compiler-dom';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
@@ -14,7 +15,23 @@ const capabilitiesSet = {
 	referencesOnly: { basic: false, diagnostic: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
 
-export function transformVueHtml(node: RootNode, componentNames: string[], pugMapper?: (htmlStart: number, htmlEnd: number) => number | undefined) {
+export function transformVueHtml(html: string, componentNames: string[] = [], htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined) {
+	let node: vueDom.RootNode;
+	try {
+		node = vueDom.compile(html, { onError: () => { } }).ast;
+	}
+	catch {
+		return {
+			textWithoutSlots: '',
+			text: '',
+			mappings: [],
+			cssCode: '',
+			cssMappings: [],
+			tags: new Set<string>(),
+			formatCode: '',
+			formapMappings: [],
+		};
+	}
 	const mappings: Mapping<TsMappingData>[] = [];
 	const formapMappings: Mapping<TsMappingData>[] = [];
 	const cssMappings: Mapping<undefined>[] = [];
@@ -35,6 +52,8 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 	let formatCode = '';
 	parseNode(node, []);
 
+	const textWithoutSlots = text;
+
 	text += `export default {\n`
 	for (const [name, slot] of slots) {
 		mappingObjectProperty(MapedNodeTypes.Slot, name, capabilitiesSet.slotName, slot.loc);
@@ -44,6 +63,7 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 
 	return {
 		mappings,
+		textWithoutSlots,
 		text,
 		cssMappings,
 		cssCode,
@@ -51,6 +71,7 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 		formatCode,
 		formapMappings,
 	};
+
 
 	function getComponentName(tagName: string) {
 		return componentsMap.get(tagName) ?? tagName;
@@ -101,8 +122,8 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 							start: prop.arg.loc.start.offset + start,
 							end: prop.arg.loc.start.offset + end,
 						};
-						if (pugMapper) {
-							const newStart = pugMapper(sourceRange.start, sourceRange.end);
+						if (htmlToTemplate) {
+							const newStart = htmlToTemplate(sourceRange.start, sourceRange.end);
 							if (newStart === undefined) continue;
 							const offset = newStart - sourceRange.start;
 							sourceRange.start += offset;
@@ -384,7 +405,7 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 							});
 							text += `;\n`
 						}
-						if (!node.isSelfClosing && !pugMapper) { // end tag
+						if (!node.isSelfClosing && !htmlToTemplate) { // end tag
 							text += `__VLS_components`
 							mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
 								start: node.loc.end.offset - 1 - node.tag.length,
@@ -782,8 +803,8 @@ export function transformVueHtml(node: RootNode, componentNames: string[], pugMa
 		if (addCode) text += `'`;
 	}
 	function mapping(type: MapedNodeTypes | undefined, mapCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRange: { start: number, end: number }, addCode = true, formatWrapper?: [string, string]) {
-		if (pugMapper) {
-			const newStart = pugMapper(sourceRange.start, sourceRange.end);
+		if (htmlToTemplate) {
+			const newStart = htmlToTemplate(sourceRange.start, sourceRange.end);
 			if (newStart !== undefined) {
 				const offset = newStart - sourceRange.start;
 				sourceRange = {
