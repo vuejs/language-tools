@@ -1,3 +1,7 @@
+### 0.18.14
+
+- fix: `<script setup>` variables should report unused when use as component
+
 ### 0.18.13
 
 - feat: unused variables report for `<script setup>`

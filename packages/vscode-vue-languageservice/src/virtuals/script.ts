@@ -93,7 +93,7 @@ export function useScriptSetupGen(
 			scriptSetupRange = addCode(noDollarCode);
 
 			if (html.value) {
-				const interpolations = transformVueHtml(html.value);
+				const interpolations = transformVueHtml(html.value, [], undefined, scriptSetupData.value.exposeVarNames.map(range => scriptSetup.value?.content.substring(range.start, range.end) ?? ''));
 				code += '{\n';
 				code += interpolations.textWithoutSlots;
 				code += '}\n';

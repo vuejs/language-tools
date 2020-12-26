@@ -15,7 +15,7 @@ const capabilitiesSet = {
 	referencesOnly: { basic: false, diagnostic: false, references: true, rename: false, completion: false, semanticTokens: false },
 }
 
-export function transformVueHtml(html: string, componentNames: string[] = [], htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined) {
+export function transformVueHtml(html: string, componentNames: string[] = [], htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined, scriptSetupVars?: string[]) {
 	let node: vueDom.RootNode;
 	try {
 		node = vueDom.compile(html, { onError: () => { } }).ast;
@@ -88,6 +88,15 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 			text += `{\n`;
 			{
 				tags.add(getComponentName(node.tag));
+
+				if (scriptSetupVars) {
+					for (const scriptSetupVar of scriptSetupVars) {
+						if (node.tag === scriptSetupVar || node.tag === hyphenate(scriptSetupVar)) {
+							text += scriptSetupVar + `; // ignore unused in script setup\n`;
+						}
+					}
+				}
+
 				writeInlineCss(node);
 				writeImportSlots(node);
 				writeVshow(node);
