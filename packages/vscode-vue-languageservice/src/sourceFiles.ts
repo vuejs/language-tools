@@ -81,7 +81,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				};
 			}
 		}
-		return {};
 	});
 	const templateData = computed<undefined | {
 		html?: string,
@@ -448,10 +447,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			});
 			const pugErrors = computed(() => {
 				const result: Diagnostic[] = [];
-				if (pugData.value.error) {
+				if (pugData.value?.error) {
 					result.push(pugData.value.error);
 				}
-				if (pugData.value.html && virtualTemplateRaw.textDocument.value) {
+				if (pugData.value?.html && virtualTemplateRaw.textDocument.value) {
 					const htmlDoc = TextDocument.create('', 'html', 0, pugData.value.html);
 					const vueCompileErrors = getVueCompileErrors(htmlDoc);
 					const pugDocRange = {

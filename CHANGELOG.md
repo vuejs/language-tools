@@ -1,3 +1,7 @@
+### 0.18.15
+
+- fix: `<script setup>` unused variables report broke with html
+
 ### 0.18.14
 
 - fix: `<script setup>` variables should report unused when use as component
