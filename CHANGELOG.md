@@ -1,3 +1,9 @@
+### 0.18.16
+
+- feat: codeLens for `app.component(...)`
+- feat: codeLens for slots
+- fix: css codeLens location incorrect corner case
+
 ### 0.18.15
 
 - fix: `<script setup>` unused variables report broke with html
