@@ -394,6 +394,7 @@ function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
 	const result = new Map<string, Set<[number, number]>>();
 	const cssLanguageService = globalServices.getCssService(doc.languageId);
 	const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
+	const usedNodes = new Set<number>();
 	for (const s of symbols) {
 		if (s.kind === css.SymbolKind.Class) {
 			const nodeText = doc.getText(s.location.range);
@@ -412,6 +413,8 @@ function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
 							result.set(className_1, new Set());
 						}
 						const startIndex = doc.offsetAt(s.location.range.start) + _className_2.index - 1;
+						if (usedNodes.has(startIndex)) continue;
+						usedNodes.add(startIndex);
 						result.get(className_1)!.add([startIndex, startIndex + className_1.length + 1]);
 						break;
 					}
