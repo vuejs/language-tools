@@ -8,6 +8,12 @@ Volar is a Language Support plugin built specifically for Vue 3. This is based o
 
 Roadmap: https://github.com/johnsoncodehk/volar/issues/28
 
+## Helping
+
+I know setup TS to totally working is not easy (especially for new users), so I create a discord server. If you don't want to open a issue, you can ask in server anytime.
+
+https://discord.gg/5bnSSSSBbK
+
 ## Using
 
 <details>
