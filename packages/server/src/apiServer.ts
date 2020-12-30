@@ -301,7 +301,7 @@ async function onInitialized() {
 	connection.client.register(RenameRequest.type, vueOnly);
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
 	connection.client.register(CodeLensRequest.type, {
-		documentSelector: vueOnly.documentSelector,
+		documentSelector: both.documentSelector,
 		resolveProvider: true,
 	});
 	connection.client.register(SignatureHelpRequest.type, {

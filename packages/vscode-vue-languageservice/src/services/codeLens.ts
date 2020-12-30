@@ -6,9 +6,34 @@ import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { rfc } from '../virtuals/script';
+import { TsSourceMap } from '../utils/sourceMaps';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSourceMaps: () => Map<string, { sourceMap: TsSourceMap }>) {
 	return (document: TextDocument) => {
+
+		const globalTsSourceMaps = getGlobalTsSourceMaps?.();
+		const globalTsSourceMap = globalTsSourceMaps?.get(document.uri);
+		
+		if (globalTsSourceMap) {
+			const result: CodeLens[] = [];
+			for (const maped of globalTsSourceMap.sourceMap) {
+				if (!maped.data.capabilities.referencesCodeLens) continue;
+				const codeLens: CodeLens = {
+					range: {
+						start: document.positionAt(maped.sourceRange.start),
+						end: document.positionAt(maped.sourceRange.end),
+					},
+					data: {
+						uri: document.uri,
+						tsUri: globalTsSourceMap.sourceMap.targetDocument.uri,
+						tsOffset: maped.targetRange.start,
+					},
+				};
+				result.push(codeLens);
+			}
+			return result;
+		}
+
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 

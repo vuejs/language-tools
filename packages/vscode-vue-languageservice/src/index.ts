@@ -170,6 +170,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 						vueTag: '',
 						capabilities: {
 							references: true,
+							referencesCodeLens: true,
 							// TODO: rename
 						},
 					},
@@ -213,12 +214,12 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		doExecuteCommand: apiHook(executeCommand.register(sourceFiles, tsLanguageService), false),
 		doComplete: apiHook(completions.register(sourceFiles, tsLanguageService), false),
 		doCompletionResolve: apiHook(completionResolve.register(sourceFiles, tsLanguageService), false),
-		doCodeLensResolve: apiHook(codeLensResolve.register(sourceFiles, tsLanguageService), false),
+		doCodeLensResolve: apiHook(codeLensResolve.register(sourceFiles, tsLanguageService, () => _globalComponentCallsGen), false),
 		getEmbeddedDocument: apiHook(embeddedDocument.register(sourceFiles), false),
 		getSignatureHelp: apiHook(signatureHelp.register(sourceFiles, tsLanguageService), false),
 		getSelectionRanges: apiHook(selectionRanges.register(sourceFiles, tsLanguageService), false),
 		getColorPresentations: apiHook(colorPresentations.register(sourceFiles), false),
-		getCodeLens: apiHook(codeLens.register(sourceFiles), false),
+		getCodeLens: apiHook(codeLens.register(sourceFiles, () => _globalComponentCallsGen), false),
 		findDocumentHighlights: apiHook(documentHighlight.register(sourceFiles, tsLanguageService), false),
 		findDocumentSymbols: apiHook(documentSymbol.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),

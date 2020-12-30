@@ -15,8 +15,6 @@ import * as findReferences from './references';
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	const _findReferences = findReferences.register(sourceFiles, tsLanguageService);
 	return async (document: TextDocument, command: string, args: any[] | undefined, connection: Connection) => {
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return;
 
 		if (command === Commands.SHOW_REFERENCES && args) {
 			const uri = args[0];
@@ -24,6 +22,10 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const locs = args[2];
 			connection.sendNotification(ShowReferencesNotification.type, { uri, position: pos, references: locs });
 		}
+
+		const sourceFile = sourceFiles.get(document.uri);
+		if (!sourceFile) return;
+
 		if (command === Commands.SWITCH_REF_SUGAR) {
 			const desc = sourceFile.getDescriptor();
 			if (!desc.scriptSetup) return;
