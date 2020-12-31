@@ -410,24 +410,24 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 						{ // start tag
 							text += `__VLS_components`
 							mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
-								start: node.loc.start.offset + 1,
-								end: node.loc.start.offset + 1 + node.tag.length,
+								start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+								end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 							});
 							text += `;\n`
 						}
 						if (!node.isSelfClosing && !htmlToTemplate) { // end tag
 							text += `__VLS_components`
 							mappingPropertyAccess(MapedNodeTypes.ElementTag, getComponentName(node.tag), capabilitiesSet.htmlTagOrAttr, {
-								start: node.loc.end.offset - 1 - node.tag.length,
-								end: node.loc.end.offset - 1,
+								start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
+								end: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
 							});
 							text += `;\n`
 						}
 
 						text += `const `;
 						mapping(undefined, varName, MapedMode.Gate, capabilitiesSet.diagnosticOnly, {
-							start: node.loc.start.offset + 1,
-							end: node.loc.start.offset + 1 + node.tag.length,
+							start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+							end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 						});
 						text += `: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`;
 					}
@@ -618,8 +618,8 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 				slots.set(slotName, {
 					varName: varSlot,
 					loc: {
-						start: node.loc.start.offset + 1,
-						end: node.loc.start.offset + 1 + node.tag.length,
+						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 					},
 				});
 
