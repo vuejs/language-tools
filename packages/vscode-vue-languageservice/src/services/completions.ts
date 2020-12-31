@@ -48,6 +48,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult.items.length) return cssResult;
 
+		const vueResult = getVueResult(sourceFile);
+		if (vueResult?.items.length) return vueResult;
+
 		const emmetResult = await getEmmetResult();
 		if (emmetResult?.items.length) return emmetResult;
 
@@ -302,6 +305,64 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				}
 			}
 			return result;
+		}
+		function getVueResult(sourceFile: SourceFile) {
+			const embededDoc = getEmbeddedDoc(document, { start: position, end: position });
+			if (embededDoc) {
+				let syntax = languageIdToSyntax(embededDoc.document.languageId);
+				if (syntax === 'vue') {
+					const dataProvider = html.newHTMLDataProvider(document.uri, {
+						version: 1.1,
+						tags: [
+							{
+								name: 'template',
+								attributes: [
+									{
+										name: 'lang',
+										values: [
+											{ name: 'html' },
+											{ name: 'pug' },
+										],
+									},
+								],
+							},
+							{
+								name: 'script',
+								attributes: [
+									{
+										name: 'lang',
+										values: [
+											{ name: 'js' },
+											{ name: 'ts' },
+											{ name: 'jsx' },
+											{ name: 'tsx' },
+										],
+									},
+									{ name: 'setup' },
+								],
+							},
+							{
+								name: 'style',
+								attributes: [
+									{
+										name: 'lang',
+										values: [
+											{ name: 'css' },
+											{ name: 'scss' },
+											{ name: 'less' },
+										],
+									},
+									{ name: 'scoped' },
+									{ name: 'module' },
+								],
+							},
+						],
+					});
+					globalServices.html.setDataProviders(false, [dataProvider]);
+					const vueHtmlDoc = sourceFile.getVueHtmlDocument();
+					return globalServices.html.doComplete(document, position, vueHtmlDoc);
+				}
+			}
 		}
 		async function getEmmetResult() {
 			if (!getEmmetConfig) return;

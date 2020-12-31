@@ -116,6 +116,8 @@ export function createLanguageServiceHost(
 
 		onParsedCommandLineUpdate();
 		const tsConfigWatcher = ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
+			console.log(tsConfig);
+			
 			if (eventKind === ts.FileWatcherEventKind.Changed) {
 				parsedCommandLine = createParsedCommandLine();
 				onParsedCommandLineUpdate();
