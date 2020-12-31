@@ -36,7 +36,7 @@ export function useScriptMain(
 					`export var __VLS_component = defineComponent({});`,
 				]),
 			`declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
+			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents${hasScript ? ' & __VLS_PickComponents<typeof __VLS_ctx>' : '/* no script */'};`,
 			hasScript ? `__VLS_ctx.${SearchTexts.Context};` : `// no script`,
 			`__VLS_Components.${SearchTexts.Components};`,
 			`__VLS_options.setup().${SearchTexts.SetupReturns};`,
