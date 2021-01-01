@@ -38,6 +38,7 @@ connection.onInitialized(onInitialized);
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 connection.listen();
+let host: ReturnType<typeof createLanguageServiceHost>;
 
 const vueOnly: TextDocumentRegistrationOptions = {
 	documentSelector: [{ language: 'vue' }],
@@ -57,7 +58,7 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, async (uri: string) => {
+	host = createLanguageServiceHost(connection, documents, rootPath, async (uri: string) => {
 		return await connection.sendRequest(DocumentVersionRequest.type, { uri });
 	}, async () => {
 		await connection.sendNotification(SemanticTokensChangedNotification.type);
@@ -141,9 +142,10 @@ function initLanguageService(rootPath: string) {
 	});
 	connection.onRequest(SemanticTokenLegendRequest.type, getSemanticTokensLegend);
 }
-function onInitialized() {
+async function onInitialized() {
 	connection.client.register(DocumentHighlightRequest.type, vueOnly);
 	connection.client.register(DocumentSymbolRequest.type, vueOnly);
 	connection.client.register(DocumentLinkRequest.type, vueOnly);
 	connection.client.register(DocumentColorRequest.type, vueOnly);
+	host.onConnectionInited();
 }

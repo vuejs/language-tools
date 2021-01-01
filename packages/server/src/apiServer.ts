@@ -45,6 +45,7 @@ export const connection = createConnection(ProposedFeatures.all);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
+let host: ReturnType<typeof createLanguageServiceHost>;
 
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
@@ -107,7 +108,7 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath);
+	host = createLanguageServiceHost(connection, documents, rootPath);
 
 	// custom requests
 	connection.onNotification(RestartServerNotification.type, async () => {
@@ -322,4 +323,5 @@ async function onInitialized() {
 		triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
 		resolveProvider: true,
 	});
+	host.onConnectionInited();
 }

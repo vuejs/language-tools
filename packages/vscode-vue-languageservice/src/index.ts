@@ -52,7 +52,7 @@ export function createNoStateLanguageService() {
 		getFoldingRanges: foldingRanges.register(),
 	}
 }
-export function createLanguageService(vueHost: ts.LanguageServiceHost) {
+export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?: (progress: number) => void) {
 
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
@@ -305,8 +305,14 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 				}
 			}
 
-			unsetSourceFiles(removes.map(fsPathToUri));
-			updateSourceFiles(adds.concat(updates).map(fsPathToUri), shouldUpdateTemplateScript)
+			const finalUpdates = adds.concat(updates);
+
+			if (removes.length) {
+				unsetSourceFiles(removes.map(fsPathToUri));
+			}
+			if (finalUpdates.length) {
+				updateSourceFiles(finalUpdates.map(fsPathToUri), shouldUpdateTemplateScript)
+			}
 		}
 		else if (shouldUpdateTemplateScript && templateScriptUpdateUris.size) {
 			updateSourceFiles([], shouldUpdateTemplateScript)
@@ -445,8 +451,16 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
 		let vueTemplageScriptUpdated = false;
+		let updateNums = uris.length;
+		let currentNums = 0;
+		if (shouldUpdateTemplateScript) {
+			updateNums += templateScriptUpdateUris.size;
+		}
 
 		for (const uri of uris) {
+			onUpdate?.(currentNums / updateNums);
+			currentNums++;
+
 			const sourceFile = sourceFiles.get(uri);
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
@@ -479,6 +493,9 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 			}
 
 			for (const uri of templateScriptUpdateUris) {
+				onUpdate?.(currentNums / updateNums);
+				currentNums++;
+
 				const sourceFile = sourceFiles.get(uri);
 				if (!sourceFile) continue;
 				if (sourceFile.updateTemplateScript()) {
@@ -490,6 +507,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost) {
 		if (vueTemplageScriptUpdated) {
 			tsProjectVersion.value++;
 		}
+		onUpdate?.(1);
 	}
 	function unsetSourceFiles(uris: string[]) {
 		let count = 0;

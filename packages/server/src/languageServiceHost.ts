@@ -1,9 +1,9 @@
 import * as ts from 'typescript';
 import * as upath from 'upath';
-import { LanguageService, createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
+import { createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
 import { uriToFsPath, fsPathToUri, sleep, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection, Disposable } from 'vscode-languageserver/node';
+import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import type { TextDocuments } from 'vscode-languageserver/node';
 
 export function createLanguageServiceHost(
@@ -14,16 +14,12 @@ export function createLanguageServiceHost(
 	_onProjectFilesUpdate?: () => void,
 ) {
 	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
+	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
+	const languageServices = new Map<string, ReturnType<typeof createLs>>();
+	let connectionInited = false;
+
 	let tsConfigs = ts.sys.readDirectory(rootPath, searchFiles, undefined, ['**/*']);
 	tsConfigs = tsConfigs.filter(tsConfig => searchFiles.includes(upath.basename(tsConfig)));
-	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
-
-	const languageServices = new Map<string, {
-		languageService: LanguageService,
-		getParsedCommandLine: () => ts.ParsedCommandLine,
-		dispose: () => void,
-	}>();
-
 	for (const tsConfig of tsConfigs) {
 		onTsConfigChanged(tsConfig);
 	}
@@ -39,8 +35,15 @@ export function createLanguageServiceHost(
 		best,
 		all,
 		restart,
+		onConnectionInited,
 	};
 
+	async function onConnectionInited() {
+		connectionInited = true;
+		for (const [_, service] of languageServices) {
+			service.prepareNextProgress();
+		}
+	}
 	function onTsConfigChanged(tsConfig: string) {
 		if (languageServices.has(tsConfig)) {
 			languageServices.get(tsConfig)?.dispose();
@@ -57,14 +60,14 @@ export function createLanguageServiceHost(
 		}
 	}
 	function restart() {
+		for (const doc of documents.all()) {
+			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] })
+		}
+		for (const tsConfig of [...languageServices.keys()]) {
+			onTsConfigChanged(tsConfig);
+		}
 		for (const [tsConfig, service] of languageServices) {
-			for (const doc of documents.all()) {
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] })
-			}
-			service.dispose();
-			const newLs = createLs(tsConfig);
-			languageServices.set(tsConfig, newLs);
-			newLs.onProjectFilesUpdate([]);
+			service.onProjectFilesUpdate([]);
 		}
 	}
 	function best(uri: string) {
@@ -112,12 +115,23 @@ export function createLanguageServiceHost(
 		let parsedCommandLineUpdateTrigger = false;
 		let parsedCommandLine = createParsedCommandLine();
 		let currentValidation: Promise<void> | undefined;
+		let workDoneProgress: WorkDoneProgressServerReporter | undefined;
 		const fileCurrentReqs = new Map<string, number>();
 		const fileWatchers = new Map<string, ts.FileWatcher>();
 		const scriptVersions = new Map<string, string>();
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const languageServiceHost = createLanguageServiceHost();
-		const vueLanguageService = createLanguageService(languageServiceHost);
+		const vueLanguageService = createLanguageService(languageServiceHost, async p => {
+			if (p === 0) {
+				workDoneProgress?.begin('Initializing Vue language features');
+			}
+			if (p < 1) {
+				workDoneProgress?.report(p * 100);
+			}
+			else {
+				prepareNextProgress();
+			}
+		});
 		const disposables: Disposable[] = [];
 
 		onParsedCommandLineUpdate();
@@ -134,13 +148,22 @@ export function createLanguageServiceHost(
 		disposables.push(documents.onDidChangeContent(change => onDidChangeContent(change.document)));
 		disposables.push(documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] })));
 
+		prepareNextProgress();
+
 		return {
 			languageService: vueLanguageService,
 			getParsedCommandLine: () => parsedCommandLine,
-			dispose: dispose,
+			dispose,
 			onProjectFilesUpdate,
+			prepareNextProgress,
 		};
 
+		async function prepareNextProgress() {
+			workDoneProgress?.done();
+			if (connectionInited) {
+				workDoneProgress = await connection.window.createWorkDoneProgress();
+			}
+		}
 		function createParsedCommandLine() {
 			const parseConfigHost: ts.ParseConfigHost = {
 				...ts.sys,
