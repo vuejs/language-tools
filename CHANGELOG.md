@@ -1,3 +1,11 @@
+### 0.18.17
+
+- feat: server init progress
+- feat: vue block completion
+- fix: tsconfig.json update not working
+- fix: __VLS_GlobalComponents not working if no `<script>` block
+- fix: element tag mapping incorrect corner case
+
 ### 0.18.16
 
 - feat: codeLens for `app.component(...)`
