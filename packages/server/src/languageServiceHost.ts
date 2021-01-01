@@ -16,6 +16,7 @@ export function createLanguageServiceHost(
 	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
 	let tsConfigs = ts.sys.readDirectory(rootPath, searchFiles, undefined, ['**/*']);
 	tsConfigs = tsConfigs.filter(tsConfig => searchFiles.includes(upath.basename(tsConfig)));
+	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 
 	const languageServices = new Map<string, {
 		languageService: LanguageService,
@@ -24,22 +25,12 @@ export function createLanguageServiceHost(
 	}>();
 
 	for (const tsConfig of tsConfigs) {
-		languageServices.set(tsConfig, createLs(tsConfig));
+		onTsConfigChanged(tsConfig);
 	}
 
 	ts.sys.watchDirectory!(rootPath, tsConfig => {
 		if (searchFiles.includes(upath.basename(tsConfig))) {
-			if (ts.sys.fileExists(tsConfig)) {
-				if (!languageServices.has(tsConfig)) {
-					languageServices.set(tsConfig, createLs(tsConfig));
-				}
-			}
-			else {
-				if (languageServices.has(tsConfig)) {
-					languageServices.get(tsConfig)?.dispose();
-					languageServices.delete(tsConfig);
-				}
-			}
+			onTsConfigChanged(tsConfig);
 		}
 	}, true);
 
@@ -50,6 +41,21 @@ export function createLanguageServiceHost(
 		restart,
 	};
 
+	function onTsConfigChanged(tsConfig: string) {
+		if (languageServices.has(tsConfig)) {
+			languageServices.get(tsConfig)?.dispose();
+			tsConfigWatchers.get(tsConfig)?.close();
+			languageServices.delete(tsConfig);
+		}
+		if (ts.sys.fileExists(tsConfig)) {
+			languageServices.set(tsConfig, createLs(tsConfig));
+			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
+				if (eventKind === ts.FileWatcherEventKind.Changed) {
+					onTsConfigChanged(tsConfig);
+				}
+			}));
+		}
+	}
 	function restart() {
 		for (const [tsConfig, service] of languageServices) {
 			for (const doc of documents.all()) {
@@ -115,14 +121,6 @@ export function createLanguageServiceHost(
 		const disposables: Disposable[] = [];
 
 		onParsedCommandLineUpdate();
-		const tsConfigWatcher = ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
-			console.log(tsConfig);
-			
-			if (eventKind === ts.FileWatcherEventKind.Changed) {
-				parsedCommandLine = createParsedCommandLine();
-				onParsedCommandLineUpdate();
-			}
-		});
 		const directoryWatcher = ts.sys.watchDirectory!(upath.dirname(tsConfig), async fileName => {
 			parsedCommandLineUpdateTrigger = true;
 			await sleep(0);
@@ -346,7 +344,6 @@ export function createLanguageServiceHost(
 				fileWatcher.close();
 			}
 			directoryWatcher.close();
-			tsConfigWatcher.close();
 			vueLanguageService.dispose();
 			for (const disposable of disposables) {
 				disposable.dispose();
