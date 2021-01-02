@@ -143,19 +143,6 @@
 						"user-defined"
 					],
 					"description": "Formatter for <template>, <script>, <style> region"
-				},
-				"volar.scriptSetup.supportRfc": {
-					"type": "string",
-					"default": "#222",
-					"enum": [
-						"#182",
-						"#222"
-					],
-					"enumDescriptions": [
-						"SFC Improvements",
-						"New script setup and ref sugar"
-					],
-					"description": "<script setup> support RFC (reload VSCode required)"
 				}
 			}
 		}

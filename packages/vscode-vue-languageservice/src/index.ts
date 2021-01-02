@@ -42,7 +42,6 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 export { triggerCharacter } from './services/completions';
 export * from './utils/sourceMaps';
 export * from './commands';
-export { setScriptSetupRfc } from './virtuals/script';
 
 export function getSemanticTokensLegend() {
 	return semanticTokens.semanticTokenLegend;

@@ -9,15 +9,6 @@ import * as ts from 'typescript';
 import * as upath from 'upath';
 import { transformVueHtml } from '../utils/vueHtmlConverter';
 
-export let rfc: '#182' | '#222' = '#222';
-export function setScriptSetupRfc(_rfc: string) {
-	switch (_rfc) {
-		case '#182':
-		case '#222':
-			rfc = _rfc;
-			break;
-	}
-}
 export function useScriptSetupGen(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
@@ -525,50 +516,45 @@ function genScriptSetup(
 		right: MapedRange,
 	}[] = [];
 	let genCode = `\n/* <script setup> */\n`;
-	if (rfc === '#182') {
-		genCode += `import * as __VLS_exports from './${upath.basename(uri)}.scriptSetup.raw'\n`;
-	}
-	if (rfc === '#222') {
-		let newLinesOnly = originalCode.split('\n').map(line => ' '.repeat(line.length)).join('\n');
-		let importPos = 0;
-		for (const _import of data.imports.sort((a, b) => a.start - b.start)) {
-			addCode(newLinesOnly.substring(importPos, _import.start), { // for auto import
-				capabilities: {},
-				scriptSetupRange: {
-					start: importPos,
-					end: _import.start,
-				},
-				mode: MapedMode.Offset,
-			});
-			addCode(originalCode.substring(_import.start, _import.end), {
-				capabilities: {
-					basic: true,
-					references: true,
-					rename: true,
-					semanticTokens: true,
-					completion: true,
-					diagnostic: true,
-				},
-				scriptSetupRange: {
-					start: _import.start,
-					end: _import.end,
-				},
-				mode: MapedMode.Offset,
-			});
-			sourceCode = replaceStringToEmpty(sourceCode, _import.start, _import.end);
-			importPos = _import.end;
-		}
-		addCode(newLinesOnly.substring(importPos, newLinesOnly.length), { // for auto import
+	let newLinesOnly = originalCode.split('\n').map(line => ' '.repeat(line.length)).join('\n');
+	let importPos = 0;
+	for (const _import of data.imports.sort((a, b) => a.start - b.start)) {
+		addCode(newLinesOnly.substring(importPos, _import.start), { // for auto import
 			capabilities: {},
 			scriptSetupRange: {
 				start: importPos,
-				end: newLinesOnly.length,
+				end: _import.start,
 			},
 			mode: MapedMode.Offset,
 		});
-		for (const _export of data.exportKeywords) {
-			sourceCode = replaceStringToEmpty(sourceCode, _export.start, _export.end);
-		}
+		addCode(originalCode.substring(_import.start, _import.end), {
+			capabilities: {
+				basic: true,
+				references: true,
+				rename: true,
+				semanticTokens: true,
+				completion: true,
+				diagnostic: true,
+			},
+			scriptSetupRange: {
+				start: _import.start,
+				end: _import.end,
+			},
+			mode: MapedMode.Offset,
+		});
+		sourceCode = replaceStringToEmpty(sourceCode, _import.start, _import.end);
+		importPos = _import.end;
+	}
+	addCode(newLinesOnly.substring(importPos, newLinesOnly.length), { // for auto import
+		capabilities: {},
+		scriptSetupRange: {
+			start: importPos,
+			end: newLinesOnly.length,
+		},
+		mode: MapedMode.Offset,
+	});
+	for (const _export of data.exportKeywords) {
+		sourceCode = replaceStringToEmpty(sourceCode, _export.start, _export.end);
 	}
 	if (data.exportDefault) {
 		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.start, data.exportDefault.expression.start);
@@ -642,24 +628,6 @@ function genScriptSetup(
 		}
 		genCode += `\n`;
 		sourceCode = replaceStringToEmpty(sourceCode, d.start, d.end);
-	}
-
-	if (rfc === '#182') {
-		addCode(sourceCode, {
-			scriptSetupRange: {
-				start: 0,
-				end: sourceCode.length,
-			},
-			mode: MapedMode.Offset,
-			capabilities: {
-				basic: true,
-				references: true,
-				diagnostic: true,
-				rename: true,
-				completion: true,
-				semanticTokens: true,
-			},
-		});
 	}
 
 	genCode += `\n`;
@@ -760,206 +728,199 @@ function genScriptSetup(
 	});
 	genCode += `(${setupParams}${SearchTexts.SetupParams}) {\n`;
 
-	if (rfc === '#222') {
-		const labels = data.labels.sort((a, b) => a.start - b.start);
-		let tsOffset = 0;
-		for (const label of labels) {
-			mapSubText(tsOffset, label.start);
-			let first = true;
+	const labels = data.labels.sort((a, b) => a.start - b.start);
+	let tsOffset = 0;
+	for (const label of labels) {
+		mapSubText(tsOffset, label.start);
+		let first = true;
 
-			for (const binary of label.binarys) {
-				if (first) {
-					first = false;
-					genCode += `const `;
-				}
-				else {
-					genCode += `, `;
-				}
+		for (const binary of label.binarys) {
+			if (first) {
+				first = false;
+				genCode += `const `;
+			}
+			else {
+				genCode += `, `;
+			}
 
-				let leftPos = binary.left.start;
-				for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
-					genCode += originalCode.substring(leftPos, prop.start);
-					if (prop.isShortand) {
-						addCode(prop.text, {
-							isNoDollarRef: false,
-							capabilities: { diagnostic: true },
-							scriptSetupRange: prop,
-							mode: MapedMode.Offset,
-						});
-						genCode += `: `;
-					}
-					addCode(`__VLS_refs_${prop.text}`, {
+			let leftPos = binary.left.start;
+			for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
+				genCode += originalCode.substring(leftPos, prop.start);
+				if (prop.isShortand) {
+					addCode(prop.text, {
 						isNoDollarRef: false,
 						capabilities: { diagnostic: true },
 						scriptSetupRange: prop,
-						mode: MapedMode.Gate,
+						mode: MapedMode.Offset,
 					});
-					leftPos = prop.end;
+					genCode += `: `;
 				}
-				genCode += originalCode.substring(leftPos, binary.left.end);
-
-				if (binary.right) {
-					genCode += ` = `;
-					mapSubText(binary.right.start, binary.right.end);
-				}
+				addCode(`__VLS_refs_${prop.text}`, {
+					isNoDollarRef: false,
+					capabilities: { diagnostic: true },
+					scriptSetupRange: prop,
+					mode: MapedMode.Gate,
+				});
+				leftPos = prop.end;
 			}
-			genCode += `;\n`;
+			genCode += originalCode.substring(leftPos, binary.left.end);
 
-			for (const binary of label.binarys) {
-				for (const prop of binary.vars) {
-					genCode += `let `;
+			if (binary.right) {
+				genCode += ` = `;
+				mapSubText(binary.right.start, binary.right.end);
+			}
+		}
+		genCode += `;\n`;
+
+		for (const binary of label.binarys) {
+			for (const prop of binary.vars) {
+				genCode += `let `;
+				const leftRange = {
+					start: genCode.length,
+					end: genCode.length + prop.text.length,
+				};
+				addCode(prop.text, {
+					isNoDollarRef: true,
+					capabilities: {
+						basic: true, // hover
+						references: true,
+						rename: true,
+						diagnostic: true,
+					},
+					scriptSetupRange: {
+						start: prop.start,
+						end: prop.end,
+					},
+					mode: MapedMode.Offset,
+				});
+				genCode += ` = (await import('__VLS_vue')).unref(`;
+				if (binary.right) {
+					addCode(`__VLS_refs_${prop.text}`, {
+						isNoDollarRef: false,
+						capabilities: {},
+						scriptSetupRange: binary.right,
+						mode: MapedMode.Offset, // TODO
+					});
+				}
+				else {
+					genCode += `__VLS_refs_${prop.text}`;
+				}
+				genCode += `);\n`;
+
+				genCode += `const `;
+				const rightRange = {
+					start: genCode.length,
+					end: genCode.length + `$${prop.text}`.length,
+				};
+				addCode(`$${prop.text}`, {
+					isNoDollarRef: true,
+					capabilities: {
+						diagnostic: true,
+					},
+					scriptSetupRange: {
+						start: prop.start,
+						end: prop.end,
+					},
+					mode: MapedMode.Offset, // TODO
+				});
+				genCode += ` = (await import('__VLS_vue')).ref(`;
+				if (binary.right) {
+					addCode(`__VLS_refs_${prop.text}`, {
+						isNoDollarRef: false,
+						capabilities: {},
+						scriptSetupRange: binary.right,
+						mode: MapedMode.Offset, // TODO
+					});
+				}
+				else {
+					genCode += `__VLS_refs_${prop.text}`;
+				}
+				genCode += `);\n`;
+				mirrors.push({
+					left: leftRange,
+					right: rightRange,
+				});
+			}
+		}
+
+		tsOffset = label.end;
+	}
+	mapSubText(tsOffset, sourceCode.length);
+
+	genCode += `return {\n`;
+	for (const expose of data.exposeVarNames) {
+		const varName = originalCode.substring(expose.start, expose.end);
+		const leftRange = {
+			start: genCode.length,
+			end: genCode.length + varName.length,
+		};
+		// TODO: remove this
+		addCode(varName, {
+			capabilities: {},
+			scriptSetupRange: {
+				start: expose.start,
+				end: expose.end,
+			},
+			mode: MapedMode.Offset,
+		});
+		genCode += ': ';
+		const rightRange = {
+			start: genCode.length,
+			end: genCode.length + varName.length,
+		};
+		// TODO: remove this
+		addCode(varName, {
+			capabilities: {},
+			scriptSetupRange: {
+				start: expose.start,
+				end: expose.end,
+			},
+			mode: MapedMode.Offset,
+		});
+		genCode += ',\n';
+		mirrors.push({
+			left: leftRange,
+			right: rightRange,
+		});
+	}
+	for (const label of data.labels) {
+		for (const binary of label.binarys) {
+			for (const refVar of binary.vars) {
+				if (refVar.inRoot) {
 					const leftRange = {
 						start: genCode.length,
-						end: genCode.length + prop.text.length,
+						end: genCode.length + refVar.text.length,
 					};
-					addCode(prop.text, {
+					// TODO: remove this
+					addCode(refVar.text, {
 						isNoDollarRef: true,
-						capabilities: {
-							basic: true, // hover
-							references: true,
-							rename: true,
-							diagnostic: true,
-						},
+						capabilities: {},
 						scriptSetupRange: {
-							start: prop.start,
-							end: prop.end,
+							start: refVar.start,
+							end: refVar.end,
 						},
 						mode: MapedMode.Offset,
 					});
-					genCode += ` = (await import('__VLS_vue')).unref(`;
-					if (binary.right) {
-						addCode(`__VLS_refs_${prop.text}`, {
-							isNoDollarRef: false,
-							capabilities: {},
-							scriptSetupRange: binary.right,
-							mode: MapedMode.Offset, // TODO
-						});
-					}
-					else {
-						genCode += `__VLS_refs_${prop.text}`;
-					}
-					genCode += `);\n`;
-
-					genCode += `const `;
+					genCode += ': ';
 					const rightRange = {
 						start: genCode.length,
-						end: genCode.length + `$${prop.text}`.length,
+						end: genCode.length + refVar.text.length,
 					};
-					addCode(`$${prop.text}`, {
+					// TODO: remove this
+					addCode(refVar.text, {
 						isNoDollarRef: true,
-						capabilities: {
-							diagnostic: true,
-						},
+						capabilities: {},
 						scriptSetupRange: {
-							start: prop.start,
-							end: prop.end,
+							start: refVar.start,
+							end: refVar.end,
 						},
-						mode: MapedMode.Offset, // TODO
+						mode: MapedMode.Offset,
 					});
-					genCode += ` = (await import('__VLS_vue')).ref(`;
-					if (binary.right) {
-						addCode(`__VLS_refs_${prop.text}`, {
-							isNoDollarRef: false,
-							capabilities: {},
-							scriptSetupRange: binary.right,
-							mode: MapedMode.Offset, // TODO
-						});
-					}
-					else {
-						genCode += `__VLS_refs_${prop.text}`;
-					}
-					genCode += `);\n`;
+					genCode += ', \n';
 					mirrors.push({
 						left: leftRange,
 						right: rightRange,
 					});
-				}
-			}
-
-			tsOffset = label.end;
-		}
-		mapSubText(tsOffset, sourceCode.length);
-	}
-
-	genCode += `return {\n`;
-	if (rfc === '#182') {
-		genCode += `...__VLS_exports,\n`;
-	}
-	if (rfc === '#222') {
-		for (const expose of data.exposeVarNames) {
-			const varName = originalCode.substring(expose.start, expose.end);
-			const leftRange = {
-				start: genCode.length,
-				end: genCode.length + varName.length,
-			};
-			// TODO: remove this
-			addCode(varName, {
-				capabilities: {},
-				scriptSetupRange: {
-					start: expose.start,
-					end: expose.end,
-				},
-				mode: MapedMode.Offset,
-			});
-			genCode += ': ';
-			const rightRange = {
-				start: genCode.length,
-				end: genCode.length + varName.length,
-			};
-			// TODO: remove this
-			addCode(varName, {
-				capabilities: {},
-				scriptSetupRange: {
-					start: expose.start,
-					end: expose.end,
-				},
-				mode: MapedMode.Offset,
-			});
-			genCode += ',\n';
-			mirrors.push({
-				left: leftRange,
-				right: rightRange,
-			});
-		}
-		for (const label of data.labels) {
-			for (const binary of label.binarys) {
-				for (const refVar of binary.vars) {
-					if (refVar.inRoot) {
-						const leftRange = {
-							start: genCode.length,
-							end: genCode.length + refVar.text.length,
-						};
-						// TODO: remove this
-						addCode(refVar.text, {
-							isNoDollarRef: true,
-							capabilities: {},
-							scriptSetupRange: {
-								start: refVar.start,
-								end: refVar.end,
-							},
-							mode: MapedMode.Offset,
-						});
-						genCode += ': ';
-						const rightRange = {
-							start: genCode.length,
-							end: genCode.length + refVar.text.length,
-						};
-						// TODO: remove this
-						addCode(refVar.text, {
-							isNoDollarRef: true,
-							capabilities: {},
-							scriptSetupRange: {
-								start: refVar.start,
-								end: refVar.end,
-							},
-							mode: MapedMode.Offset,
-						});
-						genCode += ', \n';
-						mirrors.push({
-							left: leftRange,
-							right: rightRange,
-						});
-					}
 				}
 			}
 		}

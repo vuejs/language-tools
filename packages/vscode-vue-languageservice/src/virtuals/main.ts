@@ -4,7 +4,6 @@ import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap } from '../utils/sourceMaps';
 import * as upath from 'upath';
 import { SearchTexts } from './common';
-import { rfc } from './script';
 
 export function useScriptMain(
 	getUnreactiveDoc: () => TextDocument,
@@ -17,11 +16,9 @@ export function useScriptMain(
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
 		const hasScript = !!script.value || !!scriptSetup.value;
-		const hasScriptSetupExports = rfc === '#182' && !!scriptSetup.value;
 		const content = [
 			`import { defineComponent } from '__VLS_vue';`,
 			hasScript ? `import __VLS_componentRaw from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
-			hasScriptSetupExports ? `import * as __VLS_Setup from './${upath.basename(vueDoc.uri)}.__VLS_scriptSetup.raw';` : `// no scriptSetup #182`,
 			...(hasScript
 				? [
 					`import { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';`,
@@ -42,7 +39,6 @@ export function useScriptMain(
 			`__VLS_options.setup().${SearchTexts.SetupReturns};`,
 			`__VLS_options.props.${SearchTexts.Props};`,
 			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
-			hasScriptSetupExports ? `__VLS_Setup.${SearchTexts.ScriptSetupExports};` : `// no scriptSetup #182`,
 			``,
 			`export default {} as typeof __VLS_component & {`,
 			`__VLS_options: typeof __VLS_options,`,

@@ -6,7 +6,6 @@ import { hyphenate } from '@vue/shared';
 import * as globalServices from '../globalServices';
 import * as html from 'vscode-html-languageservice';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
-import { rfc } from '../virtuals/script';
 
 type TokenData = [number, number, number, number, number | undefined];
 
@@ -58,7 +57,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		}
 
 		if (cancle?.isCancellationRequested) return;
-		const scriptSetupResult = rfc === '#222' ? getScriptSetupResult(sourceFile) : [];
+		const scriptSetupResult = getScriptSetupResult(sourceFile);
 		if (scriptSetupResult.length) {
 			tokens = tokens.concat(scriptSetupResult);
 			resultProgress?.report(buildTokens(tokens));

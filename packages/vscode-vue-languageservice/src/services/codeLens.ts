@@ -5,7 +5,6 @@ import {
 import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { rfc } from '../virtuals/script';
 import { TsSourceMap } from '../utils/sourceMaps';
 
 export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSourceMaps: () => Map<string, { sourceMap: TsSourceMap }>) {
@@ -73,20 +72,8 @@ export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSource
 		function getScriptSetupResult(sourceFile: SourceFile) {
 			const result: CodeLens[] = [];
 			const descriptor = sourceFile.getDescriptor();
-			if (descriptor.scriptSetup) {
-				result.push({
-					range: {
-						start: document.positionAt(descriptor.scriptSetup.loc.start),
-						end: document.positionAt(descriptor.scriptSetup.loc.end),
-					},
-					command: {
-						title: 'RFC: ' + rfc,
-						command: '',
-					},
-				})
-			}
 			const data = sourceFile.getScriptSetupData();
-			if (descriptor.scriptSetup && rfc === '#222' && data) {
+			if (descriptor.scriptSetup && data) {
 				result.push({
 					range: {
 						start: document.positionAt(descriptor.scriptSetup.loc.start),

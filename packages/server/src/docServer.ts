@@ -18,7 +18,7 @@ import {
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { setScriptSetupRfc, getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
+import { getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
 import {
 	uriToFsPath,
 	VerifyAllScriptsRequest,
@@ -46,7 +46,6 @@ const vueOnly: TextDocumentRegistrationOptions = {
 
 function onInitialize(params: InitializeParams) {
 	if (params.rootPath) {
-		setScriptSetupRfc(params.initializationOptions.scriptSetupRfc);
 		initLanguageService(params.rootPath);
 	}
 	const result: InitializeResult = {
