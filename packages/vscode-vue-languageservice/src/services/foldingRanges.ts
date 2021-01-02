@@ -7,7 +7,6 @@ import { FoldingRange } from 'vscode-languageserver/node';
 import { createSourceFile } from '../sourceFiles';
 import { getCheapTsService2 } from '../globalServices';
 import { notEmpty } from '@volar/shared';
-import { rfc } from '../virtuals/script';
 
 export function register() {
 	return (_document: TextDocument) => {

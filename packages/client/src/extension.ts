@@ -18,7 +18,6 @@ import {
 } from 'vscode-languageclient/node';
 import {
 	TagCloseRequest,
-	LinkedEditingRangeRequest,
 	VerifyAllScriptsRequest,
 	FormatAllScriptsRequest,
 	WriteVirtualFilesRequest,
@@ -42,19 +41,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		await docClient.onReady();
 		await cheapClient.onReady();
 
-		context.subscriptions.push(vscode.languages.registerLinkedEditingRangeProvider({ language: 'vue' }, {
-			async provideLinkedEditingRanges(document: vscode.TextDocument, position: vscode.Position) {
-				const param = apiClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-				return apiClient.sendRequest(LinkedEditingRangeRequest.type, param).then(response => {
-					if (response) {
-						return {
-							ranges: response.map(r => apiClient.protocol2CodeConverter.asRange(r))
-						};
-					}
-					return undefined;
-				});
-			}
-		}));
 		context.subscriptions.push(docClient.onRequest(DocumentVersionRequest.type, handler => {
 			const doc = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === handler.uri);
 			return doc?.version;

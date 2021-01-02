@@ -34,7 +34,6 @@ import {
 	GetFormattingSourceMapsRequest,
 	uriToFsPath,
 	RestartServerNotification,
-	LinkedEditingRangeRequest,
 } from '@volar/shared';
 import * as upath from 'upath';
 
@@ -118,11 +117,6 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.uri);
 		if (!document) return;
 		return host.best(document.uri)?.getD3(document);
-	});
-	connection.onRequest(LinkedEditingRangeRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return host.best(document.uri)?.findLinkedEditingRanges(document, handler.position);
 	});
 	connection.onRequest(GetFormattingSourceMapsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);

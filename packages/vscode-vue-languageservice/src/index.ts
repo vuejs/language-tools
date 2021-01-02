@@ -34,6 +34,8 @@ import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
+import { HTMLDocument } from 'vscode-html-languageservice';
+import * as globalServices from './globalServices';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -46,10 +48,24 @@ export function getSemanticTokensLegend() {
 	return semanticTokens.semanticTokenLegend;
 }
 export function createNoStateLanguageService() {
+	const cache = new Map<string, [number, HTMLDocument]>();
 	return {
-		doAutoClose: autoClose.register(),
 		doFormatting: formatting.register(),
 		getFoldingRanges: foldingRanges.register(),
+		doAutoClose: autoClose.register(getHtmlDocument),
+		findLinkedEditingRanges: linkedEditingRanges.register(getHtmlDocument),
+	}
+	function getHtmlDocument(document: TextDocument) {
+		const _cache = cache.get(document.uri);
+		if (_cache) {
+			const [cacheVersion, cacheHtmlDoc] = _cache;
+			if (cacheVersion === document.version) {
+				return cacheHtmlDoc;
+			}
+		}
+		const htmlDoc = globalServices.html.parseHTMLDocument(document);
+		cache.set(document.uri, [document.version, htmlDoc]);
+		return htmlDoc;
 	}
 }
 export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?: (progress: number) => void) {
@@ -224,7 +240,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?
 		findDocumentSymbols: apiHook(documentSymbol.register(sourceFiles, tsLanguageService), false),
 		findDocumentLinks: apiHook(documentLink.register(sourceFiles, vueHost), false),
 		findDocumentColors: apiHook(documentColor.register(sourceFiles), false),
-		findLinkedEditingRanges: apiHook(linkedEditingRanges.register(sourceFiles), false),
 		...createNoStateLanguageService(),
 		dispose: tsLanguageService.dispose,
 	};

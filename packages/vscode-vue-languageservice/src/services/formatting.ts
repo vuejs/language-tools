@@ -6,7 +6,6 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createSourceFile } from '../sourceFiles';
 import { getCheapTsService2 } from '../globalServices';
-import { rfc } from '../virtuals/script';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import { notEmpty } from '@volar/shared';

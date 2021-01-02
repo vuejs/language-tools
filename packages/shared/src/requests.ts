@@ -41,9 +41,6 @@ export namespace D3Request {
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any> = new RequestType('html/tag');
 }
-export namespace LinkedEditingRangeRequest {
-	export const type: RequestType<TextDocumentPositionParams, Range[] | null, any> = new RequestType('html/linkedEditingRange');
-}
 export namespace DocumentVersionRequest {
 	export const type: RequestType<{
 		uri: string,

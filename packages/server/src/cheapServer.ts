@@ -6,6 +6,7 @@ import {
 	createConnection,
 	FoldingRangeRequest,
 	TextDocumentRegistrationOptions,
+	LinkedEditingRangeRequest,
 } from 'vscode-languageserver/node';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -51,10 +52,16 @@ function initLanguageService() {
 		if (!document) return undefined;
 		return ls.getFoldingRanges(document);
 	});
+	connection.languages.onLinkedEditingRange(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return ls.findLinkedEditingRanges(document, handler.position);
+	});
 }
 function onInitialized() {
 	const vueOnly: TextDocumentRegistrationOptions = {
 		documentSelector: [{ language: 'vue' }],
 	};
 	connection.client.register(FoldingRangeRequest.type, vueOnly);
+	connection.client.register(LinkedEditingRangeRequest.type, vueOnly);
 }
