@@ -6,11 +6,11 @@
 		"@types/prettier": "latest"
 	},
 	"dependencies": {
-		"@vue/compiler-core": "3.0.2",
-		"@vue/compiler-sfc": "3.0.2",
-		"@vue/compiler-dom": "3.0.2",
-		"@vue/reactivity": "3.0.2",
-		"@vue/shared": "3.0.2",
+		"@vue/compiler-core": "latest",
+		"@vue/compiler-sfc": "latest",
+		"@vue/compiler-dom": "latest",
+		"@vue/reactivity": "latest",
+		"@vue/shared": "latest",
 		"vscode-css-languageservice": "latest",
 		"vscode-html-languageservice": "latest",
 		"typescript": "latest",
