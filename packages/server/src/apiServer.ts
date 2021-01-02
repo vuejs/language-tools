@@ -25,13 +25,12 @@ import {
 	CallHierarchyPrepareRequest,
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
-import { Commands, triggerCharacter, SourceMap, TsSourceMap } from '@volar/vscode-vue-languageservice';
+import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	D3Request,
 	FormatAllScriptsRequest,
-	GetFormattingSourceMapsRequest,
 	uriToFsPath,
 	RestartServerNotification,
 } from '@volar/shared';
@@ -116,35 +115,6 @@ function initLanguageService(rootPath: string) {
 		const document = documents.get(handler.uri);
 		if (!document) return;
 		return host.best(document.uri)?.getD3(document);
-	});
-	connection.onRequest(GetFormattingSourceMapsRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		const sourceFile = host.best(document.uri)?.getSourceFile(document.uri);
-		if (!sourceFile) return;
-		const result = {
-			templates: [...sourceFile.getHtmlSourceMaps().map(s => translateSourceMap(s, 'template')), ...sourceFile.getPugSourceMaps().map(s => translateSourceMap(s, 'template'))],
-			styles: sourceFile.getCssSourceMaps().map(s => translateSourceMap(s, 'style')),
-			scripts: sourceFile.getTsSourceMaps().map(translateTsSourceMap).filter(script => script.mappings.length > 0),
-		};
-		return result;
-
-		function translateSourceMap(sourceMap: SourceMap, vueRegion: string) {
-			return {
-				languageId: sourceMap.targetDocument.languageId,
-				content: sourceMap.targetDocument.getText(),
-				mappings: [...sourceMap.values()],
-				vueRegion,
-			};
-		}
-		function translateTsSourceMap(sourceMap: TsSourceMap) {
-			return {
-				languageId: sourceMap.targetDocument.languageId,
-				content: sourceMap.targetDocument.getText(),
-				mappings: [...sourceMap.values()].filter(maped => maped.data.capabilities.formatting),
-				vueRegion: sourceMap.isInterpolation ? 'template' : 'script',
-			};
-		}
 	});
 	connection.onRequest(FormatAllScriptsRequest.type, async options => {
 		const progress = await connection.window.createWorkDoneProgress();

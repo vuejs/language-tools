@@ -7,6 +7,7 @@ import {
 	FoldingRangeRequest,
 	TextDocumentRegistrationOptions,
 	LinkedEditingRangeRequest,
+	DocumentFormattingRequest,
 } from 'vscode-languageserver/node';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -64,4 +65,5 @@ function onInitialized() {
 	};
 	connection.client.register(FoldingRangeRequest.type, vueOnly);
 	connection.client.register(LinkedEditingRangeRequest.type, vueOnly);
+	connection.client.register(DocumentFormattingRequest.type, vueOnly);
 }

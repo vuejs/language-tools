@@ -7,7 +7,6 @@ import * as path from 'upath';
 import * as vscode from 'vscode';
 import { activateTagClosing } from './tagClosing';
 import { registerDocumentSemanticTokensProvider } from './semanticTokens';
-import { registerDocumentFormattingEditProvider } from './format';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -155,7 +154,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
-	registerDocumentFormattingEditProvider(cheapClient, apiClient);
 }
 
 export function deactivate(): Thenable<void> | undefined {

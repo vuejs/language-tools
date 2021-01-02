@@ -126,26 +126,7 @@
 				"command": "volar.action.showCallGraph",
 				"title": "Volar: Show call graph (Experimental)"
 			}
-		],
-		"configuration": {
-			"title": "Vue 3",
-			"properties": {
-				"volar.format.formatter": {
-					"type": "string",
-					"default": "default",
-					"enum": [
-						"default",
-						"workspaceExtensions"
-					],
-					"enumDescriptions": [
-						"disable formatting",
-						"css (prettier), html (@starptech/prettyhtml), javascript (typescript), pug (pug-beautify)",
-						"user-defined"
-					],
-					"description": "Formatter for <template>, <script>, <style> region"
-				}
-			}
-		}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

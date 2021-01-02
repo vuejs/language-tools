@@ -6,7 +6,6 @@ import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '..
 import { SearchTexts } from './common';
 import { getCheapTsService } from '../globalServices';
 import * as ts from 'typescript';
-import * as upath from 'upath';
 import { transformVueHtml } from '../utils/vueHtmlConverter';
 
 export function useScriptSetupGen(

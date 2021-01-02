@@ -46,15 +46,6 @@ export namespace DocumentVersionRequest {
 		uri: string,
 	}, number | undefined, any> = new RequestType('vue/docUpdated');
 }
-export namespace GetFormattingSourceMapsRequest {
-	export const type: RequestType<{
-		textDocument: TextDocumentIdentifier,
-	}, {
-		templates: ISourceMap[],
-		scripts: ISourceMap[],
-		styles: ISourceMap[],
-	} | undefined, any> = new RequestType('vue/descriptor');
-}
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.verifyAllScripts');
 }
