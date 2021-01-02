@@ -916,9 +916,6 @@
 		"vue-directives": {
 			"patterns": [
 				{
-					"include": "#vue-directives-scriptSetup"
-				},
-				{
 					"include": "#vue-directives-control"
 				},
 				{
@@ -1060,61 +1057,6 @@
 									"include": "source.js"
 								}
 							]
-						}
-					]
-				}
-			]
-		},
-		"vue-directives-scriptSetup": {
-			"begin": "\\b(setup)\\s*(=)",
-			"captures": {
-				"1": {
-					"name": "entity.other.attribute-name.html"
-				},
-				"2": {
-					"name": "punctuation.separator.key-value.html"
-				}
-			},
-			"end": "(?<='|\")",
-			"name": "meta.directive.vue",
-			"patterns": [
-				{
-					"begin": "\"",
-					"beginCaptures": [
-						{
-							"name": "punctuation.definition.string.begin.html"
-						}
-					],
-					"end": "\"",
-					"endCaptures": [
-						{
-							"name": "punctuation.definition.string.end.html"
-						}
-					],
-					"name": "source.directive.vue",
-					"patterns": [
-						{
-							"include": "source.js"
-						}
-					]
-				},
-				{
-					"begin": "'",
-					"beginCaptures": [
-						{
-							"name": "punctuation.definition.string.begin.html"
-						}
-					],
-					"end": "'",
-					"endCaptures": [
-						{
-							"name": "punctuation.definition.string.end.html"
-						}
-					],
-					"name": "source.directive.vue",
-					"patterns": [
-						{
-							"include": "source.js"
 						}
 					]
 				}
