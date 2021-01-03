@@ -22,9 +22,21 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let references = references0;
 			if (sourceFile) {
 				references = references0?.filter(ref => {
-					for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-						if (cssSourceMap.isSource(ref.range)) {
-							return false;
+					if (ref.uri === uri) {
+						for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
+							if (cssSourceMap.isSource(ref.range)) {
+								return false;
+							}
+						}
+						for (const cssSourceMap of sourceFile.getHtmlSourceMaps()) {
+							if (cssSourceMap.isSource(ref.range)) {
+								return false;
+							}
+						}
+						for (const cssSourceMap of sourceFile.getPugSourceMaps()) {
+							if (cssSourceMap.isSource(ref.range)) {
+								return false;
+							}
 						}
 					}
 					return true;
