@@ -12,19 +12,22 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 	return (codeLens: CodeLens) => {
 
 		const uri: string | undefined = codeLens.data.uri;
+		const offset: number | undefined = codeLens.data.offset;
 		const tsUri: string | undefined = codeLens.data.tsUri;
 		const tsOffset: number | undefined = codeLens.data.tsOffset;
+		const doc = uri ? sourceFiles.get(uri)?.getTextDocument() ?? tsLanguageService.getTextDocument(uri) : undefined;
 		const tsDoc = tsUri ? tsLanguageService.getTextDocument(tsUri) : undefined;
 		const sourceFile = uri ? sourceFiles.get(uri) : undefined;
 
-		if (uri && tsDoc && tsOffset !== undefined) {
+		if (uri && doc && tsDoc && offset !== undefined && tsOffset !== undefined) {
+			const pos = doc.positionAt(offset);
 			const tsPos = tsDoc.positionAt(tsOffset);
 			const references0 = _findReferences(tsDoc, tsPos);
 			let references = references0;
 			if (sourceFile) {
 				let isCssLocation = false;
 				for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-					if (cssSourceMap.isSource({ start: tsPos, end: tsPos })) {
+					if (cssSourceMap.isSource({ start: pos, end: pos })) {
 						isCssLocation = true;
 					}
 				}

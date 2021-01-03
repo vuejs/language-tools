@@ -24,6 +24,7 @@ export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSource
 					},
 					data: {
 						uri: document.uri,
+						offset: maped.sourceRange.start,
 						tsUri: globalTsSourceMap.sourceMap.targetDocument.uri,
 						tsOffset: maped.targetRange.start,
 					},
@@ -60,6 +61,7 @@ export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSource
 						},
 						data: {
 							uri: document.uri,
+							offset: maped.sourceRange.start,
 							tsUri: sourceMap.targetDocument.uri,
 							tsOffset: maped.targetRange.start,
 						},
