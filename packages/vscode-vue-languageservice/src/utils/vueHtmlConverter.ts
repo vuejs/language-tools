@@ -122,7 +122,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 						&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 						&& prop.arg.content === 'style'
-						&& prop.exp.isConstant
+						&& prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY
 					) {
 						const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]; // " | '
 						const start = prop.arg.loc.source.indexOf(endCrt) + 1;
@@ -219,7 +219,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 						&& prop.arg
 						&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 						&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-						&& !prop.exp?.isConstant // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
+						&& !(prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
 					) {
 						if (prop.name === 'bind' || prop.name === 'model') {
 							write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
@@ -329,7 +329,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 								start: prop.loc.start.offset,
 								end: prop.loc.end.offset,
 							}, false);
-							if (prop.exp?.isConstant) {
+							if (prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) {
 								mappingObjectProperty(MapedNodeTypes.Prop, propName, capabilitiesSet.htmlTagOrAttr, {
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.start.offset + propName2.length, // patch style attr
@@ -342,7 +342,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 								});
 							}
 							text += `: (`;
-							if (prop.exp && !prop.exp.isConstant) { // style='z-index: 2' will compile to {'z-index':'2'}
+							if (prop.exp && !(prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 								mapping(undefined, propValue, MapedMode.Offset, capabilitiesSet.all, {
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,

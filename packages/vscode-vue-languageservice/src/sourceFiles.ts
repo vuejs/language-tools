@@ -503,6 +503,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					const templateResult = vueSfc.compileTemplate({
 						source: doc.getText(),
 						filename: vueFileName,
+						id: vueFileName,
 						compilerOptions: {
 							onError: err => {
 								if (!err.loc) return;
