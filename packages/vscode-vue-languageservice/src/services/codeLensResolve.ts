@@ -49,6 +49,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					});
 				}
 			}
+			else {
+				references = references0?.filter(ref => {
+					if (ref.uri === uri) {
+						return false;
+					}
+					return true;
+				});
+			}
 			const referencesCount = references?.length ?? 0;
 			codeLens.command = {
 				title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
