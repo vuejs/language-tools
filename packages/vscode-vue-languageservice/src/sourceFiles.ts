@@ -3,6 +3,7 @@ import {
 	DiagnosticSeverity,
 	Position,
 	CompletionItem,
+	DiagnosticTag,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
@@ -24,6 +25,7 @@ import { useTemplateRaw } from './virtuals/template.raw';
 import { useTemplateScript } from './virtuals/template';
 import { useStylesRaw } from './virtuals/styles.raw';
 import * as ts from 'typescript';
+import { duplicateDiagnostics } from './utils/commons';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
@@ -374,6 +376,9 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				}
 			},
 		};
+		const tsOptions = tsLanguageService.host.getCompilationSettings();
+		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
+
 		const nonTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
 			[useStylesValidation(), [], 0],
 			[useTemplateValidation(), [], 0],
@@ -388,6 +393,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			[useScriptValidation(virtualScriptGen.textDocument, 1), [], 0],
 			[useScriptValidation(virtualScriptGen.textDocument, 2), [], 0],
 			[useScriptValidation(computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), [], 0],
+			[useScriptValidation(computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), [], 0],
 		];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>, withSideEffect = true) => {
@@ -434,7 +440,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				const startTime = Date.now();
 				diag[1] = diag[0].value;
 				diag[2] = Date.now() - startTime;
-				response([...all, ...keep].map(diag => diag[1]).flat());
+				const results = [...all, ...keep].map(diag => diag[1]).flat();
+				response(duplicateDiagnostics(results));
 			}
 		}
 
@@ -590,7 +597,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return diags;
 			});
 		}
-		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: number) {
+		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: number, onlyUnusedCheck = false) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -610,7 +617,11 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			return computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				return toTsSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
+				let result = toTsSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
+				if (onlyUnusedCheck) {
+					result = result.filter(error => error.tags?.includes(DiagnosticTag.Unnecessary));
+				}
+				return result;
 			});
 		}
 		function useTemplateScriptValidation(mode: number) {

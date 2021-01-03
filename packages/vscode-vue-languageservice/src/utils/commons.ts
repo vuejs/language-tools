@@ -5,12 +5,29 @@ import {
 	Location,
 	CallHierarchyIncomingCall,
 	CallHierarchyOutgoingCall,
+	Diagnostic,
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFiles';
 import type { TsMappingData, TsSourceMap } from '../utils/sourceMaps';
 
 export function notEmpty<T>(value: T): value is NonNullable<T> {
 	return value !== null && value !== undefined;
+}
+export function duplicateDiagnostics(errors: Diagnostic[]) {
+	const result = new Map<string, Diagnostic>();
+	for (const error of errors) {
+		result.set([
+			error.range.start.line,
+			error.range.start.character,
+			error.range.end.line,
+			error.range.end.character,
+			error.source,
+			error.code,
+			error.severity,
+			error.message,
+		].join(':'), error);
+	}
+	return [...result.values()];
 }
 export function duplicateLocations<T extends Location>(locations: T[]): T[] {
 	const temp: any = {};
