@@ -1,3 +1,11 @@
+### 0.19.0
+
+- feat: unsupported workspaceExtensions formatter
+- feat: unsupported old `<script setup>`
+- fix: references codeLens should not counting itself
+- fix: hyphenate format slot name have duplicate references codeLens
+- fix: `<script setup>` unused checking not working for `"noUnusedLocals": true`
+
 ### 0.18.17
 
 - feat: server init progress
