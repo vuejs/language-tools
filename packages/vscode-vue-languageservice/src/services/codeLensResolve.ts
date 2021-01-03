@@ -18,29 +18,36 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		const sourceFile = uri ? sourceFiles.get(uri) : undefined;
 
 		if (uri && tsDoc && tsOffset !== undefined) {
-			const references0 = _findReferences(tsDoc, tsDoc.positionAt(tsOffset));
+			const tsPos = tsDoc.positionAt(tsOffset);
+			const references0 = _findReferences(tsDoc, tsPos);
 			let references = references0;
 			if (sourceFile) {
-				references = references0?.filter(ref => {
-					if (ref.uri === uri) {
-						for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-							if (cssSourceMap.isSource(ref.range)) {
-								return false;
-							}
-						}
-						for (const cssSourceMap of sourceFile.getHtmlSourceMaps()) {
-							if (cssSourceMap.isSource(ref.range)) {
-								return false;
-							}
-						}
-						for (const cssSourceMap of sourceFile.getPugSourceMaps()) {
-							if (cssSourceMap.isSource(ref.range)) {
-								return false;
-							}
-						}
+				let isCssLocation = false;
+				for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
+					if (cssSourceMap.isSource({ start: tsPos, end: tsPos })) {
+						isCssLocation = true;
 					}
-					return true;
-				});
+				}
+				if (isCssLocation) {
+					references = references0?.filter(ref => {
+						if (ref.uri === uri) {
+							for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
+								if (cssSourceMap.isSource(ref.range)) {
+									return false;
+								}
+							}
+						}
+						return true;
+					});
+				}
+				else {
+					references = references0?.filter(ref => {
+						if (ref.uri === uri) {
+							return false;
+						}
+						return true;
+					});
+				}
 			}
 			const referencesCount = references?.length ?? 0;
 			codeLens.command = {

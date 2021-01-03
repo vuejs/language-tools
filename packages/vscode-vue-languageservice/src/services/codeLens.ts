@@ -12,7 +12,7 @@ export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSource
 
 		const globalTsSourceMaps = getGlobalTsSourceMaps?.();
 		const globalTsSourceMap = globalTsSourceMaps?.get(document.uri);
-		
+
 		if (globalTsSourceMap) {
 			const result: CodeLens[] = [];
 			for (const maped of globalTsSourceMap.sourceMap) {

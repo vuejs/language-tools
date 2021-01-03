@@ -10,7 +10,7 @@ const capabilitiesSet = {
 	diagnosticOnly: { basic: false, diagnostic: true, references: false, rename: false, completion: true, semanticTokens: false },
 	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, rename: true, completion: false, semanticTokens: false },
 	className: { basic: true, diagnostic: false, references: true, rename: true, completion: false, semanticTokens: false },
-	slotName: { basic: true, diagnostic: true, references: true, rename: false, completion: false, semanticTokens: false},
+	slotName: { basic: true, diagnostic: true, references: true, rename: false, completion: false, semanticTokens: false },
 	slotNameExport: { basic: true, diagnostic: true, references: true, rename: false, completion: false, semanticTokens: false, referencesCodeLens: true },
 	propRaw: { basic: false, diagnostic: false, references: true, rename: true, completion: false, semanticTokens: false },
 	referencesOnly: { basic: false, diagnostic: false, references: true, rename: false, completion: false, semanticTokens: false },
@@ -55,12 +55,12 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 
 	const textWithoutSlots = text;
 
-	text += `export default {\n`
+	text += `export default {\n`;
 	for (const [name, slot] of slots) {
 		mappingObjectProperty(MapedNodeTypes.Slot, name, capabilitiesSet.slotNameExport, slot.loc);
 		text += `: ${slot.varName},\n`;
 	}
-	text += `};\n`
+	text += `};\n`;
 
 	return {
 		mappings,
@@ -807,6 +807,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 			formatting: false,
 			completion: false,
 			semanticTokens: false,
+			referencesCodeLens: false,
 		}, sourceRange, false);
 		if (addCode) text += `'`;
 		mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange, addCode);
