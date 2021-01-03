@@ -1,3 +1,7 @@
+### 0.19.1
+
+- fix: css class references codeLens broke
+
 ### 0.19.0
 
 - feat: unsupported workspaceExtensions formatter
