@@ -24,9 +24,7 @@ documents.listen(connection);
 connection.listen();
 
 function onInitialize(params: InitializeParams) {
-	if (params.rootPath) {
-		initLanguageService();
-	}
+	initLanguageService();
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Full,

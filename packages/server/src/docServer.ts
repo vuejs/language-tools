@@ -38,15 +38,19 @@ connection.onInitialized(onInitialized);
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 connection.listen();
-let host: ReturnType<typeof createLanguageServiceHost>;
+const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 
 const vueOnly: TextDocumentRegistrationOptions = {
 	documentSelector: [{ language: 'vue' }],
 };
 
 function onInitialize(params: InitializeParams) {
-	if (params.rootPath) {
-		initLanguageService(params.rootPath);
+	if (params.workspaceFolders) {
+		for (const workspaceFolder of params.workspaceFolders) {
+			if (workspaceFolder.uri.startsWith('file:/')) {
+				initLanguageService(uriToFsPath(workspaceFolder.uri));
+			}
+		}
 	}
 	const result: InitializeResult = {
 		capabilities: {
@@ -57,11 +61,12 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	host = createLanguageServiceHost(connection, documents, rootPath, async (uri: string) => {
+	const host = createLanguageServiceHost(connection, documents, rootPath, async (uri: string) => {
 		return await connection.sendRequest(DocumentVersionRequest.type, { uri });
 	}, async () => {
 		await connection.sendNotification(SemanticTokensChangedNotification.type);
 	});
+	hosts.push(host);
 
 	connection.onNotification(RestartServerNotification.type, async () => {
 		host.restart();
@@ -146,5 +151,7 @@ async function onInitialized() {
 	connection.client.register(DocumentSymbolRequest.type, vueOnly);
 	connection.client.register(DocumentLinkRequest.type, vueOnly);
 	connection.client.register(DocumentColorRequest.type, vueOnly);
-	host.onConnectionInited();
+	for (const host of hosts) {
+		host.onConnectionInited();
+	}
 }

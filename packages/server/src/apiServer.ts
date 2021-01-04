@@ -43,7 +43,7 @@ export const connection = createConnection(ProposedFeatures.all);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasDiagnosticRelatedInformationCapability = false;
-let host: ReturnType<typeof createLanguageServiceHost>;
+const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
@@ -68,8 +68,12 @@ const both: TextDocumentRegistrationOptions = {
 };
 
 function onInitialize(params: InitializeParams) {
-	if (params.rootPath) {
-		initLanguageService(params.rootPath);
+	if (params.workspaceFolders) {
+		for (const workspaceFolder of params.workspaceFolders) {
+			if (workspaceFolder.uri.startsWith('file:/')) {
+				initLanguageService(uriToFsPath(workspaceFolder.uri));
+			}
+		}
 	}
 
 	const capabilities = params.capabilities;
@@ -105,7 +109,8 @@ function onInitialize(params: InitializeParams) {
 }
 function initLanguageService(rootPath: string) {
 
-	host = createLanguageServiceHost(connection, documents, rootPath);
+	const host = createLanguageServiceHost(connection, documents, rootPath);
+	hosts.push(host);
 
 	// custom requests
 	connection.onNotification(RestartServerNotification.type, async () => {
@@ -286,5 +291,7 @@ async function onInitialized() {
 		triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
 		resolveProvider: true,
 	});
-	host.onConnectionInited();
+	for (const host of hosts) {
+		host.onConnectionInited();
+	}
 }
