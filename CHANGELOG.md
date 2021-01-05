@@ -1,3 +1,8 @@
+### 0.19.2
+
+- fix: ref sugar variables unused report incorrect
+- fix: `@click` type check not working for non native elements
+
 ### 0.19.1
 
 - fix: css class references codeLens broke
