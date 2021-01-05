@@ -804,7 +804,7 @@ function genScriptSetup(
 				else {
 					genCode += `__VLS_refs_${prop.text}`;
 				}
-				genCode += `);\n`;
+				genCode += `); ${prop.text};\n`;
 
 				genCode += `const `;
 				const rightRange = {
@@ -834,7 +834,7 @@ function genScriptSetup(
 				else {
 					genCode += `__VLS_refs_${prop.text}`;
 				}
-				genCode += `);\n`;
+				genCode += `); $${prop.text};\n`;
 				mirrors.push({
 					left: leftRange,
 					right: rightRange,
