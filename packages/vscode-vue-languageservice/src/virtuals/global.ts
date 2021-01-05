@@ -36,8 +36,8 @@ declare global {
 	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
 	function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
-	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Record<string, unknown> /* & Omit<__VLS_PropsType<T[K], keyof HTMLAttributes> */ };
+	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: Exclude<__VLS_PropsType<T[K]>, __VLS_GlobalAttrsBase> /* __VLS_GlobalAttrs has perf issue with Exclude<> */ };
+	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & __VLS_GlobalAttrs & Record<string, unknown> };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : () => void };
 	type __VLS_PickEmitFunction<F, E> =
 		F extends {
@@ -48,9 +48,9 @@ declare global {
 			(event: E, ...payload: infer P): infer R
 		} ? (...payload: P) => R :
 		undefined;
-	type __VLS_FirstFunction<F1, F2> = F1 extends undefined ? F2 : (F1 extends (...args: any) => any ? F1 : (F2 extends (...args: any) => any ? F2 : F1));
-	type __VLS_GlobalAttrs = HTMLAttributes & VNodeProps & AllowedComponentProps;
-	type __VLS_PickFunc<A, B> = A extends (...args: any) => any ? A : B;
+	type __VLS_FirstFunction<F1, F2> = NonNullable<F1> extends (...args: any) => any ? F1 : F2;
+	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
+	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends new (...args: any) => any ? K : never]: T[K] };
 }
