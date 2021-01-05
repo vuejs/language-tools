@@ -74,6 +74,9 @@ export function register() {
 					if (line.startsWith(removeIndent)) {
 						lines[i] = line.replace(removeIndent, baseIndent);
 					}
+					else {
+						lines[i] = baseIndent.replace(removeIndent, '') + line;
+					}
 				}
 				indentTextEdits.push({
 					newText: lines.join('\n'),

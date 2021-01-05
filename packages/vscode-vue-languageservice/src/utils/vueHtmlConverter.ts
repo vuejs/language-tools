@@ -857,7 +857,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 			});
 			formatCode += mapCode;
 			formatCode += formatWrapper[1];
-			formatCode += `;\n`;
+			formatCode += `\n;\n`;
 		}
 		mappings.push({
 			mode,
