@@ -31,6 +31,7 @@ import {
 } from '@volar/shared';
 import * as upath from 'upath';
 import * as fs from 'fs-extra';
+import { setTypescript } from '@volar/vscode-builtin-packages';
 
 export const connection = createConnection(ProposedFeatures.all);
 connection.onInitialize(onInitialize);
@@ -45,6 +46,7 @@ const vueOnly: TextDocumentRegistrationOptions = {
 };
 
 function onInitialize(params: InitializeParams) {
+	setTypescript(params.initializationOptions.appRoot);
 	if (params.workspaceFolders) {
 		for (const workspaceFolder of params.workspaceFolders) {
 			if (workspaceFolder.uri.startsWith('file:/')) {

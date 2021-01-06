@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { fsPathToUri, uriToFsPath } from '@volar/shared';
 import * as vscode from 'vscode-languageserver/node';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import * as path from 'path';
 import * as PConst from '../protocol.const';
 import { parseKindModifier } from '../utils/modifiers';

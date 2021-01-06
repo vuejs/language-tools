@@ -3,17 +3,19 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, CssSourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
 import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function useStylesRaw(
 	tsLanguageService: ts2.LanguageService,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
 ) {
+	const ts = getTypescript();
 	let version = 0;
 	const textDocuments = computed(() => {
 		const vueDoc = getUnreactiveDoc();

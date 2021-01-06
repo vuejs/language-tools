@@ -24,12 +24,14 @@ import { useScriptMain } from './virtuals/main';
 import { useTemplateRaw } from './virtuals/template.raw';
 import { useTemplateScript } from './virtuals/template';
 import { useStylesRaw } from './virtuals/styles.raw';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { duplicateDiagnostics } from './utils/commons';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(initialDocument: TextDocument, tsLanguageService: ts2.LanguageService) {
+	const ts = getTypescript();
 	// sources
 	const tsProjectVersion = ref<string>();
 	const vueDoc = ref(initialDocument);

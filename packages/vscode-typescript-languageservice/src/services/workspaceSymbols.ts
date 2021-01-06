@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import * as PConst from '../protocol.const';
 import {
 	TextDocument,

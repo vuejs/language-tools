@@ -7,3 +7,4 @@ packages/*/src/
 contributing.md
 node_modules/@volar/client
 node_modules/@volar/server
+node_modules/@types

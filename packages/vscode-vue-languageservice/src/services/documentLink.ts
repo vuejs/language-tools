@@ -7,11 +7,13 @@ import { SourceFile } from '../sourceFiles';
 import * as jsonc from 'jsonc-parser';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import * as upath from 'upath';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { notEmpty } from '../utils/commons';
 import * as globalServices from '../globalServices';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.LanguageServiceHost) {
+	const ts = getTypescript();
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;

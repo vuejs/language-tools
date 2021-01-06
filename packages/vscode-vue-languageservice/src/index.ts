@@ -6,7 +6,7 @@ import { SearchTexts } from './virtuals/common';
 import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { MapedMode, MapedRange, Mapping, TsMappingData, TsSourceMap } from './utils/sourceMaps';
 import * as upath from 'upath';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
@@ -36,6 +36,7 @@ import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
 import { HTMLDocument } from 'vscode-html-languageservice';
 import * as globalServices from './globalServices';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -69,6 +70,7 @@ export function createNoStateLanguageService() {
 }
 export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?: (progress: number) => void) {
 
+	const ts = getTypescript();
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);

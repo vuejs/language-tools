@@ -15,6 +15,7 @@ import {
 	TagCloseRequest,
 } from '@volar/shared';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
+import { setTypescript } from '@volar/vscode-builtin-packages';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -24,6 +25,7 @@ documents.listen(connection);
 connection.listen();
 
 function onInitialize(params: InitializeParams) {
+	setTypescript(params.initializationOptions.appRoot);
 	initLanguageService();
 	const result: InitializeResult = {
 		capabilities: {

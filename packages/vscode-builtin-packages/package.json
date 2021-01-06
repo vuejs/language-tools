@@ -1,0 +1,12 @@
+{
+	"name": "@volar/vscode-builtin-packages",
+	"version": "1.0.0",
+	"main": "out/index.js",
+	"dependencies": {
+		"vscode-languageserver": "latest",
+		"upath": "latest"
+	},
+	"devDependencies": {
+		"typescript": "latest"
+	}
+}

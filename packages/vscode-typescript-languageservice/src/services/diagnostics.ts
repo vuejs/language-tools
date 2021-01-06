@@ -5,9 +5,11 @@ import {
 	DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	const ts = getTypescript();
 	return (
 		uri: string,
 		options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true },

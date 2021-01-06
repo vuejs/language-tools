@@ -1,10 +1,11 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import * as upath from 'upath';
 import { createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
 import { uriToFsPath, fsPathToUri, sleep, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import type { TextDocuments } from 'vscode-languageserver/node';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function createLanguageServiceHost(
 	connection: Connection,
@@ -13,6 +14,7 @@ export function createLanguageServiceHost(
 	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
 	_onProjectFilesUpdate?: () => void,
 ) {
+	const ts = getTypescript();
 	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const languageServices = new Map<string, ReturnType<typeof createLs>>();

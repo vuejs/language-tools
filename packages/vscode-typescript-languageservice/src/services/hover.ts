@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import {
 	Hover,
 	TextDocument,
@@ -9,8 +9,10 @@ import {
 } from 'vscode-languageserver/node';
 import * as previewer from '../utils/previewer';
 import { uriToFsPath } from '@volar/shared';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	const ts = getTypescript();
 	return (uri: string, position: Position): Hover | undefined => {
 		const document = getTextDocument(uri);
 		if (!document) return;

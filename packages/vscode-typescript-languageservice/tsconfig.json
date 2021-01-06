@@ -10,5 +10,8 @@
 		{
 			"path": "../shared"
 		},
+		{
+			"path": "../vscode-builtin-packages"
+		},
 	],
 }

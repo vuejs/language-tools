@@ -1,9 +1,11 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { CompletionItem, TextEdit } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	const ts = getTypescript();
 	return (item: CompletionItem): CompletionItem => {
 		const fileName = item.data.fileName;
 		const offset = item.data.offset;

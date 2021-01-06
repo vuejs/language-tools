@@ -35,6 +35,7 @@ import {
 	RestartServerNotification,
 } from '@volar/shared';
 import * as upath from 'upath';
+import { setTypescript } from '@volar/vscode-builtin-packages';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -68,6 +69,7 @@ const both: TextDocumentRegistrationOptions = {
 };
 
 function onInitialize(params: InitializeParams) {
+	setTypescript(params.initializationOptions.appRoot);
 	if (params.workspaceFolders) {
 		for (const workspaceFolder of params.workspaceFolders) {
 			if (workspaceFolder.uri.startsWith('file:/')) {

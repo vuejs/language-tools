@@ -1,9 +1,12 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	const ts = getTypescript();
+
 	return (uri: string) => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
@@ -28,12 +31,12 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		return foldingRanges;
 	};
-}
 
-function transformFoldingRangeKind(tsKind: ts.OutliningSpanKind) {
-	switch (tsKind) {
-		case ts.OutliningSpanKind.Comment: return FoldingRangeKind.Comment;
-		case ts.OutliningSpanKind.Imports: return FoldingRangeKind.Imports;
-		case ts.OutliningSpanKind.Region: return FoldingRangeKind.Region;
+	function transformFoldingRangeKind(tsKind: ts.OutliningSpanKind) {
+		switch (tsKind) {
+			case ts.OutliningSpanKind.Comment: return FoldingRangeKind.Comment;
+			case ts.OutliningSpanKind.Imports: return FoldingRangeKind.Imports;
+			case ts.OutliningSpanKind.Region: return FoldingRangeKind.Region;
+		}
 	}
 }

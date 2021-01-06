@@ -5,8 +5,9 @@ import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap, TsMappingData, MapedRange, SourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from './common';
 import { getCheapTsService } from '../globalServices';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { transformVueHtml } from '../utils/vueHtmlConverter';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function useScriptSetupGen(
 	getUnreactiveDoc: () => TextDocument,
@@ -14,6 +15,7 @@ export function useScriptSetupGen(
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,
 	html: Ref<string | undefined>,
 ) {
+	const ts = getTypescript();
 	let version = 0;
 	const scriptData = computed(() => {
 		if (script.value) {
@@ -1103,6 +1105,7 @@ function genScriptSetup(
 	}
 }
 function getScriptSetupData(sourceCode: string) {
+	const ts = getTypescript();
 	const labels: {
 		start: number,
 		end: number,
@@ -1541,6 +1544,7 @@ function getScriptSetupData(sourceCode: string) {
 	}
 }
 function getScriptData(sourceCode: string) {
+	const ts = getTypescript();
 	let exportDefault: {
 		start: number,
 		end: number,

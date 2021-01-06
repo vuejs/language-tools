@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"main": "out/index.js",
 	"devDependencies": {
+		"typescript": "latest",
 		"@types/prettier": "latest"
 	},
 	"dependencies": {
@@ -13,7 +14,6 @@
 		"@vue/shared": "latest",
 		"vscode-css-languageservice": "latest",
 		"vscode-html-languageservice": "latest",
-		"typescript": "latest",
 		"vscode-languageserver-textdocument": "latest",
 		"vscode-languageserver": "latest",
 		"upath": "latest",

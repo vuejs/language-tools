@@ -195,6 +195,9 @@ function createLanguageService(context: vscode.ExtensionContext, script: string,
 			// Notify the server about file changes to '.clientrc files contained in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
 		},
+		initializationOptions: {
+			appRoot: vscode.env.appRoot,
+		},
 	};
 
 	// Create the language client and start the client.

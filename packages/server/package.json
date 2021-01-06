@@ -8,7 +8,6 @@
 		"vscode-languageserver": "latest",
 		"vscode-languageserver-textdocument": "latest",
 		"fs-extra": "latest",
-		"typescript": "latest",
 		"upath": "latest"
 	}
 }

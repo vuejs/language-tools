@@ -5,7 +5,7 @@
 
 import { Range, CancellationToken, /* SemanticTokensBuilder */ } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { uriToFsPath } from '@volar/shared';
 import { TokenEncodingConsts, TokenType, TokenModifier } from 'typescript-vscode-sh-plugin/lib/constants';
 

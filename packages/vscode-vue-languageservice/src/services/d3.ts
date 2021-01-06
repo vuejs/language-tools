@@ -7,11 +7,12 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as references from './references';
 import * as definitions from './definitions';
-import * as ts from 'typescript';
-import * as upath from 'upath';
+import type * as ts from 'typescript';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 
+	const ts = getTypescript();
 	const findReferences = references.register(sourceFiles, tsLanguageService);
 	const findDefinitions = definitions.register(sourceFiles, tsLanguageService);
 

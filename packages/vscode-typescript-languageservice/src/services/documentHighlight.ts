@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import {
 	TextDocument,
 	DocumentHighlight,
@@ -6,8 +6,10 @@ import {
 	Position,
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
+import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+	const ts = getTypescript();
 	return (uri: string, position: Position): DocumentHighlight[] => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
