@@ -7,7 +7,6 @@
 		"@types/prettier": "^1.16.4"
 	},
 	"dependencies": {
-		"@vue/compiler-core": "latest",
 		"@vue/compiler-sfc": "latest",
 		"@vue/compiler-dom": "latest",
 		"@vue/reactivity": "latest",

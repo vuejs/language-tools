@@ -1,8 +1,8 @@
-import { TemplateChildNode, ElementNode, NodeTypes, RootNode } from '@vue/compiler-core';
-import { TransformContext, transformOn } from '@vue/compiler-core';
 import { MapedMode, TsMappingData, Mapping, MapedNodeTypes, MapedRange } from './sourceMaps';
 import { camelize, hyphenate } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
+import { NodeTypes, transformOn } from '@vue/compiler-dom';
+import type { TemplateChildNode, ElementNode, RootNode, TransformContext } from '@vue/compiler-dom';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
