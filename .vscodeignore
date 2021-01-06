@@ -1,10 +1,11 @@
 .vscode/**
-packages/*/src/
 **/*.map
+**/*.d.ts
 .gitignore
 **/tsconfig.json
 **/tsconfig.base.json
+**/tsconfig.tsbuildinfo
 contributing.md
-node_modules/@volar/client
-node_modules/@volar/server
+packages
+node_modules/@volar/*/src
 node_modules/@types

@@ -25,7 +25,7 @@
 	"activationEvents": [
 		"onLanguage:vue"
 	],
-	"main": "./packages/client/out/extension",
+	"main": "./node_modules/@volar/client/out/extension",
 	"contributes": {
 		"languages": [
 			{

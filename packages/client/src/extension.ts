@@ -31,9 +31,9 @@ let docClient: LanguageClient;
 let cheapClient: LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	apiClient = createLanguageService(context, path.join('packages', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009, true);
-	docClient = createLanguageService(context, path.join('packages', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010, true);
-	cheapClient = createLanguageService(context, path.join('packages', 'server', 'out', 'cheapServer.js'), 'Volar - HTML', 6011, false);
+	apiClient = createLanguageService(context, path.join('node_modules', '@volar', 'server', 'out', 'apiServer.js'), 'Volar - Basic', 6009, true);
+	docClient = createLanguageService(context, path.join('node_modules', '@volar', 'server', 'out', 'docServer.js'), 'Volar - Document', 6010, true);
+	cheapClient = createLanguageService(context, path.join('node_modules', '@volar', 'server', 'out', 'cheapServer.js'), 'Volar - HTML', 6011, false);
 
 	(async () => {
 		await apiClient.onReady();
