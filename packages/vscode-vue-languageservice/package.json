@@ -11,6 +11,7 @@
 		"@vue/compiler-dom": "latest",
 		"@vue/reactivity": "latest",
 		"@vue/shared": "latest",
+		"@starptech/prettyhtml": "latest",
 		"vscode-css-languageservice": "latest",
 		"vscode-html-languageservice": "latest",
 		"vscode-languageserver-textdocument": "latest",
