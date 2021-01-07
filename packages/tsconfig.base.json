@@ -3,8 +3,7 @@
 		"target": "es2019",
 		"lib": ["ESNext"],
 		"module": "commonjs",
-		"outDir": "out",
-		"rootDir": "src",
+		"moduleResolution": "node",
 		"sourceMap": true,
 		"composite": true,
 		"declaration": true,
@@ -14,6 +13,4 @@
 			"@volar/*": ["*/src"]
 		},
 	},
-	// "include": ["src"],
-	// "exclude": ["node_modules", ".vscode-test"]
 }
