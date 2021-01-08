@@ -246,14 +246,6 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 						props.add(camelize('on-' + propName));
 					}
 					for (const name of props.values()) {
-						// import('@vue/runtime-dom').Events
-						text += `// @ts-ignore\n`;
-						text += `({} as import('__VLS_vue').Events)`;
-						mappingPropertyAccess(MapedNodeTypes.Prop, name, capabilitiesSet.htmlTagOrAttr, {
-							start,
-							end,
-						});
-						text += `;\n`;
 						// __VLS_options.props
 						text += `// @ts-ignore\n`;
 						text += `__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`;
