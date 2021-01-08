@@ -80,13 +80,15 @@ function onInitialize(params: InitializeParams) {
 	mode = params.initializationOptions.mode;
 	setTypescript(params.initializationOptions.appRoot);
 
-	if (params.workspaceFolders) {
+	if (mode === 'html') {
+		initLanguageServiceHtml();
+	}
+	else if (params.workspaceFolders) {
 		for (const workspaceFolder of params.workspaceFolders) {
 			if (workspaceFolder.uri.startsWith('file:/')) {
 				switch (mode) {
-					case 'api': initLanguageServiceApi(uriToFsPath(workspaceFolder.uri));
-					case 'doc': initLanguageServiceDoc(uriToFsPath(workspaceFolder.uri));
-					case 'html': initLanguageServiceHtml();
+					case 'api': initLanguageServiceApi(uriToFsPath(workspaceFolder.uri)); break;
+					case 'doc': initLanguageServiceDoc(uriToFsPath(workspaceFolder.uri)); break;
 				}
 			}
 		}
@@ -102,9 +104,9 @@ function onInitialize(params: InitializeParams) {
 }
 async function onInitialized() {
 	switch (mode) {
-		case 'api': onInitializedApi();
-		case 'doc': onInitializedDoc();
-		case 'html': onInitializedHtml();
+		case 'api': onInitializedApi(); break;
+		case 'doc': onInitializedDoc(); break;
+		case 'html': onInitializedHtml(); break;
 	}
 }
 function initLanguageServiceApi(rootPath: string) {
