@@ -1,3 +1,9 @@
+### 0.19.3
+
+- fix: component props auto complete broke
+- fix: interpolation formatting incorrect edge case
+- chore: remove unneeded files to reduce extension size
+
 ### 0.19.2
 
 - fix: ref sugar variables unused report incorrect
