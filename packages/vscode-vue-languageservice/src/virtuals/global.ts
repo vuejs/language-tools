@@ -36,7 +36,7 @@ declare global {
 	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
 	function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
-	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: Exclude<__VLS_PropsType<T[K]>, __VLS_GlobalAttrsBase> /* __VLS_GlobalAttrs has perf issue with Exclude<> */ };
+	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: Omit<__VLS_PropsType<T[K]>, keyof __VLS_GlobalAttrsBase> /* __VLS_GlobalAttrs has perf issue with Omit<> */ };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & __VLS_GlobalAttrs & Record<string, unknown> };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : () => void };
 	type __VLS_PickEmitFunction<F, E> =
