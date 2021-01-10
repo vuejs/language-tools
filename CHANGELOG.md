@@ -1,3 +1,9 @@
+### 0.19.5
+
+- feat: add split editors button
+- feat: improve split editors
+- fix: `<template lang="pug">` block folding not working with `>` character
+
 ### 0.19.4
 
 - feat: split editors
