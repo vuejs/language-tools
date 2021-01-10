@@ -128,9 +128,20 @@
 			},
 			{
 				"command": "volar.action.splitEditors",
-				"title": "Volar: Split Editors"
+				"title": "Volar: Split <script>, <template>, <style> Editors",
+				"category": "Volar",
+				"icon": "images/split-editors.png"
 			}
-		]
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "volar.action.splitEditors",
+					"when": "editorLangId == vue",
+					"group": "navigation"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
