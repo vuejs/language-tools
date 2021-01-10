@@ -20,6 +20,7 @@ import {
 	D3Request,
 	DocumentVersionRequest,
 } from '@volar/shared';
+import * as splitEditors from './features/splitEditors';
 
 let apiClient: LanguageClient;
 let docClient: LanguageClient;
@@ -29,6 +30,8 @@ export async function activate(context: ExtensionContext) {
 	apiClient = createLanguageService(context, 'api', 'Volar - Basic', 6009, true);
 	docClient = createLanguageService(context, 'doc', 'Volar - Document', 6010, true);
 	cheapClient = createLanguageService(context, 'html', 'Volar - HTML', 6011, false);
+
+	splitEditors.activate(context);
 
 	(async () => {
 		await apiClient.onReady();

@@ -1,3 +1,7 @@
+### 0.19.4
+
+- feat: split editors
+
 ### 0.19.3
 
 - fix: component props auto complete broke

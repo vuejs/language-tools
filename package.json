@@ -112,19 +112,23 @@
 			},
 			{
 				"command": "volar.action.verifyAllScripts",
-				"title": "Volar: Verify all scripts"
+				"title": "Volar: Verify All Scripts"
 			},
 			{
 				"command": "volar.action.formatAllScripts",
-				"title": "Volar: Format all scripts"
+				"title": "Volar: Format All Scripts"
 			},
 			{
 				"command": "volar.action.writeVirtualFiles",
-				"title": "Volar: Write virtual files"
+				"title": "Volar: Write Virtual Files (Debug)"
 			},
 			{
 				"command": "volar.action.showCallGraph",
-				"title": "Volar: Show call graph (Experimental)"
+				"title": "Volar: Show Call Graph (Experimental)"
+			},
+			{
+				"command": "volar.action.splitEditors",
+				"title": "Volar: Split Editors"
 			}
 		]
 	},

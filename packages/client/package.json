@@ -6,7 +6,8 @@
 	},
 	"dependencies": {
 		"upath": "latest",
-		"vscode-languageclient": "latest"
+		"vscode-languageclient": "latest",
+		"@vue/compiler-sfc": "latest"
 	},
 	"devDependencies": {
 		"@types/vscode": "latest",
