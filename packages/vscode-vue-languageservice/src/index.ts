@@ -165,7 +165,7 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?
 
 			const fullText = script.getText(0, docLength) + addText;
 			const doc = TextDocument.create(uri, 'typescript', 0, fullText);
-			const sourceMap = new TsSourceMap(doc, doc, false, { foldingRanges: false, formatting: false });
+			const sourceMap = new TsSourceMap(doc, doc, false, { foldingRanges: false, formatting: false, documentSymbol: false });
 			for (const maped of mappings) {
 				sourceMap.add(maped);
 			}
@@ -184,7 +184,6 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?
 				const _end = docLength + addText.length;
 				mappings.push({
 					data: {
-						vueTag: '',
 						capabilities: {
 							references: true,
 							referencesCodeLens: true,

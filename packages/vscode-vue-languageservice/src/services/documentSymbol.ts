@@ -8,6 +8,7 @@ import {
 import { SourceFile } from '../sourceFiles';
 import * as globalServices from '../globalServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import { notEmpty } from '@volar/shared';
 
 export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
 	return (document: TextDocument) => {
@@ -18,7 +19,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
-		return [...vueResult, ...tsResult, ...htmlResult, ...cssResult];
+		// TODO: pug
+
+		return [
+			...vueResult,
+			...tsResult,
+			...htmlResult,
+			...cssResult,
+		];
 
 		function getVueResult(sourceFile: SourceFile) {
 
@@ -35,25 +43,43 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					)),
 				});
 			}
-
-			// if (desc.script) {
-			// 	result.push({
-			// 		name: '<script>',
-			// 		kind: SymbolKind.Module,
-			// 		location: Location.create(document.uri, Range.create(
-			// 			document.positionAt(desc.script.loc.start),
-			// 			document.positionAt(desc.script.loc.end),
-			// 		)),
-			// 	});
-			// }
-
+			if (desc.script) {
+				result.push({
+					name: '<script>',
+					kind: SymbolKind.Module,
+					location: Location.create(document.uri, Range.create(
+						document.positionAt(desc.script.loc.start),
+						document.positionAt(desc.script.loc.end),
+					)),
+				});
+			}
+			if (desc.scriptSetup) {
+				result.push({
+					name: '<script setup>',
+					kind: SymbolKind.Module,
+					location: Location.create(document.uri, Range.create(
+						document.positionAt(desc.scriptSetup.loc.start),
+						document.positionAt(desc.scriptSetup.loc.end),
+					)),
+				});
+			}
 			for (const style of desc.styles) {
 				result.push({
-					name: '<style>',
+					name: `<${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(notEmpty).join(' ')}>`,
 					kind: SymbolKind.Module,
 					location: Location.create(document.uri, Range.create(
 						document.positionAt(style.loc.start),
 						document.positionAt(style.loc.end),
+					)),
+				});
+			}
+			for (const customBlock of desc.customBlocks) {
+				result.push({
+					name: `<${customBlock.type}>`,
+					kind: SymbolKind.Module,
+					location: Location.create(document.uri, Range.create(
+						document.positionAt(customBlock.loc.start),
+						document.positionAt(customBlock.loc.end),
 					)),
 				});
 			}
@@ -65,6 +91,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const map = new Map<string, SymbolInformation>();
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				if (!sourceMap.capabilities.documentSymbol) continue;
 				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.targetDocument.uri);
 				for (const s of symbols) {
 					const vueLoc = sourceMap.targetToSource(s.location.range);
@@ -72,8 +99,6 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						map.set(`${sourceMap.targetDocument.offsetAt(s.location.range.start)}:${sourceMap.targetDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
 							...s,
 							location: Location.create(document.uri, vueLoc.range),
-							name: s.kind === SymbolKind.Module ? `<${vueLoc.maped.data.vueTag}>` : s.name,
-							containerName: s.containerName ?? `<${vueLoc.maped.data.vueTag}>`,
 						});
 					}
 				}

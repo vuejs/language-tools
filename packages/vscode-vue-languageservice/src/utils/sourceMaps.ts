@@ -180,7 +180,7 @@ export enum MapedNodeTypes {
 }
 
 export interface TsMappingData {
-	vueTag: string,
+	vueTag?: 'template' | 'script' | 'scriptSetup' | 'style',
 	type?: MapedNodeTypes,
 	isNoDollarRef?: boolean,
 	capabilities: {
@@ -204,6 +204,7 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 		public capabilities: {
 			foldingRanges: boolean,
 			formatting: boolean,
+			documentSymbol: boolean,
 		},
 	) {
 		super(sourceDocument, targetDocument);

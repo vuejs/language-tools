@@ -230,7 +230,7 @@ export function useScriptSetupGen(
 		if (!textDocument.value) return;
 
 		const vueDoc = getUnreactiveDoc();
-		const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false });
+		const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false, documentSymbol: true });
 
 		if (script.value && docGen.value.scriptRange) {
 			sourceMap.add({
@@ -386,7 +386,7 @@ export function useScriptSetupGen(
 		if (!textDocumentForSuggestion.value) return;
 
 		const vueDoc = getUnreactiveDoc();
-		const sourceMap = new TsSourceMap(vueDoc, textDocumentForSuggestion.value, false, { foldingRanges: false, formatting: false });
+		const sourceMap = new TsSourceMap(vueDoc, textDocumentForSuggestion.value, false, { foldingRanges: false, formatting: false, documentSymbol: false });
 
 		if (script.value && scriptForSuggestion.value.scriptRange) {
 			sourceMap.add({
@@ -462,7 +462,7 @@ export function useScriptSetupGen(
 				sourceMap.value.sourceDocument,
 				shadowTsTextDocument.value,
 				sourceMap.value.isInterpolation,
-				{ foldingRanges: false, formatting: false },
+				{ foldingRanges: false, formatting: false, documentSymbol: false },
 			);
 			for (const maped of sourceMap.value) {
 				newSourceMap.add({

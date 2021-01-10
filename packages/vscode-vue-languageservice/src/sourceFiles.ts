@@ -323,16 +323,18 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		function updateCustomBlocks(newDescriptor: vueSfc.SFCDescriptor) {
 			for (let i = 0; i < newDescriptor.customBlocks.length; i++) {
-				const style = newDescriptor.customBlocks[i];
+				const block = newDescriptor.customBlocks[i];
 				const newData = {
-					lang: style.lang ?? '',
-					content: style.content,
+					type: block.type,
+					lang: block.lang ?? '',
+					content: block.content,
 					loc: {
-						start: style.loc.start.offset,
-						end: style.loc.end.offset,
+						start: block.loc.start.offset,
+						end: block.loc.end.offset,
 					},
 				};
 				if (descriptor.customBlocks.length > i) {
+					descriptor.customBlocks[i].type = newData.type;
 					descriptor.customBlocks[i].lang = newData.lang;
 					descriptor.customBlocks[i].content = newData.content;
 					descriptor.customBlocks[i].loc.start = newData.loc.start;

@@ -52,10 +52,9 @@ export function useScriptMain(
 		if (textDocument.value) {
 			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false, documentSymbol: false });
 			sourceMap.add({
 				data: {
-					vueTag: '',
 					capabilities: {},
 				},
 				mode: MapedMode.In,

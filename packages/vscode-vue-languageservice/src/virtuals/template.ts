@@ -245,7 +245,7 @@ export function useTemplateScript(
 	const sourceMap = computed(() => {
 		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: false });
+			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: false, documentSymbol: false });
 			for (const [uri, mappings] of [...data.value.cssModuleMappings, ...data.value.cssScopedMappings]) {
 				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.targetDocument.uri === uri);
 				if (!cssSourceMap) continue;
@@ -293,7 +293,7 @@ export function useTemplateScript(
 	const sourceMapForFormatting = computed(() => {
 		if (data.value && textDocumentForFormatting.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocumentForFormatting.value, true, { foldingRanges: false, formatting: true });
+			const sourceMap = new TsSourceMap(vueDoc, textDocumentForFormatting.value, true, { foldingRanges: false, formatting: true, documentSymbol: false });
 			for (const maped of data.value.interpolations.formapMappings) {
 				sourceMap.add({
 					data: maped.data,
