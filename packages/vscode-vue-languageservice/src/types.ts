@@ -37,7 +37,8 @@ export interface IDescriptor {
 	styles: (IDescriptorBlock & {
 		module: boolean;
 		scoped: boolean;
-	})[];
+    })[];
+    customBlocks: IDescriptorBlock[],
 }
 export interface ITemplateScriptData {
     projectVersion: string | undefined;

@@ -15,7 +15,7 @@ export function register() {
 
 		const sourceFile = createSourceFile(document, tsService2.service);
 
-		const vueResult = getVueResult(); // include html folding ranges
+		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
 		const pugResult = getPugResult(sourceFile);
@@ -27,8 +27,20 @@ export function register() {
 			...pugResult,
 		];
 
-		function getVueResult() {
-			return globalServices.html.getFoldingRanges(document);
+		function getVueResult(sourceFile: SourceFile) {
+			let docTextWithoutBlocks = document.getText();
+			const desc = sourceFile.getDescriptor();
+			const blocks = [desc.script, desc.scriptSetup, ...desc.styles, ...desc.customBlocks].filter(notEmpty);
+			if (desc.template && desc.template.lang !== 'html') {
+				blocks.push(desc.template);
+			}
+			for (const block of blocks) {
+				const content = docTextWithoutBlocks.substring(block.loc.start, block.loc.end);
+				docTextWithoutBlocks = docTextWithoutBlocks.substring(0, block.loc.start)
+					+ content.split('\n').map(line => ' '.repeat(line.length)).join('\n')
+					+ docTextWithoutBlocks.substring(block.loc.end);
+			}
+			return globalServices.html.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
 		}
 		function getTsResult(sourceFile: SourceFile) {
 			const tsSourceMaps = [

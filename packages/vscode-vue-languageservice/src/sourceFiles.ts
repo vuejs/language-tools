@@ -42,6 +42,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		script: null,
 		scriptSetup: null,
 		styles: [],
+		customBlocks: [],
 	});
 	const lastUpdateChanged = {
 		template: false,
@@ -206,6 +207,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		updateScript(newDescriptor);
 		updateScriptSetup(newDescriptor);
 		updateStyles(newDescriptor);
+		updateCustomBlocks(newDescriptor);
 		virtualTemplateGen.update(); // TODO
 
 		if (newVueDocument.getText() !== vueDoc.value.getText()) {
@@ -317,6 +319,31 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			}
 			while (descriptor.styles.length > newDescriptor.styles.length) {
 				descriptor.styles.pop();
+			}
+		}
+		function updateCustomBlocks(newDescriptor: vueSfc.SFCDescriptor) {
+			for (let i = 0; i < newDescriptor.customBlocks.length; i++) {
+				const style = newDescriptor.customBlocks[i];
+				const newData = {
+					lang: style.lang ?? '',
+					content: style.content,
+					loc: {
+						start: style.loc.start.offset,
+						end: style.loc.end.offset,
+					},
+				};
+				if (descriptor.customBlocks.length > i) {
+					descriptor.customBlocks[i].lang = newData.lang;
+					descriptor.customBlocks[i].content = newData.content;
+					descriptor.customBlocks[i].loc.start = newData.loc.start;
+					descriptor.customBlocks[i].loc.end = newData.loc.end;
+				}
+				else {
+					descriptor.customBlocks.push(newData);
+				}
+			}
+			while (descriptor.customBlocks.length > newDescriptor.customBlocks.length) {
+				descriptor.customBlocks.pop();
 			}
 		}
 	}
