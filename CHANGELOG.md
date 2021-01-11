@@ -1,3 +1,8 @@
+### 0.19.6
+
+- fix: prop types incorrect if duplicate name with HTMLAttributes
+- fix: symbols outline incorrect
+
 ### 0.19.5
 
 - feat: add split editors button
