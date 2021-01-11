@@ -1,183 +1,65 @@
-import { join } from 'upath';
-import { commands, env, ExtensionContext, extensions, languages, Uri, ViewColumn, window, workspace, Position as vPosition, Location as vLocation, Range as vRange } from 'vscode';
-import { activateTagClosing } from './tagClosing';
-import { registerDocumentSemanticTokensProvider } from './semanticTokens';
-import {
-	LanguageClient,
-	LanguageClientOptions,
-	ServerOptions,
-	TransportKind,
-	Position,
-	Location,
-} from 'vscode-languageclient/node';
-import {
-	TagCloseRequest,
-	VerifyAllScriptsRequest,
-	FormatAllScriptsRequest,
-	WriteVirtualFilesRequest,
-	RestartServerNotification,
-	ShowReferencesNotification,
-	D3Request,
-	DocumentVersionRequest,
-} from '@volar/shared';
+import * as path from 'upath';
+import * as vscode from 'vscode';
+import * as lsp from 'vscode-languageclient/node';
 import * as splitEditors from './features/splitEditors';
+import * as callGraph from './features/callGraph';
+import * as showReferences from './features/showReferences';
+import * as documentVersion from './features/documentVersion';
+import * as formatAll from './features/formatAll';
+import * as verifyAll from './features/verifyAll';
+import * as virtualFiles from './features/virtualFiles';
+import * as restart from './features/restart';
+import * as tagClosing from './features/tagClosing';
+import * as semanticTokens from './features/semanticTokens';
 
-let apiClient: LanguageClient;
-let docClient: LanguageClient;
-let cheapClient: LanguageClient;
+let apiClient: lsp.LanguageClient;
+let docClient: lsp.LanguageClient;
+let htmlClient: lsp.LanguageClient;
 
-export async function activate(context: ExtensionContext) {
-	apiClient = createLanguageService(context, 'api', 'Volar - Basic', 6009, true);
+export async function activate(context: vscode.ExtensionContext) {
+	apiClient = createLanguageService(context, 'api', 'Volar - API', 6009, true);
 	docClient = createLanguageService(context, 'doc', 'Volar - Document', 6010, true);
-	cheapClient = createLanguageService(context, 'html', 'Volar - HTML', 6011, false);
+	htmlClient = createLanguageService(context, 'html', 'Volar - HTML', 6011, false);
 
 	splitEditors.activate(context);
-
-	(async () => {
-		await apiClient.onReady();
-		await docClient.onReady();
-		await cheapClient.onReady();
-
-		context.subscriptions.push(docClient.onRequest(DocumentVersionRequest.type, handler => {
-			const doc = workspace.textDocuments.find(doc => doc.uri.toString() === handler.uri);
-			return doc?.version;
-		}));
-		context.subscriptions.push(await registerDocumentSemanticTokensProvider(docClient));
-		context.subscriptions.push(activateTagClosing((document, position) => {
-			let param = cheapClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return cheapClient.sendRequest(TagCloseRequest.type, param);
-		}, { vue: true }, 'html.autoClosingTags'));
-		context.subscriptions.push(commands.registerCommand('volar.action.restartServer', () => {
-			apiClient.sendNotification(RestartServerNotification.type, undefined);
-			docClient.sendNotification(RestartServerNotification.type, undefined);
-		}));
-		context.subscriptions.push(commands.registerCommand('volar.action.verifyAllScripts', () => {
-			docClient.sendRequest(VerifyAllScriptsRequest.type, undefined);
-		}));
-		context.subscriptions.push(commands.registerCommand('volar.action.writeVirtualFiles', () => {
-			docClient.sendRequest(WriteVirtualFilesRequest.type, undefined);
-		}));
-		context.subscriptions.push(commands.registerCommand('volar.action.formatAllScripts', async () => {
-			const useTabsOptions = new Map<boolean, string>();
-			useTabsOptions.set(true, 'Indent Using Tabs');
-			useTabsOptions.set(false, 'Indent Using Spaces');
-			const useTabs = await userPick(useTabsOptions);
-			if (useTabs === undefined) return; // cancle
-
-			const tabSizeOptions = new Map<number, string>();
-			for (let i = 1; i <= 8; i++) {
-				tabSizeOptions.set(i, i.toString());
-			}
-			const tabSize = await userPick(tabSizeOptions, 'Select Tab Size');
-			if (tabSize === undefined) return; // cancle
-
-			apiClient.sendRequest(FormatAllScriptsRequest.type, {
-				insertSpaces: !useTabs,
-				tabSize,
-			});
-
-			function userPick<K>(options: Map<K, string>, placeholder?: string) {
-				return new Promise<K | undefined>(resolve => {
-					const quickPick = window.createQuickPick();
-					quickPick.items = [...options.values()].map(option => ({ label: option }));
-					quickPick.placeholder = placeholder;
-					quickPick.onDidChangeSelection(selection => {
-						if (selection[0]) {
-							for (const [key, label] of options) {
-								if (selection[0].label === label) {
-									resolve(key);
-									quickPick.hide();
-								}
-							}
-						}
-					});
-					quickPick.onDidHide(() => {
-						quickPick.dispose();
-						resolve(undefined);
-					})
-					quickPick.show();
-				});
-			}
-		}));
-		context.subscriptions.push(commands.registerCommand('volar.action.showCallGraph', async () => {
-			const document = window.activeTextEditor?.document;
-			if (!document) return;
-			let param = apiClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
-			const d3 = await apiClient.sendRequest(D3Request.type, param);
-
-			const panel = window.createWebviewPanel(
-				'vueCallGraph',
-				'Vue Call Graph',
-				ViewColumn.One,
-				{
-					enableScripts: true
-				}
-			);
-			panel.webview.html = `
-	<script src="https://d3js.org/d3.v5.min.js"></script>
-	<script src="https://unpkg.com/viz.js@1.8.1/viz.js" type="javascript/worker"></script>
-	<script src="https://unpkg.com/d3-graphviz@2.1.0/build/d3-graphviz.min.js"></script>
-	<div id="graph" style="text-align: center;"></div>
-	<script>
-	
-		var dotIndex = 0;
-		var graphviz = d3.select("#graph").graphviz()
-			.zoom(false)
-			.on("initEnd", render)
-	
-		function render() {
-			var dot = \`${d3}\`;
-			graphviz
-				.renderDot(dot)
-		}
-	
-	</script>
-	`
-		}));
-		context.subscriptions.push(apiClient.onNotification(ShowReferencesNotification.type, handler => {
-			const uri: string = handler.uri;
-			const pos: Position = handler.position;
-			const refs: Location[] = handler.references;
-			commands.executeCommand(
-				'editor.action.showReferences',
-				Uri.parse(uri),
-				new vPosition(pos.line, pos.character),
-				refs.map(ref => new vLocation(
-					Uri.parse(ref.uri),
-					new vRange(ref.range.start.line, ref.range.start.character, ref.range.end.line, ref.range.end.character),
-				)),
-			);
-		}));
-	})();
+	callGraph.activate(context, apiClient);
+	showReferences.activate(context, apiClient);
+	documentVersion.activate(context, docClient);
+	formatAll.activate(context, apiClient);
+	verifyAll.activate(context, docClient);
+	virtualFiles.activate(context, docClient);
+	tagClosing.activate(context, htmlClient);
+	semanticTokens.activate(context, docClient);
+	restart.activate(context, [apiClient, docClient]);
 
 	// TODO: active by vue block lang
 	startEmbeddedLanguageServices();
 }
 
 export function deactivate(): Thenable<void> | undefined {
-	return apiClient?.stop() && docClient?.stop() && cheapClient?.stop();
+	return apiClient?.stop() && docClient?.stop() && htmlClient?.stop();
 }
 
-function createLanguageService(context: ExtensionContext, mode: string, name: string, port: number, fileOnly: boolean) {
+function createLanguageService(context: vscode.ExtensionContext, mode: string, name: string, port: number, fileOnly: boolean) {
 	// The server is implemented in node
-	let serverModule = context.asAbsolutePath(join('node_modules', '@volar', 'server', 'out', 'server.js'));
+	let serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'server', 'out', 'server.js'));
 	// The debug options for the server
 	// --inspect=6009: runs the server in Node's Inspector mode so VS Code can attach to the server for debugging
 	let debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
-	let serverOptions: ServerOptions = {
-		run: { module: serverModule, transport: TransportKind.ipc },
+	let serverOptions: lsp.ServerOptions = {
+		run: { module: serverModule, transport: lsp.TransportKind.ipc },
 		debug: {
 			module: serverModule,
-			transport: TransportKind.ipc,
+			transport: lsp.TransportKind.ipc,
 			options: debugOptions
 		},
 	};
 
 	// Options to control the language client
-	let clientOptions: LanguageClientOptions = {
+	let clientOptions: lsp.LanguageClientOptions = {
 		// Register the server for plain text documents
 		documentSelector: fileOnly ?
 			[
@@ -191,16 +73,16 @@ function createLanguageService(context: ExtensionContext, mode: string, name: st
 			],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contained in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
 		},
 		initializationOptions: {
-			appRoot: env.appRoot,
+			appRoot: vscode.env.appRoot,
 			mode: mode,
 		},
 	};
 
 	// Create the language client and start the client.
-	const client = new LanguageClient(
+	const client = new lsp.LanguageClient(
 		name,
 		serverOptions,
 		clientOptions,
@@ -212,9 +94,10 @@ function createLanguageService(context: ExtensionContext, mode: string, name: st
 	return client;
 }
 async function startEmbeddedLanguageServices() {
-	const ts = extensions.getExtension('vscode.typescript-language-features');
-	const css = extensions.getExtension('vscode.css-language-features');
-	const html = extensions.getExtension('vscode.html-language-features');
+	const ts = vscode.extensions.getExtension('vscode.typescript-language-features');
+	const css = vscode.extensions.getExtension('vscode.css-language-features');
+	const html = vscode.extensions.getExtension('vscode.html-language-features');
+
 	if (ts && !ts.isActive) {
 		await ts.activate();
 	}
@@ -225,10 +108,10 @@ async function startEmbeddedLanguageServices() {
 		await html.activate();
 	}
 
-	languages.setLanguageConfiguration('vue', {
+	vscode.languages.setLanguageConfiguration('vue', {
 		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
 	});
-	languages.setLanguageConfiguration('jade', {
+	vscode.languages.setLanguageConfiguration('jade', {
 		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
 	});
 }
