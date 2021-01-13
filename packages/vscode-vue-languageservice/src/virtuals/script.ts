@@ -8,6 +8,7 @@ import { getCheapTsService } from '../globalServices';
 import type * as ts from 'typescript';
 import { transformVueHtml } from '../utils/vueHtmlConverter';
 import { getTypescript } from '@volar/vscode-builtin-packages';
+import * as path from 'upath';
 
 export function useScriptSetupGen(
 	getUnreactiveDoc: () => TextDocument,
@@ -111,6 +112,7 @@ export function useScriptSetupGen(
 		if (!script.value && !scriptSetup.value) return;
 
 		let code = '';
+		let scriptSrcRange: MapedRange | undefined;
 		let scriptRange: MapedRange | undefined;
 		let scriptSetupRange: MapedRange | undefined;
 		let defaultExportRange: {
@@ -126,6 +128,14 @@ export function useScriptSetupGen(
 			partRange: MapedRange,
 			genRange: MapedRange,
 		} | undefined;
+
+		if (script.value?.src) {
+			code += `export * from `;
+			scriptSrcRange = addCode(`'${script.value.src}'`);
+			code += `;\n`
+			code += `import __VLS_ScriptSrc from '${script.value.src}';\n`;
+			code += `export default __VLS_ScriptSrc;\n`;
+		}
 
 		if (script.value) {
 			if (scriptSetup.value && scriptData.value?.exportDefault) {
@@ -186,6 +196,7 @@ export function useScriptSetupGen(
 
 		return {
 			code,
+			scriptSrcRange,
 			scriptRange,
 			scriptSetupRange,
 			defaultExportRange,
@@ -254,6 +265,30 @@ export function useScriptSetupGen(
 				},
 				targetRange: docGen.value.scriptRange,
 			});
+			if (script.value.src && docGen.value.scriptSrcRange) {
+				const src = script.value.src;
+				const vueStart = vueDoc.getText().substring(0, script.value.loc.start).lastIndexOf(src); // TODO: don't use indexOf()
+				const vueEnd = vueStart + src.length;
+				sourceMap.add({
+					data: {
+						vueTag: 'script',
+						capabilities: {
+							basic: true,
+							references: true,
+							rename: true,
+							diagnostic: true,
+							completion: true,
+							semanticTokens: true,
+						},
+					},
+					mode: MapedMode.Offset,
+					sourceRange: {
+						start: vueStart - 1,
+						end: vueEnd + 1,
+					},
+					targetRange: docGen.value.scriptSrcRange,
+				});
+			}
 		}
 		if (scriptSetup.value && scriptSetupGenResult.value && docGen.value.scriptSetupRange) {
 			const vueDoc = getUnreactiveDoc();

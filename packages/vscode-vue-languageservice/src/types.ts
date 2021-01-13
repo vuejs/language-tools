@@ -30,7 +30,9 @@ export interface IDescriptorBlock {
 }
 export interface IDescriptor {
 	template: IDescriptorBlock | null;
-	script: IDescriptorBlock | null;
+	script: (IDescriptorBlock & {
+		src?: string;
+    }) | null;
 	scriptSetup: (IDescriptorBlock & {
 		setup: string;
 	}) | null;

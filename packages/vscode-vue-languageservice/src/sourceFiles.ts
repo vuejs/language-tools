@@ -248,6 +248,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		}
 		function updateScript(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.script ? {
+				src: newDescriptor.script.src,
 				lang: newDescriptor.script.lang ?? 'js',
 				content: newDescriptor.script.content,
 				loc: {
@@ -259,6 +260,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			lastUpdateChanged.script = descriptor.script?.content !== newData?.content;
 
 			if (descriptor.script && newData) {
+				descriptor.script.src = newData.src;
 				descriptor.script.lang = newData.lang;
 				descriptor.script.content = newData.content;
 				descriptor.script.loc.start = newData.loc.start;
