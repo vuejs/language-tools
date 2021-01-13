@@ -1,3 +1,7 @@
+### 0.19.7
+
+- feat: `<script src>` support
+
 ### 0.19.6
 
 - fix: prop types incorrect if duplicate name with HTMLAttributes
