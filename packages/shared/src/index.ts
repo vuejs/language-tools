@@ -32,9 +32,6 @@ export function getValidScriptSyntax(syntax: string) {
     }
     return 'js';
 }
-export function randomStr() {
-    return [...Array(10)].map(i => (~~(Math.random() * 36)).toString(36)).join('');
-}
 export function notEmpty<T>(value: T | null | undefined): value is T {
     return value !== null && value !== undefined;
 }

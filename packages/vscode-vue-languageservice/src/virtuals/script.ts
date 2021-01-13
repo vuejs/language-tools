@@ -15,7 +15,6 @@ export function useScriptSetupGen(
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,
 	html: Ref<string | undefined>,
 ) {
-	const ts = getTypescript();
 	let version = 0;
 	const scriptData = computed(() => {
 		if (script.value) {
@@ -289,7 +288,6 @@ export function useScriptSetupGen(
 			}
 		}
 		if (scriptSetup.value && scriptSetupGenResult.value && docGen.value.scriptSetupRange) {
-			const vueDoc = getUnreactiveDoc();
 			for (const mapping of scriptSetupGenResult.value.mappings) {
 				sourceMap.add({
 					data: {

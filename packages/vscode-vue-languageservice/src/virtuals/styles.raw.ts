@@ -3,7 +3,6 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, CssSourceMap } from '../utils/sourceMaps';
 import * as globalServices from '../globalServices';
-import type * as ts from 'typescript';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
 import { uriToFsPath } from '@volar/shared';

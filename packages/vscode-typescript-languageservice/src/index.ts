@@ -1,4 +1,3 @@
-import type * as ts from 'typescript';
 import * as ShPlugin from 'typescript-vscode-sh-plugin';
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
