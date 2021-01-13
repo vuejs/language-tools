@@ -8,7 +8,6 @@ import { getCheapTsService } from '../globalServices';
 import type * as ts from 'typescript';
 import { transformVueHtml } from '../utils/vueHtmlConverter';
 import { getTypescript } from '@volar/vscode-builtin-packages';
-import * as path from 'upath';
 
 export function useScriptSetupGen(
 	getUnreactiveDoc: () => TextDocument,
@@ -49,8 +48,7 @@ export function useScriptSetupGen(
 	});
 	const scriptSetupGenResult = computed(() => {
 		if (scriptSetup.value && scriptSetupData.value) {
-			const vueDoc = getUnreactiveDoc();
-			return genScriptSetup(vueDoc.uri, scriptSetup.value.content, scriptSetup.value.setup, scriptSetupData.value);
+			return genScriptSetup(scriptSetup.value.content, scriptSetupData.value);
 		}
 	});
 	const scriptForSuggestion = computed(() => {
@@ -310,35 +308,6 @@ export function useScriptSetupGen(
 					},
 				});
 			}
-			{
-				const setup = scriptSetup.value.setup;
-				const vueStart = vueDoc.getText().substring(0, scriptSetup.value.loc.start).lastIndexOf(setup); // TODO: don't use indexOf()
-				const vueEnd = vueStart + setup.length;
-				const tsStart = docGen.value.code.indexOf(`${setup}${SearchTexts.SetupParams}`);
-				const tsEnd = tsStart + setup.length;
-				sourceMap.add({
-					data: {
-						vueTag: 'scriptSetup',
-						capabilities: {
-							basic: true,
-							references: true,
-							rename: true,
-							diagnostic: true,
-							completion: true,
-							semanticTokens: true,
-						},
-					},
-					mode: MapedMode.Offset,
-					sourceRange: {
-						start: vueStart,
-						end: vueEnd,
-					},
-					targetRange: {
-						start: tsStart,
-						end: tsEnd,
-					},
-				});
-			}
 		}
 		if (docGen.value.defaultExportRange) {
 			const optionsRange = docGen.value.defaultExportRange;
@@ -534,9 +503,7 @@ export function useScriptSetupGen(
 }
 
 function genScriptSetup(
-	uri: string,
 	originalCode: string,
-	setupParams: string,
 	data: ReturnType<typeof getScriptSetupData>,
 ) {
 	let sourceCode = originalCode;
@@ -762,7 +729,7 @@ function genScriptSetup(
 			end: 0,
 		},
 	});
-	genCode += `(${setupParams}${SearchTexts.SetupParams}) {\n`;
+	genCode += `() {\n`;
 
 	const labels = data.labels.sort((a, b) => a.start - b.start);
 	let tsOffset = 0;

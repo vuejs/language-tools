@@ -278,7 +278,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					start: newDescriptor.scriptSetup.loc.start.offset,
 					end: newDescriptor.scriptSetup.loc.end.offset,
 				},
-				setup: typeof newDescriptor.scriptSetup.setup === 'string' ? newDescriptor.scriptSetup.setup : '',
 			} : null;
 
 			lastUpdateChanged.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
@@ -288,7 +287,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				descriptor.scriptSetup.content = newData.content;
 				descriptor.scriptSetup.loc.start = newData.loc.start;
 				descriptor.scriptSetup.loc.end = newData.loc.end;
-				descriptor.scriptSetup.setup = newData.setup;
 			}
 			else {
 				descriptor.scriptSetup = newData;

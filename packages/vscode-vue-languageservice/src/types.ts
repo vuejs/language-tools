@@ -33,9 +33,7 @@ export interface IDescriptor {
 	script: (IDescriptorBlock & {
 		src?: string;
     }) | null;
-	scriptSetup: (IDescriptorBlock & {
-		setup: string;
-	}) | null;
+	scriptSetup: IDescriptorBlock | null;
 	styles: (IDescriptorBlock & {
 		module: boolean;
 		scoped: boolean;
