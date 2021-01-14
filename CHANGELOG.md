@@ -1,3 +1,9 @@
+### 0.19.8
+
+- feat: show underscore with css scoped classes
+- fix: css scoped classes definition goto wrong place if define in import file
+- fix: FunctionalComponent services not working with `setup()` return
+
 ### 0.19.7
 
 - feat: `<script src>` support
