@@ -52,7 +52,7 @@ declare global {
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
-	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends new (...args: any) => any ? K : never]: T[K] };
+	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent ? K : never]: T[K] };
 }
 
 declare const app: App;
