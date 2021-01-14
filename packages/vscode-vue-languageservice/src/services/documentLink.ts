@@ -26,9 +26,16 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 		}
 
 		const tsResult = getTsResult(sourceFile);
+		const tsResult2 = getTsResult2(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
-		return [...cssResult, ...htmlResult, ...tsResult];
+
+		return [
+			...cssResult,
+			...htmlResult,
+			...tsResult,
+			...tsResult2,
+		];
 
 		function getTsResult(sourceFile: SourceFile) {
 			let result: DocumentLink[] = [];
@@ -117,6 +124,24 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 					? node.children.map(f)
 					: [];
 			}
+		}
+		function getTsResult2(sourceFile: SourceFile) {
+			const result: DocumentLink[] = [];
+			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				for (const maped of sourceMap) {
+					if (!maped.data.showLink) {
+						continue;
+					}
+					result.push({
+						range: {
+							start: document.positionAt(maped.sourceRange.start),
+							end: document.positionAt(maped.sourceRange.end),
+						},
+						target: document.uri, // TODO
+					});
+				}
+			}
+			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentLink[] = [];

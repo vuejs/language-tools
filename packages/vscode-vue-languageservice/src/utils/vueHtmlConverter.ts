@@ -7,16 +7,16 @@ import type { TemplateChildNode, ElementNode, RootNode, TransformContext } from 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
 	noFormatting: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
-	diagnosticOnly: { basic: false, diagnostic: true, references: false, rename: false, completion: true, semanticTokens: false },
-	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, rename: true, completion: false, semanticTokens: false },
-	className: { basic: true, diagnostic: false, references: true, rename: true, completion: false, semanticTokens: false },
-	slotName: { basic: true, diagnostic: true, references: true, rename: false, completion: false, semanticTokens: false },
-	slotNameExport: { basic: true, diagnostic: true, references: true, rename: false, completion: false, semanticTokens: false, referencesCodeLens: true },
-	propRaw: { basic: false, diagnostic: false, references: true, rename: true, completion: false, semanticTokens: false },
-	referencesOnly: { basic: false, diagnostic: false, references: true, rename: false, completion: false, semanticTokens: false },
+	diagnosticOnly: { diagnostic: true, completion: true, },
+	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, rename: true, },
+	className: { basic: true, references: true, rename: true, },
+	slotName: { basic: true, diagnostic: true, references: true, },
+	slotNameExport: { basic: true, diagnostic: true, references: true, referencesCodeLens: true },
+	propRaw: { references: true, rename: true, },
+	referencesOnly: { references: true, },
 }
 
-export function transformVueHtml(html: string, componentNames: string[] = [], htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined, scriptSetupVars?: string[]) {
+export function transformVueHtml(html: string, componentNames: string[] = [], cssScopedClasses: string[] = [], htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined, scriptSetupVars?: string[]) {
 	let node: vueDom.RootNode;
 	try {
 		node = vueDom.compile(html, { onError: () => { } }).ast;
@@ -42,6 +42,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 		loc: MapedRange,
 	}>();
 	const componentsMap = new Map<string, string>();
+	const cssScopedClassesSet = new Set(cssScopedClasses);
 
 	for (const componentName of componentNames) {
 		componentsMap.set(hyphenate(componentName), componentName);
@@ -470,11 +471,16 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 
 						function addClass(className: string, offset: number) {
 							text += `// @ts-ignore\n`;
-							text += `__VLS_styleScopedClasses`
-							mappingPropertyAccess(MapedNodeTypes.Prop, className, capabilitiesSet.className, {
-								start: offset,
-								end: offset + className.length,
-							});
+							text += `__VLS_styleScopedClasses`;
+							const maped = mappingPropertyAccess(
+								MapedNodeTypes.Prop,
+								className,
+								capabilitiesSet.className,
+								{ start: offset, end: offset + className.length }
+							);
+							if (maped && cssScopedClassesSet.has(className)) {
+								maped.data.showLink = true;
+							}
 							text += `;\n`;
 						}
 					}
@@ -785,21 +791,22 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 	};
 	function mappingObjectProperty(type: MapedNodeTypes | undefined, mapCode: string, capabilities: TsMappingData['capabilities'], sourceRange: { start: number, end: number }) {
 		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
-			mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange);
+			return mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange);
 		}
 		else {
-			mappingWithQuotes(type, mapCode, capabilities, sourceRange);
+			return mappingWithQuotes(type, mapCode, capabilities, sourceRange);
 		}
 	}
 	function mappingPropertyAccess(type: MapedNodeTypes | undefined, mapCode: string, capabilities: TsMappingData['capabilities'], sourceRange: { start: number, end: number }, addCode = true) {
 		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
 			if (addCode) text += `.`;
-			mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange, addCode);
+			return mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange, addCode);
 		}
 		else {
 			if (addCode) text += `[`;
-			mappingWithQuotes(type, mapCode, capabilities, sourceRange, addCode);
+			const result = mappingWithQuotes(type, mapCode, capabilities, sourceRange, addCode);
 			if (addCode) text += `]`;
+			return result;
 		}
 	}
 	function mappingWithQuotes(type: MapedNodeTypes | undefined, mapCode: string, capabilities: TsMappingData['capabilities'], sourceRange: { start: number, end: number }, addCode = true) {
@@ -812,8 +819,9 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 			referencesCodeLens: false,
 		}, sourceRange, false);
 		if (addCode) text += `'`;
-		mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange, addCode);
+		const result = mapping(type, mapCode, MapedMode.Offset, capabilities, sourceRange, addCode, undefined);
 		if (addCode) text += `'`;
+		return result;
 	}
 	function mapping(type: MapedNodeTypes | undefined, mapCode: string, mode: MapedMode, capabilities: TsMappingData['capabilities'], sourceRange: { start: number, end: number }, addCode = true, formatWrapper?: [string, string]) {
 		if (htmlToTemplate) {
@@ -851,7 +859,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 			formatCode += formatWrapper[1];
 			formatCode += `\n;\n`;
 		}
-		mappings.push({
+		const result: Mapping<TsMappingData> = {
 			mode,
 			sourceRange: sourceRange,
 			targetRange: {
@@ -863,9 +871,11 @@ export function transformVueHtml(html: string, componentNames: string[] = [], ht
 				vueTag: 'template',
 				capabilities: capabilities,
 			},
-		});
+		};
+		mappings.push(result);
 		if (addCode) {
 			text += mapCode;
 		}
+		return result;
 	}
 };

@@ -38,9 +38,12 @@ export function useTemplateScript(
 		if (!templateData.value?.html) {
 			return;
 		}
+		const cssModuleClasses = getCssClasses('module');
+		const cssScopedClasses = getCssClasses('scoped');
 		const interpolations = transformVueHtml(
 			templateData.value.html,
 			templateScriptData.components,
+			[...cssScopedClasses.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 		);
 
@@ -86,14 +89,12 @@ export function useTemplateScript(
 		/* CSS Module */
 		text += '/* CSS Module */\n';
 		text += 'declare const $style: {\n';
-		const cssModuleClasses = getCssClasses('module');
 		const cssModuleMappings = writeCssClassProperties(cssModuleClasses);
 		text += '};\n';
 
 		/* Style Scoped */
 		text += '/* Style Scoped */\n';
 		text += 'declare const __VLS_styleScopedClasses: {\n';
-		const cssScopedClasses = getCssClasses('scoped');
 		const cssScopedMappings = writeCssClassProperties(cssScopedClasses);
 		text += '};\n';
 
@@ -227,7 +228,7 @@ export function useTemplateScript(
 				for (const link of sourceMap.links) {
 					for (const [className, offsets] of findClassNames(link.textDocument, link.stylesheet)) {
 						for (const offset of offsets) {
-							addClassName(sourceMap.textDocument.uri, className, offset);
+							addClassName(link.textDocument.uri, className, offset);
 						}
 					}
 				}

@@ -183,6 +183,7 @@ export interface TsMappingData {
 	vueTag?: 'template' | 'script' | 'scriptSetup' | 'style',
 	type?: MapedNodeTypes,
 	isNoDollarRef?: boolean,
+	showLink?: boolean,
 	capabilities: {
 		basic?: boolean,
 		references?: boolean, // references, definitions
