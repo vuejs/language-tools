@@ -5,15 +5,15 @@ import { NodeTypes, transformOn } from '@vue/compiler-dom';
 import type { TemplateChildNode, ElementNode, RootNode, TransformContext } from '@vue/compiler-dom';
 
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
-	noFormatting: { basic: true, diagnostic: true, references: true, rename: true, completion: true, semanticTokens: true },
+	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	noFormatting: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true, completion: true, },
-	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, rename: true, },
-	className: { basic: true, references: true, rename: true, },
-	slotName: { basic: true, diagnostic: true, references: true, },
-	slotNameExport: { basic: true, diagnostic: true, references: true, referencesCodeLens: true },
-	propRaw: { references: true, rename: true, },
-	referencesOnly: { references: true, },
+	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	className: { basic: true, references: true, definitions: true, rename: true, },
+	slotName: { basic: true, diagnostic: true, references: true, definitions: true, },
+	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
+	propRaw: { references: true, definitions: true, rename: true, },
+	referencesOnly: { references: true, definitions: true, },
 }
 
 export function transformVueHtml(html: string, componentNames: string[] = [], cssScopedClasses: string[] = [], htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined, scriptSetupVars?: string[]) {

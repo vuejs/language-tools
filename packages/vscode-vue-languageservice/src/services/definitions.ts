@@ -61,7 +61,7 @@ export function tsDefinitionWorker(sourceFile: SourceFile, position: Position, s
 	let result: Location[] = [];
 	for (const sourceMap of sourceFile.getTsSourceMaps()) {
 		for (const tsLoc of sourceMap.sourceToTargets(range)) {
-			if (!tsLoc.maped.data.capabilities.references) continue;
+			if (!tsLoc.maped.data.capabilities.definitions) continue;
 			const definitions = worker(sourceMap.targetDocument.uri, tsLoc.range.start);
 			const vueDefinitions = definitions.map(location => tsLocationToVueLocations(location, sourceFiles, globalTsSourceMaps)).flat();
 			if (vueDefinitions.length) {

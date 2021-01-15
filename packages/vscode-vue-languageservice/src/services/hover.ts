@@ -54,6 +54,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			return [hover.contents.value];
 		}
 		function getTsResult(sourceFile: SourceFile) {
+			let _result: Hover | undefined;
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsLoc of sourceMap.sourceToTargets(range)) {
 					if (!tsLoc.maped.data.capabilities.basic) continue;
@@ -62,11 +63,17 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const vueLoc = sourceMap.targetToSource(result.range);
 						if (vueLoc) result.range = vueLoc.range;
 					}
-					if (result) {
-						return result;
+					if (!_result) {
+						_result = result;
+					}
+					else if (_result && result) {
+						if (MarkupContent.is(_result.contents) && MarkupContent.is(result.contents)) {
+							_result.contents.value += '\n\n' + result.contents.value;
+						}
 					}
 				}
 			}
+			return _result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {

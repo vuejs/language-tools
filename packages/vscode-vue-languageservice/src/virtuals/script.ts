@@ -247,6 +247,7 @@ export function useScriptSetupGen(
 					capabilities: {
 						basic: true,
 						references: true,
+						definitions: true,
 						rename: true,
 						diagnostic: true,
 						formatting: true,
@@ -272,6 +273,7 @@ export function useScriptSetupGen(
 						capabilities: {
 							basic: true,
 							references: true,
+							definitions: true,
 							rename: true,
 							diagnostic: true,
 							completion: true,
@@ -321,6 +323,7 @@ export function useScriptSetupGen(
 						capabilities: {
 							basic: false,
 							references: true,
+							definitions: true,
 							rename: true,
 							diagnostic: false,
 							formatting: false,
@@ -345,6 +348,7 @@ export function useScriptSetupGen(
 					capabilities: {
 						basic: false,
 						references: true,
+						definitions: true,
 						rename: true,
 						diagnostic: false,
 						formatting: false,
@@ -368,6 +372,7 @@ export function useScriptSetupGen(
 					capabilities: {
 						basic: false,
 						references: true,
+						definitions: true,
 						rename: true,
 						diagnostic: false,
 						formatting: false,
@@ -532,6 +537,7 @@ function genScriptSetup(
 			capabilities: {
 				basic: true,
 				references: true,
+				definitions: true,
 				rename: true,
 				semanticTokens: true,
 				completion: true,
@@ -576,6 +582,7 @@ function genScriptSetup(
 				capabilities: {
 					basic: true,
 					references: true,
+					definitions: true,
 					diagnostic: true,
 					rename: true,
 					completion: true,
@@ -603,6 +610,7 @@ function genScriptSetup(
 				capabilities: {
 					basic: true,
 					references: true,
+					definitions: true,
 					diagnostic: true,
 					rename: true,
 					completion: true,
@@ -620,6 +628,7 @@ function genScriptSetup(
 				capabilities: {
 					basic: true,
 					references: true,
+					definitions: true,
 					diagnostic: true,
 					rename: true,
 					completion: true,
@@ -667,6 +676,7 @@ function genScriptSetup(
 			capabilities: {
 				basic: true,
 				references: true,
+				definitions: true,
 				diagnostic: true,
 				rename: true,
 				completion: true,
@@ -686,6 +696,7 @@ function genScriptSetup(
 			capabilities: {
 				basic: true,
 				references: true,
+				definitions: true,
 				diagnostic: true,
 				rename: true,
 				completion: true,
@@ -705,6 +716,7 @@ function genScriptSetup(
 			capabilities: {
 				basic: true,
 				references: true,
+				definitions: true,
 				diagnostic: true,
 				rename: true,
 				completion: true,
@@ -735,6 +747,35 @@ function genScriptSetup(
 		mapSubText(tsOffset, label.start);
 		let first = true;
 
+		genCode += `{\n`;
+		for (const binary of label.binarys) {
+			if (first) {
+				first = false;
+				genCode += `let `;
+			}
+			else {
+				genCode += `, `;
+			}
+			addCode(originalCode.substring(binary.left.start, binary.left.end), {
+				isNoDollarRef: false,
+				capabilities: {
+					completion: true,
+					definitions: true,
+					semanticTokens: true,
+					diagnostic: true,
+				},
+				scriptSetupRange: binary.left,
+				mode: MapedMode.Offset,
+			});
+			if (binary.right) {
+				genCode += ` = `;
+				mapSubText(binary.right.start, binary.right.end);
+			}
+		}
+		genCode += `;\n`;
+		genCode += `}\n`;
+
+		first = true;
 		for (const binary of label.binarys) {
 			if (first) {
 				first = false;
@@ -748,13 +789,7 @@ function genScriptSetup(
 			for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
 				genCode += originalCode.substring(leftPos, prop.start);
 				if (prop.isShortand) {
-					addCode(prop.text, {
-						isNoDollarRef: false,
-						capabilities: { diagnostic: true },
-						scriptSetupRange: prop,
-						mode: MapedMode.Offset,
-					});
-					genCode += `: `;
+					genCode += `${prop.text}: `;
 				}
 				addCode(`__VLS_refs_${prop.text}`, {
 					isNoDollarRef: false,
@@ -816,6 +851,7 @@ function genScriptSetup(
 				addCode(`$${prop.text}`, {
 					isNoDollarRef: true,
 					capabilities: {
+						basic: true, // hover
 						diagnostic: true,
 					},
 					scriptSetupRange: {
@@ -976,6 +1012,7 @@ function genScriptSetup(
 					capabilities: {
 						basic: true,
 						references: true,
+						definitions: true,
 						diagnostic: true,
 						rename: true,
 						completion: true,
@@ -1073,6 +1110,7 @@ function genScriptSetup(
 				capabilities: {
 					basic: true,
 					references: true,
+					definitions: true,
 					diagnostic: true,
 					rename: true,
 					completion: true,

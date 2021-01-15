@@ -1,3 +1,10 @@
+### 0.19.10
+
+- feat: ref sugar hover info add dollar variable
+- fix: ref sugar autocomplete not working for `ref: { | } = foo()`
+- fix: ref sugar goto definition not working for `ref: { | } = foo()`
+- fix: ref sugar semantic token not working
+
 ### 0.19.9
 
 - fix: language server broke with monorepo tsconfig.json (outDir + rootDir + composite/incremental)

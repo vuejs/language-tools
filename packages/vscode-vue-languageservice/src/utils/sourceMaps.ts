@@ -186,7 +186,8 @@ export interface TsMappingData {
 	showLink?: boolean,
 	capabilities: {
 		basic?: boolean,
-		references?: boolean, // references, definitions
+		references?: boolean,
+		definitions?: boolean,
 		diagnostic?: boolean,
 		formatting?: boolean,
 		rename?: boolean,

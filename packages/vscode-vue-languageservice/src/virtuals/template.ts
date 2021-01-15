@@ -261,6 +261,7 @@ export function useTemplateScript(
 								capabilities: {
 									basic: true,
 									references: true,
+									definitions: true,
 									rename: true,
 									diagnostic: true,
 									formatting: false,
