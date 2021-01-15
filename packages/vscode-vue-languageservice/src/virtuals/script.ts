@@ -669,7 +669,7 @@ function genScriptSetup(
 		mapSubText(tsOffset, label.start);
 		let first = true;
 
-		genCode += `{\n`;
+		genCode += `{ `;
 		for (const binary of label.binarys) {
 			if (first) {
 				first = false;
@@ -694,8 +694,7 @@ function genScriptSetup(
 				mapSubText(binary.right.start, binary.right.end);
 			}
 		}
-		genCode += `;\n`;
-		genCode += `}\n`;
+		genCode += `; }\n`;
 
 		first = true;
 		for (const binary of label.binarys) {
@@ -902,7 +901,6 @@ function genScriptSetup(
 			start: number,
 			end: number,
 			name: string,
-			isRaw: boolean,
 		}[] = [];
 		for (const label of data.labels) {
 			for (const binary of label.binarys) {
@@ -913,7 +911,6 @@ function genScriptSetup(
 								start: reference.start,
 								end: reference.end,
 								name: prop.text,
-								isRaw: false,
 							});
 						}
 					}
@@ -924,110 +921,15 @@ function genScriptSetup(
 
 		let pos = start;
 		for (const label of insideLabels) {
-			writeStartText();
-			writeCenter();
-
-			function writeStartText() {
-				const startText = sourceCode.substring(pos, label.start);
-				addCode(startText, {
-					capabilities: {
-						basic: true,
-						references: true,
-						definitions: true,
-						diagnostic: true,
-						rename: true,
-						completion: true,
-						semanticTokens: true,
-					},
-					scriptSetupRange: {
-						start: pos,
-						end: pos + startText.length,
-					},
-					mode: MapedMode.Offset,
-				});
-			}
-			function writeCenter() {
-				let isShorthand = false;
-				for (const shorthandProperty of data.shorthandPropertys) {
-					if (
-						label.start === shorthandProperty.start
-						&& label.end === shorthandProperty.end
-					) {
-						isShorthand = true;
-						break;
-					}
-				}
-				if (isShorthand) {
-					addCode(label.name, {
-						capabilities: {
-							diagnostic: true,
-						},
-						scriptSetupRange: {
-							start: label.start,
-							end: label.end,
-						},
-						mode: MapedMode.Offset,
-					});
-					genCode += ': ';
-				}
-				if (!label.isRaw) {
-					addCode(`$${label.name}.value`, {
-						capabilities: {
-							diagnostic: true,
-						},
-						scriptSetupRange: {
-							start: label.start,
-							end: label.end,
-						},
-						mode: MapedMode.Gate,
-					}, false);
-					addCode(`$${label.name}`, {
-						isNoDollarRef: true,
-						capabilities: {
-							basic: true, // hover, TODO: hover display type incorrect
-							references: true,
-							rename: true,
-						},
-						scriptSetupRange: {
-							start: label.start,
-							end: label.end,
-						},
-						mode: MapedMode.Offset,
-					});
-					genCode += `.`;
-					addCode(`value`, {
-						capabilities: {
-							diagnostic: true,
-						},
-						scriptSetupRange: {
-							start: label.start,
-							end: label.end,
-						},
-						mode: MapedMode.Gate,
-					});
-				}
-				else {
-					addCode(`$${label.name}`, {
-						capabilities: {
-							basic: true, // hover
-							references: true,
-							rename: true,
-						},
-						scriptSetupRange: {
-							start: label.start,
-							end: label.end,
-						},
-						mode: MapedMode.Offset,
-					});
-				}
-				pos = label.end;
-			}
+			writeText(pos, label.start);
+			writeCenter(label);
+			pos = label.end;
 		}
-		writeEndText();
+		writeText(pos, end);
 
-		function writeEndText() {
-			const endText = sourceCode.substring(pos, end);
-			addCode(endText, {
+		function writeText(start: number, end: number) {
+			const text = sourceCode.substring(start, end);
+			addCode(text, {
 				capabilities: {
 					basic: true,
 					references: true,
@@ -1038,10 +940,74 @@ function genScriptSetup(
 					semanticTokens: true,
 				},
 				scriptSetupRange: {
-					start: pos,
-					end: pos + endText.length,
+					start,
+					end,
 				},
 				mode: MapedMode.Offset,
+			});
+		}
+		function writeCenter(label: {
+			start: number;
+			end: number;
+			name: string;
+		}) {
+			let isShorthand = false;
+			for (const shorthandProperty of data.shorthandPropertys) {
+				if (
+					label.start === shorthandProperty.start
+					&& label.end === shorthandProperty.end
+				) {
+					isShorthand = true;
+					break;
+				}
+			}
+			if (isShorthand) {
+				addCode(label.name, {
+					capabilities: {
+						diagnostic: true,
+					},
+					scriptSetupRange: {
+						start: label.start,
+						end: label.end,
+					},
+					mode: MapedMode.Offset,
+				});
+				genCode += ': ';
+			}
+			addCode(`$${label.name}.value`, {
+				capabilities: {
+					diagnostic: true,
+				},
+				scriptSetupRange: {
+					start: label.start,
+					end: label.end,
+				},
+				mode: MapedMode.Gate,
+			}, false);
+			addCode(`$${label.name}`, {
+				isNoDollarRef: true,
+				capabilities: {
+					basic: true, // TODO: hover display type incorrect
+					references: true,
+					definitions: true,
+					rename: true,
+				},
+				scriptSetupRange: {
+					start: label.start,
+					end: label.end,
+				},
+				mode: MapedMode.Offset,
+			});
+			genCode += `.`;
+			addCode(`value`, {
+				capabilities: {
+					diagnostic: true,
+				},
+				scriptSetupRange: {
+					start: label.start,
+					end: label.end,
+				},
+				mode: MapedMode.Gate,
 			});
 		}
 	}

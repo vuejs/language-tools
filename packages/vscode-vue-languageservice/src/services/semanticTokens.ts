@@ -86,7 +86,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
 				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
 			}
-	
+
 			return builder.build();
 		}
 		function getScriptSetupResult(sourceFile: SourceFile) {
@@ -127,12 +127,16 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						end: sourceMap.targetDocument.positionAt(maped.targetRange.end),
 					};
 					const tokens = tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument.uri, tsRange, cancle);
-					if (!tokens) continue;
+					if (!tokens)
+						continue;
 					for (const token of tokens) {
-						const tokenOffset = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] });
-						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
-						const vuePos = document.positionAt(vueOffset);
-						result.push([vuePos.line, vuePos.character, token[2], token[3], token[4]]);
+						const tsStart = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] });
+						const tsEnd = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
+						const vueRange = sourceMap.targetToSource2({ start: tsStart, end: tsEnd });
+						if (!vueRange?.maped.data.capabilities.semanticTokens)
+							continue;
+						const vuePos = document.positionAt(vueRange.range.start);
+						result.push([vuePos.line, vuePos.character, vueRange.range.end - vueRange.range.start, token[3], token[4]]);
 					}
 				}
 			}
@@ -172,7 +176,8 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: TokenData[] = [];
 
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				if (sourceMap.html === undefined) continue;
+				if (sourceMap.html === undefined)
+					continue;
 				for (const maped of sourceMap) {
 					if (maped.mode !== MapedMode.Offset)
 						continue;
