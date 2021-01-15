@@ -159,9 +159,6 @@ export function useScriptSetupGen(
 			code += `{}`;
 		}
 		code += `),\n`;
-		if (scriptSetupGenResult.value?.declaresNames.has('props')) {
-			code += `props: __VLS_declares_props,\n`;
-		}
 		if (scriptSetupData.value?.defineProps?.args && scriptSetup.value) {
 			code += `props: (`;
 			const text = scriptSetup.value.content.substring(scriptSetupData.value.defineProps.args.start, scriptSetupData.value.defineProps.args.end);
@@ -568,83 +565,8 @@ function genScriptSetup(
 		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.expression.end, data.exportDefault.end);
 	}
 
-	const declaresNames = new Set<string>();
-	for (const d of data.declares) {
-		let nameText = originalCode.substring(d.name.start, d.name.end);
-		declaresNames.add(nameText);
-		if (['props', 'emit', 'slots'].includes(nameText)) {
-			addCode(originalCode.substring(d.start, d.name.start), {
-				scriptSetupRange: {
-					start: d.start,
-					end: d.name.start,
-				},
-				mode: MapedMode.Offset,
-				capabilities: {
-					basic: true,
-					references: true,
-					definitions: true,
-					diagnostic: true,
-					rename: true,
-					completion: true,
-					semanticTokens: true,
-				},
-			});
-			addCode('__VLS_declares_' + nameText, {
-				scriptSetupRange: {
-					start: d.name.start,
-					end: d.name.end,
-				},
-				mode: MapedMode.Offset,
-				capabilities: {
-					basic: true,
-					diagnostic: true,
-					semanticTokens: true,
-				},
-			});
-			addCode(originalCode.substring(d.name.end, d.end), {
-				scriptSetupRange: {
-					start: d.name.end,
-					end: d.end,
-				},
-				mode: MapedMode.Offset,
-				capabilities: {
-					basic: true,
-					references: true,
-					definitions: true,
-					diagnostic: true,
-					rename: true,
-					completion: true,
-					semanticTokens: true,
-				},
-			});
-		}
-		else {
-			addCode(originalCode.substring(d.start, d.end), {
-				scriptSetupRange: {
-					start: d.start,
-					end: d.end,
-				},
-				mode: MapedMode.Offset,
-				capabilities: {
-					basic: true,
-					references: true,
-					definitions: true,
-					diagnostic: true,
-					rename: true,
-					completion: true,
-					semanticTokens: true,
-				},
-			});
-		}
-		genCode += `\n`;
-		sourceCode = replaceStringToEmpty(sourceCode, d.start, d.end);
-	}
-
 	genCode += `\n`;
 	genCode += `export default (await import('__VLS_vue')).defineComponent({\n`;
-	if (declaresNames.has('props')) {
-		genCode += `props: ({} as __VLS_DefinePropsToOptions<typeof __VLS_declares_props>),\n`;
-	}
 	if (data.defineProps?.typeArgs) {
 		genCode += `props: ({} as __VLS_DefinePropsToOptions<`
 		addCode(originalCode.substring(data.defineProps.typeArgs.start, data.defineProps.typeArgs.end), {
@@ -969,7 +891,6 @@ function genScriptSetup(
 	genCode += `ref${SearchTexts.Ref}\n`; // for execute auto import
 
 	return {
-		declaresNames,
 		data,
 		mappings,
 		code: genCode,
@@ -1220,14 +1141,6 @@ function getScriptSetupData(sourceCode: string) {
 		},
 	} | undefined;
 	let defineEmit: typeof defineProps;
-	const declares: {
-		start: number,
-		end: number,
-		name: {
-			start: number,
-			end: number,
-		},
-	}[] = [];
 	const refCalls: {
 		start: number,
 		end: number,
@@ -1254,27 +1167,7 @@ function getScriptSetupData(sourceCode: string) {
 	const scriptAst = ts.createSourceFile('', sourceCode, ts.ScriptTarget.Latest);
 
 	scriptAst.forEachChild(node => {
-		if (node.modifiers?.find(m => m.kind === ts.SyntaxKind.DeclareKeyword)) {
-			if (ts.isVariableStatement(node)) {
-				for (const declaration of node.declarationList.declarations) {
-					if (ts.isIdentifier(declaration.name)) {
-						declares.push({
-							...getStartEnd(node),
-							name: getStartEnd(declaration.name),
-						});
-					}
-				}
-			}
-			else if (ts.isFunctionDeclaration(node)) {
-				if (node.name) {
-					declares.push({
-						...getStartEnd(node),
-						name: getStartEnd(node.name),
-					});
-				}
-			}
-		}
-		else if (ts.isVariableStatement(node)) {
+		if (ts.isVariableStatement(node)) {
 			for (const node_2 of node.declarationList.declarations) {
 				const vars = findBindingVars(node_2.name);
 				for (const _var of vars) {
@@ -1377,7 +1270,6 @@ function getScriptSetupData(sourceCode: string) {
 		exportDefault,
 		defineProps,
 		defineEmit,
-		declares,
 		refCalls,
 		shorthandPropertys,
 		dollars,
