@@ -691,7 +691,7 @@ function genScriptSetup(
 			});
 			if (binary.right) {
 				genCode += ` = `;
-				mapSubText(binary.right.start, binary.right.end);
+				genCode += originalCode.substring(binary.right.start, binary.right.end);
 			}
 		}
 		genCode += `; }\n`;
