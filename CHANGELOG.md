@@ -1,3 +1,7 @@
+### 0.19.9
+
+- fix: language server broke with monorepo tsconfig.json (outDir + rootDir + composite/incremental)
+
 ### 0.19.8
 
 - feat: show underscore with css scoped classes

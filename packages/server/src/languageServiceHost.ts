@@ -170,16 +170,14 @@ export function createLanguageServiceHost(
 			const parseConfigHost: ts.ParseConfigHost = {
 				...ts.sys,
 				readDirectory: (path, extensions, exclude, include, depth) => {
-					return [
-						...ts.sys.readDirectory(path, extensions, exclude, include, depth),
-						...ts.sys.readDirectory(path, ['.vue'], exclude, include, depth),
-					];
+					return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
 				},
 			};
 
 			const realTsConfig = ts.sys.realpath!(tsConfig);
 			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
+			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
