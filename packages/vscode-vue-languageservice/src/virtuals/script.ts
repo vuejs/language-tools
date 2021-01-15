@@ -27,14 +27,6 @@ export function useScriptSetupGen(
 		}
 	});
 	const defaultExport = computed(() => {
-		if (scriptSetupData.value?.exportDefault) {
-			return {
-				tag: 'scriptSetup',
-				text: scriptSetupData.value.exportDefault.args.text,
-				start: scriptSetupData.value.exportDefault.args.start,
-				end: scriptSetupData.value.exportDefault.args.end,
-			};
-		}
 		if (scriptData.value?.exportDefault) {
 			return {
 				tag: 'script',
@@ -557,13 +549,6 @@ function genScriptSetup(
 		},
 		mode: MapedMode.Offset,
 	});
-	for (const _export of data.exportKeywords) {
-		sourceCode = replaceStringToEmpty(sourceCode, _export.start, _export.end);
-	}
-	if (data.exportDefault) {
-		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.start, data.exportDefault.expression.start);
-		sourceCode = replaceStringToEmpty(sourceCode, data.exportDefault.expression.end, data.exportDefault.end);
-	}
 
 	genCode += `\n`;
 	genCode += `export default (await import('__VLS_vue')).defineComponent({\n`;
@@ -590,27 +575,6 @@ function genScriptSetup(
 			mode: MapedMode.Offset,
 		});
 		genCode += `>),\n`;
-	}
-	// TODO: emit types
-	if (data.exportDefault) {
-		genCode += `...(`;
-		addCode(originalCode.substring(data.exportDefault.args.start, data.exportDefault.args.end), {
-			capabilities: {
-				basic: true,
-				references: true,
-				definitions: true,
-				diagnostic: true,
-				rename: true,
-				completion: true,
-				semanticTokens: true,
-			},
-			mode: MapedMode.Offset,
-			scriptSetupRange: {
-				start: data.exportDefault.args.start,
-				end: data.exportDefault.args.end,
-			},
-		});
-		genCode += `),\n`;
 	}
 	if (data.defineProps?.args) {
 		genCode += `props: `;
@@ -1077,23 +1041,6 @@ function getScriptSetupData(sourceCode: string) {
 		start: number,
 		end: number,
 	}[] = [];
-	const exportKeywords: {
-		start: number,
-		end: number,
-	}[] = [];
-	let exportDefault: {
-		start: number,
-		end: number,
-		expression: {
-			start: number,
-			end: number,
-		},
-		args: {
-			text: string,
-			start: number,
-			end: number,
-		},
-	} | undefined;
 	let defineProps: {
 		start: number,
 		end: number,
@@ -1159,35 +1106,6 @@ function getScriptSetupData(sourceCode: string) {
 				}
 			}
 		}
-		else if (ts.isExportDeclaration(node)) {
-			node.forEachChild(node_2 => {
-				if (node_2.kind === ts.SyntaxKind.ExportKeyword) {
-					exportKeywords.push(getStartEnd(node_2));
-				}
-			});
-		}
-		else if (ts.isExportAssignment(node)) {
-			let obj: ts.ObjectLiteralExpression | undefined;
-			if (ts.isObjectLiteralExpression(node.expression)) {
-				obj = node.expression;
-			}
-			else if (ts.isCallExpression(node.expression) && node.expression.arguments.length) {
-				const arg0 = node.expression.arguments[0];
-				if (ts.isObjectLiteralExpression(arg0)) {
-					obj = arg0;
-				}
-			}
-			if (obj) {
-				exportDefault = {
-					...getStartEnd(node),
-					expression: getStartEnd(node.expression),
-					args: {
-						...getStartEnd(obj),
-						text: obj.getText(scriptAst), // TODO: remove
-					},
-				};
-			}
-		}
 	});
 	scriptAst.forEachChild(node => {
 		deepLoop(node, scriptAst, true);
@@ -1232,8 +1150,6 @@ function getScriptSetupData(sourceCode: string) {
 		labels,
 		exposeVarNames,
 		imports,
-		exportKeywords,
-		exportDefault,
 		defineProps,
 		defineEmit,
 		refCalls,
