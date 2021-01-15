@@ -1,3 +1,10 @@
+### 0.19.11
+
+- fix: should not support old `<script setup>` declare props, emit, slots
+- fix: should not allow export keywords in `<script setup>`
+- fix: ref sugar right side expression services duplicate
+- fix: ref sugar references semantic token incorrect
+
 ### 0.19.10
 
 - feat: ref sugar hover info add dollar variable
