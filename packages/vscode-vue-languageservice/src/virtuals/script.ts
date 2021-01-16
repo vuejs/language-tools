@@ -648,7 +648,6 @@ function genScriptSetup(
 					completion: true,
 					definitions: true,
 					semanticTokens: true,
-					diagnostic: true,
 				},
 				scriptSetupRange: binary.left,
 				mode: MapedMode.Offset,
@@ -674,11 +673,21 @@ function genScriptSetup(
 			for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
 				genCode += originalCode.substring(leftPos, prop.start);
 				if (prop.isShortand) {
-					genCode += `${prop.text}: `;
+					addCode(prop.text, {
+						isNoDollarRef: false,
+						capabilities: {
+							diagnostic: true,
+						},
+						scriptSetupRange: prop,
+						mode: MapedMode.Offset,
+					});
+					genCode += `: `;
 				}
 				addCode(`__VLS_refs_${prop.text}`, {
 					isNoDollarRef: false,
-					capabilities: { diagnostic: true },
+					capabilities: {
+						diagnostic: true,
+					},
 					scriptSetupRange: prop,
 					mode: MapedMode.Gate,
 				});
@@ -946,7 +955,7 @@ function genScriptSetup(
 					start: label.start,
 					end: label.end,
 				},
-				mode: MapedMode.Gate,
+				mode: MapedMode.In,
 			}, false);
 			addCode(`$${label.name}`, {
 				isNoDollarRef: true,
@@ -962,17 +971,7 @@ function genScriptSetup(
 				},
 				mode: MapedMode.Offset,
 			});
-			genCode += `.`;
-			addCode(`value`, {
-				capabilities: {
-					diagnostic: true,
-				},
-				scriptSetupRange: {
-					start: label.start,
-					end: label.end,
-				},
-				mode: MapedMode.Gate,
-			});
+			genCode += `.value`;
 		}
 	}
 	function addCode(code: string, mapping: {

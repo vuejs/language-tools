@@ -1,3 +1,7 @@
+### 0.19.12
+
+- fix: ref sugar unused report incorrect with `noUnusedLocals` enabled
+
 ### 0.19.11
 
 - fix: should not support old `<script setup>` declare props, emit, slots
