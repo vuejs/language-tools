@@ -21,7 +21,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
             const changeDisposable = vscode.window.onDidChangeActiveTextEditor(update);
             const messageDisposable = panel.webview.onDidReceiveMessage(async message => {
-                console.log(message);
                 switch (message.command) {
                     case 'alert':
                         const text = message.data;
@@ -31,7 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
                         const offset: number = message.data;
                         if (lastEditor) {
                             const position = lastEditor.document.positionAt(offset);
-                            await vscode.window.showTextDocument(lastEditor.document, vscode.ViewColumn.One);
+                            await vscode.window.showTextDocument(lastEditor.document, lastEditor.viewColumn);
                             lastEditor.selection = new vscode.Selection(position, position);
                         }
                         return;
