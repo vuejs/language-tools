@@ -33,6 +33,7 @@ export function useStylesRaw(
 			}[],
 			module: boolean,
 			scoped: boolean,
+			ignore: boolean,
 		}[] = [];
 		for (let i = 0; i < styles.value.length; i++) {
 			const style = styles.value[i];
@@ -54,6 +55,7 @@ export function useStylesRaw(
 				links: linkStyles,
 				module: style.module,
 				scoped: style.scoped,
+				ignore: style.ignore,
 			});
 
 			function findLinks(ls1: css.LanguageService, textDocument: TextDocument, stylesheet: css.Stylesheet) {

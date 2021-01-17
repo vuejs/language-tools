@@ -106,6 +106,28 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 
 </details>
 
+<details>
+<summary>Ignore Checking</summary>
+
+```vue
+<!-- @vue-ignore -->
+<template>
+...
+</template>
+
+<!-- @vue-ignore -->
+<script>
+...
+</script>
+
+<!-- @vue-ignore -->
+<style>
+...
+</style>
+```
+
+</details>
+
 ## Note
 
 > Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)

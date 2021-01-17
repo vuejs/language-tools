@@ -311,7 +311,7 @@ export function useTemplateScript(
 		}
 	});
 	const cssTextDocument = computed(() => {
-		if (data.value) {
+		if (data.value && template.value) {
 			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, data.value.interpolations.cssCode);
 			const stylesheet = globalServices.css.parseStylesheet(textDocument);
 			return {
@@ -320,6 +320,7 @@ export function useTemplateScript(
 				links: [],
 				module: false,
 				scoped: false,
+				ignore: template.value.ignore,
 			};
 		}
 	});

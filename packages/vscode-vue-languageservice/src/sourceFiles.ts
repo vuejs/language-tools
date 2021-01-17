@@ -27,6 +27,7 @@ import { useStylesRaw } from './virtuals/styles.raw';
 import type * as ts from 'typescript';
 import { duplicateDiagnostics } from './utils/commons';
 import { getTypescript } from '@volar/vscode-builtin-packages';
+import * as htmlparser2 from 'htmlparser2';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
@@ -203,6 +204,37 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			virtualTemplateGen.textDocument.value?.version,
 		];
 
+		const blocks = [
+			newDescriptor.template,
+			newDescriptor.script,
+			newDescriptor.scriptSetup,
+			...newDescriptor.styles,
+			...newDescriptor.customBlocks,
+		].filter(notEmpty);
+
+		const htmlDoc = htmlparser2.parseDocument(newVueDocument.getText(), {
+			withStartIndices: true,
+			withEndIndices: true,
+		});
+		for (const node of htmlDoc.childNodes) {
+			if (
+				node.type === htmlparser2.ElementType.ElementType.Comment
+				&& node.startIndex !== null
+				&& node.endIndex !== null
+			) {
+				const text = newVueDocument.getText().substring(node.startIndex, node.endIndex + 1);
+				if (text.indexOf('@vue-ignore') >= 0) {
+					const afterBlocks = blocks
+						.filter(block => block.loc.start.offset > node.startIndex!)
+						.sort((a, b) => a.loc.start.offset - b.loc.start.offset);
+
+					if (afterBlocks.length) {
+						afterBlocks[0].attrs['__VLS_ignore'] = true;
+					}
+				}
+			}
+		}
+
 		updateTemplate(newDescriptor);
 		updateScript(newDescriptor);
 		updateScriptSetup(newDescriptor);
@@ -232,6 +264,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					start: newDescriptor.template.loc.start.offset,
 					end: newDescriptor.template.loc.end.offset,
 				},
+				ignore: !!newDescriptor.template.attrs['__VLS_ignore'],
 			} : null;
 
 			lastUpdateChanged.template = descriptor.template?.content !== newData?.content;
@@ -241,6 +274,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				descriptor.template.content = newData.content;
 				descriptor.template.loc.start = newData.loc.start;
 				descriptor.template.loc.end = newData.loc.end;
+				descriptor.template.ignore = newData.ignore;
 			}
 			else {
 				descriptor.template = newData;
@@ -255,6 +289,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					start: newDescriptor.script.loc.start.offset,
 					end: newDescriptor.script.loc.end.offset,
 				},
+				ignore: !!newDescriptor.script.attrs['__VLS_ignore'],
 			} : null;
 
 			lastUpdateChanged.script = descriptor.script?.content !== newData?.content;
@@ -265,6 +300,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				descriptor.script.content = newData.content;
 				descriptor.script.loc.start = newData.loc.start;
 				descriptor.script.loc.end = newData.loc.end;
+				descriptor.script.ignore = newData.ignore;
 			}
 			else {
 				descriptor.script = newData;
@@ -278,6 +314,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					start: newDescriptor.scriptSetup.loc.start.offset,
 					end: newDescriptor.scriptSetup.loc.end.offset,
 				},
+				ignore: !!newDescriptor.scriptSetup.attrs['__VLS_ignore'],
 			} : null;
 
 			lastUpdateChanged.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
@@ -287,6 +324,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				descriptor.scriptSetup.content = newData.content;
 				descriptor.scriptSetup.loc.start = newData.loc.start;
 				descriptor.scriptSetup.loc.end = newData.loc.end;
+				descriptor.scriptSetup.ignore = newData.ignore;
 			}
 			else {
 				descriptor.scriptSetup = newData;
@@ -302,6 +340,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						start: style.loc.start.offset,
 						end: style.loc.end.offset,
 					},
+					ignore: !!style.attrs['__VLS_ignore'],
 					module: !!style.module,
 					scoped: !!style.scoped,
 				};
@@ -310,6 +349,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					descriptor.styles[i].content = newData.content;
 					descriptor.styles[i].loc.start = newData.loc.start;
 					descriptor.styles[i].loc.end = newData.loc.end;
+					descriptor.styles[i].ignore = newData.ignore;
 					descriptor.styles[i].module = newData.module;
 					descriptor.styles[i].scoped = newData.scoped;
 				}
@@ -332,6 +372,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 						start: block.loc.start.offset,
 						end: block.loc.end.offset,
 					},
+					ignore: !!block.attrs['__VLS_ignore'],
 				};
 				if (descriptor.customBlocks.length > i) {
 					descriptor.customBlocks[i].type = newData.type;
@@ -339,6 +380,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 					descriptor.customBlocks[i].content = newData.content;
 					descriptor.customBlocks[i].loc.start = newData.loc.start;
 					descriptor.customBlocks[i].loc.end = newData.loc.end;
+					descriptor.customBlocks[i].ignore = newData.ignore;
 				}
 				else {
 					descriptor.customBlocks.push(newData);
@@ -409,22 +451,24 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		};
 		const tsOptions = tsLanguageService.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
+		const ignoreTemplateCheck = computed(() => descriptor.template?.ignore);
+		const ignoreScriptCheck = computed(() => descriptor.script?.ignore || descriptor.scriptSetup?.ignore);
 
 		const nonTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
-			[useStylesValidation(), [], 0],
-			[useTemplateValidation(), [], 0],
-			[useScriptExistValidation(), [], 0],
+			[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), [], 0],
+			[useTemplateValidation(ignoreTemplateCheck), [], 0],
+			[useScriptExistValidation(ignoreScriptCheck), [], 0],
 		];
 		let templateTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
-			[useTemplateScriptValidation(1), [], 0],
-			[useTemplateScriptValidation(2), [], 0],
-			[useTemplateScriptValidation(3), [], 0],
+			[useTemplateScriptValidation(ignoreTemplateCheck, 1), [], 0],
+			[useTemplateScriptValidation(ignoreTemplateCheck, 2), [], 0],
+			[useTemplateScriptValidation(ignoreTemplateCheck, 3), [], 0],
 		];
 		let scriptTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
-			[useScriptValidation(virtualScriptGen.textDocument, 1), [], 0],
-			[useScriptValidation(virtualScriptGen.textDocument, 2), [], 0],
-			[useScriptValidation(computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), [], 0],
-			[useScriptValidation(computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), [], 0],
+			[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), [], 0],
+			[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), [], 0],
+			[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), [], 0],
+			[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), [], 0],
 		];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>, withSideEffect = true) => {
@@ -476,7 +520,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			}
 		}
 
-		function useTemplateValidation() {
+		function useTemplateValidation(ignore: Ref<boolean | undefined>) {
 			const htmlErrors = computed(() => {
 				if (virtualTemplateRaw.textDocument.value?.languageId === 'html') {
 					return getVueCompileErrors(virtualTemplateRaw.textDocument.value);
@@ -521,6 +565,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result;
 			});
 			return computed(() => {
+				if (ignore.value) return [];
 				if (!virtualTemplateRaw.textDocument.value) return [];
 				return [
 					...toSourceDiags(htmlErrors.value, virtualTemplateRaw.textDocument.value.uri, virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
@@ -587,11 +632,13 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result;
 			}
 		}
-		function useStylesValidation() {
+		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet, ignore: boolean | undefined }[]>) {
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
-				for (const { textDocument, stylesheet } of virtualStyles.textDocuments.value) {
-					const cssLanguageService = textDocument.languageId === "scss" ? globalServices.scss : globalServices.css;
+				for (const { textDocument, stylesheet, ignore } of documents.value) {
+					if (ignore) continue;
+					const cssLanguageService = globalServices.getCssService(textDocument.languageId);
+					if (!cssLanguageService) continue;
 					const errs = cssLanguageService.doValidation(textDocument, stylesheet);
 					if (errs) result.set(textDocument.uri, errs);
 				}
@@ -605,8 +652,10 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result as Diagnostic[];
 			});
 		}
-		function useScriptExistValidation() {
+		function useScriptExistValidation(ignore: Ref<boolean | undefined>) {
 			return computed(() => {
+				if (ignore.value) return [];
+
 				const diags: Diagnostic[] = [];
 				if (
 					virtualScriptGen.textDocument.value
@@ -629,7 +678,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return diags;
 			});
 		}
-		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: number, onlyUnusedCheck = false) {
+		function useScriptValidation(ignore: Ref<boolean | undefined>, document: Ref<TextDocument | undefined>, mode: number, onlyUnusedCheck = false) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -647,6 +696,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				}
 			});
 			return computed(() => {
+				if (ignore.value) return [];
+
 				const doc = document.value;
 				if (!doc) return [];
 				let result = toTsSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
@@ -656,7 +707,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result;
 			});
 		}
-		function useTemplateScriptValidation(mode: number) {
+		function useTemplateScriptValidation(ignore: Ref<boolean | undefined>, mode: number) {
 			const errors_1 = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -699,6 +750,8 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 				return result;
 			})
 			return computed(() => {
+				if (ignore.value) return [];
+
 				const result_1 = virtualTemplateGen.textDocument.value ? toTsSourceDiags(
 					errors_1.value,
 					virtualTemplateGen.textDocument.value.uri,
