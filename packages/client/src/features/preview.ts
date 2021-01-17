@@ -5,6 +5,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('volar.action.preview', async () => {
 
         let defaultServerUrl = 'http://localhost:3000/preview#';
+        let lastEditor: vscode.TextEditor | undefined;
+
         const serverUrl = vscode.window.createInputBox();
         serverUrl.placeholder = 'Preview Server URL...';
         serverUrl.value = defaultServerUrl;
@@ -18,7 +20,28 @@ export async function activate(context: vscode.ExtensionContext) {
             );
 
             const changeDisposable = vscode.window.onDidChangeActiveTextEditor(update);
-            panel.onDidDispose(() => changeDisposable.dispose());
+            const messageDisposable = panel.webview.onDidReceiveMessage(async message => {
+                console.log(message);
+                switch (message.command) {
+                    case 'alert':
+                        const text = message.data;
+                        vscode.window.showInformationMessage(text);
+                        return;
+                    case 'goToOffset':
+                        const offset: number = message.data;
+                        if (lastEditor) {
+                            const position = lastEditor.document.positionAt(offset);
+                            await vscode.window.showTextDocument(lastEditor.document, vscode.ViewColumn.One);
+                            lastEditor.selection = new vscode.Selection(position, position);
+                        }
+                        return;
+                }
+            });
+
+            panel.onDidDispose(() => {
+                changeDisposable.dispose();
+                messageDisposable.dispose();
+            });
 
             update();
 
@@ -30,9 +53,17 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (document.languageId !== 'vue') return;
 
                 panel.title = 'Preview ' + path.basename(document.fileName);
-                panel.webview.html = `<iframe src="${serverUrl.value}${document.uri.fsPath}" frameborder="0" style="display: block; margin: 0px; overflow: hidden; width: 100%; height: 100vh;" />`;
+                panel.webview.html = `
+<script>
+const vscode = acquireVsCodeApi();
+window.onmessage = function(e) {
+    vscode.postMessage(JSON.parse(e.data));
+};
+</script>
+<iframe src="${serverUrl.value}${document.uri.fsPath}" frameborder="0" style="display: block; margin: 0px; overflow: hidden; width: 100%; height: 100vh;" />
+`;
+                lastEditor = editor;
             }
-            panel.webview.onDidReceiveMessage(e => console.log(e))
         });
         serverUrl.show();
     }));
