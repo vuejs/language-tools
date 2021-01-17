@@ -41,12 +41,13 @@ export function useStylesRaw(
 			const documentUri = vueDoc.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, version++, content);
 			const cssLanguageService = globalServices.getCssService(lang);
+			if (!cssLanguageService) continue;
 			const stylesheet = cssLanguageService.parseStylesheet(document);
 			const linkStyles: {
 				textDocument: TextDocument,
 				stylesheet: css.Stylesheet,
 			}[] = [];
-			findLinks(document, stylesheet);
+			findLinks(cssLanguageService, document, stylesheet);
 			documents.push({
 				textDocument: document,
 				stylesheet,
@@ -55,8 +56,8 @@ export function useStylesRaw(
 				scoped: style.scoped,
 			});
 
-			function findLinks(textDocument: TextDocument, stylesheet: css.Stylesheet) {
-				const links = cssLanguageService.findDocumentLinks(textDocument, stylesheet, documentContext);
+			function findLinks(ls1: css.LanguageService, textDocument: TextDocument, stylesheet: css.Stylesheet) {
+				const links = ls1.findDocumentLinks(textDocument, stylesheet, documentContext);
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
@@ -68,12 +69,14 @@ export function useStylesRaw(
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, version++, text);
-					const stylesheet = globalServices.getCssService(lang).parseStylesheet(doc);
+					const ls2 = globalServices.getCssService(lang);
+					if (!ls2) continue;
+					const stylesheet = ls2.parseStylesheet(doc);
 					linkStyles.push({
 						textDocument: doc,
 						stylesheet,
 					});
-					findLinks(doc, stylesheet);
+					findLinks(ls2, doc, stylesheet);
 				}
 			}
 		}

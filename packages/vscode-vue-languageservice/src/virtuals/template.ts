@@ -395,6 +395,7 @@ export function useTemplateScript(
 function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
 	const result = new Map<string, Set<[number, number]>>();
 	const cssLanguageService = globalServices.getCssService(doc.languageId);
+	if (!cssLanguageService) return result;
 	const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
 	const usedNodes = new Set<number>();
 	for (const s of symbols) {

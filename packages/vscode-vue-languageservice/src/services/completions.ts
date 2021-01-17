@@ -275,6 +275,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;

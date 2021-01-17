@@ -64,6 +64,7 @@ export function register() {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.targetDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}

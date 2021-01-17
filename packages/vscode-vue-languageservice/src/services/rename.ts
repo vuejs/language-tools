@@ -200,6 +200,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: WorkspaceEdit = { changes: {} };
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				for (const cssLoc of sourceMap.sourceToTargets(range)) {
 					const cssEdits = cssLanguageService.doRename(sourceMap.targetDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
 					if (!cssEdits) continue;

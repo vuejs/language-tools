@@ -39,6 +39,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				const cssLocs = sourceMap.sourceToTargets(Range.create(position, position));
 				for (const virLoc of cssLocs) {
 					const definition = cssLanguageService.findDefinition(sourceMap.targetDocument, virLoc.range.start, sourceMap.stylesheet);

@@ -66,6 +66,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				for (const cssLoc of sourceMap.sourceToTargets(range)) {
 					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {

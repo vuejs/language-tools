@@ -18,6 +18,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				let colors = cssLanguageService.findDocumentColors(sourceMap.targetDocument, sourceMap.stylesheet);
 				for (const color of colors) {
 					const vueLoc = sourceMap.targetToSource(color.range);

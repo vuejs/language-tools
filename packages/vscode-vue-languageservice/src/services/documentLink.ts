@@ -164,6 +164,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				const links = cssLanguageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
 					const vueLoc = sourceMap.targetToSource(link.range);

@@ -92,6 +92,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				for (const cssLoc of sourceMap.sourceToTargets(range)) {
 					const result = cssLanguageService.doHover(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
 					if (result?.range) {

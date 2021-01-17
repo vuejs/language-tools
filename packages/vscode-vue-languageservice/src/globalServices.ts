@@ -16,7 +16,6 @@ export function getCssService(lang: string) {
         case 'css': return css;
         case 'scss': return scss;
         case 'less': return less;
-        default: return css;
     }
 }
 

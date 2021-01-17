@@ -133,6 +133,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.targetDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {

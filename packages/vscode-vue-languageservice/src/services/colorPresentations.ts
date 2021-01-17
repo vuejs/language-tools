@@ -20,6 +20,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
 					const _result = cssLanguageService.getColorPresentations(sourceMap.targetDocument, sourceMap.stylesheet, color, virtualLoc.range);

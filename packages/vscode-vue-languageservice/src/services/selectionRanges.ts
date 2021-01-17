@@ -64,6 +64,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const range of ranges) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
 					const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+					if (!cssLanguageService) continue;
 					for (const cssLoc of sourceMap.sourceToTargets(range)) {
 						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.targetDocument, [cssLoc.range.start], sourceMap.stylesheet);
 						for (const selectRange of selectRanges) {

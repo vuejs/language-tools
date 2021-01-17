@@ -96,6 +96,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			let result: Location[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				if (!cssLanguageService) continue;
 				for (const cssLoc of sourceMap.sourceToTargets(range)) {
 					const locations = cssLanguageService.findReferences(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
 					for (const location of locations) {
