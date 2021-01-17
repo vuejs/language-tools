@@ -53,6 +53,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
                 panel.title = 'Preview ' + path.basename(document.fileName);
                 panel.webview.html = `
+<style>
+body {
+    padding: 0;
+}
+</style>
 <script>
 const vscode = acquireVsCodeApi();
 window.onmessage = function(e) {
