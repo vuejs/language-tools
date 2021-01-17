@@ -108,29 +108,40 @@
 		"commands": [
 			{
 				"command": "volar.action.restartServer",
-				"title": "Volar: Restart Vue server"
+				"title": "Restart Vue server",
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.verifyAllScripts",
-				"title": "Volar: Verify All Scripts"
+				"title": "Verify All Scripts",
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.formatAllScripts",
-				"title": "Volar: Format All Scripts"
+				"title": "Format All Scripts",
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.writeVirtualFiles",
-				"title": "Volar: Write Virtual Files (Debug)"
+				"title": "Write Virtual Files (Debug)",
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.showCallGraph",
-				"title": "Volar: Show Call Graph (Experimental)"
+				"title": "Show Call Graph (Experimental)",
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.splitEditors",
-				"title": "Volar: Split <script>, <template>, <style> Editors",
+				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Volar",
 				"icon": "images/split-editors.png"
+			},
+			{
+				"command": "volar.action.preview",
+				"title": "Start Preview Client (Experimental)",
+				"category": "Volar",
+				"icon": "$(open-preview)"
 			}
 		],
 		"menus": {

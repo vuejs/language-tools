@@ -2,6 +2,7 @@ import * as path from 'upath';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import * as splitEditors from './features/splitEditors';
+import * as preview from './features/preview';
 import * as callGraph from './features/callGraph';
 import * as showReferences from './features/showReferences';
 import * as documentVersion from './features/documentVersion';
@@ -22,6 +23,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	htmlClient = createLanguageService(context, 'html', 'Volar - HTML', 6011, false);
 
 	splitEditors.activate(context);
+	preview.activate(context);
 	callGraph.activate(context, apiClient);
 	showReferences.activate(context, apiClient);
 	documentVersion.activate(context, docClient);
