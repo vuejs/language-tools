@@ -1,6 +1,7 @@
 ### 0.19.14
 
 - feat: `@vue-ignore` support
+- fix: don't diagnose `lang="sass"`, `lang="stylus"` with css language
 
 ### 0.19.13
 
