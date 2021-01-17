@@ -1,3 +1,7 @@
+### 0.19.14
+
+- feat: `@vue-ignore` support
+
 ### 0.19.13
 
 - feat: preview client (experimental)
