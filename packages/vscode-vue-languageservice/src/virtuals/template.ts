@@ -169,19 +169,19 @@ export function useTemplateScript(
 			const mappings: Mapping<{ isAdditionalReference: boolean }>[] = [];
 			for (const propName of templateScriptData.context) {
 				const vueRange = {
-					start: text.length + `declare let `.length,
-					end: text.length + `declare let ${propName}`.length,
+					start: text.length + `declare var `.length,
+					end: text.length + `declare var ${propName}`.length,
 				};
 				mappings.push({
 					data: { isAdditionalReference: false },
 					mode: MapedMode.Offset,
 					sourceRange: vueRange,
 					targetRange: {
-						start: text.length + `declare let ${propName}: typeof __VLS_ctx.`.length,
-						end: text.length + `declare let ${propName}: typeof __VLS_ctx.${propName}`.length,
+						start: text.length + `declare var ${propName}: typeof __VLS_ctx.`.length,
+						end: text.length + `declare var ${propName}: typeof __VLS_ctx.${propName}`.length,
 					},
 				});
-				text += `declare let ${propName}: typeof __VLS_ctx.${propName}; `;
+				text += `declare var ${propName}: typeof __VLS_ctx.${propName}; `;
 				if (propsSet.has(propName)) {
 					mappings.push({
 						data: { isAdditionalReference: true },
