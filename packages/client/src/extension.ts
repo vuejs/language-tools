@@ -66,11 +66,15 @@ function createLanguageService(context: vscode.ExtensionContext, mode: string, n
 		documentSelector: fileOnly ?
 			[
 				{ scheme: 'file', language: 'vue' },
+				{ scheme: 'file', language: 'javascript' },
 				{ scheme: 'file', language: 'typescript' },
+				{ scheme: 'file', language: 'javascriptreact' },
 				{ scheme: 'file', language: 'typescriptreact' },
 			] : [
 				{ language: 'vue' },
+				{ language: 'javascript' },
 				{ language: 'typescript' },
+				{ language: 'javascriptreact' },
 				{ language: 'typescriptreact' },
 			],
 		synchronize: {

@@ -69,7 +69,9 @@ const vueOnly: TextDocumentRegistrationOptions = {
 const both: TextDocumentRegistrationOptions = {
 	documentSelector: [
 		{ language: 'vue' },
+		{ language: 'javascript' },
 		{ language: 'typescript' },
+		{ language: 'javascriptreact' },
 		{ language: 'typescriptreact' },
 	],
 };
