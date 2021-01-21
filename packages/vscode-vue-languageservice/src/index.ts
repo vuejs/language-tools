@@ -153,12 +153,20 @@ export function createLanguageService(vueHost: ts.LanguageServiceHost, onUpdate?
 			if (!script) continue;
 
 			const docLength = script.getLength();
-			let addText = '\ndeclare global { interface __VLS_GlobalComponents {\n';
+			let addText = '\n';
+
+			for (let i = 0; i < argsArr.length; i++) {
+				const args = argsArr[i];
+				addText += `const __VLS_${i} = ${args[1].text};\n`;
+			}
+
+			addText += '\ndeclare global { interface __VLS_GlobalComponents {\n';
 
 			const mappings: Mapping<TsMappingData>[] = [];
-			for (const args of argsArr) {
+			for (let i = 0; i < argsArr.length; i++) {
+				const args = argsArr[i];
 				mappingText(args[0].start, args[0].end, args[0].text);
-				addText += `: typeof ${args[1].text};\n`;
+				addText += `: typeof __VLS_${i};\n`;
 			}
 
 			addText += `} }\n`;
