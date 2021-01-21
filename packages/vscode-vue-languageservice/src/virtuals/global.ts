@@ -24,15 +24,13 @@ import { PropType } from '__VLS_vue'
 import { App } from '__VLS_vue'
 
 declare global {
-	interface __VLS_GlobalComponents {
-		Transition: typeof import('__VLS_vue').Transition;
-		TransitionGroup: typeof import('__VLS_vue').TransitionGroup;
-		KeepAlive: typeof import('__VLS_vue').KeepAlive;
-		Suspense: typeof import('__VLS_vue').Suspense;
-		Teleport: typeof import('__VLS_vue').Teleport;
-		component: FunctionalComponent<{ is: any }>;
-		slot: FunctionalComponent<{ name?: string }>;
-	}
+	interface __VLS_GlobalComponents extends Pick<typeof import('__VLS_vue'),
+		'Transition'
+		| 'TransitionGroup'
+		| 'KeepAlive'
+		| 'Suspense'
+		| 'Teleport'
+	> { }
 	var __VLS_for_key: string;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
 	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
