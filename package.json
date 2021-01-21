@@ -159,16 +159,10 @@
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
 		"pack": "yarn && vsce package --yarn",
-		"publish": "yarn && vsce publish --yarn",
-		"rollup": "rollup -c rollup.config.js"
+		"publish": "yarn && vsce publish --yarn"
 	},
 	"devDependencies": {
-		"typescript": "latest",
-		"rollup": "latest",
-		"rollup-plugin-typescript2": "latest",
-		"rollup-plugin-node-resolve": "latest",
-		"@rollup/plugin-commonjs": "latest",
-		"@rollup/plugin-json": "latest"
+		"typescript": "latest"
 	},
 	"dependencies": {},
 	"workspaces": [

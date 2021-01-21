@@ -1,6 +1,7 @@
 export * from './path';
 export * from './requests';
-import { Range, TextDocument } from 'vscode-languageserver/node';
+
+import type { Range, TextDocument } from 'vscode-languageserver/node';
 import { promisify } from 'util';
 
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
@@ -42,17 +43,20 @@ export function isInsideRange(parent: Range, child: Range) {
     if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
     return true;
 }
-export function getWordRange(wordPattern: RegExp, range: Range, document: TextDocument) {
-	const docText = document.getText();
-	const startOffset = document.offsetAt(range.start);
-	const endOffset = document.offsetAt(range.end);
-	for (const match of docText.matchAll(wordPattern)) {
-		if (match.index === undefined) continue;
-		const startIndex = match.index;
-		const endIndex = match.index + match[0].length;
-		if (startOffset >= startIndex && endOffset <= endIndex) {
-			return Range.create(document.positionAt(startIndex), document.positionAt(endIndex));
-		}
-	}
-	return undefined;
+export function getWordRange(wordPattern: RegExp, range: Range, document: TextDocument): Range | undefined {
+    const docText = document.getText();
+    const startOffset = document.offsetAt(range.start);
+    const endOffset = document.offsetAt(range.end);
+    for (const match of docText.matchAll(wordPattern)) {
+        if (match.index === undefined) continue;
+        const startIndex = match.index;
+        const endIndex = match.index + match[0].length;
+        if (startOffset >= startIndex && endOffset <= endIndex) {
+            return {
+                start: document.positionAt(startIndex),
+                end: document.positionAt(endIndex),
+            };
+        }
+    }
+    return undefined;
 }

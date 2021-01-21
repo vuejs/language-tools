@@ -1,11 +1,28 @@
+# project
 .vscode/**
 **/*.map
+**/*.ts
 **/*.d.ts
+**/*.flow
 .gitignore
 **/tsconfig.json
 **/tsconfig.base.json
 **/tsconfig.tsbuildinfo
-contributing.md
-packages
-node_modules/@volar/*/src
-node_modules/@types
+packages/
+
+# text files
+node_modules/**/*.md
+node_modules/**/*.txt
+node_modules/**/license
+node_modules/**/LICENSE
+
+# prettier
+node_modules/prettier/**
+!node_modules/prettier/index.js
+!node_modules/prettier/package.json
+!node_modules/prettier/parser-postcss.js
+!node_modules/prettier/third-party.js
+
+# vscode-*
+node_modules/**/lib/esm/
+node_modules/**/lib/browser/

@@ -52,16 +52,15 @@ import { getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
 
-export const connection = createConnection(ProposedFeatures.all);
-
 const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 
+const connection = createConnection(ProposedFeatures.all);
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
+connection.listen();
 
 const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
-connection.listen();
 
 const vueOnly: TextDocumentRegistrationOptions = {
 	documentSelector: [{ language: 'vue' }],
