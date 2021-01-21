@@ -1,3 +1,9 @@
+### 0.19.15
+
+- feat: support global component with `component(..., defineAsyncComponent(...))`
+- feat: preview client improve
+- fix: js files should handle in language server
+
 ### 0.19.14
 
 - feat: `@vue-ignore` support
