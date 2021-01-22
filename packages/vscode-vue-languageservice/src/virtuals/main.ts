@@ -4,6 +4,7 @@ import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap } from '../utils/sourceMaps';
 import * as upath from 'upath';
 import { SearchTexts } from './common';
+import { uriToFsPath } from '@volar/shared';
 
 export function useScriptMain(
 	getUnreactiveDoc: () => TextDocument,
@@ -16,13 +17,14 @@ export function useScriptMain(
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
 		const hasScript = !!script.value || !!scriptSetup.value;
+		const vueFileName = upath.basename(uriToFsPath(vueDoc.uri));
 		const content = [
 			`import { defineComponent } from '__VLS_vue';`,
-			hasScript ? `import __VLS_componentRaw from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
+			hasScript ? `import __VLS_componentRaw from './${vueFileName}.__VLS_script';` : `// no script`,
 			...(hasScript
 				? [
-					`import { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';`,
-					`export { __VLS_options } from './${upath.basename(vueDoc.uri)}.__VLS_script';`,
+					`import { __VLS_options } from './${vueFileName}.__VLS_script';`,
+					`export { __VLS_options } from './${vueFileName}.__VLS_script';`,
 					`const __VLS_componentReserve = defineComponent(__VLS_componentRaw);`,
 					`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;`,
 					`export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;`,
@@ -42,9 +44,9 @@ export function useScriptMain(
 			``,
 			`export default {} as typeof __VLS_component & {`,
 			`__VLS_options: typeof __VLS_options,`,
-			template.value ? `__VLS_slots: typeof import ('./${upath.basename(vueDoc.uri)}.__VLS_template').default,` : `// no template`,
+			template.value ? `__VLS_slots: typeof import ('./${vueFileName}.__VLS_template').default,` : `// no template`,
 			`};`,
-			hasScript ? `export * from './${upath.basename(vueDoc.uri)}.__VLS_script';` : `// no script`,
+			hasScript ? `export * from './${vueFileName}.__VLS_script';` : `// no script`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', version++, content);
 	});

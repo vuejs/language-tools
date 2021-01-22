@@ -33,7 +33,7 @@ export function useTemplateScript(
 	let version = 0;
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
-	const vueFileName = uriToFsPath(_vueDoc.uri);
+	const vueFileName = upath.basename(uriToFsPath(_vueDoc.uri));
 	const data = computed(() => {
 		if (!templateData.value?.html) {
 			return;
@@ -49,9 +49,9 @@ export function useTemplateScript(
 
 		let text = [
 			(templateScriptData.scriptSetupExports.length
-				? `import * as __VLS_setups from './${upath.basename(vueFileName)}.scriptSetup.raw';`
+				? `import * as __VLS_setups from './${vueFileName}.scriptSetup.raw';`
 				: `// no setups`),
-			`import { __VLS_options, __VLS_component } from './${upath.basename(vueFileName)}';`,
+			`import { __VLS_options, __VLS_component } from './${vueFileName}';`,
 			`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;`,
 			`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };`,
 			`declare const __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,

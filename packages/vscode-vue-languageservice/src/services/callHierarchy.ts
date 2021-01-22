@@ -8,7 +8,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFile } from '../sourceFiles';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
-import { notEmpty } from '@volar/shared';
+import { notEmpty, uriToFsPath } from '@volar/shared';
 import { duplicateLocations, duplicateCallHierarchyIncomingCall, duplicateCallHierarchyOutgoingCall } from '../utils/commons';
 import * as upath from 'upath';
 
@@ -115,7 +115,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const vueRanges = tsRanges.map(tsRange => sourceMap.targetToSource(tsRange)?.range).filter(notEmpty);
 				const vueItem: CallHierarchyItem = {
 					...tsItem,
-					name: tsItem.name === upath.basename(sourceMap.targetDocument.uri) ? upath.basename(sourceMap.sourceDocument.uri) : tsItem.name,
+					name: tsItem.name === upath.basename(uriToFsPath(sourceMap.targetDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
 					uri: sourceMap.sourceDocument.uri,
 					range: vueRange,
 					selectionRange: vueSelectionLoc.range,
