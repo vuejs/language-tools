@@ -250,7 +250,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], cs
 						// __VLS_options.props
 						text += `// @ts-ignore\n`;
 						text += `__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`;
-						mappingPropertyAccess(MapedNodeTypes.Prop, name, capabilitiesSet.htmlTagOrAttr, {
+						mappingPropertyAccess(MapedNodeTypes.Prop, name, { ...capabilitiesSet.htmlTagOrAttr, basic: false }, {
 							start,
 							end,
 						});
@@ -260,7 +260,7 @@ export function transformVueHtml(html: string, componentNames: string[] = [], cs
 						// __VLS_options.emits
 						text += `// @ts-ignore\n`;
 						text += `__VLS_components['${getComponentName(node.tag)}'].__VLS_options.emits`;
-						mappingPropertyAccess(undefined, name, capabilitiesSet.htmlTagOrAttr, {
+						mappingPropertyAccess(undefined, name, { ...capabilitiesSet.htmlTagOrAttr, basic: false }, {
 							start,
 							end,
 						});
