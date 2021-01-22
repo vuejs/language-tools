@@ -1,3 +1,8 @@
+### 0.19.16
+
+- fix: remove incorrect props hover info
+- fix: file name parsing incorrect with `[]` characters
+
 ### 0.19.15
 
 - feat: support global component with `component(..., defineAsyncComponent(...))`
