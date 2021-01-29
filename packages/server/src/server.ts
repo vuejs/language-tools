@@ -97,7 +97,7 @@ function onInitialize(params: InitializeParams) {
 
 	const result: InitializeResult = {
 		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Full,
+			textDocumentSync: TextDocumentSyncKind.Incremental,
 		}
 	};
 

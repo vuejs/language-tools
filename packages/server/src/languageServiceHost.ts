@@ -224,19 +224,19 @@ export function createLanguageServiceHost(
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
 			const docVersion = document.version;
 			fileCurrentReqs.set(document.uri, req);
-			let _isCancle = false;
+			let _isCancel = false;
 			const isCancel = async () => {
-				if (_isCancle) {
+				if (_isCancel) {
 					return true;
 				}
 				if (fileCurrentReqs.get(document.uri) !== req) {
-					_isCancle = true;
+					_isCancel = true;
 					return true;
 				}
 				if (getDocVersionForDiag) {
 					const clientDocVersion = await getDocVersionForDiag(document.uri);
 					if (clientDocVersion !== undefined && docVersion !== clientDocVersion) {
-						_isCancle = true;
+						_isCancel = true;
 						return true;
 					}
 				}
