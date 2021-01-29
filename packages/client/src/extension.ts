@@ -18,9 +18,9 @@ let docClient: lsp.LanguageClient;
 let htmlClient: lsp.LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	apiClient = createLanguageService(context, 'api', 'Volar - API', 6009, true);
-	docClient = createLanguageService(context, 'doc', 'Volar - Document', 6010, true);
-	htmlClient = createLanguageService(context, 'html', 'Volar - HTML', 6011, false);
+	apiClient = createLanguageService(context, 'api', 'Volar - API','volar-api', 6009, true);
+	docClient = createLanguageService(context, 'doc', 'Volar - Document','volar-document', 6010, true);
+	htmlClient = createLanguageService(context, 'html', 'Volar - HTML', 'volar-html', 6011, false);
 
 	splitEditors.activate(context);
 	preview.activate(context);
@@ -42,7 +42,7 @@ export function deactivate(): Thenable<void> | undefined {
 	return apiClient?.stop() && docClient?.stop() && htmlClient?.stop();
 }
 
-function createLanguageService(context: vscode.ExtensionContext, mode: string, name: string, port: number, fileOnly: boolean) {
+function createLanguageService(context: vscode.ExtensionContext, mode: string, name: string,id:string, port: number, fileOnly: boolean) {
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'server', 'out', 'server.js'));
 	// The debug options for the server
@@ -89,6 +89,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: string, n
 
 	// Create the language client and start the client.
 	const client = new lsp.LanguageClient(
+		id,
 		name,
 		serverOptions,
 		clientOptions,
