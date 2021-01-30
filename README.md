@@ -8,7 +8,13 @@ Volar is a Language Support plugin built specifically for Vue 3. This is based o
 
 Roadmap: https://github.com/johnsoncodehk/volar/issues/28
 
-I know setup a totally working TS project is not easy (especially for new users), so if you have any question, you can open a Issue, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
+If you have any question, you can open a issue, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
+
+## Quick Start
+
+Some templates that can used with Volar. (let me know if you're know others)
+
+Vite: [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
 
@@ -139,10 +145,11 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 > - script: js, ts, jsx, tsx
 > - style: css, scss, less
 
-> Need to disable Vetur to avoid conflicts.
+> Please disable Vetur to avoid conflicts.
 
 > tsconfig.json / jsconfig.json is required. And usually also need `"strict": true`.
 
+> pug is not fully supported temporarily. ([#50](https://github.com/johnsoncodehk/volar/issues/50))
 
 ## Sponsors
 
