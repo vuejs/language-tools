@@ -1,17 +1,15 @@
+import * as pug from 'pug';
 import * as htmlparser2 from 'htmlparser2';
 import { Node, DataNode, Element } from 'domhandler';
 import { ElementType } from 'domelementtype';
 import * as prettyhtml from '@starptech/prettyhtml';
-
-let pugLoader: (source: string) => string = require('pug-plain-loader');
-pugLoader = pugLoader.bind({ addDependency: () => { } }); // patch loader
 
 const tabSize = 2;
 const useTabs = false;
 
 export function pugToHtml(pugCode: string) {
 	pugCode = pugCode.replace(/\/\/-/g, '// ')
-	let htmlCode = pugLoader(pugCode);
+	let htmlCode = pug.compile(pugCode, { doctype: 'html' })();
 	htmlCode = htmlCode.replace(/\-\-\>/g, " -->");
 
 	// TODO
