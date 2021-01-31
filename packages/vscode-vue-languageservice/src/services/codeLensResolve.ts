@@ -1,14 +1,12 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
 	CodeLens,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
 import * as findReferences from './references';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import { Commands } from '../commands';
-import { TsSourceMap } from '../utils/sourceMaps';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService, getGlobalTsSourceMaps: () => Map<string, { sourceMap: TsSourceMap }>) {
-	const _findReferences = findReferences.register(sourceFiles, tsLanguageService, getGlobalTsSourceMaps);
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+	const _findReferences = findReferences.register(arguments[0]);
 	return (codeLens: CodeLens) => {
 
 		const uri: string | undefined = codeLens.data.uri;

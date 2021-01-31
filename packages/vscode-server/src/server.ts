@@ -32,6 +32,7 @@ import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
 import { TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
+	ServerInitializationOptions,
 	D3Request,
 	FormatAllScriptsRequest,
 	uriToFsPath,
@@ -47,10 +48,10 @@ import {
 	TagCloseRequest,
 } from '@volar/shared';
 import * as upath from 'upath';
-import { setTypescript } from '@volar/vscode-builtin-packages';
-import { getSemanticTokensLegend } from '@volar/vscode-vue-languageservice';
+import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
+import { loadVscodeTypescript } from '@volar/shared';
 
 const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 
@@ -75,11 +76,14 @@ const both: TextDocumentRegistrationOptions = {
 	],
 };
 let mode: 'api' | 'doc' | 'html' = 'api';
+let appRoot: string;
 
 function onInitialize(params: InitializeParams) {
 
-	mode = params.initializationOptions.mode;
-	setTypescript(params.initializationOptions.appRoot);
+	const options: ServerInitializationOptions = params.initializationOptions;
+
+	mode = options.mode;
+	appRoot = options.appRoot;
 
 	if (mode === 'html') {
 		initLanguageServiceHtml();
@@ -112,7 +116,7 @@ async function onInitialized() {
 }
 function initLanguageServiceApi(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath);
+	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), connection, documents, rootPath);
 	hosts.push(host);
 
 	// custom requests
@@ -122,12 +126,12 @@ function initLanguageServiceApi(rootPath: string) {
 	connection.onRequest(D3Request.type, handler => {
 		const document = documents.get(handler.uri);
 		if (!document) return;
-		return host.best(document.uri)?.getD3(document);
+		return host.bestMatch(document.uri)?.getD3(document);
 	});
 	connection.onRequest(FormatAllScriptsRequest.type, async options => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Format', 0, '', true);
-		for (const [uri, service] of host.services) {
+		for (const [_, service] of host.services) {
 			const sourceFiles = service.languageService.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
@@ -148,7 +152,7 @@ function initLanguageServiceApi(rootPath: string) {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 
-		return host.best(document.uri)?.doComplete(
+		return host.bestMatch(document.uri)?.doComplete(
 			document,
 			handler.position,
 			handler.context,
@@ -186,77 +190,97 @@ function initLanguageServiceApi(rootPath: string) {
 	});
 	connection.onCompletionResolve(async item => {
 		const uri = item.data?.uri;
-		return host.best(uri)?.doCompletionResolve(item) ?? item;
+		return host.bestMatch(uri)?.doCompletionResolve(item) ?? item;
 	});
 	connection.onHover(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.doHover(document, handler.position);
+		return host.bestMatch(document.uri)?.doHover(document, handler.position);
 	});
 	connection.onSignatureHelp(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.getSignatureHelp(document, handler.position);
+		return host.bestMatch(document.uri)?.getSignatureHelp(document, handler.position);
 	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.getSelectionRanges(document, handler.positions);
+		return host.bestMatch(document.uri)?.getSelectionRanges(document, handler.positions);
 	});
 	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.doRename(document, handler.position, handler.newName);
+		return host.bestMatch(document.uri)?.doRename(document, handler.position, handler.newName);
 	});
 	connection.onCodeLens(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.getCodeLens(document);
+		return host.bestMatch(document.uri)?.getCodeLens(document);
 	});
 	connection.onCodeLensResolve(codeLens => {
 		const uri = codeLens.data?.uri;
-		return host.best(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
+		return host.bestMatch(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
 		const document = documents.get(uri);
 		if (!document) return undefined;
-		return host.best(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
+		return host.bestMatch(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
 	});
 	// vue & ts
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.all(document.uri).map(ls => ls.findReferences(document, handler.position, true)).flat();
+		return host.allMatches(document.uri).map(ls => {
+			let result = ls.findReferences(document, handler.position);
+			if (document.languageId !== 'vue') {
+				result = result.filter(loc => ls.getSourceFile(loc.uri));
+			}
+			return result;
+		}).flat();
 	});
 	connection.onDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findDefinition(document, handler.position, true);
+		const ls = host.bestMatch(document.uri);
+		if (ls) {
+			let result = ls.findDefinition(document, handler.position);
+			if (document.languageId !== 'vue') {
+				result = result.filter(loc => ls.getSourceFile(loc.uri));
+			}
+			return result;
+		}
 	});
 	connection.onTypeDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findTypeDefinition(document, handler.position, true);
+		const ls = host.bestMatch(document.uri);
+		if (ls) {
+			let result = ls.findTypeDefinition(document, handler.position);
+			if (document.languageId !== 'vue') {
+				result = result.filter(loc => ls.getSourceFile(loc.uri));
+			}
+			return result;
+		}
 	});
 	connection.languages.callHierarchy.onPrepare(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return [];
-		const items = host.best(document.uri)?.prepareCallHierarchy(document, handler.position);
+		const items = host.bestMatch(document.uri)?.callHierarchy.onPrepare(document, handler.position);
 		return items?.length ? items : null;
 	});
 	connection.languages.callHierarchy.onIncomingCalls(handler => {
 		const { uri } = handler.item.data as { uri: string };
-		return host.best(uri)?.provideCallHierarchyIncomingCalls(handler.item) ?? [];
+		return host.bestMatch(uri)?.callHierarchy.onIncomingCalls(handler.item) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(handler => {
 		const { uri } = handler.item.data as { uri: string };
-		return host.best(uri)?.provideCallHierarchyOutgoingCalls(handler.item) ?? [];
+		return host.bestMatch(uri)?.callHierarchy.onOutgoingCalls(handler.item) ?? [];
 	});
 }
 function initLanguageServiceDoc(rootPath: string) {
 
-	const host = createLanguageServiceHost(connection, documents, rootPath, async (uri: string) => {
+	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), connection, documents, rootPath, async (uri: string) => {
 		return await connection.sendRequest(DocumentVersionRequest.type, { uri });
 	}, async () => {
 		await connection.sendNotification(SemanticTokensChangedNotification.type);
@@ -269,7 +293,7 @@ function initLanguageServiceDoc(rootPath: string) {
 	connection.onRequest(WriteVirtualFilesRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Write', 0, '', true);
-		for (const [uri, service] of host.services) {
+		for (const [_, service] of host.services) {
 			const globalDocs = service.languageService.getGlobalDocs();
 			for (const globalDoc of globalDocs) {
 				await fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
@@ -283,7 +307,7 @@ function initLanguageServiceDoc(rootPath: string) {
 					}
 					await fs.writeFile(uriToFsPath(uri), doc.getText(), "utf8");
 				}
-				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, sourceFile.fileName));
+				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 			}
 		}
 		progress.done();
@@ -291,7 +315,7 @@ function initLanguageServiceDoc(rootPath: string) {
 	connection.onRequest(VerifyAllScriptsRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Verify', 0, '', true);
-		for (const [uri, service] of host.services) {
+		for (const [_, service] of host.services) {
 			const sourceFiles = service.languageService.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
@@ -302,7 +326,7 @@ function initLanguageServiceDoc(rootPath: string) {
 				await service.languageService.doValidation(doc, result => {
 					connection.sendDiagnostics({ uri: doc.uri, diagnostics: result });
 				});
-				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, sourceFile.fileName));
+				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 			}
 		}
 		progress.done();
@@ -311,39 +335,39 @@ function initLanguageServiceDoc(rootPath: string) {
 	connection.onDocumentColor(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findDocumentColors(document);
+		return host.bestMatch(document.uri)?.findDocumentColors(document);
 	});
 	connection.onColorPresentation(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.getColorPresentations(document, handler.color, handler.range);
+		return host.bestMatch(document.uri)?.getColorPresentations(document, handler.color, handler.range);
 	});
 	connection.onDocumentHighlight(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findDocumentHighlights(document, handler.position);
+		return host.bestMatch(document.uri)?.findDocumentHighlights(document, handler.position);
 	});
 	connection.onDocumentSymbol(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findDocumentSymbols(document);
+		return host.bestMatch(document.uri)?.findDocumentSymbols(document);
 	});
 	connection.onDocumentLinks(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.best(document.uri)?.findDocumentLinks(document);
+		return host.bestMatch(document.uri)?.findDocumentLinks(document);
 	});
 	connection.onRequest(RangeSemanticTokensRequest.type, async handler => {
 		// TODO: blocked diagnostics request
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return host.best(document.uri)?.getSemanticTokens(document, handler.range);
+		return host.bestMatch(document.uri)?.getSemanticTokens(document, handler.range);
 	});
-	connection.onRequest(SemanticTokenLegendRequest.type, getSemanticTokensLegend);
+	connection.onRequest(SemanticTokenLegendRequest.type, () => semanticTokenLegend);
 }
 function initLanguageServiceHtml() {
 
-	const ls = createNoStateLanguageService();
+	const ls = createNoStateLanguageService({ typescript: loadVscodeTypescript(appRoot) });
 
 	connection.onRequest(TagCloseRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -366,7 +390,7 @@ function initLanguageServiceHtml() {
 		return ls.findLinkedEditingRanges(document, handler.position);
 	});
 }
-async function onInitializedApi() {
+function onInitializedApi() {
 	connection.client.register(ReferencesRequest.type, both);
 	connection.client.register(DefinitionRequest.type, both);
 	connection.client.register(CallHierarchyPrepareRequest.type, both);
@@ -400,7 +424,7 @@ async function onInitializedApi() {
 		host.onConnectionInited();
 	}
 }
-async function onInitializedDoc() {
+function onInitializedDoc() {
 	connection.client.register(DocumentHighlightRequest.type, vueOnly);
 	connection.client.register(DocumentSymbolRequest.type, vueOnly);
 	connection.client.register(DocumentLinkRequest.type, vueOnly);

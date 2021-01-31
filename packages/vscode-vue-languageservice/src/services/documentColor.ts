@@ -1,11 +1,12 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
-	TextDocument,
 	ColorInformation,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
-import * as globalServices from '../globalServices';
+import { SourceFile } from '../sourceFile';
+import * as languageServices from '../utils/languageServices';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register({ sourceFiles }: TsApiRegisterOptions) {
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -17,7 +18,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
 				let colors = cssLanguageService.findDocumentColors(sourceMap.targetDocument, sourceMap.stylesheet);
 				for (const color of colors) {

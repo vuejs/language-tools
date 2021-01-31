@@ -5,16 +5,15 @@ import { uriToFsPath, fsPathToUri, sleep, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import type { TextDocuments } from 'vscode-languageserver/node';
-import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function createLanguageServiceHost(
+	ts: typeof import('typescript'),
 	connection: Connection,
 	documents: TextDocuments<TextDocument>,
 	rootPath: string,
 	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
 	_onProjectFilesUpdate?: () => void,
 ) {
-	const ts = getTypescript();
 	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const languageServices = new Map<string, ReturnType<typeof createLs>>();
@@ -34,8 +33,8 @@ export function createLanguageServiceHost(
 
 	return {
 		services: languageServices,
-		best,
-		all,
+		bestMatch,
+		allMatches,
 		restart,
 		onConnectionInited,
 	};
@@ -68,18 +67,18 @@ export function createLanguageServiceHost(
 		for (const tsConfig of [...languageServices.keys()]) {
 			onTsConfigChanged(tsConfig);
 		}
-		for (const [tsConfig, service] of languageServices) {
+		for (const [_, service] of languageServices) {
 			service.onProjectFilesUpdate([]);
 		}
 	}
-	function best(uri: string) {
+	function bestMatch(uri: string) {
 		const matches = _all(uri);
 		if (matches.first.length)
 			return languageServices.get(matches.first[0])?.languageService;
 		if (matches.second.length)
 			return languageServices.get(matches.second[0])?.languageService;
 	}
-	function all(uri: string) {
+	function allMatches(uri: string) {
 		const matches = _all(uri);
 		return [...matches.first, ...matches.second].map(tsConfig => languageServices.get(tsConfig)?.languageService).filter(notEmpty);
 	}
@@ -123,7 +122,7 @@ export function createLanguageServiceHost(
 		const scriptVersions = new Map<string, string>();
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const languageServiceHost = createLanguageServiceHost();
-		const vueLanguageService = createLanguageService(languageServiceHost, async p => {
+		const vueLanguageService = createLanguageService(languageServiceHost, { typescript: ts }, async p => {
 			if (p === 0) {
 				workDoneProgress?.begin('Initializing Vue language features');
 			}
@@ -218,7 +217,7 @@ export function createLanguageServiceHost(
 			}, 0);
 		}
 		async function sendDiagnostics(document: TextDocument, withSideEffect: boolean) {
-			const matchLs = best(document.uri);
+			const matchLs = bestMatch(document.uri);
 			if (matchLs !== vueLanguageService) return;
 
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
@@ -317,20 +316,17 @@ export function createLanguageServiceHost(
 				readDirectory: ts.sys.readDirectory,
 				realpath: ts.sys.realpath,
 				// custom
+				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 				getProjectVersion: () => projectVersion.toString(),
-				getScriptFileNames,
-				getScriptVersion,
-				getScriptSnapshot,
+				getScriptFileNames: () => parsedCommandLine.fileNames,
 				getCurrentDirectory: () => upath.dirname(tsConfig),
 				getCompilationSettings: () => parsedCommandLine.options,
-				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
+				getScriptVersion,
+				getScriptSnapshot,
 			};
 
 			return host;
 
-			function getScriptFileNames() {
-				return parsedCommandLine.fileNames;
-			}
 			function getScriptVersion(fileName: string) {
 				const version = scriptVersions.get(fileName);
 				if (version !== undefined) {
@@ -363,7 +359,7 @@ export function createLanguageServiceHost(
 		}
 		function dispose() {
 			disposed = true;
-			for (const [uri, fileWatcher] of fileWatchers) {
+			for (const [_, fileWatcher] of fileWatchers) {
 				fileWatcher.close();
 			}
 			directoryWatcher.close();

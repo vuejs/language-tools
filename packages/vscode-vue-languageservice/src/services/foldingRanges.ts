@@ -1,19 +1,20 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFiles';
+import type { SourceFile } from '../sourceFile';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
-import * as globalServices from '../globalServices';
+import * as languageServices from '../utils/languageServices';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
 import { FoldingRange } from 'vscode-languageserver/node';
-import { createSourceFile } from '../sourceFiles';
-import { getCheapTsService2 } from '../globalServices';
+import { createSourceFile } from '../sourceFile';
+import { getCheapTsService2 } from '../utils/languageServices';
 import { notEmpty } from '@volar/shared';
+import type { HtmlApiRegisterOptions } from '../types';
 
-export function register() {
+export function register({ ts }: HtmlApiRegisterOptions) {
 	return (_document: TextDocument) => {
-		const tsService2 = getCheapTsService2(_document);
+		const tsService2 = getCheapTsService2(ts, _document);
 		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText());
 
-		const sourceFile = createSourceFile(document, tsService2.service);
+		const sourceFile = createSourceFile(document, tsService2.service, ts);
 
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
@@ -40,7 +41,7 @@ export function register() {
 					+ content.split('\n').map(line => ' '.repeat(line.length)).join('\n')
 					+ docTextWithoutBlocks.substring(block.loc.end);
 			}
-			return globalServices.html.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
+			return languageServices.html.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
 		}
 		function getTsResult(sourceFile: SourceFile) {
 			const tsSourceMaps = [
@@ -53,7 +54,7 @@ export function register() {
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
+				const cheapTs = getCheapTsService2(ts, sourceMap.targetDocument);
 				const foldingRanges = cheapTs.service.getFoldingRanges(cheapTs.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
@@ -63,7 +64,7 @@ export function register() {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
 				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.targetDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
@@ -184,7 +185,7 @@ function toVueFoldingRangesTs(virtualFoldingRanges: FoldingRange[], sourceMap: T
 			start: { line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			end: { line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
 		});
-		if (vueLoc && vueLoc.maped.data.capabilities.foldingRanges) {
+		if (vueLoc && vueLoc.data.capabilities.foldingRanges) {
 			foldingRange.startLine = vueLoc.range.start.line;
 			foldingRange.endLine = vueLoc.range.end.line;
 			if (foldingRange.startCharacter !== undefined)

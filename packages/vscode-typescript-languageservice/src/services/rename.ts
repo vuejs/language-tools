@@ -1,10 +1,10 @@
 import type * as ts from 'typescript';
 import {
-	TextDocument,
 	WorkspaceEdit,
 	Position,
 } from 'vscode-languageserver/node';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (uri: string, position: Position, newText: string): WorkspaceEdit | undefined => {

@@ -1,5 +1,5 @@
 {
-	"name": "@volar/client",
+	"name": "@volar/vscode-client",
 	"version": "1.0.0",
 	"engines": {
 		"vscode": "latest"

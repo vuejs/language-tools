@@ -1,114 +1,94 @@
-import {
-	Position,
-	TextDocument,
-	Location,
-	Range,
-} from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
-import {
-	tsLocationToVueLocations,
-	duplicateLocations,
-	findSourceFileByTsUri,
-} from '../utils/commons';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
-import * as globalServices from '../globalServices';
-import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
+import type { TsApiRegisterOptions } from '../types';
+import type { Position } from 'vscode-languageserver/node';
+import type { Location } from 'vscode-languageserver/node';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import * as dedupe from '../utils/dedupe';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService, getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>) {
-	return (document: TextDocument, position: Position, ingoreTsResult = false) => {
-		const range = { start: position, end: position };
+export function register({ mapper }: TsApiRegisterOptions) {
 
-		if (document.languageId !== 'vue') {
-			let result = getTsResultWorker(document, range);
-			if (ingoreTsResult) {
-				result = result.filter(loc => sourceFiles.has(loc.uri)); // duplicate
-			}
-			return duplicateLocations(result);
-		}
+	return (document: TextDocument, position: Position) => {
 
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return [];
+		const tsResult = onTs(document.uri, position)
+		const cssResult = onCss(document.uri, position);
 
-		const tsResult = getTsResult(sourceFile);
-		const cssResult = getCssResult(sourceFile);
-		const result = [...tsResult, ...cssResult];
-		return duplicateLocations(result);
+		return dedupe.withLocations([
+			...tsResult,
+			...cssResult,
+		]);
+	}
 
-		function getTsResult(sourceFile: SourceFile) {
-			let result: Location[] = [];
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.sourceToTargets(range)) {
-					if (!tsLoc.maped.data.capabilities.references) continue;
-					result = result.concat(getTsResultWorker(sourceMap.targetDocument, tsLoc.range));
-				}
-			}
-			return result;
-		}
-		function getTsResultWorker(tsDoc: TextDocument, tsRange: Range) {
-			const tsLocations: Location[] = [];
-			worker(tsDoc, tsRange.start);
-			const globalTsSourceMaps = getGlobalTsSourceMaps?.();
-			return tsLocations.map(tsLoc => tsLocationToVueLocations(tsLoc, sourceFiles, globalTsSourceMaps)).flat();
+	function onTs(uri: string, position: Position) {
 
-			function worker(doc: TextDocument, pos: Position) {
-				const references = tsLanguageService.findReferences(doc.uri, pos);
-				for (const reference of references) {
-					if (hasLocation(reference)) continue;
-					tsLocations.push(reference);
-					const sourceFile_2 = findSourceFileByTsUri(sourceFiles, reference.uri);
-					const tsm = sourceFile_2?.getMirrorsSourceMaps();
-					if (tsm?.contextSourceMap?.sourceDocument.uri === reference.uri)
-						transfer(tsm.contextSourceMap);
-					if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === reference.uri)
-						transfer(tsm.scriptSetupSourceMap);
-					function transfer(sourceMap: SourceMap) {
-						const leftRange = sourceMap.isSource(reference.range)
-							? reference.range
-							: sourceMap.targetToSource(reference.range)?.range;
-						if (leftRange) {
-							const leftLoc = { uri: sourceMap.sourceDocument.uri, range: leftRange };
-							if (!hasLocation(leftLoc)) {
-								worker(sourceMap.sourceDocument, leftLoc.range.start);
-							}
-							const rightLocs = sourceMap.sourceToTargets(leftRange);
-							for (const rightLoc of rightLocs) {
-								const rightLoc_2 = { uri: sourceMap.sourceDocument.uri, range: rightLoc.range };
-								if (!hasLocation(rightLoc_2)) {
-									worker(sourceMap.sourceDocument, rightLoc_2.range.start);
-								}
-							}
-						}
+		const loopChecker = dedupe.createLocationSet();
+		let tsResult: Location[] = [];
+		let vueResult: Location[] = [];
+
+		// vue -> ts
+		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+
+			if (!tsMaped.data.capabilities.references)
+				continue;
+
+			withTeleports(tsMaped.textDocument.uri, tsMaped.range.start);
+
+			function withTeleports(uri: string, position: Position) {
+
+				const tsLocs = tsMaped.languageService.findReferences(
+					uri,
+					position,
+				);
+				tsResult = tsResult.concat(tsLocs);
+
+				for (const tsLoc of tsLocs) {
+					loopChecker.add({ uri: tsLoc.uri, range: tsLoc.range });
+					for (const teleport of mapper.ts.teleports(tsLoc.uri, tsLoc.range)) {
+						if (!teleport.sideData.capabilities.references)
+							continue;
+						if (loopChecker.has({ uri: tsLoc.uri, range: teleport.range }))
+							continue;
+						withTeleports(tsLoc.uri, teleport.range.start);
 					}
 				}
 			}
-			// TODO: use map
-			function hasLocation(loc: Location) {
-				return tsLocations.find(tsLoc =>
-					tsLoc.uri === loc.uri
-					&& tsLoc.range.start.line === loc.range.start.line
-					&& tsLoc.range.start.character === loc.range.start.character
-					&& tsLoc.range.end.line === loc.range.end.line
-					&& tsLoc.range.end.character === loc.range.end.character
-				)
+		}
+
+		// ts -> vue
+		for (const tsLoc of tsResult) {
+			for (const vueMaped of mapper.ts.from(tsLoc.uri, tsLoc.range)) {
+				vueResult.push({
+					uri: vueMaped.textDocument.uri,
+					range: vueMaped.range,
+				});
 			}
 		}
-		function getCssResult(sourceFile: SourceFile) {
-			let result: Location[] = [];
-			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
-				for (const cssLoc of sourceMap.sourceToTargets(range)) {
-					const locations = cssLanguageService.findReferences(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
-					for (const location of locations) {
-						const sourceLoc = sourceMap.targetToSource(location.range);
-						if (sourceLoc) result.push({
-							uri: sourceMap.sourceDocument.uri,
-							range: sourceLoc.range,
-						});
-					}
-				}
-			}
-			return result;
+
+		return vueResult;
+	}
+	function onCss(uri: string, position: Position) {
+
+		let cssResult: Location[] = [];
+		let vueResult: Location[] = [];
+
+		// vue -> css
+		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
+			const cssLocs = cssMaped.languageService.findReferences(
+				cssMaped.textDocument,
+				cssMaped.range.start,
+				cssMaped.stylesheet,
+			);
+			cssResult = cssResult.concat(cssLocs);
 		}
+
+		// css -> vue
+		for (const cssLoc of cssResult) {
+			for (const vueMaped of mapper.css.from(cssLoc.uri, cssLoc.range)) {
+				vueResult.push({
+					uri: vueMaped.textDocument.uri,
+					range: vueMaped.range,
+				});
+			}
+		}
+
+		return vueResult;
 	}
 }

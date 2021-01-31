@@ -5,9 +5,9 @@ import {
 	CompletionItem,
 	CompletionItemKind,
 	Range,
-	TextDocument,
 	TextEdit,
 } from 'vscode-languageserver/node';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, getWordRange } from '@volar/shared';
 
 export const wordPatterns: { [lang: string]: RegExp } = {

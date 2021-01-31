@@ -1,6 +1,8 @@
 export * from './path';
 export * from './requests';
+export * from './types';
 
+import * as path from 'upath';
 import type { Range, TextDocument } from 'vscode-languageserver/node';
 import { promisify } from 'util';
 
@@ -59,4 +61,8 @@ export function getWordRange(wordPattern: RegExp, range: Range, document: TextDo
         }
     }
     return undefined;
+}
+export function loadVscodeTypescript(appRoot: string): typeof import('typescript') {
+    const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript');
+    return require(path.toUnix(tsPath));
 }

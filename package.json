@@ -25,7 +25,7 @@
 	"activationEvents": [
 		"onLanguage:vue"
 	],
-	"main": "./node_modules/@volar/client/out/extension",
+	"main": "./node_modules/@volar/vscode-client/out/extension",
 	"contributes": {
 		"languages": [
 			{

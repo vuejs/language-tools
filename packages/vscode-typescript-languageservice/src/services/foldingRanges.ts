@@ -2,11 +2,8 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
 import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
-import { getTypescript } from '@volar/vscode-builtin-packages';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	const ts = getTypescript();
-
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (uri: string) => {
 		const document = getTextDocument(uri);
 		if (!document) return [];

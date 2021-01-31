@@ -1,19 +1,18 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
 	Range,
 	TextEdit,
 	Connection,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { pugToHtml, htmlToPug } from '@volar/pug';
 import { ShowReferencesNotification, sleep } from '@volar/shared';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
-import { SearchTexts } from '../virtuals/common';
+import { SearchTexts } from '../utils/string';
 import * as findReferences from './references';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	const _findReferences = findReferences.register(sourceFiles, tsLanguageService);
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+	const _findReferences = findReferences.register(arguments[0]);
 	return async (document: TextDocument, command: string, args: any[] | undefined, connection: Connection) => {
 
 		if (command === Commands.SHOW_REFERENCES && args) {
@@ -32,18 +31,18 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const genData = sourceFile.getScriptSetupData();
 			if (!genData) return;
 			let edits: TextEdit[] = [];
-			if (genData.data.labels.length) {
+			if (genData.labels.length) {
 				// unuse ref sugar
 				let varsNum = 0;
 				let varsCur = 0;
-				for (const label of genData.data.labels) {
+				for (const label of genData.labels) {
 					for (const binary of label.binarys) {
 						varsNum += binary.vars.length;
 					}
 				}
 				const progress = await connection.window.createWorkDoneProgress();
 				progress.begin('Unuse Ref Sugar', 0, '', true);
-				for (const label of genData.data.labels) {
+				for (const label of genData.labels) {
 					edits.push(TextEdit.replace({
 						start: document.positionAt(desc.scriptSetup.loc.start + label.label.start),
 						end: document.positionAt(desc.scriptSetup.loc.start + label.label.end + 1),
@@ -67,9 +66,16 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 							!binary.right.isComputedCall
 							&& !document.getText().substring(desc.scriptSetup.loc.start + binary.left.start, desc.scriptSetup.loc.start + binary.left.end).startsWith('{') // TODO
 						) {
+							let rightType = '';
+							if (binary.right.as) {
+								rightType = `<${document.getText().substring(
+									desc.scriptSetup.loc.start + binary.right.as.start,
+									desc.scriptSetup.loc.start + binary.right.as.end,
+								)}>`;
+							}
 							edits.push(TextEdit.insert(
 								document.positionAt(desc.scriptSetup.loc.start + binary.right.start),
-								'ref('
+								`ref${rightType}(`
 							));
 							edits.push(TextEdit.insert(
 								document.positionAt(desc.scriptSetup.loc.start + binary.right.end),
@@ -101,7 +107,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 									const referenceText = document.getText().substring(refernceRange.start, refernceRange.end);
 									const isRaw = `$${varText}` === referenceText;
 									let isShorthand = false;
-									for (const shorthandProperty of genData.data.shorthandPropertys) {
+									for (const shorthandProperty of genData.shorthandPropertys) {
 										if (
 											refernceRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
 											&& refernceRange.end === desc.scriptSetup.loc.start + shorthandProperty.end
@@ -149,20 +155,37 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				// use ref sugar
 				let varsNum = 0;
 				let varsCur = 0;
-				for (const label of genData.data.refCalls) {
+				for (const label of genData.refCalls) {
 					varsNum += label.vars.length;
 				}
 				const progress = await connection.window.createWorkDoneProgress();
 				progress.begin('Use Ref Sugar', 0, '', true);
-				for (const refCall of genData.data.refCalls) {
+				for (const refCall of genData.refCalls) {
+
 					const left = document.getText().substring(
 						desc.scriptSetup.loc.start + refCall.left.start,
 						desc.scriptSetup.loc.start + refCall.left.end,
 					);
-					const right = document.getText().substring(
-						desc.scriptSetup.loc.start + refCall.rightExpression.start,
-						desc.scriptSetup.loc.start + refCall.rightExpression.end,
-					);
+					const rightExp = refCall.rightExpression
+						? document.getText().substring(
+							desc.scriptSetup.loc.start + refCall.rightExpression.start,
+							desc.scriptSetup.loc.start + refCall.rightExpression.end,
+						)
+						: 'undefined';
+					const rightType = refCall.rightType
+						? document.getText().substring(
+							desc.scriptSetup.loc.start + refCall.rightType.start,
+							desc.scriptSetup.loc.start + refCall.rightType.end,
+						)
+						: undefined;
+					let right = rightExp ? rightExp : 'undefined';
+					if (rightType) {
+						right += ` as ${rightType}`;
+						if (!refCall.rightExpression) {
+							right += ` | undefined`;
+						}
+					}
+
 					if (left.trim().startsWith('{')) {
 						edits.push(TextEdit.replace({
 							start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),

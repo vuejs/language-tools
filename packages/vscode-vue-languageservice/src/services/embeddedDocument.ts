@@ -1,9 +1,10 @@
+import type { TsApiRegisterOptions } from '../types';
 import type { Range } from 'vscode-languageserver/node';
-import type { SourceFile } from '../sourceFiles';
+import type { SourceFile } from '../sourceFile';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceMap } from '../utils/sourceMaps';
 
-export function register(sourceFiles: Map<string, SourceFile>) {
+export function register({ sourceFiles }: TsApiRegisterOptions) {
 	return (document: TextDocument, range: Range): {
 		document: TextDocument,
 		range: Range,
@@ -34,7 +35,7 @@ export function register(sourceFiles: Map<string, SourceFile>) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.maped.data.capabilities.formatting) continue;
+					if (!virtualLoc.data.capabilities.formatting) continue;
 					return {
 						sourceMap,
 						document: sourceMap.targetDocument,

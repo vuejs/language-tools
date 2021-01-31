@@ -1,4 +1,10 @@
-import { CompletionItem } from 'vscode-languageserver/node';
+import type { CompletionItem } from 'vscode-languageserver/node';
+import type { SourceFile } from './sourceFile';
+import type { TsSourceMap } from './utils/sourceMaps';
+import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import type { TextDocument } from 'vscode-css-languageservice';
+import type { HTMLDocument } from 'vscode-html-languageservice';
+import type { createMapper } from './utils/mapper';
 
 export interface TsCompletionData {
 	mode: 'ts',
@@ -49,6 +55,18 @@ export interface ITemplateScriptData {
 	components: string[];
 	props: string[];
 	setupReturns: string[];
-	scriptSetupExports: string[];
 	htmlElements: string[];
+}
+
+export type HtmlApiRegisterOptions = {
+	ts: typeof import('typescript');
+	getHtmlDocument(document: TextDocument): HTMLDocument;
+}
+export type TsApiRegisterOptions = {
+	ts: typeof import('typescript');
+	sourceFiles: Map<string, SourceFile>;
+	tsLanguageService: ts2.LanguageService;
+	getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>;
+	vueHost: ts2.LanguageServiceHost;
+	mapper: ReturnType<typeof createMapper>;
 }

@@ -18,15 +18,13 @@ import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-import { getTypescript } from '@volar/vscode-builtin-packages';
 export type { LanguageServiceHost } from 'typescript';
 import type { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
 
-export function createLanguageService(host: LanguageServiceHost) {
+export function createLanguageService(host: LanguageServiceHost, ts: typeof import('typescript')) {
 
-	const ts = getTypescript();
 	const documents = new Map<string, TextDocument>();
 	const shPlugin = ShPlugin({ typescript: ts as any });
 	let languageService = ts.createLanguageService(host);
@@ -40,17 +38,17 @@ export function createLanguageService(host: LanguageServiceHost) {
 		findReferences: references.register(languageService, getTextDocument),
 		doRename: rename.register(languageService, getTextDocument),
 
-		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument),
+		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getTextDocument),
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
 		doComplete: completions.register(languageService, getTextDocument),
-		doCompletionResolve: completionResolve.register(languageService, getTextDocument),
-		doHover: hover.register(languageService, getTextDocument),
+		doCompletionResolve: completionResolve.register(languageService, getTextDocument, ts),
+		doHover: hover.register(languageService, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getTextDocument),
-		getSignatureHelp: signatureHelp.register(languageService, getTextDocument),
+		getSignatureHelp: signatureHelp.register(languageService, getTextDocument, ts),
 		getSelectionRange: selectionRanges.register(languageService, getTextDocument),
-		doValidation: diagnostics.register(languageService, getTextDocument),
-		getFoldingRanges: foldingRanges.register(languageService, getTextDocument),
+		doValidation: diagnostics.register(languageService, getTextDocument, ts),
+		getFoldingRanges: foldingRanges.register(languageService, getTextDocument, ts),
 		getDocumentSemanticTokens: semanticTokens.register(languageService, getTextDocument),
 		...callHierarchy.register(languageService, getTextDocument),
 

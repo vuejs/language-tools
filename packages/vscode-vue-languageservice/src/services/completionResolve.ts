@@ -1,10 +1,10 @@
+import type { TsApiRegisterOptions } from '../types';
 import { CompletionItem, MarkupKind } from 'vscode-languageserver/node';
 import { CompletionData, TsCompletionData, HtmlCompletionData } from '../types';
-import { SourceFile } from '../sourceFiles';
+import { SourceFile } from '../sourceFile';
 import { translateAdditionalTextEdits } from './completions';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (item: CompletionItem) => {
 		const data: CompletionData = item.data;
 		const sourceFile = sourceFiles.get(data.uri);

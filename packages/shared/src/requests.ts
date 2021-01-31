@@ -1,39 +1,16 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
-import {
-	RequestType,
-	NotificationType,
-	TextDocumentPositionParams,
-	TextDocumentIdentifier,
-	FormattingOptions,
-	Position,
-	Location,
-	DocumentUri,
-	Range,
-	RequestType0,
-	NotificationType0,
-	SemanticTokensLegend,
-	SemanticTokens,
-} from 'vscode-languageserver/node';
-
-export interface ISourceMap {
-	languageId: string;
-	content: string;
-	vueRegion: string;
-	mappings: {
-		sourceRange: {
-			start: number;
-			end: number;
-		};
-		targetRange: {
-			start: number;
-			end: number;
-		};
-	}[],
-}
+import { RequestType } from 'vscode-languageserver/node';
+import { NotificationType } from 'vscode-languageserver/node';
+import { TextDocumentPositionParams } from 'vscode-languageserver/node';
+import { TextDocumentIdentifier } from 'vscode-languageserver/node';
+import { FormattingOptions } from 'vscode-languageserver/node';
+import { Position } from 'vscode-languageserver/node';
+import { Location } from 'vscode-languageserver/node';
+import { DocumentUri } from 'vscode-languageserver/node';
+import { Range } from 'vscode-languageserver/node';
+import { RequestType0 } from 'vscode-languageserver/node';
+import { NotificationType0 } from 'vscode-languageserver/node';
+import { SemanticTokensLegend } from 'vscode-languageserver/node';
+import { SemanticTokens } from 'vscode-languageserver/node';
 
 export namespace D3Request {
 	export const type: RequestType<TextDocumentIdentifier, string | null | undefined, any> = new RequestType('volar/d3');

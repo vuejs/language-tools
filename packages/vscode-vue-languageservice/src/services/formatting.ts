@@ -4,19 +4,20 @@ import {
 	Range,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createSourceFile } from '../sourceFiles';
-import { getCheapTsService2 } from '../globalServices';
+import { createSourceFile } from '../sourceFile';
+import { getCheapTsService2 } from '../utils/languageServices';
 import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import { notEmpty } from '@volar/shared';
+import type { HtmlApiRegisterOptions } from '../types';
 const pugBeautify = require('pug-beautify');
 
-export function register() {
+export function register({ ts }: HtmlApiRegisterOptions) {
 	return (_document: TextDocument, options: FormattingOptions) => {
-		const tsService2 = getCheapTsService2(_document);
+		const tsService2 = getCheapTsService2(ts, _document);
 		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText()); // TODO: high cost
 
-		const sourceFile = createSourceFile(document, tsService2.service);
+		const sourceFile = createSourceFile(document, tsService2.service, ts);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();
@@ -174,11 +175,11 @@ export function register() {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const cheapTs = getCheapTsService2(sourceMap.targetDocument);
+				const cheapTs = getCheapTsService2(ts, sourceMap.targetDocument);
 				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
-						if (!vueLoc.maped.data.capabilities.formatting) continue;
+						if (!vueLoc.data.capabilities.formatting) continue;
 						result.push({
 							newText: textEdit.newText,
 							range: vueLoc.range,

@@ -1,19 +1,17 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
 	Range,
-	TextDocument,
 	DocumentLink,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
+import { SourceFile } from '../sourceFile';
 import * as jsonc from 'jsonc-parser';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import * as upath from 'upath';
-import type * as ts from 'typescript';
-import { notEmpty } from '../utils/commons';
-import * as globalServices from '../globalServices';
-import { getTypescript } from '@volar/vscode-builtin-packages';
+import { notEmpty } from '@volar/shared';
+import * as languageServices from '../utils/languageServices';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.LanguageServiceHost) {
-	const ts = getTypescript();
+export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -129,7 +127,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const maped of sourceMap) {
-					if (!maped.data.showLink) {
+					if (!maped.data.capabilities.displayWithLink) {
 						continue;
 					}
 					result.push({
@@ -146,7 +144,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const links = globalServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext);
+				const links = languageServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext);
 				for (const link of links) {
 					const vueLoc = sourceMap.targetToSource(link.range);
 					if (vueLoc) {
@@ -163,7 +161,7 @@ export function register(sourceFiles: Map<string, SourceFile>, vueHost: ts.Langu
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
 				const links = cssLanguageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {

@@ -5,5 +5,8 @@
 	"dependencies": {
 		"vscode-languageserver": "latest",
 		"upath": "latest"
+	},
+	"devDependencies": {
+		"typescript": "latest"
 	}
 }

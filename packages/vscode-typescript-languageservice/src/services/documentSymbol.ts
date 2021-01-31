@@ -1,13 +1,13 @@
 import type * as ts from 'typescript';
 import * as PConst from '../protocol.const';
 import {
-	TextDocument,
 	Range,
 	SymbolKind,
 	DocumentSymbol,
 } from 'vscode-languageserver/node';
 import { parseKindModifier } from '../utils/modifiers';
 import { uriToFsPath } from '@volar/shared';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 const getSymbolKind = (kind: string): SymbolKind => {
 	switch (kind) {

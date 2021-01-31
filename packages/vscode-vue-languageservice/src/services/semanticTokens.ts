@@ -1,9 +1,10 @@
+import type { TsApiRegisterOptions } from '../types';
 import { CancellationToken, Range, ResultProgressReporter, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensPartialResult } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFiles';
+import type { SourceFile } from '../sourceFile';
 import { MapedMode } from '../utils/sourceMaps';
 import { hyphenate } from '@vue/shared';
-import * as globalServices from '../globalServices';
+import * as languageServices from '../utils/languageServices';
 import * as html from 'vscode-html-languageservice';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
 
@@ -24,7 +25,7 @@ export const semanticTokenLegend: SemanticTokensLegend = {
 	tokenModifiers: tsLegend.modifiers,
 };
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (document: TextDocument, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -94,7 +95,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const scriptSetupGen = sourceFile.getScriptSetupData();
 			const scriptSetup = sourceFile.getDescriptor().scriptSetup;
 			if (scriptSetupGen && scriptSetup) {
-				const genData = scriptSetupGen.data;
+				const genData = scriptSetupGen;
 				for (const label of genData.labels) {
 					const labelPos = document.positionAt(scriptSetup.loc.start + label.label.start);
 					result.push([labelPos.line, labelPos.character, label.label.end - label.label.start + 1, tokenTypes.get('refLabel') ?? -1, undefined]);
@@ -133,7 +134,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 						const tsStart = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] });
 						const tsEnd = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
 						const vueRange = sourceMap.targetToSource2({ start: tsStart, end: tsEnd });
-						if (!vueRange?.maped.data.capabilities.semanticTokens)
+						if (!vueRange?.data.capabilities.semanticTokens)
 							continue;
 						const vuePos = document.positionAt(vueRange.range.start);
 						result.push([vuePos.line, vuePos.character, vueRange.range.end - vueRange.range.start, token[3], token[4]]);
@@ -154,7 +155,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (offsetRange && maped.sourceRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.targetDocument.getText();
-					const scanner = globalServices.html.createScanner(docText, maped.targetRange.start);
+					const scanner = languageServices.html.createScanner(docText, maped.targetRange.start);
 					let token = scanner.scan();
 					while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= maped.targetRange.end) {
 						const tokenOffset = scanner.getTokenOffset();
@@ -186,7 +187,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					if (offsetRange && maped.sourceRange.start > offsetRange.end)
 						continue;
 					const docText = sourceMap.html;
-					const scanner = globalServices.html.createScanner(docText, 0);
+					const scanner = languageServices.html.createScanner(docText, 0);
 					let token = scanner.scan();
 					while (token !== html.TokenType.EOS) {
 						const htmlOffset = scanner.getTokenOffset();

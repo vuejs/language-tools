@@ -5,7 +5,7 @@ import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap } from '../utils/sourceMaps';
 export function useScriptFormat(
 	getUnreactiveDoc: () => TextDocument,
-	script: Ref<IDescriptor['script'] | IDescriptor['scriptSetup']>,
+	script: Ref<IDescriptor['script']>,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {

@@ -1,15 +1,13 @@
 import {
-	TextDocument,
 	Diagnostic,
 	DiagnosticTag,
 	DiagnosticSeverity,
 } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 import type * as ts from 'typescript';
-import { getTypescript } from '@volar/vscode-builtin-packages';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	const ts = getTypescript();
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (
 		uri: string,
 		options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true },

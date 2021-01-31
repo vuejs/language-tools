@@ -3,7 +3,7 @@ import { syntaxToLanguageId } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, HtmlSourceMap, PugSourceMap } from '../utils/sourceMaps';
-import * as globalServices from '../globalServices';
+import * as languageServices from '../utils/languageServices';
 
 export function useTemplateRaw(
 	getUnreactiveDoc: () => TextDocument,
@@ -27,7 +27,7 @@ export function useTemplateRaw(
 	const htmlSourceMap = computed(() => {
 		if (textDocument.value?.languageId === 'html' && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const htmlDocument = globalServices.html.parseHTMLDocument(textDocument.value);
+			const htmlDocument = languageServices.html.parseHTMLDocument(textDocument.value);
 			const sourceMap = new HtmlSourceMap(
 				vueDoc,
 				textDocument.value,

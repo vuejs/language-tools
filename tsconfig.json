@@ -3,7 +3,7 @@
 	"files": [],
 	"include": [],
 	"references": [
-		{ "path": "./packages/client" },
-		{ "path": "./packages/server" }
+		{ "path": "./packages/vscode-client" },
+		{ "path": "./packages/vscode-server" }
 	]
 }

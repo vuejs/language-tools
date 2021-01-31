@@ -2,19 +2,18 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, CssSourceMap } from '../utils/sourceMaps';
-import * as globalServices from '../globalServices';
+import * as languageServices from '../utils/languageServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
 import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
-import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export function useStylesRaw(
+	ts: typeof import('typescript'),
 	tsLanguageService: ts2.LanguageService,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
 ) {
-	const ts = getTypescript();
 	let version = 0;
 	const textDocuments = computed(() => {
 		const vueDoc = getUnreactiveDoc();
@@ -41,7 +40,7 @@ export function useStylesRaw(
 			const content = style.content;
 			const documentUri = vueDoc.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, version++, content);
-			const cssLanguageService = globalServices.getCssService(lang);
+			const cssLanguageService = languageServices.getCssLanguageService(lang);
 			if (!cssLanguageService) continue;
 			const stylesheet = cssLanguageService.parseStylesheet(document);
 			const linkStyles: {
@@ -71,7 +70,7 @@ export function useStylesRaw(
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, version++, text);
-					const ls2 = globalServices.getCssService(lang);
+					const ls2 = languageServices.getCssLanguageService(lang);
 					if (!ls2) continue;
 					const stylesheet = ls2.parseStylesheet(doc);
 					linkStyles.push({

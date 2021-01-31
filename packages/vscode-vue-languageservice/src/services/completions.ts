@@ -1,3 +1,4 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
 	Position,
 	CompletionItem,
@@ -7,18 +8,17 @@ import {
 	CompletionItemKind,
 } from 'vscode-languageserver-types';
 import { CompletionContext } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
+import { SourceFile } from '../sourceFile';
 import { CompletionData } from '../types';
 import { SourceMap } from '../utils/sourceMaps';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import { languageIdToSyntax, getWordRange } from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
-import * as globalServices from '../globalServices';
+import * as languageServices from '../utils/languageServices';
 import * as emmet from 'vscode-emmet-helper';
 import * as getEmbeddedDocument from './embeddedDocument';
 import type * as ts from 'typescript';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
@@ -30,9 +30,53 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 	less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
 	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
 };
+export const vueTags = [
+	{
+		name: 'template',
+		attributes: [
+			{
+				name: 'lang',
+				values: [
+					{ name: 'html' },
+					{ name: 'pug' },
+				],
+			},
+		],
+	},
+	{
+		name: 'script',
+		attributes: [
+			{
+				name: 'lang',
+				values: [
+					{ name: 'js' },
+					{ name: 'ts' },
+					{ name: 'jsx' },
+					{ name: 'tsx' },
+				],
+			},
+			{ name: 'setup' },
+		],
+	},
+	{
+		name: 'style',
+		attributes: [
+			{
+				name: 'lang',
+				values: [
+					{ name: 'css' },
+					{ name: 'scss' },
+					{ name: 'less' },
+				],
+			},
+			{ name: 'scoped' },
+			{ name: 'module' },
+		],
+	},
+];
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	const getEmbeddedDoc = getEmbeddedDocument.register(sourceFiles);
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 
 	return async (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig>) => {
 		const sourceFile = sourceFiles.get(document.uri);
@@ -65,14 +109,14 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.maped.data.capabilities.completion) continue;
-					const quotePreference = virtualLoc.maped.data.vueTag === 'template' ? 'single' : 'auto';
+					if (!virtualLoc.data.capabilities.completion) continue;
+					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
 					let tsItems = tsLanguageService.doComplete(sourceMap.targetDocument.uri, virtualLoc.range.start, {
 						quotePreference,
-						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(virtualLoc.maped.data.vueTag ?? ''), // TODO: read ts config
+						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(virtualLoc.data.vueTag ?? ''), // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
-					if (virtualLoc.maped.data.vueTag === 'template') {
+					if (virtualLoc.data.vueTag === 'template') {
 						tsItems = tsItems.filter(tsItem => {
 							const sortText = Number(tsItem.sortText);
 							if (Number.isNaN(sortText))
@@ -206,11 +250,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 					tags,
 					globalAttributes,
 				});
-				globalServices.html.setDataProviders(true, [dataProvider]);
+				languageServices.html.setDataProviders(true, [dataProvider]);
 
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					const htmlResult = globalServices.html.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument);
+					const htmlResult = languageServices.html.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument);
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -274,7 +318,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				return result;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
@@ -314,54 +358,11 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				if (syntax === 'vue') {
 					const dataProvider = html.newHTMLDataProvider(document.uri, {
 						version: 1.1,
-						tags: [
-							{
-								name: 'template',
-								attributes: [
-									{
-										name: 'lang',
-										values: [
-											{ name: 'html' },
-											{ name: 'pug' },
-										],
-									},
-								],
-							},
-							{
-								name: 'script',
-								attributes: [
-									{
-										name: 'lang',
-										values: [
-											{ name: 'js' },
-											{ name: 'ts' },
-											{ name: 'jsx' },
-											{ name: 'tsx' },
-										],
-									},
-									{ name: 'setup' },
-								],
-							},
-							{
-								name: 'style',
-								attributes: [
-									{
-										name: 'lang',
-										values: [
-											{ name: 'css' },
-											{ name: 'scss' },
-											{ name: 'less' },
-										],
-									},
-									{ name: 'scoped' },
-									{ name: 'module' },
-								],
-							},
-						],
+						tags: vueTags,
 					});
-					globalServices.html.setDataProviders(false, [dataProvider]);
+					languageServices.html.setDataProviders(false, [dataProvider]);
 					const vueHtmlDoc = sourceFile.getVueHtmlDocument();
-					return globalServices.html.doComplete(document, position, vueHtmlDoc);
+					return languageServices.html.doComplete(document, position, vueHtmlDoc);
 				}
 			}
 		}

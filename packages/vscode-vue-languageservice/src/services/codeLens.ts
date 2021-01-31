@@ -1,13 +1,13 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
 	CodeLens,
 	Range,
 } from 'vscode-languageserver-types';
-import { SourceFile } from '../sourceFiles';
+import { SourceFile } from '../sourceFile';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { TsSourceMap } from '../utils/sourceMaps';
 
-export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSourceMaps: () => Map<string, { sourceMap: TsSourceMap }>) {
+export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOptions) {
 	return (document: TextDocument) => {
 
 		const globalTsSourceMaps = getGlobalTsSourceMaps?.();
@@ -82,7 +82,7 @@ export function register(sourceFiles: Map<string, SourceFile>, getGlobalTsSource
 						end: document.positionAt(descriptor.scriptSetup.loc.end),
 					},
 					command: {
-						title: 'ref sugar ' + (data.data.labels.length ? '☑' : '☐'),
+						title: 'ref sugar ' + (data.labels.length ? '☑' : '☐'),
 						command: Commands.SWITCH_REF_SUGAR,
 						arguments: [document.uri],
 					},

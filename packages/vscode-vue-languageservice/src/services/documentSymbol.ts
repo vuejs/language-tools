@@ -1,16 +1,16 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
-	TextDocument,
 	SymbolInformation,
 	SymbolKind,
 	Location,
 	Range,
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
-import * as globalServices from '../globalServices';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import { SourceFile } from '../sourceFile';
+import * as languageServices from '../utils/languageServices';
 import { notEmpty } from '@volar/shared';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
@@ -114,7 +114,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let symbols = globalServices.html.findDocumentSymbols(sourceMap.targetDocument, sourceMap.htmlDocument);
+				let symbols = languageServices.html.findDocumentSymbols(sourceMap.targetDocument, sourceMap.htmlDocument);
 				if (!symbols) continue;
 				for (const s of symbols) {
 					const vueLoc = sourceMap.targetToSource(s.location.range);
@@ -132,7 +132,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
 				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.targetDocument, sourceMap.stylesheet);
 				if (!symbols) continue;

@@ -1,34 +1,20 @@
-import {
-	Position,
-	TextDocument,
-	Hover,
-	MarkupContent,
-	MarkedString,
-} from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFiles';
-import * as globalServices from '../globalServices';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import type { TsApiRegisterOptions } from '../types';
+import type { Position } from 'vscode-languageserver/node';
+import type { Hover } from 'vscode-languageserver/node';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { MarkupContent } from 'vscode-languageserver/node';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register({ mapper }: TsApiRegisterOptions) {
+
 	return (document: TextDocument, position: Position) => {
 
-		if (document.languageId !== 'vue') {
-			return tsLanguageService.doHover(document.uri, position);
-		}
+		const tsResult = onTs(document.uri, position);
+		const htmlResult = onHtml(document.uri, position);
+		const cssResult = onCss(document.uri, position);
 
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return;
-		const range = {
-			start: position,
-			end: position,
-		};
-
-		const tsResult = getTsResult(sourceFile);
-		const htmlResult = getHtmlResult(sourceFile);
-		const cssResult = getCssResult(sourceFile);
 		if (!tsResult && !htmlResult && !cssResult) return;
 
-		const texts: MarkedString[] = [
+		const texts = [
 			...getHoverTexts(tsResult),
 			...getHoverTexts(htmlResult),
 			...getHoverTexts(cssResult),
@@ -39,71 +25,107 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 		};
 
 		return result;
-
-		function getHoverTexts(hover?: Hover) {
-			if (!hover) return [];
-			if (typeof hover.contents === 'string') {
-				return [hover.contents];
-			}
-			if (MarkupContent.is(hover.contents)) {
-				return [hover.contents.value];
-			}
-			if (Array.isArray(hover.contents)) {
-				return hover.contents;
-			}
-			return [hover.contents.value];
-		}
-		function getTsResult(sourceFile: SourceFile) {
-			let _result: Hover | undefined;
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.sourceToTargets(range)) {
-					if (!tsLoc.maped.data.capabilities.basic) continue;
-					const result = tsLanguageService.doHover(sourceMap.targetDocument.uri, tsLoc.range.start);
-					if (result?.range) {
-						const vueLoc = sourceMap.targetToSource(result.range);
-						if (vueLoc) result.range = vueLoc.range;
-					}
-					if (!_result) {
-						_result = result;
-					}
-					else if (_result && result) {
-						if (MarkupContent.is(_result.contents) && MarkupContent.is(result.contents)) {
-							_result.contents.value += '\n\n' + result.contents.value;
-						}
-					}
-				}
-			}
-			return _result;
-		}
-		function getHtmlResult(sourceFile: SourceFile) {
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const htmlLoc of sourceMap.sourceToTargets(range)) {
-					const result = globalServices.html.doHover(sourceMap.targetDocument, htmlLoc.range.start, sourceMap.htmlDocument);
-					if (result?.range) {
-						const vueLoc = sourceMap.targetToSource(result.range);
-						if (vueLoc) result.range = vueLoc.range;
-					}
-					if (result) {
-						return result
-					}
-				}
-			}
-		}
-		function getCssResult(sourceFile: SourceFile) {
-			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
-				for (const cssLoc of sourceMap.sourceToTargets(range)) {
-					const result = cssLanguageService.doHover(sourceMap.targetDocument, cssLoc.range.start, sourceMap.stylesheet);
-					if (result?.range) {
-						const vueLoc = sourceMap.targetToSource(result.range);
-						if (vueLoc) result.range = vueLoc.range;
-					}
-					if (result) {
-						return result
-					}
-				}
-			}
-		}
 	}
+
+	function onTs(uri: string, position: Position) {
+
+		let result: Hover | undefined;
+
+		// vue -> ts
+		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+			if (!tsMaped.data.capabilities.basic)
+				continue;
+			const tsHover = tsMaped.languageService.doHover(
+				tsMaped.textDocument.uri,
+				tsMaped.range.start,
+			);
+			if (!tsHover)
+				continue;
+			if (!tsHover.range) {
+				result = tsHover;
+				continue;
+			}
+			// ts -> vue
+			for (const vueMaped of mapper.ts.from(tsMaped.textDocument.uri, tsHover.range)) {
+				result = {
+					...tsHover,
+					range: vueMaped.range,
+				};
+			}
+		}
+
+		return result;
+	}
+	function onHtml(uri: string, position: Position) {
+
+		let result: Hover | undefined;
+
+		// vue -> html
+		for (const htmlMaped of mapper.html.to(uri, { start: position, end: position })) {
+			const htmlHover = htmlMaped.languageService.doHover(
+				htmlMaped.textDocument,
+				htmlMaped.range.start,
+				htmlMaped.htmlDocument,
+			);
+			if (!htmlHover)
+				continue;
+			if (!htmlHover.range) {
+				result = htmlHover;
+				continue;
+			}
+			// html -> vue
+			for (const vueMaped of mapper.html.from(htmlMaped.textDocument.uri, htmlHover.range)) {
+				result = {
+					...htmlHover,
+					range: vueMaped.range,
+				};
+			}
+		}
+
+		return result;
+	}
+	function onCss(uri: string, position: Position) {
+
+		let result: Hover | undefined;
+
+		// vue -> css
+		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
+			const cssHover = cssMaped.languageService.doHover(
+				cssMaped.textDocument,
+				cssMaped.range.start,
+				cssMaped.stylesheet,
+			);
+			if (!cssHover)
+				continue;
+			if (!cssHover.range) {
+				result = cssHover;
+				continue;
+			}
+			// css -> vue
+			for (const vueMaped of mapper.css.from(cssMaped.textDocument.uri, cssHover.range)) {
+				result = {
+					...cssHover,
+					range: vueMaped.range,
+				};
+			}
+		}
+
+		return result;
+	}
+}
+
+function getHoverTexts(hover?: Hover) {
+	if (!hover) {
+		return [];
+	}
+	if (typeof hover.contents === 'string') {
+		return [hover.contents];
+	}
+	if (MarkupContent.is(hover.contents)) {
+		return [hover.contents.value];
+	}
+	if (Array.isArray(hover.contents)) {
+		return hover.contents;
+	}
+	return [hover.contents.value];
 }

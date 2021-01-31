@@ -4,14 +4,13 @@ import type * as ts from 'typescript';
 import * as TS2 from '@volar/vscode-typescript-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { fsPathToUri, uriToFsPath } from '@volar/shared';
-import { getTypescript } from '@volar/vscode-builtin-packages';
 
 export const html = HTML.getLanguageService();
 export const css = CSS.getCSSLanguageService();
 export const scss = CSS.getSCSSLanguageService();
 export const less = CSS.getLESSLanguageService();
 
-export function getCssService(lang: string) {
+export function getCssLanguageService(lang: string) {
     switch (lang) {
         case 'css': return css;
         case 'scss': return scss;
@@ -23,8 +22,7 @@ export function getCssService(lang: string) {
 let tsScriptVersion = 0;
 let tsScript: ts.IScriptSnapshot | undefined;
 let tsService: ts.LanguageService | undefined;
-export function getCheapTsService(code: string) {
-    const ts = getTypescript();
+export function getCheapTsService(ts: typeof import('typescript'), code: string) {
     if (!tsService) {
         tsService = ts.createLanguageService({
             getCompilationSettings: () => ({}),
@@ -46,17 +44,19 @@ export function getCheapTsService(code: string) {
 let tsScriptVersion2 = 0;
 let tsScript2: ts.IScriptSnapshot | undefined;
 let tsService2: TS2.LanguageService | undefined;
-export function getCheapTsService2(doc: TextDocument) {
-    const ts = getTypescript();
+export function getCheapTsService2(ts: typeof import('typescript'), doc: TextDocument) {
     if (!tsService2) {
-        tsService2 = TS2.createLanguageService({
-            getCompilationSettings: () => ({}),
-            getScriptFileNames: () => [uriToFsPath(fsPathToUri('fake.ts'))],
-            getScriptVersion: () => tsScriptVersion2.toString(),
-            getScriptSnapshot: () => tsScript2,
-            getCurrentDirectory: () => '',
-            getDefaultLibFileName: () => '',
-        });
+        tsService2 = TS2.createLanguageService(
+            {
+                getCompilationSettings: () => ({}),
+                getScriptFileNames: () => [uriToFsPath(fsPathToUri('fake.ts'))],
+                getScriptVersion: () => tsScriptVersion2.toString(),
+                getScriptSnapshot: () => tsScript2,
+                getCurrentDirectory: () => '',
+                getDefaultLibFileName: () => '',
+            },
+            ts,
+        );
     }
     tsScriptVersion2++;
     tsScript2 = ts.ScriptSnapshot.fromString(doc.getText());

@@ -3,7 +3,7 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import { MapedMode, TsSourceMap } from '../utils/sourceMaps';
 import * as upath from 'upath';
-import { SearchTexts } from './common';
+import { SearchTexts } from '../utils/string';
 import { uriToFsPath } from '@volar/shared';
 
 export function useScriptMain(
@@ -57,6 +57,7 @@ export function useScriptMain(
 			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false, documentSymbol: false });
 			sourceMap.add({
 				data: {
+					vueTag: 'script',
 					capabilities: {},
 				},
 				mode: MapedMode.In,

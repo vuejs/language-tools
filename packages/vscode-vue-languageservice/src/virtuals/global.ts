@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SearchTexts } from './common';
+import { SearchTexts } from '../utils/string';
 import { fsPathToUri } from '@volar/shared';
 import { join } from 'upath';
 
@@ -16,12 +16,12 @@ declare module '__VLS_vue' {
 
 export function getGlobalDoc(root: string) {
 	let code = `
-import { FunctionalComponent } from '__VLS_vue'
-import { HTMLAttributes } from '__VLS_vue'
-import { VNodeProps } from '__VLS_vue'
-import { AllowedComponentProps } from '__VLS_vue'
-import { PropType } from '__VLS_vue'
-import { App } from '__VLS_vue'
+import { FunctionalComponent } from '__VLS_vue';
+import { HTMLAttributes } from '__VLS_vue';
+import { VNodeProps } from '__VLS_vue';
+import { AllowedComponentProps } from '__VLS_vue';
+import { PropType } from '__VLS_vue';
+import { App } from '__VLS_vue';
 
 declare global {
 	interface __VLS_GlobalComponents extends Pick<typeof import('__VLS_vue'),

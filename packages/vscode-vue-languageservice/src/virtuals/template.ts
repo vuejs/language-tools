@@ -3,12 +3,13 @@ import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import { IDescriptor, ITemplateScriptData } from '../types';
 import * as upath from 'upath';
-import { SourceMap, MapedMode, TsSourceMap, Mapping, CssSourceMap } from '../utils/sourceMaps';
-import { transformVueHtml } from '../utils/vueHtmlConverter';
+import { MapedMode, TsSourceMap, Mapping, CssSourceMap, createScriptGenerator, TeleportMappingData, TeleportSourceMap } from '../utils/sourceMaps';
+import * as templateGen from '../generators/template';
+import * as cssClasses from '../parsers/cssClasses';
 import { hyphenate } from '@vue/shared';
-import * as globalServices from '../globalServices';
+import * as languageServices from '../utils/languageServices';
 import * as css from 'vscode-css-languageservice';
-import { SearchTexts } from './common';
+import { SearchTexts } from '../utils/string';
 
 export function useTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
@@ -34,92 +35,101 @@ export function useTemplateScript(
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = upath.basename(uriToFsPath(_vueDoc.uri));
-	const data = computed(() => {
-		if (!templateData.value?.html) {
+	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module)));
+	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped)));
+	const interpolations = computed(() => {
+		if (templateData.value?.html === undefined)
 			return;
-		}
-		const cssModuleClasses = getCssClasses('module');
-		const cssScopedClasses = getCssClasses('scoped');
-		const interpolations = transformVueHtml(
+
+		return templateGen.generate(
 			templateData.value.html,
 			templateScriptData.components,
-			[...cssScopedClasses.values()].map(map => [...map.keys()]).flat(),
+			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 		);
+	});
+	const data = computed(() => {
+		if (!interpolations.value)
+			return;
 
-		let text = [
-			(templateScriptData.scriptSetupExports.length
-				? `import * as __VLS_setups from './${vueFileName}.scriptSetup.raw';`
-				: `// no setups`),
-			`import { __VLS_options, __VLS_component } from './${vueFileName}';`,
-			`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;`,
-			`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };`,
-			`declare const __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
-		].join('\n') + `\n`;
+		const gen = createScriptGenerator();
+
+		gen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
+		gen.addText(`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
+		gen.addText(`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
+		gen.addText(`declare const __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;\n`);
 
 		/* Components */
-		text += '/* Components */\n';
-		text += 'declare const __VLS_components: JSX.IntrinsicElements & typeof __VLS_Components;\n';
-		text += 'declare const __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n';
-		text += 'declare const __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n';
-		text += 'declare const __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n'
+		gen.addText('/* Components */\n');
+		gen.addText('declare const __VLS_components: JSX.IntrinsicElements & typeof __VLS_Components;\n');
+		gen.addText('declare const __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n');
+		gen.addText('declare const __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n');
+		gen.addText('declare const __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n');
 
 		/* Completion */
-		text += `({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
+		gen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
 
-		text += '/* Completion: Emits */\n';
+		gen.addText('/* Completion: Emits */\n');
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			text += `// @ts-ignore\n`;
-			text += `__VLS_componentEmits['${name}']('');\n`; // TODO
+			if (!hasElement(interpolations.value.tags, name)) continue;
+			gen.addText(`// @ts-ignore\n`);
+			gen.addText(`__VLS_componentEmits['${name}']('');\n`); // TODO
 		}
-		text += '/* Completion: Props */\n';
+		gen.addText('/* Completion: Props */\n');
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			text += `// @ts-ignore\n`;
-			text += `__VLS_componentPropsBase['${name}'][''];\n`; // TODO
+			if (!hasElement(interpolations.value.tags, name)) continue;
+			gen.addText(`// @ts-ignore\n`);
+			gen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
 		}
-		text += '/* Completion: Slots */\n';
+		gen.addText('/* Completion: Slots */\n');
 		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.tags, name)) continue;
-			text += `// @ts-ignore\n`;
-			text += `__VLS_components['${name}'].__VLS_slots[''];\n`; // TODO
+			if (!hasElement(interpolations.value.tags, name)) continue;
+			gen.addText(`// @ts-ignore\n`);
+			gen.addText(`__VLS_components['${name}'].__VLS_slots[''];\n`); // TODO
 		}
 
 		/* CSS Module */
-		text += '/* CSS Module */\n';
-		text += 'declare const $style: {\n';
-		const cssModuleMappings = writeCssClassProperties(cssModuleClasses);
-		text += '};\n';
+		gen.addText('/* CSS Module */\n');
+		gen.addText('declare const $style: {\n');
+		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, false);
+		gen.addText('};\n');
 
 		/* Style Scoped */
-		text += '/* Style Scoped */\n';
-		text += 'declare const __VLS_styleScopedClasses: {\n';
-		const cssScopedMappings = writeCssClassProperties(cssScopedClasses);
-		text += '};\n';
+		gen.addText('/* Style Scoped */\n');
+		gen.addText('declare const __VLS_styleScopedClasses: {\n');
+		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true);
+		gen.addText('};\n');
 
 		/* Props */
-		text += `/* Props */\n`;
+		gen.addText(`/* Props */\n`);
 		const ctxMappings = writeProps();
 
 		/* Interpolations */
-		text += `/* Interpolations */\n`;
+		gen.addText(`/* Interpolations */\n`);
 		// patch
-		for (const maped of interpolations.mappings) {
-			maped.targetRange.start += text.length;
-			maped.targetRange.end += text.length;
+		const crtOffset = gen.getText().length;
+		for (const maped of interpolations.value.mappings) {
+			gen.addMapping2({
+				targetRange: {
+					start: maped.targetRange.start + crtOffset,
+					end: maped.targetRange.end + crtOffset,
+				},
+				sourceRange: maped.sourceRange,
+				mode: maped.mode,
+				data: maped.data,
+			});
 		}
-		text += interpolations.text;
+		gen.addText(interpolations.value.text);
 
 		return {
-			text,
+			text: gen.getText(),
+			mappings: gen.getMappings(),
 			cssModuleMappings,
 			cssScopedMappings,
 			ctxMappings,
-			interpolations,
 		};
 
-		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>) {
+		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>, patchRename: boolean) {
 			const mappings = new Map<string, {
 				tsRange: {
 					start: number,
@@ -130,6 +140,7 @@ export function useTemplateScript(
 					end: number,
 				}[],
 				mode: MapedMode,
+				patchRename: boolean,
 			}[]>();
 			for (const [uri, classes] of data) {
 				if (!mappings.has(uri)) {
@@ -138,109 +149,100 @@ export function useTemplateScript(
 				for (const [className, ranges] of classes) {
 					mappings.get(uri)!.push({
 						tsRange: {
-							start: text.length + 1, // + '
-							end: text.length + 1 + className.length,
+							start: gen.getText().length + 1, // + '
+							end: gen.getText().length + 1 + className.length,
 						},
 						cssRanges: [...ranges].map(range => ({
 							start: range[0],
 							end: range[1],
 						})),
 						mode: MapedMode.Offset,
+						patchRename,
 					});
 					mappings.get(uri)!.push({
 						tsRange: {
-							start: text.length,
-							end: text.length + className.length + 2,
+							start: gen.getText().length,
+							end: gen.getText().length + className.length + 2,
 						},
 						cssRanges: [...ranges].map(range => ({
 							start: range[0],
 							end: range[1],
 						})),
 						mode: MapedMode.Gate,
+						patchRename,
 					});
-					text += `'${className}': string,\n`;
+					gen.addText(`'${className}': string,\n`);
 				}
 			}
 			return mappings;
 		}
 		function writeProps() {
 			const propsSet = new Set(templateScriptData.props);
-			const scriptSetupExportsSet = new Set(templateScriptData.scriptSetupExports);
-			const mappings: Mapping<{ isAdditionalReference: boolean }>[] = [];
+			const mappings: Mapping<TeleportMappingData>[] = [];
 			for (const propName of templateScriptData.context) {
-				const vueRange = {
-					start: text.length + `declare var `.length,
-					end: text.length + `declare var ${propName}`.length,
-				};
+				gen.addText(`declare var `);
+				const templateSideRange = gen.addText(propName);
+				gen.addText(`: typeof __VLS_ctx.`);
+				const scriptSideRange = gen.addText(propName);
+				gen.addText(`;`);
+
 				mappings.push({
-					data: { isAdditionalReference: false },
-					mode: MapedMode.Offset,
-					sourceRange: vueRange,
-					targetRange: {
-						start: text.length + `declare var ${propName}: typeof __VLS_ctx.`.length,
-						end: text.length + `declare var ${propName}: typeof __VLS_ctx.${propName}`.length,
+					data: {
+						isAdditionalReference: false,
+						toSource: {
+							capabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
+							},
+						},
+						toTarget: {
+							capabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
+							},
+						},
 					},
+					mode: MapedMode.Offset,
+					sourceRange: scriptSideRange,
+					targetRange: templateSideRange,
 				});
-				text += `declare var ${propName}: typeof __VLS_ctx.${propName}; `;
+
 				if (propsSet.has(propName)) {
+					gen.addText(` __VLS_options.props.`);
+					const scriptSideRange2 = gen.addText(propName);
+					gen.addText(`;`);
+
 					mappings.push({
-						data: { isAdditionalReference: true },
-						mode: MapedMode.Offset,
-						sourceRange: vueRange,
-						targetRange: {
-							start: text.length + `__VLS_options.props.`.length,
-							end: text.length + `__VLS_options.props.${propName}`.length,
+						data: {
+							isAdditionalReference: true,
+							toSource: {
+								capabilities: {
+									definitions: true,
+									references: true,
+									rename: true,
+								},
+							},
+							toTarget: {
+								capabilities: {
+									definitions: true,
+									references: true,
+									rename: true,
+								},
+							},
 						},
-					});
-					text += `__VLS_options.props.${propName}; `;
-				}
-				if (scriptSetupExportsSet.has(propName)) {
-					mappings.push({
-						data: { isAdditionalReference: true },
 						mode: MapedMode.Offset,
-						sourceRange: vueRange,
-						targetRange: {
-							start: text.length + `__VLS_setups.`.length,
-							end: text.length + `__VLS_setups.${propName}`.length,
-						},
+						sourceRange: scriptSideRange2,
+						targetRange: templateSideRange,
 					});
-					text += `__VLS_setups.${propName}; `
 				}
-				text += `\n`;
+				gen.addText(`\n`);
 			}
 			return mappings;
 		}
 		function hasElement(tags: Set<string>, tagName: string) {
 			return tags.has(tagName) || tags.has(hyphenate(tagName));
-		}
-		function getCssClasses(type: 'module' | 'scoped') {
-			const result = new Map<string, Map<string, Set<[number, number]>>>();
-			for (const sourceMap of styleDocuments.value) {
-				if (type === 'module' && !sourceMap.module)
-					continue;
-				if (type === 'scoped' && !sourceMap.scoped)
-					continue;
-				for (const [className, offsets] of findClassNames(sourceMap.textDocument, sourceMap.stylesheet)) {
-					for (const offset of offsets) {
-						addClassName(sourceMap.textDocument.uri, className, offset);
-					}
-				}
-				for (const link of sourceMap.links) {
-					for (const [className, offsets] of findClassNames(link.textDocument, link.stylesheet)) {
-						for (const offset of offsets) {
-							addClassName(link.textDocument.uri, className, offset);
-						}
-					}
-				}
-			}
-			return result;
-			function addClassName(uri: string, className: string, range: [number, number]) {
-				if (!result.has(uri))
-					result.set(uri, new Map());
-				if (!result.get(uri)!.has(className))
-					result.get(uri)!.set(className, new Set());
-				result.get(uri)!.get(className)?.add(range);
-			}
 		}
 	});
 	const sourceMap = computed(() => {
@@ -269,6 +271,8 @@ export function useTemplateScript(
 									semanticTokens: false,
 									referencesCodeLens: maped.mode === MapedMode.Gate, // has 2 modes
 								},
+								beforeRename: maped.patchRename ? (newName => newName.startsWith('.') ? newName.substr(1) : newName) : undefined,
+								doRename: maped.patchRename ? ((oldName, newName) => '.' + newName) : undefined,
 							},
 							mode: maped.mode,
 							sourceRange: vueLoc.range,
@@ -277,7 +281,7 @@ export function useTemplateScript(
 					}
 				}
 			}
-			for (const maped of data.value.interpolations.mappings) {
+			for (const maped of data.value.mappings) {
 				sourceMap.add({
 					data: maped.data,
 					mode: maped.mode,
@@ -293,10 +297,10 @@ export function useTemplateScript(
 		}
 	});
 	const sourceMapForFormatting = computed(() => {
-		if (data.value && textDocumentForFormatting.value && template.value) {
+		if (interpolations.value && textDocumentForFormatting.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new TsSourceMap(vueDoc, textDocumentForFormatting.value, true, { foldingRanges: false, formatting: true, documentSymbol: false });
-			for (const maped of data.value.interpolations.formapMappings) {
+			for (const maped of interpolations.value.formapMappings) {
 				sourceMap.add({
 					data: maped.data,
 					mode: maped.mode,
@@ -311,9 +315,9 @@ export function useTemplateScript(
 		}
 	});
 	const cssTextDocument = computed(() => {
-		if (data.value && template.value) {
-			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, data.value.interpolations.cssCode);
-			const stylesheet = globalServices.css.parseStylesheet(textDocument);
+		if (interpolations.value && template.value) {
+			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, interpolations.value.cssCode);
+			const stylesheet = languageServices.css.parseStylesheet(textDocument);
 			return {
 				textDocument,
 				stylesheet,
@@ -325,7 +329,7 @@ export function useTemplateScript(
 		}
 	});
 	const cssSourceMap = computed(() => {
-		if (data.value && cssTextDocument.value && template.value) {
+		if (interpolations.value && cssTextDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new CssSourceMap(
 				vueDoc,
@@ -336,7 +340,7 @@ export function useTemplateScript(
 				[],
 				{ foldingRanges: false, formatting: false },
 			);
-			for (const maped of data.value.interpolations.cssMappings) {
+			for (const maped of interpolations.value.cssMappings) {
 				sourceMap.add({
 					data: undefined,
 					mode: maped.mode,
@@ -352,16 +356,14 @@ export function useTemplateScript(
 	});
 	const textDocument = ref<TextDocument>();
 	const textDocumentForFormatting = ref<TextDocument>();
-	const contextSourceMap = ref<SourceMap<{
-		isAdditionalReference: boolean;
-	}>>();
+	const teleportSourceMap = ref<TeleportSourceMap>();
 
 	return {
 		sourceMap,
 		textDocument,
 		textDocumentForFormatting,
 		sourceMapForFormatting,
-		contextSourceMap,
+		teleportSourceMap,
 		cssTextDocument,
 		cssSourceMap,
 		update, // TODO: cheapComputed
@@ -369,62 +371,22 @@ export function useTemplateScript(
 
 	function update() {
 		if (data.value?.text !== textDocument.value?.getText()) {
-			if (data.value) {
+			if (data.value && interpolations.value) {
 				const _version = version++;
 				textDocument.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.text);
-				textDocumentForFormatting.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, data.value.interpolations.formatCode);
-				{
-					const sourceMap = new SourceMap<{ isAdditionalReference: boolean }>(
-						textDocument.value,
-						textDocument.value,
-					);
-					for (const maped of data.value.ctxMappings) {
-						sourceMap.add(maped);
-					}
-					contextSourceMap.value = sourceMap;
+				textDocumentForFormatting.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, interpolations.value.formatCode);
+
+				const sourceMap = new TeleportSourceMap(textDocument.value);
+				for (const maped of data.value.ctxMappings) {
+					sourceMap.add(maped);
 				}
+				teleportSourceMap.value = sourceMap;
 			}
 			else {
 				textDocument.value = undefined;
-				contextSourceMap.value = undefined;
+				teleportSourceMap.value = undefined;
 				textDocumentForFormatting.value = undefined;
 			}
 		}
 	}
-}
-
-function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
-	const result = new Map<string, Set<[number, number]>>();
-	const cssLanguageService = globalServices.getCssService(doc.languageId);
-	if (!cssLanguageService) return result;
-	const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
-	const usedNodes = new Set<number>();
-	for (const s of symbols) {
-		if (s.kind === css.SymbolKind.Class) {
-			const nodeText = doc.getText(s.location.range);
-			// https://stackoverflow.com/questions/448981/which-characters-are-valid-in-css-class-names-selectors
-			const classNames_1 = s.name.matchAll(/(?<=\.)-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g);
-			const classNames_2 = nodeText.matchAll(/(?<=\.)-?[_a-zA-Z]+[_a-zA-Z0-9-]*/g);
-
-			for (const _className_1 of classNames_1) {
-				if (_className_1.index === undefined) continue;
-				const className_1 = _className_1.toString();
-				for (const _className_2 of classNames_2) {
-					if (_className_2.index === undefined) continue;
-					const className_2 = _className_2.toString();
-					if (className_1 === className_2) {
-						if (!result.has(className_1)) {
-							result.set(className_1, new Set());
-						}
-						const startIndex = doc.offsetAt(s.location.range.start) + _className_2.index - 1;
-						if (usedNodes.has(startIndex)) continue;
-						usedNodes.add(startIndex);
-						result.get(className_1)!.add([startIndex, startIndex + className_1.length + 1]);
-						break;
-					}
-				}
-			}
-		}
-	}
-	return result;
 }

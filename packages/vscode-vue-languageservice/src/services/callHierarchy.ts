@@ -1,3 +1,4 @@
+import type { TsApiRegisterOptions } from '../types';
 import {
 	Position,
 	Range,
@@ -6,27 +7,24 @@ import {
 	CallHierarchyOutgoingCall,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFile } from '../sourceFiles';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import { notEmpty, uriToFsPath } from '@volar/shared';
-import { duplicateLocations, duplicateCallHierarchyIncomingCall, duplicateCallHierarchyOutgoingCall } from '../utils/commons';
 import * as upath from 'upath';
+import * as dedupe from '../utils/dedupe';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
-	function prepareCallHierarchy(document: TextDocument, position: Position) {
+export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+	function onPrepare(document: TextDocument, position: Position) {
 		let vueItems: CallHierarchyItem[] = [];
 
 		if (document.languageId !== 'vue') {
-			const items = worker(document, position);
-			vueItems = vueItems.concat(items);
+			vueItems = worker(document.uri, position);
 		}
 		else {
 			const sourceFile = sourceFiles.get(document.uri);
 			if (sourceFile) {
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
 					for (const tsLoc of sourceMap.sourceToTargets({ start: position, end: position })) {
-						if (!tsLoc.maped.data.capabilities.references) continue;
-						const items = worker(sourceMap.targetDocument, tsLoc.range.start);
+						if (!tsLoc.data.capabilities.references) continue;
+						const items = worker(sourceMap.targetDocument.uri, tsLoc.range.start);
 						vueItems = vueItems.concat(items);
 					}
 				}
@@ -40,9 +38,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 			};
 		}
 
-		return duplicateLocations(vueItems);
+		return dedupe.withLocations(vueItems);
 	}
-	function provideCallHierarchyIncomingCalls(item: CallHierarchyItem) {
+	function onIncomingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLanguageService.provideCallHierarchyIncomingCalls).flat();
 		const vueIncomingItems: CallHierarchyIncomingCall[] = [];
@@ -55,9 +53,9 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				fromRanges: vueRanges,
 			});
 		}
-		return duplicateCallHierarchyIncomingCall(vueIncomingItems);
+		return dedupe.withCallHierarchyIncomingCalls(vueIncomingItems);
 	}
-	function provideCallHierarchyOutgoingCalls(item: CallHierarchyItem) {
+	function onOutgoingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLanguageService.provideCallHierarchyOutgoingCalls).flat();
 		const vueIncomingItems: CallHierarchyOutgoingCall[] = [];
@@ -70,18 +68,18 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				fromRanges: vueRanges,
 			});
 		}
-		return duplicateCallHierarchyOutgoingCall(vueIncomingItems);
+		return dedupe.withCallHierarchyOutgoingCalls(vueIncomingItems);
 	}
 
 	return {
-		prepareCallHierarchy,
-		provideCallHierarchyIncomingCalls,
-		provideCallHierarchyOutgoingCalls,
+		onPrepare,
+		onIncomingCalls,
+		onOutgoingCalls,
 	}
 
-	function worker(tsDoc: TextDocument, tsPos: Position) {
+	function worker(tsDocUri: string, tsPos: Position) {
 		const vueOrTsItems: CallHierarchyItem[] = [];
-		const tsItems = tsLanguageService.prepareCallHierarchy(tsDoc.uri, tsPos);
+		const tsItems = tsLanguageService.prepareCallHierarchy(tsDocUri, tsPos);
 		for (const tsItem of tsItems) {
 			const result = toVueCallHierarchyItem(tsItem, []);
 			if (!result) continue;
@@ -141,7 +139,7 @@ export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService
 				const tsSelectionLocs = sourceMap.sourceToTargets(item.selectionRange);
 				if (tsLocs.length) {
 					for (const tsLoc of tsLocs) {
-						if (!tsLoc.maped.data.capabilities.references) continue;
+						if (!tsLoc.data.capabilities.references) continue;
 						for (const tsSelectionLoc of tsSelectionLocs) {
 							tsItems.push({
 								...item,

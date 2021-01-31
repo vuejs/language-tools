@@ -1,5 +1,5 @@
 {
-	"name": "@volar/server",
+	"name": "@volar/vscode-server",
 	"version": "1.0.0",
 	"devDependencies": {
 		"@types/fs-extra": "latest"

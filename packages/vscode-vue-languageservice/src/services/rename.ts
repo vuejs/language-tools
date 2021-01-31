@@ -1,347 +1,154 @@
-import {
-	Position,
-	WorkspaceEdit,
-	Location,
-	TextEdit,
-} from 'vscode-languageserver/node';
-import {
-	tsLocationToVueLocations,
-	tsLocationToVueLocationsRaw,
-	findSourceFileByTsUri,
-} from '../utils/commons';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFile } from '../sourceFiles';
-import { hyphenate } from '@vue/shared';
-import { MapedNodeTypes, SourceMap } from '../utils/sourceMaps';
-import * as globalServices from '../globalServices';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import type { TsApiRegisterOptions } from '../types';
+import type { Position } from 'vscode-languageserver/node';
+import type { WorkspaceEdit } from 'vscode-languageserver/node';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import * as dedupe from '../utils/dedupe';
 
-export function register(sourceFiles: Map<string, SourceFile>, tsLanguageService: ts2.LanguageService) {
+export function register({ mapper }: TsApiRegisterOptions) {
+
 	return (document: TextDocument, position: Position, newName: string) => {
-		const sourceFile = sourceFiles.get(document.uri);
-		if (!sourceFile) return;
-		const range = { start: position, end: position };
 
-		const tsResult = getTsResult(sourceFile);
+		const tsResult = onTs(document.uri, position, newName);
 		if (tsResult.changes && Object.keys(tsResult.changes).length) {
 			return tsResult;
 		}
 
-		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult.changes && Object.keys(htmlResult.changes).length) {
-			return htmlResult;
-		}
-
-		const cssResult = getCssResult(sourceFile);
+		const cssResult = onCss(document.uri, position, newName);
 		if (cssResult.changes && Object.keys(cssResult.changes).length) {
 			return cssResult;
 		}
+	}
 
-		function getTsResult(sourceFile: SourceFile) {
-			let vueEdits: WorkspaceEdit[] = [];
-			let tsLocations: Location[] = [];
+	function onTs(uri: string, position: Position, newName: string) {
 
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				let startWithScriptSetup = false;
-				let startWithNoDollarRef = false;
-				let startWithStyle = false;
-				for (const tsLoc of sourceMap.sourceToTargets(range)) {
-					if (tsLoc.maped.data.capabilities.rename) {
-						if (tsLoc.maped.data.vueTag === 'scriptSetup') {
-							startWithScriptSetup = true;
-						}
-						if (tsLoc.maped.data.isNoDollarRef) {
-							startWithNoDollarRef = true;
-						}
-						if (tsLoc.maped.data.vueTag === 'style') {
-							startWithStyle = true;
-						}
-					}
-				}
-				if (startWithStyle && newName.startsWith('.')) {
-					newName = newName.substr(1);
-				}
-				for (const tsLoc of sourceMap.sourceToTargets(range)) {
-					if (!tsLoc.maped.data.capabilities.rename) continue;
-					const tsEdit = worker(sourceMap.targetDocument, tsLoc.range.start, newName);
-					if (!tsEdit) continue;
-					const hasNoDollarRef = hasScriptRefReference(tsEdit);
-					const startWithDollarRef = startWithScriptSetup && !startWithNoDollarRef && hasNoDollarRef;
-					keepHtmlTagOrAttrStyle(tsEdit);
-					const vueEdit = getSourceWorkspaceEdit(tsEdit, hasNoDollarRef, startWithDollarRef, sourceFile);
-					vueEdits.push(vueEdit);
-				}
-			}
+		const loopChecker = dedupe.createLocationSet();
+		const tsResult: WorkspaceEdit = { changes: {} };
+		const vueResult: WorkspaceEdit = { changes: {} };
 
-			const vueEdit = margeWorkspaceEdits(vueEdits);
-			return deduplication(vueEdit);
+		// vue -> ts
+		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+			if (
+				tsMaped.data.capabilities.rename === true
+				|| (typeof tsMaped.data.capabilities.rename === 'object' && tsMaped.data.capabilities.rename.in)
+			) {
+				const newName_2 = tsMaped.data.beforeRename ? tsMaped.data.beforeRename(newName) : newName;
+				withTeleports(tsMaped.textDocument.uri, tsMaped.range.start, newName_2);
 
-			function worker(doc: TextDocument, pos: Position, newName: string, direction = 0) {
-				let rename = tsLanguageService.doRename(doc.uri, pos, newName);
-				if (!rename) return rename;
-				for (const tsUri in rename.changes) {
-					const tsEdits = rename.changes[tsUri];
-					for (const tsEdit of tsEdits) {
-						const tsLoc = { uri: tsUri, range: tsEdit.range };
-						if (hasLocation(tsLoc)) continue;
-						tsLocations.push(tsLoc);
-						const sourceFile_2 = findSourceFileByTsUri(sourceFiles, tsUri);
-						const tsm = sourceFile_2?.getMirrorsSourceMaps();
-						if (tsm?.contextSourceMap?.sourceDocument.uri === tsLoc.uri)
-							transfer(tsm.contextSourceMap);
-						if (tsm?.scriptSetupSourceMap?.sourceDocument.uri === tsLoc.uri)
-							transfer(tsm.scriptSetupSourceMap);
-						function transfer(sourceMap: SourceMap) {
-							if (direction === 0 || direction === 1) {
-								if (sourceMap.isSource(tsLoc.range)) {
-									const rightLocs = sourceMap.sourceToTargets(tsLoc.range);
-									for (const rightLoc of rightLocs) {
-										const definitions = tsLanguageService.findDefinition(sourceMap.targetDocument.uri, rightLoc.range.start);
-										for (const definition of definitions) {
-											const vueLocs = tsLocationToVueLocations(definition, sourceFiles);
-											for (const vueLoc of vueLocs) {
-												const sourceFile = sourceFiles.get(vueLoc.uri);
-												if (!sourceFile) continue;
-												for (const sourceMap of sourceFile.getTsSourceMaps()) {
-													const tsLocs = sourceMap.sourceToTargets(vueLoc.range);
-													for (const tsLoc of tsLocs) {
-														if (!tsLoc.maped.data.capabilities.rename) continue;
-														const rename2 = worker(sourceMap.targetDocument, tsLoc.range.start, newName, 0); // TODO: direction should be 1?
-														if (rename && rename2) {
-															rename = margeWorkspaceEdits([rename, rename2]);
-															break;
-														}
-													}
-												}
-											}
-										}
-										if (definitions.length) {
-											break;
-										}
-									}
-								}
-							}
-							if (direction === 0 || direction === -1) {
-								if (sourceMap.isTarget(tsLoc.range)) {
-									const leftLoc = sourceMap.targetToSource(tsLoc.range);
-									if (leftLoc) {
-										const rename2 = worker(sourceMap.targetDocument, leftLoc.range.start, newName, -1);
-										if (rename && rename2) {
-											rename = margeWorkspaceEdits([rename, rename2]);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				return rename;
-			}
-			// TODO: use map
-			function hasLocation(loc: Location) {
-				return !!tsLocations.find(tsLoc =>
-					tsLoc.uri === loc.uri
-					&& tsLoc.range.start.line === loc.range.start.line
-					&& tsLoc.range.start.character === loc.range.start.character
-					&& tsLoc.range.end.line === loc.range.end.line
-					&& tsLoc.range.end.character === loc.range.end.character
-				)
-			}
-			function keepHtmlTagOrAttrStyle(tsWorkspaceEdit: WorkspaceEdit) {
-				if (!tsWorkspaceEdit?.changes) return;
-				for (const uri in tsWorkspaceEdit.changes) {
-					const editSourceFile = findSourceFileByTsUri(sourceFiles, uri);
-					if (!editSourceFile) continue;
-					for (const sourceMap of editSourceFile.getTsSourceMaps()) {
-						if (sourceMap.targetDocument.uri !== uri) continue;
-						for (const textEdit of tsWorkspaceEdit.changes[uri]) {
-							for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
-								const oldName = sourceMap.sourceDocument.getText(vueLoc.range);
-								const isHyphenateName = oldName === hyphenate(oldName)
-								const isHtmlTag = vueLoc.maped.data.type === MapedNodeTypes.ElementTag;
-								const isAttrArg = vueLoc.maped.data.type === MapedNodeTypes.Prop;
-								if ((isHtmlTag || isAttrArg) && isHyphenateName) {
-									textEdit.newText = hyphenate(textEdit.newText);
-									break;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		function getHtmlResult(sourceFile: SourceFile) {
-			const result: WorkspaceEdit = { changes: {} };
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const htmlLoc of sourceMap.sourceToTargets(range)) {
-					const htmlEdits = globalServices.html.doRename(sourceMap.targetDocument, htmlLoc.range.start, newName, sourceMap.htmlDocument);
-					if (!htmlEdits) continue;
-					if (!htmlEdits.changes) continue;
-					for (const uri in htmlEdits.changes) {
-						const edits = htmlEdits.changes[uri];
-						for (const htmlEdit of edits) {
-							const vueLoc = sourceMap.targetToSource(htmlEdit.range);
-							if (!vueLoc) continue;
-							const vueUri = sourceMap.sourceDocument.uri;
-							if (!result.changes![vueUri]) {
-								result.changes![vueUri] = [];
-							}
-							result.changes![vueUri].push({
-								range: vueLoc.range,
-								newText: htmlEdit.newText,
-							});
-						}
-					}
-				}
-			}
-			return result;
-		}
-		function getCssResult(sourceFile: SourceFile) {
-			const result: WorkspaceEdit = { changes: {} };
-			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = globalServices.getCssService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
-				for (const cssLoc of sourceMap.sourceToTargets(range)) {
-					const cssEdits = cssLanguageService.doRename(sourceMap.targetDocument, cssLoc.range.start, newName, sourceMap.stylesheet);
-					if (!cssEdits) continue;
-					if (!cssEdits.changes) continue;
-					for (const uri in cssEdits.changes) {
-						const edits = cssEdits.changes[uri];
-						for (const cssEdit of edits) {
-							const vueLoc = sourceMap.targetToSource(cssEdit.range);
-							if (!vueLoc) continue;
-							const vueUri = sourceMap.sourceDocument.uri;
-							if (!result.changes![vueUri]) {
-								result.changes![vueUri] = [];
-							}
-							result.changes![vueUri].push({
-								range: vueLoc.range,
-								newText: cssEdit.newText,
-							});
-						}
-					}
-				}
-			}
-			return result;
-		}
-		function hasScriptRefReference(workspaceEdit: WorkspaceEdit) {
-			for (const uri in workspaceEdit.changes) {
-				const edits = workspaceEdit.changes[uri];
-				for (const edit of edits) {
-					const location = Location.create(uri, edit.range);
-					const sourceLocations = tsLocationToVueLocationsRaw(location, sourceFiles);
-					for (const [_, data] of sourceLocations) {
-						if (data && !data.capabilities.rename) continue;
-						if (data?.isNoDollarRef) return true;
-					}
-				}
-			}
-			return false;
-		}
-		function getSourceWorkspaceEdit(workspaceEdit: WorkspaceEdit, isRefSugarRenaming: boolean, startWithDollarRef: boolean, sourceFile: SourceFile) {
-			const desc = sourceFile.getDescriptor();
-			const genData = sourceFile.getScriptSetupData();
-			const newWorkspaceEdit: WorkspaceEdit = {
-				changes: {}
-			};
-			for (const uri in workspaceEdit.changes) {
-				const edits = workspaceEdit.changes[uri];
-				for (const edit of edits) {
-					const location = Location.create(uri, edit.range);
-					const sourceLocations = tsLocationToVueLocationsRaw(location, sourceFiles);
-					for (const [sourceLocation, data] of sourceLocations) {
-						if (data && !data.capabilities.rename) continue;
-						let newText = edit.newText;
-						patchRefSugar();
-						if (data?.vueTag === 'style') {
-							newText = '.' + newText;
-						}
-						const sourceTextEdit = TextEdit.replace(sourceLocation.range, newText);
-						const sourceUri = sourceLocation.uri;
-						if (!newWorkspaceEdit.changes![sourceUri]) {
-							newWorkspaceEdit.changes![sourceUri] = [];
-						}
-						newWorkspaceEdit.changes![sourceUri].push(sourceTextEdit);
+				function withTeleports(uri: string, position: Position, newName: string) {
 
-						function patchRefSugar() {
-							const isDollarRef = isRefSugarRenaming && data?.vueTag === 'scriptSetup' && !data?.isNoDollarRef;
-							let shouldAddDollar = false;
-							if (isDollarRef) {
-								if (!startWithDollarRef)
-									shouldAddDollar = true;
-								else if (newText.indexOf(': ') === -1 && !newText.startsWith('$'))
-									shouldAddDollar = true;
-								else if (newText.indexOf(': ') >= 0 && newText.indexOf(': $') === -1)
-									shouldAddDollar = true;
-							}
-							if (isDollarRef && (!newText.startsWith('$') || !startWithDollarRef)) {
-								shouldAddDollar = true;
-							}
-							let isShorthand = false;
-							if (genData && desc.scriptSetup) {
-								const renameRange = {
-									start: sourceFile.getTextDocument().offsetAt(sourceLocation.range.start),
-									end: sourceFile.getTextDocument().offsetAt(sourceLocation.range.end),
-								};
-								for (const shorthandProperty of genData.data.shorthandPropertys) {
-									if (
-										renameRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
-										&& renameRange.end === desc.scriptSetup.loc.start + shorthandProperty.end
-									) {
-										isShorthand = true;
-										break;
-									}
+					const tsWorkspaceEdit = tsMaped.languageService.doRename(
+						uri,
+						position,
+						newName,
+					);
+
+					if (tsWorkspaceEdit?.changes) {
+						margeWorkspaceEdits(tsResult, tsWorkspaceEdit);
+
+						for (const editUri in tsWorkspaceEdit.changes) {
+							const textEdits = tsWorkspaceEdit.changes[editUri];
+							for (const textEdit of textEdits) {
+								loopChecker.add({ uri: editUri, range: textEdit.range });
+								for (const teleport of mapper.ts.teleports(editUri, textEdit.range)) {
+									if (!teleport.sideData.capabilities.rename)
+										continue;
+									if (loopChecker.has({ uri: editUri, range: teleport.range }))
+										continue;
+									const newName_2 = teleport.sideData.editRenameText
+										? teleport.sideData.editRenameText(newName)
+										: newName;
+									withTeleports(editUri, teleport.range.start, newName_2);
 								}
-							}
-							if (isShorthand) {
-								if (newText.indexOf(': ') >= 0) {
-									if (shouldAddDollar) {
-										newText = newText.replace(': ', ': $');
-									}
-								}
-								else {
-									const originalText = sourceFile.getTextDocument().getText(sourceLocation.range);
-									newText = originalText + ': ' + newText;
-								}
-							}
-							else if (shouldAddDollar) {
-								newText = '$' + newText;
-							}
-							if (!isDollarRef && startWithDollarRef && newText.startsWith('$')) {
-								newText = newText.substr(1);
 							}
 						}
 					}
 				}
 			}
-			return newWorkspaceEdit;
 		}
-		function deduplication(workspaceEdit: WorkspaceEdit) {
-			for (const uri in workspaceEdit.changes) {
-				let edits = workspaceEdit.changes[uri];
-				const map = new Map<string, TextEdit>();
-				for (const edit of edits) {
-					map.set(`${edit.newText}:${JSON.stringify(edit.range)}`, edit);
-				}
-				edits = [...map.values()];
-				workspaceEdit.changes[uri] = edits;
-			}
-			return workspaceEdit;
-		}
-		function margeWorkspaceEdits(workspaceEdits: WorkspaceEdit[]) {
-			const newWorkspaceEdit: WorkspaceEdit = {
-				changes: {}
-			};
-			for (const workspaceEdit of workspaceEdits) {
-				for (const uri in workspaceEdit.changes) {
-					if (!newWorkspaceEdit.changes![uri]) {
-						newWorkspaceEdit.changes![uri] = [];
+
+		// ts -> vue
+		for (const tsUri in tsResult.changes) {
+			const tsEdits = tsResult.changes[tsUri];
+			for (const tsEdit of tsEdits) {
+				for (const vueMaped of mapper.ts.from(tsUri, tsEdit.range)) {
+					if (
+						!vueMaped.data
+						|| vueMaped.data.capabilities.rename === true
+						|| (typeof vueMaped.data.capabilities.rename === 'object' && vueMaped.data.capabilities.rename.out)
+					) {
+						const newText_2 = vueMaped.data?.doRename
+							? vueMaped.data.doRename(vueMaped.textDocument.getText(vueMaped.range), tsEdit.newText)
+							: tsEdit.newText;
+
+						if (!vueResult.changes) {
+							vueResult.changes = {};
+						}
+						if (!vueResult.changes[vueMaped.textDocument.uri]) {
+							vueResult.changes[vueMaped.textDocument.uri] = [];
+						}
+						vueResult.changes[vueMaped.textDocument.uri].push({
+							newText: newText_2,
+							range: vueMaped.range,
+						});
 					}
-					const edits = workspaceEdit.changes[uri];
-					newWorkspaceEdit.changes![uri] = newWorkspaceEdit.changes![uri].concat(edits);
 				}
 			}
-			return newWorkspaceEdit;
+		}
+
+		return vueResult;
+	}
+	function onCss(uri: string, position: Position, newName: string) {
+
+		const cssResult: WorkspaceEdit = { changes: {} };
+		const vueResult: WorkspaceEdit = { changes: {} };
+
+		// vue -> css
+		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
+			const cssWorkspaceEdit = cssMaped.languageService.doRename(
+				cssMaped.textDocument,
+				cssMaped.range.start,
+				newName,
+				cssMaped.stylesheet,
+			);
+			if (cssWorkspaceEdit) {
+				margeWorkspaceEdits(cssResult, cssWorkspaceEdit);
+			}
+		}
+
+		// css -> vue
+		for (const cssUri in cssResult.changes) {
+			const cssEdits = cssResult.changes[cssUri];
+			for (const cssEdit of cssEdits) {
+				for (const vueMaped of mapper.css.from(cssUri, cssEdit.range)) {
+					if (!vueResult.changes) {
+						vueResult.changes = {};
+					}
+					if (!vueResult.changes[vueMaped.textDocument.uri]) {
+						vueResult.changes[vueMaped.textDocument.uri] = [];
+					}
+					vueResult.changes[vueMaped.textDocument.uri].push({
+						newText: cssEdit.newText,
+						range: vueMaped.range,
+					});
+				}
+			}
+		}
+
+		return vueResult;
+	}
+}
+
+function margeWorkspaceEdits(original: WorkspaceEdit, ...others: WorkspaceEdit[]) {
+	if (!original.changes) {
+		original.changes = {};
+	}
+	for (const workspaceEdit of others) {
+		for (const uri in workspaceEdit.changes) {
+			if (!original.changes[uri]) {
+				original.changes[uri] = [];
+			}
+			const edits = workspaceEdit.changes[uri];
+			original.changes[uri] = original.changes![uri].concat(edits);
 		}
 	}
 }

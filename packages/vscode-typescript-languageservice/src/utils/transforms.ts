@@ -2,9 +2,9 @@ import type * as ts from 'typescript';
 import {
 	Location,
 	Range,
-	TextDocument,
 } from 'vscode-languageserver/node';
 import { fsPathToUri } from '@volar/shared';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function entriesToLocations(entries: { fileName: string, textSpan: ts.TextSpan }[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const locations: Location[] = [];
