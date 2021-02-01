@@ -1,3 +1,6 @@
+- perf: incremental update server documents (Thanks to @IWANABETHATGUY !)
+- fix: accurate ref sugar renaming
+
 ### 0.19.16
 
 - fix: remove incorrect props hover info
