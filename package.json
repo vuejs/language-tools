@@ -4,7 +4,7 @@
 	"displayName": "Vue 3",
 	"description": "TypeScript support for Vue 3",
 	"icon": "images/icon.png",
-	"version": "0.20.0",
+	"version": "0.20.1",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
