@@ -1,3 +1,9 @@
+### 0.20.0
+
+- feat: import path renaming
+- feat: refactor import path on rename file
+- feat: options to disable codeLens
+- feat: verification before renaming
 - perf: incremental update server documents (Thanks to @IWANABETHATGUY !)
 - fix: accurate ref sugar renaming
 
