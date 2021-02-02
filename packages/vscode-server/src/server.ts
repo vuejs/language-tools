@@ -22,6 +22,7 @@ import {
 	DocumentSymbolRequest,
 	DocumentLinkRequest,
 	DocumentColorRequest,
+	DidChangeConfigurationNotification,
 	// html
 	FoldingRangeRequest,
 	LinkedEditingRangeRequest,
@@ -53,6 +54,7 @@ import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
+import { codeLensOptions } from '@volar/vscode-vue-languageservice';
 import { loadVscodeTypescript } from '@volar/shared';
 
 const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
@@ -60,6 +62,7 @@ const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 const connection = createConnection(ProposedFeatures.all);
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
+connection.onDidChangeConfiguration(updateConfigs);
 connection.listen();
 
 const documents = new TextDocuments(TextDocument);
@@ -80,6 +83,20 @@ const both: TextDocumentRegistrationOptions = {
 let mode: 'api' | 'doc' | 'html' = 'api';
 let appRoot: string;
 
+async function updateConfigs() {
+	const [
+		codeLensReferences,
+		codeLensPugTool,
+		codeLensRefScriptSetupTool,
+	] = await Promise.all([
+		connection.workspace.getConfiguration('volar.codeLens.references'),
+		connection.workspace.getConfiguration('volar.codeLens.pugTools'),
+		connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
+	]);
+	codeLensOptions.references = codeLensReferences;
+	codeLensOptions.pugTool = codeLensPugTool;
+	codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
+}
 function onInitialize(params: InitializeParams) {
 
 	const options: ServerInitializationOptions = params.initializationOptions;
@@ -131,6 +148,8 @@ async function onInitialized() {
 		case 'doc': onInitializedDoc(); break;
 		case 'html': onInitializedHtml(); break;
 	}
+	connection.client.register(DidChangeConfigurationNotification.type, undefined);
+	updateConfigs();
 }
 function initLanguageServiceApi(rootPath: string) {
 

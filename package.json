@@ -72,6 +72,21 @@
 					],
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
+				},
+				"volar.codeLens.references": {
+					"type": "boolean",
+					"default": true,
+					"description": "[references] code lens."
+				},
+				"volar.codeLens.pugTools": {
+					"type": "boolean",
+					"default": true,
+					"description": "[html ☑ | pug ☐] code lens."
+				},
+				"volar.codeLens.scriptSetupTools": {
+					"type": "boolean",
+					"default": true,
+					"description": "[ref suager ☐] code lens."
 				}
 			}
 		},

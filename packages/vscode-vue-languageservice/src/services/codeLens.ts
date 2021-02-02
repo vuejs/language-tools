@@ -7,6 +7,12 @@ import { SourceFile } from '../sourceFile';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
+export const options = {
+	references: true,
+	pugTool: true,
+	scriptSetupTool: true,
+};
+
 export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOptions) {
 	return (document: TextDocument) => {
 
@@ -37,17 +43,20 @@ export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOp
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 
-		const scriptSetupResult = getScriptSetupResult(sourceFile);
-		const htmlResult = getHtmlResult(sourceFile);
-		const pugResult = getPugResult(sourceFile);
-		const tsResult = getTsResult(sourceFile);
+		let result: CodeLens[] = [];
 
-		return [
-			...scriptSetupResult,
-			...htmlResult,
-			...pugResult,
-			...tsResult,
-		];
+		if (options.references) {
+			result = result.concat(getTsResult(sourceFile));
+		}
+		if (options.pugTool) {
+			result = result.concat(getHtmlResult(sourceFile));
+			result = result.concat(getPugResult(sourceFile));
+		}
+		if (options.scriptSetupTool) {
+			result = result.concat(getScriptSetupResult(sourceFile));
+		}
+
+		return result;
 
 		function getTsResult(sourceFile: SourceFile) {
 			const result: CodeLens[] = [];
