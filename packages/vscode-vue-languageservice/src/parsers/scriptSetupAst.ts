@@ -24,10 +24,14 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 start: number,
                 end: number,
             },
-            right?: {
+            right: undefined | {
                 start: number,
                 end: number,
                 isComputedCall: boolean,
+                withoutAs: {
+                    start: number,
+                    end: number,
+                },
                 as: undefined | {
                     start: number,
                     end: number,
@@ -238,6 +242,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
                     vars: findLabelVars(node, inRoot),
                     left: range,
                     parent: range,
+                    right: undefined,
                 });
             }
             if (ts.isBinaryExpression(node)) {
@@ -248,9 +253,10 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 else {
                     let parent: ts.Node = parenthesized ?? node;
                     let right = node.right;
+                    let rightWituoutAs = right;
                     let rightAs: ts.TypeNode | undefined;
                     if (ts.isAsExpression(node.right)) {
-                        right = node.right.expression;
+                        rightWituoutAs = node.right.expression;
                         rightAs = node.right.type;
                     }
                     binaryExps.push({
@@ -259,6 +265,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
                         right: {
                             ...getStartEnd(right),
                             isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(scriptAst) === 'computed',
+                            withoutAs: getStartEnd(rightWituoutAs),
                             as: rightAs ? getStartEnd(rightAs) : undefined,
                         },
                         parent: getStartEnd(parent),

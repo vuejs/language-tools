@@ -1,3 +1,7 @@
+### 0.20.1
+
+- fix: ref sugar broke in 0.20.0
+
 ### 0.20.0
 
 - feat: import path renaming

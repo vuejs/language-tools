@@ -60,6 +60,10 @@ export async function execute(
                         desc.scriptSetup.loc.start + binary.right.as.start,
                         desc.scriptSetup.loc.start + binary.right.as.end,
                     )}>`;
+                    edits.push(TextEdit.del({
+                        start: document.positionAt(desc.scriptSetup.loc.start + binary.right.withoutAs.end),
+                        end: document.positionAt(desc.scriptSetup.loc.start + binary.right.as.end),
+                    }));
                 }
                 edits.push(TextEdit.insert(
                     document.positionAt(desc.scriptSetup.loc.start + binary.right.start),
