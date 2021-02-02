@@ -247,7 +247,7 @@ function initLanguageServiceApi(rootPath: string) {
 	connection.onPrepareRename(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.bestMatch(document.uri)?.rename.onPrepare(document, handler.position); // TODO: https://github.com/microsoft/vscode-languageserver-node/issues/735
+		return host.bestMatch(document.uri)?.rename.onPrepare(document, handler.position);
 	});
 	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);

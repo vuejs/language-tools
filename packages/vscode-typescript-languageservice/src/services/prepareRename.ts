@@ -17,7 +17,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const renameInfo = languageService.getRenameInfo(fileName, offset, { allowRenameOfImportPath: true });
 		if (!renameInfo.canRename) {
-			return new ResponseError(0, renameInfo.localizedErrorMessage);
+			// return new ResponseError(0, renameInfo.localizedErrorMessage);
+			return; // TODO: https://github.com/microsoft/vscode-languageserver-node/issues/735
 		}
 
 		return {
