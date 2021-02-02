@@ -6,6 +6,7 @@
 - feat: verification before renaming
 - perf: incremental update server documents (Thanks to @IWANABETHATGUY !)
 - fix: accurate ref sugar renaming
+- fix: ref sugar should convert with type args
 
 ### 0.19.16
 
