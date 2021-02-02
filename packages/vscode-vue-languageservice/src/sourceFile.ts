@@ -136,14 +136,15 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 	});
 	const tsDocuments = computed(() => {
 		const docs = new Map<string, TextDocument>();
+
+		docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
+
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
 		if (virtualScriptGen.textDocumentForSuggestion.value)
 			docs.set(virtualScriptGen.textDocumentForSuggestion.value.uri, virtualScriptGen.textDocumentForSuggestion.value);
 		if (virtualScriptGen.textDocumentForTemplate.value)
 			docs.set(virtualScriptGen.textDocumentForTemplate.value.uri, virtualScriptGen.textDocumentForTemplate.value);
-		if (virtualScriptMain.textDocument.value)
-			docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 		if (virtualTemplateGen.textDocument.value)
 			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
 		return docs;
@@ -163,6 +164,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		getComponentCompletionData: untrack(getComponentCompletionData),
 		getDiagnostics: untrack(getDiagnostics),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
+		getMainTsDoc: untrack(() => virtualScriptMain.textDocument.value),
 		getCssSourceMaps: untrack(() => virtualStyles.sourceMaps.value),
 		getHtmlSourceMaps: untrack(() => virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
 		getPugSourceMaps: untrack(() => virtualTemplateRaw.pugSourceMap.value ? [virtualTemplateRaw.pugSourceMap.value] : []),

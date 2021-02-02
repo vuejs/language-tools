@@ -6,6 +6,7 @@ import * as typeDefinitions from './services/typeDefinitions';
 import * as references from './services/references';
 import * as prepareRename from './services/prepareRename';
 import * as rename from './services/rename';
+import * as fileRename from './services/fileRename';
 import * as hover from './services/hover';
 import * as signatureHelp from './services/signatureHelp';
 import * as selectionRanges from './services/selectionRanges';
@@ -26,7 +27,7 @@ export { getSemanticTokenLegend } from './services/semanticTokens';
 
 export function createLanguageService(host: LanguageServiceHost, ts: typeof import('typescript')) {
 
-	const documents = new Map<string, TextDocument>();
+	const documents = new Map<string, [string, TextDocument]>();
 	const shPlugin = ShPlugin({ typescript: ts as any });
 	let languageService = ts.createLanguageService(host);
 	languageService = shPlugin.decorate(languageService);
@@ -39,6 +40,7 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		findReferences: references.register(languageService, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getTextDocument),
 		doRename: rename.register(languageService, getTextDocument),
+		onFileName: fileRename.register(languageService, getTextDocument),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getTextDocument),
@@ -63,16 +65,17 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		if (!languageService.getProgram()?.getSourceFile(fileName)) {
 			return;
 		}
-		const version = Number(host.getScriptVersion(fileName));
-		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
+		const version = host.getScriptVersion(fileName);
+		const oldDoc = documents.get(uri);
+		if (!oldDoc || oldDoc[0] !== version) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-				const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', version, scriptText);
-				documents.set(uri, document);
+				const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
+				documents.set(uri, [version, document]);
 			}
 		}
-		return documents.get(uri);
+		return documents.get(uri)?.[1];
 	}
 	function dispose() {
 		languageService.dispose();

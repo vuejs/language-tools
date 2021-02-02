@@ -46,11 +46,13 @@ import {
 	DocumentVersionRequest,
 	// html
 	TagCloseRequest,
+	notEmpty,
 } from '@volar/shared';
 import * as upath from 'upath';
 import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
+import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { loadVscodeTypescript } from '@volar/shared';
 
 const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
@@ -104,6 +106,22 @@ function onInitialize(params: InitializeParams) {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 		}
 	};
+
+	if (mode === 'api') {
+		result.capabilities.workspace = {
+			fileOperations: {
+				willRename: {
+					filters: [
+						{ pattern: { glob: '**/*.vue' } },
+						{ pattern: { glob: '**/*.js' } },
+						{ pattern: { glob: '**/*.ts' } },
+						{ pattern: { glob: '**/*.jsx' } },
+						{ pattern: { glob: '**/*.tsx' } },
+					]
+				}
+			}
+		}
+	}
 
 	return result;
 }
@@ -210,12 +228,12 @@ function initLanguageServiceApi(rootPath: string) {
 	connection.onPrepareRename(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.bestMatch(document.uri)?.prepareRename(document, handler.position); // TODO: https://github.com/microsoft/vscode-languageserver-node/issues/735
+		return host.bestMatch(document.uri)?.rename.onPrepare(document, handler.position); // TODO: https://github.com/microsoft/vscode-languageserver-node/issues/735
 	});
 	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.bestMatch(document.uri)?.doRename(document, handler.position, handler.newName);
+		return host.bestMatch(document.uri)?.rename.doRename(document, handler.position, handler.newName);
 	});
 	connection.onCodeLens(handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -281,6 +299,21 @@ function initLanguageServiceApi(rootPath: string) {
 	connection.languages.callHierarchy.onOutgoingCalls(handler => {
 		const { uri } = handler.item.data as { uri: string };
 		return host.bestMatch(uri)?.callHierarchy.onOutgoingCalls(handler.item) ?? [];
+	});
+	connection.workspace.onWillRenameFiles(handler => {
+		const edits = handler.files
+			.map(file => {
+				return host.bestMatch(file.oldUri)?.rename.onRenameFile(file.oldUri, file.newUri);
+			})
+			.filter(notEmpty)
+
+		if (edits.length) {
+			const result = edits[0];
+			margeWorkspaceEdits(result, ...edits.slice(1));
+			return result;
+		}
+
+		return null;
 	});
 }
 function initLanguageServiceDoc(rootPath: string) {

@@ -17,7 +17,6 @@ import * as diagnostics from './services/diagnostics';
 import * as formatting from './services/formatting';
 import * as definitions from './services/definitions';
 import * as references from './services/references';
-import * as prepareRename from './services/prepareRename';
 import * as rename from './services/rename';
 import * as documentHighlight from './services/documentHighlight';
 import * as documentSymbol from './services/documentSymbol';
@@ -231,6 +230,7 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 	};
 	const _callHierarchy = callHierarchy.register(options);
 	const findDefinition = definitions.register(options);
+	const doRename = rename.register(options);
 
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
@@ -248,8 +248,11 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 			onIncomingCalls: apiHook(_callHierarchy.onIncomingCalls),
 			onOutgoingCalls: apiHook(_callHierarchy.onOutgoingCalls),
 		},
-		prepareRename: apiHook(prepareRename.register(options)),
-		doRename: apiHook(rename.register(options)),
+		rename: {
+			onPrepare: apiHook(doRename.onPrepare),
+			doRename: apiHook(doRename.onRename),
+			onRenameFile: apiHook(doRename.onRenameFile),
+		},
 		getSemanticTokens: apiHook(semanticTokens.register(options)),
 		getD3: apiHook(d3.register(options)),
 		doExecuteCommand: apiHook(executeCommand.register(options), false),

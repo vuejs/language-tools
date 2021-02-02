@@ -109,8 +109,8 @@ export function createMapper(
                 return result;
             },
         },
-        ts: {
-            fromUri: (tsUri: string) => {
+        tsUri: {
+            from: (tsUri: string) => {
 
                 const sourceFile = findSourceFileByTsUri(tsUri);
                 if (sourceFile) {
@@ -127,6 +127,26 @@ export function createMapper(
                     return document;
                 }
             },
+            to: (vueUri: string) => {
+                const sourceFile = sourceFiles.get(vueUri);
+                if (sourceFile) {
+                    return {
+                        languageService: tsLanguageService,
+                        textDocument: sourceFile.getMainTsDoc(),
+                        isVirtualFile: true,
+                    }
+                }
+                const tsDoc = tsLanguageService.getTextDocument(vueUri);
+                if (tsDoc) {
+                    return {
+                        languageService: tsLanguageService,
+                        textDocument: tsDoc,
+                        isVirtualFile: false,
+                    };
+                }
+            },
+        },
+        ts: {
             from: (tsUri: string, tsRange: Range) => {
                 const result: {
                     textDocument: TextDocument,

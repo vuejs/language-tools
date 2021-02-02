@@ -8,27 +8,72 @@ import { CreateFile } from 'vscode-languageserver/node';
 import { RenameFile } from 'vscode-languageserver/node';
 import { DeleteFile } from 'vscode-languageserver/node';
 import { AnnotatedTextEdit } from 'vscode-languageserver/node';
+import { ResponseError } from 'vscode-languageserver/node';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
-	return (document: TextDocument, position: Position, newName: string) => {
-
-		const tsResult = onTs(document.uri, position, newName);
-		if (tsResult) {
+	return {
+		onPrepare: (document: TextDocument, position: Position) => {
+			const tsResult = onTsPrepare(document.uri, position);
 			return tsResult;
-		}
+		},
+		onRename: (document: TextDocument, position: Position, newName: string) => {
 
-		const cssResult = onCss(document.uri, position, newName);
-		if (cssResult) {
-			return cssResult;
-		}
+			const tsResult = onTs(document.uri, position, newName);
+			if (tsResult) {
+				return tsResult;
+			}
+
+			const cssResult = onCss(document.uri, position, newName);
+			if (cssResult) {
+				return cssResult;
+			}
+		},
+		onRenameFile: onTsFile,
 	}
 
+	function onTsPrepare(uri: string, position: Position) {
+		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+			if (
+				tsMaped.data.capabilities.rename === true
+				|| (typeof tsMaped.data.capabilities.rename === 'object' && tsMaped.data.capabilities.rename.in)
+			) {
+				const tsRange = tsMaped.languageService.prepareRename(
+					tsMaped.textDocument.uri,
+					tsMaped.range.start,
+				);
+				if (!tsRange)
+					continue;
+
+				if (tsRange instanceof ResponseError)
+					return tsRange;
+
+				for (const vueMaped of mapper.ts.from(tsMaped.textDocument.uri, tsRange))
+					return vueMaped.range;
+			}
+		}
+	}
+	function onTsFile(oldUri: string, newUri: string) {
+
+		// vue -> ts
+		const tsMaped = mapper.tsUri.to(oldUri);
+		if (!tsMaped)
+			return;
+
+		const tsOldUri = tsMaped.textDocument.uri;
+		const tsNewUri = tsMaped.isVirtualFile ? newUri + '.ts' : newUri;
+		const tsResult = tsMaped.languageService.onFileName(tsOldUri, tsNewUri);
+		if (!tsResult)
+			return;
+
+		// ts -> vue
+		const vueResult = tsToVue(tsResult);
+		return vueResult;
+	}
 	function onTs(uri: string, position: Position, newName: string) {
 
 		const loopChecker = dedupe.createLocationSet();
 		const tsResult: WorkspaceEdit = {};
-		const vueResult: WorkspaceEdit = {};
 		let hasResult = false;
 
 		// vue -> ts
@@ -79,9 +124,15 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			return;
 
 		// ts -> vue
+		const vueResult = tsToVue(tsResult);
+		return vueResult;
+	}
+	function tsToVue(tsResult: WorkspaceEdit) {
+		const vueResult: WorkspaceEdit = {};
+
 		for (const tsUri in tsResult.changeAnnotations) {
 			const tsAnno = tsResult.changeAnnotations[tsUri];
-			const vueDoc = mapper.ts.fromUri(tsUri);
+			const vueDoc = mapper.tsUri.from(tsUri);
 			if (!vueDoc)
 				continue;
 
@@ -124,7 +175,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				}
 				let vueDocEdit: typeof tsDocEdit | undefined;
 				if (TextDocumentEdit.is(tsDocEdit)) {
-					const vueDoc = mapper.ts.fromUri(tsDocEdit.textDocument.uri);
+					const vueDoc = mapper.tsUri.from(tsDocEdit.textDocument.uri);
 					if (!vueDoc)
 						continue;
 					const _vueDocEdit = TextDocumentEdit.create(
@@ -150,20 +201,20 @@ export function register({ mapper }: TsApiRegisterOptions) {
 						vueDocEdit = _vueDocEdit;
 					}
 				}
-				if (CreateFile.is(tsDocEdit)) {
-					const vueDoc = mapper.ts.fromUri(tsDocEdit.uri);
+				else if (CreateFile.is(tsDocEdit)) {
+					const vueDoc = mapper.tsUri.from(tsDocEdit.uri);
 					if (!vueDoc)
 						continue;
 					vueDocEdit = CreateFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
 				}
-				if (RenameFile.is(tsDocEdit)) {
-					const vueDoc = mapper.ts.fromUri(tsDocEdit.oldUri);
+				else if (RenameFile.is(tsDocEdit)) {
+					const vueDoc = mapper.tsUri.from(tsDocEdit.oldUri);
 					if (!vueDoc)
 						continue;
 					vueDocEdit = RenameFile.create(vueDoc.uri, tsDocEdit.newUri, tsDocEdit.options, tsDocEdit.annotationId);
 				}
-				if (DeleteFile.is(tsDocEdit)) {
-					const vueDoc = mapper.ts.fromUri(tsDocEdit.uri);
+				else if (DeleteFile.is(tsDocEdit)) {
+					const vueDoc = mapper.tsUri.from(tsDocEdit.uri);
 					if (!vueDoc)
 						continue;
 					vueDocEdit = DeleteFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
@@ -173,7 +224,6 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				}
 			}
 		}
-
 		return vueResult;
 	}
 	function onCss(uri: string, position: Position, newName: string) {
@@ -222,7 +272,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	}
 }
 
-function margeWorkspaceEdits(original: WorkspaceEdit, ...others: WorkspaceEdit[]) {
+export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: WorkspaceEdit[]) {
 	for (const other of others) {
 		for (const uri in other.changeAnnotations) {
 			if (!original.changeAnnotations) {

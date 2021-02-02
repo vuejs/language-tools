@@ -62,7 +62,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	}
 }
 
-function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChanges[], getTextDocument: (uri: string) => TextDocument | undefined) {
+export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChanges[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const workspaceEdit: WorkspaceEdit = {};
 
 	for (const change of changes) {
