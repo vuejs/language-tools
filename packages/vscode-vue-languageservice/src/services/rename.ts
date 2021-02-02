@@ -9,13 +9,23 @@ import { RenameFile } from 'vscode-languageserver/node';
 import { DeleteFile } from 'vscode-languageserver/node';
 import { AnnotatedTextEdit } from 'vscode-languageserver/node';
 import { ResponseError } from 'vscode-languageserver/node';
+import { wordPatterns } from './completions';
+import { getWordRange } from '@volar/shared';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
 	return {
 		onPrepare: (document: TextDocument, position: Position) => {
+
 			const tsResult = onTsPrepare(document.uri, position);
-			return tsResult;
+			if (tsResult) {
+				return tsResult;
+			}
+
+			const cssResult = onCssPrepare(document.uri, position);
+			if (cssResult) {
+				return cssResult;
+			}
 		},
 		onRename: (document: TextDocument, position: Position, newName: string) => {
 
@@ -225,6 +235,17 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			}
 		}
 		return vueResult;
+	}
+	function onCssPrepare(uri: string, position: Position) {
+		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
+			const wordPattern = wordPatterns[cssMaped.textDocument.languageId] ?? wordPatterns.css;
+			const wordRange = getWordRange(wordPattern, cssMaped.range, cssMaped.textDocument);
+			if (wordRange) {
+				for (const vueMaped of mapper.css.from(cssMaped.textDocument.uri, wordRange)) {
+					return vueMaped.range;
+				}
+			}
+		}
 	}
 	function onCss(uri: string, position: Position, newName: string) {
 
