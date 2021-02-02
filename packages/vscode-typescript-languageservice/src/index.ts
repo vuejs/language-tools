@@ -4,6 +4,7 @@ import * as completionResolve from './services/completionResolve';
 import * as definitions from './services/definitions';
 import * as typeDefinitions from './services/typeDefinitions';
 import * as references from './services/references';
+import * as prepareRename from './services/prepareRename';
 import * as rename from './services/rename';
 import * as hover from './services/hover';
 import * as signatureHelp from './services/signatureHelp';
@@ -36,6 +37,7 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		findDefinition: definitions.register(languageService, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getTextDocument),
 		findReferences: references.register(languageService, getTextDocument),
+		prepareRename: prepareRename.register(languageService, getTextDocument),
 		doRename: rename.register(languageService, getTextDocument),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument, ts),

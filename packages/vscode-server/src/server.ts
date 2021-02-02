@@ -207,6 +207,11 @@ function initLanguageServiceApi(rootPath: string) {
 		if (!document) return undefined;
 		return host.bestMatch(document.uri)?.getSelectionRanges(document, handler.positions);
 	});
+	connection.onPrepareRename(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return undefined;
+		return host.bestMatch(document.uri)?.prepareRename(document, handler.position); // TODO: https://github.com/microsoft/vscode-languageserver-node/issues/735
+	});
 	connection.onRenameRequest(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
@@ -396,7 +401,10 @@ function onInitializedApi() {
 	connection.client.register(CallHierarchyPrepareRequest.type, both);
 	connection.client.register(TypeDefinitionRequest.type, both);
 	connection.client.register(HoverRequest.type, vueOnly);
-	connection.client.register(RenameRequest.type, vueOnly);
+	connection.client.register(RenameRequest.type, {
+		documentSelector: vueOnly.documentSelector,
+		prepareProvider: true,
+	});
 	connection.client.register(SelectionRangeRequest.type, vueOnly);
 	connection.client.register(CodeLensRequest.type, {
 		documentSelector: both.documentSelector,

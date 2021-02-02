@@ -3,18 +3,23 @@ import type { Position } from 'vscode-languageserver/node';
 import type { WorkspaceEdit } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as dedupe from '../utils/dedupe';
+import { TextDocumentEdit } from 'vscode-languageserver/node';
+import { CreateFile } from 'vscode-languageserver/node';
+import { RenameFile } from 'vscode-languageserver/node';
+import { DeleteFile } from 'vscode-languageserver/node';
+import { AnnotatedTextEdit } from 'vscode-languageserver/node';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
 	return (document: TextDocument, position: Position, newName: string) => {
 
 		const tsResult = onTs(document.uri, position, newName);
-		if (tsResult.changes && Object.keys(tsResult.changes).length) {
+		if (tsResult) {
 			return tsResult;
 		}
 
 		const cssResult = onCss(document.uri, position, newName);
-		if (cssResult.changes && Object.keys(cssResult.changes).length) {
+		if (cssResult) {
 			return cssResult;
 		}
 	}
@@ -22,8 +27,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	function onTs(uri: string, position: Position, newName: string) {
 
 		const loopChecker = dedupe.createLocationSet();
-		const tsResult: WorkspaceEdit = { changes: {} };
-		const vueResult: WorkspaceEdit = { changes: {} };
+		const tsResult: WorkspaceEdit = {};
+		const vueResult: WorkspaceEdit = {};
+		let hasResult = false;
 
 		// vue -> ts
 		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
@@ -42,9 +48,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 						newName,
 					);
 
-					if (tsWorkspaceEdit?.changes) {
+					if (tsWorkspaceEdit) {
+						hasResult = true;
 						margeWorkspaceEdits(tsResult, tsWorkspaceEdit);
+					}
 
+					if (tsWorkspaceEdit?.changes) {
 						for (const editUri in tsWorkspaceEdit.changes) {
 							const textEdits = tsWorkspaceEdit.changes[editUri];
 							for (const textEdit of textEdits) {
@@ -66,7 +75,21 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			}
 		}
 
+		if (!hasResult)
+			return;
+
 		// ts -> vue
+		for (const tsUri in tsResult.changeAnnotations) {
+			const tsAnno = tsResult.changeAnnotations[tsUri];
+			const vueDoc = mapper.ts.fromUri(tsUri);
+			if (!vueDoc)
+				continue;
+
+			if (!vueResult.changeAnnotations)
+				vueResult.changeAnnotations = {};
+
+			vueResult.changeAnnotations[vueDoc.uri] = tsAnno;
+		}
 		for (const tsUri in tsResult.changes) {
 			const tsEdits = tsResult.changes[tsUri];
 			for (const tsEdit of tsEdits) {
@@ -94,6 +117,62 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				}
 			}
 		}
+		if (tsResult.documentChanges) {
+			for (const tsDocEdit of tsResult.documentChanges) {
+				if (!vueResult.documentChanges) {
+					vueResult.documentChanges = [];
+				}
+				let vueDocEdit: typeof tsDocEdit | undefined;
+				if (TextDocumentEdit.is(tsDocEdit)) {
+					const vueDoc = mapper.ts.fromUri(tsDocEdit.textDocument.uri);
+					if (!vueDoc)
+						continue;
+					const _vueDocEdit = TextDocumentEdit.create(
+						{ uri: vueDoc.uri, version: vueDoc.version },
+						[],
+					);
+					for (const tsEdit of tsDocEdit.edits) {
+						for (const vueMaped of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range)) {
+							if (
+								!vueMaped.data
+								|| vueMaped.data.capabilities.rename === true
+								|| (typeof vueMaped.data.capabilities.rename === 'object' && vueMaped.data.capabilities.rename.out)
+							) {
+								_vueDocEdit.edits.push({
+									annotationId: AnnotatedTextEdit.is(tsEdit) ? tsEdit.annotationId : undefined,
+									newText: tsEdit.newText,
+									range: vueMaped.range,
+								});
+							}
+						}
+					}
+					if (_vueDocEdit.edits.length) {
+						vueDocEdit = _vueDocEdit;
+					}
+				}
+				if (CreateFile.is(tsDocEdit)) {
+					const vueDoc = mapper.ts.fromUri(tsDocEdit.uri);
+					if (!vueDoc)
+						continue;
+					vueDocEdit = CreateFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
+				}
+				if (RenameFile.is(tsDocEdit)) {
+					const vueDoc = mapper.ts.fromUri(tsDocEdit.oldUri);
+					if (!vueDoc)
+						continue;
+					vueDocEdit = RenameFile.create(vueDoc.uri, tsDocEdit.newUri, tsDocEdit.options, tsDocEdit.annotationId);
+				}
+				if (DeleteFile.is(tsDocEdit)) {
+					const vueDoc = mapper.ts.fromUri(tsDocEdit.uri);
+					if (!vueDoc)
+						continue;
+					vueDocEdit = DeleteFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
+				}
+				if (vueDocEdit) {
+					vueResult.documentChanges.push(vueDocEdit);
+				}
+			}
+		}
 
 		return vueResult;
 	}
@@ -101,6 +180,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		const cssResult: WorkspaceEdit = { changes: {} };
 		const vueResult: WorkspaceEdit = { changes: {} };
+		let hasResult = false;
 
 		// vue -> css
 		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
@@ -111,9 +191,13 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				cssMaped.stylesheet,
 			);
 			if (cssWorkspaceEdit) {
+				hasResult = true;
 				margeWorkspaceEdits(cssResult, cssWorkspaceEdit);
 			}
 		}
+
+		if (!hasResult)
+			return;
 
 		// css -> vue
 		for (const cssUri in cssResult.changes) {
@@ -139,16 +223,30 @@ export function register({ mapper }: TsApiRegisterOptions) {
 }
 
 function margeWorkspaceEdits(original: WorkspaceEdit, ...others: WorkspaceEdit[]) {
-	if (!original.changes) {
-		original.changes = {};
-	}
-	for (const workspaceEdit of others) {
-		for (const uri in workspaceEdit.changes) {
+	for (const other of others) {
+		for (const uri in other.changeAnnotations) {
+			if (!original.changeAnnotations) {
+				original.changeAnnotations = {};
+			}
+			original.changeAnnotations[uri] = other.changeAnnotations[uri];
+		}
+		for (const uri in other.changes) {
+			if (!original.changes) {
+				original.changes = {};
+			}
 			if (!original.changes[uri]) {
 				original.changes[uri] = [];
 			}
-			const edits = workspaceEdit.changes[uri];
-			original.changes[uri] = original.changes![uri].concat(edits);
+			const edits = other.changes[uri];
+			original.changes[uri] = original.changes[uri].concat(edits);
+		}
+		if (other.documentChanges) {
+			if (!original.documentChanges) {
+				original.documentChanges = [];
+			}
+			for (const docChange of other.documentChanges) {
+				original.documentChanges.push(docChange);
+			}
 		}
 	}
 }

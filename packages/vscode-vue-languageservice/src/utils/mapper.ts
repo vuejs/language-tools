@@ -110,6 +110,23 @@ export function createMapper(
             },
         },
         ts: {
+            fromUri: (tsUri: string) => {
+
+                const sourceFile = findSourceFileByTsUri(tsUri);
+                if (sourceFile) {
+                    return sourceFile.getTextDocument();
+                }
+
+                const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
+                if (globalTs) {
+                    return globalTs.sourceMap.sourceDocument;
+                }
+
+                const document = tsLanguageService.getTextDocument(tsUri);
+                if (document) {
+                    return document;
+                }
+            },
             from: (tsUri: string, tsRange: Range) => {
                 const result: {
                     textDocument: TextDocument,
