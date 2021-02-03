@@ -6,18 +6,19 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 Volar is a Language Support plugin built specifically for Vue 3. This is based on Composition API to calculate on-demand, so as to achieve performance close to native TypeScript script.
 
-Roadmap: https://github.com/johnsoncodehk/volar/issues/28
+[[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
 
-If you have any question, you can open a issue, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
+If you have question, you can open a issue, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
 
 ## Quick Start
 
-Some templates that can used with Volar. (let me know if you're know others)
+Some templates that can used with Volar. (let me know if we have others)
 
 Vite: [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
 
+<!-- Components services -->
 <details>
 <summary>Components services</summary>
 
@@ -64,6 +65,7 @@ declare global {
 
 </details>
 
+<!-- Slots services -->
 <details>
 <summary>Slots services</summary>
 
@@ -95,6 +97,7 @@ declare global {
 
 </details>
 
+<!-- Work with Vue 2? -->
 <details>
 <summary>Work with Vue 2?</summary>
 
@@ -112,23 +115,22 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 
 </details>
 
+<!-- Ignore Checking -->
 <details>
 <summary>Ignore Checking</summary>
 
 ```vue
-<!-- @vue-ignore -->
 <template>
-...
+... checking on
 </template>
 
-<!-- @vue-ignore -->
 <script>
-...
+... checking on
 </script>
 
 <!-- @vue-ignore -->
 <style>
-...
+... checking off!
 </style>
 ```
 
