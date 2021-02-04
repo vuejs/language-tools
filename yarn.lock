@@ -1325,6 +1325,11 @@
   resolved "https://registry.yarnpkg.com/@types/pug/-/pug-2.0.4.tgz#8772fcd0418e3cd2cc171555d73007415051f4b2"
   integrity sha1-h3L80EGOPNLMFxVV1zAHQVBR9LI=
 
+"@types/semver@^7.3.4":
+  version "7.3.4"
+  resolved "http://xnpm.repo.xunlei.cn/@types%2fsemver/-/semver-7.3.4.tgz#43d7168fec6fa0988bb1a513a697b29296721afb"
+  integrity sha1-Q9cWj+xvoJiLsaUTppeykpZyGvs=
+
 "@types/stack-utils@^2.0.0":
   version "2.0.0"
   resolved "http://xnpm.repo.xunlei.cn/@types%2fstack-utils/-/stack-utils-2.0.0.tgz#7036640b4e21cc2f259ae826ce843d277dad8cff"
