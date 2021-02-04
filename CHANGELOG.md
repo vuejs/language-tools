@@ -1,3 +1,8 @@
+### 0.20.2
+
+- fix: `<script setup>` props rename broke
+- fix: inline css service broke
+
 ### 0.20.1
 
 - fix: ref sugar broke in 0.20.0
