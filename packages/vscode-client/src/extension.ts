@@ -36,8 +36,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	tagClosing.activate(context, htmlClient);	
 	restart.activate(context, [apiClient, docClient]);	
 
-  startEmbeddedLanguageServices();	
-  volarProjectWarning()
+    startEmbeddedLanguageServices();	
+    volarProjectWarning()
 }	
 
 export function deactivate(): Thenable<void> | undefined {	
