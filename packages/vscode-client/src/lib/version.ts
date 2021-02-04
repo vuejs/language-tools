@@ -1,4 +1,4 @@
-import semver from "semver";
+import { compare, minVersion } from "semver";
 
 /**
  *
@@ -19,7 +19,7 @@ export function isVolarProject(packageJson: string): boolean {
       return true;
     }
 
-    if (semver.compare(semver.minVersion(vueVersion), "3.0.0") === -1) {
+    if (compare(minVersion(vueVersion) as any, "3.0.0") === -1) {
       // 2.x vue
       return !!(parsed["devDependencies"]?.["@vue/runtime-dom"] || parsed["dependencies"]?.["@vue/runtime-dom"]);
     }

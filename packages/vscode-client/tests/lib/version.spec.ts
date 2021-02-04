@@ -1,4 +1,4 @@
-import { isVolarProject, isVueProject } from "../../lib/version";
+import { isVolarProject, isVueProject } from "../../src/lib/version";
 
 const invalidPackageJson = `
 {
