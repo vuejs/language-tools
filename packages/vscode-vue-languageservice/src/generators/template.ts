@@ -341,7 +341,6 @@ export function generate(
 					MapedMode.Offset,
 					undefined,
 				);
-				inlineCssGen.addText(content);
 				inlineCssGen.addText(` }\n`);
 			}
 		}
