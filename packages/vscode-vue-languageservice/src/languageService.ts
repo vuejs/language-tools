@@ -250,7 +250,7 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 		},
 		rename: {
 			onPrepare: apiHook(doRename.onPrepare),
-			doRename: apiHook(doRename.onRename),
+			doRename: apiHook(doRename.doRename),
 			onRenameFile: apiHook(doRename.onRenameFile),
 		},
 		getSemanticTokens: apiHook(semanticTokens.register(options)),

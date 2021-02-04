@@ -27,16 +27,26 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				return cssResult;
 			}
 		},
-		onRename: (document: TextDocument, position: Position, newName: string) => {
+		doRename: (document: TextDocument, position: Position, newName: string) => {
 
 			const tsResult = onTs(document.uri, position, newName);
 			if (tsResult) {
+				doDedupe(tsResult);
 				return tsResult;
 			}
 
 			const cssResult = onCss(document.uri, position, newName);
 			if (cssResult) {
+				doDedupe(cssResult);
 				return cssResult;
+			}
+
+			function doDedupe(workspaceEdit :WorkspaceEdit) {
+				if (workspaceEdit.changes) {
+					for (const uri in workspaceEdit.changes) {
+						workspaceEdit.changes[uri] = dedupe.withTextEdits(workspaceEdit.changes[uri]);
+					}
+				}
 			}
 		},
 		onRenameFile: onTsFile,
