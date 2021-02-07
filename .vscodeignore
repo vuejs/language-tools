@@ -8,6 +8,8 @@
 **/tsconfig.json
 **/tsconfig.base.json
 **/tsconfig.tsbuildinfo
+**/tests/
+**/testCases/
 packages/
 
 # text files
