@@ -5,11 +5,14 @@
 		"vscode": "latest"
 	},
 	"dependencies": {
+		"@vue/compiler-sfc": "latest",
+		"jsonc-parser": "latest",
+		"semver": "latest",
 		"upath": "latest",
-		"vscode-languageclient": "latest",
-		"@vue/compiler-sfc": "latest"
+		"vscode-languageclient": "latest"
 	},
 	"devDependencies": {
+		"@types/semver": "latest",
 		"@types/vscode": "latest",
 		"vscode-test": "latest"
 	}

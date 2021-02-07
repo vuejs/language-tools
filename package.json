@@ -213,9 +213,14 @@
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
 		"pack": "yarn && vsce package --yarn",
-		"publish": "yarn && vsce publish --yarn"
+		"publish": "yarn && vsce publish --yarn",
+		"test-install": "cd packages/vscode-vue-languageservice/testCases && yarn",
+		"test": "npm run test-install && jest"
 	},
 	"devDependencies": {
+		"@types/jest": "latest",
+		"jest": "latest",
+		"ts-jest": "latest",
 		"typescript": "latest"
 	},
 	"dependencies": {},
