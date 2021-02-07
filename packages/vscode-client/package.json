@@ -7,22 +7,13 @@
 	"dependencies": {
 		"@vue/compiler-sfc": "latest",
 		"jsonc-parser": "latest",
-		"semver": "^7.3.4",
+		"semver": "latest",
 		"upath": "latest",
 		"vscode-languageclient": "latest"
 	},
-	"scripts": {
-		"test": "jest"
-	},
 	"devDependencies": {
-		"@babel/core": "^7.12.13",
-		"@babel/preset-env": "^7.12.13",
-		"@babel/preset-typescript": "^7.12.13",
-		"@types/jest": "^26.0.20",
-		"@types/semver": "^7.3.4",
+		"@types/semver": "latest",
 		"@types/vscode": "latest",
-		"babel-jest": "^26.6.3",
-		"jest": "^26.6.3",
 		"vscode-test": "latest"
 	}
 }
