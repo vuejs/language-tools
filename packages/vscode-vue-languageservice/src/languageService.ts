@@ -234,6 +234,10 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
+		checkProject: apiHook(() => {
+			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
+			return !vueImportErrors.find(error => error.code === 2305); // Module '"__VLS_vue"' has no exported member '*'.ts(2305)
+		}),
 		getTsService: () => tsLanguageService,
 		getGlobalDocs: () => [globalDoc, globalDTsDoc],
 		getSourceFile: apiHook(getSourceFile),

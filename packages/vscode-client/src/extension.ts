@@ -1,5 +1,4 @@
 import * as path from 'upath';
-import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import * as splitEditors from './features/splitEditors';
@@ -14,7 +13,6 @@ import * as restart from './features/restart';
 import * as tagClosing from './features/tagClosing';
 import * as semanticTokens from './features/semanticTokens';
 import { ServerInitializationOptions } from '@volar/shared';
-import { isVolarProject } from './lib/version';
 
 let apiClient: lsp.LanguageClient;
 let docClient: lsp.LanguageClient;
@@ -38,7 +36,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	restart.activate(context, [apiClient, docClient]);
 
 	startEmbeddedLanguageServices();
-	volarProjectWarning();
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -110,22 +107,4 @@ async function startEmbeddedLanguageServices() {
 	vscode.languages.setLanguageConfiguration('jade', {
 		wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
 	});
-}
-function volarProjectWarning() {
-	try {
-		const rootDir = vscode.workspace.workspaceFolders?.[0];
-		if (!rootDir) {
-			return;
-		}
-		const packageJsonPath = path.resolve(rootDir.uri.fsPath, "package.json");
-		if (!fs.existsSync(packageJsonPath)) {
-			return;
-		}
-		const packageJson = fs.readFileSync(packageJsonPath).toString();
-		if (!isVolarProject(packageJson)) {
-			vscode.window.showWarningMessage(
-				"Volar can't not offer intelligence due to your project is a vue2 project and without @vue/runtime-dom installed, you can find more info here: https://github.com/johnsoncodehk/volar"
-			);
-		}
-	} catch (err) { }
 }

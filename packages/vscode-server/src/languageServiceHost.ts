@@ -117,6 +117,7 @@ export function createLanguageServiceHost(
 		let parsedCommandLine = createParsedCommandLine();
 		let currentValidation: Promise<void> | undefined;
 		let workDoneProgress: WorkDoneProgressServerReporter | undefined;
+		let checkedProject = false;
 		const fileCurrentReqs = new Map<string, number>();
 		const fileWatchers = new Map<string, ts.FileWatcher>();
 		const scriptVersions = new Map<string, string>();
@@ -146,7 +147,9 @@ export function createLanguageServiceHost(
 			}
 		}, true);
 
-		disposables.push(documents.onDidChangeContent(change => onDidChangeContent(change.document)));
+		disposables.push(documents.onDidChangeContent(change => {
+			onDidChangeContent(change.document);
+		}));
 		disposables.push(documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] })));
 
 		prepareNextProgress();
@@ -242,9 +245,21 @@ export function createLanguageServiceHost(
 				return false;
 			};
 
+			let send = false; // is vue document
 			await vueLanguageService.doValidation(document, async result => {
+				send = true;
 				connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
 			}, isCancel, withSideEffect);
+
+			if (send && !checkedProject) {
+				checkedProject = true;
+				const projectValid = vueLanguageService.checkProject();
+				if (!projectValid) {
+					connection.window.showWarningMessage(
+						"Volar can't not offer intelligence due to your project is a vue2 project and without @vue/runtime-dom installed, you can find more info here: https://github.com/johnsoncodehk/volar"
+					);
+				}
+			}
 		}
 		function onParsedCommandLineUpdate() {
 			const fileNames = new Set(parsedCommandLine.fileNames);
