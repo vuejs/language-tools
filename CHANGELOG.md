@@ -1,3 +1,9 @@
+### 0.20.3
+
+- feat: localized typescript diagnostics
+- feat: report errors count with `Verify All Scripts` command
+- feat: show warning notification if project invalid (Thanks to @IWANABETHATGUY !)
+
 ### 0.20.2
 
 - fix: `<script setup>` props rename broke
