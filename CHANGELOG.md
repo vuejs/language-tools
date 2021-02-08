@@ -1,3 +1,8 @@
+### 0.20.4
+
+- feat: auto close tag delay 0ms -> 100ms
+- feat: auto-complete ref value with `.value` (Experimental)
+
 ### 0.20.3
 
 - feat: localized typescript diagnostics

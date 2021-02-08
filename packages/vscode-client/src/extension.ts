@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	verifyAll.activate(context, docClient);
 	virtualFiles.activate(context, docClient);
 	semanticTokens.activate(context, docClient);
-	tagClosing.activate(context, htmlClient);
+	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
 
 	startEmbeddedLanguageServices();

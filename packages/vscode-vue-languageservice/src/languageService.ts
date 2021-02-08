@@ -11,6 +11,7 @@ import * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
 import * as autoClose from './services/autoClose';
+import * as refAutoClose from './services/refAutoClose';
 import * as embeddedDocument from './services/embeddedDocument';
 import * as hover from './services/hover';
 import * as diagnostics from './services/diagnostics';
@@ -272,6 +273,7 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 		findDocumentSymbols: apiHook(documentSymbol.register(options), false),
 		findDocumentLinks: apiHook(documentLink.register(options), false),
 		findDocumentColors: apiHook(documentColor.register(options), false),
+		doRefAutoClose: apiHook(refAutoClose.register(options), false),
 		...createNoStateLanguageService({ typescript }),
 		dispose: tsLanguageService.dispose,
 	};

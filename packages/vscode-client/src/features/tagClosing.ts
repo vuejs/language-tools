@@ -1,17 +1,36 @@
 import * as vscode from 'vscode';
-import { TagCloseRequest } from '@volar/shared';
+import { TagCloseRequest, RefCloseRequest } from '@volar/shared';
 import type { LanguageClient } from 'vscode-languageclient/node';
 import { window, workspace, Disposable, TextDocumentContentChangeEvent, TextDocument, Position, SnippetString } from 'vscode';
 
-export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
-    await languageClient.onReady();
-    context.subscriptions.push(activateTagClosing((document, position) => {
-        let param = languageClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-        return languageClient.sendRequest(TagCloseRequest.type, param);
-    }, { vue: true }, 'html.autoClosingTags'));
+export async function activate(context: vscode.ExtensionContext, htmlClient: LanguageClient, tsClient: LanguageClient) {
+    await htmlClient.onReady();
+    context.subscriptions.push(activateTagClosing(
+        (document, position) => {
+            let param = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+            return htmlClient.sendRequest(TagCloseRequest.type, param);
+        },
+        { vue: true },
+        'html.autoClosingTags',
+        (rangeLength, lastCharacter) => rangeLength <= 0 && (lastCharacter === '>' || lastCharacter === '/'),
+    ));
+    context.subscriptions.push(activateTagClosing(
+        (document, position) => {
+            let param = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+            return tsClient.sendRequest(RefCloseRequest.type, param);
+        },
+        { vue: true },
+        'volar.autoCompleteRefs',
+        (rangeLength, lastCharacter) => lastCharacter !== '>' && lastCharacter !== '/',
+    ));
 }
 
-function activateTagClosing(tagProvider: (document: TextDocument, position: Position) => Thenable<string | null | undefined>, supportedLanguages: { [id: string]: boolean }, configName: string): Disposable {
+function activateTagClosing(
+    tagProvider: (document: TextDocument, position: Position) => Thenable<string | null | undefined>,
+    supportedLanguages: { [id: string]: boolean },
+    configName: string,
+    changeValid: (rangeLength: number, lastCharacter: string) => boolean,
+): Disposable {
 
     let disposables: Disposable[] = [];
     workspace.onDidChangeTextDocument(event => onDidChangeTextDocument(event.document, event.contentChanges), null, disposables);
@@ -51,7 +70,13 @@ function activateTagClosing(tagProvider: (document: TextDocument, position: Posi
         }
         let lastChange = changes[changes.length - 1];
         let lastCharacter = lastChange.text[lastChange.text.length - 1];
-        if (lastChange.rangeLength > 0 || lastCharacter !== '>' && lastCharacter !== '/') {
+        if (lastCharacter === undefined) { // delete text
+            return;
+        }
+        if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
+            return;
+        }
+        if (!changeValid(lastChange.rangeLength, lastCharacter)) {
             return;
         }
         let rangeStart = lastChange.range.start;
@@ -75,7 +100,7 @@ function activateTagClosing(tagProvider: (document: TextDocument, position: Posi
                 }
             });
             timeout = undefined;
-        }, /* 100 */ 0);
+        }, 100);
     }
     return Disposable.from(...disposables);
 }

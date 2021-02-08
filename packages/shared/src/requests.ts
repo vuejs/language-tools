@@ -18,6 +18,9 @@ export namespace D3Request {
 export namespace TagCloseRequest {
 	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any> = new RequestType('html/tag');
 }
+export namespace RefCloseRequest {
+	export const type: RequestType<TextDocumentPositionParams, string | null | undefined, any> = new RequestType('volar/ref');
+}
 export namespace DocumentVersionRequest {
 	export const type: RequestType<{
 		uri: string,

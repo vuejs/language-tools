@@ -40,6 +40,7 @@ import {
 	FormatAllScriptsRequest,
 	uriToFsPath,
 	RestartServerNotification,
+	RefCloseRequest,
 	// doc
 	VerifyAllScriptsRequest,
 	WriteVirtualFilesRequest,
@@ -163,6 +164,11 @@ function initLanguageServiceApi(rootPath: string) {
 	// custom requests
 	connection.onNotification(RestartServerNotification.type, async () => {
 		host.restart();
+	});
+	connection.onRequest(RefCloseRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return host.bestMatch(document.uri)?.doRefAutoClose(document, handler.position);
 	});
 	connection.onRequest(D3Request.type, handler => {
 		const document = documents.get(handler.uri);

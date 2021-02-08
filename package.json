@@ -87,6 +87,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "[ref suager ☐] code lens."
+				},
+				"volar.autoCompleteRefs": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto-complete Ref value with `.value`. (Experimental)"
 				}
 			}
 		},
