@@ -19,7 +19,13 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
             let param = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
             return tsClient.sendRequest(RefCloseRequest.type, param);
         },
-        { vue: true },
+        {
+            vue: true,
+            javascript: true,
+            typescript: true,
+            javascriptreact: true,
+            typescriptreact: true,
+        },
         'volar.autoCompleteRefs',
         (rangeLength, lastCharacter) => lastCharacter !== '>' && lastCharacter !== '/',
     ));
