@@ -23,6 +23,8 @@ import {
 	DocumentLinkRequest,
 	DocumentColorRequest,
 	DidChangeConfigurationNotification,
+	Diagnostic,
+	DiagnosticSeverity,
 	// html
 	FoldingRangeRequest,
 	LinkedEditingRangeRequest,
@@ -370,6 +372,10 @@ function initLanguageServiceDoc(rootPath: string) {
 		progress.done();
 	});
 	connection.onRequest(VerifyAllScriptsRequest.type, async () => {
+
+		let errors = 0;
+		let warnings = 0;
+
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Verify', 0, '', true);
 		for (const [_, service] of host.services) {
@@ -380,13 +386,19 @@ function initLanguageServiceDoc(rootPath: string) {
 					continue;
 				}
 				const doc = sourceFile.getTextDocument();
+				let _result: Diagnostic[] = [];
 				await service.languageService.doValidation(doc, result => {
 					connection.sendDiagnostics({ uri: doc.uri, diagnostics: result });
+					_result = result;
 				});
+				errors += _result.filter(error => error.severity === DiagnosticSeverity.Error).length;
+				warnings += _result.filter(error => error.severity === DiagnosticSeverity.Warning).length;
 				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 			}
 		}
 		progress.done();
+
+		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
 
 	connection.onDocumentColor(handler => {
