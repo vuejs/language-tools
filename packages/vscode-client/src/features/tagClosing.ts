@@ -27,7 +27,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
             typescriptreact: true,
         },
         'volar.autoCompleteRefs',
-        (rangeLength, lastCharacter) => lastCharacter !== '>' && lastCharacter !== '/',
+        (_, lastCharacter, nextCharacter) => lastCharacter !== '>' && lastCharacter !== '/' && !nextCharacter.trim(),
     ));
 }
 
@@ -35,7 +35,7 @@ function activateTagClosing(
     tagProvider: (document: TextDocument, position: Position) => Thenable<string | null | undefined>,
     supportedLanguages: { [id: string]: boolean },
     configName: string,
-    changeValid: (rangeLength: number, lastCharacter: string) => boolean,
+    changeValid: (rangeLength: number, lastCharacter: string, nextCharacter: string) => boolean,
 ): Disposable {
 
     let disposables: Disposable[] = [];
@@ -82,13 +82,14 @@ function activateTagClosing(
         if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
             return;
         }
-        if (!changeValid(lastChange.rangeLength, lastCharacter)) {
-            return;
-        }
         let rangeStart = lastChange.range.start;
         let version = document.version;
+        let position = new Position(rangeStart.line, rangeStart.character + lastChange.text.length);
+        let nextCharacter = document.getText(new vscode.Range(position, document.positionAt(document.offsetAt(position) + 1)));
+        if (!changeValid(lastChange.rangeLength, lastCharacter, nextCharacter)) {
+            return;
+        }
         timeout = setTimeout(() => {
-            let position = new Position(rangeStart.line, rangeStart.character + lastChange.text.length);
             tagProvider(document, position).then(text => {
                 if (text && isEnabled) {
                     let activeEditor = window.activeTextEditor;
