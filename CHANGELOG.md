@@ -1,3 +1,8 @@
+### 0.20.5
+
+- fix: `.value` auto-complete corner case
+- feat: enabled `.value` auto-complete in .ts
+
 ### 0.20.4
 
 - feat: auto close tag delay 0ms -> 100ms
