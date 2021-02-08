@@ -55,9 +55,10 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		},
 	};
 	const serverInitOptions: ServerInitializationOptions = {
-		appRoot: vscode.env.appRoot,
 		mode: mode,
-	}
+		appRoot: vscode.env.appRoot,
+		language: vscode.env.language,
+	};
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector: fileOnly ?
 			[

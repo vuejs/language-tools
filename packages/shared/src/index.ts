@@ -3,8 +3,10 @@ export * from './requests';
 export * from './types';
 
 import * as path from 'upath';
+import * as fs from 'fs';
 import type { Range, TextDocument } from 'vscode-languageserver/node';
 import { promisify } from 'util';
+import { MapLike } from 'typescript';
 
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
@@ -65,4 +67,10 @@ export function getWordRange(wordPattern: RegExp, range: Range, document: TextDo
 export function loadVscodeTypescript(appRoot: string): typeof import('typescript') {
     const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript');
     return require(path.toUnix(tsPath));
+}
+export function loadVscodeTypescriptLocalized(appRoot: string, lang: string): MapLike<string> | undefined {
+    const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript', 'lib', lang, 'diagnosticMessages.generated.json');
+    if (fs.existsSync(tsPath)) {
+        return require(path.toUnix(tsPath));
+    }
 }

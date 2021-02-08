@@ -57,7 +57,7 @@ import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { codeLensOptions } from '@volar/vscode-vue-languageservice';
-import { loadVscodeTypescript } from '@volar/shared';
+import { loadVscodeTypescript, loadVscodeTypescriptLocalized } from '@volar/shared';
 
 const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 
@@ -84,6 +84,7 @@ const both: TextDocumentRegistrationOptions = {
 };
 let mode: 'api' | 'doc' | 'html' = 'api';
 let appRoot: string;
+let language: string;
 
 async function updateConfigs() {
 	const [
@@ -105,6 +106,7 @@ function onInitialize(params: InitializeParams) {
 
 	mode = options.mode;
 	appRoot = options.appRoot;
+	language = options.language;
 
 	if (mode === 'html') {
 		initLanguageServiceHtml();
@@ -155,7 +157,7 @@ async function onInitialized() {
 }
 function initLanguageServiceApi(rootPath: string) {
 
-	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), connection, documents, rootPath);
+	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), loadVscodeTypescriptLocalized(appRoot, language), connection, documents, rootPath);
 	hosts.push(host);
 
 	// custom requests
@@ -339,7 +341,7 @@ function initLanguageServiceApi(rootPath: string) {
 }
 function initLanguageServiceDoc(rootPath: string) {
 
-	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), connection, documents, rootPath, async (uri: string) => {
+	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), loadVscodeTypescriptLocalized(appRoot, language), connection, documents, rootPath, async (uri: string) => {
 		return await connection.sendRequest(DocumentVersionRequest.type, { uri });
 	}, async () => {
 		await connection.sendNotification(SemanticTokensChangedNotification.type);

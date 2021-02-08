@@ -8,6 +8,7 @@ import type { TextDocuments } from 'vscode-languageserver/node';
 
 export function createLanguageServiceHost(
 	ts: typeof import('typescript'),
+	tsLocalized: ts.MapLike<string> | undefined,
 	connection: Connection,
 	documents: TextDocuments<TextDocument>,
 	rootPath: string,
@@ -339,6 +340,10 @@ export function createLanguageServiceHost(
 				getScriptVersion,
 				getScriptSnapshot,
 			};
+
+			if (tsLocalized) {
+				host.getLocalizedDiagnosticMessages = () => tsLocalized;
+			}
 
 			return host;
 
