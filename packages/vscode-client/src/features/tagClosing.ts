@@ -27,7 +27,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
             typescriptreact: true,
         },
         'volar.autoCompleteRefs',
-        (_, lastCharacter, nextCharacter) => lastCharacter !== '>' && lastCharacter !== '/' && !nextCharacter.trim(),
+        (_, lastCharacter, nextCharacter) => /\w/.test(lastCharacter) && !/\w/.test(nextCharacter),
     ));
 }
 
