@@ -73,10 +73,15 @@ export function htmlToPug(html: string) {
 			for (const att in element.attribs) {
 				if (att === 'class') {
 					const val = element.attribs[att];
-					const classes = val.split(' ');
-					for (const _class of classes) {
-						if (!_class.trim()) continue;
-						code += `.${_class}`;
+					if (!val.match(/[^\w-_ ]/)) {
+						const classes = val.split(' ');
+						for (const _class of classes) {
+							if (!_class.trim()) continue;
+							code += `.${_class}`;
+						}
+					}
+					else {
+						atts.push(`${att}="${val}"`);
 					}
 				}
 			}

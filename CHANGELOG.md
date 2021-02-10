@@ -2,6 +2,7 @@
 
 - fix: `.value` auto-complete should not occur at definition
 - fix: multi-line pug attribute not working
+- fix: pug-html convert tool should not convert to pug class literal if exist illegal characters
 
 ### 0.20.7
 
