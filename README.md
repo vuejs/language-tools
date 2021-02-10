@@ -12,9 +12,9 @@ If you have question, you can open a issue, or ask me in [Discord](https://disco
 
 ## Quick Start
 
-Some templates that can used with Volar. (let me know if we have others)
+Some templates that can used with Volar. (let me know if any others)
 
-Vite: [Vitesse](https://github.com/antfu/vitesse)
+[Vitesse](https://github.com/antfu/vitesse), [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts)
 
 ## Using
 
