@@ -4,7 +4,7 @@
 	"displayName": "Vue 3",
 	"description": "Language support for Vue 3",
 	"icon": "images/icon.png",
-	"version": "0.20.6",
+	"version": "0.20.7",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
