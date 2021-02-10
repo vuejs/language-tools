@@ -125,9 +125,13 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
         if (typeof attr.val !== 'boolean') {
             codeGen.addText('=');
             const escapeLength = attr.mustEscape ? `${attr.name}=`.length : 0;
+            let val = attr.val;
+            if (val.startsWith('`') && val.endsWith('`')) {
+                val = `"${val.substr(1, val.length - 2)}"`;
+            }
             codeGen.addCode(
-                attr.val,
-                getPugStartEnd(attr.line, attr.column, attr.val.length, escapeLength),
+                val,
+                getPugStartEnd(attr.line, attr.column, val.length, escapeLength),
                 MapedMode.Offset,
                 undefined
             );

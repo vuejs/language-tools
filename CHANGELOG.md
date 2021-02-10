@@ -1,6 +1,7 @@
 ### 0.20.8
 
 - fix: `.value` auto-complete should not occur at definition
+- fix: multi-line pug attribute not working
 
 ### 0.20.7
 
