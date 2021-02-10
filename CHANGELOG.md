@@ -1,3 +1,9 @@
+### 0.20.6
+
+- 🎉 feat: better pug support (https://github.com/johnsoncodehk/volar/projects/1#card-50201163)
+- feat: improve html -> pug convert
+- fix: `.value` auto-complete not working if typing inside `()`
+
 ### 0.20.5
 
 - fix: `.value` auto-complete corner case
