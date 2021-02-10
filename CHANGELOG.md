@@ -1,3 +1,7 @@
+### 0.20.7
+
+- fix: inline css service broke in pug
+
 ### 0.20.6
 
 - 🎉 feat: better pug support (https://github.com/johnsoncodehk/volar/projects/1#card-50201163)

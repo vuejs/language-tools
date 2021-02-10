@@ -99,8 +99,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             undefined,
         );
         writeClassesOrStyles(node.attrs, 'class');
-        writeClassesOrStyles(node.attrs, 'style');
-        for (const attr of node.attrs.filter(attr => attr.name !== 'class' && attr.name !== 'style')) {
+        for (const attr of node.attrs.filter(attr => attr.name !== 'class')) {
             writeAttr(attr);
         }
         if (selfClosing) {
