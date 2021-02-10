@@ -1,3 +1,7 @@
+### 0.20.8
+
+- fix: `.value` auto-complete should not occur at definition
+
 ### 0.20.7
 
 - fix: inline css service broke in pug
