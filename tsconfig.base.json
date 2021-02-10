@@ -8,10 +8,9 @@
 		"composite": true,
 		"declaration": true,
 		"strict": true,
-		"noUnusedLocals": true,
-		"baseUrl": ".",
+		"baseUrl": "./",
 		"paths": {
-			"@volar/*": ["*/src"]
+			"@volar/*": ["packages/*/src"]
 		},
 	},
 }

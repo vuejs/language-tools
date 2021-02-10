@@ -3,7 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import { TextEdit } from 'vscode-languageserver/node';
 import { Range } from 'vscode-languageserver/node';
-import { htmlToPug } from '@volar/pug';
+import { htmlToPug } from '@volar/html2pug';
 
 export function execute(document: TextDocument, sourceFile: SourceFile, connection: Connection) {
 	const desc = sourceFile.getDescriptor();

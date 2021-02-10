@@ -1,5 +1,6 @@
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
-import { MapedMode, createScriptGenerator } from '../utils/sourceMaps';
+import { MapedMode, TsMappingData } from '../utils/sourceMaps';
+import { createScriptGenerator } from '@volar/source-map';
 import * as templateGen from './template';
 
 export function generate(
@@ -16,7 +17,7 @@ export function generate(
 
     if (!scriptSetup) return;
 
-    const gen = createScriptGenerator();
+    const gen = createScriptGenerator<TsMappingData>();
 
     writeScript();
     writeScriptSetup();

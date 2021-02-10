@@ -1,12 +1,10 @@
 import {
 	Diagnostic,
 	DiagnosticSeverity,
-	Position,
 	CompletionItem,
 	DiagnosticTag,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createHtmlPugMapper, pugToHtml } from '@volar/pug';
 import { uriToFsPath, notEmpty } from '@volar/shared';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -54,43 +52,27 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		setupReturns: [],
 		htmlElements: [],
 	});
-	const pugData = computed(() => {
-		if (descriptor.template?.lang === 'pug') {
-			try {
-				const html = pugToHtml(descriptor.template.content);
-				const mapper = createHtmlPugMapper(descriptor.template.content, html);
-				return {
-					html,
-					mapper,
-				};
-			}
-			catch (err) {
-				const line: number = err.line - 1;
-				const column: number = err.column - 1;
-				const diagnostic: Diagnostic = {
-					range: {
-						start: Position.create(line, column),
-						end: Position.create(line, column),
-					},
-					severity: DiagnosticSeverity.Error,
-					code: err.code,
-					source: 'pug',
-					message: err.msg,
-				};
-				return {
-					error: diagnostic
-				};
-			}
-		}
+	const vueHtmlDocument = computed(() => {
+		return languageServices.html.parseHTMLDocument(vueDoc.value);
 	});
+
+	// virtual scripts
+	const _virtualStyles = useStylesRaw(ts, tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles));
+	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template));
 	const templateData = computed<undefined | {
 		html?: string,
 		htmlToTemplate?: (start: number, end: number) => number | undefined,
 	}>(() => {
-		if (pugData.value) {
+		if (virtualTemplateRaw.pugDocument.value) {
+			const pugDoc = virtualTemplateRaw.pugDocument.value;
 			return {
-				html: pugData.value.html,
-				htmlToTemplate: pugData.value.mapper,
+				html: pugDoc.html,
+				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
+					const pugMaped = pugDoc.sourceMap.targetToSource2({ start: htmlStart, end: htmlEnd });
+					if (pugMaped) {
+						return pugMaped.range.start;
+					}
+				},
 			}
 		}
 		if (descriptor.template) {
@@ -99,13 +81,6 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 			}
 		}
 	});
-	const vueHtmlDocument = computed(() => {
-		return languageServices.html.parseHTMLDocument(vueDoc.value);
-	});
-
-	// virtual scripts
-	const _virtualStyles = useStylesRaw(ts, tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles));
-	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), templateData);
 	const virtualTemplateGen = useTemplateScript(
 		untrack(() => vueDoc.value),
 		computed(() => descriptor.template),
@@ -503,43 +478,71 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 		function useTemplateValidation(ignore: Ref<boolean | undefined>) {
 			const htmlErrors = computed(() => {
-				if (virtualTemplateRaw.textDocument.value?.languageId === 'html') {
+				if (virtualTemplateRaw.textDocument.value && virtualTemplateRaw.htmlDocument.value) {
 					return getVueCompileErrors(virtualTemplateRaw.textDocument.value);
 				}
 				return [];
 			});
 			const pugErrors = computed(() => {
 				const result: Diagnostic[] = [];
-				if (pugData.value?.error) {
-					result.push(pugData.value.error);
-				}
-				if (pugData.value?.html && virtualTemplateRaw.textDocument.value) {
-					const htmlDoc = TextDocument.create('', 'html', 0, pugData.value.html);
-					const vueCompileErrors = getVueCompileErrors(htmlDoc);
-					const pugDocRange = {
-						start: virtualTemplateRaw.textDocument.value.positionAt(0),
-						end: virtualTemplateRaw.textDocument.value.positionAt(virtualTemplateRaw.textDocument.value.getText().length),
-					};
-					const mapper = pugData.value.mapper;
-					for (const vueCompileError of vueCompileErrors) {
-						const htmlRange = {
-							start: htmlDoc.offsetAt(vueCompileError.range.start),
-							end: htmlDoc.offsetAt(vueCompileError.range.end),
-						};
-						const pugOffset = mapper(htmlRange.start, htmlRange.end);
-						if (pugOffset !== undefined) {
-							vueCompileError.range = {
-								start: virtualTemplateRaw.textDocument.value.positionAt(pugOffset),
-								end: virtualTemplateRaw.textDocument.value.positionAt(pugOffset + htmlRange.end - htmlRange.start),
-							};
-							result.push(vueCompileError);
-						}
-						else {
-							let errorText = htmlDoc.getText(vueCompileError.range);
-							errorText = prettyhtml(errorText).contents;
-							vueCompileError.range = pugDocRange;
-							vueCompileError.message += '\n```html\n' + errorText + '```';
-							result.push(vueCompileError);
+				if (virtualTemplateRaw.textDocument.value && virtualTemplateRaw.pugDocument.value) {
+					const pugDoc = virtualTemplateRaw.pugDocument.value;
+					const astError = pugDoc.error;
+					if (astError) {
+						result.push({
+							code: astError.code,
+							message: astError.msg,
+							range: {
+								start: { line: astError.line, character: astError.column },
+								end: { line: astError.line, character: astError.column },
+							},
+						});
+					}
+					else {
+						const htmlDoc = pugDoc.sourceMap.targetDocument;
+						const vueCompileErrors = getVueCompileErrors(htmlDoc);
+						for (const vueCompileError of vueCompileErrors) {
+							let pugRange = pugDoc.sourceMap.targetToSource(vueCompileError.range)?.range;
+							if (!pugRange) {
+								const pugStart = pugDoc.sourceMap.targetToSource({ start: vueCompileError.range.start, end: vueCompileError.range.start })?.range.start;
+								const pugEnd = pugDoc.sourceMap.targetToSource({ start: vueCompileError.range.end, end: vueCompileError.range.end })?.range.end;
+								if (pugStart && pugEnd) {
+									pugRange = {
+										start: pugStart,
+										end: pugEnd,
+									};
+									// trim empty space
+									const pugText = pugDoc.sourceMap.sourceDocument.getText(pugRange);
+									const trimLength = pugText.length - pugText.trimEnd().length;
+									if (trimLength) {
+										pugRange.end = pugDoc.sourceMap.sourceDocument.positionAt(
+											pugDoc.sourceMap.sourceDocument.offsetAt(pugEnd)
+											- trimLength
+										);
+									}
+								}
+							}
+
+							if (pugRange) {
+								vueCompileError.range = pugRange;
+								result.push(vueCompileError);
+							}
+							else {
+								let htmlText = htmlDoc.getText(vueCompileError.range);
+								let errorText = '';
+								try {
+									errorText += '\n```html\n' + prettyhtml(htmlText).contents.trim() + '\n```'; // may thorw
+								} catch (error) {
+									errorText += '\n```html\n' + htmlText.trim() + '\n```'; // may thorw
+									errorText += '\n```json\n' + JSON.stringify(error, null, 2) + '\n```';
+								}
+								vueCompileError.message += errorText;
+								vueCompileError.range = {
+									start: virtualTemplateRaw.textDocument.value.positionAt(0),
+									end: virtualTemplateRaw.textDocument.value.positionAt(virtualTemplateRaw.textDocument.value.getText().length),
+								};
+								result.push(vueCompileError);
+							}
 						}
 					}
 				}
@@ -789,12 +792,12 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 							start: error.range.start,
 							end: error.range.start,
 						});
+						if (!vueLocStart || !vueLocStart.data.capabilities.diagnostic)
+							continue;
 						const vueLocEnd = sourceMap.targetToSource({
 							start: error.range.end,
 							end: error.range.end,
 						});
-						if (!vueLocStart || !vueLocStart.data.capabilities.diagnostic)
-							continue;
 						if (!vueLocEnd || !vueLocEnd.data.capabilities.diagnostic)
 							continue;
 						result.push({

@@ -1,4 +1,5 @@
-import { MapedMode, TsMappingData, MapedRange, createScriptGenerator, Mapping } from '../utils/sourceMaps';
+import { MapedMode, TsMappingData, MapedRange, Mapping } from '../utils/sourceMaps';
+import { createScriptGenerator } from '@volar/source-map';
 import { camelize, hyphenate } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
 import { NodeTypes, transformOn } from '@vue/compiler-dom';
@@ -40,8 +41,8 @@ export function generate(
 			formapMappings: [],
 		};
 	}
-	const scriptGen = createScriptGenerator();
-	const formatGen = createScriptGenerator();
+	const scriptGen = createScriptGenerator<TsMappingData>();
+	const formatGen = createScriptGenerator<TsMappingData>();
 	const inlineCssGen = createScriptGenerator<undefined>();
 	const tags = new Set<string>();
 	const slots = new Map<string, {
@@ -110,8 +111,7 @@ export function generate(
 				writeImportSlots(node, parents);
 				writeVshow(node);
 				writeElReferences(node); // <el ref="foo" />
-				writeProps(node, false);
-				writeProps(node, true);
+				writeProps(node);
 				writeClassScopeds(node);
 				writeOns(node);
 				writeOptionReferences(node);
@@ -535,13 +535,10 @@ export function generate(
 			}
 		}
 	}
-	function writeProps(node: ElementNode, forDuplicateClassOrStyleAttr: boolean) {
+	function writeProps(node: ElementNode) {
 		const varName = `__VLS_${elementIndex++}`;
-		let wrap = false;
 
-		if (!forDuplicateClassOrStyleAttr) {
-			addStartWrap();
-		}
+		addStartWrap();
 
 		for (const prop of node.props) {
 			if (
@@ -550,15 +547,15 @@ export function generate(
 				&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 				&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
-				if (forDuplicateClassOrStyleAttr) continue;
-
-				if (!wrap) {
-					addStartWrap();
-				}
 
 				const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
 				const propValue = prop.exp?.content ?? 'undefined';
 				const propName2 = prop.arg.content;
+				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
+
+				if (isClassOrStyleAttr) {
+					scriptGen.addText(`// @ts-ignore\n`);
+				}
 
 				if (prop.name === 'bind' || prop.name === 'model') {
 					// camelize name
@@ -654,10 +651,8 @@ export function generate(
 				const propName2 = prop.name;
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
 
-				if (isClassOrStyleAttr !== forDuplicateClassOrStyleAttr) continue;
-
-				if (!wrap) {
-					addStartWrap();
+				if (isClassOrStyleAttr) {
+					scriptGen.addText(`// @ts-ignore\n`);
 				}
 
 				// camelize name
@@ -713,73 +708,59 @@ export function generate(
 			}
 		}
 
-		if (wrap) {
-			addEndWrap();
-		}
+		addEndWrap();
 
 		function addStartWrap() {
-			wrap = true;
-			if (!forDuplicateClassOrStyleAttr) {
-				{ // start tag
-					scriptGen.addText(`__VLS_components`);
-					writePropertyAccess(
-						getComponentName(node.tag),
-						{
-							start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-							end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.htmlTagOrAttr,
-							doRename: keepHyphenateName,
-						},
-					);
-					scriptGen.addText(`;\n`);
-				}
-				if (!node.isSelfClosing && !htmlToTemplate) { // end tag
-					scriptGen.addText(`__VLS_components`);
-					writePropertyAccess(
-						getComponentName(node.tag),
-						{
-							start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
-							end: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.htmlTagOrAttr,
-							doRename: keepHyphenateName,
-						},
-					);
-					scriptGen.addText(`;\n`);
-				}
-
-				scriptGen.addText(`const `);
-				writeCode(
-					varName,
+			{ // start tag
+				scriptGen.addText(`__VLS_components`);
+				writePropertyAccess(
+					getComponentName(node.tag),
 					{
 						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
 						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 					},
-					MapedMode.Gate,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.diagnosticOnly,
+						capabilities: capabilitiesSet.htmlTagOrAttr,
+						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(`: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+				scriptGen.addText(`;\n`);
 			}
-			else {
-				scriptGen.addText(`// @ts-ignore\n`);
-				scriptGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+			if (!node.isSelfClosing && !htmlToTemplate) { // end tag
+				scriptGen.addText(`__VLS_components`);
+				writePropertyAccess(
+					getComponentName(node.tag),
+					{
+						start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
+						end: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
+					},
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.htmlTagOrAttr,
+						doRename: keepHyphenateName,
+					},
+				);
+				scriptGen.addText(`;\n`);
 			}
+
+			scriptGen.addText(`const `);
+			writeCode(
+				varName,
+				{
+					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+				},
+				MapedMode.Gate,
+				{
+					vueTag: 'template',
+					capabilities: capabilitiesSet.diagnosticOnly,
+				},
+			);
+			scriptGen.addText(`: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
 		}
 		function addEndWrap() {
-			if (!forDuplicateClassOrStyleAttr) {
-				scriptGen.addText(`}; ${varName};\n`);
-			}
-			else {
-				scriptGen.addText(`};\n`);
-			}
+			scriptGen.addText(`}; ${varName};\n`);
 		}
 	}
 	function writeClassScopeds(node: ElementNode) {

@@ -3,7 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import { TextEdit } from 'vscode-languageserver/node';
 import { Range } from 'vscode-languageserver/node';
-import { pugToHtml } from '@volar/pug';
+import { pugToHtml } from '@volar/html2pug';
 
 export function execute(document: TextDocument, sourceFile: SourceFile, connection: Connection) {
 	const desc = sourceFile.getDescriptor();
@@ -11,7 +11,7 @@ export function execute(document: TextDocument, sourceFile: SourceFile, connecti
 	const lang = desc.template.lang;
 	if (lang !== 'pug') return;
 
-	let html = pugToHtml(desc.template.content);
+	const html = pugToHtml(desc.template.content);
 	const newTemplate = `<template>\n` + html;
 
 	let start = desc.template.loc.start - '<template>'.length;

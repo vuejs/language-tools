@@ -42,9 +42,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: SelectionRange[] = [];
 			for (const range of ranges) {
-				for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+				for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 					for (const htmlLoc of sourceMap.sourceToTargets(range)) {
-						const selectRanges = languageServices.html.getSelectionRanges(sourceMap.targetDocument, [htmlLoc.range.start]);
+						const selectRanges = sourceMap.language === 'html'
+							? languageServices.html.getSelectionRanges(sourceMap.targetDocument, [htmlLoc.range.start])
+							: languageServices.pug.getSelectionRanges(sourceMap.pugDocument, [htmlLoc.range.start])
 						for (const selectRange of selectRanges) {
 							const vueLoc = sourceMap.targetToSource(selectRange.range);
 							if (vueLoc) {

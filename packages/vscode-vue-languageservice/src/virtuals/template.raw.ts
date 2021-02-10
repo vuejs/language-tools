@@ -8,10 +8,6 @@ import * as languageServices from '../utils/languageServices';
 export function useTemplateRaw(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
-	templateData: Ref<{
-		html?: string,
-		htmlToTemplate?: (start: number, end: number) => number | undefined,
-	} | undefined>,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
@@ -24,14 +20,18 @@ export function useTemplateRaw(
 			return document;
 		}
 	});
+	const htmlDocument = computed(() => {
+		if (textDocument.value?.languageId === 'html') {
+			return languageServices.html.parseHTMLDocument(textDocument.value);
+		}
+	});
 	const htmlSourceMap = computed(() => {
-		if (textDocument.value?.languageId === 'html' && textDocument.value && template.value) {
+		if (textDocument.value && textDocument.value && template.value && htmlDocument.value) {
 			const vueDoc = getUnreactiveDoc();
-			const htmlDocument = languageServices.html.parseHTMLDocument(textDocument.value);
 			const sourceMap = new HtmlSourceMap(
 				vueDoc,
 				textDocument.value,
-				htmlDocument,
+				htmlDocument.value,
 			);
 			sourceMap.add({
 				data: undefined,
@@ -48,14 +48,18 @@ export function useTemplateRaw(
 			return sourceMap;
 		}
 	});
+	const pugDocument = computed(() => {
+		if (textDocument.value?.languageId === 'jade') {
+			return languageServices.pug.parsePugDocument(textDocument.value);
+		}
+	});
 	const pugSourceMap = computed(() => {
-		if (textDocument.value?.languageId === 'jade' && template.value && templateData.value && templateData.value.htmlToTemplate) {
+		if (textDocument.value && template.value && pugDocument.value) {
 			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new PugSourceMap(
 				vueDoc,
 				textDocument.value,
-				templateData.value.html,
-				templateData.value.htmlToTemplate,
+				pugDocument.value,
 			);
 			sourceMap.add({
 				data: undefined,
@@ -76,5 +80,7 @@ export function useTemplateRaw(
 		textDocument,
 		htmlSourceMap,
 		pugSourceMap,
+		htmlDocument,
+		pugDocument,
 	};
 }

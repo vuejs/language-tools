@@ -1,6 +1,7 @@
 import type { Ast as ScriptAst } from '../parsers/scriptAst';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
-import { MapedMode, Mapping, TeleportMappingData, createScriptGenerator } from '../utils/sourceMaps';
+import { MapedMode, Mapping, TeleportMappingData, TsMappingData } from '../utils/sourceMaps';
+import { createScriptGenerator } from '@volar/source-map';
 import { SearchTexts } from '../utils/string';
 import { replaceToComment } from '../utils/string';
 
@@ -16,7 +17,7 @@ export function generate(
     scriptSetupAst: ScriptSetupAst | undefined,
 ) {
 
-    const gen = createScriptGenerator();
+    const gen = createScriptGenerator<TsMappingData>();
     const teleports: Mapping<TeleportMappingData>[] = [];
 
     writeScriptSrc();

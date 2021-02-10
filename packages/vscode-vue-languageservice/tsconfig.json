@@ -1,5 +1,5 @@
 {
-	"extends": "../tsconfig.base.json",
+	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"outDir": "out",
 		"rootDir": "src",
@@ -16,7 +16,13 @@
 			"path": "../shared"
 		},
 		{
-			"path": "../pug"
+			"path": "../html2pug"
+		},
+		{
+			"path": "../source-map"
+		},
+		{
+			"path": "../vscode-pug-languageservice"
 		},
 		{
 			"path": "../vscode-typescript-languageservice"

@@ -2,7 +2,7 @@ import type { TsApiRegisterOptions } from '../types';
 import { CancellationToken, Range, ResultProgressReporter, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensPartialResult } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import { MapedMode } from '../utils/sourceMaps';
+import { MapedMode, Mapping, SourceMap } from '../utils/sourceMaps';
 import { hyphenate } from '@vue/shared';
 import * as languageServices from '../utils/languageServices';
 import * as html from 'vscode-html-languageservice';
@@ -29,10 +29,14 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	return (document: TextDocument, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const offsetRange = range ? {
-			start: document.offsetAt(range.start),
-			end: document.offsetAt(range.end),
-		} : undefined;
+		const offsetRange = range ?
+			{
+				start: document.offsetAt(range.start),
+				end: document.offsetAt(range.end),
+			} : {
+				start: 0,
+				end: document.getText().length,
+			};
 		const templateScriptData = sourceFile.getTemplateScriptData();
 		const components = new Set([
 			...templateScriptData.components,
@@ -47,13 +51,6 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const htmlResult = getHtmlResult(sourceFile);
 		if (htmlResult.length) {
 			tokens = tokens.concat(htmlResult);
-			resultProgress?.report(buildTokens(tokens));
-		}
-
-		if (cancle?.isCancellationRequested) return;
-		const pugResult = getPugResult(sourceFile);
-		if (pugResult.length) {
-			tokens = tokens.concat(pugResult);
 			resultProgress?.report(buildTokens(tokens));
 		}
 
@@ -146,80 +143,48 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const maped of sourceMap) {
-					if (maped.mode !== MapedMode.Offset)
-						continue;
-					if (offsetRange && maped.sourceRange.end < offsetRange.start)
-						continue;
-					if (offsetRange && maped.sourceRange.start > offsetRange.end)
-						continue;
-					const docText = sourceMap.targetDocument.getText();
-					const scanner = languageServices.html.createScanner(docText, maped.targetRange.start);
-					let token = scanner.scan();
-					while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= maped.targetRange.end) {
+			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+
+				let start = offsetRange.start;
+				let end = offsetRange.end;
+
+				for (const mapping of sourceMap) {
+					const _start = mapping.sourceRange.start;
+					const _end = mapping.sourceRange.end;
+					if (_start >= offsetRange.start && _start < start) {
+						start = _start;
+					}
+					if (_end <= offsetRange.end && _end > end) {
+						end = _end;
+					}
+				}
+
+				const docText = sourceMap.targetDocument.getText();
+				const scanner = sourceMap.language === 'html'
+					? languageServices.html.createScanner(docText, start)
+					: languageServices.pug.createScanner(sourceMap.pugDocument, start)
+				if (!scanner) continue;
+
+				let token = scanner.scan();
+				while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= end) {
+					if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
 						const tokenOffset = scanner.getTokenOffset();
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(tokenOffset, tokenLength);
-						const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
-						if (isComponentToken(token, tokenText)) {
-							const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-							result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
+						if (components.has(tokenText)) {
+							const vueMaped = sourceMap.targetToSource2({ start: tokenOffset, end: tokenOffset });
+							if (vueMaped) {
+								const vueOffset = vueMaped.range.start;
+								const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
+								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
+							}
 						}
-						token = scanner.scan();
 					}
+					token = scanner.scan();
 				}
 			}
 
 			return result;
-		}
-		function getPugResult(sourceFile: SourceFile) {
-			const result: TokenData[] = [];
-
-			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				if (sourceMap.html === undefined)
-					continue;
-				for (const maped of sourceMap) {
-					if (maped.mode !== MapedMode.Offset)
-						continue;
-					if (offsetRange && maped.sourceRange.end < offsetRange.start)
-						continue;
-					if (offsetRange && maped.sourceRange.start > offsetRange.end)
-						continue;
-					const docText = sourceMap.html;
-					const scanner = languageServices.html.createScanner(docText, 0);
-					let token = scanner.scan();
-					while (token !== html.TokenType.EOS) {
-						const htmlOffset = scanner.getTokenOffset();
-						const tokenLength = scanner.getTokenLength();
-						const tokenText = docText.substr(htmlOffset, tokenLength);
-						if (isComponentToken(token, tokenText)) {
-							const vuePos = getTokenPosition(htmlOffset, tokenText);
-							if (vuePos) result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
-						}
-						token = scanner.scan();
-					}
-
-					function getTokenPosition(htmlOffset: number, tokenText: string) {
-						const tokenOffset = sourceMap.mapper?.(htmlOffset, htmlOffset + tokenText.length);
-						if (tokenOffset !== undefined) {
-							const vueOffset = tokenOffset - maped.targetRange.start + maped.sourceRange.start;
-							const vuePos = document.positionAt(vueOffset);
-							return vuePos;
-						}
-					}
-				}
-			}
-
-			return result;
-		}
-		function isComponentToken(token: html.TokenType, tokenText: string) {
-			if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
-				if (components.has(tokenText)) {
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 }

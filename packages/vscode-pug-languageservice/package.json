@@ -1,0 +1,14 @@
+{
+	"name": "@volar/vscode-pug-languageservice",
+	"version": "1.0.0",
+	"main": "out/index.js",
+	"devDependencies": {
+		"@types/pug": "latest",
+		"vscode-html-languageservice": "latest"
+	},
+	"dependencies": {
+		"vscode-languageserver": "latest",
+		"pug-lexer": "latest",
+		"pug-parser": "latest"
+	}
+}

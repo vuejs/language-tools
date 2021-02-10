@@ -143,8 +143,10 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentLink[] = [];
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const links = languageServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext);
+			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+				const links = sourceMap.language === 'html'
+					? languageServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext)
+					: languageServices.pug.findDocumentLinks(sourceMap.pugDocument, documentContext)
 				for (const link of links) {
 					const vueLoc = sourceMap.targetToSource(link.range);
 					if (vueLoc) {

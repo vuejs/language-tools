@@ -62,11 +62,16 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// vue -> html
 		for (const htmlMaped of mapper.html.to(uri, { start: position, end: position })) {
-			const htmlHover = htmlMaped.languageService.doHover(
-				htmlMaped.textDocument,
-				htmlMaped.range.start,
-				htmlMaped.htmlDocument,
-			);
+			const htmlHover = htmlMaped.language === 'html'
+				? htmlMaped.languageService.doHover(
+					htmlMaped.textDocument,
+					htmlMaped.range.start,
+					htmlMaped.htmlDocument,
+				)
+				: htmlMaped.languageService.doHover(
+					htmlMaped.pugDocument,
+					htmlMaped.range.start,
+				)
 			if (!htmlHover)
 				continue;
 			if (!htmlHover.range) {

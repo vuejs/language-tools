@@ -3,7 +3,8 @@ import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import { IDescriptor, ITemplateScriptData } from '../types';
 import * as upath from 'upath';
-import { MapedMode, TsSourceMap, Mapping, CssSourceMap, createScriptGenerator, TeleportMappingData, TeleportSourceMap } from '../utils/sourceMaps';
+import { MapedMode, TsSourceMap, Mapping, CssSourceMap, TeleportMappingData, TeleportSourceMap, TsMappingData } from '../utils/sourceMaps';
+import { createScriptGenerator } from '@volar/source-map';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
 import { hyphenate } from '@vue/shared';
@@ -52,7 +53,7 @@ export function useTemplateScript(
 		if (!interpolations.value)
 			return;
 
-		const gen = createScriptGenerator();
+		const gen = createScriptGenerator<TsMappingData>();
 
 		gen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
 		gen.addText(`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);

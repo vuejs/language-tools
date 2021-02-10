@@ -2,7 +2,6 @@ import * as pug from 'pug';
 import * as htmlparser2 from 'htmlparser2';
 import { Node, DataNode, Element } from 'domhandler';
 import { ElementType } from 'domelementtype';
-import * as prettyhtml from '@starptech/prettyhtml';
 
 const tabSize = 2;
 const useTabs = false;
@@ -12,37 +11,14 @@ export function pugToHtml(pugCode: string) {
 	let htmlCode = pug.compile(pugCode, { doctype: 'html' })();
 	htmlCode = htmlCode.replace(/\-\-\>/g, " -->");
 
-	// TODO
+	// TODO: use [Unescaped Attributes](https://pugjs.org/language/attributes.html#unescaped-attributes)
 	htmlCode = htmlCode
 		.replace(/&gt;/g, `>`)
 		.replace(/&lt;/g, `<`)
 		.replace(/&amp;/g, `&`)
 		.replace(/&quot;/g, `"`)
 
-	// make html pug mapping correct, let pug mutli-line interpolations work.
-	htmlCode = prettyhtml(htmlCode, { tabWidth: tabSize, useTabs: useTabs }).contents;
-	const mapper = createHtmlPugMapper(pugCode, htmlCode);
-	const htmlLines = htmlCode.split('\n');
-	let htmlOffset = 0;
-	let newHtmlCode = '';
-	for (const htmlLine of htmlLines) {
-		const htmlLineTrimed = htmlLine.trimStart();
-		htmlOffset += htmlLine.length - htmlLineTrimed.length;
-		const pugOffset = mapper(htmlOffset, htmlOffset + htmlLineTrimed.length)
-		htmlOffset += htmlLineTrimed.length + 1; // +1 is \n
-		if (pugOffset) {
-			let pugTrimed = '';
-			for (let i = pugOffset - 1; i >= 0 && ['\t', ' '].includes(pugCode[i]); i--) {
-				pugTrimed = pugCode[i] + pugTrimed;
-			}
-			newHtmlCode += pugTrimed + htmlLineTrimed + '\n';
-		}
-		else {
-			newHtmlCode += htmlLine + '\n';
-		}
-	}
-
-	return newHtmlCode.trim();
+	return htmlCode.trim();
 }
 export function htmlToPug(html: string) {
 	let nodes = htmlparser2.parseDOM(html, {
@@ -86,23 +62,44 @@ export function htmlToPug(html: string) {
 		}
 		else if (node.type === ElementType.Tag) {
 			const element = node as Element;
-			let code = element.name;
+			let code = element.name !== 'div' ? element.name : '';
 			const atts: string[] = [];
 			for (const att in element.attribs) {
-				let val = element.attribs[att];
-				if (val === '') {
-					atts.push(`${att}`);
-				}
-				else if (val.indexOf('\n') === -1) {
-					atts.push(`${att}="${val}"`);
-				}
-				else {
-					val = val.replace(/\`/g, '\\`');
-					atts.push(`${att}=\`${val}\``);
+				if (att === 'id') {
+					const val = element.attribs[att];
+					code += `#${val}`;
 				}
 			}
+			for (const att in element.attribs) {
+				if (att === 'class') {
+					const val = element.attribs[att];
+					const classes = val.split(' ');
+					for (const _class of classes) {
+						if (!_class.trim()) continue;
+						code += `.${_class}`;
+					}
+				}
+			}
+			for (const att in element.attribs) {
+				if (att !== 'id' && att !== 'class') {
+					let val = element.attribs[att];
+					if (val === '') {
+						atts.push(`${att}`);
+					}
+					else if (val.indexOf('\n') === -1) {
+						atts.push(`${att}="${val}"`);
+					}
+					else {
+						val = val.replace(/\`/g, '\\`');
+						atts.push(`${att}=\`${val}\``);
+					}
+				}
+			}
+			if (!code) {
+				code = 'div';
+			}
 			if (atts.length > 0) {
-				code += `(${atts.join(', ')})`;
+				code += `(${atts.join(' ')})`;
 			}
 			pug += '\n' + getIndent(indent) + code;
 			const childs = filterEmptyTextNodes(element.children);
@@ -151,60 +148,5 @@ export function htmlToPug(html: string) {
 		}
 
 		return newNodes;
-	}
-}
-export function createHtmlPugMapper(pug: string, html: string) {
-	const cache = new Map<string, { htmlOffsets: number[], pugOffset: number[] }>();
-	html = removeEndTags(html);
-
-	return searchPugOffset;
-
-	function removeEndTags(template: string) {
-		return template.replace(/\<\/[^\>]*\>/g, s => ' '.repeat(s.length));
-	}
-	function searchPugOffset(htmlStart: number, htmlEnd: number) {
-		const code = html.substring(htmlStart, htmlEnd);
-
-		if (!cache.has(code)) {
-			cache.set(code, {
-				htmlOffsets: getMatchOffsets(html, code),
-				pugOffset: getMatchOffsets(pug, code),
-			});
-		}
-		const { htmlOffsets, pugOffset } = cache.get(code)!;
-
-		if (htmlOffsets.length === pugOffset.length) {
-			const matchIndex = htmlOffsets.indexOf(htmlStart);
-			if (matchIndex >= 0) {
-				return pugOffset[matchIndex];
-			}
-		}
-	}
-	function toUnicode(theString: string) {
-		let unicodeString = '';
-		for (let i = 0; i < theString.length; i++) {
-			let theUnicode = theString.charCodeAt(i).toString(16).toUpperCase();
-			while (theUnicode.length < 4) {
-				theUnicode = '0' + theUnicode;
-			}
-			theUnicode = '\\u' + theUnicode;
-			unicodeString += theUnicode;
-		}
-		return unicodeString;
-	}
-	function getMatchOffsets(sourceString: string, regexPattern: string) {
-		if (regexPattern.length === 0) return [];
-
-		regexPattern = toUnicode(regexPattern);
-		let regexPatternWithGlobal = RegExp(regexPattern, 'gs')
-		return getMatchOffsetsRegExp(sourceString, regexPatternWithGlobal);
-	}
-	function getMatchOffsetsRegExp(sourceString: string, regex: RegExp) {
-		let output: number[] = []
-		let match: RegExpExecArray | null;
-		while (match = regex.exec(sourceString)) {
-			output.push(match.index);
-		}
-		return output
 	}
 }

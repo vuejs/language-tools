@@ -46,9 +46,14 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				for (const htmlLoc of sourceMap.sourceToTargets(range)) {
-					const highlights = languageServices.html.findDocumentHighlights(sourceMap.targetDocument, htmlLoc.range.start, sourceMap.htmlDocument);
+
+					const highlights = sourceMap.language === 'html'
+						? languageServices.html.findDocumentHighlights(sourceMap.targetDocument, htmlLoc.range.start, sourceMap.htmlDocument)
+						: languageServices.pug.findDocumentHighlights(sourceMap.pugDocument, htmlLoc.range.start)
+					if (!highlights) continue;
+
 					for (const highlight of highlights) {
 						const vueLoc = sourceMap.targetToSource(highlight.range);
 						if (vueLoc) {

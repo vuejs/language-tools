@@ -7,10 +7,12 @@ import type { TsSourceMap } from '../utils/sourceMaps';
 import type { LanguageService as TsLanguageService } from '@volar/vscode-typescript-languageservice';
 import type { LanguageService as CssLanguageService } from 'vscode-css-languageservice';
 import type { LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
+import type { LanguageService as PugLanguageService } from '@volar/vscode-pug-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
+import type { PugDocument } from '@volar/vscode-pug-languageservice';
 import type { SourceFile } from '../sourceFile';
-import { getCssLanguageService, html as htmlLs } from '../utils/languageServices';
+import * as languageServices from '../utils/languageServices';
 
 export function createMapper(
     sourceFiles: Map<string, SourceFile>,
@@ -48,7 +50,7 @@ export function createMapper(
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
-                        const cssLs = getCssLanguageService(sourceMap.targetDocument.languageId);
+                        const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
                         if (!cssLs) continue;
                         for (const cssMaped of sourceMap.sourceToTargets(vueRange)) {
                             result.push({
@@ -70,7 +72,7 @@ export function createMapper(
                     range: Range,
                 }[] = [];
                 for (const [_, sourceFile] of sourceFiles) {
-                    for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+                    for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
                         if (sourceMap.targetDocument.uri === htmlUri) {
                             for (const vueLoc of sourceMap.targetToSources(htmlRange)) {
                                 result.push({
@@ -84,24 +86,44 @@ export function createMapper(
                 return result;
             },
             to: (vueUri: string, vueRange: Range) => {
-                const result: {
+                const result: ({
+                    language: 'html',
                     textDocument: TextDocument,
                     htmlDocument: HTMLDocument,
                     range: Range,
                     languageService: HtmlLanguageService,
-                }[] = [];
+                } | {
+                    language: 'pug',
+                    textDocument: TextDocument,
+                    pugDocument: PugDocument,
+                    range: Range,
+                    languageService: PugLanguageService,
+                })[] = [];
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-                        const cssLs = getCssLanguageService(sourceMap.targetDocument.languageId);
+                        const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
                         if (!cssLs) continue;
                         for (const cssMaped of sourceMap.sourceToTargets(vueRange)) {
-                            sourceMap.htmlDocument
                             result.push({
+                                language: 'html',
                                 textDocument: sourceMap.targetDocument,
                                 htmlDocument: sourceMap.htmlDocument,
                                 range: cssMaped.range,
-                                languageService: htmlLs,
+                                languageService: languageServices.html,
+                            });
+                        }
+                    }
+                    for (const sourceMap of sourceFile.getPugSourceMaps()) {
+                        const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+                        if (!cssLs) continue;
+                        for (const cssMaped of sourceMap.sourceToTargets(vueRange)) {
+                            result.push({
+                                language: 'pug',
+                                textDocument: sourceMap.targetDocument,
+                                pugDocument: sourceMap.pugDocument,
+                                range: cssMaped.range,
+                                languageService: languageServices.pug,
                             });
                         }
                     }

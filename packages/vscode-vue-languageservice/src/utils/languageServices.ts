@@ -1,5 +1,6 @@
 import * as CSS from 'vscode-css-languageservice';
 import * as HTML from 'vscode-html-languageservice';
+import * as Pug from '@volar/vscode-pug-languageservice';
 import type * as ts from 'typescript';
 import * as TS2 from '@volar/vscode-typescript-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
@@ -9,6 +10,7 @@ export const html = HTML.getLanguageService();
 export const css = CSS.getCSSLanguageService();
 export const scss = CSS.getSCSSLanguageService();
 export const less = CSS.getLESSLanguageService();
+export const pug = Pug.getLanguageService(html);
 
 export function getCssLanguageService(lang: string) {
     switch (lang) {

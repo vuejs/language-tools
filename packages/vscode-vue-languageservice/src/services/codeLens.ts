@@ -2,7 +2,7 @@ import type { TsApiRegisterOptions } from '../types';
 import {
 	CodeLens,
 	Range,
-} from 'vscode-languageserver-types';
+} from 'vscode-languageserver';
 import { SourceFile } from '../sourceFile';
 import { Commands } from '../commands';
 import type { TextDocument } from 'vscode-languageserver-textdocument';

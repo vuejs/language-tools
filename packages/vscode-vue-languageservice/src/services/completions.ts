@@ -10,7 +10,8 @@ import {
 import { CompletionContext } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
 import { CompletionData } from '../types';
-import { SourceMap } from '../utils/sourceMaps';
+import { transformTextEdit } from '@volar/source-map';
+import { transformTextEdits } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import { languageIdToSyntax, getWordRange } from '@volar/shared';
@@ -137,8 +138,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						};
 						const vueItem: CompletionItem = {
 							...tsItem,
-							additionalTextEdits: translateAdditionalTextEdits(tsItem.additionalTextEdits, sourceMap),
-							textEdit: translateTextEdit(tsItem.textEdit, sourceMap),
+							additionalTextEdits: transformTextEdits(tsItem.additionalTextEdits, sourceMap),
+							textEdit: transformTextEdit(tsItem.textEdit, sourceMap),
 							data,
 						};
 						return vueItem;
@@ -157,7 +158,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return result;
 			}
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
@@ -254,14 +255,17 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 				const virtualLocs = sourceMap.sourceToTargets(range);
 				for (const virtualLoc of virtualLocs) {
-					const htmlResult = languageServices.html.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument);
+					const htmlResult = sourceMap.language === 'html'
+						? languageServices.html.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument)
+						: languageServices.pug.doComplete(sourceMap.pugDocument, virtualLoc.range.start)
+					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
 					let vueItems: CompletionItem[] = htmlResult.items.map(htmlItem => ({
 						...htmlItem,
-						additionalTextEdits: translateAdditionalTextEdits(htmlItem.additionalTextEdits, sourceMap),
-						textEdit: translateTextEdit(htmlItem.textEdit, sourceMap),
+						additionalTextEdits: transformTextEdits(htmlItem.additionalTextEdits, sourceMap),
+						textEdit: transformTextEdit(htmlItem.textEdit, sourceMap),
 					}));
 					const htmlItemsMap = new Map<string, html.CompletionItem>();
 					for (const entry of htmlResult.items) {
@@ -335,8 +339,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					};
 					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {
 						const newText = cssItem.textEdit?.newText || cssItem.insertText || cssItem.label;
-						const textEdit = translateTextEdit(TextEdit.replace(wordRange, newText), sourceMap);
-						const addTextEdits = translateAdditionalTextEdits(cssItem.additionalTextEdits, sourceMap);
+						const textEdit = transformTextEdit(TextEdit.replace(wordRange, newText), sourceMap);
+						const addTextEdits = transformTextEdits(cssItem.additionalTextEdits, sourceMap);
 						return {
 							...cssItem,
 							additionalTextEdits: addTextEdits,
@@ -377,12 +381,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					const emmetResult = emmet.doComplete(embededDoc.document, embededDoc.range.start, syntax, emmetConfig);
 					if (emmetResult && embededDoc.sourceMap) {
 						for (const item of emmetResult.items) {
-							if (item.textEdit) {
-								item.textEdit = translateTextEdit(item.textEdit, embededDoc.sourceMap);
-							}
-							if (item.additionalTextEdits) {
-								item.additionalTextEdits = translateAdditionalTextEdits(item.additionalTextEdits, embededDoc.sourceMap);
-							}
+							item.textEdit = transformTextEdit(item.textEdit, embededDoc.sourceMap);
+							item.additionalTextEdits = transformTextEdits(item.additionalTextEdits, embededDoc.sourceMap);
 						}
 					}
 					return emmetResult;
@@ -390,33 +390,4 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			}
 		}
 	}
-}
-
-export function translateAdditionalTextEdits(additionalTextEdits: TextEdit[] | undefined, sourceMap: SourceMap) {
-	if (additionalTextEdits) {
-		const newAdditionalTextEdits: TextEdit[] = [];
-		for (const textEdit of additionalTextEdits) {
-			const vueLoc = sourceMap.targetToSource(textEdit.range);
-			if (vueLoc) {
-				newAdditionalTextEdits.push({
-					newText: textEdit.newText,
-					range: vueLoc.range,
-				});
-			}
-		}
-		return newAdditionalTextEdits;
-	}
-	return undefined;
-}
-export function translateTextEdit(textEdit: TextEdit | html.InsertReplaceEdit | undefined, sourceMap: SourceMap) {
-	if (textEdit && TextEdit.is(textEdit)) {
-		const vueLoc = sourceMap.targetToSource(textEdit.range);
-		if (vueLoc) {
-			return {
-				newText: textEdit.newText,
-				range: vueLoc.range,
-			};
-		}
-	}
-	return undefined;
 }
