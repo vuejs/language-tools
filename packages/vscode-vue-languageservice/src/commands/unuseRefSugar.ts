@@ -10,7 +10,7 @@ export async function execute(
     document: TextDocument,
     sourceFile: SourceFile,
     connection: Connection,
-    _findReferences: (document: TextDocument, position: Position) => Location[],
+    _findReferences: (uri: string, position: Position) => Location[],
 ) {
     const desc = sourceFile.getDescriptor();
     if (!desc.scriptSetup) return;
@@ -75,7 +75,7 @@ export async function execute(
             const varText = document.getText(varRange);
             progress.report(++varsCur / varsNum * 100, varText);
             await sleep(0);
-            const references = _findReferences(document, varRange.start) ?? [];
+            const references = _findReferences(document.uri, varRange.start) ?? [];
             for (const reference of references) {
                 if (reference.uri !== document.uri)
                     continue;

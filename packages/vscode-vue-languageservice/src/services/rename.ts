@@ -1,7 +1,6 @@
 import type { TsApiRegisterOptions } from '../types';
 import type { Position } from 'vscode-languageserver/node';
 import type { WorkspaceEdit } from 'vscode-languageserver/node';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as dedupe from '../utils/dedupe';
 import { TextDocumentEdit } from 'vscode-languageserver/node';
 import { CreateFile } from 'vscode-languageserver/node';
@@ -15,27 +14,27 @@ import { getWordRange } from '@volar/shared';
 export function register({ mapper }: TsApiRegisterOptions) {
 
 	return {
-		onPrepare: (document: TextDocument, position: Position) => {
+		onPrepare: (uri: string, position: Position) => {
 
-			const tsResult = onTsPrepare(document.uri, position);
+			const tsResult = onTsPrepare(uri, position);
 			if (tsResult) {
 				return tsResult;
 			}
 
-			const cssResult = onCssPrepare(document.uri, position);
+			const cssResult = onCssPrepare(uri, position);
 			if (cssResult) {
 				return cssResult;
 			}
 		},
-		doRename: (document: TextDocument, position: Position, newName: string) => {
+		doRename: (uri: string, position: Position, newName: string) => {
 
-			const tsResult = onTs(document.uri, position, newName);
+			const tsResult = onTs(uri, position, newName);
 			if (tsResult) {
 				doDedupe(tsResult);
 				return tsResult;
 			}
 
-			const cssResult = onCss(document.uri, position, newName);
+			const cssResult = onCss(uri, position, newName);
 			if (cssResult) {
 				doDedupe(cssResult);
 				return cssResult;

@@ -255,14 +255,10 @@ function initLanguageServiceApi(rootPath: string) {
 		return host.bestMatch(document.uri)?.getSelectionRanges(document, handler.positions);
 	});
 	connection.onPrepareRename(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.bestMatch(document.uri)?.rename.onPrepare(document, handler.position);
+		return host.bestMatch(handler.textDocument.uri)?.rename.onPrepare(handler.textDocument.uri, handler.position);
 	});
 	connection.onRenameRequest(handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return undefined;
-		return host.bestMatch(document.uri)?.rename.doRename(document, handler.position, handler.newName);
+		return host.bestMatch(handler.textDocument.uri)?.rename.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
 	connection.onCodeLens(handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -284,7 +280,7 @@ function initLanguageServiceApi(rootPath: string) {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
 		return host.allMatches(document.uri).map(ls => {
-			let result = ls.findReferences(document, handler.position);
+			let result = ls.findReferences(document.uri, handler.position);
 			if (document.languageId !== 'vue') {
 				result = result.filter(loc => ls.getSourceFile(loc.uri));
 			}
@@ -296,7 +292,7 @@ function initLanguageServiceApi(rootPath: string) {
 		if (!document) return undefined;
 		const ls = host.bestMatch(document.uri);
 		if (ls) {
-			let result = ls.findDefinition(document, handler.position);
+			let result = ls.findDefinition(document.uri, handler.position);
 			if (document.languageId !== 'vue') {
 				result = result.filter(loc => ls.getSourceFile(loc.uri));
 			}
@@ -308,7 +304,7 @@ function initLanguageServiceApi(rootPath: string) {
 		if (!document) return undefined;
 		const ls = host.bestMatch(document.uri);
 		if (ls) {
-			let result = ls.findTypeDefinition(document, handler.position);
+			let result = ls.findTypeDefinition(document.uri, handler.position);
 			if (document.languageId !== 'vue') {
 				result = result.filter(loc => ls.getSourceFile(loc.uri));
 			}

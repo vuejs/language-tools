@@ -20,7 +20,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		if (uri && doc && tsDoc && offset !== undefined && tsOffset !== undefined) {
 			const pos = doc.positionAt(offset);
 			const tsPos = tsDoc.positionAt(tsOffset);
-			const references0 = _findReferences(tsDoc, tsPos);
+			const references0 = _findReferences(tsDoc.uri, tsPos);
 			let references = references0;
 			if (sourceFile) {
 				let isCssLocation = false;

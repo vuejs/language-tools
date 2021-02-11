@@ -1,25 +1,24 @@
 import type { Position } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
-import type { TextDocument } from 'vscode-languageserver-textdocument'
 import type { TsApiRegisterOptions } from '../types';
 import * as dedupe from '../utils/dedupe';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
 	return {
-		on: (document: TextDocument, position: Position) => {
+		on: (uri: string, position: Position) => {
 
-			const tsResult = onTs(document.uri, position, 'definition');
-			const cssResult = onCss(document.uri, position);
+			const tsResult = onTs(uri, position, 'definition');
+			const cssResult = onCss(uri, position);
 
 			return dedupe.withLocations([
 				...tsResult,
 				...cssResult,
 			]);
 		},
-		onType: (document: TextDocument, position: Position) => {
+		onType: (uri: string, position: Position) => {
 
-			const tsResult = onTs(document.uri, position, 'typeDefinition');
+			const tsResult = onTs(uri, position, 'typeDefinition');
 
 			return dedupe.withLocations([
 				...tsResult,

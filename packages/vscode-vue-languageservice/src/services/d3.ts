@@ -93,7 +93,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 									start: argsStartLoc.range.start,
 									end: argsEndLoc.range.start,
 								},
-								references: findReferences(sourceMap.sourceDocument, loc.range.start),
+								references: findReferences(sourceMap.sourceDocument.uri, loc.range.start),
 							});
 						}
 						for (const arg of node.initializer.arguments) {
@@ -189,7 +189,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 								funcCalls.push({
 									name: sourceMap.sourceDocument.getText(loc.range),
 									range: loc.range,
-									definitions: findDefinition.on(sourceMap.sourceDocument, loc.range.start),
+									definitions: findDefinition.on(sourceMap.sourceDocument.uri, loc.range.start),
 								});
 							}
 						}
@@ -238,7 +238,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 								start: argsStartLoc.start,
 								end: argsEndLoc.start,
 							},
-							references: findReferences(tsDoc, loc.start),
+							references: findReferences(tsDoc.uri, loc.start),
 						});
 					}
 					for (const arg of node.initializer.arguments) {
@@ -330,7 +330,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 							funcCalls.push({
 								name: tsDoc.getText(loc),
 								range: loc,
-								definitions: findDefinition.on(tsDoc, loc.start),
+								definitions: findDefinition.on(tsDoc.uri, loc.start),
 							});
 						}
 					}
