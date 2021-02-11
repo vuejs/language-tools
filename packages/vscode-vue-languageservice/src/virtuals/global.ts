@@ -39,15 +39,26 @@ declare global {
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: Omit<__VLS_PropsType<T[K]>, keyof __VLS_GlobalAttrsBase> /* __VLS_GlobalAttrs has perf issue with Omit<> */ };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_PropsType<T[K]>> & Record<string, unknown> };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : () => void };
-	type __VLS_PickEmitFunction<F, E> =
+	type __VLS_EmitEvent<F, E> =
 		F extends {
 			(event: E, ...payload: infer P): infer R
-			(event: any, ...payload: any): any
-		} ? (...payload: P) => R :
-		F extends {
+			(...args: any): any
+			(...args: any): any
+			(...args: any): any
+		} ? (...payload: P) => R
+		: F extends {
 			(event: E, ...payload: infer P): infer R
-		} ? (...payload: P) => R :
-		undefined;
+			(...args: any): any
+			(...args: any): any
+		} ? (...payload: P) => R
+		: F extends {
+			(event: E, ...payload: infer P): infer R
+			(...args: any): any
+		} ? (...payload: P) => R
+		: F extends {
+			(event: E, ...payload: infer P): infer R
+		} ? (...payload: P) => R
+		: (...payload: any[]) => void | '[volar warning] event not found within 4 overloads from $emit';
 	type __VLS_FirstFunction<F1, F2> = NonNullable<F1> extends (...args: any) => any ? F1 : F2;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
