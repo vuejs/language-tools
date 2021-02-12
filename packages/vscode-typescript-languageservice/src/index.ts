@@ -33,6 +33,7 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 	languageService = shPlugin.decorate(languageService);
 
 	return {
+		raw: languageService,
 		host,
 
 		findDefinition: definitions.register(languageService, getTextDocument),

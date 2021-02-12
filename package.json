@@ -211,7 +211,12 @@
 					"group": "navigation"
 				}
 			]
-		}
+		},
+		"typescriptServerPlugins": [
+			{
+				"name": "@volar/typescript-vue-plugin"
+			}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

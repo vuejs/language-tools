@@ -8,6 +8,12 @@ import { MapedMode, MapedRange, Mapping, TsMappingData, TsSourceMap } from './ut
 import * as upath from 'upath';
 import type * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
+import { HTMLDocument } from 'vscode-html-languageservice';
+import * as languageServices from './utils/languageServices';
+import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';
+import { createMapper } from './utils/mapper';
+import * as tsPluginApis from './tsPluginApis';
+// vue services
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
 import * as autoClose from './services/autoClose';
@@ -34,10 +40,6 @@ import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
-import { HTMLDocument } from 'vscode-html-languageservice';
-import * as languageServices from './utils/languageServices';
-import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';
-import { createMapper } from './utils/mapper';
 
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts.LanguageServiceHost;
@@ -72,7 +74,12 @@ export function createNoStateLanguageService({ typescript }: Dependencies) {
 		return htmlDoc;
 	}
 }
-export function createLanguageService(vueHost: LanguageServiceHost, { typescript }: Dependencies, onUpdate?: (progress: number) => void) {
+export function createLanguageService(
+	vueHost: LanguageServiceHost,
+	{ typescript }: Dependencies,
+	onUpdate?: (progress: number) => void,
+	isTsPlugin = false,
+) {
 
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
@@ -90,6 +97,7 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 	const globalDTsDoc = getGlobalDTs(vueHost.getCurrentDirectory());
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const globalComponentCalls = computed(() => {
+		if (isTsPlugin) return [];
 		{ // watching
 			tsProjectVersion.value
 		}
@@ -221,20 +229,55 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 	let _globalComponentCallsGen: typeof globalComponentCallsGen.value = new Map();
 	let globalComponentCallsGenVersion = '';
 
+	const mapper = createMapper(sourceFiles, tsLanguageService, getTextDocument, () => _globalComponentCallsGen);
 	const options: TsApiRegisterOptions = {
 		ts: typescript,
 		sourceFiles,
 		tsLanguageService,
 		vueHost,
 		getGlobalTsSourceMaps: () => _globalComponentCallsGen,
-		mapper: createMapper(sourceFiles, tsLanguageService, () => _globalComponentCallsGen)
+		mapper,
 	};
 	const _callHierarchy = callHierarchy.register(options);
 	const findDefinition = definitions.register(options);
 	const doRename = rename.register(options);
+	const _tsPluginApis = tsPluginApis.register(options);
+
+	const tsPlugin: Partial<ts.LanguageService> = {
+		getSemanticDiagnostics: apiHook(tsLanguageService.raw.getSemanticDiagnostics, false),
+		getEncodedSemanticClassifications: apiHook(tsLanguageService.raw.getEncodedSemanticClassifications, false),
+		getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
+		getCompletionEntryDetails: apiHook(tsLanguageService.raw.getCompletionEntryDetails, false), // not sure
+		getCompletionEntrySymbol: apiHook(tsLanguageService.raw.getCompletionEntrySymbol, false), // not sure
+		getQuickInfoAtPosition: apiHook(tsLanguageService.raw.getQuickInfoAtPosition, false),
+		getSignatureHelpItems: apiHook(tsLanguageService.raw.getSignatureHelpItems, false),
+		getRenameInfo: apiHook(tsLanguageService.raw.getRenameInfo, false),
+		findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
+		getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
+		getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
+		getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
+		getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition, false),
+		getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition, true),
+		findReferences: apiHook(_tsPluginApis.findReferences, true),
+
+		// TODO: now is handle by vue server
+		// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
+		// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
+		// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
+		// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
+
+		// not sure
+		// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
+		// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
+		// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
+		// getApplicableRefactors: apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
+		// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
+	};
 
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
+		tsPlugin,
+		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
 			return !vueImportErrors.find(error => error.code === 2305); // Module '"__VLS_vue"' has no exported member '*'.ts(2305)
@@ -281,7 +324,7 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 	function apiHook<T extends Function>(api: T, shouldUpdateTemplateScript = true) {
 		const handler = {
 			apply: function (target: Function, thisArg: any, argumentsList: any[]) {
-				if (!initTemplateScript) {
+				if (!initTemplateScript && !isTsPlugin) {
 					initTemplateScript = true;
 					shouldUpdateTemplateScript = true;
 				}
@@ -410,12 +453,10 @@ export function createLanguageService(vueHost: LanguageServiceHost, { typescript
 				const sourceFile = sourceFiles.get(uri);
 				if (sourceFile) {
 					for (const [uri] of sourceFile.getTsDocuments()) {
-						tsFileNames.push(uriToFsPath(uri));
+						tsFileNames.push(uriToFsPath(uri)); // virtual .ts
 					}
 				}
-				else {
-					tsFileNames.push(fileName);
-				}
+				tsFileNames.push(fileName); // .vue + .ts
 			}
 			return tsFileNames;
 		}

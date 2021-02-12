@@ -3,7 +3,14 @@
 	"files": [],
 	"include": [],
 	"references": [
-		{ "path": "./packages/vscode-client" },
-		{ "path": "./packages/vscode-server" }
+		{
+			"path": "./packages/vscode-client"
+		},
+		{
+			"path": "./packages/vscode-server"
+		},
+		{
+			"path": "./packages/typescript-vue-plugin"
+		},
 	]
 }

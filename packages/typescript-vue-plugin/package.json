@@ -1,0 +1,9 @@
+{
+	"name": "@volar/typescript-vue-plugin",
+	"version": "1.0.0",
+	"main": "out/index.js",
+	"devDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {}
+}

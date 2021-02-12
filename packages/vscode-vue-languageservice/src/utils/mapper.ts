@@ -12,11 +12,15 @@ import type { Stylesheet } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { PugDocument } from '@volar/vscode-pug-languageservice';
 import type { SourceFile } from '../sourceFile';
+import type { MapedRange } from '@volar/source-map';
+import type * as ts from 'typescript';
 import * as languageServices from '../utils/languageServices';
+import { fsPathToUri, uriToFsPath } from '@volar/shared';
 
 export function createMapper(
     sourceFiles: Map<string, SourceFile>,
     tsLanguageService: TsLanguageService,
+    getTextDocument: (uri: string) => TextDocument | undefined,
     getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>,
 ) {
     return {
@@ -169,107 +173,207 @@ export function createMapper(
             },
         },
         ts: {
-            from: (tsUri: string, tsRange: Range) => {
-                const result: {
-                    textDocument: TextDocument,
-                    range: Range,
-                    data?: TsMappingData,
-                }[] = [];
-
-                const document = tsLanguageService.getTextDocument(tsUri);
-                if (!document) return [];
-
-                const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
-                if (globalTs) {
-                    const tsMaped = globalTs.sourceMap.targetToSource(tsRange);
-                    if (tsMaped) {
-                        tsRange = tsMaped.range;
-                    }
-                }
-
-                const sourceFile = findSourceFileByTsUri(tsUri);
-                if (!sourceFile) {
-                    result.push({
-                        textDocument: document,
-                        range: tsRange,
-                    });
-                    return result;
-                }
-
-                for (const sourceMap of sourceFile.getTsSourceMaps()) {
-                    if (sourceMap.targetDocument.uri !== tsUri)
-                        continue;
-                    for (const vueMaped of sourceMap.targetToSources(tsRange)) {
-                        result.push({
-                            textDocument: sourceMap.sourceDocument,
-                            range: vueMaped.range,
-                            data: vueMaped.data,
-                        });
-                    }
-                }
-
-                return result;
-            },
-            to: (vueUri: string, vueRange: Range) => {
-                const result: {
-                    textDocument: TextDocument,
-                    range: Range,
-                    data: TsMappingData,
-                    languageService: TsLanguageService,
-                }[] = [];
-                const sourceFile = sourceFiles.get(vueUri);
-                if (sourceFile) {
-                    for (const sourceMap of sourceFile.getTsSourceMaps()) {
-                        for (const tsMaped of sourceMap.sourceToTargets(vueRange)) {
-                            result.push({
-                                textDocument: sourceMap.targetDocument,
-                                range: tsMaped.range,
-                                data: tsMaped.data,
-                                languageService: tsLanguageService,
-                            });
-                        }
-                    }
-                }
-                else {
-                    const tsDoc = tsLanguageService.getTextDocument(vueUri);
-                    if (tsDoc) {
-                        result.push({
-                            textDocument: tsDoc,
-                            range: vueRange,
-                            data: {
-                                vueTag: 'script',
-                                capabilities: {
-                                    references: true,
-                                    definitions: true,
-                                    completion: true,
-                                },
-                            },
-                            languageService: tsLanguageService,
-                        });
-                    }
-                }
-                return result;
-            },
-            teleports: (tsUri: string, tsRange: Range) => {
-                const result: {
-                    data: TeleportMappingData;
-                    sideData: TeleportSideData;
-                    range: Range;
-                }[] = [];
-                const sourceFile = findSourceFileByTsUri(tsUri);
-                if (sourceFile) {
-                    const teleports = sourceFile.getTeleports();
-                    for (const teleport of teleports) {
-                        if (teleport.document.uri === tsUri) {
-                            for (const loc of teleport.findTeleports(tsRange)) {
-                                result.push(loc);
-                            }
-                        }
-                    }
-                }
-                return result;
-            },
+            from: fromTs,
+            from2: fromTs2,
+            to: toTs,
+            to2: toTs2,
+            teleports,
+            teleports2,
         },
+    };
+
+    function teleports(tsUri: string, tsRange: Range) {
+        const result: {
+            data: TeleportMappingData;
+            sideData: TeleportSideData;
+            range: Range;
+        }[] = [];
+        const sourceFile = findSourceFileByTsUri(tsUri);
+        if (sourceFile) {
+            const teleports = sourceFile.getTeleports();
+            for (const teleport of teleports) {
+                if (teleport.document.uri === tsUri) {
+                    for (const loc of teleport.findTeleports(tsRange)) {
+                        result.push(loc);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    function teleports2(tsFsPath: string, tsRange: MapedRange) {
+        const result: {
+            data: TeleportMappingData;
+            sideData: TeleportSideData;
+            range: MapedRange;
+        }[] = [];
+        const tsUri = fsPathToUri(tsFsPath);
+        const sourceFile = findSourceFileByTsUri(tsUri);
+        if (sourceFile) {
+            const teleports = sourceFile.getTeleports();
+            for (const teleport of teleports) {
+                if (teleport.document.uri === tsUri) {
+                    for (const loc of teleport.findTeleports2(tsRange)) {
+                        result.push(loc);
+                    }
+                }
+            }
+        }
+        return result;
+    };
+    function fromTs(tsUri: string, tsRange: Range) {
+
+        const tsDoc = tsLanguageService.getTextDocument(tsUri);
+        if (!tsDoc) return [];
+
+        const _result = fromTs2(uriToFsPath(tsUri), {
+            start: tsDoc.offsetAt(tsRange.start),
+            end: tsDoc.offsetAt(tsRange.end),
+        });
+
+        const result: {
+            textDocument: TextDocument,
+            range: Range,
+            data?: TsMappingData,
+        }[] = [];
+
+        for (const r of _result) {
+            result.push({
+                textDocument: r.textDocument,
+                range: {
+                    start: r.textDocument.positionAt(r.range.start),
+                    end: r.textDocument.positionAt(r.range.end),
+                },
+                data: r.data,
+            });
+        }
+
+        return result;
+    };
+    function fromTs2(tsFsPath: string, tsRange: MapedRange) {
+        const result: {
+            fileName: string,
+            textDocument: TextDocument,
+            range: MapedRange,
+            data?: TsMappingData,
+        }[] = [];
+        const tsUri = fsPathToUri(tsFsPath);
+
+        const document = tsLanguageService.getTextDocument(tsUri);
+        if (!document) return [];
+
+        const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
+        if (globalTs) {
+            const tsMaped = globalTs.sourceMap.targetToSource2(tsRange);
+            if (tsMaped) {
+                tsRange = tsMaped.range;
+            }
+        }
+
+        const sourceFile = findSourceFileByTsUri(tsUri);
+        if (!sourceFile) {
+            result.push({
+                fileName: tsFsPath,
+                textDocument: document,
+                range: tsRange,
+            });
+            return result;
+        }
+
+        for (const sourceMap of sourceFile.getTsSourceMaps()) {
+            if (sourceMap.targetDocument.uri !== tsUri)
+                continue;
+            for (const vueMaped of sourceMap.targetToSources2(tsRange)) {
+                result.push({
+                    fileName: uriToFsPath(sourceMap.sourceDocument.uri),
+                    textDocument: sourceMap.sourceDocument,
+                    range: vueMaped.range,
+                    data: vueMaped.data,
+                });
+            }
+        }
+
+        return result;
+    };
+    function toTs(vueUri: string, vueRange: Range) {
+
+        const vueDoc = getTextDocument(vueUri);
+        if (!vueDoc) return [];
+
+        const result_2 = toTs2(uriToFsPath(vueUri), {
+            start: vueDoc.offsetAt(vueRange.start),
+            end: vueDoc.offsetAt(vueRange.end),
+        });
+        const result: {
+            textDocument: TextDocument,
+            range: Range,
+            data: TsMappingData,
+            languageService: TsLanguageService,
+        }[] = [];
+
+        for (const r of result_2) {
+            result.push({
+                textDocument: r.textDocument,
+                range: {
+                    start: r.textDocument.positionAt(r.range.start),
+                    end: r.textDocument.positionAt(r.range.end),
+                },
+                data: r.data,
+                languageService: tsLanguageService,
+            });
+        }
+
+        return result;
+    }
+    function toTs2(vueFsPath: string, vueRange: MapedRange) {
+        const result: {
+            fileName: string,
+            textDocument: TextDocument,
+            range: MapedRange,
+            data: TsMappingData,
+            languageService: ts.LanguageService,
+        }[] = [];
+        const sourceFile = sourceFiles.get(fsPathToUri(vueFsPath));
+        if (sourceFile) {
+            for (const sourceMap of sourceFile.getTsSourceMaps()) {
+                for (const tsMaped of sourceMap.sourceToTargets2(vueRange)) {
+                    result.push({
+                        fileName: uriToFsPath(sourceMap.targetDocument.uri),
+                        textDocument: sourceMap.targetDocument,
+                        range: tsMaped.range,
+                        data: tsMaped.data,
+                        languageService: tsLanguageService.raw,
+                    });
+                }
+            }
+        }
+        else {
+            const tsDoc = tsLanguageService.getTextDocument(fsPathToUri(vueFsPath));
+            if (tsDoc) {
+                result.push({
+                    fileName: uriToFsPath(tsDoc.uri),
+                    textDocument: tsDoc,
+                    range: vueRange,
+                    data: {
+                        vueTag: 'script',
+                        capabilities: {
+                            basic: true,
+                            references: true,
+                            definitions: true,
+                            diagnostic: true,
+                            formatting: true,
+                            rename: true,
+                            completion: true,
+                            semanticTokens: true,
+                            foldingRanges: true,
+                            referencesCodeLens: true,
+                        },
+                    },
+                    languageService: tsLanguageService.raw,
+                });
+            }
+        }
+        return result;
     };
     function findSourceFileByTsUri(tsUri: string) {
         for (const sourceFile of sourceFiles.values()) {

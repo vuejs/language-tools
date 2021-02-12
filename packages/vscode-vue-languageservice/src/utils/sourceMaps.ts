@@ -3,7 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
 import type { PugDocument } from '@volar/vscode-pug-languageservice';
-import { SourceMap } from '@volar/source-map';
+import { MapedRange, SourceMap } from '@volar/source-map';
 
 export interface TsMappingData {
 	vueTag: 'template' | 'script' | 'scriptSetup' | 'style' | 'scriptSrc',
@@ -115,6 +115,26 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 			});
 		}
 		for (const loc of this.targetToSources(range)) {
+			result.push({
+				...loc,
+				sideData: loc.data.toSource,
+			});
+		}
+		return result;
+	}
+	findTeleports2(range: MapedRange) {
+		const result: {
+			data: TeleportMappingData;
+			sideData: TeleportSideData;
+			range: MapedRange;
+		}[] = [];
+		for (const loc of this.sourceToTargets2(range)) {
+			result.push({
+				...loc,
+				sideData: loc.data.toTarget,
+			});
+		}
+		for (const loc of this.targetToSources2(range)) {
 			result.push({
 				...loc,
 				sideData: loc.data.toSource,

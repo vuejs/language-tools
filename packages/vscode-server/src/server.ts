@@ -464,10 +464,10 @@ function initLanguageServiceHtml() {
 	});
 }
 function onInitializedApi() {
-	connection.client.register(ReferencesRequest.type, both);
-	connection.client.register(DefinitionRequest.type, both);
+	connection.client.register(ReferencesRequest.type, vueOnly);
+	connection.client.register(DefinitionRequest.type, vueOnly);
 	connection.client.register(CallHierarchyPrepareRequest.type, both);
-	connection.client.register(TypeDefinitionRequest.type, both);
+	connection.client.register(TypeDefinitionRequest.type, vueOnly);
 	connection.client.register(HoverRequest.type, vueOnly);
 	connection.client.register(RenameRequest.type, {
 		documentSelector: vueOnly.documentSelector,
