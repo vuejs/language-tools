@@ -1,3 +1,11 @@
+### 0.20.9
+
+- feat: emit event type not matching warning
+- feat: ts plugin support (default is disabled, run `Volar: Switch TS Plugin` to enable)
+- fix: typescript auto-complete should not replace suffix
+- chore: emit overloads infer nums 2 -> 4
+- chore: switch auto `.value` feature to default disabled
+
 ### 0.20.8
 
 - fix: `.value` auto-complete should not occur at definition
