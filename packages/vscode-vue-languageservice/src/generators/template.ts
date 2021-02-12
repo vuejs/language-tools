@@ -840,7 +840,7 @@ export function generate(
 						capabilities: capabilitiesSet.htmlTagOrAttr,
 					},
 				);
-				scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_componentEmits['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
+				scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
 
 				const transformResult = transformOn(prop, node, context);
 				for (const prop_2 of transformResult.props) {

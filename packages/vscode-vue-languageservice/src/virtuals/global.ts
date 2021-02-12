@@ -16,12 +16,13 @@ declare module '__VLS_vue' {
 
 export function getGlobalDoc(root: string) {
 	let code = `
-import { FunctionalComponent } from '__VLS_vue';
-import { HTMLAttributes } from '__VLS_vue';
-import { VNodeProps } from '__VLS_vue';
-import { AllowedComponentProps } from '__VLS_vue';
-import { PropType } from '__VLS_vue';
-import { App } from '__VLS_vue';
+import type { FunctionalComponent } from '__VLS_vue';
+import type { HTMLAttributes } from '__VLS_vue';
+import type { VNodeProps } from '__VLS_vue';
+import type { AllowedComponentProps } from '__VLS_vue';
+import type { PropType } from '__VLS_vue';
+import type { App } from '__VLS_vue';
+import type { DefineComponent } from '__VLS_vue';
 
 declare global {
 	interface __VLS_GlobalComponents extends Pick<typeof import('__VLS_vue'),
@@ -39,26 +40,20 @@ declare global {
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: Omit<__VLS_PropsType<T[K]>, keyof __VLS_GlobalAttrsBase> /* __VLS_GlobalAttrs has perf issue with Omit<> */ };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_PropsType<T[K]>> & Record<string, unknown> };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : () => void };
-	type __VLS_EmitEvent<F, E> =
-		F extends {
-			(event: E, ...payload: infer P): infer R
-			(...args: any): any
-			(...args: any): any
-			(...args: any): any
-		} ? (...payload: P) => R
-		: F extends {
-			(event: E, ...payload: infer P): infer R
-			(...args: any): any
-			(...args: any): any
-		} ? (...payload: P) => R
-		: F extends {
-			(event: E, ...payload: infer P): infer R
-			(...args: any): any
-		} ? (...payload: P) => R
-		: F extends {
-			(event: E, ...payload: infer P): infer R
-		} ? (...payload: P) => R
-		: (...payload: any[]) => void | '[volar warning] event not found within 4 overloads from $emit';
+	type __VLS_ExtractEmits<T> = T extends DefineComponent<
+		any,
+		any,
+		any,
+		any,
+		any,
+		any,
+		any,
+		infer E
+	>
+		? E
+		: never;
+	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : T;
+	type __VLS_EmitEvent<T, E extends keyof __VLS_ExtractEmits<T>> = __VLS_ReturnVoid<__VLS_ExtractEmits<T>[E]>;
 	type __VLS_FirstFunction<F1, F2> = NonNullable<F1> extends (...args: any) => any ? F1 : F2;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
