@@ -212,7 +212,7 @@
 				}
 			]
 		},
-		"typescriptServerPlugins": [
+		"typescriptServerPlugins-XX": [
 			{
 				"name": "@volar/typescript-vue-plugin"
 			}
