@@ -140,22 +140,22 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 
 > Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
 
-> If your rename location includes both a .ts and a .vue file. Please perform the rename operation on the .vue file, otherwise the rename location in the .vue wouldn't be found.
+> TS Plugin default disabled, you can use `Volar: Switch TS Plugin` to switch on.
 
 > Currently supported languages:
 > - template: html, pug
 > - script: js, ts, jsx, tsx
 > - style: css, scss, less
 
-> Please disable Vetur to avoid conflicts.
+> You need to disable Vetur to avoid conflicts.
 
 > tsconfig.json / jsconfig.json is required. And usually also need `"strict": true`.
 
 ## Sponsors
 
-If you like this extension and you can afford, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). I can reduce other work and move time to Volar, so this will definitely speed up this project.
+If you like this extension, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). This is a big support to me.
 
-Thanks a lot!
+Thank you!
 
 <a href="https://github.com/yyx990803"><img src="https://avatars1.githubusercontent.com/u/499550?s=64&amp;v=4" width="32" height="32" alt="@yyx990803" style="border-radius: 50%;"></a>
 <a href="https://github.com/Pizzacus"><img src="https://avatars1.githubusercontent.com/u/7659613?s=64&amp;v=4" width="32" height="32" alt="@Pizzacus" style="border-radius: 50%;"></a>
