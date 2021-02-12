@@ -182,13 +182,13 @@
 			},
 			{
 				"command": "volar.action.writeVirtualFiles",
-				"title": "Write Virtual Files (Debug)",
-				"category": "Volar"
+				"title": "Write Virtual Files",
+				"category": "Debug"
 			},
 			{
 				"command": "volar.action.showCallGraph",
-				"title": "Show Call Graph (Experimental)",
-				"category": "Volar"
+				"title": "Show Call Graph",
+				"category": "Volar (Experimental)"
 			},
 			{
 				"command": "volar.action.splitEditors",
@@ -198,9 +198,14 @@
 			},
 			{
 				"command": "volar.action.preview",
-				"title": "Start Preview Client (Experimental)",
-				"category": "Volar",
+				"title": "Start Preview Client",
+				"category": "Volar (Experimental)",
 				"icon": "$(open-preview)"
+			},
+			{
+				"command": "volar.action.proxyTsServer",
+				"title": "Switch TS Plugin on / off",
+				"category": "Volar"
 			}
 		],
 		"menus": {
@@ -212,7 +217,7 @@
 				}
 			]
 		},
-		"typescriptServerPlugins-XX": [
+		"typescriptServerPlugins-off": [
 			{
 				"name": "@volar/typescript-vue-plugin"
 			}
