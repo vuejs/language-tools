@@ -42,10 +42,11 @@ export function useScriptMain(
 			`__VLS_options.props.${SearchTexts.Props};`,
 			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
 			``,
-			`export default {} as typeof __VLS_component & {`,
+			`declare const _export: typeof __VLS_component & {`,
 			`__VLS_options: typeof __VLS_options,`,
 			template.value ? `__VLS_slots: typeof import ('./${vueFileName}.__VLS_template').default,` : `// no template`,
 			`};`,
+			`export default _export;`,
 			hasScript ? `export * from './${vueFileName}.__VLS_script';` : `// no script`,
 		].join('\n');
 		return TextDocument.create(uri, 'typescript', version++, content);
