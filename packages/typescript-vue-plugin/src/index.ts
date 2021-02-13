@@ -63,17 +63,16 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getScriptSnapshot,
 	};
 
-	checkFilesUpdate();
+	checkFilesAddRemove();
 
-	const directoryWatcher = info.serverHost.watchDirectory(info.project.getCurrentDirectory(), async fileName => {
-		anyFilesChanged = true;
-		await sleep(0);
-		if (anyFilesChanged && !disposed) {
-			anyFilesChanged = false;
-			vueFiles = new Set(getVueFiles());
-			checkFilesUpdate();
-		}
-	}, true);
+	const directoryWatcher = info.serverHost.watchDirectory(info.project.getCurrentDirectory(), onFileChangedOrConfigUpdated, true);
+
+	let tsconfigWatcher = info.project.fileExists(info.project.projectName)
+		? info.serverHost.watchFile(info.project.projectName, () => {
+			onFileChangedOrConfigUpdated();
+			onProjectUpdated();
+		})
+		: undefined;
 
 	return {
 		host,
@@ -81,6 +80,15 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		dispose,
 	};
 
+	async function onFileChangedOrConfigUpdated() {
+		anyFilesChanged = true;
+		await sleep(0);
+		if (anyFilesChanged && !disposed) {
+			anyFilesChanged = false;
+			vueFiles = new Set(getVueFiles());
+			checkFilesAddRemove();
+		}
+	}
 	function getProjectVersion() {
 		return info.project.getProjectVersion() + ':' + projectVersion.toString();
 	}
@@ -133,7 +141,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		const content = ts.parseJsonConfigFileContent(parsedJson, parseConfigHost, path.dirname(tsConfig), {}, path.basename(tsConfig));
 		return content.fileNames;
 	}
-	function checkFilesUpdate() {
+	function checkFilesAddRemove() {
 		let changed = false;
 		for (const fileName of fileWatchers.keys()) {
 			if (!vueFiles.has(fileName)) {
@@ -154,7 +162,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 			}
 		}
 		if (changed) {
-			onVueFilesUpdated();
+			onProjectUpdated();
 		}
 	}
 	function onFileChanged(fileName: string) {
@@ -167,14 +175,17 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		else {
 			scriptVersions.set(fileName, (oldVersionNum + 1).toString());
 		}
-		onVueFilesUpdated();
+		onProjectUpdated();
 	}
-	function onVueFilesUpdated() {
+	function onProjectUpdated() {
 		projectVersion++;
 		info.project.refreshDiagnostics();
 	}
 	function dispose() {
 		directoryWatcher.close();
+		if (tsconfigWatcher) {
+			tsconfigWatcher.close();
+		}
 		for (const [_, fileWatcher] of fileWatchers) {
 			fileWatcher.close();
 		}
