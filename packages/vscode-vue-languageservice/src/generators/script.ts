@@ -374,7 +374,6 @@ export function generate(
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
-                                basic: true, // hover
                                 diagnostic: true,
                             },
                         },
