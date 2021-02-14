@@ -12,7 +12,7 @@ import * as virtualFiles from './features/virtualFiles';
 import * as restart from './features/restart';
 import * as tagClosing from './features/tagClosing';
 import * as semanticTokens from './features/semanticTokens';
-import * as proxyTsServer from './features/proxyTsServer';
+import * as tsPlugin from './features/tsPlugin';
 import { ServerInitializationOptions } from '@volar/shared';
 
 let apiClient: lsp.LanguageClient;
@@ -35,7 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	semanticTokens.activate(context, docClient);
 	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
-	proxyTsServer.activate(context);
+	tsPlugin.activate(context);
 
 	startEmbeddedLanguageServices();
 }

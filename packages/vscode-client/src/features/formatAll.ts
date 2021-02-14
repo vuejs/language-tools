@@ -22,28 +22,28 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
             insertSpaces: !useTabs,
             tabSize,
         });
-
-        function userPick<K>(options: Map<K, string>, placeholder?: string) {
-            return new Promise<K | undefined>(resolve => {
-                const quickPick = vscode.window.createQuickPick();
-                quickPick.items = [...options.values()].map(option => ({ label: option }));
-                quickPick.placeholder = placeholder;
-                quickPick.onDidChangeSelection(selection => {
-                    if (selection[0]) {
-                        for (const [key, label] of options) {
-                            if (selection[0].label === label) {
-                                resolve(key);
-                                quickPick.hide();
-                            }
-                        }
-                    }
-                });
-                quickPick.onDidHide(() => {
-                    quickPick.dispose();
-                    resolve(undefined);
-                })
-                quickPick.show();
-            });
-        }
     }));
+}
+
+export function userPick<K>(options: Map<K, string>, placeholder?: string) {
+    return new Promise<K | undefined>(resolve => {
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.items = [...options.values()].map(option => ({ label: option }));
+        quickPick.placeholder = placeholder;
+        quickPick.onDidChangeSelection(selection => {
+            if (selection[0]) {
+                for (const [key, label] of options) {
+                    if (selection[0].label === label) {
+                        resolve(key);
+                        quickPick.hide();
+                    }
+                }
+            }
+        });
+        quickPick.onDidHide(() => {
+            quickPick.dispose();
+            resolve(undefined);
+        })
+        quickPick.show();
+    });
 }

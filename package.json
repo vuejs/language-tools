@@ -92,6 +92,16 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`. (Experimental)"
+				},
+				"volar.tsPlugin": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enabled Vue TS Server Plugin."
+				},
+				"volar.tsPluginStatus": {
+					"type": "boolean",
+					"default": true,
+					"description": "Display TS Server Plugin status bar item."
 				}
 			}
 		},
@@ -203,7 +213,7 @@
 				"icon": "$(open-preview)"
 			},
 			{
-				"command": "volar.action.proxyTsServer",
+				"command": "volar.action.switchTsPlugin",
 				"title": "Switch TS Plugin on / off",
 				"category": "Volar"
 			}
