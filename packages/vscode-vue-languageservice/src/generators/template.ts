@@ -71,16 +71,7 @@ export function generate(
 	if (withExportSlots) {
 		scriptGen.addText(`export default {\n`);
 		for (const [exp, slot] of slotExps) {
-			writeCode(
-				`[{} as typeof ${exp}]`,
-				slot.loc,
-				MapedMode.Gate,
-				{
-					vueTag: 'template',
-					capabilities: { ...capabilitiesSet.slotNameExport, referencesCodeLens: false },
-				},
-			);
-			scriptGen.addText(`: ${slot.varName},\n`);
+			scriptGen.addText(`...{} as __VLS_SlotExpMap<typeof ${exp}, typeof ${slot.varName}>,\n`);
 		}
 		for (const [name, slot] of slots) {
 			writeObjectProperty(

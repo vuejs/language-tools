@@ -1,3 +1,7 @@
+### 0.21.3
+
+- fix: slot name expression types incorrect
+
 ### 0.21.2
 
 - feat: support slot name expression
