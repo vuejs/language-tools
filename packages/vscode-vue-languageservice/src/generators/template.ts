@@ -49,6 +49,10 @@ export function generate(
 		varName: string,
 		loc: MapedRange,
 	}>();
+	const slotExps = new Map<string, {
+		varName: string,
+		loc: MapedRange,
+	}>();
 	const componentsMap = new Map<string, string>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 
@@ -66,6 +70,18 @@ export function generate(
 
 	if (withExportSlots) {
 		scriptGen.addText(`export default {\n`);
+		for (const [exp, slot] of slotExps) {
+			writeCode(
+				`[{} as typeof ${exp}]`,
+				slot.loc,
+				MapedMode.Gate,
+				{
+					vueTag: 'template',
+					capabilities: { ...capabilitiesSet.slotNameExport, referencesCodeLens: false },
+				},
+			);
+			scriptGen.addText(`: ${slot.varName},\n`);
+		}
 		for (const [name, slot] of slots) {
 			writeObjectProperty(
 				name,
@@ -953,6 +969,7 @@ export function generate(
 		const varBinds = `__VLS_${elementIndex++}`;
 		const varSlot = `__VLS_${elementIndex++}`;
 		const slotName = getSlotName();
+		const slotNameExp = getSlotNameExp();
 		let hasDefaultBind = false;
 
 		for (const prop of node.props) {
@@ -1047,13 +1064,29 @@ export function generate(
 			scriptGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
-		slots.set(slotName, {
-			varName: varSlot,
-			loc: {
-				start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-				end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-			},
-		});
+		if (slotName) {
+			slots.set(slotName, {
+				varName: varSlot,
+				loc: {
+					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+				},
+			});
+		}
+		else if (slotNameExp) {
+			const varSlotExp = `__VLS_${elementIndex++}`;
+			const varSlotExp2 = `__VLS_${elementIndex++}`;
+			scriptGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
+			scriptGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
+			slotExps.set(varSlotExp2, {
+				varName: varSlot,
+				loc: {
+					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+				},
+			});
+		}
+		scriptGen.addText(`/* ${slotName}, ${slotNameExp} */\n`)
 
 		function getSlotName() {
 			for (const prop2 of node.props) {
@@ -1066,7 +1099,19 @@ export function generate(
 					}
 				}
 			}
-			return 'default';
+		}
+		function getSlotNameExp() {
+			for (const prop2 of node.props) {
+				scriptGen.addText(`/* ${prop2.name}, ${prop2.type} */\n`);
+				if (prop2.type === NodeTypes.DIRECTIVE && prop2.name === 'bind' && prop2.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop2.arg.content === 'name') {
+					if (prop2.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+						return prop2.exp.content;
+					}
+					else {
+						return `'default'`;
+					}
+				}
+			}
 		}
 	}
 	function writeObjectProperty(mapCode: string, sourceRange: MapedRange, data: TsMappingData) {

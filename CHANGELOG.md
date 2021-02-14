@@ -1,3 +1,7 @@
+### 0.21.2
+
+- feat: support slot name expression
+
 ### 0.21.1
 
 - feat: show reload button on switch ts plugin
