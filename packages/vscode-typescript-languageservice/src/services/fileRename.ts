@@ -9,6 +9,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const fileToRename = uriToFsPath(oldUri);
 		const newFilePath = uriToFsPath(newUri);
 		const response = languageService.getEditsForFileRename(fileToRename, newFilePath, {}, { allowTextChangesInNewFiles: true });
+		if (!response.length) return;
 		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);
 		return edits;
 	};
