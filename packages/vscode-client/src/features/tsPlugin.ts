@@ -56,12 +56,12 @@ export async function activate(context: vscode.ExtensionContext) {
             if (packageText.indexOf(`"typescriptServerPlugins-off"`) >= 0) {
                 const newText = packageText.replace(`"typescriptServerPlugins-off"`, `"typescriptServerPlugins"`);
                 fs.writeFileSync(packageJson, newText, 'utf8');
-                vscode.window.showInformationMessage('Volar TS Plugin enabled, please reload VSCode to refresh TS Server.');
+                showReload(true);
             }
             else if (packageText.indexOf(`"typescriptServerPlugins"`) >= 0) {
                 const newText = packageText.replace(`"typescriptServerPlugins"`, `"typescriptServerPlugins-off"`);
                 fs.writeFileSync(packageJson, newText, 'utf8');
-                vscode.window.showInformationMessage('Volar TS Plugin disabled, please reload VSCode to refresh TS Server.');
+                showReload(false);
             }
             else {
                 vscode.window.showWarningMessage('Unknow package.json status.');
@@ -70,6 +70,11 @@ export async function activate(context: vscode.ExtensionContext) {
         catch (err) {
             vscode.window.showWarningMessage('Volar package.json update failed.');
         }
+    }
+    async function showReload(enabled: boolean) {
+        const reload = await vscode.window.showInformationMessage(`Volar TS Plugin ${enabled ? 'enabled' : 'disabled'}, please reload VSCode to refresh TS Server.`, 'Reload Window');
+        if (reload === undefined) return; // cancel
+        vscode.commands.executeCommand('workbench.action.reloadWindow');
     }
     function updateStatusBar() {
         if (tsPluginEnabled) {
