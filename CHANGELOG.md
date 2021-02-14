@@ -1,3 +1,8 @@
+### 0.21.1
+
+- feat: show reload button on switch ts plugin
+- fix: ts plugin status not sync on dropdown menu
+
 ### 0.21.0
 
 - feat: props `@update` event support
