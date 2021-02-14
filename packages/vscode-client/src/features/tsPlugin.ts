@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const options = new Map<number, string>();
         options.set(1, (isPluginEnabled() ? '• ' : '') + 'Enable TS Plugin');
         options.set(2, (!isPluginEnabled() ? '• ' : '') + 'Disable TS Plugin');
-        options.set(3, `Remove Status Bar Item (or config 'volar.tsPluginStatus' option)`);
+        options.set(3, 'Hide TS Plugin Status (or config "volar.tsPluginStatus")');
 
         const select = await userPick(options);
         if (select === undefined) return; // cancle
