@@ -113,7 +113,7 @@ export function generate(
 				writeElReferences(node); // <el ref="foo" />
 				writeProps(node);
 				writeClassScopeds(node);
-				writeOns(node);
+				writeEvents(node);
 				writeOptionReferences(node);
 				writeSlots(node);
 
@@ -423,7 +423,12 @@ export function generate(
 					write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 				}
 				else if (prop.name === 'on') {
-					write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
+					if (prop.arg.content.startsWith('update:')) {
+						write('props', prop.arg.content.substr('update:'.length), prop.arg.loc.start.offset + 'update:'.length, prop.arg.loc.end.offset, true);
+					}
+					else {
+						write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
+					}
 				}
 			}
 			else if (
@@ -432,7 +437,7 @@ export function generate(
 				write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
 			}
 		}
-		function write(option: 'props' | 'emits', propName: string, start: number, end: number) {
+		function write(option: 'props' | 'emits', propName: string, start: number, end: number, checking = false) {
 			const props = new Set<string>();
 			const emits = new Set<string>();
 			if (option === 'props') {
@@ -445,7 +450,8 @@ export function generate(
 			}
 			for (const name of props.values()) {
 				// __VLS_options.props
-				scriptGen.addText(`// @ts-ignore\n`);
+				if (!checking)
+					scriptGen.addText(`// @ts-ignore\n`);
 				scriptGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`);
 				writePropertyAccess(
 					name,
@@ -465,7 +471,8 @@ export function generate(
 			}
 			for (const name of emits.values()) {
 				// __VLS_options.emits
-				scriptGen.addText(`// @ts-ignore\n`);
+				if (!checking)
+					scriptGen.addText(`// @ts-ignore\n`);
 				scriptGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.emits`);
 				writePropertyAccess(
 					name,
@@ -806,7 +813,7 @@ export function generate(
 			}
 		}
 	}
-	function writeOns(node: ElementNode) {
+	function writeEvents(node: ElementNode) {
 		// @ts-ignore
 		const context: TransformContext = {
 			onError: () => { },
@@ -825,22 +832,31 @@ export function generate(
 				&& prop.name === 'on'
 			) {
 				const var_on = `__VLS_${elementIndex++}`;
-				const key_1 = prop.arg.content;
-				const key_2 = camelize('on-' + key_1);
+				let key_1 = prop.arg.content;
+				let keyOffset = 0;
 
-				scriptGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentProps['${getComponentName(node.tag)}'][`);
-				writeCodeWithQuotes(
-					key_2,
-					{
-						start: prop.arg.loc.start.offset,
-						end: prop.arg.loc.end.offset,
-					},
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.htmlTagOrAttr,
-					},
-				);
-				scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
+				if (prop.arg.content.startsWith('update:')) {
+					keyOffset = 'update:'.length;
+					key_1 = prop.arg.content.substr(keyOffset);
+					scriptGen.addText(`let ${var_on}!: { '${key_1}': ($event: InstanceType<typeof __VLS_components['UsTeleport']>['$props']['${key_1}']) => void };\n`);
+				}
+				else {
+					const key_2 = camelize('on-' + key_1);
+
+					scriptGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentProps['${getComponentName(node.tag)}'][`);
+					writeCodeWithQuotes(
+						key_2,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.htmlTagOrAttr,
+						},
+					);
+					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
+				}
 
 				const transformResult = transformOn(prop, node, context);
 				for (const prop_2 of transformResult.props) {
@@ -849,7 +865,7 @@ export function generate(
 					writeObjectProperty(
 						key_1,
 						{
-							start: prop.arg.loc.start.offset,
+							start: prop.arg.loc.start.offset + keyOffset,
 							end: prop.arg.loc.end.offset,
 						},
 						{
