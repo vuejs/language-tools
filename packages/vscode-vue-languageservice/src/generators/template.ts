@@ -1086,7 +1086,6 @@ export function generate(
 				},
 			});
 		}
-		scriptGen.addText(`/* ${slotName}, ${slotNameExp} */\n`)
 
 		function getSlotName() {
 			for (const prop2 of node.props) {
@@ -1102,7 +1101,6 @@ export function generate(
 		}
 		function getSlotNameExp() {
 			for (const prop2 of node.props) {
-				scriptGen.addText(`/* ${prop2.name}, ${prop2.type} */\n`);
 				if (prop2.type === NodeTypes.DIRECTIVE && prop2.name === 'bind' && prop2.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop2.arg.content === 'name') {
 					if (prop2.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
 						return prop2.exp.content;
