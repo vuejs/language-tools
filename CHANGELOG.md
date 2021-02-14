@@ -1,3 +1,15 @@
+### 0.21.0
+
+- feat: props `@update` event support
+- feat: `v-model="..."` support
+- feat: ts plugin status bar item
+- fix: improve events type-checking
+- fix: tsconfig update not working for ts plugin
+- fix: ref sugar variables hover info incorrect
+- fix: services not working for hyphenate events
+- fix: don't show confirm box if no import will change on move file
+- fix: props rename references should keep with hyphenate
+
 ### 0.20.9
 
 - feat: emit event type not matching warning
