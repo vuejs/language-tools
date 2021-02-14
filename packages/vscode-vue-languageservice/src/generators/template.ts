@@ -465,6 +465,7 @@ export function generate(
 							...capabilitiesSet.htmlTagOrAttr,
 							basic: false,
 						},
+						doRename: keepHyphenateName,
 					},
 				);
 				scriptGen.addText(`;\n`);
@@ -486,6 +487,7 @@ export function generate(
 							...capabilitiesSet.htmlTagOrAttr,
 							basic: false,
 						},
+						doRename: keepHyphenateName,
 					},
 				);
 				scriptGen.addText(`;\n`);
