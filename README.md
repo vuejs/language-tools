@@ -12,7 +12,7 @@ If you have question, you can open a issue, or ask me in [Discord](https://disco
 
 ## Quick Start
 
-Some templates that can used with Volar. (let me know if any others)
+Some templates that can used with Volar.
 
 [Vitesse](https://github.com/antfu/vitesse), [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts)
 
@@ -137,10 +137,6 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 </details>
 
 ## Note
-
-> Syntax highlighting is based on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight)
-
-> TS Plugin default disabled, you can use `Volar: Switch TS Plugin` to switch on.
 
 > Currently supported languages:
 > - template: html, pug
