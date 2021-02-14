@@ -1100,24 +1100,34 @@ export function generate(
 		});
 	}
 	function addMapping(gen: typeof scriptGen, mapping: Mapping<TsMappingData>) {
-		let sourceRange = mapping.sourceRange;
+		const newMapping = { ...mapping };
 		if (htmlToTemplate) {
-			const templateStart = htmlToTemplate(sourceRange.start, sourceRange.end);
-			if (templateStart !== undefined) {
-				const offset = templateStart - sourceRange.start;
-				sourceRange = {
-					start: sourceRange.start + offset,
-					end: sourceRange.end + offset,
-				};
-			}
-			else { // not found
-				return;
+
+			const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);
+			if (templateStart === undefined) return; // not found
+			const offset = templateStart - mapping.sourceRange.start;
+			newMapping.sourceRange = {
+				start: mapping.sourceRange.start + offset,
+				end: mapping.sourceRange.end + offset,
+			};
+
+			if (mapping.others) {
+				newMapping.others = [];
+				for (const other of mapping.others) {
+					let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end);
+					if (otherTemplateStart === undefined) continue;
+					const otherOffset = otherTemplateStart - other.sourceRange.start;
+					newMapping.others.push({
+						...other,
+						sourceRange: {
+							start: other.sourceRange.start + otherOffset,
+							end: other.sourceRange.end + otherOffset,
+						},
+					})
+				}
 			}
 		}
-		gen.addMapping2({
-			...mapping,
-			sourceRange,
-		});
+		gen.addMapping2(newMapping);
 	}
 };
 

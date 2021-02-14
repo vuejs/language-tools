@@ -111,13 +111,18 @@ export function useTemplateScript(
 		const crtOffset = gen.getText().length;
 		for (const maped of interpolations.value.mappings) {
 			gen.addMapping2({
+				...maped,
 				targetRange: {
 					start: maped.targetRange.start + crtOffset,
 					end: maped.targetRange.end + crtOffset,
 				},
-				sourceRange: maped.sourceRange,
-				mode: maped.mode,
-				data: maped.data,
+				others: maped.others ? maped.others.map(other => ({
+					...other,
+					targetRange: {
+						start: other.targetRange.start + crtOffset,
+						end: other.targetRange.end + crtOffset,
+					},
+				})) : undefined,
 			});
 		}
 		gen.addText(interpolations.value.text);
@@ -284,13 +289,18 @@ export function useTemplateScript(
 			}
 			for (const maped of data.value.mappings) {
 				sourceMap.add({
-					data: maped.data,
-					mode: maped.mode,
+					...maped,
 					sourceRange: {
 						start: maped.sourceRange.start + template.value.loc.start,
 						end: maped.sourceRange.end + template.value.loc.start,
 					},
-					targetRange: maped.targetRange,
+					others: maped.others ? maped.others.map(other => ({
+						...other,
+						sourceRange: {
+							start: other.sourceRange.start + template.value!.loc.start,
+							end: other.sourceRange.end + template.value!.loc.start,
+						},
+					})) : undefined,
 				});
 			}
 
@@ -343,13 +353,18 @@ export function useTemplateScript(
 			);
 			for (const maped of interpolations.value.cssMappings) {
 				sourceMap.add({
-					data: undefined,
-					mode: maped.mode,
+					...maped,
 					sourceRange: {
 						start: maped.sourceRange.start + template.value.loc.start,
 						end: maped.sourceRange.end + template.value.loc.start,
 					},
-					targetRange: maped.targetRange,
+					others: maped.others ? maped.others.map(other => ({
+						...other,
+						sourceRange: {
+							start: other.sourceRange.start + template.value!.loc.start,
+							end: other.sourceRange.end + template.value!.loc.start,
+						},
+					})) : undefined,
 				});
 			}
 			return sourceMap;
