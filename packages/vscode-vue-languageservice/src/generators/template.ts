@@ -432,12 +432,18 @@ export function generate(
 				}
 			}
 			else if (
+				prop.type === NodeTypes.DIRECTIVE
+				&& prop.name === 'model'
+			) {
+				write('props', 'modelValue', prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
+			}
+			else if (
 				prop.type === NodeTypes.ATTRIBUTE
 			) {
 				write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
 			}
 		}
-		function write(option: 'props' | 'emits', propName: string, start: number, end: number, checking = false) {
+		function write(option: 'props' | 'emits', propName: string, start: number, end: number, checking = false, rename = true) {
 			const props = new Set<string>();
 			const emits = new Set<string>();
 			if (option === 'props') {
@@ -464,6 +470,7 @@ export function generate(
 						capabilities: {
 							...capabilitiesSet.htmlTagOrAttr,
 							basic: false,
+							rename: rename,
 						},
 						doRename: keepHyphenateName,
 					},
@@ -486,6 +493,7 @@ export function generate(
 						capabilities: {
 							...capabilitiesSet.htmlTagOrAttr,
 							basic: false,
+							rename: rename,
 						},
 						doRename: keepHyphenateName,
 					},
@@ -552,15 +560,14 @@ export function generate(
 		for (const prop of node.props) {
 			if (
 				prop.type === NodeTypes.DIRECTIVE
-				&& prop.arg
+				&& (prop.name === 'model' || prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION)
 				&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
-				&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
 
-				const propName = hyphenate(prop.arg.content) === prop.arg.content ? camelize(prop.arg.content) : prop.arg.content;
+				const propName_1 = prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : 'modelValue';
+				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 				const propValue = prop.exp?.content ?? 'undefined';
-				const propName2 = prop.arg.content;
-				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
+				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
 
 				if (isClassOrStyleAttr) {
 					scriptGen.addText(`// @ts-ignore\n`);
@@ -570,12 +577,25 @@ export function generate(
 					// camelize name
 					const diagStart = scriptGen.getText().length;
 					// `'${propName}': (${propValue})`
-					if (prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) {
+					if (!prop.arg) {
 						writeObjectProperty(
-							propName,
+							propName_1,
+							{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + 'v-model'.length,
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.htmlTagOrAttr,
+							},
+						);
+					}
+					else if (prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) {
+						writeObjectProperty(
+							propName_2,
 							{
 								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.start.offset + propName2.length, // patch style attr
+								end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
 							},
 							{
 								vueTag: 'template',
@@ -586,7 +606,7 @@ export function generate(
 					}
 					else {
 						writeObjectProperty(
-							propName,
+							propName_2,
 							{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
@@ -635,9 +655,9 @@ export function generate(
 					});
 					scriptGen.addText(`,\n`);
 					// original name
-					if (propName2 !== propName) {
+					if (prop.arg && propName_1 !== propName_2) {
 						writeObjectProperty(
-							propName2,
+							propName_1,
 							{
 								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
