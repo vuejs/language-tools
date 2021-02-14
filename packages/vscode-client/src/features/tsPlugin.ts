@@ -12,8 +12,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.commands.registerCommand('volar.action.switchTsPlugin', async () => {
         const options = new Map<number, string>();
-        options.set(1, (isPluginEnabled() ? '• ' : '') + 'Enable TS Plugin');
-        options.set(2, (!isPluginEnabled() ? '• ' : '') + 'Disable TS Plugin');
+        options.set(1, (isConfigEnabled() ? '• ' : '') + 'Enable TS Plugin');
+        options.set(2, (!isConfigEnabled() ? '• ' : '') + 'Disable TS Plugin');
         options.set(3, 'Hide TS Plugin Status (or config "volar.tsPluginStatus")');
 
         const select = await userPick(options);
