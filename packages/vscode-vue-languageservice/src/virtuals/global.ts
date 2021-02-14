@@ -39,21 +39,31 @@ declare global {
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: Omit<__VLS_PropsType<T[K]>, keyof __VLS_GlobalAttrsBase> /* __VLS_GlobalAttrs has perf issue with Omit<> */ };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_PropsType<T[K]>> & Record<string, unknown> };
-	type __VLS_MapEmitType<T> = { [K in keyof T]: T[K] extends new (...args: any) => { $emit: infer Emit } ? Emit : () => void };
-	type __VLS_ExtractEmits<T> = T extends DefineComponent<
-		any,
-		any,
-		any,
-		any,
-		any,
-		any,
-		any,
-		infer E
-	>
-		? E
-		: never;
+	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
+	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : never;
 	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : T;
-	type __VLS_EmitEvent<T, E extends keyof __VLS_ExtractEmits<T>> = __VLS_ReturnVoid<__VLS_ExtractEmits<T>[E]>;
+	type __VLS_EmitEvent2<F, E> =
+		F extends {
+			(event: E, ...payload: infer P): infer R
+			(...args: any): any
+			(...args: any): any
+			(...args: any): any
+		} ? (...payload: P) => R
+		: F extends {
+			(event: E, ...payload: infer P): infer R
+			(...args: any): any
+			(...args: any): any
+		} ? (...payload: P) => R
+		: F extends {
+			(event: E, ...payload: infer P): infer R
+			(...args: any): any
+		} ? (...payload: P) => R
+		: F extends {
+			(event: E, ...payload: infer P): infer R
+		} ? (...payload: P) => R
+		: (...payload: any[]) => void | '[volar type warning] volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
+	type __VLS_EmitEvent<T, E> = T extends { __VLS_raw: infer R } ? __VLS_EmitEvent0<R, E> : __VLS_EmitEvent0<T, E>;
+	type __VLS_EmitEvent0<T, E> = T extends DefineComponent<infer _, any, any, any, any, any, any, infer E2> ? E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> : never : __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
 	type __VLS_FirstFunction<F1, F2> = NonNullable<F1> extends (...args: any) => any ? F1 : F2;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;

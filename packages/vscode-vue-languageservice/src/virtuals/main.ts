@@ -43,6 +43,7 @@ export function useScriptMain(
 			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
 			``,
 			`declare const _export: typeof __VLS_component & {`,
+			`__VLS_raw: typeof __VLS_component`,
 			`__VLS_options: typeof __VLS_options,`,
 			template.value ? `__VLS_slots: typeof import ('./${vueFileName}.__VLS_template').default,` : `// no template`,
 			`};`,
