@@ -129,17 +129,16 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				return info.project.readDirectory(path, ['.vue'], exclude, include, depth);
 			},
-			fileExists: info.project.fileExists,
-			readFile: info.project.readFile,
+			fileExists: fileName => info.project.fileExists(fileName),
+			readFile: fileName => info.project.readFile(fileName),
 		};
 
 		const tsConfig = info.project.projectName;
-		const json = info.project.readFile(tsConfig);
-		if (!json) return [];
-		let parsedJson = {};
-		try { parsedJson = JSON.parse(json); } catch { }
-		const content = ts.parseJsonConfigFileContent(parsedJson, parseConfigHost, path.dirname(tsConfig), {}, path.basename(tsConfig));
-		return content.fileNames;
+		if (!info.project.fileExists(tsConfig))
+			return [];
+		const jsonConfigFile = ts.readJsonConfigFile(tsConfig, fileName => info.project.readFile(fileName));
+		const { fileNames } = ts.parseJsonSourceFileConfigFileContent(jsonConfigFile, parseConfigHost, path.dirname(tsConfig), {}, path.basename(tsConfig));
+		return fileNames;
 	}
 	function checkFilesAddRemove() {
 		let changed = false;

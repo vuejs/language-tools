@@ -1,3 +1,7 @@
+### 0.21.5
+
+- fix: tsconfig parsing for ts plugin incorrect
+
 ### 0.21.4
 
 - feat: `vue.d.ts` emit support
