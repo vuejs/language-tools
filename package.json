@@ -216,6 +216,11 @@
 				"command": "volar.action.switchTsPlugin",
 				"title": "Switch TS Plugin on / off",
 				"category": "Volar"
+			},
+			{
+				"command": "volar.action.emitDts",
+				"title": "Emit TypeScript declaration file (.d.ts)",
+				"category": "Volar"
 			}
 		],
 		"menus": {

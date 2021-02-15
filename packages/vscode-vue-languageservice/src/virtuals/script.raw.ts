@@ -12,8 +12,8 @@ export function useScriptFormat(
 		if (script.value) {
 			const vueDoc = getUnreactiveDoc();
 			const lang = getValidScriptSyntax(script.value.lang);
-			const uri = `${vueDoc.uri}.__VLS_script.raw.${lang}`;
-			return TextDocument.create(uri, syntaxToLanguageId(lang), version++, script.value.content + '\n\nexport {}');
+			const uri = `${vueDoc.uri}.${lang}`;
+			return TextDocument.create(uri, syntaxToLanguageId(lang), version++, script.value.content);
 		}
 	});
 	const sourceMap = computed(() => {

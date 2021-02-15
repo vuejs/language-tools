@@ -35,6 +35,13 @@ export namespace FormatAllScriptsRequest {
 export namespace WriteVirtualFilesRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.writeVirtualFiles');
 }
+export namespace EmitDtsRequest {
+	export const type: RequestType<{
+		uri: string | undefined,
+		dir: string | undefined,
+		all: boolean,
+	}, undefined, any> = new RequestType('volar.action.emitDts');
+}
 
 export namespace RestartServerNotification {
 	export const type: NotificationType<undefined> = new NotificationType('volar.action.restartServer');

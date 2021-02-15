@@ -27,7 +27,12 @@ import * as dedupe from './utils/dedupe';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
-export function createSourceFile(initialDocument: TextDocument, tsLanguageService: ts2.LanguageService, ts: typeof import('typescript')) {
+export function createSourceFile(
+	initialDocument: TextDocument,
+	tsLanguageService: ts2.LanguageService,
+	ts: typeof import('typescript'),
+	dtsMode?: Ref<boolean>,
+) {
 	// sources
 	const tsProjectVersion = ref<string>();
 	const vueDoc = ref(initialDocument);
@@ -100,6 +105,7 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 
 	// map / set
 	const tsSourceMaps = computed(() => {
+		if (dtsMode?.value) return [];
 		const result = [
 			virtualScriptGen.sourceMap.value,
 			virtualScriptGen.sourceMapForSuggestion.value,
@@ -110,7 +116,14 @@ export function createSourceFile(initialDocument: TextDocument, tsLanguageServic
 		return result;
 	});
 	const tsDocuments = computed(() => {
+
 		const docs = new Map<string, TextDocument>();
+
+		if (dtsMode?.value) {
+			if (virtualScriptRaw.textDocument.value)
+				docs.set(virtualScriptRaw.textDocument.value.uri, virtualScriptRaw.textDocument.value);
+			return docs;
+		}
 
 		docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 

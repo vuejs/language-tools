@@ -48,11 +48,12 @@ import {
 	SemanticTokensChangedNotification,
 	RangeSemanticTokensRequest,
 	DocumentVersionRequest,
+	EmitDtsRequest,
 	// html
 	TagCloseRequest,
 	notEmpty,
 } from '@volar/shared';
-import * as upath from 'upath';
+import * as path from 'upath';
 import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
@@ -186,10 +187,10 @@ function initLanguageServiceApi(rootPath: string) {
 					continue;
 				}
 				const doc = sourceFile.getTextDocument();
+				progress.report(i++ / sourceFiles.length * 100, path.relative(service.languageService.rootPath, uriToFsPath(doc.uri)));
 				const edits = service.languageService.doFormatting(doc, options) ?? [];
 				const workspaceEdit: WorkspaceEdit = { changes: { [doc.uri]: edits } };
 				await connection.workspace.applyEdit(workspaceEdit);
-				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(doc.uri)));
 			}
 		}
 		progress.done();
@@ -353,6 +354,76 @@ function initLanguageServiceDoc(rootPath: string) {
 	connection.onNotification(RestartServerNotification.type, async () => {
 		host.restart();
 	});
+	connection.onRequest(EmitDtsRequest.type, async handler => {
+		if (handler.all) {
+			const progress = await connection.window.createWorkDoneProgress();
+			progress.begin('Emit', 0, '', true);
+			for (const [_, { languageService }] of host.services) {
+				languageService.setDtsMode(true);
+				const sourceFiles = languageService.getAllSourceFiles();
+				let i = 0;
+				for (const sourceFile of sourceFiles) {
+					progress.report(i++ / sourceFiles.length * 100, path.relative(languageService.rootPath, uriToFsPath(sourceFile.uri)));
+					for (const [uri, doc] of sourceFile.getTsDocuments()) {
+						if (progress.token.isCancellationRequested) {
+							break;
+						}
+						const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
+						for (const file of output.outputFiles) {
+							await fs.writeFile(file.name, file.text, "utf8");
+						}
+					}
+				}
+				languageService.setDtsMode(false);
+			}
+			progress.done();
+		}
+		if (handler.dir) {
+			const progress = await connection.window.createWorkDoneProgress();
+			progress.begin('Emit', 0, '', true);
+			for (const [_, { languageService }] of host.services) {
+				languageService.setDtsMode(true);
+				const sourceFiles = languageService.getAllSourceFiles();
+				let nums = 0;
+				let i = 0;
+				for (const sourceFile of sourceFiles) {
+					if (path.dirname(sourceFile.uri) === path.dirname(handler.dir)) {
+						nums++;
+					}
+				}
+				for (const sourceFile of sourceFiles) {
+					if (path.dirname(sourceFile.uri) === path.dirname(handler.dir)) {
+						progress.report(i++ / nums * 100, path.relative(languageService.rootPath, uriToFsPath(sourceFile.uri)) + '.d.ts');
+						for (const [uri, doc] of sourceFile.getTsDocuments()) {
+							if (progress.token.isCancellationRequested) {
+								break;
+							}
+							const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
+							for (const file of output.outputFiles) {
+								await fs.writeFile(file.name, file.text, "utf8");
+							}
+						}
+					}
+				}
+				languageService.setDtsMode(false);
+			}
+			progress.done();
+		}
+		if (handler.uri) {
+			const languageService = host.bestMatch(handler.uri);
+			const sourceFile = languageService?.getSourceFile(handler.uri);
+			if (languageService && sourceFile) {
+				languageService.setDtsMode(true);
+				for (const [uri, doc] of sourceFile.getTsDocuments()) {
+					const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
+					for (const file of output.outputFiles) {
+						await fs.writeFile(file.name, file.text, "utf8");
+					}
+				}
+				languageService.setDtsMode(false);
+			}
+		}
+	});
 	connection.onRequest(WriteVirtualFilesRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Write', 0, '', true);
@@ -364,13 +435,13 @@ function initLanguageServiceDoc(rootPath: string) {
 			const sourceFiles = service.languageService.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
+				progress.report(i++ / sourceFiles.length * 100, path.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 				for (const [uri, doc] of sourceFile.getTsDocuments()) {
 					if (progress.token.isCancellationRequested) {
-						continue;
+						break;
 					}
 					await fs.writeFile(uriToFsPath(uri), doc.getText(), "utf8");
 				}
-				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 			}
 		}
 		progress.done();
@@ -386,6 +457,7 @@ function initLanguageServiceDoc(rootPath: string) {
 			const sourceFiles = service.languageService.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
+				progress.report(i++ / sourceFiles.length * 100, path.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 				if (progress.token.isCancellationRequested) {
 					continue;
 				}
@@ -397,7 +469,6 @@ function initLanguageServiceDoc(rootPath: string) {
 				});
 				errors += _result.filter(error => error.severity === DiagnosticSeverity.Error).length;
 				warnings += _result.filter(error => error.severity === DiagnosticSeverity.Warning).length;
-				progress.report(i++ / sourceFiles.length * 100, upath.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
 			}
 		}
 		progress.done();

@@ -56,8 +56,7 @@ export function generate(
             }
         );
         gen.addText(`;\n`);
-        gen.addText(`import __VLS_ScriptSrc from '${script.src}';\n`);
-        gen.addText(`export default __VLS_ScriptSrc;\n`);
+        gen.addText(`export { default } from '${script.src}';\n`);
     }
     function writeScript() {
         if (!script)

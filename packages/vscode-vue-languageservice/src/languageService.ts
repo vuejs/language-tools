@@ -84,8 +84,10 @@ export function createLanguageService(
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);
+	let dtsMode = ref(false);
 	let initTemplateScript = false; // html components completion require template data
 	let shouldCheckGlobalComponentsUpdate = false;
+	let shouldSendUpdate = true;
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
@@ -277,6 +279,10 @@ export function createLanguageService(
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		tsPlugin,
+		setDtsMode: (_dtsMode: boolean) => {
+			dtsMode.value = _dtsMode;
+			tsProjectVersion.value++;
+		},
 		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
@@ -548,14 +554,16 @@ export function createLanguageService(
 		}
 
 		for (const uri of uris) {
-			onUpdate?.(currentNums / updateNums);
+			if (shouldSendUpdate) {
+				onUpdate?.(currentNums / updateNums);
+			}
 			currentNums++;
 
 			const sourceFile = sourceFiles.get(uri);
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, dtsMode));
 				vueScriptsUpdated = true;
 			}
 			else {
@@ -583,7 +591,9 @@ export function createLanguageService(
 			}
 
 			for (const uri of templateScriptUpdateUris) {
-				onUpdate?.(currentNums / updateNums);
+				if (shouldSendUpdate) {
+					onUpdate?.(currentNums / updateNums);
+				}
 				currentNums++;
 
 				const sourceFile = sourceFiles.get(uri);
@@ -597,7 +607,13 @@ export function createLanguageService(
 		if (vueTemplageScriptUpdated) {
 			tsProjectVersion.value++;
 		}
-		onUpdate?.(1);
+		if (shouldSendUpdate) {
+			onUpdate?.(1);
+		}
+
+		if (shouldUpdateTemplateScript) {
+			shouldSendUpdate = false;
+		}
 	}
 	function unsetSourceFiles(uris: string[]) {
 		let updated = false;

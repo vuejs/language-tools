@@ -1,3 +1,8 @@
+### 0.21.4
+
+- feat: `vue.d.ts` emit support
+- fix: events type-checking not working for array emits define
+
 ### 0.21.3
 
 - fix: slot name expression types incorrect
