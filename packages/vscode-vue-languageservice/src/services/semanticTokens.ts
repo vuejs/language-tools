@@ -2,7 +2,6 @@ import type { TsApiRegisterOptions } from '../types';
 import { CancellationToken, Range, ResultProgressReporter, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensPartialResult } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import { MapedMode, Mapping, SourceMap } from '../utils/sourceMaps';
 import { hyphenate } from '@vue/shared';
 import * as languageServices from '../utils/languageServices';
 import * as html from 'vscode-html-languageservice';
@@ -130,11 +129,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					for (const token of tokens) {
 						const tsStart = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] });
 						const tsEnd = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
-						const vueRange = sourceMap.targetToSource2({ start: tsStart, end: tsEnd });
+						const vueRange = sourceMap.targetToSource2(tsStart, tsEnd);
 						if (!vueRange?.data.capabilities.semanticTokens)
 							continue;
-						const vuePos = document.positionAt(vueRange.range.start);
-						result.push([vuePos.line, vuePos.character, vueRange.range.end - vueRange.range.start, token[3], token[4]]);
+						const vuePos = document.positionAt(vueRange.start);
+						result.push([vuePos.line, vuePos.character, vueRange.end - vueRange.start, token[3], token[4]]);
 					}
 				}
 			}
@@ -172,9 +171,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(tokenOffset, tokenLength);
 						if (components.has(tokenText)) {
-							const vueMaped = sourceMap.targetToSource2({ start: tokenOffset, end: tokenOffset });
-							if (vueMaped) {
-								const vueOffset = vueMaped.range.start;
+							const vueRange = sourceMap.targetToSource2(tokenOffset);
+							if (vueRange) {
+								const vueOffset = vueRange.start;
 								const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
 								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
 							}

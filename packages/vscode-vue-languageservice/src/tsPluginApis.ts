@@ -64,16 +64,16 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
             symbols = symbols.concat(_symbols);
             for (const ref of _symbols) {
                 loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-                for (const teleport of mapper.ts.teleports2(ref.fileName, { start: ref.textSpan.start, end: ref.textSpan.start + ref.textSpan.length })) {
-                    if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleport.sideData.capabilities.definitions)
+                for (const teleRange of mapper.ts.teleports2(ref.fileName, ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+                    if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
                         continue;
-                    if ((mode === 'references') && !teleport.sideData.capabilities.references)
+                    if ((mode === 'references') && !teleRange.sideData.capabilities.references)
                         continue;
-                    if ((mode === 'rename') && !teleport.sideData.capabilities.rename)
+                    if ((mode === 'rename') && !teleRange.sideData.capabilities.rename)
                         continue;
-                    if (loopChecker.has(ref.fileName + ':' + teleport.range.start))
+                    if (loopChecker.has(ref.fileName + ':' + teleRange.start))
                         continue;
-                    withTeleports(ref.fileName, teleport.range.start);
+                    withTeleports(ref.fileName, teleRange.start);
                 }
             }
         }
@@ -100,12 +100,12 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
             symbols = symbols.concat(_symbols.definitions);
             for (const ref of _symbols.definitions) {
                 loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-                for (const teleport of mapper.ts.teleports2(ref.fileName, { start: ref.textSpan.start, end: ref.textSpan.start + ref.textSpan.length })) {
-                    if (!teleport.sideData.capabilities.definitions)
+                for (const teleRange of mapper.ts.teleports2(ref.fileName, ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+                    if (!teleRange.sideData.capabilities.definitions)
                         continue;
-                    if (loopChecker.has(ref.fileName + ':' + teleport.range.start))
+                    if (loopChecker.has(ref.fileName + ':' + teleRange.start))
                         continue;
-                    withTeleports(ref.fileName, teleport.range.start);
+                    withTeleports(ref.fileName, teleRange.start);
                 }
             }
         }
@@ -124,12 +124,12 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
             for (const symbol of _symbols) {
                 for (const ref of symbol.references) {
                     loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-                    for (const teleport of mapper.ts.teleports2(ref.fileName, { start: ref.textSpan.start, end: ref.textSpan.start + ref.textSpan.length })) {
-                        if (!teleport.sideData.capabilities.references)
+                    for (const teleRange of mapper.ts.teleports2(ref.fileName, ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+                        if (!teleRange.sideData.capabilities.references)
                             continue;
-                        if (loopChecker.has(ref.fileName + ':' + teleport.range.start))
+                        if (loopChecker.has(ref.fileName + ':' + teleRange.start))
                             continue;
-                        withTeleports(ref.fileName, teleport.range.start);
+                        withTeleports(ref.fileName, teleRange.start);
                     }
                 }
             }
@@ -176,12 +176,12 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
     function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
         if (!fileName) return;
         if (!textSpan) return;
-        for (const sourceMaped of mapper.ts.from2(fileName, { start: textSpan.start, end: textSpan.start + textSpan.length })) {
+        for (const vueRange of mapper.ts.from2(fileName, textSpan.start, textSpan.start + textSpan.length)) {
             return {
-                fileName: sourceMaped.fileName,
+                fileName: vueRange.fileName,
                 textSpan: {
-                    start: sourceMaped.range.start,
-                    length: sourceMaped.range.end - sourceMaped.range.start,
+                    start: vueRange.start,
+                    length: vueRange.end - vueRange.start,
                 },
             }
         }

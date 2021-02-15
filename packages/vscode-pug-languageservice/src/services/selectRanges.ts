@@ -9,9 +9,9 @@ export function register(htmlLanguageService: html.LanguageService) {
 
         const htmlPositions: Position[] = [];
         for (const position of positions) {
-            const htmlMaped = pugDocument.sourceMap.sourceToTarget({ start: position, end: position });
-            if (!htmlMaped) continue;
-            htmlPositions.push(htmlMaped.range.start);
+            const htmlRange = pugDocument.sourceMap.sourceToTarget(position);
+            if (!htmlRange) continue;
+            htmlPositions.push(htmlRange.start);
         }
 
         const htmlResult = htmlLanguageService.getSelectionRanges(

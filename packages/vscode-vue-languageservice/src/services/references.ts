@@ -23,16 +23,16 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let vueResult: Location[] = [];
 
 		// vue -> ts
-		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+		for (const tsRange of mapper.ts.to(uri, position)) {
 
-			if (!tsMaped.data.capabilities.references)
+			if (!tsRange.data.capabilities.references)
 				continue;
 
-			withTeleports(tsMaped.textDocument.uri, tsMaped.range.start);
+			withTeleports(tsRange.textDocument.uri, tsRange.start);
 
 			function withTeleports(uri: string, position: Position) {
 
-				const tsLocs = tsMaped.languageService.findReferences(
+				const tsLocs = tsRange.languageService.findReferences(
 					uri,
 					position,
 				);
@@ -40,12 +40,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 				for (const tsLoc of tsLocs) {
 					loopChecker.add({ uri: tsLoc.uri, range: tsLoc.range });
-					for (const teleport of mapper.ts.teleports(tsLoc.uri, tsLoc.range)) {
-						if (!teleport.sideData.capabilities.references)
+					for (const teleRange of mapper.ts.teleports(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
+						if (!teleRange.sideData.capabilities.references)
 							continue;
-						if (loopChecker.has({ uri: tsLoc.uri, range: teleport.range }))
+						if (loopChecker.has({ uri: tsLoc.uri, range: teleRange }))
 							continue;
-						withTeleports(tsLoc.uri, teleport.range.start);
+						withTeleports(tsLoc.uri, teleRange.start);
 					}
 				}
 			}
@@ -53,10 +53,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// ts -> vue
 		for (const tsLoc of tsResult) {
-			for (const vueMaped of mapper.ts.from(tsLoc.uri, tsLoc.range)) {
+			for (const vueRange of mapper.ts.from(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
 				vueResult.push({
-					uri: vueMaped.textDocument.uri,
-					range: vueMaped.range,
+					uri: vueRange.textDocument.uri,
+					range: vueRange,
 				});
 			}
 		}
@@ -69,21 +69,21 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let vueResult: Location[] = [];
 
 		// vue -> css
-		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
-			const cssLocs = cssMaped.languageService.findReferences(
-				cssMaped.textDocument,
-				cssMaped.range.start,
-				cssMaped.stylesheet,
+		for (const cssRange of mapper.css.to(uri, position)) {
+			const cssLocs = cssRange.languageService.findReferences(
+				cssRange.textDocument,
+				cssRange.start,
+				cssRange.stylesheet,
 			);
 			cssResult = cssResult.concat(cssLocs);
 		}
 
 		// css -> vue
 		for (const cssLoc of cssResult) {
-			for (const vueMaped of mapper.css.from(cssLoc.uri, cssLoc.range)) {
+			for (const vueRange of mapper.css.from(cssLoc.uri, cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
-					uri: vueMaped.textDocument.uri,
-					range: vueMaped.range,
+					uri: vueRange.textDocument.uri,
+					range: vueRange,
 				});
 			}
 		}

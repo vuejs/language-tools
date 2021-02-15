@@ -148,11 +148,11 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 					? languageServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext)
 					: languageServices.pug.findDocumentLinks(sourceMap.pugDocument, documentContext)
 				for (const link of links) {
-					const vueLoc = sourceMap.targetToSource(link.range);
-					if (vueLoc) {
+					const vueRange = sourceMap.targetToSource(link.range.start, link.range.end);
+					if (vueRange) {
 						result.push({
 							...link,
-							range: vueLoc.range,
+							range: vueRange,
 						});
 					}
 				}
@@ -167,11 +167,11 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 				if (!cssLanguageService) continue;
 				const links = cssLanguageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
-					const vueLoc = sourceMap.targetToSource(link.range);
-					if (vueLoc) {
+					const vueRange = sourceMap.targetToSource(link.range.start, link.range.end);
+					if (vueRange) {
 						result.push({
 							...link,
-							range: vueLoc.range,
+							range: vueRange,
 						});
 					}
 				}

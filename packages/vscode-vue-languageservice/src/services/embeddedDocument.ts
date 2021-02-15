@@ -33,49 +33,49 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.data.capabilities.formatting) continue;
+				const tsRanges = sourceMap.sourceToTargets(range.start, range.end);
+				for (const tsRange of tsRanges) {
+					if (!tsRange.data.capabilities.formatting) continue;
 					return {
 						sourceMap,
 						document: sourceMap.targetDocument,
-						range: virtualLoc.range,
+						range: tsRange,
 					};
 				}
 			}
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
+				const htmlRanges = sourceMap.sourceToTargets(range.start, range.end);
+				for (const htmlRange of htmlRanges) {
 					return {
 						sourceMap,
 						document: sourceMap.targetDocument,
-						range: virtualLoc.range,
+						range: htmlRange,
 					};
 				}
 			}
 		}
 		function getPugResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
+				const pugRanges = sourceMap.sourceToTargets(range.start, range.end);
+				for (const pugRange of pugRanges) {
 					return {
 						sourceMap,
 						document: sourceMap.targetDocument,
-						range: virtualLoc.range,
+						range: pugRange,
 					};
 				}
 			}
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
+				const cssRanges = sourceMap.sourceToTargets(range.start, range.end);
+				for (const cssRange of cssRanges) {
 					return {
 						sourceMap,
 						document: sourceMap.targetDocument,
-						range: virtualLoc.range,
+						range: cssRange,
 					};
 				}
 			}

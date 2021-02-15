@@ -178,11 +178,11 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 				const cheapTs = getCheapTsService2(ts, sourceMap.targetDocument);
 				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
 				for (const textEdit of textEdits) {
-					for (const vueLoc of sourceMap.targetToSources(textEdit.range)) {
-						if (!vueLoc.data.capabilities.formatting) continue;
+					for (const vueRange of sourceMap.targetToSources(textEdit.range.start, textEdit.range.end)) {
+						if (!vueRange.data.capabilities.formatting) continue;
 						result.push({
 							newText: textEdit.newText,
-							range: vueLoc.range,
+							range: vueRange,
 						});
 					}
 				}

@@ -261,8 +261,8 @@ export function useTemplateScript(
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
 					for (const cssRange of maped.cssRanges) {
-						const vueLoc = cssSourceMap.targetToSource2(cssRange);
-						if (!vueLoc) continue;
+						const vueRange = cssSourceMap.targetToSource2(cssRange.start, cssRange.end);
+						if (!vueRange) continue;
 						sourceMap.add({
 							data: {
 								vueTag: 'style',
@@ -281,7 +281,7 @@ export function useTemplateScript(
 								doRename: maped.patchRename ? ((oldName, newName) => '.' + newName) : undefined,
 							},
 							mode: maped.mode,
-							sourceRange: vueLoc.range,
+							sourceRange: vueRange,
 							targetRange: tsRange,
 						});
 					}

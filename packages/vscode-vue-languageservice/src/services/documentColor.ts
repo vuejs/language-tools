@@ -22,11 +22,11 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 				if (!cssLanguageService) continue;
 				let colors = cssLanguageService.findDocumentColors(sourceMap.targetDocument, sourceMap.stylesheet);
 				for (const color of colors) {
-					const vueLoc = sourceMap.targetToSource(color.range);
-					if (vueLoc) {
+					const vueRange = sourceMap.targetToSource(color.range.start, color.range.end);
+					if (vueRange) {
 						result.push({
 							...color,
-							range: vueLoc.range,
+							range: vueRange,
 						});
 					}
 				}

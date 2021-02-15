@@ -1,4 +1,4 @@
-import type { Range } from 'vscode-languageserver/node';
+import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export { transform as transformCompletionList } from './transforms/completionList';
@@ -40,69 +40,66 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 	}
 
 	// Range
-	public isSource(range: Range) {
-		return this.maps(range, true, true).length > 0;
+	public isSource(start: Position, end?: Position) {
+		return this.maps(start, end ?? start, true, true).length > 0;
 	}
-	public isTarget(range: Range) {
-		return this.maps(range, false, true).length > 0;
+	public isTarget(start: Position, end?: Position) {
+		return this.maps(start, end ?? start, false, true).length > 0;
 	}
-	public targetToSource(range: Range) {
-		const result = this.maps(range, false, true);
+	public targetToSource(start: Position, end?: Position) {
+		const result = this.maps(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
-	public sourceToTarget(range: Range) {
-		const result = this.maps(range, true, true);
+	public sourceToTarget(start: Position, end?: Position) {
+		const result = this.maps(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
-	public targetToSources(range: Range) {
-		return this.maps(range, false);
+	public targetToSources(start: Position, end?: Position) {
+		return this.maps(start, end ?? start, false);
 	}
-	public sourceToTargets(range: Range) {
-		return this.maps(range, true);
+	public sourceToTargets(start: Position, end?: Position) {
+		return this.maps(start, end ?? start, true);
 	}
-	private maps(range: Range, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private maps(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const toDoc = sourceToTarget ? this.targetDocument : this.sourceDocument;
 		const fromDoc = sourceToTarget ? this.sourceDocument : this.targetDocument;
-		const fromRange = {
-			start: fromDoc.offsetAt(range.start),
-			end: fromDoc.offsetAt(range.end),
-		};
+		const startOffset = fromDoc.offsetAt(start);
+		const endOffset = fromDoc.offsetAt(end);
 		return this
-			.maps2(fromRange, sourceToTarget, returnFirstResult)
+			.maps2(startOffset, endOffset, sourceToTarget, returnFirstResult)
 			.map(result => ({
 				data: result.data,
-				range: {
-					start: toDoc.positionAt(result.range.start),
-					end: toDoc.positionAt(result.range.end),
-				} as Range,
+				start: toDoc.positionAt(result.start),
+				end: toDoc.positionAt(result.end),
 			}));
 	}
 
 	// MapedRange
-	public isSource2(range: MapedRange) {
-		return this.maps2(range, true, true).length > 0;
+	public isSource2(start: number, end?: number) {
+		return this.maps2(start, end ?? start, true, true).length > 0;
 	}
-	public isTarget2(range: MapedRange) {
-		return this.maps2(range, false, true).length > 0;
+	public isTarget2(start: number, end?: number) {
+		return this.maps2(start, end ?? start, false, true).length > 0;
 	}
-	public targetToSource2(range: MapedRange) {
-		const result = this.maps2(range, false, true);
+	public targetToSource2(start: number, end?: number) {
+		const result = this.maps2(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
-	public sourceToTarget2(range: MapedRange) {
-		const result = this.maps2(range, true, true);
+	public sourceToTarget2(start: number, end?: number) {
+		const result = this.maps2(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
-	public targetToSources2(range: MapedRange) {
-		return this.maps2(range, false);
+	public targetToSources2(start: number, end?: number) {
+		return this.maps2(start, end ?? start, false);
 	}
-	public sourceToTargets2(range: MapedRange) {
-		return this.maps2(range, true);
+	public sourceToTargets2(start: number, end?: number) {
+		return this.maps2(start, end ?? start, true);
 	}
-	private maps2(fromRange: MapedRange, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private maps2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const result: {
 			data: MapedData,
-			range: MapedRange,
+			start: number,
+			end: number,
 		}[] = [];
 		for (const maped of this) {
 			const ranges = [{
@@ -114,42 +111,36 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 				const mapedToRange = sourceToTarget ? maped_2.targetRange : maped_2.sourceRange;
 				const mapedFromRange = sourceToTarget ? maped_2.sourceRange : maped_2.targetRange;
 				if (maped_2.mode === MapedMode.Gate) {
-					if (fromRange.start === mapedFromRange.start && fromRange.end === mapedFromRange.end) {
+					if (start === mapedFromRange.start && end === mapedFromRange.end) {
 						const offsets = [mapedToRange.start, mapedToRange.end];
 						result.push({
 							data: maped.data,
-							range: {
-								start: Math.min(offsets[0], offsets[1]),
-								end: Math.max(offsets[0], offsets[1]),
-							},
+							start: Math.min(offsets[0], offsets[1]),
+							end: Math.max(offsets[0], offsets[1]),
 						});
 						if (returnFirstResult) return result;
 						break;
 					}
 				}
 				else if (maped_2.mode === MapedMode.Offset) {
-					if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
-						const offsets = [mapedToRange.start + fromRange.start - mapedFromRange.start, mapedToRange.end + fromRange.end - mapedFromRange.end];
+					if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
+						const offsets = [mapedToRange.start + start - mapedFromRange.start, mapedToRange.end + end - mapedFromRange.end];
 						result.push({
 							data: maped.data,
-							range: {
-								start: Math.min(offsets[0], offsets[1]),
-								end: Math.max(offsets[0], offsets[1]),
-							},
+							start: Math.min(offsets[0], offsets[1]),
+							end: Math.max(offsets[0], offsets[1]),
 						});
 						if (returnFirstResult) return result;
 						break;
 					}
 				}
 				else if (maped_2.mode === MapedMode.In) {
-					if (fromRange.start >= mapedFromRange.start && fromRange.end <= mapedFromRange.end) {
+					if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 						const offsets = [mapedToRange.start, mapedToRange.end];
 						result.push({
 							data: maped.data,
-							range: {
-								start: Math.min(offsets[0], offsets[1]),
-								end: Math.max(offsets[0], offsets[1]),
-							},
+							start: Math.min(offsets[0], offsets[1]),
+							end: Math.max(offsets[0], offsets[1]),
 						});
 						if (returnFirstResult) return result;
 						break;

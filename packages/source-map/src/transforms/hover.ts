@@ -5,11 +5,11 @@ export function transform(hover: Hover | undefined | null, sourceMap: SourceMap)
     if (!hover?.range) {
         return hover;
     }
-    const vueLoc = sourceMap.targetToSource(hover.range);
-    if (vueLoc) {
+    const vueRange = sourceMap.targetToSource(hover.range.start, hover.range.end);
+    if (vueRange) {
         return {
             ...hover,
-            range: vueLoc.range,
+            range: vueRange,
         };
     }
 }

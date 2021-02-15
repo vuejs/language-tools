@@ -3,6 +3,7 @@ import {
 	DiagnosticSeverity,
 	CompletionItem,
 	DiagnosticTag,
+	Range,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, notEmpty } from '@volar/shared';
@@ -73,9 +74,9 @@ export function createSourceFile(
 			return {
 				html: pugDoc.html,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-					const pugMaped = pugDoc.sourceMap.targetToSource2({ start: htmlStart, end: htmlEnd });
-					if (pugMaped) {
-						return pugMaped.range.start;
+					const pugRange = pugDoc.sourceMap.targetToSource2(htmlStart, htmlEnd);
+					if (pugRange) {
+						return pugRange.start;
 					}
 				},
 			}
@@ -515,10 +516,10 @@ export function createSourceFile(
 						const htmlDoc = pugDoc.sourceMap.targetDocument;
 						const vueCompileErrors = getVueCompileErrors(htmlDoc);
 						for (const vueCompileError of vueCompileErrors) {
-							let pugRange = pugDoc.sourceMap.targetToSource(vueCompileError.range)?.range;
+							let pugRange: Range | undefined = pugDoc.sourceMap.targetToSource(vueCompileError.range.start, vueCompileError.range.end);
 							if (!pugRange) {
-								const pugStart = pugDoc.sourceMap.targetToSource({ start: vueCompileError.range.start, end: vueCompileError.range.start })?.range.start;
-								const pugEnd = pugDoc.sourceMap.targetToSource({ start: vueCompileError.range.end, end: vueCompileError.range.end })?.range.end;
+								const pugStart = pugDoc.sourceMap.targetToSource(vueCompileError.range.start, vueCompileError.range.start)?.start;
+								const pugEnd = pugDoc.sourceMap.targetToSource(vueCompileError.range.end, vueCompileError.range.end)?.end;
 								if (pugStart && pugEnd) {
 									pugRange = {
 										start: pugStart,
@@ -731,10 +732,10 @@ export function createSourceFile(
 				for (const diag of errors_1.value) {
 					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = virtualTemplateGen.teleportSourceMap.value.sourceToTargets(diag.range);
+					const propRights = virtualTemplateGen.teleportSourceMap.value.sourceToTargets(diag.range.start, diag.range.end);
 					for (const propRight of propRights) {
 						if (propRight.data.isAdditionalReference) continue;
-						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.range.start);
+						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
 							if (definition.uri !== virtualScriptGen.textDocument.value.uri) continue;
 							result.push({
@@ -769,12 +770,12 @@ export function createSourceFile(
 					for (const sourceMap of sourceMaps) {
 						if (sourceMap.targetDocument.uri !== virtualScriptUri)
 							continue;
-						const vueLoc = sourceMap.targetToSource(error.range);
-						if (!vueLoc)
+						const vueRange = sourceMap.targetToSource(error.range.start, error.range.end);
+						if (!vueRange)
 							continue;
 						result.push({
 							...error,
-							range: vueLoc.range,
+							range: vueRange,
 						});
 					}
 				}
@@ -788,12 +789,12 @@ export function createSourceFile(
 				for (const sourceMap of sourceMaps) {
 					if (sourceMap.targetDocument.uri !== virtualScriptUri)
 						continue;
-					const vueLoc = sourceMap.targetToSource(error.range);
-					if (!vueLoc || !vueLoc.data.capabilities.diagnostic)
+					const vueRange = sourceMap.targetToSource(error.range.start, error.range.end);
+					if (!vueRange || !vueRange.data.capabilities.diagnostic)
 						continue;
 					result.push({
 						...error,
-						range: vueLoc.range,
+						range: vueRange,
 					});
 					found = true;
 				}
@@ -801,23 +802,17 @@ export function createSourceFile(
 					for (const sourceMap of sourceMaps) {
 						if (sourceMap.targetDocument.uri !== virtualScriptUri)
 							continue;
-						const vueLocStart = sourceMap.targetToSource({
-							start: error.range.start,
-							end: error.range.start,
-						});
-						if (!vueLocStart || !vueLocStart.data.capabilities.diagnostic)
+						const vueStartRange = sourceMap.targetToSource(error.range.start);
+						if (!vueStartRange || !vueStartRange.data.capabilities.diagnostic)
 							continue;
-						const vueLocEnd = sourceMap.targetToSource({
-							start: error.range.end,
-							end: error.range.end,
-						});
-						if (!vueLocEnd || !vueLocEnd.data.capabilities.diagnostic)
+						const vueEndRange = sourceMap.targetToSource(error.range.end);
+						if (!vueEndRange || !vueEndRange.data.capabilities.diagnostic)
 							continue;
 						result.push({
 							...error,
 							range: {
-								start: vueLocStart.range.start,
-								end: vueLocEnd.range.start,
+								start: vueStartRange.start,
+								end: vueEndRange.start,
 							},
 						});
 					}

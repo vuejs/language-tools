@@ -5,11 +5,11 @@ export function transform(textEdits: TextEdit[] | undefined, sourceMap: SourceMa
     if (textEdits) {
         const output: TextEdit[] = [];
         for (const textEdit of textEdits) {
-            const vueLoc = sourceMap.targetToSource(textEdit.range);
-            if (vueLoc) {
+            const vueRange = sourceMap.targetToSource(textEdit.range.start, textEdit.range.end);
+            if (vueRange) {
                 output.push({
                     newText: textEdit.newText,
-                    range: vueLoc.range,
+                    range: vueRange,
                 });
             }
         }

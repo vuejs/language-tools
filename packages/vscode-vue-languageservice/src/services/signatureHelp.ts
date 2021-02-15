@@ -9,16 +9,15 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	return (document: TextDocument, position: Position) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const range = { start: position, end: position };
 
 		const tsResult = getTsResult(sourceFile);
 		if (tsResult) return tsResult;
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsLoc of sourceMap.sourceToTargets(range)) {
-					if (!tsLoc.data.capabilities.basic) continue;
-					const result = tsLanguageService.getSignatureHelp(sourceMap.targetDocument.uri, tsLoc.range.start);
+				for (const tsRange of sourceMap.sourceToTargets(position)) {
+					if (!tsRange.data.capabilities.basic) continue;
+					const result = tsLanguageService.getSignatureHelp(sourceMap.targetDocument.uri, tsRange.start);
 					if (result) {
 						return result; // TODO: to array
 					}

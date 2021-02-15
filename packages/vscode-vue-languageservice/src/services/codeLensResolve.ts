@@ -25,7 +25,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			if (sourceFile) {
 				let isCssLocation = false;
 				for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-					if (cssSourceMap.isSource({ start: pos, end: pos })) {
+					if (cssSourceMap.isSource(pos)) {
 						isCssLocation = true;
 					}
 				}
@@ -33,7 +33,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					references = references0?.filter(ref => {
 						if (ref.uri === uri) {
 							for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-								if (cssSourceMap.isSource(ref.range)) {
+								if (cssSourceMap.isSource(ref.range.start, ref.range.end)) {
 									return false;
 								}
 							}

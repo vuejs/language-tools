@@ -4,14 +4,14 @@ import * as html from 'vscode-html-languageservice';
 export function register(htmlLanguageService: html.LanguageService) {
     return (pugDocument: PugDocument, initialOffset = 0) => {
 
-        let htmlMaped = pugDocument.sourceMap.sourceToTarget2({ start: initialOffset, end: initialOffset });
-        while (!htmlMaped && initialOffset < pugDocument.pug.length) {
+        let htmlRange = pugDocument.sourceMap.sourceToTarget2(initialOffset);
+        while (!htmlRange && initialOffset < pugDocument.pug.length) {
             initialOffset++;
-            htmlMaped = pugDocument.sourceMap.sourceToTarget2({ start: initialOffset, end: initialOffset });
+            htmlRange = pugDocument.sourceMap.sourceToTarget2(initialOffset);
         }
-        if (!htmlMaped) return;
+        if (!htmlRange) return;
 
-        const htmlScanner = htmlLanguageService.createScanner(pugDocument.html, htmlMaped.range.start);
+        const htmlScanner = htmlLanguageService.createScanner(pugDocument.html, htmlRange.start);
 
         let token = html.TokenType.Unknown;
         let offset = 0;
@@ -32,10 +32,10 @@ export function register(htmlLanguageService: html.LanguageService) {
             token = htmlScanner.scan();
             const htmlOffset = htmlScanner.getTokenOffset();
             const htmlEnd = htmlScanner.getTokenEnd();
-            const pugMaped = pugDocument.sourceMap.targetToSource2({ start: htmlOffset, end: htmlEnd });
-            if (pugMaped) {
-                offset = pugMaped.range.start;
-                end = pugMaped.range.end;
+            const pugRange = pugDocument.sourceMap.targetToSource2(htmlOffset, htmlEnd);
+            if (pugRange) {
+                offset = pugRange.start;
+                end = pugRange.end;
                 return token;
             }
             else {

@@ -3,7 +3,6 @@ import {
 	Position,
 	CompletionItem,
 	CompletionList,
-	Range,
 	TextEdit,
 	CompletionItemKind,
 } from 'vscode-languageserver-types';
@@ -82,7 +81,6 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	return async (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig>) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const range = Range.create(position, position);
 
 		const tsResult = getTsResult(sourceFile);
 		if (tsResult.items.length) return tsResult;
@@ -108,16 +106,16 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				return result;
 			}
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
-					if (!virtualLoc.data.capabilities.completion) continue;
-					const quotePreference = virtualLoc.data.vueTag === 'template' ? 'single' : 'auto';
-					let tsItems = tsLanguageService.doComplete(sourceMap.targetDocument.uri, virtualLoc.range.start, {
+				const tsRanges = sourceMap.sourceToTargets(position);
+				for (const tsRange of tsRanges) {
+					if (!tsRange.data.capabilities.completion) continue;
+					const quotePreference = tsRange.data.vueTag === 'template' ? 'single' : 'auto';
+					let tsItems = tsLanguageService.doComplete(sourceMap.targetDocument.uri, tsRange.start, {
 						quotePreference,
-						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(virtualLoc.data.vueTag ?? ''), // TODO: read ts config
+						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
-					if (virtualLoc.data.vueTag === 'template') {
+					if (tsRange.data.vueTag === 'template') {
 						tsItems = tsItems.filter(tsItem => {
 							const sortText = Number(tsItem.sortText);
 							if (Number.isNaN(sortText))
@@ -253,11 +251,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				});
 				languageServices.html.setDataProviders(true, [dataProvider]);
 
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
+				const htmlRanges = sourceMap.sourceToTargets(position);
+				for (const htmlRange of htmlRanges) {
 					const htmlResult = sourceMap.language === 'html'
-						? languageServices.html.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.htmlDocument)
-						: languageServices.pug.doComplete(sourceMap.pugDocument, virtualLoc.range.start)
+						? languageServices.html.doComplete(sourceMap.targetDocument, htmlRange.start, sourceMap.htmlDocument)
+						: languageServices.pug.doComplete(sourceMap.pugDocument, htmlRange.start)
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -324,11 +322,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
+				const cssRanges = sourceMap.sourceToTargets(position);
+				for (const cssRange of cssRanges) {
 					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;
-					const wordRange = getWordRange(wordPattern, virtualLoc.range, sourceMap.targetDocument) ?? virtualLoc.range;
-					const cssResult = cssLanguageService.doComplete(sourceMap.targetDocument, virtualLoc.range.start, sourceMap.stylesheet);
+					const wordRange = getWordRange(wordPattern, cssRange, sourceMap.targetDocument) ?? cssRange;
+					const cssResult = cssLanguageService.doComplete(sourceMap.targetDocument, cssRange.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}

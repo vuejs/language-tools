@@ -22,9 +22,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const sourceFile = sourceFiles.get(document.uri);
 			if (sourceFile) {
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
-					for (const tsLoc of sourceMap.sourceToTargets({ start: position, end: position })) {
-						if (!tsLoc.data.capabilities.references) continue;
-						const items = worker(sourceMap.targetDocument.uri, tsLoc.range.start);
+					for (const tsRange of sourceMap.sourceToTargets(position)) {
+						if (!tsRange.data.capabilities.references) continue;
+						const items = worker(sourceMap.targetDocument.uri, tsRange.start);
 						vueItems = vueItems.concat(items);
 					}
 				}
@@ -98,7 +98,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					continue;
 				}
 				isVirtual = true;
-				let vueRange = sourceMap.targetToSource(tsItem.range)?.range;
+				let vueRange: Range | undefined = sourceMap.targetToSource(tsItem.range.start, tsItem.range.end);
 				if (!vueRange) {
 					// TODO: <script> range
 					vueRange = {
@@ -106,17 +106,17 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
 					};
 				}
-				const vueSelectionLoc = sourceMap.targetToSource(tsItem.selectionRange);
-				if (!vueSelectionLoc) {
+				const vueSelectionRange = sourceMap.targetToSource(tsItem.selectionRange.start, tsItem.selectionRange.end);
+				if (!vueSelectionRange) {
 					continue;
 				}
-				const vueRanges = tsRanges.map(tsRange => sourceMap.targetToSource(tsRange)?.range).filter(notEmpty);
+				const vueRanges = tsRanges.map(tsRange => sourceMap.targetToSource(tsRange.start, tsRange.end)).filter(notEmpty);
 				const vueItem: CallHierarchyItem = {
 					...tsItem,
 					name: tsItem.name === upath.basename(uriToFsPath(sourceMap.targetDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
 					uri: sourceMap.sourceDocument.uri,
 					range: vueRange,
-					selectionRange: vueSelectionLoc.range,
+					selectionRange: vueSelectionRange,
 				}
 				return [vueItem, vueRanges];
 			}
@@ -135,17 +135,17 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const sourceFile = sourceFiles.get(item.uri);
 		if (sourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsLocs = sourceMap.sourceToTargets(item.range);
-				const tsSelectionLocs = sourceMap.sourceToTargets(item.selectionRange);
+				const tsLocs = sourceMap.sourceToTargets(item.range.start, item.range.end);
+				const tsSelectionRanges = sourceMap.sourceToTargets(item.selectionRange.start, item.selectionRange.end);
 				if (tsLocs.length) {
-					for (const tsLoc of tsLocs) {
-						if (!tsLoc.data.capabilities.references) continue;
-						for (const tsSelectionLoc of tsSelectionLocs) {
+					for (const tsRange of tsLocs) {
+						if (!tsRange.data.capabilities.references) continue;
+						for (const tsSelectionRange of tsSelectionRanges) {
 							tsItems.push({
 								...item,
 								uri: sourceMap.targetDocument.uri,
-								range: tsLoc.range,
-								selectionRange: tsSelectionLoc.range,
+								range: tsRange,
+								selectionRange: tsSelectionRange,
 							});
 						}
 					}
@@ -153,7 +153,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				else {
 					for (const maped of sourceMap) {
 						if (maped.data.capabilities.references) {
-							for (const tsSelectionLoc of tsSelectionLocs) {
+							for (const tsSelectionRange of tsSelectionRanges) {
 								tsItems.push({
 									...item,
 									uri: sourceMap.targetDocument.uri,
@@ -161,7 +161,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 										start: sourceMap.targetDocument.positionAt(0),
 										end: sourceMap.targetDocument.positionAt(sourceMap.targetDocument.getText().length),
 									},
-									selectionRange: tsSelectionLoc.range,
+									selectionRange: tsSelectionRange,
 								});
 							}
 							break;

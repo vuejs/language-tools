@@ -71,29 +71,29 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 						&& ts.isCallExpression(node.initializer)
 						&& isRef(node.initializer, scriptAst)
 					) {
-						const loc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
-						});
+						const range = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
+						);
 						const _argRange = getArgRanges(node.initializer, scriptAst);
-						const argsStartLoc = _argRange ? sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(_argRange.start),
-							end: sourceMap.targetDocument.positionAt(_argRange.start),
-						}) : undefined;
-						const argsEndLoc = _argRange ? sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(_argRange.end),
-							end: sourceMap.targetDocument.positionAt(_argRange.end),
-						}) : undefined;
-						if (loc && argsStartLoc && argsEndLoc) {
+						const argsStartRange = _argRange ? sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(_argRange.start),
+							sourceMap.targetDocument.positionAt(_argRange.start),
+						) : undefined;
+						const argsEndRange = _argRange ? sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(_argRange.end),
+							sourceMap.targetDocument.positionAt(_argRange.end),
+						) : undefined;
+						if (range && argsStartRange && argsEndRange) {
 							refs.push({
 								type: 'ref',
-								name: getNodeName(loc.range),
-								range: loc.range,
+								name: getNodeName(range),
+								range: range,
 								blockRange: {
-									start: argsStartLoc.range.start,
-									end: argsEndLoc.range.start,
+									start: argsStartRange.start,
+									end: argsEndRange.start,
 								},
-								references: findReferences(sourceMap.sourceDocument.uri, loc.range.start),
+								references: findReferences(sourceMap.sourceDocument.uri, range.start),
 							});
 						}
 						for (const arg of node.initializer.arguments) {
@@ -105,26 +105,26 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 						&& node.name
 						&& node.body
 					) {
-						const loc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
-						});
-						const blockStartLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst)),
-						});
-						const blockEndLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst) + node.body.getWidth(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst) + node.body.getWidth(scriptAst)),
-						});
-						if (loc && blockStartLoc && blockEndLoc) {
+						const range = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
+						);
+						const blockStartRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst)),
+						);
+						const blockEndRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst) + node.body.getWidth(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.body.getStart(scriptAst) + node.body.getWidth(scriptAst)),
+						);
+						if (range && blockStartRange && blockEndRange) {
 							funcs.push({
 								type: 'func',
-								name: getNodeName(loc.range),
-								range: loc.range,
+								name: getNodeName(range),
+								range: range,
 								blockRange: {
-									start: blockStartLoc.range.start,
-									end: blockEndLoc.range.start,
+									start: blockStartRange.start,
+									end: blockEndRange.start,
 								},
 							});
 						}
@@ -137,37 +137,37 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 						&& ts.isIdentifier(node.name)
 						&& ts.isArrowFunction(node.initializer)
 					) {
-						const nameLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
-						});
-						const startLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst)),
-						});
-						const endLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst) + node.initializer.getWidth(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst) + node.initializer.getWidth(scriptAst)),
-						});
-						const blockStartLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst)),
-						});
-						const blockEndLoc = sourceMap.targetToSource({
-							start: sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
-							end: sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
-						});
-						if (nameLoc && startLoc && endLoc && blockStartLoc && blockEndLoc) {
+						const nameRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
+						);
+						const startRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst)),
+						);
+						const endRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst) + node.initializer.getWidth(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.initializer.getStart(scriptAst) + node.initializer.getWidth(scriptAst)),
+						);
+						const blockStartRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst)),
+						);
+						const blockEndRange = sourceMap.targetToSource(
+							sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
+							sourceMap.targetDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
+						);
+						if (nameRange && startRange && endRange && blockStartRange && blockEndRange) {
 							funcs.push({
 								type: 'func',
-								name: getNodeName(nameLoc.range),
+								name: getNodeName(nameRange),
 								range: {
-									start: startLoc.range.start,
-									end: endLoc.range.start,
+									start: startRange.start,
+									end: endRange.start,
 								},
 								blockRange: {
-									start: blockStartLoc.range.start,
-									end: blockEndLoc.range.start,
+									start: blockStartRange.start,
+									end: blockEndRange.start,
 								},
 							});
 						}
@@ -176,20 +176,20 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 					else if (ts.isCallExpression(node)) {
 						const name = getCallName(node);
 						if (name) {
-							const loc = sourceMap.targetToSource({
-								start: sourceMap.targetDocument.positionAt(name.getStart(scriptAst)),
-								end: sourceMap.targetDocument.positionAt(name.getStart(scriptAst) + name.getWidth(scriptAst)),
-							});
+							const range = sourceMap.targetToSource(
+								sourceMap.targetDocument.positionAt(name.getStart(scriptAst)),
+								sourceMap.targetDocument.positionAt(name.getStart(scriptAst) + name.getWidth(scriptAst)),
+							);
 							const _argRange = getArgRanges(node, scriptAst);
-							const argsLoc = _argRange ? sourceMap.targetToSource({
-								start: sourceMap.targetDocument.positionAt(_argRange.start),
-								end: sourceMap.targetDocument.positionAt(_argRange.end),
-							}) : undefined;
-							if (loc && argsLoc) {
+							const argsRange = _argRange ? sourceMap.targetToSource(
+								sourceMap.targetDocument.positionAt(_argRange.start),
+								sourceMap.targetDocument.positionAt(_argRange.end),
+							) : undefined;
+							if (range && argsRange) {
 								funcCalls.push({
-									name: sourceMap.sourceDocument.getText(loc.range),
-									range: loc.range,
-									definitions: findDefinition.on(sourceMap.sourceDocument.uri, loc.range.start),
+									name: sourceMap.sourceDocument.getText(range),
+									range: range,
+									definitions: findDefinition.on(sourceMap.sourceDocument.uri, range.start),
 								});
 							}
 						}

@@ -1,4 +1,4 @@
-import type { Range } from 'vscode-languageserver/node';
+import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { TeleportMappingData } from '../utils/sourceMaps';
 import type { TeleportSideData } from '../utils/sourceMaps';
@@ -12,7 +12,6 @@ import type { Stylesheet } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { PugDocument } from '@volar/vscode-pug-languageservice';
 import type { SourceFile } from '../sourceFile';
-import type { MapedRange } from '@volar/source-map';
 import type * as ts from 'typescript';
 import * as languageServices from '../utils/languageServices';
 import { fsPathToUri, uriToFsPath } from '@volar/shared';
@@ -25,18 +24,20 @@ export function createMapper(
 ) {
     return {
         css: {
-            from: (cssUri: string, cssRange: Range) => {
+            from: (cssUri: string, cssStart: Position, cssEnd?: Position) => {
                 const result: {
                     textDocument: TextDocument,
-                    range: Range,
+                    start: Position,
+                    end: Position,
                 }[] = [];
                 for (const [_, sourceFile] of sourceFiles) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
                         if (sourceMap.targetDocument.uri === cssUri) {
-                            for (const vueMaped of sourceMap.targetToSources(cssRange)) {
+                            for (const vueRange of sourceMap.targetToSources(cssStart, cssEnd)) {
                                 result.push({
                                     textDocument: sourceMap.sourceDocument,
-                                    range: vueMaped.range,
+                                    start: vueRange.start,
+                                    end: vueRange.end,
                                 });
                             }
                         }
@@ -44,11 +45,12 @@ export function createMapper(
                 }
                 return result;
             },
-            to: (vueUri: string, vueRange: Range) => {
+            to: (vueUri: string, vueStart: Position, vueEnd?: Position) => {
                 const result: {
                     textDocument: TextDocument,
                     stylesheet: Stylesheet,
-                    range: Range,
+                    start: Position,
+                    end: Position,
                     languageService: CssLanguageService,
                 }[] = [];
                 const sourceFile = sourceFiles.get(vueUri);
@@ -56,11 +58,12 @@ export function createMapper(
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
                         const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
                         if (!cssLs) continue;
-                        for (const cssMaped of sourceMap.sourceToTargets(vueRange)) {
+                        for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
                             result.push({
                                 textDocument: sourceMap.targetDocument,
                                 stylesheet: sourceMap.stylesheet,
-                                range: cssMaped.range,
+                                start: cssRange.start,
+                                end: cssRange.end,
                                 languageService: cssLs,
                             });
                         }
@@ -70,18 +73,20 @@ export function createMapper(
             },
         },
         html: {
-            from: (htmlUri: string, htmlRange: Range) => {
+            from: (htmlUri: string, htmlStart: Position, htmlEnd?: Position) => {
                 const result: {
                     textDocument: TextDocument,
-                    range: Range,
+                    start: Position,
+                    end: Position,
                 }[] = [];
                 for (const [_, sourceFile] of sourceFiles) {
                     for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
                         if (sourceMap.targetDocument.uri === htmlUri) {
-                            for (const vueLoc of sourceMap.targetToSources(htmlRange)) {
+                            for (const vueRange of sourceMap.targetToSources(htmlStart, htmlEnd)) {
                                 result.push({
                                     textDocument: sourceMap.sourceDocument,
-                                    range: vueLoc.range,
+                                    start: vueRange.start,
+                                    end: vueRange.end,
                                 });
                             }
                         }
@@ -89,18 +94,20 @@ export function createMapper(
                 }
                 return result;
             },
-            to: (vueUri: string, vueRange: Range) => {
+            to: (vueUri: string, vueStart: Position, vueEnd?: Position) => {
                 const result: ({
                     language: 'html',
                     textDocument: TextDocument,
                     htmlDocument: HTMLDocument,
-                    range: Range,
+                    start: Position,
+                    end: Position,
                     languageService: HtmlLanguageService,
                 } | {
                     language: 'pug',
                     textDocument: TextDocument,
                     pugDocument: PugDocument,
-                    range: Range,
+                    start: Position,
+                    end: Position,
                     languageService: PugLanguageService,
                 })[] = [];
                 const sourceFile = sourceFiles.get(vueUri);
@@ -108,12 +115,13 @@ export function createMapper(
                     for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
                         const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
                         if (!cssLs) continue;
-                        for (const cssMaped of sourceMap.sourceToTargets(vueRange)) {
+                        for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
                             result.push({
                                 language: 'html',
                                 textDocument: sourceMap.targetDocument,
                                 htmlDocument: sourceMap.htmlDocument,
-                                range: cssMaped.range,
+                                start: cssRange.start,
+                                end: cssRange.end,
                                 languageService: languageServices.html,
                             });
                         }
@@ -121,12 +129,13 @@ export function createMapper(
                     for (const sourceMap of sourceFile.getPugSourceMaps()) {
                         const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
                         if (!cssLs) continue;
-                        for (const cssMaped of sourceMap.sourceToTargets(vueRange)) {
+                        for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
                             result.push({
                                 language: 'pug',
                                 textDocument: sourceMap.targetDocument,
                                 pugDocument: sourceMap.pugDocument,
-                                range: cssMaped.range,
+                                start: cssRange.start,
+                                end: cssRange.end,
                                 languageService: languageServices.pug,
                             });
                         }
@@ -182,30 +191,32 @@ export function createMapper(
         },
     };
 
-    function teleports(tsUri: string, tsRange: Range) {
+    function teleports(tsUri: string, tsStart: Position, tsEnd?: Position) {
         const result: {
             data: TeleportMappingData;
             sideData: TeleportSideData;
-            range: Range;
+            start: Position,
+            end: Position,
         }[] = [];
         const sourceFile = findSourceFileByTsUri(tsUri);
         if (sourceFile) {
             const teleports = sourceFile.getTeleports();
             for (const teleport of teleports) {
                 if (teleport.document.uri === tsUri) {
-                    for (const loc of teleport.findTeleports(tsRange)) {
-                        result.push(loc);
+                    for (const teleRange of teleport.findTeleports(tsStart, tsEnd)) {
+                        result.push(teleRange);
                     }
                 }
             }
         }
         return result;
     }
-    function teleports2(tsFsPath: string, tsRange: MapedRange) {
+    function teleports2(tsFsPath: string, tsStart: number, tsEnd?: number) {
         const result: {
             data: TeleportMappingData;
             sideData: TeleportSideData;
-            range: MapedRange;
+            start: number,
+            end: number,
         }[] = [];
         const tsUri = fsPathToUri(tsFsPath);
         const sourceFile = findSourceFileByTsUri(tsUri);
@@ -213,48 +224,51 @@ export function createMapper(
             const teleports = sourceFile.getTeleports();
             for (const teleport of teleports) {
                 if (teleport.document.uri === tsUri) {
-                    for (const loc of teleport.findTeleports2(tsRange)) {
-                        result.push(loc);
+                    for (const teleRange of teleport.findTeleports2(tsStart, tsEnd)) {
+                        result.push(teleRange);
                     }
                 }
             }
         }
         return result;
     };
-    function fromTs(tsUri: string, tsRange: Range) {
+    function fromTs(tsUri: string, tsStart: Position, tsEnd?: Position) {
 
         const tsDoc = tsLanguageService.getTextDocument(tsUri);
         if (!tsDoc) return [];
 
-        const _result = fromTs2(uriToFsPath(tsUri), {
-            start: tsDoc.offsetAt(tsRange.start),
-            end: tsDoc.offsetAt(tsRange.end),
-        });
+        const _result = fromTs2(
+            uriToFsPath(tsUri),
+            tsDoc.offsetAt(tsStart),
+            tsEnd ? tsDoc.offsetAt(tsEnd) : undefined,
+        );
 
         const result: {
             textDocument: TextDocument,
-            range: Range,
+            start: Position,
+            end: Position,
             data?: TsMappingData,
         }[] = [];
 
         for (const r of _result) {
             result.push({
                 textDocument: r.textDocument,
-                range: {
-                    start: r.textDocument.positionAt(r.range.start),
-                    end: r.textDocument.positionAt(r.range.end),
-                },
+                start: r.textDocument.positionAt(r.start),
+                end: r.textDocument.positionAt(r.end),
                 data: r.data,
             });
         }
 
         return result;
     };
-    function fromTs2(tsFsPath: string, tsRange: MapedRange) {
+    function fromTs2(tsFsPath: string, tsStart: number, tsEnd?: number) {
+        tsEnd = tsEnd ?? tsStart;
+
         const result: {
             fileName: string,
             textDocument: TextDocument,
-            range: MapedRange,
+            start: number,
+            end: number,
             data?: TsMappingData,
         }[] = [];
         const tsUri = fsPathToUri(tsFsPath);
@@ -264,9 +278,10 @@ export function createMapper(
 
         const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
         if (globalTs) {
-            const tsMaped = globalTs.sourceMap.targetToSource2(tsRange);
-            if (tsMaped) {
-                tsRange = tsMaped.range;
+            const tsRange2 = globalTs.sourceMap.targetToSource2(tsStart, tsEnd);
+            if (tsRange2) {
+                tsStart = tsRange2.start;
+                tsEnd = tsRange2.end;
             }
         }
 
@@ -275,7 +290,8 @@ export function createMapper(
             result.push({
                 fileName: tsFsPath,
                 textDocument: document,
-                range: tsRange,
+                start: tsStart,
+                end: tsEnd,
             });
             return result;
         }
@@ -283,30 +299,33 @@ export function createMapper(
         for (const sourceMap of sourceFile.getTsSourceMaps()) {
             if (sourceMap.targetDocument.uri !== tsUri)
                 continue;
-            for (const vueMaped of sourceMap.targetToSources2(tsRange)) {
+            for (const vueRange of sourceMap.targetToSources2(tsStart, tsEnd)) {
                 result.push({
                     fileName: uriToFsPath(sourceMap.sourceDocument.uri),
                     textDocument: sourceMap.sourceDocument,
-                    range: vueMaped.range,
-                    data: vueMaped.data,
+                    start: vueRange.start,
+                    end: vueRange.end,
+                    data: vueRange.data,
                 });
             }
         }
 
         return result;
     };
-    function toTs(vueUri: string, vueRange: Range) {
+    function toTs(vueUri: string, vueStart: Position, vueEnd?: Position) {
 
         const vueDoc = getTextDocument(vueUri);
         if (!vueDoc) return [];
 
-        const result_2 = toTs2(uriToFsPath(vueUri), {
-            start: vueDoc.offsetAt(vueRange.start),
-            end: vueDoc.offsetAt(vueRange.end),
-        });
+        const result_2 = toTs2(
+            uriToFsPath(vueUri),
+            vueDoc.offsetAt(vueStart),
+            vueEnd ? vueDoc.offsetAt(vueEnd) : undefined,
+        );
         const result: {
             textDocument: TextDocument,
-            range: Range,
+            start: Position,
+            end: Position,
             data: TsMappingData,
             languageService: TsLanguageService,
         }[] = [];
@@ -314,10 +333,8 @@ export function createMapper(
         for (const r of result_2) {
             result.push({
                 textDocument: r.textDocument,
-                range: {
-                    start: r.textDocument.positionAt(r.range.start),
-                    end: r.textDocument.positionAt(r.range.end),
-                },
+                start: r.textDocument.positionAt(r.start),
+                end: r.textDocument.positionAt(r.end),
                 data: r.data,
                 languageService: tsLanguageService,
             });
@@ -325,23 +342,27 @@ export function createMapper(
 
         return result;
     }
-    function toTs2(vueFsPath: string, vueRange: MapedRange) {
+    function toTs2(vueFsPath: string, vueStart: number, vueEnd?: number) {
+        vueEnd = vueEnd ?? vueStart;
+
         const result: {
             fileName: string,
             textDocument: TextDocument,
-            range: MapedRange,
+            start: number,
+            end: number,
             data: TsMappingData,
             languageService: ts.LanguageService,
         }[] = [];
         const sourceFile = sourceFiles.get(fsPathToUri(vueFsPath));
         if (sourceFile) {
             for (const sourceMap of sourceFile.getTsSourceMaps()) {
-                for (const tsMaped of sourceMap.sourceToTargets2(vueRange)) {
+                for (const tsRange of sourceMap.sourceToTargets2(vueStart, vueEnd)) {
                     result.push({
                         fileName: uriToFsPath(sourceMap.targetDocument.uri),
                         textDocument: sourceMap.targetDocument,
-                        range: tsMaped.range,
-                        data: tsMaped.data,
+                        start: tsRange.start,
+                        end: tsRange.end,
+                        data: tsRange.data,
                         languageService: tsLanguageService.raw,
                     });
                 }
@@ -353,7 +374,8 @@ export function createMapper(
                 result.push({
                     fileName: uriToFsPath(tsDoc.uri),
                     textDocument: tsDoc,
-                    range: vueRange,
+                    start: vueStart,
+                    end: vueEnd,
                     data: {
                         vueTag: 'script',
                         capabilities: {

@@ -33,29 +33,29 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let vueResult: Location[] = [];
 
 		// vue -> ts
-		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+		for (const tsRange of mapper.ts.to(uri, position)) {
 
-			if (!tsMaped.data.capabilities.definitions)
+			if (!tsRange.data.capabilities.definitions)
 				continue;
 
-			withTeleports(tsMaped.textDocument.uri, tsMaped.range.start);
+			withTeleports(tsRange.textDocument.uri, tsRange.start);
 
 			function withTeleports(uri: string, position: Position) {
 
 				const tsLocs = mode === 'typeDefinition'
-					? tsMaped.languageService.findTypeDefinition(uri, position)
-					: tsMaped.languageService.findDefinition(uri, position);
+					? tsRange.languageService.findTypeDefinition(uri, position)
+					: tsRange.languageService.findDefinition(uri, position);
 
 				tsResult = tsResult.concat(tsLocs);
 
 				for (const location of tsLocs) {
 					loopChecker.add({ uri: location.uri, range: location.range });
-					for (const teleport of mapper.ts.teleports(location.uri, location.range)) {
-						if (!teleport.sideData.capabilities.definitions)
+					for (const teleRange of mapper.ts.teleports(location.uri, location.range.start, location.range.end)) {
+						if (!teleRange.sideData.capabilities.definitions)
 							continue;
-						if (loopChecker.has({ uri: location.uri, range: teleport.range }))
+						if (loopChecker.has({ uri: location.uri, range: teleRange }))
 							continue;
-						withTeleports(location.uri, teleport.range.start);
+						withTeleports(location.uri, teleRange.start);
 					}
 				}
 			}
@@ -63,10 +63,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// ts -> vue
 		for (const tsLoc of tsResult) {
-			for (const vueMaped of mapper.ts.from(tsLoc.uri, tsLoc.range)) {
+			for (const vueRange of mapper.ts.from(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
 				vueResult.push({
-					uri: vueMaped.textDocument.uri,
-					range: vueMaped.range,
+					uri: vueRange.textDocument.uri,
+					range: vueRange,
 				});
 			}
 		}
@@ -79,11 +79,11 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let vueResult: Location[] = [];
 
 		// vue -> css
-		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
-			const cssLoc = cssMaped.languageService.findDefinition(
-				cssMaped.textDocument,
-				cssMaped.range.start,
-				cssMaped.stylesheet,
+		for (const cssRange of mapper.css.to(uri, position)) {
+			const cssLoc = cssRange.languageService.findDefinition(
+				cssRange.textDocument,
+				cssRange.start,
+				cssRange.stylesheet,
 			);
 			if (cssLoc) {
 				cssResult.push(cssLoc);
@@ -92,10 +92,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// css -> vue
 		for (const cssLoc of cssResult) {
-			for (const vueMaped of mapper.css.from(cssLoc.uri, cssLoc.range)) {
+			for (const vueRange of mapper.css.from(cssLoc.uri, cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
-					uri: vueMaped.textDocument.uri,
-					range: vueMaped.range,
+					uri: vueRange.textDocument.uri,
+					range: vueRange,
 				});
 			}
 		}

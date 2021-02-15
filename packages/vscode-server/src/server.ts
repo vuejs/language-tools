@@ -364,7 +364,7 @@ function initLanguageServiceDoc(rootPath: string) {
 				let i = 0;
 				for (const sourceFile of sourceFiles) {
 					progress.report(i++ / sourceFiles.length * 100, path.relative(languageService.rootPath, uriToFsPath(sourceFile.uri)));
-					for (const [uri, doc] of sourceFile.getTsDocuments()) {
+					for (const [uri, _] of sourceFile.getTsDocuments()) {
 						if (progress.token.isCancellationRequested) {
 							break;
 						}
@@ -394,7 +394,7 @@ function initLanguageServiceDoc(rootPath: string) {
 				for (const sourceFile of sourceFiles) {
 					if (path.dirname(sourceFile.uri) === path.dirname(handler.dir)) {
 						progress.report(i++ / nums * 100, path.relative(languageService.rootPath, uriToFsPath(sourceFile.uri)) + '.d.ts');
-						for (const [uri, doc] of sourceFile.getTsDocuments()) {
+						for (const [uri, _] of sourceFile.getTsDocuments()) {
 							if (progress.token.isCancellationRequested) {
 								break;
 							}
@@ -414,7 +414,7 @@ function initLanguageServiceDoc(rootPath: string) {
 			const sourceFile = languageService?.getSourceFile(handler.uri);
 			if (languageService && sourceFile) {
 				languageService.setDtsMode(true);
-				for (const [uri, doc] of sourceFile.getTsDocuments()) {
+				for (const [uri, _] of sourceFile.getTsDocuments()) {
 					const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
 					for (const file of output.outputFiles) {
 						await fs.writeFile(file.name, file.text, "utf8");

@@ -22,22 +22,22 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 				if (!cssLanguageService) continue;
-				const virtualLocs = sourceMap.sourceToTargets(range);
-				for (const virtualLoc of virtualLocs) {
-					const _result = cssLanguageService.getColorPresentations(sourceMap.targetDocument, sourceMap.stylesheet, color, virtualLoc.range);
+				const cssRanges = sourceMap.sourceToTargets(range.start, range.end);
+				for (const cssRange of cssRanges) {
+					const _result = cssLanguageService.getColorPresentations(sourceMap.targetDocument, sourceMap.stylesheet, color, cssRange);
 					for (const item of _result) {
 						if (item.textEdit) {
 							if (TextEdit.is(item.textEdit)) {
-								const vueLoc = sourceMap.targetToSource(item.textEdit.range);
-								if (vueLoc) {
-									item.textEdit.range = vueLoc.range;
+								const vueRange = sourceMap.targetToSource(item.textEdit.range.start, item.textEdit.range.end);
+								if (vueRange) {
+									item.textEdit.range = vueRange;
 								}
 							}
 							if (item.additionalTextEdits) {
 								for (const textEdit of item.additionalTextEdits) {
-									const vueLoc = sourceMap.targetToSource(item.textEdit.range);
-									if (vueLoc) {
-										textEdit.range = vueLoc.range;
+									const vueRange = sourceMap.targetToSource(item.textEdit.range.start, item.textEdit.range.end);
+									if (vueRange) {
+										textEdit.range = vueRange;
 									}
 								}
 							}

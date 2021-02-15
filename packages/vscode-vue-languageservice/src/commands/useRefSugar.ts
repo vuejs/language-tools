@@ -132,11 +132,11 @@ export async function execute(
         if (!item.additionalTextEdits)
             continue;
         for (const edit of item.additionalTextEdits) {
-            const vueLoc = script.sourceMap.targetToSource(edit.range);
-            if (!vueLoc)
+            const vueRange = script.sourceMap.targetToSource(edit.range.start, edit.range.end);
+            if (!vueRange)
                 continue;
             edits.push({
-                range: vueLoc.range,
+                range: vueRange,
                 newText: edit.newText,
             });
         }

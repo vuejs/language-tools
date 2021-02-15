@@ -4,11 +4,11 @@ import type { Range } from 'vscode-languageserver';
 export function transform<T extends { range: Range }>(highlights: T[], sourceMap: SourceMap): T[] {
     const result: T[] = [];
     for (const highlight of highlights) {
-        const vueLoc = sourceMap.targetToSource(highlight.range);
-        if (vueLoc) {
+        const vueRange = sourceMap.targetToSource(highlight.range.start, highlight.range.end);
+        if (vueRange) {
             result.push({
                 ...highlight,
-                range: vueLoc.range,
+                range: vueRange,
             });
         }
     }

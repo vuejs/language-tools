@@ -52,23 +52,23 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	}
 
 	function onTsPrepare(uri: string, position: Position) {
-		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+		for (const tsRange of mapper.ts.to(uri, position)) {
 			if (
-				tsMaped.data.capabilities.rename === true
-				|| (typeof tsMaped.data.capabilities.rename === 'object' && tsMaped.data.capabilities.rename.in)
+				tsRange.data.capabilities.rename === true
+				|| (typeof tsRange.data.capabilities.rename === 'object' && tsRange.data.capabilities.rename.in)
 			) {
-				const tsRange = tsMaped.languageService.prepareRename(
-					tsMaped.textDocument.uri,
-					tsMaped.range.start,
+				const tsPrepare = tsRange.languageService.prepareRename(
+					tsRange.textDocument.uri,
+					tsRange.start,
 				);
-				if (!tsRange)
+				if (!tsPrepare)
 					continue;
 
-				if (tsRange instanceof ResponseError)
-					return tsRange;
+				if (tsPrepare instanceof ResponseError)
+					return tsPrepare;
 
-				for (const vueMaped of mapper.ts.from(tsMaped.textDocument.uri, tsRange))
-					return vueMaped.range;
+				for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsPrepare.start, tsPrepare.end))
+					return vueRange;
 			}
 		}
 	}
@@ -96,17 +96,17 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let hasResult = false;
 
 		// vue -> ts
-		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
+		for (const tsRange of mapper.ts.to(uri, position)) {
 			if (
-				tsMaped.data.capabilities.rename === true
-				|| (typeof tsMaped.data.capabilities.rename === 'object' && tsMaped.data.capabilities.rename.in)
+				tsRange.data.capabilities.rename === true
+				|| (typeof tsRange.data.capabilities.rename === 'object' && tsRange.data.capabilities.rename.in)
 			) {
-				const newName_2 = tsMaped.data.beforeRename ? tsMaped.data.beforeRename(newName) : newName;
-				withTeleports(tsMaped.textDocument.uri, tsMaped.range.start, newName_2);
+				const newName_2 = tsRange.data.beforeRename ? tsRange.data.beforeRename(newName) : newName;
+				withTeleports(tsRange.textDocument.uri, tsRange.start, newName_2);
 
 				function withTeleports(uri: string, position: Position, newName: string) {
 
-					const tsWorkspaceEdit = tsMaped.languageService.doRename(
+					const tsWorkspaceEdit = tsRange.languageService.doRename(
 						uri,
 						position,
 						newName,
@@ -122,15 +122,15 @@ export function register({ mapper }: TsApiRegisterOptions) {
 							const textEdits = tsWorkspaceEdit.changes[editUri];
 							for (const textEdit of textEdits) {
 								loopChecker.add({ uri: editUri, range: textEdit.range });
-								for (const teleport of mapper.ts.teleports(editUri, textEdit.range)) {
-									if (!teleport.sideData.capabilities.rename)
+								for (const teleRange of mapper.ts.teleports(editUri, textEdit.range.start, textEdit.range.end)) {
+									if (!teleRange.sideData.capabilities.rename)
 										continue;
-									if (loopChecker.has({ uri: editUri, range: teleport.range }))
+									if (loopChecker.has({ uri: editUri, range: teleRange }))
 										continue;
-									const newName_2 = teleport.sideData.editRenameText
-										? teleport.sideData.editRenameText(newName)
+									const newName_2 = teleRange.sideData.editRenameText
+										? teleRange.sideData.editRenameText(newName)
 										: newName;
-									withTeleports(editUri, teleport.range.start, newName_2);
+									withTeleports(editUri, teleRange.start, newName_2);
 								}
 							}
 						}
@@ -163,25 +163,25 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		for (const tsUri in tsResult.changes) {
 			const tsEdits = tsResult.changes[tsUri];
 			for (const tsEdit of tsEdits) {
-				for (const vueMaped of mapper.ts.from(tsUri, tsEdit.range)) {
+				for (const vueRange of mapper.ts.from(tsUri, tsEdit.range.start, tsEdit.range.end)) {
 					if (
-						!vueMaped.data
-						|| vueMaped.data.capabilities.rename === true
-						|| (typeof vueMaped.data.capabilities.rename === 'object' && vueMaped.data.capabilities.rename.out)
+						!vueRange.data
+						|| vueRange.data.capabilities.rename === true
+						|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
 					) {
-						const newText_2 = vueMaped.data?.doRename
-							? vueMaped.data.doRename(vueMaped.textDocument.getText(vueMaped.range), tsEdit.newText)
+						const newText_2 = vueRange.data?.doRename
+							? vueRange.data.doRename(vueRange.textDocument.getText(vueRange), tsEdit.newText)
 							: tsEdit.newText;
 
 						if (!vueResult.changes) {
 							vueResult.changes = {};
 						}
-						if (!vueResult.changes[vueMaped.textDocument.uri]) {
-							vueResult.changes[vueMaped.textDocument.uri] = [];
+						if (!vueResult.changes[vueRange.textDocument.uri]) {
+							vueResult.changes[vueRange.textDocument.uri] = [];
 						}
-						vueResult.changes[vueMaped.textDocument.uri].push({
+						vueResult.changes[vueRange.textDocument.uri].push({
 							newText: newText_2,
-							range: vueMaped.range,
+							range: vueRange,
 						});
 					}
 				}
@@ -202,16 +202,16 @@ export function register({ mapper }: TsApiRegisterOptions) {
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const vueMaped of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range)) {
+						for (const vueRange of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range.start, tsEdit.range.end)) {
 							if (
-								!vueMaped.data
-								|| vueMaped.data.capabilities.rename === true
-								|| (typeof vueMaped.data.capabilities.rename === 'object' && vueMaped.data.capabilities.rename.out)
+								!vueRange.data
+								|| vueRange.data.capabilities.rename === true
+								|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
 							) {
 								_vueDocEdit.edits.push({
 									annotationId: AnnotatedTextEdit.is(tsEdit) ? tsEdit.annotationId : undefined,
 									newText: tsEdit.newText,
-									range: vueMaped.range,
+									range: vueRange,
 								});
 							}
 						}
@@ -246,12 +246,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		return vueResult;
 	}
 	function onCssPrepare(uri: string, position: Position) {
-		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
-			const wordPattern = wordPatterns[cssMaped.textDocument.languageId] ?? wordPatterns.css;
-			const wordRange = getWordRange(wordPattern, cssMaped.range, cssMaped.textDocument);
+		for (const cssRange of mapper.css.to(uri, position)) {
+			const wordPattern = wordPatterns[cssRange.textDocument.languageId] ?? wordPatterns.css;
+			const wordRange = getWordRange(wordPattern, cssRange, cssRange.textDocument);
 			if (wordRange) {
-				for (const vueMaped of mapper.css.from(cssMaped.textDocument.uri, wordRange)) {
-					return vueMaped.range;
+				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordRange.start, wordRange.end)) {
+					return vueRange;
 				}
 			}
 		}
@@ -263,12 +263,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let hasResult = false;
 
 		// vue -> css
-		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
-			const cssWorkspaceEdit = cssMaped.languageService.doRename(
-				cssMaped.textDocument,
-				cssMaped.range.start,
+		for (const cssRange of mapper.css.to(uri, position)) {
+			const cssWorkspaceEdit = cssRange.languageService.doRename(
+				cssRange.textDocument,
+				cssRange.start,
 				newName,
-				cssMaped.stylesheet,
+				cssRange.stylesheet,
 			);
 			if (cssWorkspaceEdit) {
 				hasResult = true;
@@ -283,16 +283,16 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		for (const cssUri in cssResult.changes) {
 			const cssEdits = cssResult.changes[cssUri];
 			for (const cssEdit of cssEdits) {
-				for (const vueMaped of mapper.css.from(cssUri, cssEdit.range)) {
+				for (const vueRange of mapper.css.from(cssUri, cssEdit.range.start, cssEdit.range.end)) {
 					if (!vueResult.changes) {
 						vueResult.changes = {};
 					}
-					if (!vueResult.changes[vueMaped.textDocument.uri]) {
-						vueResult.changes[vueMaped.textDocument.uri] = [];
+					if (!vueResult.changes[vueRange.textDocument.uri]) {
+						vueResult.changes[vueRange.textDocument.uri] = [];
 					}
-					vueResult.changes[vueMaped.textDocument.uri].push({
+					vueResult.changes[vueRange.textDocument.uri].push({
 						newText: cssEdit.newText,
-						range: vueMaped.range,
+						range: vueRange,
 					});
 				}
 			}

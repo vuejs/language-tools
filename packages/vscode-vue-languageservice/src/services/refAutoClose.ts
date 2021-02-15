@@ -5,18 +5,18 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 export function register({ mapper }: TsApiRegisterOptions) {
 	return (document: TextDocument, position: Position): string | undefined | null => {
 
-		for (const tsMaped of mapper.ts.to(document.uri, { start: position, end: position })) {
+		for (const tsRange of mapper.ts.to(document.uri, position)) {
 
-			if (!tsMaped.data.capabilities.completion)
+			if (!tsRange.data.capabilities.completion)
 				continue;
 
-			const defs = tsMaped.languageService.findDefinition(tsMaped.textDocument.uri, tsMaped.range.start);
+			const defs = tsRange.languageService.findDefinition(tsRange.textDocument.uri, tsRange.start);
 			let isDef = false;
 			for (const def of defs) {
 				if (
-					def.uri === tsMaped.textDocument.uri
-					&& def.range.end.line === tsMaped.range.start.line
-					&& def.range.end.character === tsMaped.range.start.character
+					def.uri === tsRange.textDocument.uri
+					&& def.range.end.line === tsRange.start.line
+					&& def.range.end.character === tsRange.start.character
 				) {
 					isDef = true;
 					break;
@@ -26,9 +26,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (isDef)
 				continue;
 
-			const typeDefs = tsMaped.languageService.findTypeDefinition(tsMaped.textDocument.uri, tsMaped.range.start);
+			const typeDefs = tsRange.languageService.findTypeDefinition(tsRange.textDocument.uri, tsRange.start);
 			for (const typeDefine of typeDefs) {
-				const defineDoc = tsMaped.languageService.getTextDocument(typeDefine.uri);
+				const defineDoc = tsRange.languageService.getTextDocument(typeDefine.uri);
 				if (!defineDoc)
 					continue;
 				const typeName = defineDoc.getText(typeDefine.range);

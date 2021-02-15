@@ -94,11 +94,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				if (!sourceMap.capabilities.documentSymbol) continue;
 				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.targetDocument.uri);
 				for (const s of symbols) {
-					const vueLoc = sourceMap.targetToSource(s.location.range);
-					if (vueLoc) {
+					const vueRange = sourceMap.targetToSource(s.location.range.start, s.location.range.end);
+					if (vueRange) {
 						map.set(`${sourceMap.targetDocument.offsetAt(s.location.range.start)}:${sourceMap.targetDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
 							...s,
-							location: Location.create(document.uri, vueLoc.range),
+							location: Location.create(document.uri, vueRange),
 						});
 					}
 				}
@@ -117,11 +117,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				let symbols = languageServices.html.findDocumentSymbols(sourceMap.targetDocument, sourceMap.htmlDocument);
 				if (!symbols) continue;
 				for (const s of symbols) {
-					const vueLoc = sourceMap.targetToSource(s.location.range);
-					if (vueLoc) {
+					const vueRange = sourceMap.targetToSource(s.location.range.start, s.location.range.end);
+					if (vueRange) {
 						result.push({
 							...s,
-							location: Location.create(document.uri, vueLoc.range),
+							location: Location.create(document.uri, vueRange),
 						});
 					}
 				}
@@ -137,11 +137,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.targetDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {
-					const vueLoc = sourceMap.targetToSource(s.location.range);
-					if (vueLoc) {
+					const vueRange = sourceMap.targetToSource(s.location.range.start, s.location.range.end);
+					if (vueRange) {
 						result.push({
 							...s,
-							location: Location.create(document.uri, vueLoc.range),
+							location: Location.create(document.uri, vueRange),
 						});
 					}
 				}

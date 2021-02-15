@@ -32,12 +32,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let result: Hover | undefined;
 
 		// vue -> ts
-		for (const tsMaped of mapper.ts.to(uri, { start: position, end: position })) {
-			if (!tsMaped.data.capabilities.basic)
+		for (const tsRange of mapper.ts.to(uri, position)) {
+			if (!tsRange.data.capabilities.basic)
 				continue;
-			const tsHover = tsMaped.languageService.doHover(
-				tsMaped.textDocument.uri,
-				tsMaped.range.start,
+			const tsHover = tsRange.languageService.doHover(
+				tsRange.textDocument.uri,
+				tsRange.start,
 			);
 			if (!tsHover)
 				continue;
@@ -46,10 +46,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				continue;
 			}
 			// ts -> vue
-			for (const vueMaped of mapper.ts.from(tsMaped.textDocument.uri, tsHover.range)) {
+			for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsHover.range.start, tsHover.range.end)) {
 				result = {
 					...tsHover,
-					range: vueMaped.range,
+					range: vueRange,
 				};
 			}
 		}
@@ -61,16 +61,16 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let result: Hover | undefined;
 
 		// vue -> html
-		for (const htmlMaped of mapper.html.to(uri, { start: position, end: position })) {
-			const htmlHover = htmlMaped.language === 'html'
-				? htmlMaped.languageService.doHover(
-					htmlMaped.textDocument,
-					htmlMaped.range.start,
-					htmlMaped.htmlDocument,
+		for (const htmlRange of mapper.html.to(uri, position)) {
+			const htmlHover = htmlRange.language === 'html'
+				? htmlRange.languageService.doHover(
+					htmlRange.textDocument,
+					htmlRange.start,
+					htmlRange.htmlDocument,
 				)
-				: htmlMaped.languageService.doHover(
-					htmlMaped.pugDocument,
-					htmlMaped.range.start,
+				: htmlRange.languageService.doHover(
+					htmlRange.pugDocument,
+					htmlRange.start,
 				)
 			if (!htmlHover)
 				continue;
@@ -79,10 +79,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				continue;
 			}
 			// html -> vue
-			for (const vueMaped of mapper.html.from(htmlMaped.textDocument.uri, htmlHover.range)) {
+			for (const vueRange of mapper.html.from(htmlRange.textDocument.uri, htmlHover.range.start, htmlHover.range.end)) {
 				result = {
 					...htmlHover,
-					range: vueMaped.range,
+					range: vueRange,
 				};
 			}
 		}
@@ -94,10 +94,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let result: Hover | undefined;
 
 		// vue -> css
-		for (const cssMaped of mapper.css.to(uri, { start: position, end: position })) {
+		for (const cssMaped of mapper.css.to(uri, position)) {
 			const cssHover = cssMaped.languageService.doHover(
 				cssMaped.textDocument,
-				cssMaped.range.start,
+				cssMaped.start,
 				cssMaped.stylesheet,
 			);
 			if (!cssHover)
@@ -107,10 +107,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				continue;
 			}
 			// css -> vue
-			for (const vueMaped of mapper.css.from(cssMaped.textDocument.uri, cssHover.range)) {
+			for (const vueRange of mapper.css.from(cssMaped.textDocument.uri, cssHover.range.start, cssHover.range.end)) {
 				result = {
 					...cssHover,
-					range: vueMaped.range,
+					range: vueRange,
 				};
 			}
 		}

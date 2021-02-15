@@ -162,17 +162,17 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: SourceMap) {
 	const result: FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
-		const vueLoc = sourceMap.targetToSource({
-			start: { line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
-			end: { line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
-		});
-		if (vueLoc) {
-			foldingRange.startLine = vueLoc.range.start.line;
-			foldingRange.endLine = vueLoc.range.end.line;
+		const vueRange = sourceMap.targetToSource(
+			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
+			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
+		);
+		if (vueRange) {
+			foldingRange.startLine = vueRange.start.line;
+			foldingRange.endLine = vueRange.end.line;
 			if (foldingRange.startCharacter !== undefined)
-				foldingRange.startCharacter = vueLoc.range.start.character;
+				foldingRange.startCharacter = vueRange.start.character;
 			if (foldingRange.endCharacter !== undefined)
-				foldingRange.endCharacter = vueLoc.range.end.character;
+				foldingRange.endCharacter = vueRange.end.character;
 			result.push(foldingRange);
 		}
 	}
@@ -181,17 +181,17 @@ function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: Sou
 function toVueFoldingRangesTs(virtualFoldingRanges: FoldingRange[], sourceMap: TsSourceMap) {
 	const result: FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
-		const vueLoc = sourceMap.targetToSource({
-			start: { line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
-			end: { line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
-		});
+		const vueLoc = sourceMap.targetToSource(
+			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
+			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
+		);
 		if (vueLoc && vueLoc.data.capabilities.foldingRanges) {
-			foldingRange.startLine = vueLoc.range.start.line;
-			foldingRange.endLine = vueLoc.range.end.line;
+			foldingRange.startLine = vueLoc.start.line;
+			foldingRange.endLine = vueLoc.end.line;
 			if (foldingRange.startCharacter !== undefined)
-				foldingRange.startCharacter = vueLoc.range.start.character;
+				foldingRange.startCharacter = vueLoc.start.character;
 			if (foldingRange.endCharacter !== undefined)
-				foldingRange.endCharacter = vueLoc.range.end.character;
+				foldingRange.endCharacter = vueLoc.end.character;
 			result.push(foldingRange);
 		}
 	}

@@ -11,7 +11,6 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	return (document: TextDocument, positions: Position[]) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-		const ranges = positions.map(pos => ({ start: pos, end: pos }));
 
 		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
@@ -20,16 +19,16 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		function getTsResult(sourceFile: SourceFile) {
 			let result: SelectionRange[] = [];
-			for (const range of ranges) {
+			for (const position of positions) {
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
-					for (const tsLoc of sourceMap.sourceToTargets(range)) {
-						if (!tsLoc.data.capabilities.basic) continue;
-						const selectRange = tsLanguageService.getSelectionRange(sourceMap.targetDocument.uri, tsLoc.range.start);
+					for (const tsRange of sourceMap.sourceToTargets(position)) {
+						if (!tsRange.data.capabilities.basic) continue;
+						const selectRange = tsLanguageService.getSelectionRange(sourceMap.targetDocument.uri, tsRange.start);
 						if (selectRange) {
-							const vueLoc = sourceMap.targetToSource(selectRange.range);
-							if (vueLoc) {
+							const vueRange = sourceMap.targetToSource(selectRange.range.start, selectRange.range.end);
+							if (vueRange) {
 								result.push({
-									range: vueLoc.range,
+									range: vueRange,
 									// TODO: parent
 								});
 							}
@@ -41,17 +40,17 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: SelectionRange[] = [];
-			for (const range of ranges) {
+			for (const position of positions) {
 				for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-					for (const htmlLoc of sourceMap.sourceToTargets(range)) {
+					for (const htmlRange of sourceMap.sourceToTargets(position)) {
 						const selectRanges = sourceMap.language === 'html'
-							? languageServices.html.getSelectionRanges(sourceMap.targetDocument, [htmlLoc.range.start])
-							: languageServices.pug.getSelectionRanges(sourceMap.pugDocument, [htmlLoc.range.start])
+							? languageServices.html.getSelectionRanges(sourceMap.targetDocument, [htmlRange.start])
+							: languageServices.pug.getSelectionRanges(sourceMap.pugDocument, [htmlRange.start])
 						for (const selectRange of selectRanges) {
-							const vueLoc = sourceMap.targetToSource(selectRange.range);
-							if (vueLoc) {
+							const vueRange = sourceMap.targetToSource(selectRange.range.start, selectRange.range.end);
+							if (vueRange) {
 								result.push({
-									range: vueLoc.range,
+									range: vueRange,
 									// TODO: parent
 								});
 							}
@@ -63,17 +62,17 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			let result: SelectionRange[] = [];
-			for (const range of ranges) {
+			for (const position of positions) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
 					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
 					if (!cssLanguageService) continue;
-					for (const cssLoc of sourceMap.sourceToTargets(range)) {
-						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.targetDocument, [cssLoc.range.start], sourceMap.stylesheet);
+					for (const cssRange of sourceMap.sourceToTargets(position)) {
+						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.targetDocument, [cssRange.start], sourceMap.stylesheet);
 						for (const selectRange of selectRanges) {
-							const vueLoc = sourceMap.targetToSource(selectRange.range);
-							if (vueLoc) {
+							const vueRange = sourceMap.targetToSource(selectRange.range.start, selectRange.range.end);
+							if (vueRange) {
 								result.push({
-									range: vueLoc.range,
+									range: vueRange,
 									// TODO: parent
 								});
 							}
