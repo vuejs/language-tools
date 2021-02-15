@@ -22,6 +22,7 @@ export function generate(
     writeScript();
     writeScriptSetup();
     writeTemplate();
+    gen.addText('\n;export { };\n');
 
     function writeScript() {
         if (!script)
