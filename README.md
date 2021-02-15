@@ -1,20 +1,20 @@
 # Volar
 
-> Faster and more accurate TypeScript support of Vue 3
+> ⚡ The Fastest Vue Language Support Extension
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
-Volar is a Language Support plugin built specifically for Vue 3. This is based on Composition API to calculate on-demand, so as to achieve performance close to native TypeScript script.
+Volar is a Language Support plugin built specifically for Vue 3. It's based on `@vue/reactivity` to calculate TypeScript on-demand to optimization performance close to native TypeScript language service.
 
 [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
 
-If you have question, you can open a issue, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
+If you have question, you can open a issue / discussion, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
 
 ## Quick Start
 
 Some templates that can used with Volar.
 
-[Vitesse](https://github.com/antfu/vitesse), [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts)
+[vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts), [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
 
@@ -101,9 +101,9 @@ declare global {
 <details>
 <summary>Work with Vue 2?</summary>
 
-This tool uses Vue 3 types from '@vue/runtime-dom' module to calculate completion.
+This tool uses Vue 3 types from `@vue/runtime-dom` module to calculate completion.
 
-Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have to install this package yourself:
+Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have to install this package yourself:
 
 ```json
 {
@@ -146,6 +146,8 @@ Vue 3 in itself includes the package '@vue/runtime-dom'. For Vue 2 you will have
 > You need to disable Vetur to avoid conflicts.
 
 > tsconfig.json / jsconfig.json is required. And usually also need `"strict": true`.
+
+> `__VLS_GlobalComponents` and `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
 
 ## Sponsors
 
