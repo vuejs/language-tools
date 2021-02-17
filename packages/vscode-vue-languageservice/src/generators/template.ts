@@ -118,7 +118,8 @@ export function generate(
 				writeImportSlots(node, parents);
 				writeVshow(node);
 				writeElReferences(node); // <el ref="foo" />
-				writeProps(node);
+				writeProps(node, true);
+				writeProps(node, false);
 				writeClassScopeds(node);
 				writeEvents(node);
 				writeOptionReferences(node);
@@ -559,7 +560,7 @@ export function generate(
 			}
 		}
 	}
-	function writeProps(node: ElementNode) {
+	function writeProps(node: ElementNode, forDirectiveClassOrStyle: boolean) {
 		const varName = `__VLS_${elementIndex++}`;
 
 		addStartWrap();
@@ -576,8 +577,8 @@ export function generate(
 				const propValue = prop.exp?.content ?? 'undefined';
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
 
-				if (isClassOrStyleAttr) {
-					scriptGen.addText(`// @ts-ignore\n`);
+				if (isClassOrStyleAttr !== forDirectiveClassOrStyle) {
+					continue;
 				}
 
 				if (prop.name === 'bind' || prop.name === 'model') {
@@ -682,6 +683,10 @@ export function generate(
 			else if (
 				prop.type === NodeTypes.ATTRIBUTE
 			) {
+				if (forDirectiveClassOrStyle) {
+					continue;
+				}
+
 				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
 				const propValue = prop.value !== undefined ? `\`${prop.value.content.replace(/`/g, '\\`')}\`` : 'true';
 				const propName2 = prop.name;
