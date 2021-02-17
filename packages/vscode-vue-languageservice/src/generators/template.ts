@@ -887,6 +887,23 @@ export function generate(
 					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
 				}
 
+				scriptGen.addText(`{\n`);
+				scriptGen.addText(`declare let $event: Parameters<NonNullable<typeof ${var_on}['${key_1}']>>[0];\n`);
+				writeCode(
+					prop.exp.content,
+					{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					},
+					MapedMode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					['', ''],
+				);
+				scriptGen.addText(`}\n`);
+
 				const transformResult = transformOn(prop, node, context);
 				for (const prop_2 of transformResult.props) {
 					const value = prop_2.value;
@@ -905,19 +922,7 @@ export function generate(
 					scriptGen.addText(`: `);
 
 					if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
-						writeCode(
-							value.content,
-							{
-								start: value.loc.start.offset,
-								end: value.loc.end.offset,
-							},
-							MapedMode.Offset,
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.all,
-							},
-							['', ''],
-						);
+						scriptGen.addText(value.content);
 					}
 					else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
 						for (const child of value.children) {
@@ -928,24 +933,7 @@ export function generate(
 								// ignore
 							}
 							else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
-								if (child.content === prop.exp.content) {
-									writeCode(
-										child.content,
-										{
-											start: child.loc.start.offset,
-											end: child.loc.end.offset,
-										},
-										MapedMode.Offset,
-										{
-											vueTag: 'template',
-											capabilities: capabilitiesSet.all,
-										},
-										['', ''],
-									);
-								}
-								else {
-									scriptGen.addText(child.content);
-								}
+								scriptGen.addText(child.content);
 							}
 						}
 					}
