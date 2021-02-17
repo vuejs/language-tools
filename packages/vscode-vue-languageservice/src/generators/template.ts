@@ -10,7 +10,7 @@ const capabilitiesSet = {
 	noFormatting: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true, completion: true, },
 	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
-	className: { basic: true, references: true, definitions: true, rename: true, },
+	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	propRaw: { references: true, definitions: true, rename: true, },
@@ -563,7 +563,12 @@ export function generate(
 	function writeProps(node: ElementNode, forDirectiveClassOrStyle: boolean) {
 		const varName = `__VLS_${elementIndex++}`;
 
-		addStartWrap();
+		if (forDirectiveClassOrStyle) {
+			scriptGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+		}
+		else {
+			addStartWrap();
+		}
 
 		for (const prop of node.props) {
 			if (
@@ -749,7 +754,12 @@ export function generate(
 			}
 		}
 
-		addEndWrap();
+		if (forDirectiveClassOrStyle) {
+			scriptGen.addText(`};\;`)
+		}
+		else {
+			addEndWrap();
+		}
 
 		function addStartWrap() {
 			{ // start tag
@@ -837,7 +847,7 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: {
-								...capabilitiesSet.className,
+								...capabilitiesSet.scopedClassName,
 								displayWithLink: cssScopedClassesSet.has(className),
 							},
 						},
