@@ -1,3 +1,10 @@
+### 0.21.6
+
+- fix: `<script setup>` unused report not working if no any `import` statement
+- fix: narrowed type by v-if should not be widened in v-on
+- fix: `:style` type check not working
+- fix: scoped class name references should not have hover info
+
 ### 0.21.5
 
 - fix: tsconfig parsing for ts plugin incorrect
