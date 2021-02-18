@@ -1,16 +1,10 @@
 import type { SourceMap } from '..';
 import type { Range } from 'vscode-languageserver';
+import { transform as transformLocation } from './locationLike';
+import { notEmpty } from '@volar/shared';
 
-export function transform<T extends { range: Range }>(highlights: T[], sourceMap: SourceMap): T[] {
-    const result: T[] = [];
-    for (const highlight of highlights) {
-        const vueRange = sourceMap.targetToSource(highlight.range.start, highlight.range.end);
-        if (vueRange) {
-            result.push({
-                ...highlight,
-                range: vueRange,
-            });
-        }
-    }
-    return result;
+export function transform<T extends { range: Range }>(locations: T[], sourceMap: SourceMap): T[] {
+    return locations
+        .map(location => transformLocation(location, sourceMap))
+        .filter(notEmpty);
 }

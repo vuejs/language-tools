@@ -14,6 +14,8 @@ export function register(htmlLanguageService: html.LanguageService) {
             htmlRange.start,
             pugDocument.htmlDocument,
         );
+        if (!htmlResult) return;
+
         return transformHover(htmlResult, pugDocument.sourceMap);
     }
 }

@@ -2,7 +2,7 @@ import type { TsApiRegisterOptions } from '../types';
 import { CompletionItem, MarkupKind } from 'vscode-languageserver/node';
 import { CompletionData, TsCompletionData, HtmlCompletionData } from '../types';
 import { SourceFile } from '../sourceFile';
-import { transformTextEdits } from '@volar/source-map';
+import { transformLocations } from '@volar/source-map';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (item: CompletionItem) => {
@@ -28,7 +28,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				if (vueItem.detail !== data.tsItem.detail + '.ts') {
 					vueItem.detail = data.tsItem.detail;
 				}
-				vueItem.additionalTextEdits = transformTextEdits(data.tsItem.additionalTextEdits, sourceMap);
+				vueItem.additionalTextEdits = data.tsItem.additionalTextEdits
+					? transformLocations(data.tsItem.additionalTextEdits, sourceMap)
+					: undefined;
 			}
 			return vueItem;
 		}

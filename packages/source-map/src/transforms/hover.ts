@@ -1,15 +1,17 @@
 import type { SourceMap } from '..';
 import type { Hover } from 'vscode-languageserver';
 
-export function transform(hover: Hover | undefined | null, sourceMap: SourceMap): Hover | undefined | null {
+export function transform(hover: Hover, sourceMap: SourceMap): Hover | undefined {
+
     if (!hover?.range) {
         return hover;
     }
-    const vueRange = sourceMap.targetToSource(hover.range.start, hover.range.end);
-    if (vueRange) {
-        return {
-            ...hover,
-            range: vueRange,
-        };
-    }
+
+    const range = sourceMap.targetToSource(hover.range.start, hover.range.end);
+    if (!range) return;
+
+    return {
+        ...hover,
+        range,
+    };
 }

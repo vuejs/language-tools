@@ -9,8 +9,8 @@ import {
 import { CompletionContext } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
 import { CompletionData } from '../types';
-import { transformTextEdit } from '@volar/source-map';
-import { transformTextEdits } from '@volar/source-map';
+import { transformCompletionItem } from '@volar/source-map';
+import { transformCompletionList } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import { languageIdToSyntax, getWordRange } from '@volar/shared';
@@ -134,12 +134,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 							mode: 'ts',
 							tsItem: tsItem,
 						};
-						const vueItem: CompletionItem = {
-							...tsItem,
-							additionalTextEdits: transformTextEdits(tsItem.additionalTextEdits, sourceMap),
-							textEdit: transformTextEdit(tsItem.textEdit, sourceMap),
-							data,
-						};
+						const vueItem = transformCompletionItem(tsItem, sourceMap);
+						vueItem.data = data;
 						return vueItem;
 					});
 					result.items = result.items.concat(vueItems);
@@ -260,11 +256,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
-					let vueItems: CompletionItem[] = htmlResult.items.map(htmlItem => ({
-						...htmlItem,
-						additionalTextEdits: transformTextEdits(htmlItem.additionalTextEdits, sourceMap),
-						textEdit: transformTextEdit(htmlItem.textEdit, sourceMap),
-					}));
+					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(htmlItem, sourceMap));
 					const htmlItemsMap = new Map<string, html.CompletionItem>();
 					for (const entry of htmlResult.items) {
 						htmlItemsMap.set(entry.label, entry);
@@ -337,15 +329,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					};
 					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {
 						const newText = cssItem.textEdit?.newText || cssItem.insertText || cssItem.label;
-						const textEdit = transformTextEdit(TextEdit.replace(wordRange, newText), sourceMap);
-						const addTextEdits = transformTextEdits(cssItem.additionalTextEdits, sourceMap);
-						return {
-							...cssItem,
-							additionalTextEdits: addTextEdits,
-							textEdit: textEdit,
-							data,
-						};
-
+						cssItem.textEdit = TextEdit.replace(wordRange, newText);
+						const vueItem = transformCompletionItem(cssItem, sourceMap);
+						vueItem.data = data;
+						return vueItem;
 					}
 					);
 					result.items = result.items.concat(vueItems);
@@ -377,11 +364,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					let syntax = languageIdToSyntax(embededDoc.document.languageId);
 					if (syntax === 'vue') syntax = 'html';
 					const emmetResult = emmet.doComplete(embededDoc.document, embededDoc.range.start, syntax, emmetConfig);
-					if (emmetResult && embededDoc.sourceMap) {
-						for (const item of emmetResult.items) {
-							item.textEdit = transformTextEdit(item.textEdit, embededDoc.sourceMap);
-							item.additionalTextEdits = transformTextEdits(item.additionalTextEdits, embededDoc.sourceMap);
-						}
+					if (embededDoc.sourceMap) {
+						return transformCompletionList(emmetResult, embededDoc.sourceMap);
 					}
 					return emmetResult;
 				}

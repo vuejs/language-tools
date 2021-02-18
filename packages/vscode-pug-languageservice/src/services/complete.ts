@@ -15,6 +15,7 @@ export function register(htmlLanguageService: html.LanguageService) {
             pugDocument.htmlDocument,
             options,
         );
+
         return transformCompletionList(htmlComplete, pugDocument.sourceMap);
     }
 }

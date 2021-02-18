@@ -9,6 +9,7 @@ export function register(htmlLanguageService: html.LanguageService) {
             pugDocument.sourceMap.targetDocument,
             documentContext,
         );
+
         return transformLocations(htmlResult, pugDocument.sourceMap);
     }
 }

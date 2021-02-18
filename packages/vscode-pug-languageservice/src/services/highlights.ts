@@ -14,6 +14,7 @@ export function register(htmlLanguageService: html.LanguageService) {
             htmlRange.start,
             pugDocument.htmlDocument,
         );
+
         return transformLocations(htmlResult, pugDocument.sourceMap);
     }
 }
