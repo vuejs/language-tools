@@ -1,3 +1,7 @@
+### 0.21.7
+
+- fix: auto import `*.vue` not working
+
 ### 0.21.6
 
 - fix: `<script setup>` unused report not working if no any `import` statement
