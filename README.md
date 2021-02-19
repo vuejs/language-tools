@@ -6,9 +6,9 @@ https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 Volar is a Language Support plugin built specifically for Vue 3. It's based on `@vue/reactivity` to calculate TypeScript on-demand to optimization performance close to native TypeScript language service.
 
-[[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
+[[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
-If you have question, you can open a issue / discussion, or ask me in [Discord](https://discord.gg/5bnSSSSBbK).
+🛠️ Currently this project is still refactoring to make it easier to contribute.
 
 ## Quick Start
 
@@ -65,9 +65,9 @@ declare global {
 
 </details>
 
-<!-- Slots services -->
+<!-- v-slot services -->
 <details>
-<summary>Slots services</summary>
+<summary>v-slot services</summary>
 
 v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
 
@@ -101,7 +101,7 @@ declare global {
 <details>
 <summary>Work with Vue 2?</summary>
 
-This tool uses Vue 3 types from `@vue/runtime-dom` module to calculate completion.
+This tool required Vue 3 types from `@vue/runtime-dom` module.
 
 Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have to install this package yourself:
 
@@ -121,16 +121,16 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 
 ```vue
 <template>
-... checking on
+checking...
 </template>
 
 <script>
-... checking on
+checking...
 </script>
 
 <!-- @vue-ignore -->
 <style>
-... checking off!
+not checking!
 </style>
 ```
 
@@ -151,9 +151,7 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 
 ## Sponsors
 
-If you like this extension, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). This is a big support to me.
-
-Thank you!
+If you like this extension, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). Thank you. :)
 
 <a href="https://github.com/yyx990803"><img src="https://avatars1.githubusercontent.com/u/499550?s=64&amp;v=4" width="32" height="32" alt="@yyx990803" style="border-radius: 50%;"></a>
 <a href="https://github.com/Pizzacus"><img src="https://avatars1.githubusercontent.com/u/7659613?s=64&amp;v=4" width="32" height="32" alt="@Pizzacus" style="border-radius: 50%;"></a>
