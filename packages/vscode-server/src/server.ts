@@ -60,6 +60,7 @@ import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice'
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { codeLensOptions } from '@volar/vscode-vue-languageservice';
 import { loadVscodeTypescript, loadVscodeTypescriptLocalized } from '@volar/shared';
+import type * as emmet from 'vscode-emmet-helper';
 
 const hosts: ReturnType<typeof createLanguageServiceHost>[] = [];
 
@@ -87,20 +88,29 @@ const both: TextDocumentRegistrationOptions = {
 let mode: 'api' | 'doc' | 'html' = 'api';
 let appRoot: string;
 let language: string;
+let emmetConfig: any;
 
-async function updateConfigs() {
-	const [
-		codeLensReferences,
-		codeLensPugTool,
-		codeLensRefScriptSetupTool,
-	] = await Promise.all([
-		connection.workspace.getConfiguration('volar.codeLens.references'),
-		connection.workspace.getConfiguration('volar.codeLens.pugTools'),
-		connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
-	]);
-	codeLensOptions.references = codeLensReferences;
-	codeLensOptions.pugTool = codeLensPugTool;
-	codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
+function updateConfigs() {
+	updateCodeLens();
+	updateEmmet();
+
+	async function updateCodeLens() {
+		const [
+			codeLensReferences,
+			codeLensPugTool,
+			codeLensRefScriptSetupTool,
+		] = await Promise.all([
+			connection.workspace.getConfiguration('volar.codeLens.references'),
+			connection.workspace.getConfiguration('volar.codeLens.pugTools'),
+			connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
+		]);
+		codeLensOptions.references = codeLensReferences;
+		codeLensOptions.pugTool = codeLensPugTool;
+		codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
+	}
+	async function updateEmmet() {
+		emmetConfig = await connection.workspace.getConfiguration('emmet');
+	}
 }
 function onInitialize(params: InitializeParams) {
 
@@ -204,37 +214,8 @@ function initLanguageServiceApi(rootPath: string) {
 			document,
 			handler.position,
 			handler.context,
-			async syntax => await getEmmetConfiguration(syntax),
+			getEmmetConfiguration,
 		);
-
-		async function getEmmetConfiguration(syntax: string) {
-			const emmetConfig = await connection.workspace.getConfiguration('emmet');
-			const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
-			const preferences = Object.assign({}, emmetConfig['preferences'] || {});
-			// jsx, xml and xsl syntaxes need to have self closing tags unless otherwise configured by user
-			if (syntax === 'jsx' || syntax === 'xml' || syntax === 'xsl') {
-				syntaxProfiles[syntax] = syntaxProfiles[syntax] || {};
-				if (typeof syntaxProfiles[syntax] === 'object'
-					&& !syntaxProfiles[syntax].hasOwnProperty('self_closing_tag') // Old Emmet format
-					&& !syntaxProfiles[syntax].hasOwnProperty('selfClosingStyle') // Emmet 2.0 format
-				) {
-					syntaxProfiles[syntax] = {
-						...syntaxProfiles[syntax],
-						selfClosingStyle: 'xml'
-					};
-				}
-			}
-
-			return {
-				preferences,
-				showExpandedAbbreviation: emmetConfig['showExpandedAbbreviation'],
-				showAbbreviationSuggestions: emmetConfig['showAbbreviationSuggestions'],
-				syntaxProfiles,
-				variables: emmetConfig['variables'],
-				excludeLanguages: emmetConfig['excludeLanguages'],
-				showSuggestionsAsSnippets: emmetConfig['showSuggestionsAsSnippets']
-			};
-		}
 	});
 	connection.onCompletionResolve(async item => {
 		const uri = item.data?.uri;
@@ -587,4 +568,31 @@ function onInitializedHtml() {
 	connection.client.register(FoldingRangeRequest.type, vueOnly);
 	connection.client.register(LinkedEditingRangeRequest.type, vueOnly);
 	connection.client.register(DocumentFormattingRequest.type, vueOnly);
+}
+function getEmmetConfiguration(syntax: string): emmet.VSCodeEmmetConfig {
+	const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
+	const preferences = Object.assign({}, emmetConfig['preferences'] || {});
+	// jsx, xml and xsl syntaxes need to have self closing tags unless otherwise configured by user
+	if (syntax === 'jsx' || syntax === 'xml' || syntax === 'xsl') {
+		syntaxProfiles[syntax] = syntaxProfiles[syntax] || {};
+		if (typeof syntaxProfiles[syntax] === 'object'
+			&& !syntaxProfiles[syntax].hasOwnProperty('self_closing_tag') // Old Emmet format
+			&& !syntaxProfiles[syntax].hasOwnProperty('selfClosingStyle') // Emmet 2.0 format
+		) {
+			syntaxProfiles[syntax] = {
+				...syntaxProfiles[syntax],
+				selfClosingStyle: 'xml'
+			};
+		}
+	}
+
+	return {
+		preferences,
+		showExpandedAbbreviation: emmetConfig['showExpandedAbbreviation'],
+		showAbbreviationSuggestions: emmetConfig['showAbbreviationSuggestions'],
+		syntaxProfiles,
+		variables: emmetConfig['variables'],
+		excludeLanguages: emmetConfig['excludeLanguages'],
+		showSuggestionsAsSnippets: emmetConfig['showSuggestionsAsSnippets']
+	};
 }

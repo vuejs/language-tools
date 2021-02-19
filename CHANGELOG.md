@@ -1,3 +1,8 @@
+### 0.21.8
+
+- fix: sometime emmet completion missing
+- fix: auto-complete throw error [#65](https://github.com/johnsoncodehk/volar/issues/65)
+
 ### 0.21.7
 
 - fix: auto import `*.vue` not working

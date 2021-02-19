@@ -78,25 +78,32 @@ export const vueTags = [
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 
-	return async (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig>) => {
+	return async (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 
+		const emmetResult = getEmmetResult();
+
 		const tsResult = getTsResult(sourceFile);
-		if (tsResult.items.length) return tsResult;
+		if (tsResult.items.length) return withEmmetResult(tsResult, emmetResult);
 
 		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult.items.length) return htmlResult;
+		if (htmlResult.items.length) return withEmmetResult(htmlResult, emmetResult);
 
 		const cssResult = getCssResult(sourceFile);
-		if (cssResult.items.length) return cssResult;
+		if (cssResult.items.length) return withEmmetResult(cssResult, emmetResult);
 
 		const vueResult = getVueResult(sourceFile);
-		if (vueResult?.items.length) return vueResult;
+		if (vueResult?.items.length) return withEmmetResult(vueResult, emmetResult);
 
-		const emmetResult = await getEmmetResult();
-		if (emmetResult?.items.length) return emmetResult;
+		return emmetResult;
 
+		function withEmmetResult(a: CompletionList, b?: CompletionList): CompletionList {
+			return {
+				isIncomplete: a.isIncomplete,
+				items: b ? a.items.concat(b.items) : a.items,
+			};
+		}
 		function getTsResult(sourceFile: SourceFile) {
 			const result: CompletionList = {
 				isIncomplete: false,
@@ -355,11 +362,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				}
 			}
 		}
-		async function getEmmetResult() {
+		function getEmmetResult() {
 			if (!getEmmetConfig) return;
 			const embededDoc = getEmbeddedDoc(document, { start: position, end: position });
 			if (embededDoc) {
-				const emmetConfig = await getEmmetConfig(embededDoc.document.languageId);
+				const emmetConfig = getEmmetConfig(embededDoc.document.languageId);
 				if (emmetConfig) {
 					let syntax = languageIdToSyntax(embededDoc.document.languageId);
 					if (syntax === 'vue') syntax = 'html';
