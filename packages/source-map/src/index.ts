@@ -40,6 +40,17 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		super();
 	}
 
+	cache = new Map<string, {
+		data: MapedData;
+		start: Position;
+		end: Position;
+	}[]>();
+	cache2 = new Map<string, {
+		data: MapedData;
+		start: number;
+		end: number;
+	}[]>();
+
 	// Range
 	public isSource(start: Position, end?: Position) {
 		return this.maps(start, end ?? start, true, true).length > 0;
@@ -62,17 +73,22 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		return this.maps(start, end ?? start, true);
 	}
 	private maps(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
+		const key = start.line + ':' + start.character + ':' + end.line + ':' + end.character + ':' + sourceToTarget + ':' + returnFirstResult;
+		if (this.cache.has(key)) return this.cache.get(key)!;
+
 		const toDoc = sourceToTarget ? this.targetDocument : this.sourceDocument;
 		const fromDoc = sourceToTarget ? this.sourceDocument : this.targetDocument;
 		const startOffset = fromDoc.offsetAt(start);
 		const endOffset = fromDoc.offsetAt(end);
-		return this
+		const result = this
 			.maps2(startOffset, endOffset, sourceToTarget, returnFirstResult)
 			.map(result => ({
 				data: result.data,
 				start: toDoc.positionAt(result.start),
 				end: toDoc.positionAt(result.end),
 			}));
+		this.cache.set(key, result);
+		return result;
 	}
 
 	// MapedRange
@@ -97,59 +113,70 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		return this.maps2(start, end ?? start, true);
 	}
 	private maps2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
+		const key = start + ':' + end + ':' + sourceToTarget + ':' + returnFirstResult;
+		if (this.cache2.has(key)) return this.cache2.get(key)!;
+
 		const result: {
 			data: MapedData,
 			start: number,
 			end: number,
 		}[] = [];
 		for (const maped of this) {
-			const ranges = [{
-				mode: maped.mode,
-				sourceRange: maped.sourceRange,
-				targetRange: maped.targetRange,
-			}, ...maped.others ?? []];
-			for (const maped_2 of ranges) {
-				const mapedToRange = sourceToTarget ? maped_2.targetRange : maped_2.sourceRange;
-				const mapedFromRange = sourceToTarget ? maped_2.sourceRange : maped_2.targetRange;
-				if (maped_2.mode === MapedMode.Gate) {
-					if (start === mapedFromRange.start && end === mapedFromRange.end) {
-						const offsets = [mapedToRange.start, mapedToRange.end];
-						result.push({
-							data: maped.data,
-							start: Math.min(offsets[0], offsets[1]),
-							end: Math.max(offsets[0], offsets[1]),
-						});
+			const _result = tryMapping(maped.mode, maped.sourceRange, maped.targetRange, maped.data);
+			if (_result) {
+				result.push(_result);
+				if (returnFirstResult) return result;
+			}
+			if (maped.others) {
+				for (const other of maped.others) {
+					const _result = tryMapping(other.mode, other.sourceRange, other.targetRange, maped.data);
+					if (_result) {
+						result.push(_result);
 						if (returnFirstResult) return result;
-						break;
-					}
-				}
-				else if (maped_2.mode === MapedMode.Offset) {
-					if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
-						const offsets = [mapedToRange.start + start - mapedFromRange.start, mapedToRange.end + end - mapedFromRange.end];
-						result.push({
-							data: maped.data,
-							start: Math.min(offsets[0], offsets[1]),
-							end: Math.max(offsets[0], offsets[1]),
-						});
-						if (returnFirstResult) return result;
-						break;
-					}
-				}
-				else if (maped_2.mode === MapedMode.In) {
-					if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
-						const offsets = [mapedToRange.start, mapedToRange.end];
-						result.push({
-							data: maped.data,
-							start: Math.min(offsets[0], offsets[1]),
-							end: Math.max(offsets[0], offsets[1]),
-						});
-						if (returnFirstResult) return result;
-						break;
 					}
 				}
 			}
 		}
+		this.cache2.set(key, result);
 		return result;
+
+		function tryMapping(mode: MapedMode, sourceRange: MapedRange, targetRange: MapedRange, data: MapedData) {
+			const mapedToRange = sourceToTarget ? targetRange : sourceRange;
+			const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
+			if (mode === MapedMode.Gate) {
+				if (start === mapedFromRange.start && end === mapedFromRange.end) {
+					const _start = mapedToRange.start;
+					const _end = mapedToRange.end;
+					return {
+						data: data,
+						start: Math.min(_start, _end),
+						end: Math.max(_start, _end),
+					};
+				}
+			}
+			else if (mode === MapedMode.Offset) {
+				if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
+					const _start = mapedToRange.start + start - mapedFromRange.start;
+					const _end = mapedToRange.end + end - mapedFromRange.end;
+					return {
+						data: data,
+						start: Math.min(_start, _end),
+						end: Math.max(_start, _end),
+					};
+				}
+			}
+			else if (mode === MapedMode.In) {
+				if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
+					const _start = mapedToRange.start;
+					const _end = mapedToRange.end;
+					return {
+						data: data,
+						start: Math.min(_start, _end),
+						end: Math.max(_start, _end),
+					};
+				}
+			}
+		}
 	}
 }
 
