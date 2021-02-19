@@ -364,7 +364,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					let syntax = languageIdToSyntax(embededDoc.document.languageId);
 					if (syntax === 'vue') syntax = 'html';
 					const emmetResult = emmet.doComplete(embededDoc.document, embededDoc.range.start, syntax, emmetConfig);
-					if (embededDoc.sourceMap) {
+					if (emmetResult && embededDoc.sourceMap) {
 						return transformCompletionList(emmetResult, embededDoc.sourceMap);
 					}
 					return emmetResult;
