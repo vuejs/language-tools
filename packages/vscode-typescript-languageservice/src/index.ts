@@ -63,9 +63,6 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 
 	function getTextDocument(uri: string) {
 		const fileName = uriToFsPath(uri);
-		if (!languageService.getProgram()?.getSourceFile(fileName)) {
-			return;
-		}
 		const version = host.getScriptVersion(fileName);
 		const oldDoc = documents.get(uri);
 		if (!oldDoc || oldDoc[0] !== version) {
