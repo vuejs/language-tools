@@ -4,6 +4,7 @@ import {
 	CompletionItem,
 	DiagnosticTag,
 	Range,
+	Location,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, notEmpty } from '@volar/shared';
@@ -737,10 +738,10 @@ export function createSourceFile(
 						if (propRight.data.isAdditionalReference) continue;
 						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
-							if (definition.uri !== virtualScriptGen.textDocument.value.uri) continue;
+							if (definition.targetUri !== virtualScriptGen.textDocument.value.uri) continue;
 							result.push({
 								...diag,
-								range: definition.range,
+								range: definition.targetSelectionRange,
 							});
 						}
 					}

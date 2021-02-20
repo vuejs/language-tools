@@ -1,6 +1,7 @@
 import type { TsApiRegisterOptions } from '../types';
 import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { Location } from 'vscode-languageserver/node';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 	return (document: TextDocument, position: Position): string | undefined | null => {
@@ -13,10 +14,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			const defs = tsRange.languageService.findDefinition(tsRange.textDocument.uri, tsRange.start);
 			let isDef = false;
 			for (const def of defs) {
+				const uri = Location.is(def) ? def.uri : def.targetUri;
+				const range = Location.is(def) ? def.range : def.targetSelectionRange;
 				if (
-					def.uri === tsRange.textDocument.uri
-					&& def.range.end.line === tsRange.start.line
-					&& def.range.end.character === tsRange.start.character
+					uri === tsRange.textDocument.uri
+					&& range.end.line === tsRange.start.line
+					&& range.end.character === tsRange.start.character
 				) {
 					isDef = true;
 					break;
@@ -28,11 +31,13 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 			const typeDefs = tsRange.languageService.findTypeDefinition(tsRange.textDocument.uri, tsRange.start);
 			for (const typeDefine of typeDefs) {
-				const defineDoc = tsRange.languageService.getTextDocument(typeDefine.uri);
+				const uri = Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
+				const range = Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
+				const defineDoc = tsRange.languageService.getTextDocument(uri);
 				if (!defineDoc)
 					continue;
-				const typeName = defineDoc.getText(typeDefine.range);
-				if (typeDefine.uri.endsWith('reactivity.d.ts')) {
+				const typeName = defineDoc.getText(range);
+				if (uri.endsWith('reactivity.d.ts')) {
 					switch (typeName) {
 						case 'Ref':
 						case 'ComputedRef':

@@ -1,4 +1,4 @@
-import type { Position } from 'vscode-languageserver/node';
+import type { LocationLink, Position } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
 import type { TsApiRegisterOptions } from '../types';
 import * as dedupe from '../utils/dedupe';
@@ -9,10 +9,14 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		on: (uri: string, position: Position) => {
 
 			const tsResult = onTs(uri, position, 'definition');
-			const cssResult = onCss(uri, position);
+			if (tsResult.length) {
+				return dedupe.withLocationLinks([
+					...tsResult,
+				]);
+			}
 
+			const cssResult = onCss(uri, position);
 			return dedupe.withLocations([
-				...tsResult,
 				...cssResult,
 			]);
 		},
@@ -20,7 +24,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 			const tsResult = onTs(uri, position, 'typeDefinition');
 
-			return dedupe.withLocations([
+			return dedupe.withLocationLinks([
 				...tsResult,
 			]);
 		},
@@ -29,8 +33,8 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	function onTs(uri: string, position: Position, mode: 'definition' | 'typeDefinition') {
 
 		const loopChecker = dedupe.createLocationSet();
-		let tsResult: Location[] = [];
-		let vueResult: Location[] = [];
+		let tsResult: (LocationLink & { originalUri: string })[] = [];
+		let vueResult: LocationLink[] = [];
 
 		// vue -> ts
 		for (const tsRange of mapper.ts.to(uri, position)) {
@@ -46,16 +50,19 @@ export function register({ mapper }: TsApiRegisterOptions) {
 					? tsRange.languageService.findTypeDefinition(uri, position)
 					: tsRange.languageService.findDefinition(uri, position);
 
-				tsResult = tsResult.concat(tsLocs);
+				tsResult = tsResult.concat(tsLocs.map(tsLoc => ({
+					...tsLoc,
+					originalUri: uri,
+				})));
 
 				for (const location of tsLocs) {
-					loopChecker.add({ uri: location.uri, range: location.range });
-					for (const teleRange of mapper.ts.teleports(location.uri, location.range.start, location.range.end)) {
+					loopChecker.add({ uri: location.targetUri, range: location.targetSelectionRange });
+					for (const teleRange of mapper.ts.teleports(location.targetUri, location.targetSelectionRange.start, location.targetSelectionRange.end)) {
 						if (!teleRange.sideData.capabilities.definitions)
 							continue;
-						if (loopChecker.has({ uri: location.uri, range: teleRange }))
+						if (loopChecker.has({ uri: location.targetUri, range: teleRange }))
 							continue;
-						withTeleports(location.uri, teleRange.start);
+						withTeleports(location.targetUri, teleRange.start);
 					}
 				}
 			}
@@ -63,12 +70,21 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// ts -> vue
 		for (const tsLoc of tsResult) {
-			for (const vueRange of mapper.ts.from(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
-				vueResult.push({
-					uri: vueRange.textDocument.uri,
-					range: vueRange,
-				});
-			}
+
+			const targetSelectionRange = mapper.ts.from(tsLoc.targetUri, tsLoc.targetSelectionRange.start, tsLoc.targetSelectionRange.end);
+			if (!targetSelectionRange.length) continue;
+
+			const targetRange = mapper.ts.from(tsLoc.targetUri, tsLoc.targetRange.start, tsLoc.targetRange.end);
+			const originSelectionRange = tsLoc.originSelectionRange
+				? mapper.ts.from(tsLoc.originalUri, tsLoc.originSelectionRange.start, tsLoc.originSelectionRange.end)
+				: undefined;
+
+			vueResult.push({
+				targetUri: targetSelectionRange[0].textDocument.uri,
+				targetRange: targetRange.length ? targetRange[0] : targetSelectionRange[0],
+				targetSelectionRange: targetSelectionRange[0],
+				originSelectionRange: originSelectionRange?.length ? originSelectionRange[0] : undefined,
+			});
 		}
 
 		return vueResult;

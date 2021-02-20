@@ -2,6 +2,7 @@ import type { TsApiRegisterOptions } from '../types';
 import {
 	Range,
 	Location,
+	LocationLink,
 } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as references from './references';
@@ -33,7 +34,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 		const funcCalls: {
 			name: string,
 			range: Range,
-			definitions: Location[],
+			definitions: (Location | LocationLink)[],
 		}[] = [];
 
 		const sourceFile = sourceFiles.get(document.uri);
@@ -378,12 +379,14 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 		}
 		for (const funcCall of funcCalls) {
 			for (const definition of funcCall.definitions) {
-				if (definition.uri === document.uri) {
+				const uri = Location.is(definition) ? definition.uri : definition.targetUri;
+				const range = Location.is(definition) ? definition.range : definition.targetSelectionRange;
+				if (uri === document.uri) {
 					const definitionFunc = funcs.find(func =>
-						definition.range.start.line === func.range.start.line
-						&& definition.range.start.character === func.range.start.character
-						&& definition.range.end.line === func.range.end.line
-						&& definition.range.end.character === func.range.end.character
+						range.start.line === func.range.start.line
+						&& range.start.character === func.range.start.character
+						&& range.end.line === func.range.end.line
+						&& range.end.character === func.range.end.character
 					);
 					const match = findBestMatchBlock(funcCall.range);
 					if (definitionFunc && match) {

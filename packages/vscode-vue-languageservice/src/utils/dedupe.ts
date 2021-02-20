@@ -1,5 +1,6 @@
 import type { Range } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
+import type { LocationLink } from 'vscode-languageserver/node';
 import type { CallHierarchyIncomingCall } from 'vscode-languageserver/node';
 import type { CallHierarchyOutgoingCall } from 'vscode-languageserver/node';
 import type { Diagnostic } from 'vscode-languageserver/node';
@@ -62,6 +63,19 @@ export function withLocations<T extends Location>(items: T[]): T[] {
         item.range.start.character,
         item.range.end.line,
         item.range.end.character,
+    ].join(':'));
+}
+export function withLocationLinks<T extends LocationLink>(items: T[]): T[] {
+    return dedupe(items, item =>[
+        item.targetUri,
+        item.targetSelectionRange.start.line,
+        item.targetSelectionRange.start.character,
+        item.targetSelectionRange.end.line,
+        item.targetSelectionRange.end.character,
+        item.targetRange.start.line,
+        item.targetRange.start.character,
+        item.targetRange.end.line,
+        item.targetRange.end.character,
     ].join(':'));
 }
 export function withCallHierarchyIncomingCalls<T extends CallHierarchyIncomingCall>(items: T[]): T[] {

@@ -261,37 +261,17 @@ function initLanguageServiceApi(rootPath: string) {
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		return host.allMatches(document.uri).map(ls => {
-			let result = ls.findReferences(document.uri, handler.position);
-			if (document.languageId !== 'vue') {
-				result = result.filter(loc => ls.getSourceFile(loc.uri));
-			}
-			return result;
-		}).flat();
+		return host.bestMatch(document.uri)?.findReferences(document.uri, handler.position);
 	});
 	connection.onDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		const ls = host.bestMatch(document.uri);
-		if (ls) {
-			let result = ls.findDefinition(document.uri, handler.position);
-			if (document.languageId !== 'vue') {
-				result = result.filter(loc => ls.getSourceFile(loc.uri));
-			}
-			return result;
-		}
+		return host.bestMatch(document.uri)?.findDefinition(document.uri, handler.position);
 	});
 	connection.onTypeDefinition(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
-		const ls = host.bestMatch(document.uri);
-		if (ls) {
-			let result = ls.findTypeDefinition(document.uri, handler.position);
-			if (document.languageId !== 'vue') {
-				result = result.filter(loc => ls.getSourceFile(loc.uri));
-			}
-			return result;
-		}
+		return host.bestMatch(document.uri)?.findTypeDefinition(document.uri, handler.position);
 	});
 	connection.languages.callHierarchy.onPrepare(handler => {
 		const document = documents.get(handler.textDocument.uri);
