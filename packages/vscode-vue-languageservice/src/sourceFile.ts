@@ -58,6 +58,8 @@ export function createSourceFile(
 		props: [],
 		setupReturns: [],
 		htmlElements: [],
+		componentItems: [],
+		htmlElementItems: [],
 	});
 	const vueHtmlDocument = computed(() => {
 		return languageServices.html.parseHTMLDocument(vueDoc.value);
@@ -409,6 +411,8 @@ export function createSourceFile(
 		templateScriptData.props = propNames;
 		templateScriptData.setupReturns = setupReturnNames;
 		templateScriptData.htmlElements = htmlElementNames;
+		templateScriptData.componentItems = components;
+		templateScriptData.htmlElementItems = globalEls;
 		virtualTemplateGen.update(); // TODO
 		return true;
 
@@ -827,11 +831,12 @@ export function createSourceFile(
 			{ // watching
 				tsProjectVersion.value;
 			}
-			const data = new Map<string, { bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
+			const data = new Map<string, { item: CompletionItem | undefined, bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
 			if (virtualTemplateGen.textDocument.value && virtualTemplateRaw.textDocument.value) {
 				const doc = virtualTemplateGen.textDocument.value;
 				const text = doc.getText();
-				for (const tagName of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
+				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
+					const tagName = tag.data.name;
 					let bind: CompletionItem[] = [];
 					let on: CompletionItem[] = [];
 					let slot: CompletionItem[] = [];
@@ -859,11 +864,11 @@ export function createSourceFile(
 							slot = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
-					data.set(tagName, { bind, on, slot });
-					data.set(hyphenate(tagName), { bind, on, slot });
+					data.set(tagName, { item: tag, bind, on, slot });
+					data.set(hyphenate(tagName), { item: tag, bind, on, slot });
 				}
 				const globalBind = tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
-				data.set('*', { bind: globalBind, on: [], slot: [] });
+				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });
 			}
 			return data;
 		});

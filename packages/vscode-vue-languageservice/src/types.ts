@@ -52,9 +52,11 @@ export interface IDescriptor {
 export interface ITemplateScriptData {
 	projectVersion: string | undefined;
 	context: string[];
+	componentItems: CompletionItem[];
 	components: string[];
 	props: string[];
 	setupReturns: string[];
+	htmlElementItems: CompletionItem[];
 	htmlElements: string[];
 }
 

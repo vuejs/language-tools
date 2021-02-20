@@ -172,7 +172,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					{ name: 'v-for' },
 				];
 				const slots: html.IAttributeData[] = [];
-				for (const [componentName, { bind, on, slot }] of componentCompletion) {
+				for (const [componentName, { item, bind, on, slot }] of componentCompletion) {
 					if (componentName === '*') {
 						for (const prop of bind) {
 							const name: string = prop.data.name;
@@ -237,11 +237,20 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 							});
 							tsItems.set(propKey, _slot);
 						}
-						tags.push({
-							name: componentName,
-							// description: '', // TODO: component description
-							attributes,
-						});
+						if (item) {
+							tags.push({
+								name: componentName,
+								description: componentName + ':',
+								attributes,
+							});
+							tsItems.set(componentName + ':', item);
+						}
+						else {
+							tags.push({
+								name: componentName,
+								attributes,
+							});
+						}
 					}
 				}
 				tags.push({
@@ -272,6 +281,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					for (const vueItem of vueItems) {
 						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
 						const tsItem = documentation ? tsItems.get(documentation) : undefined;
+						if (tsItem) {
+							vueItem.documentation = undefined;
+						}
 						if (vueItem.label.startsWith(':')) {
 							vueItem.sortText = '\u0000' + vueItem.sortText;
 						}
