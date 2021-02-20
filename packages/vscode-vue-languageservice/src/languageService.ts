@@ -177,6 +177,21 @@ export function createLanguageService(
 			addText += '\ndeclare global { interface __VLS_GlobalComponents {\n';
 
 			const mappings: Mapping<TsMappingData>[] = [];
+			mappings.push({
+				data: {
+					vueTag: 'script',
+					capabilities: {},
+				},
+				mode: MapedMode.Offset,
+				sourceRange: {
+					start: 0,
+					end: docLength,
+				},
+				targetRange: {
+					start: 0,
+					end: docLength,
+				},
+			});
 			for (let i = 0; i < argsArr.length; i++) {
 				const args = argsArr[i];
 				mappingText(args[0].start, args[0].end, args[0].text);

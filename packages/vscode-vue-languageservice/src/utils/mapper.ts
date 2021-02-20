@@ -283,6 +283,9 @@ export function createMapper(
                 tsStart = tsRange2.start;
                 tsEnd = tsRange2.end;
             }
+            else {
+                return [];
+            }
         }
 
         const sourceFile = findSourceFileByTsUri(tsUri);
