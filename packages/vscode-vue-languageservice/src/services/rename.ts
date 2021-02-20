@@ -9,7 +9,7 @@ import { DeleteFile } from 'vscode-languageserver/node';
 import { AnnotatedTextEdit } from 'vscode-languageserver/node';
 import { ResponseError } from 'vscode-languageserver/node';
 import { wordPatterns } from './completions';
-import { getWordRange } from '@volar/shared';
+import { getWordStart } from '@volar/shared';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
@@ -248,9 +248,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	function onCssPrepare(uri: string, position: Position) {
 		for (const cssRange of mapper.css.to(uri, position)) {
 			const wordPattern = wordPatterns[cssRange.textDocument.languageId] ?? wordPatterns.css;
-			const wordRange = getWordRange(wordPattern, cssRange, cssRange.textDocument);
-			if (wordRange) {
-				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordRange.start, wordRange.end)) {
+			const wordStart = getWordStart(wordPattern, cssRange.end, cssRange.textDocument);
+			if (wordStart) {
+				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordStart, cssRange.end)) {
 					return vueRange;
 				}
 			}

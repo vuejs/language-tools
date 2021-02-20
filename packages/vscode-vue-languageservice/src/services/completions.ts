@@ -5,6 +5,7 @@ import {
 	CompletionList,
 	TextEdit,
 	CompletionItemKind,
+	Range,
 } from 'vscode-languageserver-types';
 import { CompletionContext } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
@@ -13,7 +14,7 @@ import { transformCompletionItem } from '@volar/source-map';
 import { transformCompletionList } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
-import { languageIdToSyntax, getWordRange } from '@volar/shared';
+import { languageIdToSyntax, getWordStart } from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as languageServices from '../utils/languageServices';
 import * as emmet from 'vscode-emmet-helper';
@@ -324,7 +325,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				const cssRanges = sourceMap.sourceToTargets(position);
 				for (const cssRange of cssRanges) {
 					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;
-					const wordRange = getWordRange(wordPattern, cssRange, sourceMap.targetDocument) ?? cssRange;
+					const wordStart = getWordStart(wordPattern, cssRange.end, sourceMap.targetDocument);
+					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
 					const cssResult = cssLanguageService.doComplete(sourceMap.targetDocument, cssRange.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;

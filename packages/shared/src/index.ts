@@ -4,7 +4,7 @@ export * from './types';
 
 import * as path from 'upath';
 import * as fs from 'fs';
-import type { Range, TextDocument } from 'vscode-languageserver/node';
+import type { Position, Range, TextDocument } from 'vscode-languageserver/node';
 import { promisify } from 'util';
 import { MapLike } from 'typescript';
 
@@ -47,19 +47,19 @@ export function isInsideRange(parent: Range, child: Range) {
     if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
     return true;
 }
-export function getWordRange(wordPattern: RegExp, range: Range, document: TextDocument, endWithInput = true): Range | undefined {
-    const docText = document.getText();
-    const startOffset = document.offsetAt(range.start);
-    const endOffset = document.offsetAt(range.end);
-    for (const match of docText.matchAll(wordPattern)) {
+export function getWordStart(wordPattern: RegExp, end: Position, document: TextDocument): Position | undefined {
+    const start: Position = {
+        line: end.line,
+        character: 0,
+    };
+    const lineText = document.getText({ start, end });
+    const endOffset = document.offsetAt(end);
+    for (const match of lineText.matchAll(wordPattern)) {
         if (match.index === undefined) continue;
         const startIndex = match.index;
         const endIndex = match.index + match[0].length;
-        if (startOffset >= startIndex && endOffset <= endIndex) {
-            return {
-                start: document.positionAt(startIndex),
-                end: endWithInput ? range.end : document.positionAt(endIndex),
-            };
+        if (endOffset === endIndex) {
+            return document.positionAt(document.offsetAt(start) + startIndex);
         }
     }
     return undefined;

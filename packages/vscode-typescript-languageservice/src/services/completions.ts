@@ -8,7 +8,7 @@ import {
 	TextEdit,
 } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath, getWordRange } from '@volar/shared';
+import { uriToFsPath, getWordStart } from '@volar/shared';
 
 export const wordPatterns: { [lang: string]: RegExp } = {
 	javascript: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
@@ -39,7 +39,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		if (completions === undefined) return [];
 
 		const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.javascript;
-		const wordRange = getWordRange(wordPattern, { start: position, end: position }, document);
+		const wordStart = getWordStart(wordPattern, position, document);
+		const wordRange = wordStart ? { start: wordStart, end: position } : undefined;
 
 		const entries = completions.entries
 			.map(entry => {
