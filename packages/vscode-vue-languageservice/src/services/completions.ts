@@ -82,10 +82,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
 
-		const emmetResult = getEmmetResult();
-
 		const tsResult = getTsResult(sourceFile);
-		if (tsResult.items.length) return withEmmetResult(tsResult, emmetResult);
+		if (tsResult.items.length) return tsResult;
+
+		const emmetResult = getEmmetResult();
 
 		const htmlResult = getHtmlResult(sourceFile);
 		if (htmlResult.items.length) return withEmmetResult(htmlResult, emmetResult);
