@@ -1,3 +1,10 @@
+### 0.21.9
+
+- feat: component tag auto-complete info in template
+- feat: ts definition selection range
+- fix: script block should not have emmet auto-complete
+- perf: fix some performance issues
+
 ### 0.21.8
 
 - fix: sometime emmet completion missing
