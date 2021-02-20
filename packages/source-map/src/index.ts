@@ -53,26 +53,26 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 
 	// Range
 	public isSource(start: Position, end?: Position) {
-		return this.maps(start, end ?? start, true, true).length > 0;
+		return this.findMapeds(start, end ?? start, true, true).length > 0;
 	}
 	public isTarget(start: Position, end?: Position) {
-		return this.maps(start, end ?? start, false, true).length > 0;
+		return this.findMapeds(start, end ?? start, false, true).length > 0;
 	}
 	public targetToSource(start: Position, end?: Position) {
-		const result = this.maps(start, end ?? start, false, true);
+		const result = this.findMapeds(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
 	public sourceToTarget(start: Position, end?: Position) {
-		const result = this.maps(start, end ?? start, true, true);
+		const result = this.findMapeds(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
 	public targetToSources(start: Position, end?: Position) {
-		return this.maps(start, end ?? start, false);
+		return this.findMapeds(start, end ?? start, false);
 	}
 	public sourceToTargets(start: Position, end?: Position) {
-		return this.maps(start, end ?? start, true);
+		return this.findMapeds(start, end ?? start, true);
 	}
-	private maps(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private findMapeds(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const key = start.line + ':' + start.character + ':' + end.line + ':' + end.character + ':' + sourceToTarget + ':' + returnFirstResult;
 		if (this.cache.has(key)) return this.cache.get(key)!;
 
@@ -81,7 +81,7 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		const startOffset = fromDoc.offsetAt(start);
 		const endOffset = fromDoc.offsetAt(end);
 		const result = this
-			.maps2(startOffset, endOffset, sourceToTarget, returnFirstResult)
+			.findMapeds2(startOffset, endOffset, sourceToTarget, returnFirstResult)
 			.map(result => ({
 				data: result.data,
 				start: toDoc.positionAt(result.start),
@@ -93,88 +93,90 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 
 	// MapedRange
 	public isSource2(start: number, end?: number) {
-		return this.maps2(start, end ?? start, true, true).length > 0;
+		return this.findMapeds2(start, end ?? start, true, true).length > 0;
 	}
 	public isTarget2(start: number, end?: number) {
-		return this.maps2(start, end ?? start, false, true).length > 0;
+		return this.findMapeds2(start, end ?? start, false, true).length > 0;
 	}
 	public targetToSource2(start: number, end?: number) {
-		const result = this.maps2(start, end ?? start, false, true);
+		const result = this.findMapeds2(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
 	public sourceToTarget2(start: number, end?: number) {
-		const result = this.maps2(start, end ?? start, true, true);
+		const result = this.findMapeds2(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
 	public targetToSources2(start: number, end?: number) {
-		return this.maps2(start, end ?? start, false);
+		return this.findMapeds2(start, end ?? start, false);
 	}
 	public sourceToTargets2(start: number, end?: number) {
-		return this.maps2(start, end ?? start, true);
+		return this.findMapeds2(start, end ?? start, true);
 	}
-	private maps2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private findMapeds2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const key = start + ':' + end + ':' + sourceToTarget + ':' + returnFirstResult;
 		if (this.cache2.has(key)) return this.cache2.get(key)!;
 
-		const result: {
+		let result: {
 			data: MapedData,
 			start: number,
 			end: number,
 		}[] = [];
-		for (const maped of this) {
-			const _result = tryMapping(maped.mode, maped.sourceRange, maped.targetRange, maped.data);
-			if (_result) {
-				result.push(_result);
+
+		for (const mapping of this) {
+			const maped = this.getMaped(start, end, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.targetRange, mapping.data);
+			if (maped) {
+				result.push(maped);
 				if (returnFirstResult) return result;
 			}
-			if (maped.others) {
-				for (const other of maped.others) {
-					const _result = tryMapping(other.mode, other.sourceRange, other.targetRange, maped.data);
-					if (_result) {
-						result.push(_result);
+			if (mapping.others) {
+				for (const other of mapping.others) {
+					const maped = this.getMaped(start, end, sourceToTarget, other.mode, other.sourceRange, other.targetRange, mapping.data);
+					if (maped) {
+						result.push(maped);
 						if (returnFirstResult) return result;
 					}
 				}
 			}
 		}
 		this.cache2.set(key, result);
-		return result;
 
-		function tryMapping(mode: MapedMode, sourceRange: MapedRange, targetRange: MapedRange, data: MapedData) {
-			const mapedToRange = sourceToTarget ? targetRange : sourceRange;
-			const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
-			if (mode === MapedMode.Gate) {
-				if (start === mapedFromRange.start && end === mapedFromRange.end) {
-					const _start = mapedToRange.start;
-					const _end = mapedToRange.end;
-					return {
-						data: data,
-						start: Math.min(_start, _end),
-						end: Math.max(_start, _end),
-					};
-				}
+		return result;
+	}
+
+	private getMaped(start: number, end: number, sourceToTarget: boolean, mode: MapedMode, sourceRange: MapedRange, targetRange: MapedRange, data: MapedData) {
+		const mapedToRange = sourceToTarget ? targetRange : sourceRange;
+		const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
+		if (mode === MapedMode.Gate) {
+			if (start === mapedFromRange.start && end === mapedFromRange.end) {
+				const _start = mapedToRange.start;
+				const _end = mapedToRange.end;
+				return {
+					data: data,
+					start: Math.min(_start, _end),
+					end: Math.max(_start, _end),
+				};
 			}
-			else if (mode === MapedMode.Offset) {
-				if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
-					const _start = mapedToRange.start + start - mapedFromRange.start;
-					const _end = mapedToRange.end + end - mapedFromRange.end;
-					return {
-						data: data,
-						start: Math.min(_start, _end),
-						end: Math.max(_start, _end),
-					};
-				}
+		}
+		else if (mode === MapedMode.Offset) {
+			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
+				const _start = mapedToRange.start + start - mapedFromRange.start;
+				const _end = mapedToRange.end + end - mapedFromRange.end;
+				return {
+					data: data,
+					start: Math.min(_start, _end),
+					end: Math.max(_start, _end),
+				};
 			}
-			else if (mode === MapedMode.In) {
-				if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
-					const _start = mapedToRange.start;
-					const _end = mapedToRange.end;
-					return {
-						data: data,
-						start: Math.min(_start, _end),
-						end: Math.max(_start, _end),
-					};
-				}
+		}
+		else if (mode === MapedMode.In) {
+			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
+				const _start = mapedToRange.start;
+				const _end = mapedToRange.end;
+				return {
+					data: data,
+					start: Math.min(_start, _end),
+					end: Math.max(_start, _end),
+				};
 			}
 		}
 	}
