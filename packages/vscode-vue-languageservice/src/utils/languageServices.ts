@@ -18,6 +18,7 @@ export const postcss: CSS.LanguageService = {
         let errors = scss.doValidation(document, stylesheet, documentSettings);
         errors = errors.filter(error => error.code !== 'css-semicolonexpected');
         errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
+        errors = errors.filter(error => error.code !== 'unknownAtRules');
         return errors;
     },
 };
