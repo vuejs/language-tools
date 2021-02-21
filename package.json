@@ -117,6 +117,7 @@
 					"source.css": "css",
 					"source.scss": "scss",
 					"source.less": "less",
+					"source.postcss": "postcss",
 					"source.js": "javascript",
 					"source.ts": "typescript",
 					"source.jsx": "javascriptreact",

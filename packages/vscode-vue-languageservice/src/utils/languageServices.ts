@@ -12,11 +12,22 @@ export const scss = CSS.getSCSSLanguageService();
 export const less = CSS.getLESSLanguageService();
 export const pug = Pug.getLanguageService(html);
 
+export const postcss: CSS.LanguageService = {
+    ...scss,
+    doValidation: (document, stylesheet, documentSettings) => {
+        let errors = scss.doValidation(document, stylesheet, documentSettings);
+        errors = errors.filter(error => error.code !== 'css-semicolonexpected');
+        errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
+        return errors;
+    },
+};
+
 export function getCssLanguageService(lang: string) {
     switch (lang) {
         case 'css': return css;
         case 'scss': return scss;
         case 'less': return less;
+        case 'postcss': return postcss;
     }
 }
 

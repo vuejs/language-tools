@@ -141,11 +141,13 @@ not checking!
 > Currently supported languages:
 > - template: html, pug
 > - script: js, ts, jsx, tsx
-> - style: css, scss, less
+> - style: css, scss, less, postcss
 
 > You need to disable Vetur to avoid conflicts.
 
 > tsconfig.json / jsconfig.json is required. And usually also need `"strict": true`.
+
+> If use postcss, you need to install [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss) for syntax highlighting.
 
 > `__VLS_GlobalComponents` and `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
 
