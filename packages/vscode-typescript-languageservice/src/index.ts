@@ -57,11 +57,19 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		getDocumentSemanticTokens: semanticTokens.register(languageService, getTextDocument),
 		...callHierarchy.register(languageService, getTextDocument),
 
-		getTextDocument,
+		getTextDocument: getTextDocumentNoChecking,
+		getTextDocument2: getTextDocument,
 		dispose,
 	};
 
 	function getTextDocument(uri: string) {
+		const fileName = uriToFsPath(uri);
+		if (!languageService.getProgram()?.getSourceFile(fileName)) {
+			return;
+		}
+		return getTextDocumentNoChecking(uri);
+	}
+	function getTextDocumentNoChecking(uri: string) {
 		const fileName = uriToFsPath(uri);
 		const version = host.getScriptVersion(fileName);
 		const oldDoc = documents.get(uri);

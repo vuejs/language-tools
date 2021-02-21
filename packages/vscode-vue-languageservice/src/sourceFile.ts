@@ -662,7 +662,7 @@ export function createSourceFile(
 				const diags: Diagnostic[] = [];
 				if (
 					virtualScriptGen.textDocument.value
-					&& !tsLanguageService.getTextDocument(virtualScriptGen.textDocument.value.uri)
+					&& !tsLanguageService.getTextDocument2(virtualScriptGen.textDocument.value.uri)
 				) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script) continue;
