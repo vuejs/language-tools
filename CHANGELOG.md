@@ -1,3 +1,7 @@
+### 0.21.11
+
+- fix: nameless slot not working
+
 ### 0.21.10
 
 - fix: definition selection range not working for global components
