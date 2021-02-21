@@ -116,7 +116,7 @@ export function generate(
 
 				writeInlineCss(node);
 				writeImportSlots(node, parents);
-				writeVshow(node);
+				writeDirectives(node);
 				writeElReferences(node); // <el ref="foo" />
 				writeProps(node, true);
 				writeProps(node, false);
@@ -385,12 +385,17 @@ export function generate(
 				}
 				const diagStart = scriptGen.getText().length;
 				scriptGen.addText(`__VLS_components['${getComponentName(parent.tag)}'].__VLS_slots`);
+				const argRange = prop.arg
+					? {
+						start: prop.arg.loc.start.offset,
+						end: prop.arg.loc.end.offset,
+					} : {
+						start: prop.loc.start.offset,
+						end: prop.loc.start.offset + prop.loc.source.split('=')[0].length,
+					};
 				writePropertyAccess(
 					slotName,
-					{
-						start: prop.arg?.loc.start.offset ?? prop.loc.start.offset,
-						end: prop.arg?.loc.end.offset ?? prop.loc.end.offset,
-					},
+					argRange,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.slotName,
@@ -402,10 +407,7 @@ export function generate(
 						start: diagStart,
 						end: diagEnd,
 					},
-					sourceRange: {
-						start: prop.arg?.loc.start.offset ?? prop.loc.start.offset,
-						end: prop.arg?.loc.end.offset ?? prop.loc.end.offset,
-					},
+					sourceRange: argRange,
 					mode: MapedMode.Gate,
 					data: {
 						vueTag: 'template',
@@ -510,10 +512,11 @@ export function generate(
 			}
 		}
 	}
-	function writeVshow(node: ElementNode) {
+	function writeDirectives(node: ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === NodeTypes.DIRECTIVE
+				&& prop.name !== 'slot'
 				&& !prop.arg
 				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
@@ -1058,16 +1061,7 @@ export function generate(
 			scriptGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
-		if (slotName) {
-			slots.set(slotName, {
-				varName: varSlot,
-				loc: {
-					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-				},
-			});
-		}
-		else if (slotNameExp) {
+		if (slotNameExp) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
 			const varSlotExp2 = `__VLS_${elementIndex++}`;
 			scriptGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
@@ -1080,18 +1074,25 @@ export function generate(
 				},
 			});
 		}
+		else {
+			slots.set(slotName, {
+				varName: varSlot,
+				loc: {
+					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+				},
+			});
+		}
 
 		function getSlotName() {
 			for (const prop2 of node.props) {
 				if (prop2.name === 'name' && prop2.type === NodeTypes.ATTRIBUTE && prop2.value) {
-					if (prop2.value.content === '') {
-						return 'default';
-					}
-					else {
+					if (prop2.value.content) {
 						return prop2.value.content;
 					}
 				}
 			}
+			return 'default';
 		}
 		function getSlotNameExp() {
 			for (const prop2 of node.props) {
