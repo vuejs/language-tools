@@ -1,3 +1,8 @@
+### 0.21.12
+
+- feat: postcss language support (required [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss) for syntax highlighting)
+- fix: `lang="ts"` missing should not throw error
+
 ### 0.21.11
 
 - fix: nameless slot not working
