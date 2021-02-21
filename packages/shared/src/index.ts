@@ -47,19 +47,24 @@ export function isInsideRange(parent: Range, child: Range) {
     if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
     return true;
 }
-export function getWordStart(wordPattern: RegExp, end: Position, document: TextDocument): Position | undefined {
-    const start: Position = {
-        line: end.line,
+export function getWordStart(wordPattern: RegExp, position: Position, document: TextDocument): Position | undefined {
+    const lineStart: Position = {
+        line: position.line,
         character: 0,
     };
-    const lineText = document.getText({ start, end });
-    const endOffset = document.offsetAt(end);
+    const lineEnd: Position = {
+        line: position.line + 1,
+        character: 0,
+    };
+    const offset = document.offsetAt(position);
+    const lineStartOffset = document.offsetAt(lineStart);
+    const lineText = document.getText({ start: lineStart, end: lineEnd });
     for (const match of lineText.matchAll(wordPattern)) {
         if (match.index === undefined) continue;
-        const startIndex = match.index;
-        const endIndex = match.index + match[0].length;
-        if (endOffset === endIndex) {
-            return document.positionAt(document.offsetAt(start) + startIndex);
+        const matchStart = match.index + lineStartOffset;
+        const matchEnd = matchStart + match[0].length;
+        if (offset >= matchStart && offset <= matchEnd) {
+            return document.positionAt(matchStart);
         }
     }
     return undefined;

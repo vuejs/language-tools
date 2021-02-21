@@ -1,3 +1,8 @@
+### 0.21.10
+
+- fix: definition selection range not working for global components
+- fix: auto-complete word range incorrect
+
 ### 0.21.9
 
 - feat: component tag auto-complete info in template
