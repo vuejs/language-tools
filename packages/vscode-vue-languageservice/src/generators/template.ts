@@ -905,7 +905,7 @@ export function generate(
 					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
 				}
 
-				scriptGen.addText(`{\n`);
+				scriptGen.addText(`if (false) {\n`);
 				scriptGen.addText(`declare let $event: Parameters<NonNullable<typeof ${var_on}['${key_1}']>>[0];\n`);
 				writeCode(
 					prop.exp.content,
