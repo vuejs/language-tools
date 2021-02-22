@@ -1,3 +1,9 @@
+### 0.21.13
+
+- fix: ignore `postcss(unknownAtRules)`
+- fix: postcss completion word range
+- fix: v-on expression should not affect variables types in template
+
 ### 0.21.12
 
 - feat: postcss language support (required [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss) for syntax highlighting)
