@@ -1,3 +1,9 @@
+### 0.21.14
+
+- feat: rename fail message
+- fix: revert narrowed type patch for v-on
+- fix: event type incorrect if given `null` (for example: `emits: { foo: null }`)
+
 ### 0.21.13
 
 - fix: ignore `postcss(unknownAtRules)`
