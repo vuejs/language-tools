@@ -41,7 +41,7 @@ declare global {
 	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_PropsType<T[K]>> & Record<string, unknown> };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : never;
-	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : T;
+	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 	type __VLS_EmitEvent2<F, E> =
 		F extends {
 			(event: E, ...payload: infer P): infer R
