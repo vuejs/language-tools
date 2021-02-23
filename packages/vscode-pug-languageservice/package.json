@@ -7,7 +7,7 @@
 		"vscode-html-languageservice": "latest"
 	},
 	"dependencies": {
-		"vscode-languageserver": "latest",
+		"vscode-languageserver": "next",
 		"pug-lexer": "latest",
 		"pug-parser": "latest"
 	}

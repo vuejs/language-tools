@@ -15,7 +15,7 @@
 		"vscode-css-languageservice": "latest",
 		"vscode-html-languageservice": "latest",
 		"vscode-languageserver-textdocument": "latest",
-		"vscode-languageserver": "latest",
+		"vscode-languageserver": "next",
 		"upath": "latest",
 		"jsonc-parser": "latest",
 		"prettier": "^1.16.4",

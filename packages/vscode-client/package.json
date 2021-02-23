@@ -9,7 +9,7 @@
 		"jsonc-parser": "latest",
 		"semver": "latest",
 		"upath": "latest",
-		"vscode-languageclient": "latest"
+		"vscode-languageclient": "next"
 	},
 	"devDependencies": {
 		"@types/semver": "latest",
