@@ -1,3 +1,7 @@
+### 0.21.15
+
+- fix: v-on type-checking not working with function assign
+
 ### 0.21.14
 
 - feat: rename fail message

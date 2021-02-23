@@ -923,38 +923,52 @@ export function generate(
 					scriptGen.addText(`: `);
 
 					if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
-						scriptGen.addText(value.content);
+						if (value.content === prop.exp.content) {
+							writeCode(
+								value.content,
+								{
+									start: prop.exp.loc.start.offset,
+									end: prop.exp.loc.end.offset,
+								},
+								MapedMode.Offset,
+								{
+									vueTag: 'template',
+									capabilities: capabilitiesSet.all,
+								},
+								['', ''],
+							);
+						}
+						else {
+							scriptGen.addText(value.content);
+						}
 					}
 					else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
 						for (const child of value.children) {
-							let text: string | undefined;
 							if (typeof child === 'string') {
-								text = child;
+								scriptGen.addText(child);
 							}
 							else if (typeof child === 'symbol') {
 								// ignore
 							}
 							else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
-								text = child.content;
-							}
-							if (text === undefined) continue;
-							if (text === prop.exp.content) {
-								writeCode(
-									text,
-									{
-										start: prop.exp.loc.start.offset,
-										end: prop.exp.loc.end.offset,
-									},
-									MapedMode.Offset,
-									{
-										vueTag: 'template',
-										capabilities: capabilitiesSet.all,
-									},
-									['', ''],
-								);
-							}
-							else {
-								scriptGen.addText(text);
+								if (child.content === prop.exp.content) {
+									writeCode(
+										child.content,
+										{
+											start: prop.exp.loc.start.offset,
+											end: prop.exp.loc.end.offset,
+										},
+										MapedMode.Offset,
+										{
+											vueTag: 'template',
+											capabilities: capabilitiesSet.all,
+										},
+										['', ''],
+									);
+								}
+								else {
+									scriptGen.addText(child.content);
+								}
 							}
 						}
 					}
