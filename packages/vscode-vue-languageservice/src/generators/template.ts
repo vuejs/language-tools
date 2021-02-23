@@ -905,23 +905,6 @@ export function generate(
 					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
 				}
 
-				scriptGen.addText(`if (false) {\n`);
-				scriptGen.addText(`declare let $event: Parameters<NonNullable<typeof ${var_on}['${key_1}']>>[0];\n`);
-				writeCode(
-					prop.exp.content,
-					{
-						start: prop.exp.loc.start.offset,
-						end: prop.exp.loc.end.offset,
-					},
-					MapedMode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-					['', ''],
-				);
-				scriptGen.addText(`}\n`);
-
 				const transformResult = transformOn(prop, node, context);
 				for (const prop_2 of transformResult.props) {
 					const value = prop_2.value;
@@ -944,14 +927,34 @@ export function generate(
 					}
 					else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
 						for (const child of value.children) {
+							let text: string | undefined;
 							if (typeof child === 'string') {
-								scriptGen.addText(child);
+								text = child;
 							}
 							else if (typeof child === 'symbol') {
 								// ignore
 							}
 							else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
-								scriptGen.addText(child.content);
+								text = child.content;
+							}
+							if (text === undefined) continue;
+							if (text === prop.exp.content) {
+								writeCode(
+									text,
+									{
+										start: prop.exp.loc.start.offset,
+										end: prop.exp.loc.end.offset,
+									},
+									MapedMode.Offset,
+									{
+										vueTag: 'template',
+										capabilities: capabilitiesSet.all,
+									},
+									['', ''],
+								);
+							}
+							else {
+								scriptGen.addText(text);
 							}
 						}
 					}
