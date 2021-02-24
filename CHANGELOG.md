@@ -1,3 +1,7 @@
+### 0.21.16
+
+- fix: can't reference .vue file out of rootDir
+
 ### 0.21.15
 
 - fix: v-on type-checking not working with function assign
