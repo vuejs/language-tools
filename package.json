@@ -249,6 +249,7 @@
 		"test": "npm run test-install && jest"
 	},
 	"devDependencies": {
+		"vsce": "latest",
 		"@types/jest": "latest",
 		"jest": "latest",
 		"ts-jest": "latest",
