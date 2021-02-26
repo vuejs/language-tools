@@ -1,3 +1,10 @@
+### 0.21.17
+
+- feat: auto-indent in template section support
+- feat: multi-root workspaces support
+- fix: should not throw when edit untitled vue documents
+- fix: type checking doesn't work for components written in .ts files
+
 ### 0.21.16
 
 - fix: can't reference .vue file out of rootDir
