@@ -74,15 +74,17 @@ const documents = new TextDocuments(TextDocument);
 documents.listen(connection);
 
 const vueOnly: TextDocumentRegistrationOptions = {
-	documentSelector: [{ language: 'vue' }],
+	documentSelector: [
+		{ scheme: 'file', language: 'vue' },
+	],
 };
 const both: TextDocumentRegistrationOptions = {
 	documentSelector: [
-		{ language: 'vue' },
-		{ language: 'javascript' },
-		{ language: 'typescript' },
-		{ language: 'javascriptreact' },
-		{ language: 'typescriptreact' },
+		{ scheme: 'file', language: 'vue' },
+		{ scheme: 'file', language: 'javascript' },
+		{ scheme: 'file', language: 'typescript' },
+		{ scheme: 'file', language: 'javascriptreact' },
+		{ scheme: 'file', language: 'typescriptreact' },
 	],
 };
 let mode: 'api' | 'doc' | 'html' = 'api';
