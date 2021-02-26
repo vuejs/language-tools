@@ -164,7 +164,7 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
+				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				const links = cssLanguageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
 					const vueRange = sourceMap.targetToSource(link.range.start, link.range.end);

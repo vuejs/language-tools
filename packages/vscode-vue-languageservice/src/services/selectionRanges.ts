@@ -65,7 +65,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			for (const position of positions) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
 					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-					if (!cssLanguageService) continue;
+					if (!cssLanguageService || !sourceMap.stylesheet) continue;
 					for (const cssRange of sourceMap.sourceToTargets(position)) {
 						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.targetDocument, [cssRange.start], sourceMap.stylesheet);
 						for (const selectRange of selectRanges) {

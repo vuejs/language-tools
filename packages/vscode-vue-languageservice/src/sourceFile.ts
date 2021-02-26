@@ -635,13 +635,13 @@ export function createSourceFile(
 				return result;
 			}
 		}
-		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet, ignore: boolean | undefined }[]>) {
+		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined, ignore: boolean | undefined }[]>) {
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const { textDocument, stylesheet, ignore } of documents.value) {
 					if (ignore) continue;
 					const cssLanguageService = languageServices.getCssLanguageService(textDocument.languageId);
-					if (!cssLanguageService) continue;
+					if (!cssLanguageService || !stylesheet) continue;
 					const errs = cssLanguageService.doValidation(textDocument, stylesheet);
 					if (errs) result.set(textDocument.uri, errs);
 				}

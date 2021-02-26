@@ -21,7 +21,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
+				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				const cssRanges = sourceMap.sourceToTargets(range.start, range.end);
 				for (const cssRange of cssRanges) {
 					const _result = cssLanguageService.getColorPresentations(sourceMap.targetDocument, sourceMap.stylesheet, color, cssRange);

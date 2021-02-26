@@ -18,7 +18,7 @@ export function useTemplateScript(
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
-		stylesheet: css.Stylesheet;
+		stylesheet: css.Stylesheet | undefined;
 		links: {
 			textDocument: TextDocument;
 			stylesheet: css.Stylesheet;

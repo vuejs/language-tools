@@ -85,18 +85,18 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		if (!sourceFile) return;
 
 		const tsResult = getTsResult(sourceFile);
-		if (tsResult.items.length) return tsResult;
+		if (tsResult) return tsResult;
 
 		const emmetResult = getEmmetResult();
 
 		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult.items.length) return withEmmetResult(htmlResult, emmetResult);
+		if (htmlResult) return withEmmetResult(htmlResult, emmetResult);
 
 		const cssResult = getCssResult(sourceFile);
-		if (cssResult.items.length) return withEmmetResult(cssResult, emmetResult);
+		if (cssResult) return withEmmetResult(cssResult, emmetResult);
 
 		const vueResult = getVueResult(sourceFile);
-		if (vueResult?.items.length) return withEmmetResult(vueResult, emmetResult);
+		if (vueResult) return withEmmetResult(vueResult, emmetResult);
 
 		return emmetResult;
 
@@ -107,10 +107,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			};
 		}
 		function getTsResult(sourceFile: SourceFile) {
-			const result: CompletionList = {
-				isIncomplete: false,
-				items: [],
-			};
+			let result: CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
 				return result;
 			}
@@ -118,6 +115,12 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				const tsRanges = sourceMap.sourceToTargets(position);
 				for (const tsRange of tsRanges) {
 					if (!tsRange.data.capabilities.completion) continue;
+					if (!result) {
+						result = {
+							isIncomplete: false,
+							items: [],
+						};
+					}
 					const quotePreference = tsRange.data.vueTag === 'template' ? 'single' : 'auto';
 					let tsItems = tsLanguageService.doComplete(sourceMap.targetDocument.uri, tsRange.start, {
 						quotePreference,
@@ -150,16 +153,15 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					result.items = result.items.concat(vueItems);
 				}
 			}
-			result.items = result.items.filter(result => result.label.indexOf('__VLS_') === -1);
+			if (result) {
+				result.items = result.items.filter(result => result.label.indexOf('__VLS_') === -1);
+			}
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: CompletionList = {
-				isIncomplete: false,
-				items: [],
-			};
+			let result: CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
-				return result;
+				return;
 			}
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
@@ -265,8 +267,13 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				});
 				languageServices.html.setDataProviders(true, [dataProvider]);
 
-				const htmlRanges = sourceMap.sourceToTargets(position);
-				for (const htmlRange of htmlRanges) {
+				for (const htmlRange of sourceMap.sourceToTargets(position)) {
+					if (!result) {
+						result = {
+							isIncomplete: false,
+							items: [],
+						};
+					}
 					const htmlResult = sourceMap.language === 'html'
 						? languageServices.html.doComplete(sourceMap.targetDocument, htmlRange.start, sourceMap.htmlDocument)
 						: languageServices.pug.doComplete(sourceMap.pugDocument, htmlRange.start)
@@ -325,18 +332,21 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			const result: CompletionList = {
-				isIncomplete: false,
-				items: [],
-			};
+			let result: CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.css.includes(context.triggerCharacter)) {
-				return result;
+				return;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
 				const cssRanges = sourceMap.sourceToTargets(position);
 				for (const cssRange of cssRanges) {
+					if (!result) {
+						result = {
+							isIncomplete: false,
+							items: [],
+						};
+					}
+					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+					if (!cssLanguageService || !sourceMap.stylesheet) continue;
 					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;
 					const wordStart = getWordStart(wordPattern, cssRange.end, sourceMap.targetDocument);
 					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;

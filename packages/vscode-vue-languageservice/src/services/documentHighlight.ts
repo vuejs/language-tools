@@ -67,7 +67,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
+				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				for (const cssRange of sourceMap.sourceToTargets(position)) {
 					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.targetDocument, cssRange.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {

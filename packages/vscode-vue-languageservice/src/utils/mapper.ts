@@ -57,7 +57,7 @@ export function createMapper(
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
                         const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-                        if (!cssLs) continue;
+                        if (!cssLs || !sourceMap.stylesheet) continue;
                         for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
                             result.push({
                                 textDocument: sourceMap.targetDocument,

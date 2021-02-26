@@ -25,7 +25,7 @@ export function useStylesRaw(
 		};
 		const documents: {
 			textDocument: TextDocument,
-			stylesheet: css.Stylesheet,
+			stylesheet: css.Stylesheet | undefined,
 			links: {
 				textDocument: TextDocument,
 				stylesheet: css.Stylesheet,
@@ -40,14 +40,16 @@ export function useStylesRaw(
 			const content = style.content;
 			const documentUri = vueDoc.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, version++, content);
-			const cssLanguageService = languageServices.getCssLanguageService(lang);
-			if (!cssLanguageService) continue;
-			const stylesheet = cssLanguageService.parseStylesheet(document);
 			const linkStyles: {
 				textDocument: TextDocument,
 				stylesheet: css.Stylesheet,
 			}[] = [];
-			findLinks(cssLanguageService, document, stylesheet);
+			let stylesheet: css.Stylesheet | undefined = undefined;
+			const cssLanguageService = languageServices.getCssLanguageService(lang);
+			if (cssLanguageService) {
+				stylesheet = cssLanguageService.parseStylesheet(document);
+				findLinks(cssLanguageService, document, stylesheet);
+			}
 			documents.push({
 				textDocument: document,
 				stylesheet,
@@ -106,10 +108,12 @@ export function useStylesRaw(
 		const vueDoc = getUnreactiveDoc();
 		const sourceMaps: CssSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
+
+			const cssData = textDocuments.value[i];
 			const style = styles.value[i];
-			const document = textDocuments.value[i].textDocument;
-			const stylesheet = textDocuments.value[i].stylesheet;
-			const linkStyles = textDocuments.value[i].links;
+			const document = cssData.textDocument;
+			const stylesheet = cssData.stylesheet;
+			const linkStyles = cssData.links;
 			const loc = style.loc;
 			const module = style.module;
 			const scoped = style.scoped;

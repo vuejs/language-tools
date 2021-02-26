@@ -133,7 +133,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
-				if (!cssLanguageService) continue;
+				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.targetDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {

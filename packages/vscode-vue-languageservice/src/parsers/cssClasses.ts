@@ -5,7 +5,7 @@ import * as css from 'vscode-css-languageservice';
 export function parse(
     styleDocuments: {
         textDocument: TextDocument;
-        stylesheet: css.Stylesheet;
+        stylesheet: css.Stylesheet | undefined;
         links: {
             textDocument: TextDocument;
             stylesheet: css.Stylesheet;
@@ -14,6 +14,7 @@ export function parse(
 ) {
     const result = new Map<string, Map<string, Set<[number, number]>>>();
     for (const sourceMap of styleDocuments) {
+        if (!sourceMap.stylesheet) continue;
         for (const [className, offsets] of findClassNames(sourceMap.textDocument, sourceMap.stylesheet)) {
             for (const offset of offsets) {
                 addClassName(sourceMap.textDocument.uri, className, offset);

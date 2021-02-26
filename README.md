@@ -8,7 +8,7 @@ Volar is a Language Support plugin built specifically for Vue 3. It's based on `
 
 [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
-🛠️ Currently this project is still refactoring to make it easier to contribute.
+🛠️ This project is still refactoring to make it easier to contribute.
 
 ## Quick Start
 
@@ -138,16 +138,21 @@ not checking!
 
 ## Note
 
-> Currently supported languages:
+> Supported languages:
 > - template: html, pug
 > - script: js, ts, jsx, tsx
-> - style: css, scss, less, postcss
+> - style: css, scss, less, postcss (stylus, sass has limited support)
+
+> If use postcss / stylus / sass, you need to install additional extension for syntax highlighting. I tried these and it works, you can also choose other.
+> - postcss: [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss).
+> - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
+> - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
 
 > You need to disable Vetur to avoid conflicts.
 
 > tsconfig.json / jsconfig.json is required. And usually also need `"strict": true`.
-
-> If use postcss, you need to install [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss) for syntax highlighting.
+>
+> If use Vitepress, you may need to setup `"include": ["src/**/*", "src/.vitepress/**/*"]`.
 
 > `__VLS_GlobalComponents` and `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
 
