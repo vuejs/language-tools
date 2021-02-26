@@ -89,11 +89,12 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		const emmetResult = getEmmetResult();
 
-		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult) return withEmmetResult(htmlResult, emmetResult);
-
+		// precede html for support inline css service
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult) return withEmmetResult(cssResult, emmetResult);
+
+		const htmlResult = getHtmlResult(sourceFile);
+		if (htmlResult) return withEmmetResult(htmlResult, emmetResult);
 
 		const vueResult = getVueResult(sourceFile);
 		if (vueResult) return withEmmetResult(vueResult, emmetResult);
