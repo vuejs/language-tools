@@ -8,7 +8,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	return (item: CompletionItem) => {
 		const data: CompletionData = item.data;
 		const sourceFile = sourceFiles.get(data.uri);
-		if (!sourceFile) return;
+		if (!sourceFile) return item;
 
 		if (data.mode === 'ts') {
 			return getTsResult(sourceFile, item, data);

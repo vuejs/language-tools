@@ -126,13 +126,13 @@ function onInitialize(params: InitializeParams) {
 		initLanguageServiceHtml();
 	}
 	else if (params.workspaceFolders) {
-		for (const workspaceFolder of params.workspaceFolders) {
-			if (workspaceFolder.uri.startsWith('file:/')) {
-				switch (mode) {
-					case 'api': initLanguageServiceApi(uriToFsPath(workspaceFolder.uri)); break;
-					case 'doc': initLanguageServiceDoc(uriToFsPath(workspaceFolder.uri)); break;
-				}
-			}
+		const folders = params.workspaceFolders
+			.map(folder => folder.uri)
+			.filter(uri => uri.startsWith('file:/'))
+			.map(uri => uriToFsPath(uri));
+		switch (mode) {
+			case 'api': initLanguageServiceApi(folders); break;
+			case 'doc': initLanguageServiceDoc(folders); break;
 		}
 	}
 
@@ -169,9 +169,9 @@ async function onInitialized() {
 	connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	updateConfigs();
 }
-function initLanguageServiceApi(rootPath: string) {
+function initLanguageServiceApi(rootPaths: string[]) {
 
-	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), loadVscodeTypescriptLocalized(appRoot, language), connection, documents, rootPath);
+	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), loadVscodeTypescriptLocalized(appRoot, language), connection, documents, rootPaths);
 	hosts.push(host);
 
 	// custom requests
@@ -305,9 +305,9 @@ function initLanguageServiceApi(rootPath: string) {
 		return null;
 	});
 }
-function initLanguageServiceDoc(rootPath: string) {
+function initLanguageServiceDoc(rootPaths: string[]) {
 
-	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), loadVscodeTypescriptLocalized(appRoot, language), connection, documents, rootPath, async (uri: string) => {
+	const host = createLanguageServiceHost(loadVscodeTypescript(appRoot), loadVscodeTypescriptLocalized(appRoot, language), connection, documents, rootPaths, async (uri: string) => {
 		return await connection.sendRequest(DocumentVersionRequest.type, { uri });
 	}, async () => {
 		await connection.sendNotification(SemanticTokensChangedNotification.type);

@@ -11,7 +11,7 @@ export function createLanguageServiceHost(
 	tsLocalized: ts.MapLike<string> | undefined,
 	connection: Connection,
 	documents: TextDocuments<TextDocument>,
-	rootPath: string,
+	rootPaths: string[],
 	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
 	_onProjectFilesUpdate?: () => void,
 ) {
@@ -20,17 +20,19 @@ export function createLanguageServiceHost(
 	const languageServices = new Map<string, ReturnType<typeof createLs>>();
 	let connectionInited = false;
 
-	let tsConfigs = ts.sys.readDirectory(rootPath, searchFiles, undefined, ['**/*']);
-	tsConfigs = tsConfigs.filter(tsConfig => searchFiles.includes(upath.basename(tsConfig)));
+	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, searchFiles, undefined, ['**/*'])).flat());
+	const tsConfigs = [...tsConfigSet].filter(tsConfig => searchFiles.includes(upath.basename(tsConfig)));
 	for (const tsConfig of tsConfigs) {
 		onTsConfigChanged(tsConfig);
 	}
 
-	ts.sys.watchDirectory!(rootPath, tsConfig => {
-		if (searchFiles.includes(upath.basename(tsConfig))) {
-			onTsConfigChanged(tsConfig);
-		}
-	}, true);
+	for (const rootPath of rootPaths) {
+		ts.sys.watchDirectory!(rootPath, tsConfig => {
+			if (searchFiles.includes(upath.basename(tsConfig))) {
+				onTsConfigChanged(tsConfig);
+			}
+		}, true);
+	}
 
 	return {
 		services: languageServices,
