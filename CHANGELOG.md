@@ -1,3 +1,8 @@
+### 0.21.18
+
+- feat: sass language support
+- feat: stylus language support
+
 ### 0.21.17
 
 - feat: auto-indent in template section support
