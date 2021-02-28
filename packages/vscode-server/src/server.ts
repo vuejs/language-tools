@@ -59,6 +59,7 @@ import * as fs from 'fs-extra';
 import { createNoStateLanguageService } from '@volar/vscode-vue-languageservice';
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { codeLensOptions } from '@volar/vscode-vue-languageservice';
+import { defaultLanguages } from '@volar/vscode-vue-languageservice';
 import { loadVscodeTypescript, loadVscodeTypescriptLocalized } from '@volar/shared';
 import type * as emmet from 'vscode-emmet-helper';
 
@@ -95,6 +96,7 @@ let emmetConfig: any;
 function updateConfigs() {
 	updateCodeLens();
 	updateEmmet();
+	updateDefaultLanguage();
 
 	async function updateCodeLens() {
 		const [
@@ -110,6 +112,10 @@ function updateConfigs() {
 		codeLensOptions.pugTool = codeLensPugTool;
 		codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
 	}
+	async function updateDefaultLanguage() {
+		const defalutStyleLanguage = await connection.workspace.getConfiguration('volar.style.defaultLanguage');
+		defaultLanguages.style = defalutStyleLanguage;
+	}
 	async function updateEmmet() {
 		emmetConfig = await connection.workspace.getConfiguration('emmet');
 	}
@@ -121,6 +127,10 @@ function onInitialize(params: InitializeParams) {
 	mode = options.mode;
 	appRoot = options.appRoot;
 	language = options.language;
+
+	if (options.config['volar.style.defaultLanguage']) {
+		defaultLanguages.style = options.config['volar.style.defaultLanguage'];
+	}
 
 	if (mode === 'html') {
 		initLanguageServiceHtml();

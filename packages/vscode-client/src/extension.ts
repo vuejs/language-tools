@@ -14,6 +14,7 @@ import * as tagClosing from './features/tagClosing';
 import * as semanticTokens from './features/semanticTokens';
 import * as emitDts from './features/emitDts';
 import * as tsPlugin from './features/tsPlugin';
+import * as defaultLanguage from './features/defaultLanguage';
 import { ServerInitializationOptions } from '@volar/shared';
 
 let apiClient: lsp.LanguageClient;
@@ -38,6 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	restart.activate(context, [apiClient, docClient]);
 	emitDts.activate(context, docClient);
 	tsPlugin.activate(context);
+	defaultLanguage.activate();
 
 	startEmbeddedLanguageServices();
 }
@@ -62,6 +64,9 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		mode: mode,
 		appRoot: vscode.env.appRoot,
 		language: vscode.env.language,
+		config: {
+			'volar.style.defaultLanguage': vscode.workspace.getConfiguration('volar').get<string>('style.defaultLanguage'),
+		},
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector: fileOnly ?

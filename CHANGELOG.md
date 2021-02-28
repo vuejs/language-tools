@@ -1,3 +1,7 @@
+### 0.21.20
+
+- feat: added default `<style>` tag language config
+
 ### 0.21.19
 
 - fix: textDocumet/formatting fails with stylus and sass

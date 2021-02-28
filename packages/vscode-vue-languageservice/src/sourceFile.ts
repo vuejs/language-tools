@@ -27,6 +27,12 @@ import { useStylesRaw } from './virtuals/styles.raw';
 import * as htmlparser2 from 'htmlparser2';
 import * as dedupe from './utils/dedupe';
 
+export const defaultLanguages = {
+	template: 'html',
+	script: 'js',
+	style: 'css',
+};
+
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(
@@ -244,7 +250,7 @@ export function createSourceFile(
 
 		function updateTemplate(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.template ? {
-				lang: newDescriptor.template.lang ?? 'html',
+				lang: newDescriptor.template.lang ?? defaultLanguages.template,
 				content: newDescriptor.template.content,
 				loc: {
 					start: newDescriptor.template.loc.start.offset,
@@ -269,7 +275,7 @@ export function createSourceFile(
 		function updateScript(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.script ? {
 				src: newDescriptor.script.src,
-				lang: newDescriptor.script.lang ?? 'js',
+				lang: newDescriptor.script.lang ?? defaultLanguages.script,
 				content: newDescriptor.script.content,
 				loc: {
 					start: newDescriptor.script.loc.start.offset,
@@ -320,7 +326,7 @@ export function createSourceFile(
 			for (let i = 0; i < newDescriptor.styles.length; i++) {
 				const style = newDescriptor.styles[i];
 				const newData = {
-					lang: style.lang ?? 'css',
+					lang: style.lang ?? defaultLanguages.style,
 					content: style.content,
 					loc: {
 						start: style.loc.start.offset,
