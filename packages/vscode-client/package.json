@@ -6,14 +6,10 @@
 	},
 	"dependencies": {
 		"@vue/compiler-sfc": "latest",
-		"jsonc-parser": "latest",
-		"semver": "latest",
 		"upath": "latest",
 		"vscode-languageclient": "next"
 	},
 	"devDependencies": {
-		"@types/semver": "latest",
-		"@types/vscode": "latest",
-		"vscode-test": "latest"
+		"@types/vscode": "latest"
 	}
 }
