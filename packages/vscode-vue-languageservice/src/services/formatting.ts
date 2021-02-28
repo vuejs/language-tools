@@ -101,10 +101,19 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.formatting) continue;
 				for (const maped of sourceMap) {
+
+					const languageId = sourceMap.targetDocument.languageId;
+					if (
+						languageId !== 'css'
+						&& languageId !== 'less'
+						&& languageId !== 'scss'
+						&& languageId !== 'postcss'
+					) continue;
+
 					const newStyleText = prettier.format(sourceMap.targetDocument.getText(), {
 						tabWidth: options.tabSize,
 						useTabs: !options.insertSpaces,
-						parser: sourceMap.targetDocument.languageId as any,
+						parser: languageId,
 					});
 
 					const vueRange = {

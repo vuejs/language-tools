@@ -1,3 +1,7 @@
+### 0.21.19
+
+- fix: textDocumet/formatting fails with stylus and sass
+
 ### 0.21.18
 
 - feat: sass language support
