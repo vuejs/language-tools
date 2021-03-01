@@ -24,12 +24,13 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
+		// TODO: use vscode config, check: https://github.com/microsoft/vscode/blob/a699ffaee62010c4634d301da2bbdb7646b8d1da/extensions/typescript-language-features/src/languageFeatures/fileConfigurationManager.ts#L163
 		const defaultOptions: ts.GetCompletionsAtPositionOptions = {
 			disableSuggestions: false,
 			// includeCompletionsForModuleExports: true,
 			includeAutomaticOptionalChainCompletions: true,
 			includeCompletionsWithInsertText: true,
-			importModuleSpecifierPreference: 'auto',
+			importModuleSpecifierPreference: 'shortest',
 			// importModuleSpecifierEnding: 'minimal' | 'index' | 'js',
 			allowTextChangesInNewFiles: true,
 			providePrefixAndSuffixTextForRename: true,
