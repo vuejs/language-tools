@@ -13,6 +13,7 @@ import * as languageServices from './utils/languageServices';
 import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';
 import { createMapper } from './utils/mapper';
 import * as tsPluginApis from './tsPluginApis';
+import * as tsProgramApis from './tsProgramApis';
 // vue services
 import * as completions from './services/completions';
 import * as completionResolve from './services/completionResolve';
@@ -260,8 +261,9 @@ export function createLanguageService(
 	const _callHierarchy = callHierarchy.register(options);
 	const findDefinition = definitions.register(options);
 	const doRename = rename.register(options);
-	const _tsPluginApis = tsPluginApis.register(options);
 
+	// ts plugin proxy
+	const _tsPluginApis = tsPluginApis.register(options);
 	const tsPlugin: Partial<ts.LanguageService> = {
 		getSemanticDiagnostics: apiHook(tsLanguageService.raw.getSemanticDiagnostics, false),
 		getEncodedSemanticClassifications: apiHook(tsLanguageService.raw.getEncodedSemanticClassifications, false),
@@ -293,9 +295,28 @@ export function createLanguageService(
 		// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
 	};
 
+	// ts program proxy
+	const tsProgram = tsLanguageService.raw.getProgram();
+	if (!tsProgram) throw '!tsProgram';
+
+	const tsProgramApis_2 = tsProgramApis.register(options);
+	const tsProgramApis_3: Partial<typeof tsProgram> = {
+		emit: apiHook(tsProgramApis_2.emit),
+		getRootFileNames: apiHook(tsProgramApis_2.getRootFileNames),
+		getSemanticDiagnostics: apiHook(tsProgramApis_2.getSemanticDiagnostics),
+		getSyntacticDiagnostics: apiHook(tsProgramApis_2.getSyntacticDiagnostics),
+		getGlobalDiagnostics: apiHook(tsProgramApis_2.getGlobalDiagnostics),
+	};
+	const tsProgramProxy = new Proxy(tsProgram, {
+		get: (target: any, property: keyof typeof tsProgram) => {
+			return tsProgramApis_3[property] || target[property];
+		},
+	});
+
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		tsPlugin,
+		tsProgramProxy,
 		setDtsMode: (_dtsMode: boolean) => {
 			dtsMode.value = _dtsMode;
 			tsProjectVersion.value++;
@@ -502,7 +523,12 @@ export function createLanguageService(
 						tsFileNames.push(uriToFsPath(uri)); // virtual .ts
 					}
 				}
-				tsFileNames.push(fileName); // .vue + .ts
+				if (isTsPlugin) {
+					tsFileNames.push(fileName); // .vue + .ts
+				}
+				else if (!sourceFile && !fileName.endsWith('.vue')) {
+					tsFileNames.push(fileName); // .ts
+				}
 			}
 			return tsFileNames;
 		}
