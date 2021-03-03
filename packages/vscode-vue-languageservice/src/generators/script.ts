@@ -557,7 +557,6 @@ export function generate(
                     vueTag: 'script',
                     capabilities: {
                         references: true,
-                        definitions: true,
                         rename: true,
                     },
                 },
