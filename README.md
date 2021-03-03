@@ -8,13 +8,11 @@ Volar is a Language Support plugin built specifically for Vue 3. It's based on `
 
 [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
-🛠️ This project is still refactoring to make it easier to contribute.
+🛠️ This project is still refactoring to make it easier for contribute.
 
 ## Quick Start
 
-Some templates that can used with Volar.
-
-[vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts), [Vitesse](https://github.com/antfu/vitesse)
+https://github.com/johnsoncodehk/vue-vite-volar
 
 ## Using
 
