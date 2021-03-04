@@ -65,10 +65,13 @@ declare global {
 	type __VLS_EmitEvent<T, E> = T extends { __VLS_raw: infer R } ? __VLS_EmitEvent0<R, E> : __VLS_EmitEvent0<T, E>;
 	type __VLS_EmitEvent0<T, E> =
 		T extends DefineComponent<infer _, any, any, any, any, any, any, infer E2> ? (
-			E2 extends (infer K)[] ? (E extends K ? (...args: any) => void : never) // emits: ['event-1', 'event-2']
-			: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> : never // evnts: { 'event-1': () => true, 'event-2': () => true }
+			E2 extends (infer K)[] ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
+			: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> : unknown // evnts: { 'event-1': () => true, 'event-2': () => true }
 		) : __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
-	type __VLS_FirstFunction<F1, F2> = NonNullable<F1> extends (...args: any) => any ? F1 : F2;
+	type __VLS_FirstFunction<F0, F1, F2> = 
+		NonNullable<F0> extends (...args: any) => any ? F0 :
+		NonNullable<F1> extends (...args: any) => any ? F1 :
+		NonNullable<F2> extends (...args: any) => any ? F2 : never;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };

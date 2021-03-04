@@ -462,6 +462,7 @@ export function generate(
 			}
 			else if (option === 'emits') {
 				emits.add(propName);
+				emits.add(camelize(propName));
 				props.add(camelize('on-' + propName));
 			}
 			for (const name of props.values()) {
@@ -885,10 +886,11 @@ export function generate(
 				if (prop.arg.content.startsWith('update:')) {
 					keyOffset = 'update:'.length;
 					key_1 = prop.arg.content.substr(keyOffset);
-					scriptGen.addText(`let ${var_on}!: { '${key_1}': ($event: InstanceType<typeof __VLS_components['UsTeleport']>['$props']['${key_1}']) => void };\n`);
+					scriptGen.addText(`let ${var_on}!: { '${key_1}': ($event: InstanceType<typeof __VLS_components['${getComponentName(node.tag)}']>['$props']['${key_1}']) => void };\n`);
 				}
 				else {
 					const key_2 = camelize('on-' + key_1);
+					const key_3 = camelize(key_1);
 
 					scriptGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentProps['${getComponentName(node.tag)}'][`);
 					writeCodeWithQuotes(
@@ -902,7 +904,7 @@ export function generate(
 							capabilities: capabilitiesSet.htmlTagOrAttr,
 						},
 					);
-					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>> };\n`);
+					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>, __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>> };\n`);
 				}
 
 				const transformResult = transformOn(prop, node, context);
