@@ -224,7 +224,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 							}
 						}
 						for (const event of on) {
-							const propName = '@' + event.data.name;
+							const propName = '@' + hyphenate(event.data.name);
 							const propKey = componentName + ':' + propName;
 							attributes.push({
 								name: propName,
