@@ -259,17 +259,22 @@ export function parse(ts: typeof import('typescript'), content: string) {
                         rightWituoutAs = node.right.expression;
                         rightAs = node.right.type;
                     }
-                    binaryExps.push({
-                        vars: findLabelVars(node.left, inRoot),
-                        left: getStartEnd(node.left),
-                        right: {
-                            ...getStartEnd(right),
-                            isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(scriptAst) === 'computed',
-                            withoutAs: getStartEnd(rightWituoutAs),
-                            as: rightAs ? getStartEnd(rightAs) : undefined,
-                        },
-                        parent: getStartEnd(parent),
-                    });
+                    const leftRange = getStartEnd(node.left);
+                    const rightRange = getStartEnd(node.right);
+                    const parentRange = getStartEnd(parent);
+                    if (parentRange.start <= leftRange.start && parentRange.end >= rightRange.end) { // fix `ref: in` #85
+                        binaryExps.push({
+                            vars: findLabelVars(node.left, inRoot),
+                            left: leftRange,
+                            right: {
+                                ...rightRange,
+                                isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(scriptAst) === 'computed',
+                                withoutAs: getStartEnd(rightWituoutAs),
+                                as: rightAs ? getStartEnd(rightAs) : undefined,
+                            },
+                            parent: parentRange,
+                        });
+                    }
                 }
             }
             else if (ts.isParenthesizedExpression(node)) {
