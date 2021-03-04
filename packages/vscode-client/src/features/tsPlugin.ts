@@ -80,17 +80,13 @@ export async function activate(context: vscode.ExtensionContext) {
         if (tsPluginEnabled) {
             statusBar.text = '[Volar] TS Plugin: On';
             statusBar.color = undefined;
-            statusBar.backgroundColor = undefined;
         }
         else {
             statusBar.text = '[Volar] TS Plugin: Off';
-            statusBar.color = undefined;
-            statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+            statusBar.color = new vscode.ThemeColor('titleBar.inactiveForeground');
         }
         if (isConfigEnabled() !== tsPluginEnabled) {
             statusBar.text += ' -> ' + (isConfigEnabled() ? 'On' : 'Off');
-            statusBar.color = new vscode.ThemeColor('titleBar.inactiveForeground');
-            statusBar.backgroundColor = undefined;
         }
     }
     function isPluginEnabled() {
