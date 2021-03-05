@@ -1,3 +1,8 @@
+### 0.22.3
+
+- fix: ts plugin vue files missing edge case
+- fix: go to definition for 'vue' import not working
+
 ### 0.22.2
 
 - fix: vue language service broke by vscode 1.54.1
