@@ -2,6 +2,7 @@
 
 - fix: vue language service broke by vscode 1.54.1
 - fix: 'vue' module auto-import broke by vscode 1.54.1 (ts 4.2.2)
+- chore: improve vue 2 warning message (Thanks to @posva !)
 
 ### 0.22.1
 
