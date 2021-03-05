@@ -259,7 +259,7 @@ export function createLanguageServiceHost(
 				const projectValid = vueLanguageService.checkProject();
 				if (!projectValid) {
 					connection.window.showWarningMessage(
-						"Volar can't not offer intelligence due to your project is a vue2 project and without @vue/runtime-dom installed, you can find more info here: https://github.com/johnsoncodehk/volar"
+						"Volar cannot offer intellisense auto completion due to your project being a Vue 2 project and not having @vue/runtime-dom installed. You can find more information at https://github.com/johnsoncodehk/volar"
 					);
 				}
 			}
