@@ -19,20 +19,20 @@ export function useScriptMain(
 		const hasScript = !!script.value || !!scriptSetup.value;
 		const vueFileName = upath.basename(uriToFsPath(vueDoc.uri));
 		const content = [
-			`import { defineComponent } from 'vue';`,
+			`import { __VLS_defineComponent } from '__VLS_vue';`,
 			hasScript ? `import __VLS_componentRaw from './${vueFileName}.__VLS_script';` : `// no script`,
 			...(hasScript
 				? [
 					`import { __VLS_options } from './${vueFileName}.__VLS_script';`,
 					`export { __VLS_options } from './${vueFileName}.__VLS_script';`,
-					`const __VLS_componentReserve = defineComponent(__VLS_componentRaw);`,
+					`const __VLS_componentReserve = __VLS_defineComponent(__VLS_componentRaw);`,
 					`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;`,
 					`export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;`,
 					`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
 				]
 				: [
 					`export var __VLS_options = {};`,
-					`export var __VLS_component = defineComponent({});`,
+					`export var __VLS_component = __VLS_defineComponent({});`,
 				]),
 			`declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };`,
 			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents${hasScript ? ' & __VLS_PickComponents<typeof __VLS_ctx>' : '/* no script */'};`,
