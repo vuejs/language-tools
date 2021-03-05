@@ -133,11 +133,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 			readFile: fileName => info.project.readFile(fileName),
 		};
 
-		const tsConfig = info.project.projectName;
-		if (!info.project.fileExists(tsConfig))
-			return [];
-		const jsonConfigFile = ts.readJsonConfigFile(tsConfig, fileName => info.project.readFile(fileName));
-		const { fileNames } = ts.parseJsonSourceFileConfigFileContent(jsonConfigFile, parseConfigHost, path.dirname(tsConfig), {}, path.basename(tsConfig));
+		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, info.project.getCurrentDirectory(), info.project.getCompilerOptions());
 		return fileNames;
 	}
 	function checkFilesAddRemove() {
