@@ -26,6 +26,7 @@ import * as formatting from './services/formatting';
 import * as definitions from './services/definitions';
 import * as references from './services/references';
 import * as rename from './services/rename';
+import * as codeActions from './services/codeActions';
 import * as documentHighlight from './services/documentHighlight';
 import * as documentSymbol from './services/documentSymbol';
 import * as documentLink from './services/documentLink';
@@ -287,7 +288,7 @@ export function createLanguageService(
 		// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
 		// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
 
-		// not sure
+		// TODO
 		// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
 		// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
 		// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
@@ -347,6 +348,7 @@ export function createLanguageService(
 		},
 		getSemanticTokens: apiHook(semanticTokens.register(options)),
 		getD3: apiHook(d3.register(options)),
+		getCodeActions: apiHook(codeActions.register(options), false),
 		doExecuteCommand: apiHook(executeCommand.register(options), false),
 		doComplete: apiHook(completions.register(options), false),
 		doCompletionResolve: apiHook(completionResolve.register(options), false),

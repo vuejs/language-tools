@@ -12,7 +12,7 @@ Volar is a Language Support plugin built specifically for Vue 3. It's based on `
 
 ## Quick Start
 
-https://github.com/johnsoncodehk/vue-vite-volar
+https://github.com/johnsoncodehk/volar-starter
 
 ## Using
 

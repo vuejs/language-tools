@@ -7,6 +7,7 @@ import * as references from './services/references';
 import * as prepareRename from './services/prepareRename';
 import * as rename from './services/rename';
 import * as fileRename from './services/fileRename';
+import * as codeActions from './services/codeActions';
 import * as hover from './services/hover';
 import * as signatureHelp from './services/signatureHelp';
 import * as selectionRanges from './services/selectionRanges';
@@ -42,6 +43,7 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		prepareRename: prepareRename.register(languageService, getTextDocument),
 		doRename: rename.register(languageService, getTextDocument),
 		onFileName: fileRename.register(languageService, getTextDocument),
+		getCodeActions: codeActions.register(languageService, getTextDocument),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getTextDocument),

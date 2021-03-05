@@ -86,7 +86,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			return;
 
 		// ts -> vue
-		const vueResult = tsToVue(tsResult);
+		const vueResult = tsEditToVueEdit(tsResult, mapper);
 		return vueResult;
 	}
 	function onTs(uri: string, position: Position, newName: string) {
@@ -143,106 +143,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			return;
 
 		// ts -> vue
-		const vueResult = tsToVue(tsResult);
-		return vueResult;
-	}
-	function tsToVue(tsResult: WorkspaceEdit) {
-		const vueResult: WorkspaceEdit = {};
-
-		for (const tsUri in tsResult.changeAnnotations) {
-			const tsAnno = tsResult.changeAnnotations[tsUri];
-			const vueDoc = mapper.tsUri.from(tsUri);
-			if (!vueDoc)
-				continue;
-
-			if (!vueResult.changeAnnotations)
-				vueResult.changeAnnotations = {};
-
-			vueResult.changeAnnotations[vueDoc.uri] = tsAnno;
-		}
-		for (const tsUri in tsResult.changes) {
-			const tsEdits = tsResult.changes[tsUri];
-			for (const tsEdit of tsEdits) {
-				for (const vueRange of mapper.ts.from(tsUri, tsEdit.range.start, tsEdit.range.end)) {
-					if (
-						!vueRange.data
-						|| vueRange.data.capabilities.rename === true
-						|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
-					) {
-						const newText_2 = vueRange.data?.doRename
-							? vueRange.data.doRename(vueRange.textDocument.getText(vueRange), tsEdit.newText)
-							: tsEdit.newText;
-
-						if (!vueResult.changes) {
-							vueResult.changes = {};
-						}
-						if (!vueResult.changes[vueRange.textDocument.uri]) {
-							vueResult.changes[vueRange.textDocument.uri] = [];
-						}
-						vueResult.changes[vueRange.textDocument.uri].push({
-							newText: newText_2,
-							range: vueRange,
-						});
-					}
-				}
-			}
-		}
-		if (tsResult.documentChanges) {
-			for (const tsDocEdit of tsResult.documentChanges) {
-				if (!vueResult.documentChanges) {
-					vueResult.documentChanges = [];
-				}
-				let vueDocEdit: typeof tsDocEdit | undefined;
-				if (TextDocumentEdit.is(tsDocEdit)) {
-					const vueDoc = mapper.tsUri.from(tsDocEdit.textDocument.uri);
-					if (!vueDoc)
-						continue;
-					const _vueDocEdit = TextDocumentEdit.create(
-						{ uri: vueDoc.uri, version: vueDoc.version },
-						[],
-					);
-					for (const tsEdit of tsDocEdit.edits) {
-						for (const vueRange of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range.start, tsEdit.range.end)) {
-							if (
-								!vueRange.data
-								|| vueRange.data.capabilities.rename === true
-								|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
-							) {
-								_vueDocEdit.edits.push({
-									annotationId: AnnotatedTextEdit.is(tsEdit) ? tsEdit.annotationId : undefined,
-									newText: tsEdit.newText,
-									range: vueRange,
-								});
-							}
-						}
-					}
-					if (_vueDocEdit.edits.length) {
-						vueDocEdit = _vueDocEdit;
-					}
-				}
-				else if (CreateFile.is(tsDocEdit)) {
-					const vueDoc = mapper.tsUri.from(tsDocEdit.uri);
-					if (!vueDoc)
-						continue;
-					vueDocEdit = CreateFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
-				}
-				else if (RenameFile.is(tsDocEdit)) {
-					const vueDoc = mapper.tsUri.from(tsDocEdit.oldUri);
-					if (!vueDoc)
-						continue;
-					vueDocEdit = RenameFile.create(vueDoc.uri, tsDocEdit.newUri, tsDocEdit.options, tsDocEdit.annotationId);
-				}
-				else if (DeleteFile.is(tsDocEdit)) {
-					const vueDoc = mapper.tsUri.from(tsDocEdit.uri);
-					if (!vueDoc)
-						continue;
-					vueDocEdit = DeleteFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
-				}
-				if (vueDocEdit) {
-					vueResult.documentChanges.push(vueDocEdit);
-				}
-			}
-		}
+		const vueResult = tsEditToVueEdit(tsResult, mapper);
 		return vueResult;
 	}
 	function onCssPrepare(uri: string, position: Position) {
@@ -329,4 +230,103 @@ export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: Workspac
 			}
 		}
 	}
+}
+export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOptions['mapper']) {
+	const vueResult: WorkspaceEdit = {};
+
+	for (const tsUri in tsResult.changeAnnotations) {
+		const tsAnno = tsResult.changeAnnotations[tsUri];
+		const vueDoc = mapper.tsUri.from(tsUri);
+		if (!vueDoc)
+			continue;
+
+		if (!vueResult.changeAnnotations)
+			vueResult.changeAnnotations = {};
+
+		vueResult.changeAnnotations[vueDoc.uri] = tsAnno;
+	}
+	for (const tsUri in tsResult.changes) {
+		const tsEdits = tsResult.changes[tsUri];
+		for (const tsEdit of tsEdits) {
+			for (const vueRange of mapper.ts.from(tsUri, tsEdit.range.start, tsEdit.range.end)) {
+				if (
+					!vueRange.data
+					|| vueRange.data.capabilities.rename === true
+					|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
+				) {
+					const newText_2 = vueRange.data?.doRename
+						? vueRange.data.doRename(vueRange.textDocument.getText(vueRange), tsEdit.newText)
+						: tsEdit.newText;
+
+					if (!vueResult.changes) {
+						vueResult.changes = {};
+					}
+					if (!vueResult.changes[vueRange.textDocument.uri]) {
+						vueResult.changes[vueRange.textDocument.uri] = [];
+					}
+					vueResult.changes[vueRange.textDocument.uri].push({
+						newText: newText_2,
+						range: vueRange,
+					});
+				}
+			}
+		}
+	}
+	if (tsResult.documentChanges) {
+		for (const tsDocEdit of tsResult.documentChanges) {
+			if (!vueResult.documentChanges) {
+				vueResult.documentChanges = [];
+			}
+			let vueDocEdit: typeof tsDocEdit | undefined;
+			if (TextDocumentEdit.is(tsDocEdit)) {
+				const vueDoc = mapper.tsUri.from(tsDocEdit.textDocument.uri);
+				if (!vueDoc)
+					continue;
+				const _vueDocEdit = TextDocumentEdit.create(
+					{ uri: vueDoc.uri, version: vueDoc.version },
+					[],
+				);
+				for (const tsEdit of tsDocEdit.edits) {
+					for (const vueRange of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range.start, tsEdit.range.end)) {
+						if (
+							!vueRange.data
+							|| vueRange.data.capabilities.rename === true
+							|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
+						) {
+							_vueDocEdit.edits.push({
+								annotationId: AnnotatedTextEdit.is(tsEdit) ? tsEdit.annotationId : undefined,
+								newText: tsEdit.newText,
+								range: vueRange,
+							});
+						}
+					}
+				}
+				if (_vueDocEdit.edits.length) {
+					vueDocEdit = _vueDocEdit;
+				}
+			}
+			else if (CreateFile.is(tsDocEdit)) {
+				const vueDoc = mapper.tsUri.from(tsDocEdit.uri);
+				if (!vueDoc)
+					continue;
+				vueDocEdit = CreateFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
+			}
+			else if (RenameFile.is(tsDocEdit)) {
+				const vueDoc = mapper.tsUri.from(tsDocEdit.oldUri);
+				if (!vueDoc)
+					continue;
+				vueDocEdit = RenameFile.create(vueDoc.uri, tsDocEdit.newUri, tsDocEdit.options, tsDocEdit.annotationId);
+			}
+			else if (DeleteFile.is(tsDocEdit)) {
+				const vueDoc = mapper.tsUri.from(tsDocEdit.uri);
+				if (!vueDoc)
+					continue;
+				vueDocEdit = DeleteFile.create(vueDoc.uri, tsDocEdit.options, tsDocEdit.annotationId);
+			}
+			if (vueDocEdit) {
+				vueResult.documentChanges.push(vueDocEdit);
+			}
+		}
+	}
+	return vueResult;
 }

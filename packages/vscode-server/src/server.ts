@@ -17,6 +17,8 @@ import {
 	WorkspaceEdit,
 	CodeLensRequest,
 	CallHierarchyPrepareRequest,
+	CodeActionRequest,
+	// TODO: CodeActionResolveRequest,
 	// doc
 	DocumentHighlightRequest,
 	DocumentSymbolRequest,
@@ -268,6 +270,12 @@ function initLanguageServiceApi(rootPaths: string[]) {
 		const document = documents.get(uri);
 		if (!document) return undefined;
 		return host.bestMatch(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
+	});
+	connection.onCodeAction(handler => {
+		const uri = handler.textDocument.uri;
+		const document = documents.get(uri);
+		if (!document) return undefined;
+		return host.bestMatch(uri)?.getCodeActions(uri, handler.range, handler.context);
 	});
 	// vue & ts
 	connection.onReferences(handler => {
@@ -540,6 +548,7 @@ function onInitializedApi() {
 		triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
 		resolveProvider: true,
 	});
+	connection.client.register(CodeActionRequest.type, vueOnly);
 	for (const host of hosts) {
 		host.onConnectionInited();
 	}
