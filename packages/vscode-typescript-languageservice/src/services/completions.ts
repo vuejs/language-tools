@@ -42,6 +42,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.javascript;
 		const wordStart = getWordStart(wordPattern, position, document);
 		const wordRange = wordStart ? { start: wordStart, end: position } : undefined;
+		const wordRange2 = wordRange ? { start: document.offsetAt(wordRange.start), end: document.offsetAt(wordRange.end) } : undefined;
 
 		const entries = completions.entries
 			.map(entry => {
@@ -106,22 +107,26 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				 * @after
 				 * foo. + ['a/b/c'] => foo['a/b/c']
 				 */
-				const range = Range.create(
+				const replaceRange = !wordRange2 ? Range.create(
 					document.positionAt(entry.replacementSpan.start),
 					document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
+				) : entry.replacementSpan.start <= wordRange2.start ? Range.create(
+					document.positionAt(entry.replacementSpan.start),
+					document.positionAt(Math.min(entry.replacementSpan.start + entry.replacementSpan.length, wordRange2.start)),
+				) : Range.create(
+					document.positionAt(Math.max(entry.replacementSpan.start, wordRange2.end)),
+					document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
 				);
-				item.additionalTextEdits = [TextEdit.del(range)];
+				item.additionalTextEdits = [TextEdit.del(replaceRange)];
 			}
-			else {
+			if (wordRange) {
 				/**
 				 * @before
 				 * $f + $foo => $$foo
 				 * @after
 				 * $f + $foo => $foo
 				 */
-				if (wordRange) {
-					item.textEdit = TextEdit.replace(wordRange, item.insertText ?? item.label);
-				}
+				item.textEdit = TextEdit.replace(wordRange, item.insertText ?? item.label);
 			}
 
 			return item;
