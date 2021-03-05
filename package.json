@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"displayName": "Vue 3",
+	"displayName": "Volar",
 	"description": "Language support for Vue 3",
 	"icon": "images/icon.png",
 	"version": "0.21.20",
