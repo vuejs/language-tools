@@ -5,27 +5,26 @@ import { join } from 'upath';
 
 export function getGlobalDTs(root: string) {
 	let code = `
-declare module '__VLS_vue' {
-	export * from 'vue'; // #37
-	export * from '@vue/runtime-dom';
+declare module 'vue' {
+	export * from '@vue/runtime-dom'; // TODO
 }
 `;
 
-	return TextDocument.create(fsPathToUri(join(root, '__VLS_vue.d.ts')), 'typescript', 0, code);
+	return TextDocument.create(fsPathToUri(join(root, 'vue.d.ts')), 'typescript', 0, code);
 }
 
 export function getGlobalDoc(root: string) {
 	let code = `
-import type { FunctionalComponent } from '__VLS_vue';
-import type { HTMLAttributes } from '__VLS_vue';
-import type { VNodeProps } from '__VLS_vue';
-import type { AllowedComponentProps } from '__VLS_vue';
-import type { PropType } from '__VLS_vue';
-import type { App } from '__VLS_vue';
-import type { DefineComponent } from '__VLS_vue';
+import type { FunctionalComponent } from 'vue';
+import type { HTMLAttributes } from 'vue';
+import type { VNodeProps } from 'vue';
+import type { AllowedComponentProps } from 'vue';
+import type { PropType } from 'vue';
+import type { App } from 'vue';
+import type { DefineComponent } from 'vue';
 
 declare global {
-	interface __VLS_GlobalComponents extends Pick<typeof import('__VLS_vue'),
+	interface __VLS_GlobalComponents extends Pick<typeof import('vue'),
 		'Transition'
 		| 'TransitionGroup'
 		| 'KeepAlive'

@@ -19,7 +19,7 @@ export function useScriptMain(
 		const hasScript = !!script.value || !!scriptSetup.value;
 		const vueFileName = upath.basename(uriToFsPath(vueDoc.uri));
 		const content = [
-			`import { defineComponent } from '__VLS_vue';`,
+			`import { defineComponent } from 'vue';`,
 			hasScript ? `import __VLS_componentRaw from './${vueFileName}.__VLS_script';` : `// no script`,
 			...(hasScript
 				? [

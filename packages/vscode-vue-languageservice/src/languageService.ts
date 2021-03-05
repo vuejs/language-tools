@@ -325,7 +325,7 @@ export function createLanguageService(
 		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
-			return !vueImportErrors.find(error => error.code === 2305); // Module '"__VLS_vue"' has no exported member '*'.ts(2305)
+			return !vueImportErrors.find(error => error.code === 2305); // Module '"vue"' has no exported member '*'.ts(2305)
 		}),
 		getTsService: () => tsLanguageService,
 		getGlobalDocs: () => [globalDoc, globalDTsDoc],

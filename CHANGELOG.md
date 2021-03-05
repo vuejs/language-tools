@@ -1,3 +1,7 @@
+### 0.22.2
+
+- fix: 'vue' module auto-import broke with vscode 1.54.1(ts 4.2.2)
+
 ### 0.22.1
 
 - fix: code fix affect by virtual code
