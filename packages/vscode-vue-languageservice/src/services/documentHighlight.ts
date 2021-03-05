@@ -24,11 +24,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getTsResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsRange of sourceMap.sourceToTargets(position)) {
+				for (const tsRange of sourceMap.getMappedRanges(position)) {
 					if (!tsRange.data.capabilities.basic) continue;
-					const highlights = tsLanguageService.findDocumentHighlights(sourceMap.targetDocument.uri, tsRange.start);
+					const highlights = tsLanguageService.findDocumentHighlights(sourceMap.mappedDocument.uri, tsRange.start);
 					for (const highlight of highlights) {
-						const vueRange = sourceMap.targetToSource(highlight.range.start, highlight.range.end);
+						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
 						if (vueRange) {
 							result.push({
 								...highlight,
@@ -43,15 +43,15 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-				for (const htmlRange of sourceMap.sourceToTargets(position)) {
+				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 
 					const highlights = sourceMap.language === 'html'
-						? languageServices.html.findDocumentHighlights(sourceMap.targetDocument, htmlRange.start, sourceMap.htmlDocument)
+						? languageServices.html.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
 						: languageServices.pug.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {
-						const vueRange = sourceMap.targetToSource(highlight.range.start, highlight.range.end);
+						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
 						if (vueRange) {
 							result.push({
 								...highlight,
@@ -66,12 +66,12 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getCssResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				for (const cssRange of sourceMap.sourceToTargets(position)) {
-					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.targetDocument, cssRange.start, sourceMap.stylesheet);
+				for (const cssRange of sourceMap.getMappedRanges(position)) {
+					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {
-						const vueRange = sourceMap.targetToSource(highlight.range.start, highlight.range.end);
+						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
 						if (vueRange) {
 							result.push({
 								...highlight,

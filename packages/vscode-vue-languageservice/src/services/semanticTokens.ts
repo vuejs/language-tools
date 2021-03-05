@@ -120,16 +120,16 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					if (offsetRange && maped.sourceRange.start > offsetRange.end)
 						continue;
 					const tsRange = {
-						start: sourceMap.targetDocument.positionAt(maped.targetRange.start),
-						end: sourceMap.targetDocument.positionAt(maped.targetRange.end),
+						start: sourceMap.mappedDocument.positionAt(maped.mappedRange.start),
+						end: sourceMap.mappedDocument.positionAt(maped.mappedRange.end),
 					};
-					const tokens = tsLanguageService.getDocumentSemanticTokens(sourceMap.targetDocument.uri, tsRange, cancle);
+					const tokens = tsLanguageService.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
 					if (!tokens)
 						continue;
 					for (const token of tokens) {
-						const tsStart = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] });
-						const tsEnd = sourceMap.targetDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
-						const vueRange = sourceMap.targetToSource2(tsStart, tsEnd);
+						const tsStart = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] });
+						const tsEnd = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
+						const vueRange = sourceMap.getSourceRange2(tsStart, tsEnd);
 						if (!vueRange?.data.capabilities.semanticTokens)
 							continue;
 						const vuePos = document.positionAt(vueRange.start);
@@ -158,7 +158,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					}
 				}
 
-				const docText = sourceMap.targetDocument.getText();
+				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
 					? languageServices.html.createScanner(docText, start)
 					: languageServices.pug.createScanner(sourceMap.pugDocument, start)
@@ -171,7 +171,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						const tokenLength = scanner.getTokenLength();
 						const tokenText = docText.substr(tokenOffset, tokenLength);
 						if (components.has(tokenText)) {
-							const vueRange = sourceMap.targetToSource2(tokenOffset);
+							const vueRange = sourceMap.getSourceRange2(tokenOffset);
 							if (vueRange) {
 								const vueOffset = vueRange.start;
 								const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);

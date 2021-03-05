@@ -1,4 +1,4 @@
-import { MapedMode, TsMappingData, MapedRange, Mapping } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import { createScriptGenerator } from '@volar/source-map';
 import { camelize, hyphenate } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
@@ -41,17 +41,17 @@ export function generate(
 			formapMappings: [],
 		};
 	}
-	const scriptGen = createScriptGenerator<TsMappingData>();
-	const formatGen = createScriptGenerator<TsMappingData>();
+	const scriptGen = createScriptGenerator<SourceMaps.TsMappingData>();
+	const formatGen = createScriptGenerator<SourceMaps.TsMappingData>();
 	const inlineCssGen = createScriptGenerator<undefined>();
 	const tags = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
-		loc: MapedRange,
+		loc: SourceMaps.Range,
 	}>();
 	const slotExps = new Map<string, {
 		varName: string,
-		loc: MapedRange,
+		loc: SourceMaps.Range,
 	}>();
 	const componentsMap = new Map<string, string>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
@@ -155,7 +155,7 @@ export function generate(
 					start: start,
 					end: start + context.length,
 				},
-				MapedMode.Offset,
+				SourceMaps.Mode.Offset,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
@@ -182,7 +182,7 @@ export function generate(
 								start: branch.condition.loc.start.offset,
 								end: branch.condition.loc.end.offset,
 							},
-							MapedMode.Offset,
+							SourceMaps.Mode.Offset,
 							{
 								vueTag: 'template',
 								capabilities: capabilitiesSet.all,
@@ -230,7 +230,7 @@ export function generate(
 						start: start_source,
 						end: start_source + source.content.length,
 					},
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.noFormatting,
@@ -244,7 +244,7 @@ export function generate(
 						start: source.loc.start.offset,
 						end: source.loc.end.offset,
 					},
-					MapedMode.Gate,
+					SourceMaps.Mode.Totally,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.diagnosticOnly,
@@ -259,7 +259,7 @@ export function generate(
 						start: start_value,
 						end: start_value + value.content.length,
 					},
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.noFormatting,
@@ -276,7 +276,7 @@ export function generate(
 							start: start_key,
 							end: start_key + key.content.length,
 						},
-						MapedMode.Offset,
+						SourceMaps.Mode.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.noFormatting,
@@ -293,7 +293,7 @@ export function generate(
 							start: start_index,
 							end: start_index + index.content.length,
 						},
-						MapedMode.Offset,
+						SourceMaps.Mode.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.noFormatting,
@@ -346,7 +346,7 @@ export function generate(
 				inlineCssGen.addCode(
 					content,
 					sourceRange,
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					undefined,
 				);
 				inlineCssGen.addText(` }\n`);
@@ -370,7 +370,7 @@ export function generate(
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
 						},
-						MapedMode.Offset,
+						SourceMaps.Mode.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
@@ -403,12 +403,12 @@ export function generate(
 				);
 				const diagEnd = scriptGen.getText().length;
 				addMapping(scriptGen, {
-					targetRange: {
+					mappedRange: {
 						start: diagStart,
 						end: diagEnd,
 					},
 					sourceRange: argRange,
-					mode: MapedMode.Gate,
+					mode: SourceMaps.Mode.Totally,
 					data: {
 						vueTag: 'template',
 						capabilities: capabilitiesSet.diagnosticOnly,
@@ -528,7 +528,7 @@ export function generate(
 						start: prop.exp.loc.start.offset,
 						end: prop.exp.loc.end.offset,
 					},
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
@@ -554,7 +554,7 @@ export function generate(
 						start: prop.value.loc.start.offset + 1,
 						end: prop.value.loc.end.offset - 1,
 					},
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.referencesOnly,
@@ -643,7 +643,7 @@ export function generate(
 								start: prop.exp.loc.start.offset,
 								end: prop.exp.loc.end.offset,
 							},
-							MapedMode.Offset,
+							SourceMaps.Mode.Offset,
 							{
 								vueTag: 'template',
 								capabilities: capabilitiesSet.all,
@@ -660,11 +660,11 @@ export function generate(
 							start: prop.loc.start.offset,
 							end: prop.loc.end.offset,
 						},
-						targetRange: {
+						mappedRange: {
 							start: diagStart,
 							end: scriptGen.getText().length,
 						},
-						mode: MapedMode.Gate,
+						mode: SourceMaps.Mode.Totally,
 						data: {
 							vueTag: 'template',
 							capabilities: capabilitiesSet.diagnosticOnly,
@@ -725,11 +725,11 @@ export function generate(
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
 					},
-					targetRange: {
+					mappedRange: {
 						start: diagStart,
 						end: scriptGen.getText().length,
 					},
-					mode: MapedMode.Gate,
+					mode: SourceMaps.Mode.Totally,
 					data: {
 						vueTag: 'template',
 						capabilities: capabilitiesSet.diagnosticOnly,
@@ -806,7 +806,7 @@ export function generate(
 					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
 					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 				},
-				MapedMode.Gate,
+				SourceMaps.Mode.Totally,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.diagnosticOnly,
@@ -932,7 +932,7 @@ export function generate(
 									start: prop.exp.loc.start.offset,
 									end: prop.exp.loc.end.offset,
 								},
-								MapedMode.Offset,
+								SourceMaps.Mode.Offset,
 								{
 									vueTag: 'template',
 									capabilities: capabilitiesSet.all,
@@ -960,7 +960,7 @@ export function generate(
 											start: prop.exp.loc.start.offset,
 											end: prop.exp.loc.end.offset,
 										},
-										MapedMode.Offset,
+										SourceMaps.Mode.Offset,
 										{
 											vueTag: 'template',
 											capabilities: capabilitiesSet.all,
@@ -1002,7 +1002,7 @@ export function generate(
 						start: prop.exp.loc.start.offset,
 						end: prop.exp.loc.end.offset,
 					},
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
@@ -1040,7 +1040,7 @@ export function generate(
 						start: prop.exp.loc.start.offset,
 						end: prop.exp.loc.end.offset,
 					},
-					MapedMode.Offset,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
@@ -1126,18 +1126,18 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: MapedRange, data: TsMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
-			writeCode(mapCode, sourceRange, MapedMode.Offset, data);
+			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
 		else {
 			writeCodeWithQuotes(mapCode, sourceRange, data);
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: MapedRange, data: TsMappingData) {
+	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
 			scriptGen.addText(`.`);
-			return writeCode(mapCode, sourceRange, MapedMode.Offset, data);
+			return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
 		else {
 			scriptGen.addText(`[`);
@@ -1145,35 +1145,35 @@ export function generate(
 			scriptGen.addText(`]`);
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRange: MapedRange, data: TsMappingData) {
+	function writeCodeWithQuotes(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		const addText = `'${mapCode}'`;
 		addMapping(scriptGen, {
 			sourceRange,
-			targetRange: {
+			mappedRange: {
 				start: scriptGen.getText().length + 1,
 				end: scriptGen.getText().length + addText.length - 1,
 			},
-			mode: MapedMode.Offset,
-			others: [
+			mode: SourceMaps.Mode.Offset,
+			additional: [
 				{
 					sourceRange,
-					targetRange: {
+					mappedRange: {
 						start: scriptGen.getText().length,
 						end: scriptGen.getText().length + addText.length,
 					},
-					mode: MapedMode.Gate,
+					mode: SourceMaps.Mode.Totally,
 				}
 			],
 			data,
 		});
 		scriptGen.addText(addText);
 	}
-	function writeCode(mapCode: string, sourceRange: MapedRange, mode: MapedMode, data: TsMappingData, formatWrapper?: [string, string]) {
+	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: SourceMaps.TsMappingData, formatWrapper?: [string, string]) {
 		if (formatWrapper) {
 			formatGen.addText(formatWrapper[0]);
 			const targetRange = formatGen.addText(mapCode);
 			addMapping(formatGen, {
-				targetRange,
+				mappedRange: targetRange,
 				sourceRange,
 				mode,
 				data: {
@@ -1189,12 +1189,12 @@ export function generate(
 		const targetRange = scriptGen.addText(mapCode);
 		addMapping(scriptGen, {
 			sourceRange,
-			targetRange,
+			mappedRange: targetRange,
 			mode,
 			data,
 		});
 	}
-	function addMapping(gen: typeof scriptGen, mapping: Mapping<TsMappingData>) {
+	function addMapping(gen: typeof scriptGen, mapping: SourceMaps.Mapping<SourceMaps.TsMappingData>) {
 		const newMapping = { ...mapping };
 		if (htmlToTemplate) {
 
@@ -1206,13 +1206,13 @@ export function generate(
 				end: mapping.sourceRange.end + offset,
 			};
 
-			if (mapping.others) {
-				newMapping.others = [];
-				for (const other of mapping.others) {
+			if (mapping.additional) {
+				newMapping.additional = [];
+				for (const other of mapping.additional) {
 					let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end);
 					if (otherTemplateStart === undefined) continue;
 					const otherOffset = otherTemplateStart - other.sourceRange.start;
-					newMapping.others.push({
+					newMapping.additional.push({
 						...other,
 						sourceRange: {
 							start: other.sourceRange.start + otherOffset,

@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
-import { MapedMode, TsSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 export function useScriptFormat(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
@@ -19,7 +19,7 @@ export function useScriptFormat(
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: true, formatting: true, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: true, formatting: true, documentSymbol: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
@@ -28,12 +28,12 @@ export function useScriptFormat(
 						foldingRanges: true,
 					},
 				},
-				mode: MapedMode.Offset,
+				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: script.value.loc.start,
 					end: script.value.loc.end,
 				},
-				targetRange: {
+				mappedRange: {
 					start: 0,
 					end: script.value.loc.end - script.value.loc.start,
 				},

@@ -54,7 +54,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const cheapTs = getCheapTsService2(ts, sourceMap.targetDocument);
+				const cheapTs = getCheapTsService2(ts, sourceMap.mappedDocument);
 				const foldingRanges = cheapTs.service.getFoldingRanges(cheapTs.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
@@ -64,9 +64,9 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService) continue;
-				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.targetDocument);
+				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.mappedDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
 			return result;
@@ -74,7 +74,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 		function getPugResult(sourceFile: SourceFile) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const text = sourceMap.targetDocument.getText();
+				const text = sourceMap.mappedDocument.getText();
 				const lines = text.split('\n');
 				const lineOffsets = getLineOffsets(lines);
 				const lineIndents = getLineIndents(lines);
@@ -85,7 +85,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 					const offset = lineOffsets[i];
 					const indent = lineIndents[i];
 					if (indent === undefined) continue;
-					const startPos = sourceMap.targetDocument.positionAt(offset);
+					const startPos = sourceMap.mappedDocument.positionAt(offset);
 					const kind = getFoldingRangeKind(line);
 					let found = false;
 
@@ -94,7 +94,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 						const indent_2 = lineIndents[j];
 						if (indent_2 === undefined) continue;
 						if (indent_2.length <= indent.length) {
-							const endPos = sourceMap.targetDocument.positionAt(offset_2);
+							const endPos = sourceMap.mappedDocument.positionAt(offset_2);
 							const foldingRange = FoldingRange.create(
 								startPos.line,
 								endPos.line - 1,
@@ -110,7 +110,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 					if (!found) {
 						const offset_2 = text.length;
-						const endPos = sourceMap.targetDocument.positionAt(offset_2);
+						const endPos = sourceMap.mappedDocument.positionAt(offset_2);
 						const foldingRange = FoldingRange.create(
 							startPos.line,
 							endPos.line - 1,
@@ -162,7 +162,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: SourceMap) {
 	const result: FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
-		const vueRange = sourceMap.targetToSource(
+		const vueRange = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
 		);
@@ -181,7 +181,7 @@ function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: Sou
 function toVueFoldingRangesTs(virtualFoldingRanges: FoldingRange[], sourceMap: TsSourceMap) {
 	const result: FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
-		const vueLoc = sourceMap.targetToSource(
+		const vueLoc = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
 		);

@@ -33,12 +33,12 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsRanges = sourceMap.sourceToTargets(range.start, range.end);
+				const tsRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const tsRange of tsRanges) {
 					if (!tsRange.data.capabilities.formatting) continue;
 					return {
 						sourceMap,
-						document: sourceMap.targetDocument,
+						document: sourceMap.mappedDocument,
 						range: tsRange,
 					};
 				}
@@ -46,11 +46,11 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const htmlRanges = sourceMap.sourceToTargets(range.start, range.end);
+				const htmlRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const htmlRange of htmlRanges) {
 					return {
 						sourceMap,
-						document: sourceMap.targetDocument,
+						document: sourceMap.mappedDocument,
 						range: htmlRange,
 					};
 				}
@@ -58,11 +58,11 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		}
 		function getPugResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const pugRanges = sourceMap.sourceToTargets(range.start, range.end);
+				const pugRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const pugRange of pugRanges) {
 					return {
 						sourceMap,
-						document: sourceMap.targetDocument,
+						document: sourceMap.mappedDocument,
 						range: pugRange,
 					};
 				}
@@ -70,11 +70,11 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssRanges = sourceMap.sourceToTargets(range.start, range.end);
+				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const cssRange of cssRanges) {
 					return {
 						sourceMap,
-						document: sourceMap.targetDocument,
+						document: sourceMap.mappedDocument,
 						range: cssRange,
 					};
 				}

@@ -31,8 +31,8 @@ export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOp
 					data: {
 						uri: document.uri,
 						offset: maped.sourceRange.start,
-						tsUri: globalTsSourceMap.sourceMap.targetDocument.uri,
-						tsOffset: maped.targetRange.start,
+						tsUri: globalTsSourceMap.sourceMap.mappedDocument.uri,
+						tsOffset: maped.mappedRange.start,
 					},
 				};
 				result.push(codeLens);
@@ -71,8 +71,8 @@ export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOp
 						data: {
 							uri: document.uri,
 							offset: maped.sourceRange.start,
-							tsUri: sourceMap.targetDocument.uri,
-							tsOffset: maped.targetRange.start,
+							tsUri: sourceMap.mappedDocument.uri,
+							tsOffset: maped.mappedRange.start,
 						},
 					};
 					result.push(codeLens);

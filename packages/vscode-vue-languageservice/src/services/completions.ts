@@ -113,7 +113,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				return result;
 			}
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsRanges = sourceMap.sourceToTargets(position);
+				const tsRanges = sourceMap.getMappedRanges(position);
 				for (const tsRange of tsRanges) {
 					if (!tsRange.data.capabilities.completion) continue;
 					if (!result) {
@@ -123,7 +123,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						};
 					}
 					const quotePreference = tsRange.data.vueTag === 'template' ? 'single' : 'auto';
-					let tsItems = tsLanguageService.doComplete(sourceMap.targetDocument.uri, tsRange.start, {
+					let tsItems = tsLanguageService.doComplete(sourceMap.mappedDocument.uri, tsRange.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
@@ -143,7 +143,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
 						const data: CompletionData = {
 							uri: document.uri,
-							docUri: sourceMap.targetDocument.uri,
+							docUri: sourceMap.mappedDocument.uri,
 							mode: 'ts',
 							tsItem: tsItem,
 						};
@@ -268,7 +268,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				});
 				languageServices.html.setDataProviders(true, [dataProvider]);
 
-				for (const htmlRange of sourceMap.sourceToTargets(position)) {
+				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 					if (!result) {
 						result = {
 							isIncomplete: false,
@@ -276,7 +276,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						};
 					}
 					const htmlResult = sourceMap.language === 'html'
-						? languageServices.html.doComplete(sourceMap.targetDocument, htmlRange.start, sourceMap.htmlDocument)
+						? languageServices.html.doComplete(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
 						: languageServices.pug.doComplete(sourceMap.pugDocument, htmlRange.start)
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
@@ -313,7 +313,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						const data: CompletionData = {
 							mode: 'html',
 							uri: document.uri,
-							docUri: sourceMap.targetDocument.uri,
+							docUri: sourceMap.mappedDocument.uri,
 							tsItem: tsItem,
 						};
 						vueItem.data = data;
@@ -338,7 +338,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				return;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssRanges = sourceMap.sourceToTargets(position);
+				const cssRanges = sourceMap.getMappedRanges(position);
 				for (const cssRange of cssRanges) {
 					if (!result) {
 						result = {
@@ -346,18 +346,18 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 							items: [],
 						};
 					}
-					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 					if (!cssLanguageService || !sourceMap.stylesheet) continue;
-					const wordPattern = wordPatterns[sourceMap.targetDocument.languageId] ?? wordPatterns.css;
-					const wordStart = getWordStart(wordPattern, cssRange.end, sourceMap.targetDocument);
+					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
+					const wordStart = getWordStart(wordPattern, cssRange.end, sourceMap.mappedDocument);
 					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
-					const cssResult = cssLanguageService.doComplete(sourceMap.targetDocument, cssRange.start, sourceMap.stylesheet);
+					const cssResult = cssLanguageService.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
 					const data: CompletionData = {
 						uri: document.uri,
-						docUri: sourceMap.targetDocument.uri,
+						docUri: sourceMap.mappedDocument.uri,
 						mode: 'css',
 					};
 					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {

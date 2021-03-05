@@ -39,7 +39,7 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 			let result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				// TODO: move to vscode-typescript-languageservice
-				const scriptContent = sourceMap.targetDocument.getText();
+				const scriptContent = sourceMap.mappedDocument.getText();
 				const root = jsonc.parseTree(scriptContent);
 				if (!root) continue;
 				const scriptDoc = TextDocument.create(document.uri, 'typescript', 0, scriptContent);
@@ -145,10 +145,10 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 			const result: DocumentLink[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const links = sourceMap.language === 'html'
-					? languageServices.html.findDocumentLinks(sourceMap.targetDocument, documentContext)
+					? languageServices.html.findDocumentLinks(sourceMap.mappedDocument, documentContext)
 					: languageServices.pug.findDocumentLinks(sourceMap.pugDocument, documentContext)
 				for (const link of links) {
-					const vueRange = sourceMap.targetToSource(link.range.start, link.range.end);
+					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
 					if (vueRange) {
 						result.push({
 							...link,
@@ -163,11 +163,11 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				const links = cssLanguageService.findDocumentLinks(sourceMap.targetDocument, sourceMap.stylesheet, documentContext);
+				const links = cssLanguageService.findDocumentLinks(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
-					const vueRange = sourceMap.targetToSource(link.range.start, link.range.end);
+					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
 					if (vueRange) {
 						result.push({
 							...link,

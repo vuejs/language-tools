@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
-import { MapedMode, HtmlSourceMap, PugSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import * as languageServices from '../utils/languageServices';
 
 export function useTemplateRaw(
@@ -28,19 +28,19 @@ export function useTemplateRaw(
 	const htmlSourceMap = computed(() => {
 		if (textDocument.value && textDocument.value && template.value && htmlDocument.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new HtmlSourceMap(
+			const sourceMap = new SourceMaps.HtmlSourceMap(
 				vueDoc,
 				textDocument.value,
 				htmlDocument.value,
 			);
 			sourceMap.add({
 				data: undefined,
-				mode: MapedMode.Offset,
+				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: template.value.loc.start,
 					end: template.value.loc.end,
 				},
-				targetRange: {
+				mappedRange: {
 					start: 0,
 					end: template.value.loc.end - template.value.loc.start,
 				},
@@ -56,19 +56,19 @@ export function useTemplateRaw(
 	const pugSourceMap = computed(() => {
 		if (textDocument.value && template.value && pugDocument.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new PugSourceMap(
+			const sourceMap = new SourceMaps.PugSourceMap(
 				vueDoc,
 				textDocument.value,
 				pugDocument.value,
 			);
 			sourceMap.add({
 				data: undefined,
-				mode: MapedMode.Offset,
+				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: template.value.loc.start,
 					end: template.value.loc.end,
 				},
-				targetRange: {
+				mappedRange: {
 					start: 0,
 					end: template.value.loc.end - template.value.loc.start,
 				},

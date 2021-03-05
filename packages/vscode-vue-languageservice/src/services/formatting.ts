@@ -102,7 +102,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 				if (!sourceMap.capabilities.formatting) continue;
 				for (const maped of sourceMap) {
 
-					const languageId = sourceMap.targetDocument.languageId;
+					const languageId = sourceMap.mappedDocument.languageId;
 					if (
 						languageId !== 'css'
 						&& languageId !== 'less'
@@ -110,7 +110,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 						&& languageId !== 'postcss'
 					) continue;
 
-					const newStyleText = prettier.format(sourceMap.targetDocument.getText(), {
+					const newStyleText = prettier.format(sourceMap.mappedDocument.getText(), {
 						tabWidth: options.tabSize,
 						useTabs: !options.insertSpaces,
 						parser: languageId,
@@ -137,7 +137,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 					const prefixes = '<template>';
 					const suffixes = '</template>';
 
-					let newHtml = prettyhtml(prefixes + sourceMap.targetDocument.getText() + suffixes, {
+					let newHtml = prettyhtml(prefixes + sourceMap.mappedDocument.getText() + suffixes, {
 						tabWidth: options.tabSize,
 						useTabs: !options.insertSpaces,
 						printWidth: 100,
@@ -159,7 +159,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			const result: TextEdit[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				for (const maped of sourceMap) {
-					let newPug = pugBeautify(sourceMap.targetDocument.getText(), {
+					let newPug = pugBeautify(sourceMap.mappedDocument.getText(), {
 						tab_size: options.tabSize,
 						fill_tab: !options.insertSpaces,
 					});
@@ -184,10 +184,10 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const cheapTs = getCheapTsService2(ts, sourceMap.targetDocument);
+				const cheapTs = getCheapTsService2(ts, sourceMap.mappedDocument);
 				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
 				for (const textEdit of textEdits) {
-					for (const vueRange of sourceMap.targetToSources(textEdit.range.start, textEdit.range.end)) {
+					for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
 						if (!vueRange.data.capabilities.formatting) continue;
 						result.push({
 							newText: textEdit.newText,

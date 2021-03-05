@@ -18,11 +18,11 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				let colors = cssLanguageService.findDocumentColors(sourceMap.targetDocument, sourceMap.stylesheet);
+				let colors = cssLanguageService.findDocumentColors(sourceMap.mappedDocument, sourceMap.stylesheet);
 				for (const color of colors) {
-					const vueRange = sourceMap.targetToSource(color.range.start, color.range.end);
+					const vueRange = sourceMap.getSourceRange(color.range.start, color.range.end);
 					if (vueRange) {
 						result.push({
 							...color,

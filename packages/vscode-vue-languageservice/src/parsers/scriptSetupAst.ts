@@ -1,4 +1,4 @@
-import { MapedRange } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import type * as ts from 'typescript';
 import { replaceToComment } from '../utils/string';
 
@@ -333,7 +333,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
         }
     }
     function findBindingVars(left: ts.BindingName) {
-        const vars: MapedRange[] = [];
+        const vars: SourceMaps.Range[] = [];
         worker(left);
         return vars;
         function worker(_node: ts.Node) {

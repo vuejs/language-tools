@@ -1,7 +1,6 @@
 import type { Ast as ScriptAst } from '../parsers/scriptAst';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
-import { MapedMode, Mapping, TeleportMappingData, TsMappingData } from '../utils/sourceMaps';
-import { createScriptGenerator } from '@volar/source-map';
+import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 import { replaceToComment } from '../utils/string';
 
@@ -17,8 +16,8 @@ export function generate(
     scriptSetupAst: ScriptSetupAst | undefined,
 ) {
 
-    const gen = createScriptGenerator<TsMappingData>();
-    const teleports: Mapping<TeleportMappingData>[] = [];
+    const gen = SourceMaps.createScriptGenerator<SourceMaps.TsMappingData>();
+    const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 
     writeScriptSrc();
     writeScript();
@@ -39,7 +38,7 @@ export function generate(
         gen.addCode(
             `'${script.src}'`,
             { start: -1, end: -1 },
-            MapedMode.Offset,
+            SourceMaps.Mode.Offset,
             {
                 vueTag: 'scriptSrc',
                 capabilities: {
@@ -69,7 +68,7 @@ export function generate(
         gen.addCode(
             addText,
             { start: 0, end: script.content.length },
-            MapedMode.Offset,
+            SourceMaps.Mode.Offset,
             {
                 vueTag: 'script',
                 capabilities: {
@@ -102,7 +101,7 @@ export function generate(
             gen.addCode(
                 newLinesOnly.substring(importPos, _import.start),
                 { start: importPos, end: _import.start },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 { // for auto import
                     vueTag: 'scriptSetup',
                     capabilities: {},
@@ -111,7 +110,7 @@ export function generate(
             gen.addCode(
                 originalCode.substring(_import.start, _import.end),
                 { start: _import.start, end: _import.end },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
@@ -131,7 +130,7 @@ export function generate(
         gen.addCode(
             newLinesOnly.substring(importPos, newLinesOnly.length),
             { start: importPos, end: newLinesOnly.length },
-            MapedMode.Offset,
+            SourceMaps.Mode.Offset,
             { // for auto import
                 vueTag: 'scriptSetup',
                 capabilities: {},
@@ -148,7 +147,7 @@ export function generate(
                     start: data.defineProps.typeArgs.start,
                     end: data.defineProps.typeArgs.end,
                 },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {},
@@ -164,7 +163,7 @@ export function generate(
                     start: data.defineEmit.typeArgs.start,
                     end: data.defineEmit.typeArgs.end,
                 },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {},
@@ -180,7 +179,7 @@ export function generate(
                     start: data.defineProps.args.start,
                     end: data.defineProps.args.end,
                 },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
@@ -204,7 +203,7 @@ export function generate(
                     start: data.defineEmit.args.start,
                     end: data.defineEmit.args.end,
                 },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
@@ -227,7 +226,7 @@ export function generate(
                 start: 0,
                 end: 0,
             },
-            MapedMode.Gate,
+            SourceMaps.Mode.Totally,
             {
                 vueTag: 'scriptSetup',
                 capabilities: {},
@@ -258,7 +257,7 @@ export function generate(
                 gen.addCode(
                     originalCode.substring(binary.left.start, binary.left.end),
                     binary.left,
-                    MapedMode.Offset,
+                    SourceMaps.Mode.Offset,
                     {
                         vueTag: 'scriptSetup',
                         capabilities: {
@@ -294,7 +293,7 @@ export function generate(
                         gen.addCode(
                             prop.text,
                             prop,
-                            MapedMode.Offset,
+                            SourceMaps.Mode.Offset,
                             {
                                 vueTag: 'scriptSetup',
                                 capabilities: {
@@ -307,7 +306,7 @@ export function generate(
                     gen.addCode(
                         `__VLS_refs_${prop.text}`,
                         prop,
-                        MapedMode.Gate,
+                        SourceMaps.Mode.Totally,
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
@@ -335,7 +334,7 @@ export function generate(
                             start: prop.start,
                             end: prop.end,
                         },
-                        MapedMode.Offset,
+                        SourceMaps.Mode.Offset,
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
@@ -350,7 +349,7 @@ export function generate(
                         gen.addCode(
                             `__VLS_refs_${prop.text}`,
                             binary.right,
-                            MapedMode.Offset, // TODO
+                            SourceMaps.Mode.Offset, // TODO
                             {
                                 vueTag: 'scriptSetup',
                                 capabilities: {},
@@ -369,7 +368,7 @@ export function generate(
                             start: prop.start,
                             end: prop.end,
                         },
-                        MapedMode.Offset, // TODO
+                        SourceMaps.Mode.Offset, // TODO
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
@@ -382,7 +381,7 @@ export function generate(
                         gen.addCode(
                             `__VLS_refs_${prop.text}`,
                             binary.right,
-                            MapedMode.Offset, // TODO
+                            SourceMaps.Mode.Offset, // TODO
                             {
                                 vueTag: 'scriptSetup',
                                 capabilities: {},
@@ -395,9 +394,9 @@ export function generate(
                     gen.addText(`); $${prop.text};\n`);
 
                     teleports.push({
-                        mode: MapedMode.Offset,
+                        mode: SourceMaps.Mode.Offset,
                         sourceRange: (prop as any)['teleportRange'],
-                        targetRange: refVarRange,
+                        mappedRange: refVarRange,
                         data: {
                             toSource: {
                                 capabilities: {
@@ -413,14 +412,14 @@ export function generate(
                         },
                     });
                     teleports.push({
-                        mode: MapedMode.Gate,
+                        mode: SourceMaps.Mode.Totally,
                         sourceRange: refVarRange,
-                        targetRange: dollarRefVarRange,
-                        others: [
+                        mappedRange: dollarRefVarRange,
+                        additional: [
                             {
-                                mode: MapedMode.Offset,
+                                mode: SourceMaps.Mode.Offset,
                                 sourceRange: refVarRange,
-                                targetRange: {
+                                mappedRange: {
                                     start: dollarRefVarRange.start + 1, // remove $
                                     end: dollarRefVarRange.end,
                                 },
@@ -460,8 +459,8 @@ export function generate(
 
             teleports.push({
                 sourceRange: scriptSideRange,
-                targetRange: templateSideRange,
-                mode: MapedMode.Offset,
+                mappedRange: templateSideRange,
+                mode: SourceMaps.Mode.Offset,
                 data: {
                     toSource: {
                         capabilities: {
@@ -491,8 +490,8 @@ export function generate(
 
                         teleports.push({
                             sourceRange: scriptSideRange,
-                            targetRange: templateSideRange,
-                            mode: MapedMode.Offset,
+                            mappedRange: templateSideRange,
+                            mode: SourceMaps.Mode.Offset,
                             data: {
                                 toSource: {
                                     capabilities: {
@@ -527,7 +526,7 @@ export function generate(
                     start,
                     end,
                 },
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
@@ -552,7 +551,7 @@ export function generate(
             gen.addCode(
                 defaultExport.text,
                 defaultExport,
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'script',
                     capabilities: {
@@ -571,7 +570,7 @@ export function generate(
             gen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end),
                 scriptSetupAst.defineProps.args,
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
@@ -588,7 +587,7 @@ export function generate(
             gen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end),
                 scriptSetupAst.defineProps.typeArgs,
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
@@ -605,7 +604,7 @@ export function generate(
             gen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end),
                 scriptSetupAst.defineEmit.args,
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {

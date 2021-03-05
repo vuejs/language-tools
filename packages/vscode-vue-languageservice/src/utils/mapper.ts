@@ -32,8 +32,8 @@ export function createMapper(
                 }[] = [];
                 for (const [_, sourceFile] of sourceFiles) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
-                        if (sourceMap.targetDocument.uri === cssUri) {
-                            for (const vueRange of sourceMap.targetToSources(cssStart, cssEnd)) {
+                        if (sourceMap.mappedDocument.uri === cssUri) {
+                            for (const vueRange of sourceMap.getSourceRanges(cssStart, cssEnd)) {
                                 result.push({
                                     textDocument: sourceMap.sourceDocument,
                                     start: vueRange.start,
@@ -56,11 +56,11 @@ export function createMapper(
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
-                        const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+                        const cssLs = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
                         if (!cssLs || !sourceMap.stylesheet) continue;
-                        for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
+                        for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
-                                textDocument: sourceMap.targetDocument,
+                                textDocument: sourceMap.mappedDocument,
                                 stylesheet: sourceMap.stylesheet,
                                 start: cssRange.start,
                                 end: cssRange.end,
@@ -81,8 +81,8 @@ export function createMapper(
                 }[] = [];
                 for (const [_, sourceFile] of sourceFiles) {
                     for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-                        if (sourceMap.targetDocument.uri === htmlUri) {
-                            for (const vueRange of sourceMap.targetToSources(htmlStart, htmlEnd)) {
+                        if (sourceMap.mappedDocument.uri === htmlUri) {
+                            for (const vueRange of sourceMap.getSourceRanges(htmlStart, htmlEnd)) {
                                 result.push({
                                     textDocument: sourceMap.sourceDocument,
                                     start: vueRange.start,
@@ -113,12 +113,12 @@ export function createMapper(
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-                        const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+                        const cssLs = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
                         if (!cssLs) continue;
-                        for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
+                        for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
                                 language: 'html',
-                                textDocument: sourceMap.targetDocument,
+                                textDocument: sourceMap.mappedDocument,
                                 htmlDocument: sourceMap.htmlDocument,
                                 start: cssRange.start,
                                 end: cssRange.end,
@@ -127,12 +127,12 @@ export function createMapper(
                         }
                     }
                     for (const sourceMap of sourceFile.getPugSourceMaps()) {
-                        const cssLs = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+                        const cssLs = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
                         if (!cssLs) continue;
-                        for (const cssRange of sourceMap.sourceToTargets(vueStart, vueEnd)) {
+                        for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
                                 language: 'pug',
-                                textDocument: sourceMap.targetDocument,
+                                textDocument: sourceMap.mappedDocument,
                                 pugDocument: sourceMap.pugDocument,
                                 start: cssRange.start,
                                 end: cssRange.end,
@@ -278,7 +278,7 @@ export function createMapper(
 
         const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
         if (globalTs) {
-            const tsRange2 = globalTs.sourceMap.targetToSource2(tsStart, tsEnd);
+            const tsRange2 = globalTs.sourceMap.getSourceRange2(tsStart, tsEnd);
             if (tsRange2) {
                 tsStart = tsRange2.start;
                 tsEnd = tsRange2.end;
@@ -300,9 +300,9 @@ export function createMapper(
         }
 
         for (const sourceMap of sourceFile.getTsSourceMaps()) {
-            if (sourceMap.targetDocument.uri !== tsUri)
+            if (sourceMap.mappedDocument.uri !== tsUri)
                 continue;
-            for (const vueRange of sourceMap.targetToSources2(tsStart, tsEnd)) {
+            for (const vueRange of sourceMap.getSourceRanges2(tsStart, tsEnd)) {
                 result.push({
                     fileName: uriToFsPath(sourceMap.sourceDocument.uri),
                     textDocument: sourceMap.sourceDocument,
@@ -359,10 +359,10 @@ export function createMapper(
         const sourceFile = sourceFiles.get(fsPathToUri(vueFsPath));
         if (sourceFile) {
             for (const sourceMap of sourceFile.getTsSourceMaps()) {
-                for (const tsRange of sourceMap.sourceToTargets2(vueStart, vueEnd)) {
+                for (const tsRange of sourceMap.getMappedRanges2(vueStart, vueEnd)) {
                     result.push({
-                        fileName: uriToFsPath(sourceMap.targetDocument.uri),
-                        textDocument: sourceMap.targetDocument,
+                        fileName: uriToFsPath(sourceMap.mappedDocument.uri),
+                        textDocument: sourceMap.mappedDocument,
                         start: tsRange.start,
                         end: tsRange.end,
                         data: tsRange.data,

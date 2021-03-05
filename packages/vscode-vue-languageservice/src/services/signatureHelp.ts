@@ -15,9 +15,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsRange of sourceMap.sourceToTargets(position)) {
+				for (const tsRange of sourceMap.getMappedRanges(position)) {
 					if (!tsRange.data.capabilities.basic) continue;
-					const result = tsLanguageService.getSignatureHelp(sourceMap.targetDocument.uri, tsRange.start);
+					const result = tsLanguageService.getSignatureHelp(sourceMap.mappedDocument.uri, tsRange.start);
 					if (result) {
 						return result; // TODO: to array
 					}

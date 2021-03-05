@@ -8,80 +8,112 @@ export { transform as transformLocations } from './transforms/locationsLike';
 export { transform as transformLocation } from './transforms/locationLike';
 export { transform as transformTextEdit } from './transforms/textEdit';
 
-export interface MapedRange {
+export interface Range {
 	start: number,
 	end: number,
 }
 
-export enum MapedMode {
+export enum Mode {
+	/**
+	 * @case1
+	 * 123456 -> abcdef
+	 * ^    ^    ^    ^
+	 * @case2
+	 * 123456 -> abcdef
+	 *  ^  ^      ^  ^
+	 * @case3
+	 * 123456 -> abcdef
+	 *   ^^        ^^
+	 */
 	Offset,
-	Gate,
-	In,
+	/**
+	 * @case1
+	 * 123456 -> abcdef
+	 * ^    ^    ^    ^
+	 * @case2
+	 * 123456 -> abcdef
+	 *  ^  ^     NOT_MATCH
+	 * @case3
+	 * 123456 -> abcdef
+	 *   ^^      NOT_MATCH
+	 */
+	Totally,
+	/**
+	 * @case1
+	 * 123456 -> abcdef
+	 * ^    ^    ^    ^
+	 * @case2
+	 * 123456 -> abcdef
+	 *  ^  ^     ^    ^
+	 * @case3
+	 * 123456 -> abcdef
+	 *   ^^      ^    ^
+	 */
+	Expand,
 }
 
-export type Mapping<T> = {
+export type MappingBase = {
+	mode: Mode,
+	sourceRange: Range,
+	mappedRange: Range,
+}
+
+export type Mapping<T> = MappingBase & {
 	data: T,
-	mode: MapedMode,
-	sourceRange: MapedRange,
-	targetRange: MapedRange,
-	others?: {
-		mode: MapedMode,
-		sourceRange: MapedRange,
-		targetRange: MapedRange,
-	}[],
+	additional?: MappingBase[],
 }
 
-export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
+export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
 
 	constructor(
 		public sourceDocument: TextDocument,
-		public targetDocument: TextDocument,
+		public mappedDocument: TextDocument,
 	) {
 		super();
 	}
 
 	cache = new Map<string, {
-		data: MapedData;
+		data: Data;
 		start: Position;
 		end: Position;
 	}[]>();
 	cache2 = new Map<string, {
-		data: MapedData;
+		data: Data;
 		start: number;
 		end: number;
 	}[]>();
 
 	// Range
-	public isSource(start: Position, end?: Position) {
-		return this.findMapeds(start, end ?? start, true, true).length > 0;
+	public isSourceRange(start: Position, end?: Position) {
+		return this.getRanges(start, end ?? start, true, true).length > 0;
 	}
-	public isTarget(start: Position, end?: Position) {
-		return this.findMapeds(start, end ?? start, false, true).length > 0;
+	public isMappedRange(start: Position, end?: Position) {
+		return this.getRanges(start, end ?? start, false, true).length > 0;
 	}
-	public targetToSource(start: Position, end?: Position) {
-		const result = this.findMapeds(start, end ?? start, false, true);
+	public getSourceRange(start: Position, end?: Position) {
+		const result = this.getRanges(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
-	public sourceToTarget(start: Position, end?: Position) {
-		const result = this.findMapeds(start, end ?? start, true, true);
+	public getMappedRange(start: Position, end?: Position) {
+		const result = this.getRanges(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
-	public targetToSources(start: Position, end?: Position) {
-		return this.findMapeds(start, end ?? start, false);
+	public getSourceRanges(start: Position, end?: Position) {
+		return this.getRanges(start, end ?? start, false);
 	}
-	public sourceToTargets(start: Position, end?: Position) {
-		return this.findMapeds(start, end ?? start, true);
+	public getMappedRanges(start: Position, end?: Position) {
+		return this.getRanges(start, end ?? start, true);
 	}
-	private findMapeds(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private getRanges(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const key = start.line + ':' + start.character + ':' + end.line + ':' + end.character + ':' + sourceToTarget + ':' + returnFirstResult;
 		if (this.cache.has(key)) return this.cache.get(key)!;
 
-		const toDoc = sourceToTarget ? this.targetDocument : this.sourceDocument;
-		const fromDoc = sourceToTarget ? this.sourceDocument : this.targetDocument;
+		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
+		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
 		const startOffset = fromDoc.offsetAt(start);
 		const endOffset = fromDoc.offsetAt(end);
 		const result = this
-			.findMapeds2(startOffset, endOffset, sourceToTarget, returnFirstResult)
+			.getRanges2(startOffset, endOffset, sourceToTarget, returnFirstResult)
 			.map(result => ({
 				data: result.data,
 				start: toDoc.positionAt(result.start),
@@ -92,45 +124,45 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 	}
 
 	// MapedRange
-	public isSource2(start: number, end?: number) {
-		return this.findMapeds2(start, end ?? start, true, true).length > 0;
+	public isSourceRange2(start: number, end?: number) {
+		return this.getRanges2(start, end ?? start, true, true).length > 0;
 	}
-	public isTarget2(start: number, end?: number) {
-		return this.findMapeds2(start, end ?? start, false, true).length > 0;
+	public isMappedRange2(start: number, end?: number) {
+		return this.getRanges2(start, end ?? start, false, true).length > 0;
 	}
-	public targetToSource2(start: number, end?: number) {
-		const result = this.findMapeds2(start, end ?? start, false, true);
+	public getSourceRange2(start: number, end?: number) {
+		const result = this.getRanges2(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
-	public sourceToTarget2(start: number, end?: number) {
-		const result = this.findMapeds2(start, end ?? start, true, true);
+	public getMappedRange2(start: number, end?: number) {
+		const result = this.getRanges2(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
-	public targetToSources2(start: number, end?: number) {
-		return this.findMapeds2(start, end ?? start, false);
+	public getSourceRanges2(start: number, end?: number) {
+		return this.getRanges2(start, end ?? start, false);
 	}
-	public sourceToTargets2(start: number, end?: number) {
-		return this.findMapeds2(start, end ?? start, true);
+	public getMappedRanges2(start: number, end?: number) {
+		return this.getRanges2(start, end ?? start, true);
 	}
-	private findMapeds2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private getRanges2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const key = start + ':' + end + ':' + sourceToTarget + ':' + returnFirstResult;
 		if (this.cache2.has(key)) return this.cache2.get(key)!;
 
 		let result: {
-			data: MapedData,
+			data: Data,
 			start: number,
 			end: number,
 		}[] = [];
 
 		for (const mapping of this) {
-			const maped = this.getMaped(start, end, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.targetRange, mapping.data);
+			const maped = this.getRange(start, end, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
 			if (maped) {
 				result.push(maped);
 				if (returnFirstResult) return result;
 			}
-			if (mapping.others) {
-				for (const other of mapping.others) {
-					const maped = this.getMaped(start, end, sourceToTarget, other.mode, other.sourceRange, other.targetRange, mapping.data);
+			if (mapping.additional) {
+				for (const other of mapping.additional) {
+					const maped = this.getRange(start, end, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
 					if (maped) {
 						result.push(maped);
 						if (returnFirstResult) return result;
@@ -143,10 +175,10 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 		return result;
 	}
 
-	private getMaped(start: number, end: number, sourceToTarget: boolean, mode: MapedMode, sourceRange: MapedRange, targetRange: MapedRange, data: MapedData) {
+	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data) {
 		const mapedToRange = sourceToTarget ? targetRange : sourceRange;
 		const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
-		if (mode === MapedMode.Gate) {
+		if (mode === Mode.Totally) {
 			if (start === mapedFromRange.start && end === mapedFromRange.end) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
@@ -157,7 +189,7 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 				};
 			}
 		}
-		else if (mode === MapedMode.Offset) {
+		else if (mode === Mode.Offset) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 				const _start = mapedToRange.start + start - mapedFromRange.start;
 				const _end = mapedToRange.end + end - mapedFromRange.end;
@@ -168,7 +200,7 @@ export class SourceMap<MapedData = unknown> extends Set<Mapping<MapedData>> {
 				};
 			}
 		}
-		else if (mode === MapedMode.In) {
+		else if (mode === Mode.Expand) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
@@ -198,17 +230,17 @@ export function createScriptGenerator<T = undefined>() {
 		addMapping2,
 	}
 
-	function addCode(str: string, sourceRange: MapedRange, mode: MapedMode, data: T) {
+	function addCode(str: string, sourceRange: Range, mode: Mode, data: T) {
 		const targetRange = addText(str);
-		addMapping2({ targetRange, sourceRange, mode, data });
+		addMapping2({ mappedRange: targetRange, sourceRange, mode, data });
 		return targetRange;
 	}
-	function addMapping(str: string, sourceRange: MapedRange, mode: MapedMode, data: T) {
+	function addMapping(str: string, sourceRange: Range, mode: Mode, data: T) {
 		const targetRange = {
 			start: text.length,
 			end: text.length + str.length,
 		};
-		addMapping2({ targetRange, sourceRange, mode, data });
+		addMapping2({ mappedRange: targetRange, sourceRange, mode, data });
 		return targetRange;
 	}
 	function addMapping2(mapping: Mapping<T>) {

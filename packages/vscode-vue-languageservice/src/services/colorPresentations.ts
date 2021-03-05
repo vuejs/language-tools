@@ -20,22 +20,22 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		function getCssResult(sourceFile: SourceFile) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.targetDocument.languageId);
+				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				const cssRanges = sourceMap.sourceToTargets(range.start, range.end);
+				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const cssRange of cssRanges) {
-					const _result = cssLanguageService.getColorPresentations(sourceMap.targetDocument, sourceMap.stylesheet, color, cssRange);
+					const _result = cssLanguageService.getColorPresentations(sourceMap.mappedDocument, sourceMap.stylesheet, color, cssRange);
 					for (const item of _result) {
 						if (item.textEdit) {
 							if (TextEdit.is(item.textEdit)) {
-								const vueRange = sourceMap.targetToSource(item.textEdit.range.start, item.textEdit.range.end);
+								const vueRange = sourceMap.getSourceRange(item.textEdit.range.start, item.textEdit.range.end);
 								if (vueRange) {
 									item.textEdit.range = vueRange;
 								}
 							}
 							if (item.additionalTextEdits) {
 								for (const textEdit of item.additionalTextEdits) {
-									const vueRange = sourceMap.targetToSource(item.textEdit.range.start, item.textEdit.range.end);
+									const vueRange = sourceMap.getSourceRange(item.textEdit.range.start, item.textEdit.range.end);
 									if (vueRange) {
 										textEdit.range = vueRange;
 									}

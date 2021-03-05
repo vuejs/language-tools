@@ -22,9 +22,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const sourceFile = sourceFiles.get(document.uri);
 			if (sourceFile) {
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
-					for (const tsRange of sourceMap.sourceToTargets(position)) {
+					for (const tsRange of sourceMap.getMappedRanges(position)) {
 						if (!tsRange.data.capabilities.references) continue;
-						const items = worker(sourceMap.targetDocument.uri, tsRange.start);
+						const items = worker(sourceMap.mappedDocument.uri, tsRange.start);
 						vueItems = vueItems.concat(items);
 					}
 				}
@@ -94,11 +94,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		let isVirtual = false;
 		for (const sourceFile of sourceFiles.values()) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				if (sourceMap.targetDocument.uri !== tsItem.uri) {
+				if (sourceMap.mappedDocument.uri !== tsItem.uri) {
 					continue;
 				}
 				isVirtual = true;
-				let vueRange: Range | undefined = sourceMap.targetToSource(tsItem.range.start, tsItem.range.end);
+				let vueRange: Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end);
 				if (!vueRange) {
 					// TODO: <script> range
 					vueRange = {
@@ -106,14 +106,14 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
 					};
 				}
-				const vueSelectionRange = sourceMap.targetToSource(tsItem.selectionRange.start, tsItem.selectionRange.end);
+				const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end);
 				if (!vueSelectionRange) {
 					continue;
 				}
-				const vueRanges = tsRanges.map(tsRange => sourceMap.targetToSource(tsRange.start, tsRange.end)).filter(notEmpty);
+				const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)).filter(notEmpty);
 				const vueItem: CallHierarchyItem = {
 					...tsItem,
-					name: tsItem.name === upath.basename(uriToFsPath(sourceMap.targetDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
+					name: tsItem.name === upath.basename(uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
 					uri: sourceMap.sourceDocument.uri,
 					range: vueRange,
 					selectionRange: vueSelectionRange,
@@ -135,15 +135,15 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const sourceFile = sourceFiles.get(item.uri);
 		if (sourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsLocs = sourceMap.sourceToTargets(item.range.start, item.range.end);
-				const tsSelectionRanges = sourceMap.sourceToTargets(item.selectionRange.start, item.selectionRange.end);
+				const tsLocs = sourceMap.getMappedRanges(item.range.start, item.range.end);
+				const tsSelectionRanges = sourceMap.getMappedRanges(item.selectionRange.start, item.selectionRange.end);
 				if (tsLocs.length) {
 					for (const tsRange of tsLocs) {
 						if (!tsRange.data.capabilities.references) continue;
 						for (const tsSelectionRange of tsSelectionRanges) {
 							tsItems.push({
 								...item,
-								uri: sourceMap.targetDocument.uri,
+								uri: sourceMap.mappedDocument.uri,
 								range: tsRange,
 								selectionRange: tsSelectionRange,
 							});
@@ -156,10 +156,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 							for (const tsSelectionRange of tsSelectionRanges) {
 								tsItems.push({
 									...item,
-									uri: sourceMap.targetDocument.uri,
+									uri: sourceMap.mappedDocument.uri,
 									range: {
-										start: sourceMap.targetDocument.positionAt(0),
-										end: sourceMap.targetDocument.positionAt(sourceMap.targetDocument.getText().length),
+										start: sourceMap.mappedDocument.positionAt(0),
+										end: sourceMap.mappedDocument.positionAt(sourceMap.mappedDocument.getText().length),
 									},
 									selectionRange: tsSelectionRange,
 								});

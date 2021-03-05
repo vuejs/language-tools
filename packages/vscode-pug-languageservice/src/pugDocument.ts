@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-import { createScriptGenerator, MapedMode, SourceMap } from '@volar/source-map';
+import * as SourceMaps from '@volar/source-map';
 import * as html from 'vscode-html-languageservice';
 import * as path from 'upath';
 
@@ -14,7 +14,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
     const fsPath = uriToFsPath(document.uri);
     const filename = path.basename(fsPath);
     const src = document.getText();
-    const codeGen = createScriptGenerator<undefined>();
+    const codeGen = SourceMaps.createScriptGenerator<undefined>();
     let error: { code: string, msg: string, line: number, column: number, filename: string } | undefined;
 
     try {
@@ -23,12 +23,12 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
         visitNode(ast, undefined);
         codeGen.addMapping2({
             data: undefined,
-            mode: MapedMode.Gate,
+            mode: SourceMaps.Mode.Totally,
             sourceRange: {
                 start: src.trimEnd().length,
                 end: src.trimEnd().length,
             },
-            targetRange: {
+            mappedRange: {
                 start: codeGen.getText().length,
                 end: codeGen.getText().length,
             },
@@ -44,7 +44,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
 
     const htmlCode = codeGen.getText();
     const htmlDoc = TextDocument.create(document.uri + '.html', 'html', document.version, htmlCode);
-    const sourceMap = new SourceMap<undefined>(document, htmlDoc);
+    const sourceMap = new SourceMaps.SourceMap<undefined>(document, htmlDoc);
     for (const mapping of codeGen.getMappings()) {
         sourceMap.add(mapping);
     }
@@ -76,7 +76,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             codeGen.addCode(
                 node.val,
                 getPugStartEnd(node.line, node.column, node.val.length),
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 undefined,
             );
         }
@@ -84,9 +84,9 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
     function writeStartTag(node: TagNode, selfClosing: boolean) {
         codeGen.addMapping2({
             data: undefined,
-            mode: MapedMode.Gate,
+            mode: SourceMaps.Mode.Totally,
             sourceRange: getPugStartEnd(node.line, node.column, 0),
-            targetRange: {
+            mappedRange: {
                 start: codeGen.getText().length,
                 end: codeGen.getText().length,
             },
@@ -95,7 +95,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
         codeGen.addCode(
             node.name,
             getPugStartEnd(node.line, node.column, node.name.length),
-            MapedMode.Offset,
+            SourceMaps.Mode.Offset,
             undefined,
         );
         writeClassesOrStyles(node.attrs, 'class');
@@ -115,7 +115,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             codeGen.addCode(
                 attr.name,
                 getPugStartEnd(attr.line, attr.column, attr.name.length),
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 undefined
             );
         }
@@ -132,7 +132,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             codeGen.addCode(
                 val,
                 getPugStartEnd(attr.line, attr.column, val.length, escapeLength),
-                MapedMode.Offset,
+                SourceMaps.Mode.Offset,
                 undefined
             );
         }
@@ -143,9 +143,9 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             if (attr.name === attrName && attr.mustEscape) {
                 codeGen.addMapping2({
                     data: undefined,
-                    mode: MapedMode.Offset,
+                    mode: SourceMaps.Mode.Offset,
                     sourceRange: getPugStartEnd(attr.line, attr.column, attrName.length),
-                    targetRange: {
+                    mappedRange: {
                         start: codeGen.getText().length,
                         end: codeGen.getText().length + attrName.length,
                     },
@@ -162,7 +162,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
                 codeGen.addCode(
                     attr.val.substr(1, attr.val.length - 2), // remove "
                     getPugStartEnd(attr.line, attr.column + 1, attr.val.length - 2, escapeLength),
-                    MapedMode.Offset,
+                    SourceMaps.Mode.Offset,
                     undefined
                 );
             }
@@ -181,12 +181,12 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
         }
         codeGen.addMapping2({
             data: undefined,
-            mode: MapedMode.Gate,
+            mode: SourceMaps.Mode.Totally,
             sourceRange: {
                 start: nextStart,
                 end: nextStart,
             },
-            targetRange: {
+            mappedRange: {
                 start: codeGen.getText().length,
                 end: codeGen.getText().length,
             },

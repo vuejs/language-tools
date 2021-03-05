@@ -6,11 +6,11 @@ import { transformLocations } from '@volar/source-map';
 export function register(htmlLanguageService: html.LanguageService) {
     return (pugDocument: PugDocument, position: Position) => {
 
-        const htmlRange = pugDocument.sourceMap.sourceToTarget(position);
+        const htmlRange = pugDocument.sourceMap.getMappedRange(position);
         if (!htmlRange) return;
 
         const htmlResult = htmlLanguageService.findDocumentHighlights(
-            pugDocument.sourceMap.targetDocument,
+            pugDocument.sourceMap.mappedDocument,
             htmlRange.start,
             pugDocument.htmlDocument,
         );

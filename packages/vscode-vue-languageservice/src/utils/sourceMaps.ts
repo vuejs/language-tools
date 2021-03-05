@@ -3,7 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
 import type { PugDocument } from '@volar/vscode-pug-languageservice';
-import { SourceMap } from '@volar/source-map';
+import * as SourceMaps from '@volar/source-map';
 
 export interface TsMappingData {
 	vueTag: 'template' | 'script' | 'scriptSetup' | 'style' | 'scriptSrc',
@@ -42,10 +42,10 @@ export interface TeleportMappingData {
 	toTarget: TeleportSideData,
 }
 
-export class TsSourceMap extends SourceMap<TsMappingData> {
+export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 	constructor(
 		public sourceDocument: TextDocument,
-		public targetDocument: TextDocument,
+		public mappedDocument: TextDocument,
 		public isInterpolation: boolean,
 		public capabilities: {
 			foldingRanges: boolean,
@@ -53,14 +53,14 @@ export class TsSourceMap extends SourceMap<TsMappingData> {
 			documentSymbol: boolean,
 		},
 	) {
-		super(sourceDocument, targetDocument);
+		super(sourceDocument, mappedDocument);
 	}
 }
 
-export class CssSourceMap extends SourceMap<undefined> {
+export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
-		public targetDocument: TextDocument,
+		public mappedDocument: TextDocument,
 		public stylesheet: Stylesheet | undefined,
 		public module: boolean,
 		public scoped: boolean,
@@ -70,33 +70,33 @@ export class CssSourceMap extends SourceMap<undefined> {
 			formatting: boolean,
 		},
 	) {
-		super(sourceDocument, targetDocument);
+		super(sourceDocument, mappedDocument);
 	}
 }
 
-export class HtmlSourceMap extends SourceMap<undefined> {
+export class HtmlSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
-		public targetDocument: TextDocument,
+		public mappedDocument: TextDocument,
 		public htmlDocument: HTMLDocument,
 		public language: 'html' = 'html',
 	) {
-		super(sourceDocument, targetDocument);
+		super(sourceDocument, mappedDocument);
 	}
 }
 
-export class PugSourceMap extends SourceMap<undefined> {
+export class PugSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
-		public targetDocument: TextDocument,
+		public mappedDocument: TextDocument,
 		public pugDocument: PugDocument,
 		public language: 'pug' = 'pug',
 	) {
-		super(sourceDocument, targetDocument);
+		super(sourceDocument, mappedDocument);
 	}
 }
 
-export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
+export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData> {
 	constructor(
 		public document: TextDocument,
 	) {
@@ -109,13 +109,13 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 			start: Position,
 			end: Position,
 		}[] = [];
-		for (const teleRange of this.sourceToTargets(start, end)) {
+		for (const teleRange of this.getMappedRanges(start, end)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toTarget,
 			});
 		}
-		for (const teleRange of this.targetToSources(start, end)) {
+		for (const teleRange of this.getSourceRanges(start, end)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toSource,
@@ -130,13 +130,13 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 			start: number,
 			end: number,
 		}[] = [];
-		for (const teleRange of this.sourceToTargets2(start, end)) {
+		for (const teleRange of this.getMappedRanges2(start, end)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toTarget,
 			});
 		}
-		for (const teleRange of this.targetToSources2(start, end)) {
+		for (const teleRange of this.getSourceRanges2(start, end)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toSource,
@@ -146,4 +146,4 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	}
 }
 
-export { SourceMap, MapedRange, MapedMode, Mapping } from '@volar/source-map';
+export * from '@volar/source-map';

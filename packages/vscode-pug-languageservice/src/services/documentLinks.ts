@@ -6,7 +6,7 @@ export function register(htmlLanguageService: html.LanguageService) {
     return (pugDocument: PugDocument, documentContext: html.DocumentContext) => {
 
         const htmlResult = htmlLanguageService.findDocumentLinks(
-            pugDocument.sourceMap.targetDocument,
+            pugDocument.sourceMap.mappedDocument,
             documentContext,
         );
 

@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
-import { MapedMode, TsSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
 import { uriToFsPath } from '@volar/shared';
@@ -55,18 +55,18 @@ export function useScriptMain(
 		if (textDocument.value) {
 			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false, documentSymbol: false });
 			sourceMap.add({
 				data: {
 					vueTag: 'script',
 					capabilities: {},
 				},
-				mode: MapedMode.In,
+				mode: SourceMaps.Mode.Expand,
 				sourceRange: {
 					start: (scriptSetup.value ?? script.value)?.loc.start ?? 0,
 					end: (scriptSetup.value ?? script.value)?.loc.end ?? 0,
 				},
-				targetRange: {
+				mappedRange: {
 					start: 0,
 					end: docText.length,
 				},

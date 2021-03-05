@@ -9,11 +9,11 @@ export function register(htmlLanguageService: html.LanguageService) {
     return (pugDocument: PugDocument, positions: Position[]): SelectionRange[] => {
 
         const htmlPositions = positions
-            .map(position => pugDocument.sourceMap.sourceToTarget(position)?.start)
+            .map(position => pugDocument.sourceMap.getMappedRange(position)?.start)
             .filter(notEmpty);
 
         const htmlResult = htmlLanguageService.getSelectionRanges(
-            pugDocument.sourceMap.targetDocument,
+            pugDocument.sourceMap.mappedDocument,
             htmlPositions,
         );
 

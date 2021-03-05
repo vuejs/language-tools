@@ -7,7 +7,7 @@ export function transform(hover: Hover, sourceMap: SourceMap): Hover | undefined
         return hover;
     }
 
-    const range = sourceMap.targetToSource(hover.range.start, hover.range.end);
+    const range = sourceMap.getSourceRange(hover.range.start, hover.range.end);
     if (!range) return;
 
     return {

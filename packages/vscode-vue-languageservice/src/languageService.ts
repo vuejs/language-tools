@@ -4,7 +4,7 @@ import { createSourceFile, SourceFile } from './sourceFile';
 import { getGlobalDoc, getGlobalDTs } from './virtuals/global';
 import { SearchTexts } from './utils/string';
 import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
-import { MapedMode, MapedRange, Mapping, TsMappingData, TsSourceMap } from './utils/sourceMaps';
+import * as SourceMaps from './utils/sourceMaps';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -113,7 +113,7 @@ export function createLanguageService(
 	const globalComponentCallsData = computed(() => {
 
 		const calls = globalComponentCalls.value;
-		const result = new Map<string, (MapedRange & { text: string })[][]>();
+		const result = new Map<string, (SourceMaps.Range & { text: string })[][]>();
 
 		for (const call of calls) {
 
@@ -163,7 +163,7 @@ export function createLanguageService(
 		const result = new Map<string, {
 			addText: string,
 			version: string,
-			sourceMap: TsSourceMap,
+			sourceMap: SourceMaps.TsSourceMap,
 		}>();
 		for (const [uri, argsArr] of data) {
 
@@ -180,18 +180,18 @@ export function createLanguageService(
 
 			addText += '\ndeclare global { interface __VLS_GlobalComponents {\n';
 
-			const mappings: Mapping<TsMappingData>[] = [];
+			const mappings: SourceMaps.Mapping<SourceMaps.TsMappingData>[] = [];
 			mappings.push({
 				data: {
 					vueTag: 'script',
 					capabilities: {},
 				},
-				mode: MapedMode.Offset,
+				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: 0,
 					end: docLength,
 				},
-				targetRange: {
+				mappedRange: {
 					start: 0,
 					end: docLength,
 				},
@@ -206,7 +206,7 @@ export function createLanguageService(
 
 			const fullText = script.getText(0, docLength) + addText;
 			const doc = TextDocument.create(uri, 'typescript', 0, fullText);
-			const sourceMap = new TsSourceMap(doc, doc, false, { foldingRanges: false, formatting: false, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(doc, doc, false, { foldingRanges: false, formatting: false, documentSymbol: false });
 			for (const maped of mappings) {
 				sourceMap.add(maped);
 			}
@@ -232,12 +232,12 @@ export function createLanguageService(
 							// TODO: rename
 						},
 					},
-					mode: MapedMode.Offset,
+					mode: SourceMaps.Mode.Offset,
 					sourceRange: {
 						start: start,
 						end: end,
 					},
-					targetRange: {
+					mappedRange: {
 						start: _start,
 						end: _end,
 					},

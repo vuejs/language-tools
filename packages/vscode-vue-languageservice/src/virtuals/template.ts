@@ -3,7 +3,7 @@ import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import { IDescriptor, ITemplateScriptData } from '../types';
 import * as upath from 'upath';
-import { MapedMode, TsSourceMap, Mapping, CssSourceMap, TeleportMappingData, TeleportSourceMap, TsMappingData } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import { createScriptGenerator } from '@volar/source-map';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
@@ -26,7 +26,7 @@ export function useTemplateScript(
 		module: boolean;
 		scoped: boolean;
 	}[]>,
-	styleSourceMaps: Ref<CssSourceMap[]>,
+	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
 	templateData: Ref<{
 		html?: string,
 		htmlToTemplate?: (start: number, end: number) => number | undefined,
@@ -53,7 +53,7 @@ export function useTemplateScript(
 		if (!interpolations.value)
 			return;
 
-		const gen = createScriptGenerator<TsMappingData>();
+		const gen = createScriptGenerator<SourceMaps.TsMappingData>();
 
 		gen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
 		gen.addText(`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
@@ -112,15 +112,15 @@ export function useTemplateScript(
 		for (const maped of interpolations.value.mappings) {
 			gen.addMapping2({
 				...maped,
-				targetRange: {
-					start: maped.targetRange.start + crtOffset,
-					end: maped.targetRange.end + crtOffset,
+				mappedRange: {
+					start: maped.mappedRange.start + crtOffset,
+					end: maped.mappedRange.end + crtOffset,
 				},
-				others: maped.others ? maped.others.map(other => ({
+				additional: maped.additional ? maped.additional.map(other => ({
 					...other,
 					targetRange: {
-						start: other.targetRange.start + crtOffset,
-						end: other.targetRange.end + crtOffset,
+						start: other.mappedRange.start + crtOffset,
+						end: other.mappedRange.end + crtOffset,
 					},
 				})) : undefined,
 			});
@@ -145,7 +145,7 @@ export function useTemplateScript(
 					start: number,
 					end: number,
 				}[],
-				mode: MapedMode,
+				mode: SourceMaps.Mode,
 				patchRename: boolean,
 			}[]>();
 			for (const [uri, classes] of data) {
@@ -162,7 +162,7 @@ export function useTemplateScript(
 							start: range[0],
 							end: range[1],
 						})),
-						mode: MapedMode.Offset,
+						mode: SourceMaps.Mode.Offset,
 						patchRename,
 					});
 					mappings.get(uri)!.push({
@@ -174,7 +174,7 @@ export function useTemplateScript(
 							start: range[0],
 							end: range[1],
 						})),
-						mode: MapedMode.Gate,
+						mode: SourceMaps.Mode.Totally,
 						patchRename,
 					});
 					gen.addText(`'${className}': string,\n`);
@@ -184,7 +184,7 @@ export function useTemplateScript(
 		}
 		function writeProps() {
 			const propsSet = new Set(templateScriptData.props);
-			const mappings: Mapping<TeleportMappingData>[] = [];
+			const mappings: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 			for (const propName of templateScriptData.context) {
 				gen.addText(`declare var `);
 				const templateSideRange = gen.addText(propName);
@@ -210,9 +210,9 @@ export function useTemplateScript(
 							},
 						},
 					},
-					mode: MapedMode.Offset,
+					mode: SourceMaps.Mode.Offset,
 					sourceRange: scriptSideRange,
-					targetRange: templateSideRange,
+					mappedRange: templateSideRange,
 				});
 
 				if (propsSet.has(propName)) {
@@ -238,9 +238,9 @@ export function useTemplateScript(
 								},
 							},
 						},
-						mode: MapedMode.Offset,
+						mode: SourceMaps.Mode.Offset,
 						sourceRange: scriptSideRange2,
-						targetRange: templateSideRange,
+						mappedRange: templateSideRange,
 					});
 				}
 				gen.addText(`\n`);
@@ -254,14 +254,14 @@ export function useTemplateScript(
 	const sourceMap = computed(() => {
 		if (data.value && textDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: false, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, true, { foldingRanges: false, formatting: false, documentSymbol: false });
 			for (const [uri, mappings] of [...data.value.cssModuleMappings, ...data.value.cssScopedMappings]) {
-				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.targetDocument.uri === uri);
+				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.mappedDocument.uri === uri);
 				if (!cssSourceMap) continue;
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
 					for (const cssRange of maped.cssRanges) {
-						const vueRange = cssSourceMap.targetToSource2(cssRange.start, cssRange.end);
+						const vueRange = cssSourceMap.getSourceRange2(cssRange.start, cssRange.end);
 						if (!vueRange) continue;
 						sourceMap.add({
 							data: {
@@ -275,14 +275,14 @@ export function useTemplateScript(
 									formatting: false,
 									completion: true,
 									semanticTokens: false,
-									referencesCodeLens: maped.mode === MapedMode.Gate, // has 2 modes
+									referencesCodeLens: maped.mode === SourceMaps.Mode.Totally, // has 2 modes
 								},
 								beforeRename: maped.patchRename ? (newName => newName.startsWith('.') ? newName.substr(1) : newName) : undefined,
 								doRename: maped.patchRename ? ((oldName, newName) => '.' + newName) : undefined,
 							},
 							mode: maped.mode,
 							sourceRange: vueRange,
-							targetRange: tsRange,
+							mappedRange: tsRange,
 						});
 					}
 				}
@@ -294,7 +294,7 @@ export function useTemplateScript(
 						start: maped.sourceRange.start + template.value.loc.start,
 						end: maped.sourceRange.end + template.value.loc.start,
 					},
-					others: maped.others ? maped.others.map(other => ({
+					additional: maped.additional ? maped.additional.map(other => ({
 						...other,
 						sourceRange: {
 							start: other.sourceRange.start + template.value!.loc.start,
@@ -310,7 +310,7 @@ export function useTemplateScript(
 	const sourceMapForFormatting = computed(() => {
 		if (interpolations.value && textDocumentForFormatting.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new TsSourceMap(vueDoc, textDocumentForFormatting.value, true, { foldingRanges: false, formatting: true, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocumentForFormatting.value, true, { foldingRanges: false, formatting: true, documentSymbol: false });
 			for (const maped of interpolations.value.formapMappings) {
 				sourceMap.add({
 					data: maped.data,
@@ -319,7 +319,7 @@ export function useTemplateScript(
 						start: maped.sourceRange.start + template.value.loc.start,
 						end: maped.sourceRange.end + template.value.loc.start,
 					},
-					targetRange: maped.targetRange,
+					mappedRange: maped.mappedRange,
 				});
 			}
 			return sourceMap;
@@ -342,7 +342,7 @@ export function useTemplateScript(
 	const cssSourceMap = computed(() => {
 		if (interpolations.value && cssTextDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new CssSourceMap(
+			const sourceMap = new SourceMaps.CssSourceMap(
 				vueDoc,
 				cssTextDocument.value.textDocument,
 				cssTextDocument.value.stylesheet,
@@ -358,7 +358,7 @@ export function useTemplateScript(
 						start: maped.sourceRange.start + template.value.loc.start,
 						end: maped.sourceRange.end + template.value.loc.start,
 					},
-					others: maped.others ? maped.others.map(other => ({
+					additional: maped.additional ? maped.additional.map(other => ({
 						...other,
 						sourceRange: {
 							start: other.sourceRange.start + template.value!.loc.start,
@@ -372,7 +372,7 @@ export function useTemplateScript(
 	});
 	const textDocument = ref<TextDocument>();
 	const textDocumentForFormatting = ref<TextDocument>();
-	const teleportSourceMap = ref<TeleportSourceMap>();
+	const teleportSourceMap = ref<SourceMaps.TeleportSourceMap>();
 
 	return {
 		sourceMap,
@@ -392,7 +392,7 @@ export function useTemplateScript(
 				textDocument.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.text);
 				textDocumentForFormatting.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, interpolations.value.formatCode);
 
-				const sourceMap = new TeleportSourceMap(textDocument.value);
+				const sourceMap = new SourceMaps.TeleportSourceMap(textDocument.value);
 				for (const maped of data.value.ctxMappings) {
 					sourceMap.add(maped);
 				}

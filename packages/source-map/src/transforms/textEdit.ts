@@ -5,7 +5,7 @@ import { TextEdit } from 'vscode-languageserver/node';
 export function transform(textEdit: TextEdit | InsertReplaceEdit, sourceMap: SourceMap): TextEdit | InsertReplaceEdit | undefined {
     if (TextEdit.is(textEdit)) {
 
-        const range = sourceMap.targetToSource(textEdit.range.start, textEdit.range.end);
+        const range = sourceMap.getSourceRange(textEdit.range.start, textEdit.range.end);
         if (!range) return;
 
         return {
@@ -15,10 +15,10 @@ export function transform(textEdit: TextEdit | InsertReplaceEdit, sourceMap: Sou
     }
     else if (InsertReplaceEdit.is(textEdit)) {
 
-        const insert = sourceMap.targetToSource(textEdit.insert.start, textEdit.insert.end);
+        const insert = sourceMap.getSourceRange(textEdit.insert.start, textEdit.insert.end);
         if (!insert) return;
 
-        const replace = sourceMap.targetToSource(textEdit.replace.start, textEdit.replace.end);
+        const replace = sourceMap.getSourceRange(textEdit.replace.start, textEdit.replace.end);
         if (!replace) return;
 
         return {

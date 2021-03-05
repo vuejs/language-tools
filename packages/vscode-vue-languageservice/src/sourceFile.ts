@@ -83,7 +83,7 @@ export function createSourceFile(
 			return {
 				html: pugDoc.html,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-					const pugRange = pugDoc.sourceMap.targetToSource2(htmlStart, htmlEnd);
+					const pugRange = pugDoc.sourceMap.getSourceRange2(htmlStart, htmlEnd);
 					if (pugRange) {
 						return pugRange.start;
 					}
@@ -524,13 +524,13 @@ export function createSourceFile(
 						});
 					}
 					else {
-						const htmlDoc = pugDoc.sourceMap.targetDocument;
+						const htmlDoc = pugDoc.sourceMap.mappedDocument;
 						const vueCompileErrors = getVueCompileErrors(htmlDoc);
 						for (const vueCompileError of vueCompileErrors) {
-							let pugRange: Range | undefined = pugDoc.sourceMap.targetToSource(vueCompileError.range.start, vueCompileError.range.end);
+							let pugRange: Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end);
 							if (!pugRange) {
-								const pugStart = pugDoc.sourceMap.targetToSource(vueCompileError.range.start, vueCompileError.range.start)?.start;
-								const pugEnd = pugDoc.sourceMap.targetToSource(vueCompileError.range.end, vueCompileError.range.end)?.end;
+								const pugStart = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.start)?.start;
+								const pugEnd = pugDoc.sourceMap.getSourceRange(vueCompileError.range.end, vueCompileError.range.end)?.end;
 								if (pugStart && pugEnd) {
 									pugRange = {
 										start: pugStart,
@@ -743,7 +743,7 @@ export function createSourceFile(
 				for (const diag of errors_1.value) {
 					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = virtualTemplateGen.teleportSourceMap.value.sourceToTargets(diag.range.start, diag.range.end);
+					const propRights = virtualTemplateGen.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
 					for (const propRight of propRights) {
 						if (propRight.data.isAdditionalReference) continue;
 						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.start);
@@ -779,9 +779,9 @@ export function createSourceFile(
 			for (const error of errors) {
 				if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
 					for (const sourceMap of sourceMaps) {
-						if (sourceMap.targetDocument.uri !== virtualScriptUri)
+						if (sourceMap.mappedDocument.uri !== virtualScriptUri)
 							continue;
-						const vueRange = sourceMap.targetToSource(error.range.start, error.range.end);
+						const vueRange = sourceMap.getSourceRange(error.range.start, error.range.end);
 						if (!vueRange)
 							continue;
 						result.push({
@@ -798,9 +798,9 @@ export function createSourceFile(
 			for (const error of errors) {
 				let found = false;
 				for (const sourceMap of sourceMaps) {
-					if (sourceMap.targetDocument.uri !== virtualScriptUri)
+					if (sourceMap.mappedDocument.uri !== virtualScriptUri)
 						continue;
-					const vueRange = sourceMap.targetToSource(error.range.start, error.range.end);
+					const vueRange = sourceMap.getSourceRange(error.range.start, error.range.end);
 					if (!vueRange || !vueRange.data.capabilities.diagnostic)
 						continue;
 					result.push({
@@ -811,12 +811,12 @@ export function createSourceFile(
 				}
 				if (!found) { // patching for ref sugar
 					for (const sourceMap of sourceMaps) {
-						if (sourceMap.targetDocument.uri !== virtualScriptUri)
+						if (sourceMap.mappedDocument.uri !== virtualScriptUri)
 							continue;
-						const vueStartRange = sourceMap.targetToSource(error.range.start);
+						const vueStartRange = sourceMap.getSourceRange(error.range.start);
 						if (!vueStartRange || !vueStartRange.data.capabilities.diagnostic)
 							continue;
-						const vueEndRange = sourceMap.targetToSource(error.range.end);
+						const vueEndRange = sourceMap.getSourceRange(error.range.end);
 						if (!vueEndRange || !vueEndRange.data.capabilities.diagnostic)
 							continue;
 						result.push({

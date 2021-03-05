@@ -4,10 +4,10 @@ import * as html from 'vscode-html-languageservice';
 export function register(htmlLanguageService: html.LanguageService) {
     return (pugDocument: PugDocument, initialOffset = 0) => {
 
-        let htmlRange = pugDocument.sourceMap.sourceToTarget2(initialOffset);
+        let htmlRange = pugDocument.sourceMap.getMappedRange2(initialOffset);
         while (!htmlRange && initialOffset < pugDocument.pug.length) {
             initialOffset++;
-            htmlRange = pugDocument.sourceMap.sourceToTarget2(initialOffset);
+            htmlRange = pugDocument.sourceMap.getMappedRange2(initialOffset);
         }
         if (!htmlRange) return;
 
@@ -32,7 +32,7 @@ export function register(htmlLanguageService: html.LanguageService) {
             token = htmlScanner.scan();
             const htmlOffset = htmlScanner.getTokenOffset();
             const htmlEnd = htmlScanner.getTokenEnd();
-            const pugRange = pugDocument.sourceMap.targetToSource2(htmlOffset, htmlEnd);
+            const pugRange = pugDocument.sourceMap.getSourceRange2(htmlOffset, htmlEnd);
             if (pugRange) {
                 offset = pugRange.start;
                 end = pugRange.end;

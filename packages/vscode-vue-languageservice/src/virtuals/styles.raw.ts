@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
-import { MapedMode, CssSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import * as languageServices from '../utils/languageServices';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
@@ -106,7 +106,7 @@ export function useStylesRaw(
 	});
 	const sourceMaps = computed(() => {
 		const vueDoc = getUnreactiveDoc();
-		const sourceMaps: CssSourceMap[] = [];
+		const sourceMaps: SourceMaps.CssSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
 
 			const cssData = textDocuments.value[i];
@@ -118,7 +118,7 @@ export function useStylesRaw(
 			const module = style.module;
 			const scoped = style.scoped;
 
-			const sourceMap = new CssSourceMap(
+			const sourceMap = new SourceMaps.CssSourceMap(
 				vueDoc,
 				document,
 				stylesheet,
@@ -129,12 +129,12 @@ export function useStylesRaw(
 			);
 			sourceMap.add({
 				data: undefined,
-				mode: MapedMode.Offset,
+				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: loc.start,
 					end: loc.end,
 				},
-				targetRange: {
+				mappedRange: {
 					start: 0,
 					end: loc.end - loc.start,
 				},

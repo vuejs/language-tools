@@ -6,11 +6,11 @@ import { transformCompletionList } from '@volar/source-map';
 export function register(htmlLanguageService: html.LanguageService) {
     return (pugDocument: PugDocument, position: Position, options?: html.CompletionConfiguration | undefined) => {
 
-        const htmlRange = pugDocument.sourceMap.sourceToTarget(position);
+        const htmlRange = pugDocument.sourceMap.getMappedRange(position);
         if (!htmlRange) return;
 
         const htmlComplete = htmlLanguageService.doComplete(
-            pugDocument.sourceMap.targetDocument,
+            pugDocument.sourceMap.mappedDocument,
             htmlRange.start,
             pugDocument.htmlDocument,
             options,

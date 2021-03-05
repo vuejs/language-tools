@@ -1,5 +1,5 @@
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
-import { MapedMode, TsMappingData } from '../utils/sourceMaps';
+import * as SourceMaps from '../utils/sourceMaps';
 import { createScriptGenerator } from '@volar/source-map';
 import * as templateGen from './template';
 
@@ -17,7 +17,7 @@ export function generate(
 
     if (!scriptSetup) return;
 
-    const gen = createScriptGenerator<TsMappingData>();
+    const gen = createScriptGenerator<SourceMaps.TsMappingData>();
 
     writeScript();
     writeScriptSetup();
@@ -31,7 +31,7 @@ export function generate(
         gen.addCode(
             script.content,
             { start: 0, end: script.content.length },
-            MapedMode.Offset,
+            SourceMaps.Mode.Offset,
             {
                 vueTag: 'script',
                 capabilities: {
@@ -68,7 +68,7 @@ export function generate(
         gen.addCode(
             noDollarCode,
             { start: 0, end: noDollarCode.length },
-            MapedMode.Offset,
+            SourceMaps.Mode.Offset,
             {
                 vueTag: 'scriptSetup',
                 capabilities: {

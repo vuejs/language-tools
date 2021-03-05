@@ -21,7 +21,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				if (sourceMap.targetDocument.uri !== data.docUri) continue;
+				if (sourceMap.mappedDocument.uri !== data.docUri) continue;
 				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem);
 				vueItem.documentation = data.tsItem.documentation;
 				// TODO: this is a patch for import ts file icon
