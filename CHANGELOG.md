@@ -1,3 +1,7 @@
+### 0.22.4
+
+- fix: diagnosis not working for windows vscode 1.54.1
+
 ### 0.22.3
 
 - fix: ts plugin vue files missing edge case

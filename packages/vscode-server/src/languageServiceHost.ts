@@ -183,6 +183,7 @@ export function createLanguageServiceHost(
 			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
+			content.fileNames = content.fileNames.map(fsPathToUri).map(uriToFsPath); // normalized
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
@@ -336,7 +337,7 @@ export function createLanguageServiceHost(
 				// custom
 				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 				getProjectVersion: () => projectVersion.toString(),
-				getScriptFileNames: () => parsedCommandLine.fileNames.map(fsPathToUri).map(uriToFsPath), // normalized
+				getScriptFileNames: () => parsedCommandLine.fileNames,
 				getCurrentDirectory: () => upath.dirname(tsConfig),
 				getCompilationSettings: () => parsedCommandLine.options,
 				getScriptVersion,
