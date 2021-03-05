@@ -1,3 +1,13 @@
+### 0.22.0
+
+- feat: new apis for command line type-checking support (https://github.com/johnsoncodehk/vue-tsc)
+- feat: support for event handlers in kebab-case
+- feat: improve ts plugin status color
+- feat: typescript quick fix
+- fix: remove incorrect location from component options definition result
+- fix: language server crash with `ref: in`
+- chore: update display name
+
 ### 0.21.20
 
 - feat: added default `<style>` tag language config
