@@ -1,3 +1,9 @@
+### 0.22.1
+
+- fix: code fix affect by virtual code
+- fix: don't always ask refactoring when move vue file
+- fix: ts auto-complete replace range incorrect
+
 ### 0.22.0
 
 - feat: new apis for command line type-checking support (https://github.com/johnsoncodehk/vue-tsc)
