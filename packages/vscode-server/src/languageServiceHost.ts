@@ -336,7 +336,7 @@ export function createLanguageServiceHost(
 				// custom
 				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 				getProjectVersion: () => projectVersion.toString(),
-				getScriptFileNames: () => parsedCommandLine.fileNames,
+				getScriptFileNames: () => parsedCommandLine.fileNames.map(fsPathToUri).map(uriToFsPath), // normalized
 				getCurrentDirectory: () => upath.dirname(tsConfig),
 				getCompilationSettings: () => parsedCommandLine.options,
 				getScriptVersion,
