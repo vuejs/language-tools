@@ -1,3 +1,4 @@
+import type { CodeAction } from 'vscode-languageserver-types';
 import type { Range } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
 import type { LocationLink } from 'vscode-languageserver/node';
@@ -35,6 +36,11 @@ export function createLocationSet() {
     }
 }
 
+export function withCodeAction<T extends CodeAction>(items: T[]): T[] {
+    return dedupe(items, item => [
+        item.title
+    ].join(':'));
+}
 export function withTextEdits<T extends TextEdit>(items: T[]): T[] {
     return dedupe(items, item => [
         item.range.start.line,
@@ -57,7 +63,7 @@ export function withDiagnostics<T extends Diagnostic>(items: T[]): T[] {
     ].join(':'));
 }
 export function withLocations<T extends Location>(items: T[]): T[] {
-    return dedupe(items, item =>[
+    return dedupe(items, item => [
         item.uri,
         item.range.start.line,
         item.range.start.character,
@@ -66,7 +72,7 @@ export function withLocations<T extends Location>(items: T[]): T[] {
     ].join(':'));
 }
 export function withLocationLinks<T extends LocationLink>(items: T[]): T[] {
-    return dedupe(items, item =>[
+    return dedupe(items, item => [
         item.targetUri,
         item.targetSelectionRange.start.line,
         item.targetSelectionRange.start.character,
@@ -106,7 +112,7 @@ export function withRanges<T extends Range>(items: T[]): T[] {
 }
 function dedupe<T>(items: T[], getKey: (item: T) => string): T[] {
     const map = new Map<string, T>();
-    for (const item of items) {
+    for (const item of items.reverse()) {
         map.set(getKey(item), item);
     }
     return [...map.values()];

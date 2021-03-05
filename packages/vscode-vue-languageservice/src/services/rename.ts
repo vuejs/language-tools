@@ -10,6 +10,7 @@ import { AnnotatedTextEdit } from 'vscode-languageserver/node';
 import { ResponseError } from 'vscode-languageserver/node';
 import { wordPatterns } from './completions';
 import { getWordStart } from '@volar/shared';
+import { TsMappingData } from '../utils/sourceMaps';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
@@ -86,7 +87,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			return;
 
 		// ts -> vue
-		const vueResult = tsEditToVueEdit(tsResult, mapper);
+		const vueResult = tsEditToVueEdit(tsResult, mapper, canRename);
 		return vueResult;
 	}
 	function onTs(uri: string, position: Position, newName: string) {
@@ -143,7 +144,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			return;
 
 		// ts -> vue
-		const vueResult = tsEditToVueEdit(tsResult, mapper);
+		const vueResult = tsEditToVueEdit(tsResult, mapper, canRename);
 		return vueResult;
 	}
 	function onCssPrepare(uri: string, position: Position) {
@@ -203,6 +204,11 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	}
 }
 
+function canRename(data?: TsMappingData) {
+	return !data
+		|| data.capabilities.rename === true
+		|| (typeof data.capabilities.rename === 'object' && data.capabilities.rename.out)
+}
 export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: WorkspaceEdit[]) {
 	for (const other of others) {
 		for (const uri in other.changeAnnotations) {
@@ -231,7 +237,7 @@ export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: Workspac
 		}
 	}
 }
-export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOptions['mapper']) {
+export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOptions['mapper'], isValidRange: (data?: TsMappingData) => boolean) {
 	const vueResult: WorkspaceEdit = {};
 	let hasResult = false;
 
@@ -282,6 +288,7 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (TextDocumentEdit.is(tsDocEdit)) {
 				const vueDoc = mapper.tsUri.from(tsDocEdit.textDocument.uri);
+				console.log(tsDocEdit.textDocument.uri, '->', vueDoc?.uri);
 				if (!vueDoc)
 					continue;
 				const _vueDocEdit = TextDocumentEdit.create(
@@ -290,11 +297,7 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 				);
 				for (const tsEdit of tsDocEdit.edits) {
 					for (const vueRange of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range.start, tsEdit.range.end)) {
-						if (
-							!vueRange.data
-							|| vueRange.data.capabilities.rename === true
-							|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
-						) {
+						if (isValidRange(vueRange.data)) {
 							_vueDocEdit.edits.push({
 								annotationId: AnnotatedTextEdit.is(tsEdit) ? tsEdit.annotationId : undefined,
 								newText: tsEdit.newText,

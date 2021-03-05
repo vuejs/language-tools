@@ -3,6 +3,7 @@ import type { Range } from 'vscode-languageserver/node';
 import type { CodeActionContext } from 'vscode-languageserver/node';
 import type { CodeAction } from 'vscode-languageserver/node';
 import { tsEditToVueEdit } from './rename';
+import * as dedupe from '../utils/dedupe';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 
@@ -10,7 +11,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		const tsResult = onTs(uri, range, context);
 
-		return tsResult;
+		return dedupe.withCodeAction(tsResult);
 	}
 
 	function onTs(uri: string, range: Range, context: CodeActionContext) {
@@ -29,7 +30,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, mapper) : undefined;
+				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, mapper, () => true) : undefined;
 				if (tsCodeAction.edit && !edit) continue;
 
 				result.push({
