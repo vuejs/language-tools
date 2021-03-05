@@ -30,7 +30,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
 				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, mapper) : undefined;
-				if (tsCodeAction.edit?.documentChanges?.length && !edit?.documentChanges?.length) continue;
+				if (tsCodeAction.edit && !edit) continue;
 
 				result.push({
 					...tsCodeAction,

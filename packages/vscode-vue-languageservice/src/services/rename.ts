@@ -40,7 +40,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				return cssResult;
 			}
 
-			function doDedupe(workspaceEdit :WorkspaceEdit) {
+			function doDedupe(workspaceEdit: WorkspaceEdit) {
 				if (workspaceEdit.changes) {
 					for (const uri in workspaceEdit.changes) {
 						workspaceEdit.changes[uri] = dedupe.withTextEdits(workspaceEdit.changes[uri]);
@@ -233,6 +233,7 @@ export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: Workspac
 }
 export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOptions['mapper']) {
 	const vueResult: WorkspaceEdit = {};
+	let hasResult = false;
 
 	for (const tsUri in tsResult.changeAnnotations) {
 		const tsAnno = tsResult.changeAnnotations[tsUri];
@@ -268,6 +269,7 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 						newText: newText_2,
 						range: vueRange,
 					});
+					hasResult = true;
 				}
 			}
 		}
@@ -325,8 +327,11 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 			}
 			if (vueDocEdit) {
 				vueResult.documentChanges.push(vueDocEdit);
+				hasResult = true;
 			}
 		}
 	}
-	return vueResult;
+	if (hasResult) {
+		return vueResult;
+	}
 }
