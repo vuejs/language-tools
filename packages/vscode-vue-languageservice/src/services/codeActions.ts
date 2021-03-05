@@ -27,13 +27,18 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				continue;
 
 			for (const tsCodeAction of tsCodeActions) {
+				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
+
+				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, mapper) : undefined;
+				if (tsCodeAction.edit?.documentChanges?.length && !edit?.documentChanges?.length) continue;
+
 				result.push({
 					...tsCodeAction,
-					edit: tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, mapper) : undefined,
+					edit,
 				});
 			}
 		}
-		
+
 		return result;
 	}
 }
