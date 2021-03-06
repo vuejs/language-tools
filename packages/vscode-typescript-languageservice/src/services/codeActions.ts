@@ -18,19 +18,23 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.start);
 		const errorCodes = context.diagnostics.map(error => error.code) as number[];
-		const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, {} /* TODO */, {} /* TODO */);
-		const codeActions: CodeAction[] = [];
+		try {
+			const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, {} /* TODO */, {} /* TODO */);
+			const codeActions: CodeAction[] = [];
 
-		for (const codeFix of codeFixes) {
-			const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
-			const codeAction = CodeAction.create(
-				codeFix.description,
-				edit,
-				codeFix.fixName,
-			);
-			codeActions.push(codeAction);
+			for (const codeFix of codeFixes) {
+				const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
+				const codeAction = CodeAction.create(
+					codeFix.description,
+					edit,
+					codeFix.fixName,
+				);
+				codeActions.push(codeAction);
+			}
+
+			return codeActions;
+		} catch {
+			return [];
 		}
-
-		return codeActions;
 	};
 }
