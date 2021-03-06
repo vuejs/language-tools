@@ -1,3 +1,8 @@
+### 0.22.5
+
+- fix: quick fix not working in `<script setup>` if no import statement
+- fix: typescript code fixes throw if import path not exist
+
 ### 0.22.4
 
 - fix: diagnosis not working for windows vscode 1.54.1
