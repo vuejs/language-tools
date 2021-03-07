@@ -40,8 +40,6 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const components = new Set([
 			...templateScriptData.components,
 			...templateScriptData.components.map(hyphenate),
-			...templateScriptData.context,
-			...templateScriptData.context.map(hyphenate),
 		]);
 
 		let tokens: TokenData[] = [];

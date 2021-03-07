@@ -1,3 +1,7 @@
+### 0.22.6
+
+- fix: semantic token incorrect if tag name in component context
+
 ### 0.22.5
 
 - fix: quick fix not working in `<script setup>` if no import statement
