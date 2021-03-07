@@ -19,10 +19,14 @@ export function generate(
     const gen = SourceMaps.createScriptGenerator<SourceMaps.TsMappingData>();
     const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 
-    writeScriptSrc();
-    writeScript();
-    writeScriptSetup();
-    writeExportOptions();
+    if (script?.src) {
+        writeScriptSrc();
+    }
+    else {
+        writeScript();
+        writeScriptSetup();
+        writeExportOptions();
+    }
 
     return {
         code: gen.getText(),
