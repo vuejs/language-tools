@@ -2,17 +2,18 @@
 
 > ⚡ The Fastest Vue Language Support Extension
 
-https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
-
 Volar is a Language Support plugin built specifically for Vue 3. It's based on `@vue/reactivity` to calculate TypeScript on-demand to optimization performance close to native TypeScript language service.
 
-[[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
+If you need Type-Checking on command line, you can use [vue-tsc](https://github.com/johnsoncodehk/vue-tsc).
+
+[[Marketplace](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)] [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
 🛠️ This project is still refactoring to make it easier for contribute.
 
 ## Quick Start
 
-https://github.com/johnsoncodehk/volar-starter
+- [volar-starter](https://github.com/johnsoncodehk/volar-starter) (base on [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts))
+- [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
 
@@ -136,21 +137,20 @@ not checking!
 
 ## Note
 
-> Supported languages:
-> - template: html, pug
-> - script: js, ts, jsx, tsx
-> - style: css, scss, less, postcss (stylus, sass has limited support)
+> You need to disable Vetur to avoid conflicts.
 
-> If use postcss / stylus / sass, you need to install additional extension for syntax highlighting. I tried these and it works, you can also choose other.
+> Recommended use css / less / scss as `<style>` language, because these base on [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice) to provide reliable language support.
+>
+> If use postcss / stylus / sass, you need to install additional extension for syntax highlighting. I tried these and it works, you can also choose others.
 > - postcss: [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss).
 > - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 > - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
 
-> You need to disable Vetur to avoid conflicts.
-
-> tsconfig.json / jsconfig.json is required. And usually also need `"strict": true`.
+> tsconfig.json / jsconfig.json is required.
 >
-> If use Vitepress, you may need to setup `"include": ["src/**/*", "src/.vitepress/**/*"]`.
+> Also required `"strict": true` and `"moduleResolution": "node"`.
+>
+> If use Vitepress, you should need `"include": ["src/**/*", "src/.vitepress/**/*"]`.
 
 > `__VLS_GlobalComponents` and `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
 
