@@ -1,3 +1,8 @@
+### 0.22.7
+
+- fix: script src mapping incorrect if script content is empty
+- fix: ignore script content if script src is exist
+
 ### 0.22.6
 
 - fix: semantic token incorrect if tag name in component context
