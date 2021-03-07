@@ -109,7 +109,9 @@ export function useScriptSetupGen(
 
 		for (const mapping of generate.value.mappings) {
 			if (mapping.data.vueTag === 'scriptSrc' && script.value?.src) {
-				const vueStart = vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src); // TODO: don't use indexOf()
+				const vueStart = script.value.content.length
+					? vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src)
+					: (vueDoc.value.getText().substring(script.value.loc.start).indexOf(script.value.src) + script.value.loc.start); // TODO: don't use indexOf()
 				const vueEnd = vueStart + script.value.src.length;
 				sourceMap.add({
 					...mapping,
