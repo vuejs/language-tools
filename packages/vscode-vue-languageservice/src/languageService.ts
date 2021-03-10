@@ -324,7 +324,7 @@ export function createLanguageService(
 		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
-			return !vueImportErrors.find(error => error.code === 2305); // Module '"vue"' has no exported member '*'.ts(2305)
+			return !vueImportErrors.find(error => error.code === 2344); // Type '"Transition"' is not assignable to type '"default"'.ts(2344)
 		}),
 		getTsService: () => tsLanguageService,
 		getGlobalDocs: () => [globalDoc],

@@ -1,6 +1,7 @@
 ### 0.22.9
 
 - fix: props auto-complete not working for vue 2 and nuxt
+- fix: `@vue/runtime-dom` missing checking not working
 
 ### 0.22.8
 
