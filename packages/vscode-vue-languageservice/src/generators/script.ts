@@ -138,7 +138,7 @@ export function generate(
         );
 
         gen.addText(`\n`);
-        gen.addText(`export default (await import('__VLS_vue')).__VLS_defineComponent({\n`);
+        gen.addText(`export default __VLS_defineComponent({\n`);
         if (data.defineProps?.typeArgs) {
             gen.addText(`props: ({} as __VLS_DefinePropsToOptions<`);
             gen.addCode(
@@ -344,7 +344,7 @@ export function generate(
                             },
                         },
                     );
-                    gen.addText(` = (await import('__VLS_vue')).__VLS_unref(`);
+                    gen.addText(` = (await import('vue')).unref(`);
                     if (binary.right) {
                         gen.addCode(
                             `__VLS_refs_${prop.text}`,
@@ -376,7 +376,7 @@ export function generate(
                             },
                         },
                     );
-                    gen.addText(` = (await import('__VLS_vue')).__VLS_ref(`);
+                    gen.addText(` = (await import('vue')).ref(`);
                     if (binary.right) {
                         gen.addCode(
                             `__VLS_refs_${prop.text}`,

@@ -1,3 +1,7 @@
+### 0.22.9
+
+- fix: props auto-complete not working for vue 2 and nuxt
+
 ### 0.22.8
 
 - revert: "fix: ignore script content if script src is exist"
