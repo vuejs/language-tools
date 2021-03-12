@@ -50,7 +50,6 @@ import {
 	SemanticTokensChangedNotification,
 	RangeSemanticTokensRequest,
 	DocumentVersionRequest,
-	EmitDtsRequest,
 	// html
 	TagCloseRequest,
 	notEmpty,
@@ -334,76 +333,6 @@ function initLanguageServiceDoc(rootPaths: string[]) {
 
 	connection.onNotification(RestartServerNotification.type, async () => {
 		host.restart();
-	});
-	connection.onRequest(EmitDtsRequest.type, async handler => {
-		if (handler.all) {
-			const progress = await connection.window.createWorkDoneProgress();
-			progress.begin('Emit', 0, '', true);
-			for (const [_, { languageService }] of host.services) {
-				languageService.setDtsMode(true);
-				const sourceFiles = languageService.getAllSourceFiles();
-				let i = 0;
-				for (const sourceFile of sourceFiles) {
-					progress.report(i++ / sourceFiles.length * 100, path.relative(languageService.rootPath, uriToFsPath(sourceFile.uri)));
-					for (const [uri, _] of sourceFile.getTsDocuments()) {
-						if (progress.token.isCancellationRequested) {
-							break;
-						}
-						const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
-						for (const file of output.outputFiles) {
-							await fs.writeFile(file.name, file.text, "utf8");
-						}
-					}
-				}
-				languageService.setDtsMode(false);
-			}
-			progress.done();
-		}
-		if (handler.dir) {
-			const progress = await connection.window.createWorkDoneProgress();
-			progress.begin('Emit', 0, '', true);
-			for (const [_, { languageService }] of host.services) {
-				languageService.setDtsMode(true);
-				const sourceFiles = languageService.getAllSourceFiles();
-				let nums = 0;
-				let i = 0;
-				for (const sourceFile of sourceFiles) {
-					if (path.dirname(sourceFile.uri) === path.dirname(handler.dir)) {
-						nums++;
-					}
-				}
-				for (const sourceFile of sourceFiles) {
-					if (path.dirname(sourceFile.uri) === path.dirname(handler.dir)) {
-						progress.report(i++ / nums * 100, path.relative(languageService.rootPath, uriToFsPath(sourceFile.uri)) + '.d.ts');
-						for (const [uri, _] of sourceFile.getTsDocuments()) {
-							if (progress.token.isCancellationRequested) {
-								break;
-							}
-							const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
-							for (const file of output.outputFiles) {
-								await fs.writeFile(file.name, file.text, "utf8");
-							}
-						}
-					}
-				}
-				languageService.setDtsMode(false);
-			}
-			progress.done();
-		}
-		if (handler.uri) {
-			const languageService = host.bestMatch(handler.uri);
-			const sourceFile = languageService?.getSourceFile(handler.uri);
-			if (languageService && sourceFile) {
-				languageService.setDtsMode(true);
-				for (const [uri, _] of sourceFile.getTsDocuments()) {
-					const output = languageService.getTsService().raw.getEmitOutput(uriToFsPath(uri), true, true);
-					for (const file of output.outputFiles) {
-						await fs.writeFile(file.name, file.text, "utf8");
-					}
-				}
-				languageService.setDtsMode(false);
-			}
-		}
 	});
 	connection.onRequest(WriteVirtualFilesRequest.type, async () => {
 		const progress = await connection.window.createWorkDoneProgress();

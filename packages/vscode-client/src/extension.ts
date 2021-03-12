@@ -12,7 +12,6 @@ import * as virtualFiles from './features/virtualFiles';
 import * as restart from './features/restart';
 import * as tagClosing from './features/tagClosing';
 import * as semanticTokens from './features/semanticTokens';
-import * as emitDts from './features/emitDts';
 import * as tsPlugin from './features/tsPlugin';
 import * as defaultLanguage from './features/defaultLanguage';
 import { ServerInitializationOptions } from '@volar/shared';
@@ -37,7 +36,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	semanticTokens.activate(context, docClient);
 	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
-	emitDts.activate(context, docClient);
 	tsPlugin.activate(context);
 	defaultLanguage.activate();
 
