@@ -1,3 +1,8 @@
+### 0.22.10
+
+- perf: improve memory using
+- revoke: remove emit dts feature
+
 ### 0.22.9
 
 - fix: props auto-complete not working for vue 2 and nuxt
