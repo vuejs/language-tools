@@ -93,6 +93,8 @@ export function createLanguageServiceHost(
 		for (const kvp of languageServices) {
 			const tsConfig = upath.resolve(kvp[0]);
 			const parsedCommandLine = kvp[1].getParsedCommandLine();
+			const hasVueFile = parsedCommandLine.fileNames.some(fileName => upath.extname(fileName) === '.vue');
+			if (!hasVueFile) continue;
 			const fileNames = new Set(parsedCommandLine.fileNames);
 			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.getTsService().getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
