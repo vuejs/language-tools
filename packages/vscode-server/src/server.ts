@@ -203,15 +203,17 @@ function initLanguageServiceApi(rootPaths: string[]) {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Format', 0, '', true);
 		for (const [_, service] of host.services) {
-			const sourceFiles = service.languageService.getAllSourceFiles();
+			const ls = service.getLanguageServiceDontCreate();
+			if (!ls) continue;
+			const sourceFiles = ls.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
 				if (progress.token.isCancellationRequested) {
 					continue;
 				}
 				const doc = sourceFile.getTextDocument();
-				progress.report(i++ / sourceFiles.length * 100, path.relative(service.languageService.rootPath, uriToFsPath(doc.uri)));
-				const edits = service.languageService.doFormatting(doc, options) ?? [];
+				progress.report(i++ / sourceFiles.length * 100, path.relative(ls.rootPath, uriToFsPath(doc.uri)));
+				const edits = ls.doFormatting(doc, options) ?? [];
 				const workspaceEdit: WorkspaceEdit = { changes: { [doc.uri]: edits } };
 				await connection.workspace.applyEdit(workspaceEdit);
 			}
@@ -338,14 +340,16 @@ function initLanguageServiceDoc(rootPaths: string[]) {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Write', 0, '', true);
 		for (const [_, service] of host.services) {
-			const globalDocs = service.languageService.getGlobalDocs();
+			const ls = service.getLanguageServiceDontCreate();
+			if (!ls) continue;
+			const globalDocs = ls.getGlobalDocs();
 			for (const globalDoc of globalDocs) {
 				await fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
 			}
-			const sourceFiles = service.languageService.getAllSourceFiles();
+			const sourceFiles = ls.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
-				progress.report(i++ / sourceFiles.length * 100, path.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
+				progress.report(i++ / sourceFiles.length * 100, path.relative(ls.rootPath, uriToFsPath(sourceFile.uri)));
 				for (const [uri, doc] of sourceFile.getTsDocuments()) {
 					if (progress.token.isCancellationRequested) {
 						break;
@@ -364,16 +368,18 @@ function initLanguageServiceDoc(rootPaths: string[]) {
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Verify', 0, '', true);
 		for (const [_, service] of host.services) {
-			const sourceFiles = service.languageService.getAllSourceFiles();
+			const ls = service.getLanguageServiceDontCreate();
+			if (!ls) continue;
+			const sourceFiles = ls.getAllSourceFiles();
 			let i = 0;
 			for (const sourceFile of sourceFiles) {
-				progress.report(i++ / sourceFiles.length * 100, path.relative(service.languageService.rootPath, uriToFsPath(sourceFile.uri)));
+				progress.report(i++ / sourceFiles.length * 100, path.relative(ls.rootPath, uriToFsPath(sourceFile.uri)));
 				if (progress.token.isCancellationRequested) {
 					continue;
 				}
 				const doc = sourceFile.getTextDocument();
 				let _result: Diagnostic[] = [];
-				await service.languageService.doValidation(doc, result => {
+				await ls.doValidation(doc, result => {
 					connection.sendDiagnostics({ uri: doc.uri, diagnostics: result });
 					_result = result;
 				});

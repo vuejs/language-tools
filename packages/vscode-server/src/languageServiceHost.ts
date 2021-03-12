@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import * as upath from 'upath';
-import { createLanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
+import { createLanguageService, LanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
 import { uriToFsPath, fsPathToUri, sleep, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
@@ -77,13 +77,13 @@ export function createLanguageServiceHost(
 	function bestMatch(uri: string) {
 		const matches = _all(uri);
 		if (matches.first.length)
-			return languageServices.get(matches.first[0])?.languageService;
+			return languageServices.get(matches.first[0])?.getLanguageService();
 		if (matches.second.length)
-			return languageServices.get(matches.second[0])?.languageService;
+			return languageServices.get(matches.second[0])?.getLanguageService();
 	}
 	function allMatches(uri: string) {
 		const matches = _all(uri);
-		return [...matches.first, ...matches.second].map(tsConfig => languageServices.get(tsConfig)?.languageService).filter(notEmpty);
+		return [...matches.first, ...matches.second].map(tsConfig => languageServices.get(tsConfig)?.getLanguageService()).filter(notEmpty);
 	}
 	function _all(uri: string) {
 		const fileName = uriToFsPath(uri);
@@ -94,7 +94,7 @@ export function createLanguageServiceHost(
 			const tsConfig = upath.resolve(kvp[0]);
 			const parsedCommandLine = kvp[1].getParsedCommandLine();
 			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].languageService.getTsService().getTextDocument(uri)) {
+			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.getTsService().getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
 				if (fileName.startsWith(tsConfigDir)) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);
@@ -126,17 +126,7 @@ export function createLanguageServiceHost(
 		const scriptVersions = new Map<string, string>();
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const languageServiceHost = createLanguageServiceHost();
-		const vueLanguageService = createLanguageService(languageServiceHost, { typescript: ts }, async p => {
-			if (p === 0) {
-				workDoneProgress?.begin('Initializing Vue language features');
-			}
-			if (p < 1) {
-				workDoneProgress?.report(p * 100);
-			}
-			else {
-				prepareNextProgress();
-			}
-		});
+		let vueLanguageService: LanguageService | undefined;
 		const disposables: Disposable[] = [];
 
 		onParsedCommandLineUpdate();
@@ -158,7 +148,24 @@ export function createLanguageServiceHost(
 		prepareNextProgress();
 
 		return {
-			languageService: vueLanguageService,
+			getLanguageService: () => {
+				if (!vueLanguageService) {
+					console.log('create', tsConfig);
+					vueLanguageService = createLanguageService(languageServiceHost, { typescript: ts }, async p => {
+						if (p === 0) {
+							workDoneProgress?.begin('Initializing Vue language features');
+						}
+						if (p < 1) {
+							workDoneProgress?.report(p * 100);
+						}
+						else {
+							prepareNextProgress();
+						}
+					});
+				}
+				return vueLanguageService;
+			},
+			getLanguageServiceDontCreate: () => vueLanguageService,
 			getParsedCommandLine: () => parsedCommandLine,
 			dispose,
 			onProjectFilesUpdate,
@@ -226,6 +233,7 @@ export function createLanguageServiceHost(
 		async function sendDiagnostics(document: TextDocument, withSideEffect: boolean) {
 			const matchLs = bestMatch(document.uri);
 			if (matchLs !== vueLanguageService) return;
+			if (!vueLanguageService) return;
 
 			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
 			const docVersion = document.version;
@@ -386,7 +394,9 @@ export function createLanguageServiceHost(
 				fileWatcher.close();
 			}
 			directoryWatcher.close();
-			vueLanguageService.dispose();
+			if (vueLanguageService) {
+				vueLanguageService.dispose();
+			}
 			for (const disposable of disposables) {
 				disposable.dispose();
 			}
