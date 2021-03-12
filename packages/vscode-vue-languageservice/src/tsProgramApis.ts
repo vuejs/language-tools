@@ -55,7 +55,6 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
 
     // transform
     function transformDiagnosticWithLocations(diagnostics: readonly DiagnosticWithLocation[]): readonly DiagnosticWithLocation[] {
-        // console.log(diagnostics);
         const result: DiagnosticWithLocation[] = [];
         for (const diagnostic of diagnostics) {
             for (const tsOrVueRange of mapper.ts.from2(

@@ -150,7 +150,6 @@ export function createLanguageServiceHost(
 		return {
 			getLanguageService: () => {
 				if (!vueLanguageService) {
-					console.log('create', tsConfig);
 					vueLanguageService = createLanguageService(languageServiceHost, { typescript: ts }, async p => {
 						if (p === 0) {
 							workDoneProgress?.begin('Initializing Vue language features');

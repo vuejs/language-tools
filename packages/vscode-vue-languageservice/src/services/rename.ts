@@ -288,7 +288,6 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (TextDocumentEdit.is(tsDocEdit)) {
 				const vueDoc = mapper.tsUri.from(tsDocEdit.textDocument.uri);
-				console.log(tsDocEdit.textDocument.uri, '->', vueDoc?.uri);
 				if (!vueDoc)
 					continue;
 				const _vueDocEdit = TextDocumentEdit.create(
