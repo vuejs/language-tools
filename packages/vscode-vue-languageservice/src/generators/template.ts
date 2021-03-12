@@ -697,7 +697,6 @@ export function generate(
 				}
 
 				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-				const propValue = prop.value !== undefined ? `\`${prop.value.content.replace(/`/g, '\\`')}\`` : 'true';
 				const propName2 = prop.name;
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
 
@@ -719,7 +718,9 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(`: ${propValue}`);
+				scriptGen.addText(': ');
+				writeAttrValue(prop.value);
+				scriptGen.addText(',\n');
 				addMapping(scriptGen, {
 					sourceRange: {
 						start: prop.loc.start.offset,
@@ -750,7 +751,9 @@ export function generate(
 							doRename: keepHyphenateName,
 						},
 					);
-					scriptGen.addText(`: ${propValue},\n`);
+					scriptGen.addText(': ');
+					writeAttrValue(prop.value);
+					scriptGen.addText(',\n');
 				}
 			}
 			else {
@@ -765,6 +768,30 @@ export function generate(
 			addEndWrap();
 		}
 
+		function writeAttrValue(attrNode: vueDom.TextNode | undefined) {
+			if (attrNode) {
+				scriptGen.addText('`');
+				let start = attrNode.loc.start.offset;
+				let end = attrNode.loc.end.offset;
+				if (end - start > attrNode.content.length) {
+					start++;
+					end--;
+				}
+				writeCode(
+					attrNode.content.replace(/`/g, '\\`'),
+					{ start, end },
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all
+					},
+				);
+				scriptGen.addText('`');
+			}
+			else {
+				scriptGen.addText('true');
+			}
+		}
 		function addStartWrap() {
 			{ // start tag
 				scriptGen.addText(`__VLS_components`);
