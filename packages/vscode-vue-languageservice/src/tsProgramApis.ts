@@ -1,13 +1,5 @@
 import type { TsApiRegisterOptions } from './types';
-import type {
-    SourceFile,
-    WriteFileCallback,
-    CancellationToken,
-    CustomTransformers,
-    EmitResult,
-    Diagnostic,
-    DiagnosticWithLocation,
-} from 'typescript';
+import * as ts from 'typescript';
 
 export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions) {
 
@@ -24,22 +16,22 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
         return program.getRootFileNames()
             .filter(fileName => tsLanguageService.host.fileExists?.(fileName));
     }
-    function getSyntacticDiagnostics(sourceFile?: SourceFile, cancellationToken?: CancellationToken): readonly DiagnosticWithLocation[] {
+    function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.DiagnosticWithLocation[] {
         const program = getOriginalProgram();
         const result = program.getSyntacticDiagnostics(sourceFile, cancellationToken);
-        return transformDiagnosticWithLocations(result);
+        return transformDiagnostics(result);
     }
-    function getSemanticDiagnostics(sourceFile?: SourceFile, cancellationToken?: CancellationToken): readonly Diagnostic[] {
+    function getSemanticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
         const program = getOriginalProgram();
         const result = program.getSemanticDiagnostics(sourceFile, cancellationToken);
         return transformDiagnostics(result);
     }
-    function getGlobalDiagnostics(cancellationToken?: CancellationToken): readonly Diagnostic[] {
+    function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
         const program = getOriginalProgram();
         const result = program.getGlobalDiagnostics(cancellationToken);
         return transformDiagnostics(result);
     }
-    function emit(targetSourceFile?: SourceFile, writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers): EmitResult {
+    function emit(targetSourceFile?: ts.SourceFile, writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
         const program = getOriginalProgram();
         const result = program.emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
         return {
@@ -54,29 +46,8 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
     }
 
     // transform
-    function transformDiagnosticWithLocations(diagnostics: readonly DiagnosticWithLocation[]): readonly DiagnosticWithLocation[] {
-        const result: DiagnosticWithLocation[] = [];
-        for (const diagnostic of diagnostics) {
-            for (const tsOrVueRange of mapper.ts.from2(
-                diagnostic.file.fileName,
-                diagnostic.start,
-                diagnostic.start + diagnostic.length,
-            )) {
-                if (!tsLanguageService.host.fileExists?.(tsOrVueRange.fileName)) continue;
-                if (!tsOrVueRange.data || tsOrVueRange.data.capabilities.diagnostic) {
-                    result.push({
-                        ...diagnostic,
-                        file: ts.createSourceFile(tsOrVueRange.fileName, tsOrVueRange.textDocument.getText(), ts.ScriptTarget.JSON),
-                        start: tsOrVueRange.start,
-                        length: tsOrVueRange.end - tsOrVueRange.start,
-                    });
-                }
-            }
-        }
-        return result;
-    }
-    function transformDiagnostics(diagnostics: readonly Diagnostic[]): readonly Diagnostic[] {
-        const result: Diagnostic[] = [];
+    function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(diagnostics: readonly T[]): T[] {
+        const result: T[] = [];
         for (const diagnostic of diagnostics) {
             if (
                 diagnostic.file !== undefined
@@ -92,12 +63,17 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                 )) {
                     if (!tsLanguageService.host.fileExists?.(tsOrVueRange.fileName)) continue;
                     if (!tsOrVueRange.data || tsOrVueRange.data.capabilities.diagnostic) {
-                        result.push({
+                        const newDiagnostic: T = {
                             ...diagnostic,
                             file: ts.createSourceFile(tsOrVueRange.fileName, tsOrVueRange.textDocument.getText(), ts.ScriptTarget.JSON),
                             start: tsOrVueRange.start,
                             length: tsOrVueRange.end - tsOrVueRange.start,
-                        });
+                        };
+                        const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
+                        if (relatedInformation) {
+                            (newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(relatedInformation);
+                        }
+                        result.push(newDiagnostic);
                     }
                 }
             }
