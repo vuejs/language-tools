@@ -26,6 +26,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		try {
 			errors = [
 				...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
+				...options.semantic ? program.getDeclarationDiagnostics(sourceFile, cancellationToken) : [],
 				...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
 				...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
 			];
