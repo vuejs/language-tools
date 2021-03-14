@@ -1,6 +1,14 @@
+### 0.22.11
+
+- feat: script refactors, source actions, organize imports support
+- perf: improve monorepo memory using
+- fix: text attribute auto-complete not working
+- fix: declaration diagnostics missing
+- fix: typescript diagnostic related Information unhandled
+
 ### 0.22.10
 
-- perf: improve memory using
+- perf: improve monorepo memory using
 - revoke: remove emit dts feature
 
 ### 0.22.9
