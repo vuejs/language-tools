@@ -104,6 +104,8 @@ export function useScriptSetupGen(
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: true,
+				codeActions: true,
+				organizeImports: !script.value?.src && !scriptSetup.value,
 			},
 		);
 
@@ -157,6 +159,8 @@ export function useScriptSetupGen(
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,
+				codeActions: true,
+				organizeImports: true,
 			},
 		);
 
@@ -197,6 +201,8 @@ export function useScriptSetupGen(
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,
+				codeActions: false,
+				organizeImports: false,
 			},
 		);
 

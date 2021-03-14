@@ -27,6 +27,7 @@ import * as definitions from './services/definitions';
 import * as references from './services/references';
 import * as rename from './services/rename';
 import * as codeActions from './services/codeActions';
+import * as codeActionResolve from './services/codeActionResolve';
 import * as documentHighlight from './services/documentHighlight';
 import * as documentSymbol from './services/documentSymbol';
 import * as documentLink from './services/documentLink';
@@ -205,7 +206,13 @@ export function createLanguageService(
 
 			const fullText = script.getText(0, docLength) + addText;
 			const doc = TextDocument.create(uri, 'typescript', 0, fullText);
-			const sourceMap = new SourceMaps.TsSourceMap(doc, doc, false, { foldingRanges: false, formatting: false, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(doc, doc, false, {
+				foldingRanges: false,
+				formatting: false,
+				documentSymbol: false,
+				codeActions: false,
+				organizeImports: false,
+			});
 			for (const maped of mappings) {
 				sourceMap.add(maped);
 			}
@@ -348,6 +355,7 @@ export function createLanguageService(
 		getSemanticTokens: apiHook(semanticTokens.register(options)),
 		getD3: apiHook(d3.register(options)),
 		getCodeActions: apiHook(codeActions.register(options), false),
+		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
 		doExecuteCommand: apiHook(executeCommand.register(options), false),
 		doComplete: apiHook(completions.register(options), false),
 		doCompletionResolve: apiHook(completionResolve.register(options), false),

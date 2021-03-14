@@ -51,6 +51,8 @@ export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 			foldingRanges: boolean,
 			formatting: boolean,
 			documentSymbol: boolean,
+			codeActions: boolean,
+			organizeImports: boolean,
 		},
 	) {
 		super(sourceDocument, mappedDocument);

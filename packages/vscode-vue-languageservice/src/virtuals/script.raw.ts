@@ -19,7 +19,13 @@ export function useScriptFormat(
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: true, formatting: true, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, {
+				foldingRanges: true,
+				formatting: true,
+				documentSymbol: false,
+				codeActions: false,
+				organizeImports: false,
+			});
 			sourceMap.add({
 				data: {
 					vueTag: 'script',

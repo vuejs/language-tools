@@ -37,6 +37,7 @@ export function createLanguageServiceHost(
 	return {
 		services: languageServices,
 		bestMatch,
+		bestMatchTsConfig,
 		allMatches,
 		restart,
 		onConnectionInited,
@@ -75,11 +76,17 @@ export function createLanguageServiceHost(
 		}
 	}
 	function bestMatch(uri: string) {
+		const tsConfig = bestMatchTsConfig(uri);
+		if (tsConfig) {
+			return languageServices.get(tsConfig)?.getLanguageService();
+		}
+	}
+	function bestMatchTsConfig(uri: string) {
 		const matches = _all(uri);
 		if (matches.first.length)
-			return languageServices.get(matches.first[0])?.getLanguageService();
+			return matches.first[0];
 		if (matches.second.length)
-			return languageServices.get(matches.second[0])?.getLanguageService();
+			return matches.second[0];
 	}
 	function allMatches(uri: string) {
 		const matches = _all(uri);

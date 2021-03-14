@@ -54,7 +54,13 @@ export function useScriptMain(
 		if (textDocument.value) {
 			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, { foldingRanges: false, formatting: false, documentSymbol: false });
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, {
+				foldingRanges: false,
+				formatting: false,
+				documentSymbol: false,
+				codeActions: false,
+				organizeImports: false,
+			});
 			sourceMap.add({
 				data: {
 					vueTag: 'script',

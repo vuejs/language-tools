@@ -18,7 +18,6 @@ import {
 	CodeLensRequest,
 	CallHierarchyPrepareRequest,
 	CodeActionRequest,
-	// TODO: CodeActionResolveRequest,
 	// doc
 	DocumentHighlightRequest,
 	DocumentSymbolRequest,
@@ -31,6 +30,7 @@ import {
 	FoldingRangeRequest,
 	LinkedEditingRangeRequest,
 	DocumentFormattingRequest,
+	CodeActionKind,
 } from 'vscode-languageserver/node';
 import { createLanguageServiceHost } from './languageServiceHost';
 import { Commands, triggerCharacter } from '@volar/vscode-vue-languageservice';
@@ -274,11 +274,29 @@ function initLanguageServiceApi(rootPaths: string[]) {
 	});
 	connection.onCodeAction(handler => {
 		const uri = handler.textDocument.uri;
-		const document = documents.get(uri);
-		if (!document) return undefined;
-		return host.bestMatch(uri)?.getCodeActions(uri, handler.range, handler.context);
+		const tsConfig = host.bestMatchTsConfig(uri);
+		const service = tsConfig ? host.services.get(tsConfig)?.getLanguageService() : undefined;
+		if (service) {
+			const codeActions = service.getCodeActions(uri, handler.range, handler.context);
+			for (const codeAction of codeActions) {
+				if (codeAction.data && typeof codeAction.data === 'object') {
+					(codeAction.data as any).tsConfig = tsConfig;
+				}
+				else {
+					codeAction.data = { tsConfig };
+				}
+			}
+			return codeActions;
+		}
 	});
-	// vue & ts
+	connection.onCodeActionResolve(codeAction => {
+		const tsConfig: string | undefined = (codeAction.data as any)?.tsConfig;
+		const service = tsConfig ? host.services.get(tsConfig)?.getLanguageService() : undefined;
+		if (service) {
+			return service.doCodeActionResolve(codeAction);
+		}
+		return codeAction;
+	});
 	connection.onReferences(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return undefined;
@@ -483,7 +501,21 @@ function onInitializedApi() {
 		triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
 		resolveProvider: true,
 	});
-	connection.client.register(CodeActionRequest.type, vueOnly);
+	connection.client.register(CodeActionRequest.type, {
+		documentSelector: vueOnly.documentSelector,
+		codeActionKinds: [
+			CodeActionKind.Empty,
+			CodeActionKind.QuickFix,
+			CodeActionKind.Refactor,
+			CodeActionKind.RefactorExtract,
+			CodeActionKind.RefactorInline,
+			CodeActionKind.RefactorRewrite,
+			CodeActionKind.Source,
+			CodeActionKind.SourceFixAll,
+			CodeActionKind.SourceOrganizeImports,
+		],
+		resolveProvider: true,
+	});
 	for (const host of hosts) {
 		host.onConnectionInited();
 	}

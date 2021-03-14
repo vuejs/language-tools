@@ -326,6 +326,7 @@ export function createMapper(
             vueEnd ? vueDoc.offsetAt(vueEnd) : undefined,
         );
         const result: {
+            sourceMap: TsSourceMap | undefined,
             textDocument: TextDocument,
             start: Position,
             end: Position,
@@ -335,6 +336,7 @@ export function createMapper(
 
         for (const r of result_2) {
             result.push({
+                sourceMap: r.sourceMap,
                 textDocument: r.textDocument,
                 start: r.textDocument.positionAt(r.start),
                 end: r.textDocument.positionAt(r.end),
@@ -349,6 +351,7 @@ export function createMapper(
         vueEnd = vueEnd ?? vueStart;
 
         const result: {
+            sourceMap: TsSourceMap | undefined,
             fileName: string,
             textDocument: TextDocument,
             start: number,
@@ -361,6 +364,7 @@ export function createMapper(
             for (const sourceMap of sourceFile.getTsSourceMaps()) {
                 for (const tsRange of sourceMap.getMappedRanges2(vueStart, vueEnd)) {
                     result.push({
+                        sourceMap: sourceMap,
                         fileName: uriToFsPath(sourceMap.mappedDocument.uri),
                         textDocument: sourceMap.mappedDocument,
                         start: tsRange.start,
@@ -375,6 +379,7 @@ export function createMapper(
             const tsDoc = tsLanguageService.getTextDocument(fsPathToUri(vueFsPath));
             if (tsDoc) {
                 result.push({
+                    sourceMap: undefined,
                     fileName: uriToFsPath(tsDoc.uri),
                     textDocument: tsDoc,
                     start: vueStart,
