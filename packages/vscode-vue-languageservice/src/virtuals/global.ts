@@ -39,6 +39,8 @@ type App = NotAnyOnce<App_1, App_2>;
 type EmitsOptions = NotAnyOnce<EmitsOptions_1, EmitsOptions_2>;
 type DefineComponent<P, E extends EmitsOptions> = NotAnyOnce<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
 
+const throwIfAny: IsAny<HTMLAttributes> = false;
+
 declare global {
 	interface __VLS_GlobalComponents extends Pick<NotAnyOnce<typeof vue_1, typeof vue_2>,
 		'Transition'

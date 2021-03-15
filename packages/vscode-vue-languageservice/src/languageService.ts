@@ -332,7 +332,7 @@ export function createLanguageService(
 		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
-			return !vueImportErrors.find(error => error.code === 2344); // Type '"Transition"' is not assignable to type '"default"'.ts(2344)
+			return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
 		}),
 		getTsService: () => tsLanguageService,
 		getGlobalDocs: () => [globalDoc],
