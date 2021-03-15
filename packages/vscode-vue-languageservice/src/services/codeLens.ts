@@ -134,16 +134,8 @@ export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOp
 			result.push({
 				range,
 				command: {
-					title: 'html ' + (current === 'html' ? '☑' : '☐'),
-					command: current === 'html' ? '' : Commands.PUG_TO_HTML,
-					arguments: [document.uri],
-				},
-			});
-			result.push({
-				range,
-				command: {
 					title: 'pug ' + (current === 'pug' ? '☑' : '☐'),
-					command: current === 'pug' ? '' : Commands.HTML_TO_PUG,
+					command: current === 'pug' ? Commands.PUG_TO_HTML : Commands.HTML_TO_PUG,
 					arguments: [document.uri],
 				},
 			});
