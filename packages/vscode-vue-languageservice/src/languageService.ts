@@ -473,12 +473,16 @@ export function createLanguageService(
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
 			fileExists: fileName => {
-				fileName = vueHost.realpath?.(fileName) ?? fileName;
+				fileName = upath.resolve(vueHost.realpath?.(fileName) ?? fileName);
 				let realFileName = fileName;
 				if (realFileName.endsWith('.vue.ts')) {
 					realFileName = upath.trimExt(realFileName);
 				}
-				if (!extraFileWatchers.has(realFileName) && vueHost.fileExists?.(realFileName)) {
+				if (
+					!extraFileWatchers.has(realFileName)
+					&& vueHost.fileExists?.(realFileName)
+					&& !vueHost.getScriptFileNames().includes(realFileName)
+				) {
 					const fileWatcher = typescript.sys.watchFile?.(realFileName, (_, eventKind) => {
 						if (eventKind === typescript.FileWatcherEventKind.Changed) {
 							extraFileVersions.set(realFileName, (extraFileVersions.get(realFileName) ?? 0) + 1);
