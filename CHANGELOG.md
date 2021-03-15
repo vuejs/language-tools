@@ -1,3 +1,7 @@
+### 0.22.12
+
+- fix: cannot find name for text attribute
+
 ### 0.22.11
 
 - feat: script refactors, source actions, organize imports support

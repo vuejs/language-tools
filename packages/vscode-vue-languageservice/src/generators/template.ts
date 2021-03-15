@@ -736,7 +736,6 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				scriptGen.addText(`,\n`);
 				// original name
 				if (propName2 !== propName) {
 					writeObjectProperty(
