@@ -26,10 +26,13 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		try {
 			errors = [
 				...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
-				...options.semantic ? program.getDeclarationDiagnostics(sourceFile, cancellationToken) : [],
 				...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
 				...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
 			];
+
+			if (options.semantic && getEmitDeclarations(program.getCompilerOptions())) {
+				errors = errors.concat(program.getDeclarationDiagnostics(sourceFile, cancellationToken));
+			}
 		}
 		catch { }
 
@@ -76,4 +79,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			}
 		}
 	};
+}
+
+export function getEmitDeclarations(compilerOptions: ts.CompilerOptions): boolean {
+	return !!(compilerOptions.declaration || compilerOptions.composite);
 }
