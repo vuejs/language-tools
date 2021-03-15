@@ -1,3 +1,9 @@
+### 0.22.13
+
+- feat: watch extra files update
+- fix: cannot find global properties if no `<script>` block
+- fix: project verification not working
+
 ### 0.22.12
 
 - fix: cannot find name for text attribute
