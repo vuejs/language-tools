@@ -720,6 +720,7 @@ export function generate(
 				);
 				scriptGen.addText(': ');
 				writeAttrValue(prop.value);
+				const diagEnd = scriptGen.getText().length;
 				scriptGen.addText(',\n');
 				addMapping(scriptGen, {
 					sourceRange: {
@@ -728,7 +729,7 @@ export function generate(
 					},
 					mappedRange: {
 						start: diagStart,
-						end: scriptGen.getText().length,
+						end: diagEnd,
 					},
 					mode: SourceMaps.Mode.Totally,
 					data: {
