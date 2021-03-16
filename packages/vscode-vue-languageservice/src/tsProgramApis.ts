@@ -1,5 +1,6 @@
 import type { TsApiRegisterOptions } from './types';
 import * as ts from 'typescript';
+import { normalizeFileName } from '@volar/shared';
 
 export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions) {
 
@@ -54,8 +55,7 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                 && diagnostic.start !== undefined
                 && diagnostic.length !== undefined
             ) {
-                const fileName = tsLanguageService.host.realpath?.(diagnostic.file.fileName);
-                if (!fileName) continue;
+                const fileName = normalizeFileName(tsLanguageService.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
                 for (const tsOrVueRange of mapper.ts.from2(
                     fileName,
                     diagnostic.start,
@@ -63,9 +63,12 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                 )) {
                     if (!tsLanguageService.host.fileExists?.(tsOrVueRange.fileName)) continue;
                     if (!tsOrVueRange.data || tsOrVueRange.data.capabilities.diagnostic) {
+                        const file = tsOrVueRange.fileName === fileName
+                            ? diagnostic.file
+                            : ts.createSourceFile(tsOrVueRange.fileName, tsOrVueRange.textDocument.getText(), ts.ScriptTarget.JSON);
                         const newDiagnostic: T = {
                             ...diagnostic,
-                            file: ts.createSourceFile(tsOrVueRange.fileName, tsOrVueRange.textDocument.getText(), ts.ScriptTarget.JSON),
+                            file,
                             start: tsOrVueRange.start,
                             length: tsOrVueRange.end - tsOrVueRange.start,
                         };
