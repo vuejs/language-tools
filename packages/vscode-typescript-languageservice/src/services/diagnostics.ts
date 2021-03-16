@@ -10,7 +10,12 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (
 		uri: string,
-		options: { semantic?: boolean, syntactic?: boolean, suggestion?: boolean } = { semantic: true, syntactic: true, suggestion: true },
+		options: {
+			semantic?: boolean,
+			syntactic?: boolean,
+			suggestion?: boolean,
+			declaration?: boolean,
+		},
 		cancellationToken?: ts.CancellationToken,
 	): Diagnostic[] => {
 		const document = getTextDocument(uri);
@@ -30,7 +35,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
 			];
 
-			if (options.semantic && getEmitDeclarations(program.getCompilerOptions())) {
+			if (options.declaration && getEmitDeclarations(program.getCompilerOptions())) {
 				errors = errors.concat(program.getDeclarationDiagnostics(sourceFile, cancellationToken));
 			}
 		}

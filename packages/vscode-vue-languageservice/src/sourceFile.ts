@@ -449,6 +449,7 @@ export function createSourceFile(
 			[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), [], 0],
 			[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), [], 0],
 			[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), [], 0],
+			// [useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 4), [], 0], // TODO: support cancel because it's very slow
 			[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), [], 0],
 		];
 
@@ -687,7 +688,7 @@ export function createSourceFile(
 				return diags;
 			});
 		}
-		function useScriptValidation(ignore: Ref<boolean | undefined>, document: Ref<TextDocument | undefined>, mode: number, onlyUnusedCheck = false) {
+		function useScriptValidation(ignore: Ref<boolean | undefined>, document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -700,9 +701,13 @@ export function createSourceFile(
 				else if (mode === 2) {
 					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
 				}
-				else {
+				else if (mode === 3) {
 					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
 				}
+				else if (mode === 4) {
+					return tsLanguageService.doValidation(doc.uri, { declaration: true });
+				}
+				return [];
 			});
 			return computed(() => {
 				if (ignore.value) return [];
@@ -716,7 +721,7 @@ export function createSourceFile(
 				return result;
 			});
 		}
-		function useTemplateScriptValidation(ignore: Ref<boolean | undefined>, mode: number) {
+		function useTemplateScriptValidation(ignore: Ref<boolean | undefined>, mode: 1 | 2 | 3 | 4) {
 			const errors_1 = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -729,9 +734,13 @@ export function createSourceFile(
 				else if (mode === 2) {
 					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
 				}
-				else {
+				else if (mode === 3) {
 					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
 				}
+				else if (mode === 4) {
+					return tsLanguageService.doValidation(doc.uri, { declaration: true });
+				}
+				return [];
 			});
 			const errors_2 = computed(() => {
 				const result: Diagnostic[] = [];

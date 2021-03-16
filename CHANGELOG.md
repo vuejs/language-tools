@@ -1,6 +1,7 @@
 ### 0.22.15
 
 - feat: improve v-for type-checking
+- chore: disabled declaration diagnostics for now to avoid monorepo performance issue
 
 ### 0.22.14
 
