@@ -49,7 +49,6 @@ declare global {
 		| 'Suspense'
 		| 'Teleport'
 	> { }
-	var __VLS_for_key: string;
 	var __VLS_defineComponent: NotAnyOnce<typeof defineComponent_1, typeof defineComponent_2>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
 	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
