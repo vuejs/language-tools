@@ -1,3 +1,7 @@
+### 0.22.15
+
+- feat: improve v-for type-checking
+
 ### 0.22.14
 
 - fix: emit declaration diagnostics with declaration option

@@ -237,7 +237,20 @@ export function generate(
 					},
 				);
 				scriptGen.addText(`);\n`);
-				scriptGen.addText(`for (__VLS_for_key in `);
+				scriptGen.addText(`for (const `);
+				writeCode(
+					value.content,
+					{
+						start: start_value,
+						end: start_value + value.content.length,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.noFormatting,
+					},
+				);
+				scriptGen.addText(` of `);
 				writeCode(
 					sourceVarName,
 					{
@@ -251,21 +264,6 @@ export function generate(
 					},
 				);
 				scriptGen.addText(`) {\n`);
-
-				scriptGen.addText(`const `);
-				writeCode(
-					value.content,
-					{
-						start: start_value,
-						end: start_value + value.content.length,
-					},
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.noFormatting,
-					},
-				);
-				scriptGen.addText(` = ${sourceVarName}[__VLS_for_key];\n`);
 
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
