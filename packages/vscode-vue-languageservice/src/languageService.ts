@@ -84,7 +84,6 @@ export function createLanguageService(
 	isTsPlugin = false,
 ) {
 
-	let extraProjectVersion = 0;
 	let lastProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);
@@ -95,8 +94,6 @@ export function createLanguageService(
 	const documents = new Map<string, TextDocument>();
 	const sourceFiles = new Map<string, SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
-	const extraFileVersions = new Map<string, number>();
-	const extraFileWatchers = new Map<string, ts.FileWatcher | undefined>();
 
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost, typescript);
@@ -325,6 +322,7 @@ export function createLanguageService(
 		rootPath: vueHost.getCurrentDirectory(),
 		tsPlugin,
 		tsProgramProxy,
+		update,
 		setDtsMode: (_dtsMode: boolean) => {
 			dtsMode.value = _dtsMode;
 			tsProjectVersion.value++;
@@ -389,17 +387,13 @@ export function createLanguageService(
 		return new Proxy<T>(api, handler);
 	}
 	function update(shouldUpdateTemplateScript: boolean) {
-		const currentVersion = vueHost.getProjectVersion?.() + ':' + extraProjectVersion;
+		const currentVersion = vueHost.getProjectVersion?.();
 		if (currentVersion === undefined || currentVersion !== lastProjectVersion) {
 
 			let tsFileChanged = false;
 			lastProjectVersion = currentVersion;
 			const oldFiles = new Set([...lastScriptVersions.keys()]);
-			const extraFiles = [...extraFileWatchers.keys()];
-			const newFiles = new Set([
-				...vueHost.getScriptFileNames(),
-				...extraFiles.filter(fileName => fileName.endsWith('.vue')),
-			]);
+			const newFiles = new Set([...vueHost.getScriptFileNames()]);
 			const removes: string[] = [];
 			const adds: string[] = [];
 			const updates: string[] = [];
@@ -472,52 +466,17 @@ export function createLanguageService(
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
-			fileExists: fileName => {
-				fileName = upath.resolve(vueHost.realpath?.(fileName) ?? fileName);
-				let realFileName = fileName;
-				if (realFileName.endsWith('.vue.ts')) {
-					realFileName = upath.trimExt(realFileName);
-				}
-				if (
-					!extraFileWatchers.has(realFileName)
-					&& vueHost.fileExists?.(realFileName)
-					&& !vueHost.getScriptFileNames().includes(realFileName)
-				) {
-					const fileWatcher = typescript.sys.watchFile?.(realFileName, (_, eventKind) => {
-						if (eventKind === typescript.FileWatcherEventKind.Changed) {
-							extraFileVersions.set(realFileName, (extraFileVersions.get(realFileName) ?? 0) + 1);
-						}
-						if (eventKind === typescript.FileWatcherEventKind.Deleted) {
-							fileWatcher?.close();
-							extraFileVersions.delete(realFileName);
-							extraFileWatchers.delete(realFileName);
-							scriptSnapshots.delete(realFileName);
-						}
-						extraProjectVersion++;
-					});
-					extraFileVersions.set(realFileName, 0);
-					extraFileWatchers.set(realFileName, fileWatcher);
-					extraProjectVersion++;
-					if (realFileName.endsWith('.vue')) {
-						update(false); // create virtual files
+			fileExists: vueHost.fileExists
+				? fileName => {
+					if (fileName.endsWith('.vue.ts')) {
+						fileName = upath.trimExt(fileName);
 					}
+					return vueHost.fileExists!(fileName);
 				}
-				if (extraFileWatchers.has(realFileName)) {
-					return true;
-				}
-				const uri = fsPathToUri(fileName);
-				for (const vueFileName of extraFileWatchers.keys()) {
-					const vueFileUri = fsPathToUri(vueFileName);
-					const sourceFile = sourceFiles.get(vueFileUri);
-					if (sourceFile?.getTsDocuments().has(uri)) {
-						return true;
-					}
-				}
-				return false;
-			},
+				: undefined,
 			getProjectVersion: () => {
 				pauseTracking();
-				const version = vueHost.getProjectVersion?.() + ':' + extraProjectVersion + ':' + tsProjectVersion.value.toString();
+				const version = vueHost.getProjectVersion?.() + ':' + tsProjectVersion.value.toString();
 				resetTracking();
 				return version;
 			},
@@ -548,7 +507,7 @@ export function createLanguageService(
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
 			tsFileNames.push(uriToFsPath(globalDoc.uri));
-			for (const fileName of [...vueHost.getScriptFileNames(), ...extraFileVersions.keys()]) {
+			for (const fileName of vueHost.getScriptFileNames()) {
 				const uri = fsPathToUri(fileName);
 				const sourceFile = sourceFiles.get(uri);
 				if (sourceFile) {
@@ -566,9 +525,6 @@ export function createLanguageService(
 			return tsFileNames;
 		}
 		function getScriptVersion(fileName: string) {
-			if (extraFileVersions.has(fileName)) {
-				return extraFileVersions.get(fileName)!.toString();
-			}
 			const uri = fsPathToUri(fileName);
 			const addVersion = _globalComponentCallsGen.get(uri)?.version ?? '';
 			if (uri === globalDoc.uri) {
@@ -587,12 +543,6 @@ export function createLanguageService(
 			const cache = scriptSnapshots.get(fileName);
 			if (cache && cache[0] === version) {
 				return cache[1];
-			}
-			if (extraFileVersions.has(fileName)) {
-				const text = vueHost.readFile?.(fileName) ?? '';
-				const snapshot = typescript.ScriptSnapshot.fromString(text);
-				scriptSnapshots.set(fileName, [version, snapshot]);
-				return snapshot;
 			}
 			const uri = fsPathToUri(fileName);
 			if (uri === globalDoc.uri) {

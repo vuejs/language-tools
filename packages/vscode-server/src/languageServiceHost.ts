@@ -134,6 +134,8 @@ export function createLanguageServiceHost(
 		const fileWatchers = new Map<string, ts.FileWatcher>();
 		const scriptVersions = new Map<string, string>();
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
+		const extraFileWatchers = new Map<string, ts.FileWatcher>();
+		const extraFileVersions = new Map<string, number>();
 		const languageServiceHost = createLanguageServiceHost();
 		let vueLanguageService: LanguageService | undefined;
 		const disposables: Disposable[] = [];
@@ -285,6 +287,12 @@ export function createLanguageServiceHost(
 			const fileNames = new Set(parsedCommandLine.fileNames);
 			let filesChanged = false;
 
+			for (const [fileName, fileWatcher] of extraFileWatchers) {
+				fileWatcher.close();
+			}
+			extraFileWatchers.clear();
+			extraFileVersions.clear();
+
 			for (const fileName of fileWatchers.keys()) {
 				if (!fileNames.has(fileName)) {
 					fileWatchers.get(fileName)!.close();
@@ -345,15 +353,18 @@ export function createLanguageServiceHost(
 				useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 				readFile: ts.sys.readFile,
 				writeFile: ts.sys.writeFile,
-				fileExists: ts.sys.fileExists,
 				directoryExists: ts.sys.directoryExists,
 				getDirectories: ts.sys.getDirectories,
 				readDirectory: ts.sys.readDirectory,
 				realpath: ts.sys.realpath,
 				// custom
+				fileExists,
 				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 				getProjectVersion: () => projectVersion.toString(),
-				getScriptFileNames: () => parsedCommandLine.fileNames,
+				getScriptFileNames: () => [
+					...parsedCommandLine.fileNames,
+					...[...extraFileVersions.keys()].filter(fileName => fileName.endsWith('.vue')), // create virtual files from extra vue scripts
+				],
 				getCurrentDirectory: () => upath.dirname(tsConfig),
 				getCompilationSettings: () => parsedCommandLine.options,
 				getScriptVersion,
@@ -366,12 +377,39 @@ export function createLanguageServiceHost(
 
 			return host;
 
-			function getScriptVersion(fileName: string) {
-				const version = scriptVersions.get(fileName);
-				if (version !== undefined) {
-					return version.toString();
+			function fileExists(fileName: string) {
+				fileName = upath.resolve(ts.sys.realpath?.(fileName) ?? fileName);
+				const fileExists = !!ts.sys.fileExists?.(fileName);
+				if (
+					fileExists
+					&& !fileWatchers.has(fileName)
+					&& !extraFileWatchers.has(fileName)
+				) {
+					const fileWatcher = ts.sys.watchFile!(fileName, (_, eventKind) => {
+						if (eventKind === ts.FileWatcherEventKind.Changed) {
+							extraFileVersions.set(fileName, (extraFileVersions.get(fileName) ?? 0) + 1);
+						}
+						if (eventKind === ts.FileWatcherEventKind.Deleted) {
+							fileWatcher?.close();
+							extraFileVersions.delete(fileName);
+							extraFileWatchers.delete(fileName);
+							scriptSnapshots.delete(fileName);
+						}
+						onProjectFilesUpdate([]);
+					});
+					extraFileVersions.set(fileName, 0);
+					extraFileWatchers.set(fileName, fileWatcher);
+					if (fileName.endsWith('.vue')) {
+						projectVersion++;
+						vueLanguageService?.update(false); // create virtual files
+					}
 				}
-				return '';
+				return fileExists;
+			}
+			function getScriptVersion(fileName: string) {
+				return scriptVersions.get(fileName)
+					?? extraFileVersions.get(fileName)?.toString()
+					?? '';
 			}
 			function getScriptSnapshot(fileName: string) {
 				const version = getScriptVersion(fileName);
@@ -399,6 +437,9 @@ export function createLanguageServiceHost(
 		function dispose() {
 			disposed = true;
 			for (const [_, fileWatcher] of fileWatchers) {
+				fileWatcher.close();
+			}
+			for (const [_, fileWatcher] of extraFileWatchers) {
 				fileWatcher.close();
 			}
 			directoryWatcher.close();
