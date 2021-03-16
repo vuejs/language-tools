@@ -1,3 +1,8 @@
+### 0.22.16
+
+- fix: extra files watcher not working on windows
+- fix: vue-tsc not working on windows
+
 ### 0.22.15
 
 - feat: improve v-for type-checking
