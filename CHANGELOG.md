@@ -1,3 +1,8 @@
+### 0.22.14
+
+- fix: emit declaration diagnostics with declaration option
+- chore: improve extra files watcher
+
 ### 0.22.13
 
 - feat: watch extra files update
