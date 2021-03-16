@@ -8,3 +8,6 @@ export function uriToFsPath(uri: DocumentUri) {
 export function fsPathToUri(fsPath: string): DocumentUri {
 	return URI.file(fsPath).toString();
 }
+export function normalizeFileName(fileName: string) {
+    return uriToFsPath(fsPathToUri(fileName));
+}

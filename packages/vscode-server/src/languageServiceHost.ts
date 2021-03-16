@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import * as upath from 'upath';
 import { createLanguageService, LanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
-import { uriToFsPath, fsPathToUri, sleep, notEmpty } from '@volar/shared';
+import { uriToFsPath, fsPathToUri, normalizeFileName, sleep, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import type { TextDocuments } from 'vscode-languageserver/node';
@@ -200,7 +200,7 @@ export function createLanguageServiceHost(
 			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
-			content.fileNames = content.fileNames.map(fsPathToUri).map(uriToFsPath); // normalized
+			content.fileNames = content.fileNames.map(normalizeFileName);
 			return content;
 		}
 		async function onDidChangeContent(document: TextDocument) {
@@ -378,7 +378,7 @@ export function createLanguageServiceHost(
 			return host;
 
 			function fileExists(fileName: string) {
-				fileName = upath.resolve(ts.sys.realpath?.(fileName) ?? fileName);
+				fileName = normalizeFileName(ts.sys.realpath?.(fileName) ?? fileName);
 				const fileExists = !!ts.sys.fileExists?.(fileName);
 				if (
 					fileExists
