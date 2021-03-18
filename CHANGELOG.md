@@ -1,3 +1,8 @@
+### 0.22.18
+
+- feat: props jsdoc support
+- fix: emmet not working for inline css
+
 ### 0.22.17
 
 - fix: use `for...in` instead of `for...of` to v-for
