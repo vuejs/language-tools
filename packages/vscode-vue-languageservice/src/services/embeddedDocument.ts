@@ -16,14 +16,15 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		const tsResult = getTsResult(sourceFile);
 		if (tsResult !== undefined) return tsResult;
 
+		// precede html for support inline css service
+		const cssResult = getCssResult(sourceFile);
+		if (cssResult !== undefined) return cssResult;
+
 		const htmlResult = getHtmlResult(sourceFile);
 		if (htmlResult !== undefined) return htmlResult;
 
 		const pugResult = getPugResult(sourceFile);
 		if (pugResult !== undefined) return pugResult;
-
-		const cssResult = getCssResult(sourceFile);
-		if (cssResult !== undefined) return cssResult;
 
 		return {
 			sourceMap: undefined,
