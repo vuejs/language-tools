@@ -1,3 +1,7 @@
+### 0.22.17
+
+- fix: use `for...in` instead of `for...of` to v-for
+
 ### 0.22.16
 
 - fix: extra files watcher not working on windows
