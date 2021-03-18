@@ -9,11 +9,11 @@ const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	noFormatting: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true, completion: true, },
-	htmlTagOrAttr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	tag: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
-	propRaw: { references: true, definitions: true, rename: true, },
 	referencesOnly: { references: true, definitions: true, },
 }
 
@@ -479,7 +479,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: {
-							...capabilitiesSet.htmlTagOrAttr,
+							...capabilitiesSet.attr,
 							basic: false,
 							rename: rename,
 						},
@@ -502,7 +502,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: {
-							...capabilitiesSet.htmlTagOrAttr,
+							...capabilitiesSet.attr,
 							basic: false,
 							rename: rename,
 						},
@@ -603,7 +603,7 @@ export function generate(
 							},
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.htmlTagOrAttr,
+								capabilities: capabilitiesSet.attr,
 							},
 						);
 					}
@@ -616,7 +616,7 @@ export function generate(
 							},
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.htmlTagOrAttr,
+								capabilities: capabilitiesSet.attr,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -630,7 +630,7 @@ export function generate(
 							},
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.htmlTagOrAttr,
+								capabilities: capabilitiesSet.attr,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -681,7 +681,7 @@ export function generate(
 							},
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.htmlTagOrAttr,
+								capabilities: capabilitiesSet.attr,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -714,7 +714,7 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.htmlTagOrAttr,
+						capabilities: capabilitiesSet.attr,
 						doRename: keepHyphenateName,
 					},
 				);
@@ -747,7 +747,7 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.htmlTagOrAttr,
+							capabilities: capabilitiesSet.attr,
 							doRename: keepHyphenateName,
 						},
 					);
@@ -803,7 +803,7 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.htmlTagOrAttr,
+						capabilities: capabilitiesSet.tag,
 						doRename: keepHyphenateName,
 					},
 				);
@@ -819,7 +819,7 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.htmlTagOrAttr,
+						capabilities: capabilitiesSet.tag,
 						doRename: keepHyphenateName,
 					},
 				);
@@ -928,7 +928,7 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.htmlTagOrAttr,
+							capabilities: capabilitiesSet.attr,
 						},
 					);
 					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>, __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>> };\n`);
@@ -946,7 +946,7 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.htmlTagOrAttr,
+							capabilities: capabilitiesSet.attr,
 						},
 					);
 					scriptGen.addText(`: `);
@@ -1057,7 +1057,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						doRename: keepHyphenateName,
-						capabilities: capabilitiesSet.htmlTagOrAttr,
+						capabilities: capabilitiesSet.attr,
 					},
 				);
 				scriptGen.addText(`: (`);
@@ -1090,7 +1090,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						doRename: keepHyphenateName,
-						capabilities: capabilitiesSet.htmlTagOrAttr,
+						capabilities: capabilitiesSet.attr,
 					},
 				);
 				scriptGen.addText(`: (`);

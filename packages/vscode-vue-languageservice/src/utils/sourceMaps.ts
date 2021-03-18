@@ -11,6 +11,7 @@ export interface TsMappingData {
 	doRename?: (oldName: string, newName: string) => string,
 	capabilities: {
 		basic?: boolean,
+		extraHoverInfo?: boolean,
 		references?: boolean,
 		definitions?: boolean,
 		diagnostic?: boolean,

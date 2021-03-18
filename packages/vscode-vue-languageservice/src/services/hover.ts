@@ -1,10 +1,12 @@
-import type { TsApiRegisterOptions } from '../types';
-import type { Position } from 'vscode-languageserver/node';
-import type { Hover } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { Hover, LocationLink, Position } from 'vscode-languageserver/node';
 import { MarkupContent } from 'vscode-languageserver/node';
+import type { TsApiRegisterOptions } from '../types';
+import { register as registerFindDefinitions } from './definitions';
 
 export function register({ mapper }: TsApiRegisterOptions) {
+
+	const findDefinitions = registerFindDefinitions(arguments[0]);
 
 	return (document: TextDocument, position: Position) => {
 
@@ -33,24 +35,43 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// vue -> ts
 		for (const tsRange of mapper.ts.to(uri, position)) {
-			if (!tsRange.data.capabilities.basic)
-				continue;
+
+			if (!tsRange.data.capabilities.basic) continue;
+
 			const tsHover = tsRange.languageService.doHover(
 				tsRange.textDocument.uri,
 				tsRange.start,
 			);
-			if (!tsHover)
-				continue;
-			if (!tsHover.range) {
-				result = tsHover;
-				continue;
+			if (!tsHover) continue;
+
+			if (tsRange.data.capabilities.extraHoverInfo) {
+				const definitions = findDefinitions.on(uri, position) as LocationLink[];
+				for (const definition of definitions) {
+					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start);
+					if (!extraHover) continue;
+					if (!MarkupContent.is(extraHover.contents)) continue;
+					let extraText = extraHover.contents.value;
+					const splitIndex = extraText.lastIndexOf('```');
+					if (splitIndex >= 0) {
+						extraText = extraText.substr(splitIndex + 3).trim();
+					}
+					if (extraText && MarkupContent.is(tsHover.contents)) {
+						tsHover.contents.value += `\n\n` + extraText;
+					}
+				}
 			}
-			// ts -> vue
-			for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsHover.range.start, tsHover.range.end)) {
-				result = {
-					...tsHover,
-					range: vueRange,
-				};
+
+			if (tsHover.range) {
+				// ts -> vue
+				for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsHover.range.start, tsHover.range.end)) {
+					result = {
+						...tsHover,
+						range: vueRange,
+					};
+				}
+			}
+			else {
+				result = tsHover;
 			}
 		}
 
