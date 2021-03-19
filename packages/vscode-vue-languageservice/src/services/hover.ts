@@ -55,7 +55,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 					if (splitIndex >= 0) {
 						extraText = extraText.substr(splitIndex + 3).trim();
 					}
-					if (extraText && MarkupContent.is(tsHover.contents)) {
+					if (extraText && MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraText)) {
 						tsHover.contents.value += `\n\n` + extraText;
 					}
 				}
