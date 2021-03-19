@@ -1,13 +1,13 @@
 import { notEmpty } from '@volar/shared';
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { getEmmetConfiguration } from '../configs';
-import { connection, documents, host, noStateLs } from '../instances';
+import { connection, documents, servicesManager, noStateLs } from '../instances';
 
 connection.onCompletion(async handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
 
-    return host?.bestMatch(document.uri)?.doComplete(
+    return servicesManager?.getMatchService(document.uri)?.doComplete(
         document,
         handler.position,
         handler.context,
@@ -16,49 +16,49 @@ connection.onCompletion(async handler => {
 });
 connection.onCompletionResolve(async item => {
     const uri = item.data?.uri;
-    return host?.bestMatch(uri)?.doCompletionResolve(item) ?? item;
+    return servicesManager?.getMatchService(uri)?.doCompletionResolve(item) ?? item;
 });
 connection.onHover(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.doHover(document, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.doHover(document, handler.position);
 });
 connection.onSignatureHelp(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.getSignatureHelp(document, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.getSignatureHelp(document, handler.position);
 });
 connection.onSelectionRanges(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.getSelectionRanges(document, handler.positions);
+    return servicesManager?.getMatchService(document.uri)?.getSelectionRanges(document, handler.positions);
 });
 connection.onPrepareRename(handler => {
-    return host?.bestMatch(handler.textDocument.uri)?.rename.onPrepare(handler.textDocument.uri, handler.position);
+    return servicesManager?.getMatchService(handler.textDocument.uri)?.rename.onPrepare(handler.textDocument.uri, handler.position);
 });
 connection.onRenameRequest(handler => {
-    return host?.bestMatch(handler.textDocument.uri)?.rename.doRename(handler.textDocument.uri, handler.position, handler.newName);
+    return servicesManager?.getMatchService(handler.textDocument.uri)?.rename.doRename(handler.textDocument.uri, handler.position, handler.newName);
 });
 connection.onCodeLens(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.getCodeLens(document);
+    return servicesManager?.getMatchService(document.uri)?.getCodeLens(document);
 });
 connection.onCodeLensResolve(codeLens => {
-    if (!host) return codeLens;
+    if (!servicesManager) return codeLens;
     const uri = codeLens.data?.uri;
-    return host?.bestMatch(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
+    return servicesManager?.getMatchService(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
 });
 connection.onExecuteCommand(handler => {
     const uri = handler.arguments?.[0];
     const document = documents.get(uri);
     if (!document) return;
-    return host?.bestMatch(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
+    return servicesManager?.getMatchService(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
 });
 connection.onCodeAction(handler => {
     const uri = handler.textDocument.uri;
-    const tsConfig = host?.bestMatchTsConfig(uri);
-    const service = tsConfig ? host?.services.get(tsConfig)?.getLanguageService() : undefined;
+    const tsConfig = servicesManager?.getMatchTsConfig(uri);
+    const service = tsConfig ? servicesManager?.services.get(tsConfig)?.getLanguageService() : undefined;
     if (service) {
         const codeActions = service.getCodeActions(uri, handler.range, handler.context);
         for (const codeAction of codeActions) {
@@ -73,9 +73,9 @@ connection.onCodeAction(handler => {
     }
 });
 connection.onCodeActionResolve(codeAction => {
-    if (!host) return codeAction;
+    if (!servicesManager) return codeAction;
     const tsConfig: string | undefined = (codeAction.data as any)?.tsConfig;
-    const service = tsConfig ? host.services.get(tsConfig)?.getLanguageService() : undefined;
+    const service = tsConfig ? servicesManager.services.get(tsConfig)?.getLanguageService() : undefined;
     if (service) {
         return service.doCodeActionResolve(codeAction);
     }
@@ -84,42 +84,42 @@ connection.onCodeActionResolve(codeAction => {
 connection.onReferences(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findReferences(document.uri, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.findReferences(document.uri, handler.position);
 });
 connection.onDefinition(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findDefinition(document.uri, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.findDefinition(document.uri, handler.position);
 });
 connection.onTypeDefinition(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findTypeDefinition(document.uri, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.findTypeDefinition(document.uri, handler.position);
 });
 connection.onDocumentColor(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findDocumentColors(document);
+    return servicesManager?.getMatchService(document.uri)?.findDocumentColors(document);
 });
 connection.onColorPresentation(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.getColorPresentations(document, handler.color, handler.range);
+    return servicesManager?.getMatchService(document.uri)?.getColorPresentations(document, handler.color, handler.range);
 });
 connection.onDocumentHighlight(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findDocumentHighlights(document, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.findDocumentHighlights(document, handler.position);
 });
 connection.onDocumentSymbol(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findDocumentSymbols(document);
+    return servicesManager?.getMatchService(document.uri)?.findDocumentSymbols(document);
 });
 connection.onDocumentLinks(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.findDocumentLinks(document);
+    return servicesManager?.getMatchService(document.uri)?.findDocumentLinks(document);
 });
 connection.onDocumentFormatting(handler => {
     if (!noStateLs) return;
@@ -134,21 +134,21 @@ connection.onFoldingRanges(handler => {
     return noStateLs.getFoldingRanges(document);
 });
 connection.languages.callHierarchy.onPrepare(handler => {
-    if (!host) return [];
+    if (!servicesManager) return [];
     const document = documents.get(handler.textDocument.uri);
     if (!document) return [];
-    const items = host?.bestMatch(document.uri)?.callHierarchy.onPrepare(document, handler.position);
+    const items = servicesManager?.getMatchService(document.uri)?.callHierarchy.onPrepare(document, handler.position);
     return items?.length ? items : null;
 });
 connection.languages.callHierarchy.onIncomingCalls(handler => {
-    if (!host) return [];
+    if (!servicesManager) return [];
     const { uri } = handler.item.data as { uri: string };
-    return host?.bestMatch(uri)?.callHierarchy.onIncomingCalls(handler.item) ?? [];
+    return servicesManager?.getMatchService(uri)?.callHierarchy.onIncomingCalls(handler.item) ?? [];
 });
 connection.languages.callHierarchy.onOutgoingCalls(handler => {
-    if (!host) return [];
+    if (!servicesManager) return [];
     const { uri } = handler.item.data as { uri: string };
-    return host?.bestMatch(uri)?.callHierarchy.onOutgoingCalls(handler.item) ?? [];
+    return servicesManager?.getMatchService(uri)?.callHierarchy.onOutgoingCalls(handler.item) ?? [];
 });
 connection.languages.onLinkedEditingRange(handler => {
     if (!noStateLs) return;
@@ -157,10 +157,10 @@ connection.languages.onLinkedEditingRange(handler => {
     return noStateLs.findLinkedEditingRanges(document, handler.position);
 });
 connection.workspace.onWillRenameFiles(handler => {
-    if (!host) return null;
+    if (!servicesManager) return null;
     const edits = handler.files
         .map(file => {
-            return host?.bestMatch(file.oldUri)?.rename.onRenameFile(file.oldUri, file.newUri);
+            return servicesManager?.getMatchService(file.oldUri)?.rename.onRenameFile(file.oldUri, file.newUri);
         })
         .filter(notEmpty)
 

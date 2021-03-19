@@ -21,28 +21,28 @@ import {
 import {
     connection,
     documents,
-    host,
+    servicesManager,
     noStateLs
 } from '../instances';
 
 connection.onNotification(RestartServerNotification.type, async () => {
-    host?.restart();
+    servicesManager?.restartAll();
 });
 connection.onRequest(RefCloseRequest.type, handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.doRefAutoClose(document, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.doRefAutoClose(document, handler.position);
 });
 connection.onRequest(D3Request.type, handler => {
     const document = documents.get(handler.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.getD3(document);
+    return servicesManager?.getMatchService(document.uri)?.getD3(document);
 });
 connection.onRequest(FormatAllScriptsRequest.type, async options => {
-    if (!host) return;
+    if (!servicesManager) return;
     const progress = await connection.window.createWorkDoneProgress();
     progress.begin('Format', 0, '', true);
-    for (const [_, service] of host.services) {
+    for (const [_, service] of servicesManager.services) {
         const ls = service.getLanguageServiceDontCreate();
         if (!ls) continue;
         const sourceFiles = ls.getAllSourceFiles();
@@ -61,10 +61,10 @@ connection.onRequest(FormatAllScriptsRequest.type, async options => {
     progress.done();
 });
 connection.onRequest(WriteVirtualFilesRequest.type, async () => {
-    if (!host) return;
+    if (!servicesManager) return;
     const progress = await connection.window.createWorkDoneProgress();
     progress.begin('Write', 0, '', true);
-    for (const [_, service] of host.services) {
+    for (const [_, service] of servicesManager.services) {
         const ls = service.getLanguageServiceDontCreate();
         if (!ls) continue;
         const globalDocs = ls.getGlobalDocs();
@@ -87,14 +87,14 @@ connection.onRequest(WriteVirtualFilesRequest.type, async () => {
 });
 connection.onRequest(VerifyAllScriptsRequest.type, async () => {
 
-    if (!host) return;
+    if (!servicesManager) return;
 
     let errors = 0;
     let warnings = 0;
 
     const progress = await connection.window.createWorkDoneProgress();
     progress.begin('Verify', 0, '', true);
-    for (const [_, service] of host.services) {
+    for (const [_, service] of servicesManager.services) {
         const ls = service.getLanguageServiceDontCreate();
         if (!ls) continue;
         const sourceFiles = ls.getAllSourceFiles();
@@ -121,7 +121,7 @@ connection.onRequest(VerifyAllScriptsRequest.type, async () => {
 connection.onRequest(RangeSemanticTokensRequest.type, async handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return host?.bestMatch(document.uri)?.getSemanticTokens(document, handler.range);
+    return servicesManager?.getMatchService(document.uri)?.getSemanticTokens(document, handler.range);
 });
 connection.onRequest(SemanticTokenLegendRequest.type, () => semanticTokenLegend);
 connection.onRequest(TagCloseRequest.type, handler => {

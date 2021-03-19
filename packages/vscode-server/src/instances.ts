@@ -8,7 +8,7 @@ import {
     TextDocumentRegistrationOptions,
     TextDocuments
 } from 'vscode-languageserver/node';
-import { createLanguageServiceHost } from './languageServiceHost';
+import { ServicesManager } from './servicesManager';
 
 export const connection = createConnection(ProposedFeatures.all);
 export const documents = new TextDocuments(TextDocument);
@@ -32,11 +32,11 @@ export const allFilesReg: TextDocumentRegistrationOptions = {
     ],
 };
 
-export let host: ReturnType<typeof createLanguageServiceHost> | undefined;
+export let servicesManager: ServicesManager | undefined;
 export let noStateLs: NoStateLanguageService | undefined;
 
-export function setHost(_host: ReturnType<typeof createLanguageServiceHost>) {
-    host = _host;
+export function setHost(_servicesManager: ServicesManager) {
+    servicesManager = _servicesManager;
 }
 export function setNoStateLs(_noStateLs: NoStateLanguageService) {
     noStateLs = _noStateLs;

@@ -6,7 +6,9 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import type { TextDocuments } from 'vscode-languageserver/node';
 
-export function createLanguageServiceHost(
+export type ServicesManager = ReturnType<typeof createServicesManager>;
+
+export function createServicesManager(
 	ts: typeof import('typescript'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	connection: Connection,
@@ -15,48 +17,47 @@ export function createLanguageServiceHost(
 	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
 	_onProjectFilesUpdate?: () => void,
 ) {
-	const searchFiles = ['tsconfig.json', 'jsconfig.json'];
+
+	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
-	const languageServices = new Map<string, ReturnType<typeof createLs>>();
+	const services = new Map<string, ReturnType<typeof createLs>>();
+	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
+	const tsConfigs = [...tsConfigSet].filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)));
 	let connectionInited = false;
 
-	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, searchFiles, undefined, ['**/*'])).flat());
-	const tsConfigs = [...tsConfigSet].filter(tsConfig => searchFiles.includes(upath.basename(tsConfig)));
 	for (const tsConfig of tsConfigs) {
 		onTsConfigChanged(tsConfig);
 	}
-
 	for (const rootPath of rootPaths) {
 		ts.sys.watchDirectory!(rootPath, tsConfig => {
-			if (searchFiles.includes(upath.basename(tsConfig))) {
+			if (tsConfigNames.includes(upath.basename(tsConfig))) {
 				onTsConfigChanged(tsConfig);
 			}
 		}, true);
 	}
 
 	return {
-		services: languageServices,
-		bestMatch,
-		bestMatchTsConfig,
-		allMatches,
-		restart,
+		services,
+		getMatchService,
+		getMatchTsConfig,
+		restartAll,
 		onConnectionInited,
 	};
 
 	async function onConnectionInited() {
 		connectionInited = true;
-		for (const [_, service] of languageServices) {
+		for (const [_, service] of services) {
 			service.prepareNextProgress();
 		}
 	}
 	function onTsConfigChanged(tsConfig: string) {
-		if (languageServices.has(tsConfig)) {
-			languageServices.get(tsConfig)?.dispose();
+		if (services.has(tsConfig)) {
+			services.get(tsConfig)?.dispose();
 			tsConfigWatchers.get(tsConfig)?.close();
-			languageServices.delete(tsConfig);
+			services.delete(tsConfig);
 		}
 		if (ts.sys.fileExists(tsConfig)) {
-			languageServices.set(tsConfig, createLs(tsConfig));
+			services.set(tsConfig, createLs(tsConfig));
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
 					onTsConfigChanged(tsConfig);
@@ -64,40 +65,37 @@ export function createLanguageServiceHost(
 			}));
 		}
 	}
-	function restart() {
+	function restartAll() {
 		for (const doc of documents.all()) {
 			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] })
 		}
-		for (const tsConfig of [...languageServices.keys()]) {
+		for (const tsConfig of [...services.keys()]) {
 			onTsConfigChanged(tsConfig);
 		}
-		for (const [_, service] of languageServices) {
+		for (const [_, service] of services) {
 			service.onProjectFilesUpdate([]);
 		}
 	}
-	function bestMatch(uri: string) {
-		const tsConfig = bestMatchTsConfig(uri);
+	function getMatchService(uri: string) {
+		const tsConfig = getMatchTsConfig(uri);
 		if (tsConfig) {
-			return languageServices.get(tsConfig)?.getLanguageService();
+			return services.get(tsConfig)?.getLanguageService();
 		}
 	}
-	function bestMatchTsConfig(uri: string) {
-		const matches = _all(uri);
+	function getMatchTsConfig(uri: string) {
+		const matches = getMatchTsConfigs(uri);
 		if (matches.first.length)
 			return matches.first[0];
 		if (matches.second.length)
 			return matches.second[0];
 	}
-	function allMatches(uri: string) {
-		const matches = _all(uri);
-		return [...matches.first, ...matches.second].map(tsConfig => languageServices.get(tsConfig)?.getLanguageService()).filter(notEmpty);
-	}
-	function _all(uri: string) {
+	function getMatchTsConfigs(uri: string) {
+
 		const fileName = uriToFsPath(uri);
 		let firstMatchTsConfigs: string[] = [];
 		let secondMatchTsConfigs: string[] = [];
 
-		for (const kvp of languageServices) {
+		for (const kvp of services) {
 			const tsConfig = upath.resolve(kvp[0]);
 			const parsedCommandLine = kvp[1].getParsedCommandLine();
 			const hasVueFile = parsedCommandLine.fileNames.some(fileName => upath.extname(fileName) === '.vue');
@@ -122,14 +120,16 @@ export function createLanguageServiceHost(
 		};
 	}
 	function createLs(tsConfig: string) {
+
 		let projectCurrentReq = 0;
 		let projectVersion = 0;
 		let disposed = false;
+		let checkedProject = false;
 		let parsedCommandLineUpdateTrigger = false;
 		let parsedCommandLine = createParsedCommandLine();
 		let currentValidation: Promise<void> | undefined;
 		let workDoneProgress: WorkDoneProgressServerReporter | undefined;
-		let checkedProject = false;
+		let vueLanguageService: LanguageService | undefined;
 		const fileCurrentReqs = new Map<string, number>();
 		const fileWatchers = new Map<string, ts.FileWatcher>();
 		const scriptVersions = new Map<string, string>();
@@ -137,7 +137,6 @@ export function createLanguageServiceHost(
 		const extraFileWatchers = new Map<string, ts.FileWatcher>();
 		const extraFileVersions = new Map<string, number>();
 		const languageServiceHost = createLanguageServiceHost();
-		let vueLanguageService: LanguageService | undefined;
 		const disposables: Disposable[] = [];
 
 		onParsedCommandLineUpdate();
@@ -241,7 +240,7 @@ export function createLanguageServiceHost(
 			}, 0);
 		}
 		async function sendDiagnostics(document: TextDocument, withSideEffect: boolean) {
-			const matchLs = bestMatch(document.uri);
+			const matchLs = getMatchService(document.uri);
 			if (matchLs !== vueLanguageService) return;
 			if (!vueLanguageService) return;
 

@@ -19,8 +19,8 @@ import {
 import { updateConfigs } from './configs';
 import './features/customFeatures';
 import './features/lspFeatures';
-import { connection, documents, host, setHost, setNoStateLs } from './instances';
-import { createLanguageServiceHost } from './languageServiceHost';
+import { connection, documents, servicesManager, setHost, setNoStateLs } from './instances';
+import { createServicesManager } from './servicesManager';
 
 let mode: ServerInitializationOptions['mode'] = 'api';
 
@@ -72,7 +72,7 @@ function onInitialize(params: InitializeParams) {
 		setNoStateLs(createNoStateLanguageService({ typescript: loadVscodeTypescript(options.appRoot) }));
 	}
 	else if (options.mode === 'api') {
-		setHost(createLanguageServiceHost(
+		setHost(createServicesManager(
 			loadVscodeTypescript(options.appRoot),
 			loadVscodeTypescriptLocalized(options.appRoot, options.language),
 			connection,
@@ -81,7 +81,7 @@ function onInitialize(params: InitializeParams) {
 		));
 	}
 	else if (options.mode === 'doc') {
-		setHost(createLanguageServiceHost(
+		setHost(createServicesManager(
 			loadVscodeTypescript(options.appRoot),
 			loadVscodeTypescriptLocalized(options.appRoot, options.language),
 			connection,
@@ -100,7 +100,7 @@ function onInitialized() {
 		case 'doc': import('./registers/registerDocumentFeatures'); break;
 		case 'html': import('./registers/registerHtmlFeatures'); break;
 	}
-	host?.onConnectionInited();
+	servicesManager?.onConnectionInited();
 	connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	updateConfigs();
 }
