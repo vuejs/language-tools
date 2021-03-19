@@ -1,10 +1,9 @@
+import { sleep, uriToFsPath } from '@volar/shared';
 import type * as ts from 'typescript';
 import * as upath from 'upath';
-import { createLanguageService, LanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
-import { uriToFsPath, fsPathToUri, normalizeFileName, sleep, notEmpty } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection, Disposable, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
-import type { TextDocuments } from 'vscode-languageserver/node';
+import type { Connection, TextDocuments } from 'vscode-languageserver/node';
+import { createServiceHandler, ServiceHandler } from './serviceHandler';
 
 export type ServicesManager = ReturnType<typeof createServicesManager>;
 
@@ -18,23 +17,45 @@ export function createServicesManager(
 	_onProjectFilesUpdate?: () => void,
 ) {
 
+	let connectionInited = false;
+	let filesUpdateTrigger = false;
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
-	const services = new Map<string, ReturnType<typeof createLs>>();
+	const services = new Map<string, ServiceHandler>();
 	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
 	const tsConfigs = [...tsConfigSet].filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)));
-	let connectionInited = false;
+	const checkedProject = new Set<string>();
 
 	for (const tsConfig of tsConfigs) {
 		onTsConfigChanged(tsConfig);
 	}
 	for (const rootPath of rootPaths) {
-		ts.sys.watchDirectory!(rootPath, tsConfig => {
-			if (tsConfigNames.includes(upath.basename(tsConfig))) {
-				onTsConfigChanged(tsConfig);
+		ts.sys.watchDirectory!(rootPath, async fileName => {
+			if (tsConfigNames.includes(upath.basename(fileName))) {
+				// tsconfig.json changed
+				onTsConfigChanged(fileName);
+			}
+			else {
+				// *.vue, *.ts ... changed
+				filesUpdateTrigger = true;
+				await sleep(0);
+				if (filesUpdateTrigger) {
+					filesUpdateTrigger = false;
+					for (const [_, service] of services) {
+						service.update();
+					}
+				}
 			}
 		}, true);
 	}
+
+	documents.onDidChangeContent(change => {
+		for (const [_, service] of services) {
+			service.onDocumentUpdated(change.document);
+		}
+		onDocumentUpdated(change.document);
+	});
+	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
 
 	return {
 		services,
@@ -44,6 +65,89 @@ export function createServicesManager(
 		onConnectionInited,
 	};
 
+	async function onDocumentUpdated(changeDoc: TextDocument) {
+
+		if (!getDocVersionForDiag) return;
+
+		const otherDocs: TextDocument[] = [];
+		const changedFileName = uriToFsPath(changeDoc.uri);
+		const isCancel = getIsCancel(changeDoc.uri, changeDoc.version);
+
+		for (const document of documents.all()) {
+			if (document.languageId === 'vue' && document.uri !== changeDoc.uri) {
+				otherDocs.push(document);
+			}
+		}
+
+		if (await isCancel()) return;
+		await sendDocumentDiagnostics(changeDoc, false, changedFileName, isCancel);
+
+		if (await isCancel()) return;
+		await sendDocumentDiagnostics(changeDoc, true, changedFileName, isCancel);
+
+		for (const doc of otherDocs) {
+			if (await isCancel()) break;
+			await sendDocumentDiagnostics(doc, true, changedFileName, isCancel);
+		}
+	}
+	async function onFileUpdated(fileName?: string) {
+
+		if (!getDocVersionForDiag) return;
+
+		const openedDocs: TextDocument[] = [];
+
+		for (const document of documents.all()) {
+			if (document.languageId === 'vue') {
+				openedDocs.push(document);
+			}
+		}
+
+		for (const doc of openedDocs) {
+			await sendDocumentDiagnostics(doc, true, fileName);
+		}
+	}
+	function getIsCancel(uri: string, version: number) {
+		let _isCancel = false;
+		return async () => {
+			if (_isCancel) {
+				return true;
+			}
+			if (getDocVersionForDiag) {
+				const clientDocVersion = await getDocVersionForDiag(uri);
+				if (clientDocVersion !== undefined && version !== clientDocVersion) {
+					_isCancel = true;
+				}
+			}
+			return _isCancel;
+		};
+	}
+	async function sendDocumentDiagnostics(document: TextDocument, withSideEffect: boolean, changedFileName?: string, isCancel?: () => Promise<boolean>) {
+
+		const matchTsConfig = getMatchTsConfig(document.uri);
+		if (!matchTsConfig) return;
+
+		const matchService = services.get(matchTsConfig);
+		if (!matchService) return;
+		if (changedFileName && !matchService.isRelatedFile(changedFileName)) return;
+
+		const matchLs = matchService.getLanguageService();
+
+		let send = false; // is vue document
+		await matchLs.doValidation(document, async result => {
+			send = true;
+			connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
+		}, isCancel, withSideEffect);
+
+		if (send && !checkedProject.has(matchTsConfig)) {
+			checkedProject.add(matchTsConfig);
+			const projectValid = matchLs.checkProject();
+			if (!projectValid) {
+				connection.window.showWarningMessage(
+					"Volar cannot offer intellisense auto completion due to your project being a Vue 2 project and not having @vue/runtime-dom installed. You can find more information at https://github.com/johnsoncodehk/volar"
+				);
+			}
+		}
+	}
 	async function onConnectionInited() {
 		connectionInited = true;
 		for (const [_, service] of services) {
@@ -57,7 +161,16 @@ export function createServicesManager(
 			services.delete(tsConfig);
 		}
 		if (ts.sys.fileExists(tsConfig)) {
-			services.set(tsConfig, createLs(tsConfig));
+			services.set(tsConfig, createServiceHandler(
+				tsConfig,
+				ts,
+				tsLocalized,
+				connection,
+				documents,
+				() => connectionInited,
+				onFileUpdated,
+				_onProjectFilesUpdate,
+			));
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
 					onTsConfigChanged(tsConfig);
@@ -72,9 +185,7 @@ export function createServicesManager(
 		for (const tsConfig of [...services.keys()]) {
 			onTsConfigChanged(tsConfig);
 		}
-		for (const [_, service] of services) {
-			service.onProjectFilesUpdate([]);
-		}
+		onFileUpdated();
 	}
 	function getMatchService(uri: string) {
 		const tsConfig = getMatchTsConfig(uri);
@@ -84,10 +195,8 @@ export function createServicesManager(
 	}
 	function getMatchTsConfig(uri: string) {
 		const matches = getMatchTsConfigs(uri);
-		if (matches.first.length)
-			return matches.first[0];
-		if (matches.second.length)
-			return matches.second[0];
+		if (matches.length)
+			return matches[0];
 	}
 	function getMatchTsConfigs(uri: string) {
 
@@ -114,340 +223,9 @@ export function createServicesManager(
 		firstMatchTsConfigs = firstMatchTsConfigs.sort((a, b) => b.split('/').length - a.split('/').length)
 		secondMatchTsConfigs = secondMatchTsConfigs.sort((a, b) => b.split('/').length - a.split('/').length)
 
-		return {
-			first: firstMatchTsConfigs,
-			second: secondMatchTsConfigs,
-		};
-	}
-	function createLs(tsConfig: string) {
-
-		let projectCurrentReq = 0;
-		let projectVersion = 0;
-		let disposed = false;
-		let checkedProject = false;
-		let parsedCommandLineUpdateTrigger = false;
-		let parsedCommandLine = createParsedCommandLine();
-		let currentValidation: Promise<void> | undefined;
-		let workDoneProgress: WorkDoneProgressServerReporter | undefined;
-		let vueLanguageService: LanguageService | undefined;
-		const fileCurrentReqs = new Map<string, number>();
-		const fileWatchers = new Map<string, ts.FileWatcher>();
-		const scriptVersions = new Map<string, string>();
-		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-		const extraFileWatchers = new Map<string, ts.FileWatcher>();
-		const extraFileVersions = new Map<string, number>();
-		const languageServiceHost = createLanguageServiceHost();
-		const disposables: Disposable[] = [];
-
-		onParsedCommandLineUpdate();
-		const directoryWatcher = ts.sys.watchDirectory!(upath.dirname(tsConfig), async fileName => {
-			parsedCommandLineUpdateTrigger = true;
-			await sleep(0);
-			if (parsedCommandLineUpdateTrigger && !disposed) {
-				parsedCommandLineUpdateTrigger = false;
-				parsedCommandLine = createParsedCommandLine();
-				onParsedCommandLineUpdate();
-			}
-		}, true);
-
-		disposables.push(documents.onDidChangeContent(change => {
-			onDidChangeContent(change.document);
-		}));
-		disposables.push(documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] })));
-
-		prepareNextProgress();
-
-		return {
-			getLanguageService: () => {
-				if (!vueLanguageService) {
-					vueLanguageService = createLanguageService(languageServiceHost, { typescript: ts }, async p => {
-						if (p === 0) {
-							workDoneProgress?.begin('Initializing Vue language features');
-						}
-						if (p < 1) {
-							workDoneProgress?.report(p * 100);
-						}
-						else {
-							prepareNextProgress();
-						}
-					});
-				}
-				return vueLanguageService;
-			},
-			getLanguageServiceDontCreate: () => vueLanguageService,
-			getParsedCommandLine: () => parsedCommandLine,
-			dispose,
-			onProjectFilesUpdate,
-			prepareNextProgress,
-		};
-
-		async function prepareNextProgress() {
-			workDoneProgress?.done();
-			if (connectionInited) {
-				workDoneProgress = await connection.window.createWorkDoneProgress();
-			}
-		}
-		function createParsedCommandLine() {
-			const parseConfigHost: ts.ParseConfigHost = {
-				...ts.sys,
-				readDirectory: (path, extensions, exclude, include, depth) => {
-					return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
-				},
-			};
-
-			const realTsConfig = ts.sys.realpath!(tsConfig);
-			const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-			const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
-			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
-			content.fileNames = content.fileNames.map(normalizeFileName);
-			return content;
-		}
-		async function onDidChangeContent(document: TextDocument) {
-			if (disposed) return;
-			const fileName = uriToFsPath(document.uri);
-			const isProjectFile = new Set(parsedCommandLine.fileNames).has(fileName);
-			const isReferenceFile = scriptSnapshots.has(fileName);
-			if (isProjectFile || isReferenceFile) {
-				const newVersion = ts.sys.createHash!(document.getText());
-				scriptVersions.set(fileName, newVersion);
-				await onProjectFilesUpdate(isProjectFile ? [document] : []);
-			}
-		}
-		async function doValidation(changedDocs: TextDocument[]) {
-			const req = ++projectCurrentReq;
-
-			for (const doc of changedDocs) {
-				if (req !== projectCurrentReq) break;
-				await sendDiagnostics(doc, false);
-			}
-
-			const fileNames = new Set(parsedCommandLine.fileNames);
-			const openedDocs = documents.all().filter(doc => doc.languageId === 'vue' && fileNames.has(uriToFsPath(doc.uri)));
-			setTimeout(async () => {
-
-				for (const doc of changedDocs) {
-					if (req !== projectCurrentReq) break;
-					await sendDiagnostics(doc, true);
-				}
-
-				setTimeout(async () => {
-					for (const doc of openedDocs) {
-						if (changedDocs.find(changeDoc => changeDoc.uri === doc.uri)) continue;
-						if (req !== projectCurrentReq) break;
-						await sendDiagnostics(doc, true);
-					}
-				}, 0);
-			}, 0);
-		}
-		async function sendDiagnostics(document: TextDocument, withSideEffect: boolean) {
-			const matchLs = getMatchService(document.uri);
-			if (matchLs !== vueLanguageService) return;
-			if (!vueLanguageService) return;
-
-			const req = (fileCurrentReqs.get(document.uri) ?? 0) + 1;
-			const docVersion = document.version;
-			fileCurrentReqs.set(document.uri, req);
-			let _isCancel = false;
-			const isCancel = async () => {
-				if (_isCancel) {
-					return true;
-				}
-				if (fileCurrentReqs.get(document.uri) !== req) {
-					_isCancel = true;
-					return true;
-				}
-				if (getDocVersionForDiag) {
-					const clientDocVersion = await getDocVersionForDiag(document.uri);
-					if (clientDocVersion !== undefined && docVersion !== clientDocVersion) {
-						_isCancel = true;
-						return true;
-					}
-				}
-				return false;
-			};
-
-			let send = false; // is vue document
-			await vueLanguageService.doValidation(document, async result => {
-				send = true;
-				connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
-			}, isCancel, withSideEffect);
-
-			if (send && !checkedProject) {
-				checkedProject = true;
-				const projectValid = vueLanguageService.checkProject();
-				if (!projectValid) {
-					connection.window.showWarningMessage(
-						"Volar cannot offer intellisense auto completion due to your project being a Vue 2 project and not having @vue/runtime-dom installed. You can find more information at https://github.com/johnsoncodehk/volar"
-					);
-				}
-			}
-		}
-		function onParsedCommandLineUpdate() {
-			const fileNames = new Set(parsedCommandLine.fileNames);
-			let filesChanged = false;
-
-			for (const [fileName, fileWatcher] of extraFileWatchers) {
-				fileWatcher.close();
-			}
-			extraFileWatchers.clear();
-			extraFileVersions.clear();
-
-			for (const fileName of fileWatchers.keys()) {
-				if (!fileNames.has(fileName)) {
-					fileWatchers.get(fileName)!.close();
-					fileWatchers.delete(fileName);
-					filesChanged = true;
-				}
-			}
-			for (const fileName of fileNames) {
-				if (!fileWatchers.has(fileName)) {
-					const fileWatcher = ts.sys.watchFile!(fileName, (fileName, eventKind) => {
-						if (eventKind === ts.FileWatcherEventKind.Changed) {
-							onFileContentChanged(fileName);
-						}
-					});
-					fileWatchers.set(fileName, fileWatcher);
-					filesChanged = true;
-				}
-			}
-			if (filesChanged) {
-				onProjectFilesUpdate([]);
-			}
-
-			function onFileContentChanged(fileName: string) {
-				fileName = upath.resolve(fileName);
-				const uri = fsPathToUri(fileName);
-				if (!documents.get(uri)) {
-					const oldVersion = scriptVersions.get(fileName);
-					const oldVersionNum = Number(oldVersion);
-					if (Number.isNaN(oldVersionNum)) {
-						scriptVersions.set(fileName, '0');
-					}
-					else {
-						scriptVersions.set(fileName, (oldVersionNum + 1).toString());
-					}
-					onProjectFilesUpdate([]);
-				}
-			}
-		}
-		async function onProjectFilesUpdate(changedDocs: TextDocument[]) {
-			projectVersion++;
-			if (_onProjectFilesUpdate) {
-				_onProjectFilesUpdate();
-			}
-			if (getDocVersionForDiag) {
-				while (currentValidation) {
-					await currentValidation;
-				}
-				currentValidation = doValidation(changedDocs);
-				await currentValidation;
-				currentValidation = undefined;
-			}
-		}
-		function createLanguageServiceHost() {
-
-			const host: LanguageServiceHost = {
-				// ts
-				getNewLine: () => ts.sys.newLine,
-				useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
-				readFile: ts.sys.readFile,
-				writeFile: ts.sys.writeFile,
-				directoryExists: ts.sys.directoryExists,
-				getDirectories: ts.sys.getDirectories,
-				readDirectory: ts.sys.readDirectory,
-				realpath: ts.sys.realpath,
-				// custom
-				fileExists,
-				getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
-				getProjectVersion: () => projectVersion.toString(),
-				getScriptFileNames: () => [
-					...parsedCommandLine.fileNames,
-					...[...extraFileVersions.keys()].filter(fileName => fileName.endsWith('.vue')), // create virtual files from extra vue scripts
-				],
-				getCurrentDirectory: () => upath.dirname(tsConfig),
-				getCompilationSettings: () => parsedCommandLine.options,
-				getScriptVersion,
-				getScriptSnapshot,
-			};
-
-			if (tsLocalized) {
-				host.getLocalizedDiagnosticMessages = () => tsLocalized;
-			}
-
-			return host;
-
-			function fileExists(fileName: string) {
-				fileName = normalizeFileName(ts.sys.realpath?.(fileName) ?? fileName);
-				const fileExists = !!ts.sys.fileExists?.(fileName);
-				if (
-					fileExists
-					&& !fileWatchers.has(fileName)
-					&& !extraFileWatchers.has(fileName)
-				) {
-					const fileWatcher = ts.sys.watchFile!(fileName, (_, eventKind) => {
-						if (eventKind === ts.FileWatcherEventKind.Changed) {
-							extraFileVersions.set(fileName, (extraFileVersions.get(fileName) ?? 0) + 1);
-						}
-						if (eventKind === ts.FileWatcherEventKind.Deleted) {
-							fileWatcher?.close();
-							extraFileVersions.delete(fileName);
-							extraFileWatchers.delete(fileName);
-							scriptSnapshots.delete(fileName);
-						}
-						onProjectFilesUpdate([]);
-					});
-					extraFileVersions.set(fileName, 0);
-					extraFileWatchers.set(fileName, fileWatcher);
-					if (fileName.endsWith('.vue')) {
-						projectVersion++;
-						vueLanguageService?.update(false); // create virtual files
-					}
-				}
-				return fileExists;
-			}
-			function getScriptVersion(fileName: string) {
-				return scriptVersions.get(fileName)
-					?? extraFileVersions.get(fileName)?.toString()
-					?? '';
-			}
-			function getScriptSnapshot(fileName: string) {
-				const version = getScriptVersion(fileName);
-				const cache = scriptSnapshots.get(fileName);
-				if (cache && cache[0] === version) {
-					return cache[1];
-				}
-				const text = getScriptText(fileName);
-				if (text !== undefined) {
-					const snapshot = ts.ScriptSnapshot.fromString(text);
-					scriptSnapshots.set(fileName, [version.toString(), snapshot]);
-					return snapshot;
-				}
-			}
-			function getScriptText(fileName: string) {
-				const doc = documents.get(fsPathToUri(fileName));
-				if (doc) {
-					return doc.getText();
-				}
-				if (ts.sys.fileExists(fileName)) {
-					return ts.sys.readFile(fileName, 'utf8');
-				}
-			}
-		}
-		function dispose() {
-			disposed = true;
-			for (const [_, fileWatcher] of fileWatchers) {
-				fileWatcher.close();
-			}
-			for (const [_, fileWatcher] of extraFileWatchers) {
-				fileWatcher.close();
-			}
-			directoryWatcher.close();
-			if (vueLanguageService) {
-				vueLanguageService.dispose();
-			}
-			for (const disposable of disposables) {
-				disposable.dispose();
-			}
-		}
+		return [
+			...firstMatchTsConfigs,
+			...secondMatchTsConfigs,
+		];
 	}
 }

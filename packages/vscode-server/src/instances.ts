@@ -35,7 +35,7 @@ export const allFilesReg: TextDocumentRegistrationOptions = {
 export let servicesManager: ServicesManager | undefined;
 export let noStateLs: NoStateLanguageService | undefined;
 
-export function setHost(_servicesManager: ServicesManager) {
+export function setServicesManager(_servicesManager: ServicesManager) {
     servicesManager = _servicesManager;
 }
 export function setNoStateLs(_noStateLs: NoStateLanguageService) {

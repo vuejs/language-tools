@@ -19,7 +19,7 @@ import {
 import { updateConfigs } from './configs';
 import './features/customFeatures';
 import './features/lspFeatures';
-import { connection, documents, servicesManager, setHost, setNoStateLs } from './instances';
+import { connection, documents, servicesManager, setServicesManager, setNoStateLs } from './instances';
 import { createServicesManager } from './servicesManager';
 
 let mode: ServerInitializationOptions['mode'] = 'api';
@@ -72,7 +72,7 @@ function onInitialize(params: InitializeParams) {
 		setNoStateLs(createNoStateLanguageService({ typescript: loadVscodeTypescript(options.appRoot) }));
 	}
 	else if (options.mode === 'api') {
-		setHost(createServicesManager(
+		setServicesManager(createServicesManager(
 			loadVscodeTypescript(options.appRoot),
 			loadVscodeTypescriptLocalized(options.appRoot, options.language),
 			connection,
@@ -81,7 +81,7 @@ function onInitialize(params: InitializeParams) {
 		));
 	}
 	else if (options.mode === 'doc') {
-		setHost(createServicesManager(
+		setServicesManager(createServicesManager(
 			loadVscodeTypescript(options.appRoot),
 			loadVscodeTypescriptLocalized(options.appRoot, options.language),
 			connection,
