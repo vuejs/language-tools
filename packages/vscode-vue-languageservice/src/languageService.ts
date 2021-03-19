@@ -45,6 +45,7 @@ import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
 import { UriMap } from './uriMap';
 
+export type NoStateLanguageService = ReturnType<typeof createNoStateLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts.LanguageServiceHost;
 export type Dependencies = {
