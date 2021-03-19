@@ -92,12 +92,18 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             },
         });
         codeGen.addText('<');
-        codeGen.addCode(
-            node.name,
-            getPugStartEnd(node.line, node.column, node.name.length),
-            SourceMaps.Mode.Offset,
-            undefined,
-        );
+        const tagRange = getPugStartEnd(node.line, node.column, node.name.length);
+        if (src.substring(tagRange.start, tagRange.end) === node.name) {
+            codeGen.addCode(
+                node.name,
+                tagRange,
+                SourceMaps.Mode.Offset,
+                undefined,
+            );
+        }
+        else {
+            codeGen.addText(node.name);
+        }
         writeClassesOrStyles(node.attrs, 'class');
         for (const attr of node.attrs.filter(attr => attr.name !== 'class')) {
             writeAttr(attr);
