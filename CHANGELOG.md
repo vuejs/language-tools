@@ -1,3 +1,9 @@
+### 0.22.19
+
+- fix: pug tag less element mapping incorrect
+- fix: extra hover info duplicate
+- fix: error when hovering the slot bindings
+
 ### 0.22.18
 
 - feat: props jsdoc support
