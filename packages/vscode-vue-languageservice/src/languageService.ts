@@ -43,6 +43,7 @@ import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRanges';
 import * as d3 from './services/d3';
+import { UriMap } from './uriMap';
 
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts.LanguageServiceHost;
@@ -91,8 +92,8 @@ export function createLanguageService(
 	let initTemplateScript = false; // html components completion require template data
 	let shouldCheckGlobalComponentsUpdate = false;
 	let shouldSendUpdate = true;
-	const documents = new Map<string, TextDocument>();
-	const sourceFiles = new Map<string, SourceFile>();
+	const documents = new UriMap<TextDocument>();
+	const sourceFiles = new UriMap<SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
 
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
@@ -485,8 +486,8 @@ export function createLanguageService(
 			getScriptSnapshot,
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				const result = vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
-				for (const [uri] of sourceFiles) {
-					const vuePath = uriToFsPath(uri);
+				for (const [_, sourceFile] of sourceFiles) {
+					const vuePath = uriToFsPath(sourceFile.uri);
 					const vuePath2 = upath.join(path, upath.basename(vuePath));
 					if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
 						continue;
