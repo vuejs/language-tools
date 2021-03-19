@@ -29,7 +29,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		return result;
 	}
 
-	function onTs(uri: string, position: Position) {
+	function onTs(uri: string, position: Position, withExtra = true) {
 
 		let result: Hover | undefined;
 
@@ -44,10 +44,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			);
 			if (!tsHover) continue;
 
-			if (tsRange.data.capabilities.extraHoverInfo) {
+			if (withExtra && tsRange.data.capabilities.extraHoverInfo) {
 				const definitions = findDefinitions.on(uri, position) as LocationLink[];
 				for (const definition of definitions) {
-					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start);
+					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, false);
 					if (!extraHover) continue;
 					if (!MarkupContent.is(extraHover.contents)) continue;
 					let extraText = extraHover.contents.value;
