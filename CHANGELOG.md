@@ -1,3 +1,8 @@
+### 0.22.20
+
+- fix: handle file name is `Foo.vue` but LSP send `file:///.../foo.vue`
+- fix: fix lsp not working on monorepo edge case
+
 ### 0.22.19
 
 - fix: pug tag less element mapping incorrect
