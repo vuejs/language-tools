@@ -212,7 +212,7 @@ export function createServicesManager(
 			const fileNames = new Set(parsedCommandLine.fileNames);
 			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.getTsService().getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
-				if (fileName.startsWith(tsConfigDir)) { // is file under tsconfig.json folder
+				if (!upath.relative(tsConfigDir, fileName).startsWith('..')) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);
 				}
 				else {
