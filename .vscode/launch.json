@@ -11,8 +11,8 @@
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
 			"outFiles": [
-				"${workspaceRoot}/packages/client/out/**/*.js",
-				"${workspaceRoot}/packages/shared/out/**/*.js"
+				"${workspaceRoot}/packages/shared/out/**/*.js",
+				"${workspaceRoot}/packages/vscode-client/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -22,13 +22,13 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server",
+			"name": "Attach to Server - API",
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
 				"${workspaceRoot}/packages/pug/out/**/*.js",
-				"${workspaceRoot}/packages/server/out/**/*.js",
 				"${workspaceRoot}/packages/shared/out/**/*.js",
+				"${workspaceRoot}/packages/vscode-server/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-typescript-languageservice/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-vue-languageservice/out/**/*.js"
 			]
@@ -36,13 +36,13 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - 2",
+			"name": "Attach to Server - Document",
 			"port": 6010,
 			"restart": true,
 			"outFiles": [
 				"${workspaceRoot}/packages/pug/out/**/*.js",
-				"${workspaceRoot}/packages/server/out/**/*.js",
 				"${workspaceRoot}/packages/shared/out/**/*.js",
+				"${workspaceRoot}/packages/vscode-server/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-typescript-languageservice/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-vue-languageservice/out/**/*.js"
 			]
@@ -50,13 +50,13 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - 3",
+			"name": "Attach to Server - HTML",
 			"port": 6011,
 			"restart": true,
 			"outFiles": [
 				"${workspaceRoot}/packages/pug/out/**/*.js",
-				"${workspaceRoot}/packages/server/out/**/*.js",
 				"${workspaceRoot}/packages/shared/out/**/*.js",
+				"${workspaceRoot}/packages/vscode-server/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-typescript-languageservice/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-vue-languageservice/out/**/*.js"
 			]
@@ -67,9 +67,9 @@
 			"name": "Client + Server",
 			"configurations": [
 				"Launch Client",
-				"Attach to Server",
-				"Attach to Server - 2",
-				"Attach to Server - 3"
+				"Attach to Server - API",
+				"Attach to Server - Document",
+				"Attach to Server - HTML"
 			]
 		}
 	]
