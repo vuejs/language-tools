@@ -1,3 +1,9 @@
+### 0.22.21
+
+- fix: diagnostics should update if tsconfig.json update
+- fix: fix style attributes duplicate error [#109](https://github.com/johnsoncodehk/volar/issues/109)
+- fix: patch postcss diagnostics [#103](https://github.com/johnsoncodehk/volar/issues/103)
+
 ### 0.22.20
 
 - fix: handle file name is `Foo.vue` but LSP send `file:///.../foo.vue`
