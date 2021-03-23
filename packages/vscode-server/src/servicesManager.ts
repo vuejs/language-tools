@@ -155,6 +155,11 @@ export function createServicesManager(
 		}
 	}
 	function onTsConfigChanged(tsConfig: string) {
+		for (const doc of documents.all()) {
+			if (doc.languageId === 'vue') {
+				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+			}
+		}
 		if (services.has(tsConfig)) {
 			services.get(tsConfig)?.dispose();
 			tsConfigWatchers.get(tsConfig)?.close();
@@ -177,10 +182,13 @@ export function createServicesManager(
 				}
 			}));
 		}
+		onFileUpdated();
 	}
 	function restartAll() {
 		for (const doc of documents.all()) {
-			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] })
+			if (doc.languageId === 'vue') {
+				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+			}
 		}
 		for (const tsConfig of [...services.keys()]) {
 			onTsConfigChanged(tsConfig);
