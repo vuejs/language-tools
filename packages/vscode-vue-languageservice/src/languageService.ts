@@ -619,7 +619,7 @@ export function createLanguageService(
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, dtsMode));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, 'api', dtsMode));
 				vueScriptsUpdated = true;
 			}
 			else {

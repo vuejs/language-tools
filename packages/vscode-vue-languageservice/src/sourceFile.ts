@@ -4,7 +4,6 @@ import {
 	CompletionItem,
 	DiagnosticTag,
 	Range,
-	Location,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, notEmpty } from '@volar/shared';
@@ -39,6 +38,7 @@ export function createSourceFile(
 	initialDocument: TextDocument,
 	tsLanguageService: ts2.LanguageService,
 	ts: typeof import('typescript'),
+	styleMode: 'api' | 'format',
 	dtsMode?: Ref<boolean>,
 ) {
 	// sources
@@ -72,7 +72,7 @@ export function createSourceFile(
 	});
 
 	// virtual scripts
-	const _virtualStyles = useStylesRaw(ts, tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles));
+	const _virtualStyles = useStylesRaw(ts, tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles), styleMode);
 	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template));
 	const templateData = computed<undefined | {
 		html?: string,

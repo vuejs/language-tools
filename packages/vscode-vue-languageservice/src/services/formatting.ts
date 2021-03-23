@@ -17,7 +17,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 		const tsService2 = getCheapTsService2(ts, _document);
 		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText()); // TODO: high cost
 
-		const sourceFile = createSourceFile(document, tsService2.service, ts);
+		const sourceFile = createSourceFile(document, tsService2.service, ts, 'format');
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();

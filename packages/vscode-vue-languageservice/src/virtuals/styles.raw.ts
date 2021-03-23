@@ -13,6 +13,7 @@ export function useStylesRaw(
 	tsLanguageService: ts2.LanguageService,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
+	mode: 'api' | 'format',
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
@@ -37,7 +38,21 @@ export function useStylesRaw(
 		for (let i = 0; i < styles.value.length; i++) {
 			const style = styles.value[i];
 			const lang = style.lang;
-			const content = style.content;
+			let content = style.content;
+			if (mode === 'api') {
+				// TODO: this is temporarily fix, wait for https://github.com/microsoft/vscode-css-languageservice/issues/237
+				const lines = style.content.split('\n');
+				for (let i = 0; i < lines.length; i++) {
+					const line = lines[i];
+					let trimedLine = line.trim();
+					if (trimedLine.startsWith('@') && trimedLine.endsWith(';')) {
+						const offset = line.length - line.trimStart().length;
+						const parts = line.substring(offset).split(' ');
+						lines[i] = line.substring(0, offset) + parts[0] + ' ' + parts.slice(1).join('_');
+					}
+				}
+				content = lines.join('\n');
+			}
 			const documentUri = vueDoc.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, version++, content);
 			const linkStyles: {
