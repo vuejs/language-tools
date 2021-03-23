@@ -585,8 +585,9 @@ export function generate(
 				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 				const propValue = prop.exp?.content ?? 'undefined';
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
+				const isDirective = !prop.exp || prop.exp.constType !== vueDom.ConstantTypes.CAN_STRINGIFY;
 
-				if (isClassOrStyleAttr !== forDirectiveClassOrStyle) {
+				if ((isClassOrStyleAttr && isDirective) !== forDirectiveClassOrStyle) {
 					continue;
 				}
 
