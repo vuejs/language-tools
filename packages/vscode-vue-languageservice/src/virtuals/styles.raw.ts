@@ -39,7 +39,7 @@ export function useStylesRaw(
 			const style = styles.value[i];
 			const lang = style.lang;
 			let content = style.content;
-			if (mode === 'api') {
+			if (lang === 'postcss' && mode === 'api') {
 				// TODO: this is temporarily fix, wait for https://github.com/microsoft/vscode-css-languageservice/issues/237
 				const lines = style.content.split('\n');
 				for (let i = 0; i < lines.length; i++) {
