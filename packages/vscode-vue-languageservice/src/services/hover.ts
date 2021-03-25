@@ -29,7 +29,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		return result;
 	}
 
-	function onTs(uri: string, position: Position, withExtra = true) {
+	function onTs(uri: string, position: Position, isExtra = false) {
 
 		let result: Hover | undefined;
 
@@ -41,22 +41,21 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			const tsHover = tsRange.languageService.doHover(
 				tsRange.textDocument.uri,
 				tsRange.start,
+				isExtra,
 			);
 			if (!tsHover) continue;
 
-			if (withExtra && tsRange.data.capabilities.extraHoverInfo) {
+			if (!isExtra && tsRange.data.capabilities.extraHoverInfo) {
 				const definitions = findDefinitions.on(uri, position) as LocationLink[];
 				for (const definition of definitions) {
-					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, false);
+					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, true);
 					if (!extraHover) continue;
 					if (!MarkupContent.is(extraHover.contents)) continue;
-					let extraText = extraHover.contents.value;
-					const splitIndex = extraText.lastIndexOf('```');
-					if (splitIndex >= 0) {
-						extraText = extraText.substr(splitIndex + 3).trim();
-					}
-					if (extraText && MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraText)) {
-						tsHover.contents.value += `\n\n` + extraText;
+					const extraText = extraHover.contents.value;
+					for (const extraTextPart of extraText.split('\n\n')) {
+						if (MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraTextPart)) {
+							tsHover.contents.value += `\n\n` + extraTextPart;
+						}
 					}
 				}
 			}

@@ -11,7 +11,7 @@ import { uriToFsPath } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
-	return (uri: string, position: Position): Hover | undefined => {
+	return (uri: string, position: Position, documentOnly = false): Hover | undefined => {
 		const document = getTextDocument(uri);
 		if (!document) return;
 
@@ -24,7 +24,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const displayString = ts.displayPartsToString(info.displayParts);
 		const documentation = previewer.markdownDocumentation(info.documentation, info.tags);
 
-		if (displayString) {
+		if (displayString && !documentOnly) {
 			parts.push(['```typescript', displayString, '```'].join('\n'));
 		}
 		if (documentation) {
