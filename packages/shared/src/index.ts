@@ -1,6 +1,7 @@
 export * from './path';
 export * from './requests';
 export * from './types';
+export * from './uriMap';
 
 import * as path from 'upath';
 import * as fs from 'fs';

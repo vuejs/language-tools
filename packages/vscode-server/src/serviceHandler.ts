@@ -1,5 +1,6 @@
 import { fsPathToUri, normalizeFileName, uriToFsPath } from '@volar/shared';
 import { createLanguageService, LanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
+import { FsPathSet, FsPathMap } from '@volar/shared';
 import type * as ts from 'typescript';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -22,11 +23,20 @@ export function createServiceHandler(
 	let parsedCommandLine: ts.ParsedCommandLine;
 	let workDoneProgress: WorkDoneProgressServerReporter | undefined;
 	let vueLs: LanguageService | undefined;
-	const fileWatchers = new Map<string, ts.FileWatcher>();
-	const scriptVersions = new Map<string, string>();
-	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const extraFileWatchers = new Map<string, ts.FileWatcher>();
-	const extraFileVersions = new Map<string, number>();
+	const snapshots = new FsPathMap<{
+		version: string,
+		snapshot: ts.IScriptSnapshot,
+	}>();
+	const scripts = new FsPathMap<{
+		version: number,
+		fileName: string,
+		fileWatcher: ts.FileWatcher,
+	}>();
+	const extraScripts = new FsPathMap<{
+		version: number,
+		fileName: string,
+		fileWatcher: ts.FileWatcher,
+	}>();
 	const languageServiceHost = createLanguageServiceHost();
 	const disposables: Disposable[] = [];
 
@@ -70,26 +80,33 @@ export function createServiceHandler(
 
 		parsedCommandLine = createParsedCommandLine(ts, tsConfig);
 
-		const fileNames = new Set(parsedCommandLine.fileNames);
+		const fileNames = new FsPathSet(parsedCommandLine.fileNames);
 		let changed = false;
 
-		for (const [fileName, fileWatcher] of extraFileWatchers) {
+		for (const [_, { fileWatcher }] of extraScripts) {
 			fileWatcher.close();
 		}
-		extraFileWatchers.clear();
-		extraFileVersions.clear();
+		extraScripts.clear();
 
-		for (const fileName of fileWatchers.keys()) {
+		const removeKeys: string[] = [];
+		for (const [key, { fileName, fileWatcher }] of scripts) {
 			if (!fileNames.has(fileName)) {
-				fileWatchers.get(fileName)!.close();
-				fileWatchers.delete(fileName);
+				fileWatcher.close();
+				removeKeys.push(key);
 				changed = true;
 			}
 		}
-		for (const fileName of fileNames) {
-			if (!fileWatchers.has(fileName)) {
+		for (const removeKey of removeKeys) {
+			scripts.delete(removeKey);
+		}
+		for (const fileName of parsedCommandLine.fileNames) {
+			if (!scripts.has(fileName)) {
 				const fileWatcher = ts.sys.watchFile!(fileName, onDriveFileUpdated);
-				fileWatchers.set(fileName, fileWatcher);
+				scripts.set(fileName, {
+					fileName,
+					version: 0,
+					fileWatcher,
+				});
 				changed = true;
 			}
 		}
@@ -99,16 +116,22 @@ export function createServiceHandler(
 	}
 	function onDocumentUpdated(document: TextDocument) {
 		const fileName = uriToFsPath(document.uri);
-		if (isRelatedFile(fileName)) {
-			const newVersion = ts.sys.createHash!(document.getText());
-			scriptVersions.set(fileName, newVersion);
+		const script = scripts.get(fileName);
+		const extraScript = extraScripts.get(fileName);
+		if (script) {
+			script.version++;
+		}
+		if (extraScript) {
+			extraScript.version++;
+		}
+		if (script || extraScript) {
 			onProjectFilesUpdate();
 		}
 	}
 	function isRelatedFile(fileName: string) {
-		const isProjectFile = new Set(parsedCommandLine.fileNames).has(fileName);
-		const isReferenceFile = scriptSnapshots.has(fileName);
-		return isProjectFile || isReferenceFile;
+		const script = scripts.get(fileName);
+		const extraScript = extraScripts.get(fileName);
+		return !!script || !!extraScript;
 	}
 	function onDriveFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
 
@@ -124,13 +147,9 @@ export function createServiceHandler(
 			return;
 		}
 
-		const oldVersion = scriptVersions.get(fileName);
-		const oldVersionNum = Number(oldVersion);
-		if (Number.isNaN(oldVersionNum)) {
-			scriptVersions.set(fileName, '0');
-		}
-		else {
-			scriptVersions.set(fileName, (oldVersionNum + 1).toString());
+		const script = scripts.get(fileName);
+		if (script) {
+			script.version++;
 		}
 		onProjectFilesUpdate();
 
@@ -160,7 +179,7 @@ export function createServiceHandler(
 			getProjectVersion: () => projectVersion.toString(),
 			getScriptFileNames: () => [
 				...parsedCommandLine.fileNames,
-				...[...extraFileVersions.keys()].filter(fileName => fileName.endsWith('.vue')), // create virtual files from extra vue scripts
+				...[...extraScripts.values()].map(file => file.fileName).filter(fileName => fileName.endsWith('.vue')), // create virtual files from extra vue scripts
 			],
 			getCurrentDirectory: () => upath.dirname(tsConfig),
 			getCompilationSettings: () => parsedCommandLine.options,
@@ -179,23 +198,28 @@ export function createServiceHandler(
 			const fileExists = !!ts.sys.fileExists?.(fileName);
 			if (
 				fileExists
-				&& !fileWatchers.has(fileName)
-				&& !extraFileWatchers.has(fileName)
+				&& !scripts.has(fileName)
+				&& !extraScripts.has(fileName)
 			) {
 				const fileWatcher = ts.sys.watchFile!(fileName, (_, eventKind) => {
+					const extraFile = extraScripts.get(fileName);
 					if (eventKind === ts.FileWatcherEventKind.Changed) {
-						extraFileVersions.set(fileName, (extraFileVersions.get(fileName) ?? 0) + 1);
+						if (extraFile) {
+							extraFile.version++;
+						}
 					}
 					if (eventKind === ts.FileWatcherEventKind.Deleted) {
 						fileWatcher?.close();
-						extraFileVersions.delete(fileName);
-						extraFileWatchers.delete(fileName);
-						scriptSnapshots.delete(fileName);
+						extraScripts.delete(fileName);
+						snapshots.delete(fileName);
 					}
 					onProjectFilesUpdate();
 				});
-				extraFileVersions.set(fileName, 0);
-				extraFileWatchers.set(fileName, fileWatcher);
+				extraScripts.set(fileName, {
+					fileName: fileName,
+					version: 0,
+					fileWatcher: fileWatcher,
+				});
 				if (fileName.endsWith('.vue')) {
 					projectVersion++;
 					vueLs?.update(false); // create virtual files
@@ -204,20 +228,23 @@ export function createServiceHandler(
 			return fileExists;
 		}
 		function getScriptVersion(fileName: string) {
-			return scriptVersions.get(fileName)
-				?? extraFileVersions.get(fileName)?.toString()
+			return scripts.get(fileName)?.version.toString()
+				?? extraScripts.get(fileName)?.version.toString()
 				?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 			const version = getScriptVersion(fileName);
-			const cache = scriptSnapshots.get(fileName);
-			if (cache && cache[0] === version) {
-				return cache[1];
+			const cache = snapshots.get(fileName);
+			if (cache && cache.version === version) {
+				return cache.snapshot;
 			}
 			const text = getScriptText(fileName);
 			if (text !== undefined) {
 				const snapshot = ts.ScriptSnapshot.fromString(text);
-				scriptSnapshots.set(fileName, [version.toString(), snapshot]);
+				snapshots.set(fileName, {
+					version: version.toString(),
+					snapshot,
+				});
 				return snapshot;
 			}
 		}
@@ -232,10 +259,10 @@ export function createServiceHandler(
 		}
 	}
 	function dispose() {
-		for (const [_, fileWatcher] of fileWatchers) {
+		for (const [_, { fileWatcher }] of scripts) {
 			fileWatcher.close();
 		}
-		for (const [_, fileWatcher] of extraFileWatchers) {
+		for (const [_, { fileWatcher }] of extraScripts) {
 			fileWatcher.close();
 		}
 		if (vueLs) {
