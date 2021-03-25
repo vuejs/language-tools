@@ -1,3 +1,11 @@
+### 0.22.22
+
+- feat: improve props js doc hover info
+- feat: improve component recognition
+- fix: don't patch diagnostics without postcss
+- fix: handle `documents.onDidChangeContent` send incorrect file name
+- fix: html hover info not working
+
 ### 0.22.21
 
 - fix: diagnostics should update if tsconfig.json update
