@@ -113,8 +113,6 @@ export function createMapper(
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-                        const cssLs = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
-                        if (!cssLs) continue;
                         for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
                                 language: 'html',
@@ -127,8 +125,6 @@ export function createMapper(
                         }
                     }
                     for (const sourceMap of sourceFile.getPugSourceMaps()) {
-                        const cssLs = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
-                        if (!cssLs) continue;
                         for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
                                 language: 'pug',
