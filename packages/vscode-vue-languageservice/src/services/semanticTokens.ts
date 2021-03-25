@@ -37,10 +37,11 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				end: document.getText().length,
 			};
 		const templateScriptData = sourceFile.getTemplateScriptData();
+		const htmlElementsSet = new Set(templateScriptData.htmlElements);
 		const components = new Set([
 			...templateScriptData.components,
 			...templateScriptData.components.map(hyphenate),
-		]);
+		].filter(name => !htmlElementsSet.has(name)));
 
 		let tokens: TokenData[] = [];
 

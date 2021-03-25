@@ -45,6 +45,7 @@ export function useTemplateScript(
 		return templateGen.generate(
 			templateData.value.html,
 			templateScriptData.components,
+			templateScriptData.htmlElements,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 		);
@@ -58,11 +59,10 @@ export function useTemplateScript(
 		gen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
 		gen.addText(`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
 		gen.addText(`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
-		gen.addText(`declare const __VLS_Components: typeof __VLS_vmUnwrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;\n`);
 
 		/* Components */
 		gen.addText('/* Components */\n');
-		gen.addText('declare const __VLS_components: JSX.IntrinsicElements & typeof __VLS_Components;\n');
+		gen.addText('declare const __VLS_components: __VLS_GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_PickComponents<typeof __VLS_ctx> & JSX.IntrinsicElements;\n'); // sort by priority
 		gen.addText('declare const __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n');
 		gen.addText('declare const __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n');
 		gen.addText('declare const __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n');

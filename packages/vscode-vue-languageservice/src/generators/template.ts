@@ -20,6 +20,7 @@ const capabilitiesSet = {
 export function generate(
 	html: string,
 	componentNames: string[] = [],
+	elementNames: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined,
 	scriptSetupVars?: string[],
@@ -54,10 +55,14 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const componentsMap = new Map<string, string>();
+	const elementNamesSet = new Set(elementNames);
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 
 	for (const componentName of componentNames) {
-		componentsMap.set(hyphenate(componentName), componentName);
+		const variantName = hyphenate(componentName);
+		if (!elementNamesSet.has(variantName)) {
+			componentsMap.set(variantName, componentName);
+		}
 	}
 
 	let elementIndex = 0;

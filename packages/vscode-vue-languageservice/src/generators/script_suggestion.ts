@@ -85,7 +85,7 @@ export function generate(
 
         const scriptSetupVars = scriptSetupAst.exposeVarNames
             .map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
-        const interpolations = templateGen.generate(html, [], [], undefined, scriptSetupVars, false);
+        const interpolations = templateGen.generate(html, [], [], [], undefined, scriptSetupVars, false);
         gen.addText('{\n');
         gen.addText(interpolations.text);
         gen.addText('}\n');
