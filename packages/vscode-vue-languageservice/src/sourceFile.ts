@@ -70,6 +70,7 @@ export function createSourceFile(
 	const vueHtmlDocument = computed(() => {
 		return languageServices.html.parseHTMLDocument(vueDoc.value);
 	});
+	const sfcErrors = ref<Diagnostic[]>([]);
 
 	// virtual scripts
 	const _virtualStyles = useStylesRaw(ts, tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles), styleMode);
@@ -190,11 +191,13 @@ export function createSourceFile(
 	};
 
 	function update(newVueDocument: TextDocument) {
-		const newDescriptor = vueSfc.parse(newVueDocument.getText()).descriptor;
+		const parsedSfc = vueSfc.parse(newVueDocument.getText());
+		const newDescriptor = parsedSfc.descriptor;
 		const versionsBeforeUpdate = [
 			virtualScriptGen.textDocument.value?.version,
 			virtualTemplateGen.textDocument.value?.version,
 		];
+		updateSfcErrors();
 
 		const blocks = [
 			newDescriptor.template,
@@ -248,6 +251,27 @@ export function createSourceFile(
 			templateScriptUpdated: versionsBeforeUpdate[1] !== versionsAfterUpdate[1],
 		};
 
+		function updateSfcErrors() {
+			const errors: Diagnostic[] = [];
+			for (const error of parsedSfc.errors) {
+				if ('code' in error && error.loc) {
+					const diag = Diagnostic.create(
+						Range.create(
+							error.loc.start.line - 1,
+							error.loc.start.column - 1,
+							error.loc.end.line - 1,
+							error.loc.end.column - 1,
+						),
+						error.message,
+						undefined,
+						error.code,
+						'vue',
+					);
+					errors.push(diag);
+				}
+			}
+			sfcErrors.value = errors;
+		}
 		function updateTemplate(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.template ? {
 				lang: newDescriptor.template.lang ?? defaultLanguages.template,
@@ -497,7 +521,7 @@ export function createSourceFile(
 				const startTime = Date.now();
 				diag[1] = diag[0].value;
 				diag[2] = Date.now() - startTime;
-				const results = [...all, ...keep].map(diag => diag[1]).flat();
+				const results = [...all, ...keep].map(diag => diag[1]).flat().concat(sfcErrors.value);
 				response(dedupe.withDiagnostics(results));
 			}
 		}
