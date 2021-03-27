@@ -263,7 +263,7 @@ export function createSourceFile(
 							error.loc.end.column - 1,
 						),
 						error.message,
-						undefined,
+						DiagnosticSeverity.Error,
 						error.code,
 						'vue',
 					);
