@@ -1,3 +1,11 @@
+### 0.22.23
+
+- feat: sfc parse diagnostics
+- feat: improve v-slot support
+- fix: `vue-tsc` throw on `component()` call without string literal
+- fix: kebab case slots not working
+- chore: update vue to 3.0.9 to fix a few bugs
+
 ### 0.22.22
 
 - feat: improve props js doc hover info
