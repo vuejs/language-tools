@@ -12,7 +12,7 @@ const capabilitiesSet = {
 	tag: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
-	slotName: { basic: true, diagnostic: true, references: true, definitions: true, },
+	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	referencesOnly: { references: true, definitions: true, },
 }
@@ -385,7 +385,9 @@ export function generate(
 					scriptGen.addText(` = `);
 				}
 				let slotName = 'default';
+				let isStatic = true;
 				if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
+					isStatic = prop.arg.isStatic;
 					slotName = prop.arg.content;
 				}
 				const diagStart = scriptGen.getText().length;
@@ -398,14 +400,34 @@ export function generate(
 						start: prop.loc.start.offset,
 						end: prop.loc.start.offset + prop.loc.source.split('=')[0].length,
 					};
-				writePropertyAccess(
-					slotName,
-					argRange,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.slotName,
-					},
-				);
+				if (isStatic) {
+					scriptGen.addText(`[`);
+					writeCodeWithQuotes(
+						slotName,
+						argRange,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.slotName,
+						},
+					);
+					scriptGen.addText(`]`);
+				}
+				else {
+					scriptGen.addText(`[`);
+					writeCode(
+						slotName,
+						{
+							start: argRange.start + 1,
+							end: argRange.end - 1,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+					);
+					scriptGen.addText(`]`);
+				}
 				const diagEnd = scriptGen.getText().length;
 				addMapping(scriptGen, {
 					mappedRange: {
