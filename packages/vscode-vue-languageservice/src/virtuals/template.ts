@@ -118,7 +118,7 @@ export function useTemplateScript(
 				},
 				additional: maped.additional ? maped.additional.map(other => ({
 					...other,
-					targetRange: {
+					mappedRange: {
 						start: other.mappedRange.start + crtOffset,
 						end: other.mappedRange.end + crtOffset,
 					},
