@@ -198,8 +198,13 @@ export function createLanguageService(
 			});
 			for (let i = 0; i < argsArr.length; i++) {
 				const args = argsArr[i];
-				mappingText(args[0].start, args[0].end, args[0].text);
-				addText += `: typeof __VLS_${i};\n`;
+				if (
+					(args[0].text.startsWith("'") && args[0].text.endsWith("'"))
+					|| (args[0].text.startsWith('"') && args[0].text.endsWith('"'))
+				) {
+					mappingText(args[0].start, args[0].end, args[0].text);
+					addText += `: typeof __VLS_${i};\n`;
+				}
 			}
 
 			addText += `} }\n`;
