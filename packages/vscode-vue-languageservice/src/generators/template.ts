@@ -947,7 +947,17 @@ export function generate(
 					const key_2 = camelize('on-' + key_1);
 					const key_3 = camelize(key_1);
 
-					scriptGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<typeof __VLS_componentProps['${getComponentName(node.tag)}'][`);
+					scriptGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<\n`);
+					if (key_1 !== key_3) {
+						scriptGen.addText(`__VLS_FirstFunction<\n`);
+						scriptGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
+						scriptGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>\n`);
+						scriptGen.addText(`>,\n`);
+					}
+					else {
+						scriptGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
+					}
+					scriptGen.addText(`typeof __VLS_componentProps['${getComponentName(node.tag)}'][`)
 					writeCodeWithQuotes(
 						key_2,
 						{
@@ -959,7 +969,7 @@ export function generate(
 							capabilities: capabilitiesSet.attr,
 						},
 					);
-					scriptGen.addText(`], __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>, __VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>> };\n`);
+					scriptGen.addText(`]> };\n`);
 				}
 
 				const transformResult = transformOn(prop, node, context);
