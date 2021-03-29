@@ -547,6 +547,7 @@ export function generate(
 			if (
 				prop.type === NodeTypes.DIRECTIVE
 				&& prop.name !== 'slot'
+				&& prop.name !== 'model'
 				&& !prop.arg
 				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
