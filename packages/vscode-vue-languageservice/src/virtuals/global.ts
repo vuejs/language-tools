@@ -51,7 +51,7 @@ declare global {
 	> { }
 	var __VLS_defineComponent: NotAnyOnce<typeof defineComponent_1, typeof defineComponent_2>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
-	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : string;
+	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : keyof T;
 	function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };

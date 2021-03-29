@@ -270,7 +270,7 @@ export function generate(
 						capabilities: capabilitiesSet.noFormatting,
 					},
 				);
-				scriptGen.addText(` = ${sourceVarName}[{} as any]\n`);
+				scriptGen.addText(` = ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]\n`);
 
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
