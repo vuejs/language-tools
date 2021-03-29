@@ -1,3 +1,10 @@
+### 0.22.24
+
+- feat: improve `v-for` type-checking [#117](https://github.com/johnsoncodehk/volar/issues/117)
+- feat: improve events type-checking [#116](https://github.com/johnsoncodehk/volar/issues/116)
+- feat: support `"noUncheckedIndexedAccess": true` [vue-tsc#8](https://github.com/johnsoncodehk/vue-tsc/issues/8)
+- fix: auto-complete duplicate in `v-model="..."`
+
 ### 0.22.23
 
 - feat: sfc parse diagnostics
