@@ -28,31 +28,32 @@ import type { DefineComponent as DefineComponent_2 } from 'vue';
 import type { defineComponent as defineComponent_2 } from 'vue';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
-type NotAnyOnce<A, B> = IsAny<A> extends true ? B : A;
+type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 
-type FunctionalComponent<T> = NotAnyOnce<FunctionalComponent_1<T>, FunctionalComponent_2<T>>;
-type HTMLAttributes = NotAnyOnce<HTMLAttributes_1, HTMLAttributes_2>;
-type VNodeProps = NotAnyOnce<VNodeProps_1, VNodeProps_2>;
-type AllowedComponentProps = NotAnyOnce<AllowedComponentProps_1, AllowedComponentProps_2>;
-type PropType<T> = NotAnyOnce<PropType_1<T>, PropType_2<T>>;
-type App = NotAnyOnce<App_1, App_2>;
-type EmitsOptions = NotAnyOnce<EmitsOptions_1, EmitsOptions_2>;
-type DefineComponent<P, E extends EmitsOptions> = NotAnyOnce<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
+type FunctionalComponent<T> = PickNotAny<FunctionalComponent_1<T>, FunctionalComponent_2<T>>;
+type HTMLAttributes = PickNotAny<HTMLAttributes_1, HTMLAttributes_2>;
+type VNodeProps = PickNotAny<VNodeProps_1, VNodeProps_2>;
+type AllowedComponentProps = PickNotAny<AllowedComponentProps_1, AllowedComponentProps_2>;
+type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
+type App = PickNotAny<App_1, App_2>;
+type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
+type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
 
 declare global {
-	interface __VLS_GlobalComponents extends Pick<NotAnyOnce<typeof vue_1, typeof vue_2>,
+	interface __VLS_GlobalComponents extends Pick<PickNotAny<typeof vue_1, typeof vue_2>,
 		'Transition'
 		| 'TransitionGroup'
 		| 'KeepAlive'
 		| 'Suspense'
 		| 'Teleport'
 	> { }
-	var __VLS_defineComponent: NotAnyOnce<typeof defineComponent_1, typeof defineComponent_2>;
+	var __VLS_defineComponent: PickNotAny<typeof defineComponent_1, typeof defineComponent_2>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
 	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : keyof T;
 	function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
+	function __VLS_pickNotAny<T, K>(t: T, k: K): PickNotAny<T, K>;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_PropsType<T[K]>> & Record<string, unknown> };

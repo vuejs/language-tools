@@ -226,6 +226,7 @@ export function generate(
 				let start_source = source.loc.start.offset;
 
 				const sourceVarName = `__VLS_${elementIndex++}`;
+				const forOfItemName = `__VLS_${elementIndex++}`;
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
 				scriptGen.addText(`const ${sourceVarName} = __VLS_getVforSourceType(`);
@@ -242,6 +243,7 @@ export function generate(
 					},
 				);
 				scriptGen.addText(`);\n`);
+				scriptGen.addText(`for (var ${forOfItemName} of ${sourceVarName}) { }\n`);
 				scriptGen.addText(`for (const __VLS_${elementIndex++} in `);
 				writeCode(
 					sourceVarName,
@@ -270,7 +272,7 @@ export function generate(
 						capabilities: capabilitiesSet.noFormatting,
 					},
 				);
-				scriptGen.addText(` = ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]\n`);
+				scriptGen.addText(` = __VLS_pickNotAny(${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
 
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
