@@ -3,7 +3,7 @@ import { createScriptGenerator } from '@volar/source-map';
 import { camelize, hyphenate } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
 import { NodeTypes, transformOn } from '@vue/compiler-dom';
-import type { TemplateChildNode, ElementNode, RootNode, TransformContext } from '@vue/compiler-dom';
+import type { TemplateChildNode, ElementNode, TransformContext } from '@vue/compiler-dom';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -69,7 +69,7 @@ export function generate(
 
 	for (const childNode of node.children) {
 		scriptGen.addText(`{\n`);
-		writeNode(childNode, []);
+		writeNode(childNode, undefined);
 		scriptGen.addText(`}\n`);
 	}
 
@@ -105,8 +105,13 @@ export function generate(
 	function getComponentName(tagName: string) {
 		return componentsMap.get(tagName) ?? tagName;
 	}
-	function writeNode(node: TemplateChildNode, parents: TemplateChildNode[]): void {
+	function writeNode(node: TemplateChildNode, parentEl: vueDom.ElementNode | undefined): void {
 		if (node.type === NodeTypes.ELEMENT) {
+
+			if (node.tag !== 'template') {
+				parentEl = node;
+			}
+
 			scriptGen.addText(`{\n`);
 			{
 				tags.add(getComponentName(node.tag));
@@ -120,7 +125,7 @@ export function generate(
 				}
 
 				writeInlineCss(node);
-				writeImportSlots(node, parents);
+				if (parentEl) writeImportSlots(node, parentEl);
 				writeDirectives(node);
 				writeElReferences(node); // <el ref="foo" />
 				writeProps(node, true);
@@ -131,20 +136,20 @@ export function generate(
 				writeSlots(node);
 
 				for (const childNode of node.children) {
-					writeNode(childNode, parents.concat(node));
+					writeNode(childNode, parentEl);
 				}
 			}
 			scriptGen.addText('}\n');
 		}
 		else if (node.type === NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			writeNode(node.content, parents.concat(node));
+			writeNode(node.content, parentEl);
 		}
 		else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					writeNode(childNode as TemplateChildNode, parents.concat(node));
+					writeNode(childNode as TemplateChildNode, parentEl);
 				}
 			}
 		}
@@ -197,7 +202,7 @@ export function generate(
 						scriptGen.addText(`)\n`);
 						scriptGen.addText(`) {\n`);
 						for (const childNode of branch.children) {
-							writeNode(childNode, parents.concat([node, branch]));
+							writeNode(childNode, parentEl);
 						}
 						scriptGen.addText('}\n');
 					}
@@ -205,7 +210,7 @@ export function generate(
 				else {
 					scriptGen.addText('else {\n');
 					for (const childNode of branch.children) {
-						writeNode(childNode, parents.concat([node, branch]));
+						writeNode(childNode, parentEl);
 					}
 					scriptGen.addText('}\n');
 				}
@@ -309,7 +314,7 @@ export function generate(
 					scriptGen.addText(` = __VLS_getVforIndexType(${sourceVarName});\n`);
 				}
 				for (const childNode of node.children) {
-					writeNode(childNode, parents.concat(node));
+					writeNode(childNode, parentEl);
 				}
 				scriptGen.addText('}\n');
 			}
@@ -360,15 +365,12 @@ export function generate(
 			}
 		}
 	}
-	function writeImportSlots(node: ElementNode, parents: TemplateChildNode[]) {
+	function writeImportSlots(node: ElementNode, parentEl: vueDom.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === NodeTypes.DIRECTIVE
 				&& prop.name === 'slot'
 			) {
-				const parent = findParentElement(parents.concat(node));
-				if (!parent) continue;
-
 				if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
 					scriptGen.addText(`let `);
 					writeCode(
@@ -393,7 +395,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = scriptGen.getText().length;
-				scriptGen.addText(`__VLS_components['${getComponentName(parent.tag)}'].__VLS_slots`);
+				scriptGen.addText(`__VLS_components['${getComponentName(parentEl.tag)}'].__VLS_slots`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
@@ -1299,11 +1301,4 @@ function keepHyphenateName(oldName: string, newName: string) {
 		return hyphenate(newName);
 	}
 	return newName
-}
-function findParentElement(parents: (TemplateChildNode | RootNode)[]): ElementNode | undefined {
-	for (const parent of parents.reverse()) {
-		if (parent.type === NodeTypes.ELEMENT && parent.tag !== 'template') {
-			return parent;
-		}
-	}
 }
