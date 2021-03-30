@@ -96,6 +96,8 @@ declare global {
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent<infer _> ? K : never]: T[K] };
 	type __VLS_SlotExpMap<K extends string | number | symbol, T> = { [day in K]: T };
+
+	${genConstructorOverloads()}
 }
 
 declare const app: App;
@@ -103,4 +105,26 @@ app.component${SearchTexts.AppComponentCall};
 `;
 
 	return TextDocument.create(fsPathToUri(join(root, '__VLS_globals.ts')), 'typescript', 0, code);
+}
+
+// TODO: not working for overloads > n (n = 8)
+// see: https://github.com/johnsoncodehk/volar/issues/60
+function genConstructorOverloads() {
+	let code = `type __VLS_ConstructorOverloads<T> =\n`;
+	for (let i = 8; i >= 1; i--) {
+		code += `// ${i}\n`;
+		code += `T extends {\n`;
+		for (let j = 1; j <= i; j++) {
+			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`
+		}
+		code += `} ? (\n`
+		for (let j = 1; j <= i; j++) {
+			if (j > 1) code += '& ';
+			code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
+		}
+		code += `) :\n`;
+	}
+	code += `// 0\n`
+	code += `unknown;\n`
+	return code;
 }
