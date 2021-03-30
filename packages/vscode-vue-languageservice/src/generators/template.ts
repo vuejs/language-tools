@@ -16,6 +16,11 @@ const capabilitiesSet = {
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	referencesOnly: { references: true, definitions: true, },
 }
+const formatBrackets = {
+	a: ['{', '}'] as [string, string],
+	b: ['(', ')'] as [string, string],
+	c: ['', ''] as [string, string],
+};
 
 export function generate(
 	html: string,
@@ -170,7 +175,7 @@ export function generate(
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
 				},
-				['{', '}'],
+				formatBrackets.a,
 			);
 			scriptGen.addText(`};\n`);
 		}
@@ -197,7 +202,7 @@ export function generate(
 								vueTag: 'template',
 								capabilities: capabilitiesSet.all,
 							},
-							['(', ')'],
+							formatBrackets.b,
 						);
 						scriptGen.addText(`)\n`);
 						scriptGen.addText(`) {\n`);
@@ -384,7 +389,7 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
-						['(', ')'],
+						formatBrackets.b,
 					);
 					scriptGen.addText(` = `);
 				}
@@ -565,7 +570,7 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					['(', ')'],
+					formatBrackets.b,
 				);
 				scriptGen.addText(`);\n`);
 			}
@@ -681,7 +686,7 @@ export function generate(
 								vueTag: 'template',
 								capabilities: capabilitiesSet.all,
 							},
-							['(', ')'],
+							formatBrackets.b,
 						);
 					}
 					else {
@@ -1007,7 +1012,7 @@ export function generate(
 									vueTag: 'template',
 									capabilities: capabilitiesSet.all,
 								},
-								['', ''],
+								formatBrackets.c,
 							);
 						}
 						else {
@@ -1035,7 +1040,7 @@ export function generate(
 											vueTag: 'template',
 											capabilities: capabilitiesSet.all,
 										},
-										['', ''],
+										formatBrackets.c,
 									);
 								}
 								else {
@@ -1077,7 +1082,7 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					['(', ')'],
+					formatBrackets.b,
 				);
 				scriptGen.addText(`);\n`);
 				break;
@@ -1115,7 +1120,7 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					['(', ')'],
+					formatBrackets.b,
 				);
 				scriptGen.addText(`),\n`);
 			}
