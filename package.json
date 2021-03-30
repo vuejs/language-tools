@@ -4,7 +4,7 @@
 	"displayName": "Volar",
 	"description": "Language support for Vue 3",
 	"icon": "images/icon.png",
-	"version": "0.22.24",
+	"version": "0.22.25",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
@@ -265,7 +265,6 @@
 		"ts-jest": "latest",
 		"typescript": "latest"
 	},
-	"dependencies": {},
 	"workspaces": [
 		"packages/*"
 	]
