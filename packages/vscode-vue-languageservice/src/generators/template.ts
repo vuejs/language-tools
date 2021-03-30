@@ -555,6 +555,7 @@ export function generate(
 				prop.type === NodeTypes.DIRECTIVE
 				&& prop.name !== 'slot'
 				&& prop.name !== 'model'
+				&& prop.name !== 'bind'
 				&& !prop.arg
 				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
@@ -614,6 +615,7 @@ export function generate(
 		for (const prop of node.props) {
 			if (
 				prop.type === NodeTypes.DIRECTIVE
+				&& (prop.name === 'bind' || prop.name === 'model')
 				&& (prop.name === 'model' || prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION)
 				&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
 			) {
@@ -628,103 +630,101 @@ export function generate(
 					continue;
 				}
 
-				if (prop.name === 'bind' || prop.name === 'model') {
-					// camelize name
-					const diagStart = scriptGen.getText().length;
-					// `'${propName}': (${propValue})`
-					if (!prop.arg) {
-						writeObjectProperty(
-							propName_1,
-							{
-								start: prop.loc.start.offset,
-								end: prop.loc.start.offset + 'v-model'.length,
-							},
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.attr,
-							},
-						);
-					}
-					else if (prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) {
-						writeObjectProperty(
-							propName_2,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
-							},
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.attr,
-								doRename: keepHyphenateName,
-							},
-						);
-					}
-					else {
-						writeObjectProperty(
-							propName_2,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.attr,
-								doRename: keepHyphenateName,
-							},
-						);
-					}
-					scriptGen.addText(`: (`);
-					if (prop.exp && !(prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
-						writeCode(
-							propValue,
-							{
-								start: prop.exp.loc.start.offset,
-								end: prop.exp.loc.end.offset,
-							},
-							SourceMaps.Mode.Offset,
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.all,
-							},
-							formatBrackets.b,
-						);
-					}
-					else {
-						scriptGen.addText(propValue);
-					}
-					scriptGen.addText(`)`);
-					addMapping(scriptGen, {
-						sourceRange: {
+				// camelize name
+				const diagStart = scriptGen.getText().length;
+				// `'${propName}': (${propValue})`
+				if (!prop.arg) {
+					writeObjectProperty(
+						propName_1,
+						{
 							start: prop.loc.start.offset,
-							end: prop.loc.end.offset,
+							end: prop.loc.start.offset + 'v-model'.length,
 						},
-						mappedRange: {
-							start: diagStart,
-							end: scriptGen.getText().length,
-						},
-						mode: SourceMaps.Mode.Totally,
-						data: {
+						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.diagnosticOnly,
+							capabilities: capabilitiesSet.attr,
 						},
-					});
-					scriptGen.addText(`,\n`);
-					// original name
-					if (prop.arg && propName_1 !== propName_2) {
-						writeObjectProperty(
-							propName_1,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.attr,
-								doRename: keepHyphenateName,
-							},
-						);
-						scriptGen.addText(`: (${propValue}),\n`);
-					}
+					);
+				}
+				else if (prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) {
+					writeObjectProperty(
+						propName_2,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.attr,
+							doRename: keepHyphenateName,
+						},
+					);
+				}
+				else {
+					writeObjectProperty(
+						propName_2,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.attr,
+							doRename: keepHyphenateName,
+						},
+					);
+				}
+				scriptGen.addText(`: (`);
+				if (prop.exp && !(prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+					writeCode(
+						propValue,
+						{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+						formatBrackets.b,
+					);
+				}
+				else {
+					scriptGen.addText(propValue);
+				}
+				scriptGen.addText(`)`);
+				addMapping(scriptGen, {
+					sourceRange: {
+						start: prop.loc.start.offset,
+						end: prop.loc.end.offset,
+					},
+					mappedRange: {
+						start: diagStart,
+						end: scriptGen.getText().length,
+					},
+					mode: SourceMaps.Mode.Totally,
+					data: {
+						vueTag: 'template',
+						capabilities: capabilitiesSet.diagnosticOnly,
+					},
+				});
+				scriptGen.addText(`,\n`);
+				// original name
+				if (prop.arg && propName_1 !== propName_2) {
+					writeObjectProperty(
+						propName_1,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.attr,
+							doRename: keepHyphenateName,
+						},
+					);
+					scriptGen.addText(`: (${propValue}),\n`);
 				}
 			}
 			else if (
@@ -794,7 +794,35 @@ export function generate(
 					scriptGen.addText(',\n');
 				}
 			}
+			else if (
+				prop.type === NodeTypes.DIRECTIVE
+				&& prop.name === 'bind'
+				&& !prop.arg
+				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+			) {
+				if (forDirectiveClassOrStyle) {
+					continue;
+				}
+				scriptGen.addText('...(');
+				writeCode(
+					prop.exp.content,
+					{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					formatBrackets.b,
+				);
+				scriptGen.addText('),\n');
+			}
 			else {
+				if (forDirectiveClassOrStyle) {
+					continue;
+				}
 				scriptGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
 			}
 		}
