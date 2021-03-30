@@ -27,11 +27,13 @@ import type { EmitsOptions as EmitsOptions_2 } from 'vue';
 import type { DefineComponent as DefineComponent_2 } from 'vue';
 import type { defineComponent as defineComponent_2 } from 'vue';
 
+import type { HTMLAttributes as HTMLAttributes_3 } from "@vue/runtime-dom/types/jsx";
+
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 
 type FunctionalComponent<T> = PickNotAny<FunctionalComponent_1<T>, FunctionalComponent_2<T>>;
-type HTMLAttributes = PickNotAny<HTMLAttributes_1, HTMLAttributes_2>;
+type HTMLAttributes = PickNotAny<PickNotAny<HTMLAttributes_1, HTMLAttributes_2>, HTMLAttributes_3>;
 type VNodeProps = PickNotAny<VNodeProps_1, VNodeProps_2>;
 type AllowedComponentProps = PickNotAny<AllowedComponentProps_1, AllowedComponentProps_2>;
 type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
