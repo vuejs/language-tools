@@ -191,7 +191,7 @@ export function createSourceFile(
 	};
 
 	function update(newVueDocument: TextDocument) {
-		const parsedSfc = vueSfc.parse(newVueDocument.getText());
+		const parsedSfc = vueSfc.parse(newVueDocument.getText(), { sourceMap: false });
 		const newDescriptor = parsedSfc.descriptor;
 		const versionsBeforeUpdate = [
 			virtualScriptGen.textDocument.value?.version,

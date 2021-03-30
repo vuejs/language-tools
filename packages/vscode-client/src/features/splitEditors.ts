@@ -9,7 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (!editor) return;
 
         const doc = editor.document;
-        const descriptor = parse(doc.getText()).descriptor;
+        const descriptor = parse(doc.getText(), { sourceMap: false }).descriptor;
         const blocksSet: SFCBlock[][] = [];
 
         if (descriptor.scriptSetup || descriptor.script) {
