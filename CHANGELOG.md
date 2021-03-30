@@ -1,3 +1,10 @@
+### 0.22.25
+
+- feat: support pass props as `v-bind="..."` syntax [vue-tsc#9](https://github.com/johnsoncodehk/vue-tsc/issues/9)
+- feat: support use not compiled `@vue/runtime-dom` library
+- fix: `defineEmit()` types incorrect in template if use pure type define
+- perf: improve virtual documents update performance
+
 ### 0.22.24
 
 - feat: improve `v-for` type-checking [#117](https://github.com/johnsoncodehk/volar/issues/117)
