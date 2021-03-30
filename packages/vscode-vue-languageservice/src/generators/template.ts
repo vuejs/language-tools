@@ -17,9 +17,10 @@ const capabilitiesSet = {
 	referencesOnly: { references: true, definitions: true, },
 }
 const formatBrackets = {
-	a: ['{', '}'] as [string, string],
-	b: ['(', ')'] as [string, string],
-	c: ['', ''] as [string, string],
+	empty: ['', ''] as [string, string],
+	round: ['(', ')'] as [string, string],
+	curly: ['{', '}'] as [string, string],
+	square: ['[', ']'] as [string, string],
 };
 
 export function generate(
@@ -47,9 +48,9 @@ export function generate(
 			formapMappings: [],
 		};
 	}
-	const scriptGen = createScriptGenerator<SourceMaps.TsMappingData>();
-	const formatGen = createScriptGenerator<SourceMaps.TsMappingData>();
-	const inlineCssGen = createScriptGenerator<undefined>();
+	const tsCodeGen = createScriptGenerator<SourceMaps.TsMappingData>();
+	const tsFormatCodeGen = createScriptGenerator<SourceMaps.TsMappingData>();
+	const cssCodeGen = createScriptGenerator<undefined>();
 	const tags = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
@@ -73,15 +74,15 @@ export function generate(
 	let elementIndex = 0;
 
 	for (const childNode of node.children) {
-		scriptGen.addText(`{\n`);
-		writeNode(childNode, undefined);
-		scriptGen.addText(`}\n`);
+		tsCodeGen.addText(`{\n`);
+		visitNode(childNode, undefined);
+		tsCodeGen.addText(`}\n`);
 	}
 
 	if (withExportSlots) {
-		scriptGen.addText(`export default {\n`);
+		tsCodeGen.addText(`export default {\n`);
 		for (const [exp, slot] of slotExps) {
-			scriptGen.addText(`...{} as __VLS_SlotExpMap<typeof ${exp}, typeof ${slot.varName}>,\n`);
+			tsCodeGen.addText(`...{} as __VLS_SlotExpMap<typeof ${exp}, typeof ${slot.varName}>,\n`);
 		}
 		for (const [name, slot] of slots) {
 			writeObjectProperty(
@@ -92,39 +93,39 @@ export function generate(
 					capabilities: capabilitiesSet.slotNameExport,
 				},
 			);
-			scriptGen.addText(`: ${slot.varName},\n`);
+			tsCodeGen.addText(`: ${slot.varName},\n`);
 		}
-		scriptGen.addText(`};\n`);
+		tsCodeGen.addText(`};\n`);
 	}
 
 	return {
-		text: scriptGen.getText(),
-		mappings: scriptGen.getMappings(),
-		formatCode: formatGen.getText(),
-		formapMappings: formatGen.getMappings(),
-		cssMappings: inlineCssGen.getMappings(),
-		cssCode: inlineCssGen.getText(),
+		text: tsCodeGen.getText(),
+		mappings: tsCodeGen.getMappings(),
+		formatCode: tsFormatCodeGen.getText(),
+		formapMappings: tsFormatCodeGen.getMappings(),
+		cssMappings: cssCodeGen.getMappings(),
+		cssCode: cssCodeGen.getText(),
 		tags,
 	};
 
 	function getComponentName(tagName: string) {
 		return componentsMap.get(tagName) ?? tagName;
 	}
-	function writeNode(node: TemplateChildNode, parentEl: vueDom.ElementNode | undefined): void {
+	function visitNode(node: TemplateChildNode, parentEl: vueDom.ElementNode | undefined): void {
 		if (node.type === NodeTypes.ELEMENT) {
 
 			if (node.tag !== 'template') {
 				parentEl = node;
 			}
 
-			scriptGen.addText(`{\n`);
+			tsCodeGen.addText(`{\n`);
 			{
 				tags.add(getComponentName(node.tag));
 
 				if (scriptSetupVars) {
 					for (const scriptSetupVar of scriptSetupVars) {
 						if (node.tag === scriptSetupVar || node.tag === hyphenate(scriptSetupVar)) {
-							scriptGen.addText(scriptSetupVar + `; // ignore unused in script setup\n`);
+							tsCodeGen.addText(scriptSetupVar + `; // ignore unused in script setup\n`);
 						}
 					}
 				}
@@ -141,20 +142,20 @@ export function generate(
 				writeSlots(node);
 
 				for (const childNode of node.children) {
-					writeNode(childNode, parentEl);
+					visitNode(childNode, parentEl);
 				}
 			}
-			scriptGen.addText('}\n');
+			tsCodeGen.addText('}\n');
 		}
 		else if (node.type === NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			writeNode(node.content, parentEl);
+			visitNode(node.content, parentEl);
 		}
 		else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					writeNode(childNode as TemplateChildNode, parentEl);
+					visitNode(childNode as TemplateChildNode, parentEl);
 				}
 			}
 		}
@@ -163,7 +164,7 @@ export function generate(
 			const context = node.loc.source.substring(2, node.loc.source.length - 2);
 			let start = node.loc.start.offset + 2;
 
-			scriptGen.addText(`{`);
+			tsCodeGen.addText(`{`);
 			writeCode(
 				context,
 				{
@@ -175,9 +176,9 @@ export function generate(
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
 				},
-				formatBrackets.a,
+				formatBrackets.curly,
 			);
-			scriptGen.addText(`};\n`);
+			tsCodeGen.addText(`};\n`);
 		}
 		else if (node.type === NodeTypes.IF) {
 			// v-if / v-else-if / v-else
@@ -187,10 +188,10 @@ export function generate(
 				if (branch.condition) {
 					if (branch.condition.type === NodeTypes.SIMPLE_EXPRESSION) {
 
-						scriptGen.addText(firstIf ? `if (\n` : `else if (\n`);
+						tsCodeGen.addText(firstIf ? `if (\n` : `else if (\n`);
 						firstIf = false;
 
-						scriptGen.addText(`(`);
+						tsCodeGen.addText(`(`);
 						writeCode(
 							branch.condition.content,
 							{
@@ -202,22 +203,22 @@ export function generate(
 								vueTag: 'template',
 								capabilities: capabilitiesSet.all,
 							},
-							formatBrackets.b,
+							formatBrackets.round,
 						);
-						scriptGen.addText(`)\n`);
-						scriptGen.addText(`) {\n`);
+						tsCodeGen.addText(`)\n`);
+						tsCodeGen.addText(`) {\n`);
 						for (const childNode of branch.children) {
-							writeNode(childNode, parentEl);
+							visitNode(childNode, parentEl);
 						}
-						scriptGen.addText('}\n');
+						tsCodeGen.addText('}\n');
 					}
 				}
 				else {
-					scriptGen.addText('else {\n');
+					tsCodeGen.addText('else {\n');
 					for (const childNode of branch.children) {
-						writeNode(childNode, parentEl);
+						visitNode(childNode, parentEl);
 					}
-					scriptGen.addText('}\n');
+					tsCodeGen.addText('}\n');
 				}
 			}
 		}
@@ -239,7 +240,7 @@ export function generate(
 				const forOfItemName = `__VLS_${elementIndex++}`;
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
-				scriptGen.addText(`const ${sourceVarName} = __VLS_getVforSourceType(`);
+				tsCodeGen.addText(`const ${sourceVarName} = __VLS_getVforSourceType(`);
 				writeCode(
 					source.content,
 					{
@@ -252,9 +253,9 @@ export function generate(
 						capabilities: capabilitiesSet.noFormatting,
 					},
 				);
-				scriptGen.addText(`);\n`);
-				scriptGen.addText(`for (var ${forOfItemName} of ${sourceVarName}) { }\n`);
-				scriptGen.addText(`for (const __VLS_${elementIndex++} in `);
+				tsCodeGen.addText(`);\n`);
+				tsCodeGen.addText(`for (var ${forOfItemName} of ${sourceVarName}) { }\n`);
+				tsCodeGen.addText(`for (const __VLS_${elementIndex++} in `);
 				writeCode(
 					sourceVarName,
 					{
@@ -267,9 +268,9 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				);
-				scriptGen.addText(`) {\n`);
+				tsCodeGen.addText(`) {\n`);
 
-				scriptGen.addText(`const `);
+				tsCodeGen.addText(`const `);
 				writeCode(
 					value.content,
 					{
@@ -282,11 +283,11 @@ export function generate(
 						capabilities: capabilitiesSet.noFormatting,
 					},
 				);
-				scriptGen.addText(` = __VLS_pickNotAny(${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
+				tsCodeGen.addText(` = __VLS_pickNotAny(${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
 
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
-					scriptGen.addText(`const `);
+					tsCodeGen.addText(`const `);
 					writeCode(
 						key.content,
 						{
@@ -299,11 +300,11 @@ export function generate(
 							capabilities: capabilitiesSet.noFormatting,
 						},
 					);
-					scriptGen.addText(` = __VLS_getVforKeyType(${sourceVarName});\n`);
+					tsCodeGen.addText(` = __VLS_getVforKeyType(${sourceVarName});\n`);
 				}
 				if (index && index.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
-					scriptGen.addText(`const `);
+					tsCodeGen.addText(`const `);
 					writeCode(
 						index.content,
 						{
@@ -316,12 +317,12 @@ export function generate(
 							capabilities: capabilitiesSet.noFormatting,
 						},
 					);
-					scriptGen.addText(` = __VLS_getVforIndexType(${sourceVarName});\n`);
+					tsCodeGen.addText(` = __VLS_getVforIndexType(${sourceVarName});\n`);
 				}
 				for (const childNode of node.children) {
-					writeNode(childNode, parentEl);
+					visitNode(childNode, parentEl);
 				}
-				scriptGen.addText('}\n');
+				tsCodeGen.addText('}\n');
 			}
 		}
 		else if (node.type === NodeTypes.TEXT) {
@@ -331,7 +332,7 @@ export function generate(
 			// not needed progress
 		}
 		else {
-			scriptGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
+			tsCodeGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
 	function writeInlineCss(node: ElementNode) {
@@ -359,14 +360,14 @@ export function generate(
 					sourceRange.start += offset;
 					sourceRange.end += offset;
 				}
-				inlineCssGen.addText(`${node.tag} { `);
-				inlineCssGen.addCode(
+				cssCodeGen.addText(`${node.tag} { `);
+				cssCodeGen.addCode(
 					content,
 					sourceRange,
 					SourceMaps.Mode.Offset,
 					undefined,
 				);
-				inlineCssGen.addText(` }\n`);
+				cssCodeGen.addText(` }\n`);
 			}
 		}
 	}
@@ -377,7 +378,7 @@ export function generate(
 				&& prop.name === 'slot'
 			) {
 				if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
-					scriptGen.addText(`let `);
+					tsCodeGen.addText(`let `);
 					writeCode(
 						prop.exp.content,
 						{
@@ -389,9 +390,9 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
-						formatBrackets.b,
+						formatBrackets.round,
 					);
-					scriptGen.addText(` = `);
+					tsCodeGen.addText(` = `);
 				}
 				let slotName = 'default';
 				let isStatic = true;
@@ -399,8 +400,8 @@ export function generate(
 					isStatic = prop.arg.isStatic;
 					slotName = prop.arg.content;
 				}
-				const diagStart = scriptGen.getText().length;
-				scriptGen.addText(`__VLS_components['${getComponentName(parentEl.tag)}'].__VLS_slots`);
+				const diagStart = tsCodeGen.getText().length;
+				tsCodeGen.addText(`__VLS_components['${getComponentName(parentEl.tag)}'].__VLS_slots`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
@@ -410,7 +411,7 @@ export function generate(
 						end: prop.loc.start.offset + prop.loc.source.split('=')[0].length,
 					};
 				if (isStatic) {
-					scriptGen.addText(`[`);
+					tsCodeGen.addText(`[`);
 					writeCodeWithQuotes(
 						slotName,
 						argRange,
@@ -419,10 +420,10 @@ export function generate(
 							capabilities: capabilitiesSet.slotName,
 						},
 					);
-					scriptGen.addText(`]`);
+					tsCodeGen.addText(`]`);
 				}
 				else {
-					scriptGen.addText(`[`);
+					tsCodeGen.addText(`[`);
 					writeCode(
 						slotName,
 						{
@@ -435,10 +436,10 @@ export function generate(
 							capabilities: capabilitiesSet.all,
 						},
 					);
-					scriptGen.addText(`]`);
+					tsCodeGen.addText(`]`);
 				}
-				const diagEnd = scriptGen.getText().length;
-				addMapping(scriptGen, {
+				const diagEnd = tsCodeGen.getText().length;
+				addMapping(tsCodeGen, {
 					mappedRange: {
 						start: diagStart,
 						end: diagEnd,
@@ -450,7 +451,7 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				scriptGen.addText(`;\n`);
+				tsCodeGen.addText(`;\n`);
 			}
 		}
 	}
@@ -504,8 +505,8 @@ export function generate(
 			for (const name of props.values()) {
 				// __VLS_options.props
 				if (!checking)
-					scriptGen.addText(`// @ts-ignore\n`);
-				scriptGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`);
+					tsCodeGen.addText(`// @ts-ignore\n`);
+				tsCodeGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`);
 				writePropertyAccess(
 					name,
 					{
@@ -522,13 +523,13 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(`;\n`);
+				tsCodeGen.addText(`;\n`);
 			}
 			for (const name of emits.values()) {
 				// __VLS_options.emits
 				if (!checking)
-					scriptGen.addText(`// @ts-ignore\n`);
-				scriptGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.emits`);
+					tsCodeGen.addText(`// @ts-ignore\n`);
+				tsCodeGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.emits`);
 				writePropertyAccess(
 					name,
 					{
@@ -545,7 +546,7 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(`;\n`);
+				tsCodeGen.addText(`;\n`);
 			}
 		}
 	}
@@ -559,7 +560,7 @@ export function generate(
 				&& !prop.arg
 				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
-				scriptGen.addText(`(`);
+				tsCodeGen.addText(`(`);
 				writeCode(
 					prop.exp.content,
 					{
@@ -571,9 +572,9 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					formatBrackets.b,
+					formatBrackets.round,
 				);
-				scriptGen.addText(`);\n`);
+				tsCodeGen.addText(`);\n`);
 			}
 		}
 	}
@@ -584,8 +585,8 @@ export function generate(
 				&& prop.name === 'ref'
 				&& prop.value
 			) {
-				scriptGen.addText(`// @ts-ignore\n`);
-				scriptGen.addText(`(`);
+				tsCodeGen.addText(`// @ts-ignore\n`);
+				tsCodeGen.addText(`(`);
 				writeCode(
 					prop.value.content,
 					{
@@ -598,7 +599,7 @@ export function generate(
 						capabilities: capabilitiesSet.referencesOnly,
 					},
 				);
-				scriptGen.addText(`);\n`);
+				tsCodeGen.addText(`);\n`);
 			}
 		}
 	}
@@ -606,7 +607,7 @@ export function generate(
 		const varName = `__VLS_${elementIndex++}`;
 
 		if (forDirectiveClassOrStyle) {
-			scriptGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+			tsCodeGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
 		}
 		else {
 			addStartWrap();
@@ -631,7 +632,7 @@ export function generate(
 				}
 
 				// camelize name
-				const diagStart = scriptGen.getText().length;
+				const diagStart = tsCodeGen.getText().length;
 				// `'${propName}': (${propValue})`
 				if (!prop.arg) {
 					writeObjectProperty(
@@ -674,7 +675,7 @@ export function generate(
 						},
 					);
 				}
-				scriptGen.addText(`: (`);
+				tsCodeGen.addText(`: (`);
 				if (prop.exp && !(prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 					writeCode(
 						propValue,
@@ -687,21 +688,21 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
-						formatBrackets.b,
+						formatBrackets.round,
 					);
 				}
 				else {
-					scriptGen.addText(propValue);
+					tsCodeGen.addText(propValue);
 				}
-				scriptGen.addText(`)`);
-				addMapping(scriptGen, {
+				tsCodeGen.addText(`)`);
+				addMapping(tsCodeGen, {
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
 					},
 					mappedRange: {
 						start: diagStart,
-						end: scriptGen.getText().length,
+						end: tsCodeGen.getText().length,
 					},
 					mode: SourceMaps.Mode.Totally,
 					data: {
@@ -709,7 +710,7 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				scriptGen.addText(`,\n`);
+				tsCodeGen.addText(`,\n`);
 				// original name
 				if (prop.arg && propName_1 !== propName_2) {
 					writeObjectProperty(
@@ -724,7 +725,7 @@ export function generate(
 							doRename: keepHyphenateName,
 						},
 					);
-					scriptGen.addText(`: (${propValue}),\n`);
+					tsCodeGen.addText(`: (${propValue}),\n`);
 				}
 			}
 			else if (
@@ -739,11 +740,11 @@ export function generate(
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
 
 				if (isClassOrStyleAttr) {
-					scriptGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`// @ts-ignore\n`);
 				}
 
 				// camelize name
-				const diagStart = scriptGen.getText().length;
+				const diagStart = tsCodeGen.getText().length;
 				writeObjectProperty(
 					propName,
 					{
@@ -756,11 +757,11 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(': ');
+				tsCodeGen.addText(': ');
 				writeAttrValue(prop.value);
-				const diagEnd = scriptGen.getText().length;
-				scriptGen.addText(',\n');
-				addMapping(scriptGen, {
+				const diagEnd = tsCodeGen.getText().length;
+				tsCodeGen.addText(',\n');
+				addMapping(tsCodeGen, {
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
@@ -789,9 +790,9 @@ export function generate(
 							doRename: keepHyphenateName,
 						},
 					);
-					scriptGen.addText(': ');
+					tsCodeGen.addText(': ');
 					writeAttrValue(prop.value);
-					scriptGen.addText(',\n');
+					tsCodeGen.addText(',\n');
 				}
 			}
 			else if (
@@ -803,7 +804,7 @@ export function generate(
 				if (forDirectiveClassOrStyle) {
 					continue;
 				}
-				scriptGen.addText('...(');
+				tsCodeGen.addText('...(');
 				writeCode(
 					prop.exp.content,
 					{
@@ -815,20 +816,20 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					formatBrackets.b,
+					formatBrackets.round,
 				);
-				scriptGen.addText('),\n');
+				tsCodeGen.addText('),\n');
 			}
 			else {
 				if (forDirectiveClassOrStyle) {
 					continue;
 				}
-				scriptGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
+				tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
 			}
 		}
 
 		if (forDirectiveClassOrStyle) {
-			scriptGen.addText(`};\;`)
+			tsCodeGen.addText(`};\;`)
 		}
 		else {
 			addEndWrap();
@@ -836,7 +837,7 @@ export function generate(
 
 		function writeAttrValue(attrNode: vueDom.TextNode | undefined) {
 			if (attrNode) {
-				scriptGen.addText('`');
+				tsCodeGen.addText('`');
 				let start = attrNode.loc.start.offset;
 				let end = attrNode.loc.end.offset;
 				if (end - start > attrNode.content.length) {
@@ -852,15 +853,15 @@ export function generate(
 						capabilities: capabilitiesSet.all
 					},
 				);
-				scriptGen.addText('`');
+				tsCodeGen.addText('`');
 			}
 			else {
-				scriptGen.addText('true');
+				tsCodeGen.addText('true');
 			}
 		}
 		function addStartWrap() {
 			{ // start tag
-				scriptGen.addText(`__VLS_components`);
+				tsCodeGen.addText(`__VLS_components`);
 				writePropertyAccess(
 					getComponentName(node.tag),
 					{
@@ -873,10 +874,10 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(`;\n`);
+				tsCodeGen.addText(`;\n`);
 			}
 			if (!node.isSelfClosing && !htmlToTemplate) { // end tag
-				scriptGen.addText(`__VLS_components`);
+				tsCodeGen.addText(`__VLS_components`);
 				writePropertyAccess(
 					getComponentName(node.tag),
 					{
@@ -889,10 +890,10 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
-				scriptGen.addText(`;\n`);
+				tsCodeGen.addText(`;\n`);
 			}
 
-			scriptGen.addText(`const `);
+			tsCodeGen.addText(`const `);
 			writeCode(
 				varName,
 				{
@@ -905,10 +906,10 @@ export function generate(
 					capabilities: capabilitiesSet.diagnosticOnly,
 				},
 			);
-			scriptGen.addText(`: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+			tsCodeGen.addText(`: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
 		}
 		function addEndWrap() {
-			scriptGen.addText(`}; ${varName};\n`);
+			tsCodeGen.addText(`}; ${varName};\n`);
 		}
 	}
 	function writeClassScopeds(node: ElementNode) {
@@ -933,8 +934,8 @@ export function generate(
 				}
 
 				function addClass(className: string, offset: number) {
-					scriptGen.addText(`// @ts-ignore\n`);
-					scriptGen.addText(`__VLS_styleScopedClasses`);
+					tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`__VLS_styleScopedClasses`);
 					writePropertyAccess(
 						className,
 						{
@@ -949,7 +950,7 @@ export function generate(
 							},
 						},
 					);
-					scriptGen.addText(`;\n`);
+					tsCodeGen.addText(`;\n`);
 				}
 			}
 		}
@@ -979,23 +980,23 @@ export function generate(
 				if (prop.arg.content.startsWith('update:')) {
 					keyOffset = 'update:'.length;
 					key_1 = prop.arg.content.substr(keyOffset);
-					scriptGen.addText(`let ${var_on}!: { '${key_1}': ($event: InstanceType<typeof __VLS_components['${getComponentName(node.tag)}']>['$props']['${key_1}']) => void };\n`);
+					tsCodeGen.addText(`let ${var_on}!: { '${key_1}': ($event: InstanceType<typeof __VLS_components['${getComponentName(node.tag)}']>['$props']['${key_1}']) => void };\n`);
 				}
 				else {
 					const key_2 = camelize('on-' + key_1);
 					const key_3 = camelize(key_1);
 
-					scriptGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<\n`);
+					tsCodeGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<\n`);
 					if (key_1 !== key_3) {
-						scriptGen.addText(`__VLS_FirstFunction<\n`);
-						scriptGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
-						scriptGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>\n`);
-						scriptGen.addText(`>,\n`);
+						tsCodeGen.addText(`__VLS_FirstFunction<\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>\n`);
+						tsCodeGen.addText(`>,\n`);
 					}
 					else {
-						scriptGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
 					}
-					scriptGen.addText(`typeof __VLS_componentProps['${getComponentName(node.tag)}'][`)
+					tsCodeGen.addText(`typeof __VLS_componentProps['${getComponentName(node.tag)}'][`)
 					writeCodeWithQuotes(
 						key_2,
 						{
@@ -1007,13 +1008,13 @@ export function generate(
 							capabilities: capabilitiesSet.attr,
 						},
 					);
-					scriptGen.addText(`]> };\n`);
+					tsCodeGen.addText(`]> };\n`);
 				}
 
 				const transformResult = transformOn(prop, node, context);
 				for (const prop_2 of transformResult.props) {
 					const value = prop_2.value;
-					scriptGen.addText(`${var_on} = {\n`);
+					tsCodeGen.addText(`${var_on} = {\n`);
 					writeObjectProperty(
 						key_1,
 						{
@@ -1025,7 +1026,7 @@ export function generate(
 							capabilities: capabilitiesSet.attr,
 						},
 					);
-					scriptGen.addText(`: `);
+					tsCodeGen.addText(`: `);
 
 					if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
 						if (value.content === prop.exp.content) {
@@ -1040,17 +1041,17 @@ export function generate(
 									vueTag: 'template',
 									capabilities: capabilitiesSet.all,
 								},
-								formatBrackets.c,
+								formatBrackets.empty,
 							);
 						}
 						else {
-							scriptGen.addText(value.content);
+							tsCodeGen.addText(value.content);
 						}
 					}
 					else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
 						for (const child of value.children) {
 							if (typeof child === 'string') {
-								scriptGen.addText(child);
+								tsCodeGen.addText(child);
 							}
 							else if (typeof child === 'symbol') {
 								// ignore
@@ -1068,16 +1069,16 @@ export function generate(
 											vueTag: 'template',
 											capabilities: capabilitiesSet.all,
 										},
-										formatBrackets.c,
+										formatBrackets.empty,
 									);
 								}
 								else {
-									scriptGen.addText(child.content);
+									tsCodeGen.addText(child.content);
 								}
 							}
 						}
 					}
-					scriptGen.addText(`\n};\n`);
+					tsCodeGen.addText(`\n};\n`);
 				}
 			}
 		}
@@ -1098,7 +1099,7 @@ export function generate(
 				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
 			) {
 				hasDefaultBind = true;
-				scriptGen.addText(`const ${varDefaultBind} = (`);
+				tsCodeGen.addText(`const ${varDefaultBind} = (`);
 				writeCode(
 					prop.exp.content,
 					{
@@ -1110,14 +1111,14 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					formatBrackets.b,
+					formatBrackets.round,
 				);
-				scriptGen.addText(`);\n`);
+				tsCodeGen.addText(`);\n`);
 				break;
 			}
 		}
 
-		scriptGen.addText(`const ${varBinds} = {\n`);
+		tsCodeGen.addText(`const ${varBinds} = {\n`);
 		for (const prop of node.props) {
 			if (
 				prop.type === NodeTypes.DIRECTIVE
@@ -1136,7 +1137,7 @@ export function generate(
 						capabilities: capabilitiesSet.attr,
 					},
 				);
-				scriptGen.addText(`: (`);
+				tsCodeGen.addText(`: (`);
 				writeCode(
 					prop.exp.content,
 					{
@@ -1148,9 +1149,9 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
-					formatBrackets.b,
+					formatBrackets.round,
 				);
-				scriptGen.addText(`),\n`);
+				tsCodeGen.addText(`),\n`);
 			}
 			else if (
 				prop.type === NodeTypes.ATTRIBUTE
@@ -1169,25 +1170,25 @@ export function generate(
 						capabilities: capabilitiesSet.attr,
 					},
 				);
-				scriptGen.addText(`: (`);
-				scriptGen.addText(propValue);
-				scriptGen.addText(`),\n`);
+				tsCodeGen.addText(`: (`);
+				tsCodeGen.addText(propValue);
+				tsCodeGen.addText(`),\n`);
 			}
 		}
-		scriptGen.addText(`};\n`);
+		tsCodeGen.addText(`};\n`);
 
 		if (hasDefaultBind) {
-			scriptGen.addText(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
+			tsCodeGen.addText(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
 		}
 		else {
-			scriptGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
+			tsCodeGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
 		if (slotNameExp) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
 			const varSlotExp2 = `__VLS_${elementIndex++}`;
-			scriptGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
-			scriptGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
+			tsCodeGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
+			tsCodeGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
 			slotExps.set(varSlotExp2, {
 				varName: varSlot,
 				loc: {
@@ -1239,43 +1240,43 @@ export function generate(
 	}
 	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
-			scriptGen.addText(`.`);
+			tsCodeGen.addText(`.`);
 			return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
 		else {
-			scriptGen.addText(`[`);
+			tsCodeGen.addText(`[`);
 			writeCodeWithQuotes(mapCode, sourceRange, data);
-			scriptGen.addText(`]`);
+			tsCodeGen.addText(`]`);
 		}
 	}
 	function writeCodeWithQuotes(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		const addText = `'${mapCode}'`;
-		addMapping(scriptGen, {
+		addMapping(tsCodeGen, {
 			sourceRange,
 			mappedRange: {
-				start: scriptGen.getText().length + 1,
-				end: scriptGen.getText().length + addText.length - 1,
+				start: tsCodeGen.getText().length + 1,
+				end: tsCodeGen.getText().length + addText.length - 1,
 			},
 			mode: SourceMaps.Mode.Offset,
 			additional: [
 				{
 					sourceRange,
 					mappedRange: {
-						start: scriptGen.getText().length,
-						end: scriptGen.getText().length + addText.length,
+						start: tsCodeGen.getText().length,
+						end: tsCodeGen.getText().length + addText.length,
 					},
 					mode: SourceMaps.Mode.Totally,
 				}
 			],
 			data,
 		});
-		scriptGen.addText(addText);
+		tsCodeGen.addText(addText);
 	}
 	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: SourceMaps.TsMappingData, formatWrapper?: [string, string]) {
 		if (formatWrapper) {
-			formatGen.addText(formatWrapper[0]);
-			const targetRange = formatGen.addText(mapCode);
-			addMapping(formatGen, {
+			tsFormatCodeGen.addText(formatWrapper[0]);
+			const targetRange = tsFormatCodeGen.addText(mapCode);
+			addMapping(tsFormatCodeGen, {
 				mappedRange: targetRange,
 				sourceRange,
 				mode,
@@ -1286,18 +1287,18 @@ export function generate(
 					},
 				},
 			});
-			formatGen.addText(formatWrapper[1]);
-			formatGen.addText(`\n;\n`);
+			tsFormatCodeGen.addText(formatWrapper[1]);
+			tsFormatCodeGen.addText(`\n;\n`);
 		}
-		const targetRange = scriptGen.addText(mapCode);
-		addMapping(scriptGen, {
+		const targetRange = tsCodeGen.addText(mapCode);
+		addMapping(tsCodeGen, {
 			sourceRange,
 			mappedRange: targetRange,
 			mode,
 			data,
 		});
 	}
-	function addMapping(gen: typeof scriptGen, mapping: SourceMaps.Mapping<SourceMaps.TsMappingData>) {
+	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<SourceMaps.TsMappingData>) {
 		const newMapping = { ...mapping };
 		if (htmlToTemplate) {
 
