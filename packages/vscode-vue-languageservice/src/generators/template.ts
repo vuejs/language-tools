@@ -22,6 +22,7 @@ const formatBrackets = {
 	curly: ['{', '}'] as [string, string],
 	square: ['[', ']'] as [string, string],
 };
+const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function generate(
 	html: string,
@@ -980,13 +981,17 @@ export function generate(
 				if (prop.arg.content.startsWith('update:')) {
 					keyOffset = 'update:'.length;
 					key_1 = prop.arg.content.substr(keyOffset);
-					tsCodeGen.addText(`let ${var_on}!: { '${key_1}': ($event: InstanceType<typeof __VLS_components['${getComponentName(node.tag)}']>['$props']['${key_1}']) => void };\n`);
+					tsCodeGen.addText(`let ${var_on}!: { `);
+					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
+					tsCodeGen.addText(`: ($event: InstanceType<typeof __VLS_components['${getComponentName(node.tag)}']>['$props']['${key_1}']) => void };\n`);
 				}
 				else {
 					const key_2 = camelize('on-' + key_1);
 					const key_3 = camelize(key_1);
 
-					tsCodeGen.addText(`let ${var_on}!: { '${key_1}': __VLS_FirstFunction<\n`);
+					tsCodeGen.addText(`let ${var_on}!: { `);
+					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
+					tsCodeGen.addText(`: __VLS_FirstFunction<\n`);
 					if (key_1 !== key_3) {
 						tsCodeGen.addText(`__VLS_FirstFunction<\n`);
 						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
@@ -1231,7 +1236,7 @@ export function generate(
 		}
 	}
 	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
-		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
+		if (validTsVar.test(mapCode)) {
 			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
 		else {
@@ -1239,7 +1244,7 @@ export function generate(
 		}
 	}
 	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
-		if (/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(mapCode)) {
+		if (validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
 			return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
