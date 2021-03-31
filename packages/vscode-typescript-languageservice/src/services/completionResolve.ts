@@ -4,9 +4,9 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
-	return (item: CompletionItem): CompletionItem => {
+	return (item: CompletionItem, newOffset?: number): CompletionItem => {
 		const fileName = item.data.fileName;
-		const offset = item.data.offset;
+		const offset = newOffset ?? item.data.offset;
 		const name = item.data.name;
 		const source = item.data.source;
 		const detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, {

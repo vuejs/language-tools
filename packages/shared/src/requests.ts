@@ -1,16 +1,18 @@
-import { RequestType } from 'vscode-languageserver/node';
-import { NotificationType } from 'vscode-languageserver/node';
-import { TextDocumentPositionParams } from 'vscode-languageserver/node';
-import { TextDocumentIdentifier } from 'vscode-languageserver/node';
-import { FormattingOptions } from 'vscode-languageserver/node';
-import { Position } from 'vscode-languageserver/node';
-import { Location } from 'vscode-languageserver/node';
-import { DocumentUri } from 'vscode-languageserver/node';
-import { Range } from 'vscode-languageserver/node';
-import { RequestType0 } from 'vscode-languageserver/node';
-import { NotificationType0 } from 'vscode-languageserver/node';
-import { SemanticTokensLegend } from 'vscode-languageserver/node';
-import { SemanticTokens } from 'vscode-languageserver/node';
+import {
+	DocumentUri,
+	FormattingOptions,
+	Location,
+	NotificationType,
+	NotificationType0,
+	Position,
+	Range,
+	RequestType,
+	RequestType0,
+	SemanticTokens,
+	SemanticTokensLegend,
+	TextDocumentIdentifier,
+	TextDocumentPositionParams,
+} from 'vscode-languageserver/node';
 
 export namespace D3Request {
 	export const type: RequestType<TextDocumentIdentifier, string | null | undefined, any> = new RequestType('volar/d3');
@@ -25,6 +27,12 @@ export namespace DocumentVersionRequest {
 	export const type: RequestType<{
 		uri: string,
 	}, number | undefined, any> = new RequestType('vue/docUpdated');
+}
+export namespace ActiveSelectionRequest {
+	export const type: RequestType0<{
+		uri: string,
+		offset: number,
+	} | undefined, any> = new RequestType0('vue/activeSelection');
 }
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.verifyAllScripts');

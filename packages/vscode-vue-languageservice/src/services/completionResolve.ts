@@ -5,7 +5,7 @@ import { SourceFile } from '../sourceFile';
 import { transformLocations } from '@volar/source-map';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	return (item: CompletionItem) => {
+	return (item: CompletionItem, newOffset?: number) => {
 		const data: CompletionData = item.data;
 		const sourceFile = sourceFiles.get(data.uri);
 		if (!sourceFile) return item;
@@ -22,7 +22,17 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (sourceMap.mappedDocument.uri !== data.docUri) continue;
-				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem);
+
+				let newTsOffset: number | undefined;
+				if (newOffset) {
+					for (const tsRange of sourceMap.getMappedRanges2(newOffset)) {
+						if (!tsRange.data.capabilities.completion) continue;
+						newTsOffset = tsRange.start;
+						break;
+					}
+				}
+
+				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem, newTsOffset);
 				vueItem.documentation = data.tsItem.documentation;
 				// TODO: this is a patch for import ts file icon
 				if (vueItem.detail !== data.tsItem.detail + '.ts') {

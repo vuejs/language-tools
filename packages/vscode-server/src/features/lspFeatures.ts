@@ -1,4 +1,4 @@
-import { notEmpty } from '@volar/shared';
+import { ActiveSelectionRequest, notEmpty } from '@volar/shared';
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { getEmmetConfiguration } from '../configs';
 import { connection, documents, servicesManager, noStateLs } from '../instances';
@@ -16,7 +16,9 @@ connection.onCompletion(async handler => {
 });
 connection.onCompletionResolve(async item => {
     const uri = item.data?.uri;
-    return servicesManager?.getMatchService(uri)?.doCompletionResolve(item) ?? item;
+    const activeSel = await connection.sendRequest(ActiveSelectionRequest.type);
+    const newOffset = activeSel?.uri === uri ? activeSel?.offset : undefined;
+    return servicesManager?.getMatchService(uri)?.doCompletionResolve(item, newOffset) ?? item;
 });
 connection.onHover(handler => {
     const document = documents.get(handler.textDocument.uri);
