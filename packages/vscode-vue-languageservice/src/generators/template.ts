@@ -4,6 +4,7 @@ import { camelize, hyphenate } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
 import { NodeTypes, transformOn } from '@vue/compiler-dom';
 import type { TemplateChildNode, ElementNode, TransformContext } from '@vue/compiler-dom';
+import { processFor } from '@vue/compiler-core';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -23,6 +24,20 @@ const formatBrackets = {
 	square: ['[', ']'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+// @ts-ignore
+const transformContext: TransformContext = {
+	onError: () => { },
+	helperString: str => str.toString(),
+	replaceNode: node => { },
+	cacheHandlers: false,
+	prefixIdentifiers: false,
+	scopes: {
+		vFor: 0,
+		vOnce: 0,
+		vPre: 0,
+		vSlot: 0,
+	},
+};
 
 export function generate(
 	html: string,
@@ -114,6 +129,26 @@ export function generate(
 	}
 	function visitNode(node: TemplateChildNode, parentEl: vueDom.ElementNode | undefined): void {
 		if (node.type === NodeTypes.ELEMENT) {
+
+			// TODO: track https://github.com/vuejs/vue-next/issues/3498
+			const forDirective = node.props.find(
+				(prop): prop is vueDom.DirectiveNode =>
+					prop.type === NodeTypes.DIRECTIVE
+					&& prop.name === 'for'
+			);
+			if (forDirective) {
+				node.props = node.props.filter(prop => prop !== forDirective);
+				let forNode: vueDom.ForNode | undefined;
+				processFor(node, forDirective, transformContext, _forNode => {
+					forNode = _forNode;
+					return undefined;
+				});
+				if (forNode) {
+					forNode.children = [node];
+					visitNode(forNode, parentEl);
+					return;
+				}
+			}
 
 			if (node.tag !== 'template') {
 				parentEl = node;
@@ -957,14 +992,6 @@ export function generate(
 		}
 	}
 	function writeEvents(node: ElementNode) {
-		// @ts-ignore
-		const context: TransformContext = {
-			onError: () => { },
-			helperString: str => str.toString(),
-			cacheHandlers: false,
-			prefixIdentifiers: false,
-		};
-
 		for (const prop of node.props) {
 			if (
 				prop.type === NodeTypes.DIRECTIVE
@@ -1016,7 +1043,7 @@ export function generate(
 					tsCodeGen.addText(`]> };\n`);
 				}
 
-				const transformResult = transformOn(prop, node, context);
+				const transformResult = transformOn(prop, node, transformContext);
 				for (const prop_2 of transformResult.props) {
 					const value = prop_2.value;
 					tsCodeGen.addText(`${var_on} = {\n`);
