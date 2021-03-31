@@ -1,3 +1,10 @@
+### 0.22.26
+
+- feat: improve events hover info
+- feat: support pug new line syntax `\` [#118](https://github.com/johnsoncodehk/volar/issues/118)
+- fix: `v-for` not working with `v-slot` [#110](https://github.com/johnsoncodehk/volar/issues/110)
+- fix: completion detail not working when keep typing
+
 ### 0.22.25
 
 - feat: support pass props as `v-bind="..."` syntax [vue-tsc#9](https://github.com/johnsoncodehk/vue-tsc/issues/9)
