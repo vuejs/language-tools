@@ -135,6 +135,7 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             if (val.startsWith('`') && val.endsWith('`')) {
                 val = `"${val.substr(1, val.length - 2)}"`;
             }
+            val = val.replaceAll(' \\\n', '//\n'); // TODO: required a space for now
             codeGen.addCode(
                 val,
                 getPugStartEnd(attr.line, attr.column, val.length, escapeLength),
