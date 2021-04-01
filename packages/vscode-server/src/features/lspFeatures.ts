@@ -15,9 +15,10 @@ connection.onCompletion(async handler => {
     );
 });
 connection.onCompletionResolve(async item => {
-    const uri = item.data?.uri;
+    const uri: string | undefined = item.data?.uri;
+    if (!uri) return item;
     const activeSel = await connection.sendRequest(ActiveSelectionRequest.type);
-    const newOffset = activeSel?.uri === uri ? activeSel?.offset : undefined;
+    const newOffset = activeSel?.uri.toLowerCase() === uri.toLowerCase() ? activeSel?.offset : undefined;
     return servicesManager?.getMatchService(uri)?.doCompletionResolve(item, newOffset) ?? item;
 });
 connection.onHover(handler => {
