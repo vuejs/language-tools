@@ -80,14 +80,11 @@ export function createServicesManager(
 		}
 
 		if (await isCancel()) return;
-		await sendDocumentDiagnostics(changeDoc, false, changedFileName, isCancel);
-
-		if (await isCancel()) return;
-		await sendDocumentDiagnostics(changeDoc, true, changedFileName, isCancel);
+		await sendDocumentDiagnostics(changeDoc, changedFileName, isCancel);
 
 		for (const doc of otherDocs) {
 			if (await isCancel()) break;
-			await sendDocumentDiagnostics(doc, true, changedFileName, isCancel);
+			await sendDocumentDiagnostics(doc, changedFileName, isCancel);
 		}
 	}
 	async function onFileUpdated(fileName?: string) {
@@ -103,7 +100,7 @@ export function createServicesManager(
 		}
 
 		for (const doc of openedDocs) {
-			await sendDocumentDiagnostics(doc, true, fileName);
+			await sendDocumentDiagnostics(doc, fileName);
 		}
 	}
 	function getIsCancel(uri: string, version: number) {
@@ -121,7 +118,7 @@ export function createServicesManager(
 			return _isCancel;
 		};
 	}
-	async function sendDocumentDiagnostics(document: TextDocument, withSideEffect: boolean, changedFileName?: string, isCancel?: () => Promise<boolean>) {
+	async function sendDocumentDiagnostics(document: TextDocument, changedFileName?: string, isCancel?: () => Promise<boolean>) {
 
 		const matchTsConfig = getMatchTsConfig(document.uri);
 		if (!matchTsConfig) return;
@@ -136,7 +133,7 @@ export function createServicesManager(
 		await matchLs.doValidation(document, async result => {
 			send = true;
 			connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
-		}, isCancel, withSideEffect);
+		}, isCancel);
 
 		if (send && !checkedProject.has(matchTsConfig)) {
 			checkedProject.add(matchTsConfig);

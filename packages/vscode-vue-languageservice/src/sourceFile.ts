@@ -6,7 +6,7 @@ import {
 	Range,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath, notEmpty } from '@volar/shared';
+import { uriToFsPath, notEmpty, eqSet } from '@volar/shared';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
@@ -445,14 +445,10 @@ export function createSourceFile(
 		templateScriptData.htmlElementItems = globalEls;
 		virtualTemplateGen.update(); // TODO
 		return true;
-
-		function eqSet<T>(as: Set<T>, bs: Set<T>) {
-			if (as.size !== bs.size) return false;
-			for (const a of as) if (!bs.has(a)) return false;
-			return true;
-		}
 	}
 	function useDiagnostics() {
+
+		let lastResult = new Set<string>();
 
 		const tsOptions = tsLanguageService.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
@@ -477,52 +473,56 @@ export function createSourceFile(
 			[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), [], 0],
 		];
 
-		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>, withSideEffect = true) => {
+		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
-
-			let all = [...nonTs];
-			let keep: typeof all = [];
 
 			// sort by cost
 			templateTs = templateTs.sort((a, b) => a[2] - b[2]);
 			scriptTs = scriptTs.sort((a, b) => a[2] - b[2]);
 
+			let all = [...nonTs];
+			let mainErrorIndex = -1;
+
 			if (lastUpdateChanged.script || lastUpdateChanged.scriptSetup) {
 				all = all.concat(scriptTs);
-				if (withSideEffect) {
-					all = all.concat(templateTs);
-				}
-				else {
-					keep = keep.concat(templateTs);
-				}
-			}
-			else if (lastUpdateChanged.template) {
+				mainErrorIndex = all.length - 1;
 				all = all.concat(templateTs);
-				if (withSideEffect) {
-					all = all.concat(scriptTs);
-				}
-				else {
-					keep = keep.concat(scriptTs);
-				}
 			}
 			else {
-				if (withSideEffect) {
-					all = all.concat(scriptTs);
-					all = all.concat(templateTs);
-				}
-				else {
-					keep = keep.concat(scriptTs);
-					keep = keep.concat(templateTs);
-				}
+				all = all.concat(templateTs);
+				mainErrorIndex = all.length - 1;
+				all = all.concat(scriptTs);
 			}
 
-			for (const diag of all) {
+			let sended = false;
+
+			for (let i = 0; i < all.length; i++) {
 				if (await isCancel?.()) return;
 				const startTime = Date.now();
+				const diag = all[i];
 				diag[1] = diag[0].value;
 				diag[2] = Date.now() - startTime;
-				const results = [...all, ...keep].map(diag => diag[1]).flat().concat(sfcErrors.value);
-				response(dedupe.withDiagnostics(results));
+				const results = all.map(diag => diag[1]).flat().concat(sfcErrors.value);
+				const resultKeys = new Set(results.map(error =>
+					error.source
+					+ ':' + error.code
+					+ ':' + error.range.start.line
+					+ ':' + error.range.start.character
+					+ ':' + error.range.end.line
+					+ ':' + error.range.end.character
+				));
+				const isLast = i === all.length - 1
+				if (
+					(isLast && !sended)
+					|| (
+						!eqSet(lastResult, resultKeys)
+						&& (isLast || i === mainErrorIndex)
+					)
+				) {
+					sended = true;
+					lastResult = resultKeys;
+					response(dedupe.withDiagnostics(results));
+				}
 			}
 		}
 
