@@ -1,4 +1,4 @@
-import type { LocationLink, Position } from 'vscode-languageserver/node';
+import type { LocationLink, Position, Range } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
 import type { TsApiRegisterOptions } from '../types';
 import * as dedupe from '../utils/dedupe';
@@ -33,7 +33,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	function onTs(uri: string, position: Position, mode: 'definition' | 'typeDefinition') {
 
 		const loopChecker = dedupe.createLocationSet();
-		let tsResult: (LocationLink & { originalUri: string })[] = [];
+		let tsResult: (LocationLink & { originalUri: string, isOriginal: boolean })[] = [];
 		let vueResult: LocationLink[] = [];
 
 		// vue -> ts
@@ -42,9 +42,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (!tsRange.data.capabilities.definitions)
 				continue;
 
-			withTeleports(tsRange.textDocument.uri, tsRange.start);
+			withTeleports(tsRange.textDocument.uri, tsRange.start, true);
 
-			function withTeleports(uri: string, position: Position) {
+			function withTeleports(uri: string, position: Position, isOriginal: boolean) {
 
 				const tsLocs = mode === 'typeDefinition'
 					? tsRange.languageService.findTypeDefinition(uri, position)
@@ -53,6 +53,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				tsResult = tsResult.concat(tsLocs.map(tsLoc => ({
 					...tsLoc,
 					originalUri: uri,
+					isOriginal,
 				})));
 
 				for (const location of tsLocs) {
@@ -62,28 +63,34 @@ export function register({ mapper }: TsApiRegisterOptions) {
 							continue;
 						if (loopChecker.has({ uri: location.targetUri, range: teleRange }))
 							continue;
-						withTeleports(location.targetUri, teleRange.start);
+						withTeleports(location.targetUri, teleRange.start, false);
 					}
 				}
 			}
 		}
 
 		// ts -> vue
+		let originSelectionRange: Range | undefined;
+		for (const tsLoc of tsResult) {
+			if (tsLoc.isOriginal && tsLoc.originSelectionRange) {
+				const ranges = mapper.ts.from(tsLoc.originalUri, tsLoc.originSelectionRange.start, tsLoc.originSelectionRange.end);
+				if (ranges.length) {
+					originSelectionRange = ranges[0];
+				}
+			}
+		}
 		for (const tsLoc of tsResult) {
 
 			const targetSelectionRange = mapper.ts.from(tsLoc.targetUri, tsLoc.targetSelectionRange.start, tsLoc.targetSelectionRange.end);
 			if (!targetSelectionRange.length) continue;
 
 			const targetRange = mapper.ts.from(tsLoc.targetUri, tsLoc.targetRange.start, tsLoc.targetRange.end);
-			const originSelectionRange = tsLoc.originSelectionRange
-				? mapper.ts.from(tsLoc.originalUri, tsLoc.originSelectionRange.start, tsLoc.originSelectionRange.end)
-				: undefined;
 
 			vueResult.push({
 				targetUri: targetSelectionRange[0].textDocument.uri,
 				targetRange: targetRange.length ? targetRange[0] : targetSelectionRange[0],
 				targetSelectionRange: targetSelectionRange[0],
-				originSelectionRange: originSelectionRange?.length ? originSelectionRange[0] : undefined,
+				originSelectionRange,
 			});
 		}
 
