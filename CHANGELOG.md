@@ -1,3 +1,8 @@
+### 0.22.28
+
+- fix: reduce diagnostics shaking
+- fix: only diagnosis import variables in `<script setup>` return
+
 ### 0.22.27
 
 - feat: report error if import type in `<script setup>` incorrectly
