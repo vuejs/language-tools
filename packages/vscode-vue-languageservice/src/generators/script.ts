@@ -454,7 +454,17 @@ export function generate(
             const varName = originalCode.substring(expose.start, expose.end);
             const templateSideRange = gen.addText(varName);
             gen.addText(': ');
-            const scriptSideRange = gen.addText(varName);
+            const scriptSideRange = gen.addCode(
+                varName,
+                expose,
+                SourceMaps.Mode.Offset,
+                {
+                    vueTag: 'scriptSetup',
+                    capabilities: {
+                        diagnostic: true
+                    },
+                },
+            );
             gen.addText(',\n');
 
             teleports.push({
