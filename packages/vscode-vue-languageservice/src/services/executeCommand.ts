@@ -9,7 +9,7 @@ import { execute as executePugToHtml } from '../commands/pugToHtml';
 import { execute as executeUseRefSugar } from '../commands/useRefSugar';
 import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOptions) {
 
 	const findReferences = registerFindReferences(arguments[0]);
 
@@ -34,10 +34,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				return;
 
 			if (scriptSetupData.labels.length) {
-				executeUseRefSugar(document, sourceFile, connection, findReferences, tsLanguageService);
+				executeUseRefSugar(ts, document, sourceFile, connection, findReferences, tsLanguageService);
 			}
 			else {
-				executeUnuseRefSugar(document, sourceFile, connection, findReferences);
+				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences);
 			}
 		}
 		if (command === Commands.HTML_TO_PUG) {

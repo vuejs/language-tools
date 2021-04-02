@@ -5,28 +5,36 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import { TextEdit } from 'vscode-languageserver/node';
 import { sleep } from '@volar/shared';
+import { parse2 } from '../parsers/scriptSetupAst';
 
 export async function execute(
+    ts: typeof import('typescript'),
     document: TextDocument,
     sourceFile: SourceFile,
     connection: Connection,
     _findReferences: (uri: string, position: Position) => Location[],
 ) {
+
     const desc = sourceFile.getDescriptor();
     if (!desc.scriptSetup) return;
+
     const genData = sourceFile.getScriptSetupData();
     if (!genData) return;
-    let edits: TextEdit[] = [];
 
-    // use ref sugar
+    const descriptor = sourceFile.getDescriptor();
+    if (!descriptor.scriptSetup) return;
+
+    const genData2 = parse2(ts, descriptor.scriptSetup.content);
+
+    let edits: TextEdit[] = [];
     let varsNum = 0;
     let varsCur = 0;
-    for (const label of genData.refCalls) {
+    for (const label of genData2.refCalls) {
         varsNum += label.vars.length;
     }
     const progress = await connection.window.createWorkDoneProgress();
     progress.begin('Use Ref Sugar', 0, '', true);
-    for (const refCall of genData.refCalls) {
+    for (const refCall of genData2.refCalls) {
 
         const left = document.getText().substring(
             desc.scriptSetup.loc.start + refCall.left.start,
@@ -37,32 +45,35 @@ export async function execute(
                 desc.scriptSetup.loc.start + refCall.rightExpression.start,
                 desc.scriptSetup.loc.start + refCall.rightExpression.end,
             )
-            : 'undefined';
+            : undefined;
         const rightType = refCall.rightType
             ? document.getText().substring(
                 desc.scriptSetup.loc.start + refCall.rightType.start,
                 desc.scriptSetup.loc.start + refCall.rightType.end,
             )
             : undefined;
-        let right = rightExp ? rightExp : 'undefined';
-        if (rightType) {
-            right += ` as ${rightType}`;
-            if (!refCall.rightExpression) {
-                right += ` | undefined`;
-            }
+        let right = '';
+        if (rightExp && rightType) {
+            right = ' = ' + rightExp + ' as ' + rightType;
+        }
+        else if (rightExp) {
+            right = ' = ' + rightExp;
+        }
+        else if (rightType) {
+            right = ' = undefined as ' + rightType + ' | undefined';
         }
 
         if (left.trim().startsWith('{')) {
             edits.push(TextEdit.replace({
                 start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
                 end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
-            }, `ref: (${left} = ${right})`));
+            }, `ref: (${left}${right})`));
         }
         else {
             edits.push(TextEdit.replace({
                 start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
                 end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
-            }, `ref: ${left} = ${right}`));
+            }, `ref: ${left}${right}`));
         }
         for (const _var of refCall.vars) {
             if (progress.token.isCancellationRequested) {

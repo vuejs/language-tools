@@ -7,8 +7,10 @@ import type { LanguageService as TsLanguageService } from '@volar/vscode-typescr
 import { TextEdit } from 'vscode-languageserver/node';
 import { sleep } from '@volar/shared';
 import { SearchTexts } from '../utils/string';
+import { parse2 } from '../parsers/scriptSetupAst';
 
 export async function execute(
+    ts: typeof import('typescript'),
     document: TextDocument,
     sourceFile: SourceFile,
     connection: Connection,
@@ -17,10 +19,16 @@ export async function execute(
 ) {
     const desc = sourceFile.getDescriptor();
     if (!desc.scriptSetup) return;
+
     const genData = sourceFile.getScriptSetupData();
     if (!genData) return;
-    let edits: TextEdit[] = [];
 
+    const descriptor = sourceFile.getDescriptor();
+    if (!descriptor.scriptSetup) return;
+
+    const genData2 = parse2(ts, descriptor.scriptSetup.content);
+
+    let edits: TextEdit[] = [];
     let varsNum = 0;
     let varsCur = 0;
     for (const label of genData.labels) {
@@ -99,7 +107,7 @@ export async function execute(
                         const referenceText = document.getText().substring(refernceRange.start, refernceRange.end);
                         const isRaw = `$${varText}` === referenceText;
                         let isShorthand = false;
-                        for (const shorthandProperty of genData.shorthandPropertys) {
+                        for (const shorthandProperty of genData2.shorthandPropertys) {
                             if (
                                 refernceRange.start === desc.scriptSetup.loc.start + shorthandProperty.start
                                 && refernceRange.end === desc.scriptSetup.loc.start + shorthandProperty.end

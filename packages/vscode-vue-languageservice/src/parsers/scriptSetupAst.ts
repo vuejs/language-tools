@@ -1,6 +1,5 @@
 import * as SourceMaps from '../utils/sourceMaps';
 import type * as ts from 'typescript';
-import { replaceToComment } from '../utils/string';
 
 export type Ast = ReturnType<typeof parse>;
 
@@ -68,38 +67,14 @@ export function parse(ts: typeof import('typescript'), content: string) {
         },
     } | undefined;
     let defineEmit: typeof defineProps;
-    const refCalls: {
-        start: number,
-        end: number,
-        vars: {
-            start: number,
-            end: number,
-        }[],
-        left: {
-            start: number,
-            end: number,
-        },
-        rightExpression: undefined | {
-            start: number,
-            end: number,
-        },
-        rightType: undefined | {
-            start: number,
-            end: number,
-        },
-    }[] = [];
-    const shorthandPropertys: { // TODO: remove
-        start: number,
-        end: number,
-    }[] = [];
     const dollars: number[] = [];
 
-    const scriptAst = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
+    const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
 
-    scriptAst.forEachChild(node => {
+    sourceFile.forEachChild(node => {
         if (ts.isVariableStatement(node)) {
             for (const node_2 of node.declarationList.declarations) {
-                const vars = findBindingVars(node_2.name);
+                const vars = _findBindingVars(node_2.name);
                 for (const _var of vars) {
                     exposeVarNames.push(_var);
                 }
@@ -107,39 +82,26 @@ export function parse(ts: typeof import('typescript'), content: string) {
         }
         else if (ts.isFunctionDeclaration(node)) {
             if (node.name && ts.isIdentifier(node.name)) {
-                exposeVarNames.push(getStartEnd(node.name));
+                exposeVarNames.push(_getStartEnd(node.name));
             }
         }
         else if (ts.isImportDeclaration(node)) {
-            imports.push(getStartEnd(node));
+            imports.push(_getStartEnd(node));
             if (node.importClause && !node.importClause.isTypeOnly) {
                 if (node.importClause.name) {
-                    exposeVarNames.push(getStartEnd(node.importClause.name));
+                    exposeVarNames.push(_getStartEnd(node.importClause.name));
                 }
                 if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
                     for (const element of node.importClause.namedBindings.elements) {
-                        exposeVarNames.push(getStartEnd(element.name));
+                        exposeVarNames.push(_getStartEnd(element.name));
                     }
                 }
             }
         }
     });
-    scriptAst.forEachChild(node => {
-        deepLoop(node, scriptAst, true);
+    sourceFile.forEachChild(node => {
+        visitNode(node, sourceFile, true);
     });
-
-    let noLabelCode = content;
-    for (const label of labels) {
-        noLabelCode = noLabelCode.substring(0, label.label.start) + 'let' + noLabelCode.substring(label.label.end).replace(':', ' ');
-        for (const binary of label.binarys) {
-            if (binary.parent.start !== binary.left.start) {
-                noLabelCode = replaceToComment(noLabelCode, binary.parent.start, binary.left.start);
-            }
-            if (binary.parent.end !== binary.left.end) {
-                noLabelCode = replaceToComment(noLabelCode, (binary.right ?? binary.left).end, binary.parent.end);
-            }
-        }
-    }
 
     return {
         labels,
@@ -147,36 +109,31 @@ export function parse(ts: typeof import('typescript'), content: string) {
         imports,
         defineProps,
         defineEmit,
-        refCalls,
-        shorthandPropertys,
         dollars,
     };
 
-    function getStartEnd(node: ts.Node) {
-        // TODO: high cost
-        const start = node.getStart(scriptAst);
-        const end = node.getEnd();
-        return {
-            start: start,
-            end: end,
-        };
+    function _getStartEnd(node: ts.Node) {
+        return getStartEnd(node, sourceFile);
     }
-    function deepLoop(node: ts.Node, parent: ts.Node, inRoot: boolean) {
+    function _findBindingVars(left: ts.BindingName) {
+        return findBindingVars(ts, left, sourceFile);
+    }
+    function visitNode(node: ts.Node, parent: ts.Node, inRoot: boolean) {
         if (
             ts.isIdentifier(node)
-            && node.getText(scriptAst).startsWith('$')
+            && node.getText(sourceFile).startsWith('$')
         ) {
-            dollars.push(node.getStart(scriptAst));
+            dollars.push(node.getStart(sourceFile));
         }
         if (
             ts.isLabeledStatement(node)
-            && node.label.getText(scriptAst) === 'ref'
+            && node.label.getText(sourceFile) === 'ref'
             && ts.isExpressionStatement(node.statement)
         ) {
             labels.push({
-                ...getStartEnd(node),
-                label: getStartEnd(node.label),
-                parent: getStartEnd(parent),
+                ..._getStartEnd(node),
+                label: _getStartEnd(node.label),
+                parent: _getStartEnd(parent),
                 binarys: findBinaryExpressions(node.statement.expression, inRoot),
             });
         }
@@ -184,8 +141,8 @@ export function parse(ts: typeof import('typescript'), content: string) {
             ts.isCallExpression(node)
             && ts.isIdentifier(node.expression)
             && (
-                node.expression.getText(scriptAst) === 'defineProps'
-                || node.expression.getText(scriptAst) === 'defineEmit'
+                node.expression.getText(sourceFile) === 'defineProps'
+                || node.expression.getText(sourceFile) === 'defineEmit'
             )
         ) {
             // TODO: handle this
@@ -194,42 +151,18 @@ export function parse(ts: typeof import('typescript'), content: string) {
             const arg: ts.Expression | undefined = node.arguments.length ? node.arguments[0] : undefined;
             const typeArg: ts.TypeNode | undefined = node.typeArguments?.length ? node.typeArguments[0] : undefined;
             const call = {
-                ...getStartEnd(node),
-                args: arg ? getStartEnd(arg) : undefined,
-                typeArgs: typeArg ? getStartEnd(typeArg) : undefined,
+                ..._getStartEnd(node),
+                args: arg ? _getStartEnd(arg) : undefined,
+                typeArgs: typeArg ? _getStartEnd(typeArg) : undefined,
             };
-            if (node.expression.getText(scriptAst) === 'defineProps') {
+            if (node.expression.getText(sourceFile) === 'defineProps') {
                 defineProps = call;
             }
-            else if (node.expression.getText(scriptAst) === 'defineEmit') {
+            else if (node.expression.getText(sourceFile) === 'defineEmit') {
                 defineEmit = call;
             }
         }
-        else if (
-            ts.isVariableDeclarationList(node)
-            && node.declarations.length === 1
-            && node.declarations[0].initializer
-            && ts.isCallExpression(node.declarations[0].initializer)
-            && ts.isIdentifier(node.declarations[0].initializer.expression)
-            && ['ref', 'computed'].includes(node.declarations[0].initializer.expression.getText(scriptAst))
-        ) {
-            const declaration = node.declarations[0];
-            const refCall = node.declarations[0].initializer;
-            const isRef = refCall.expression.getText(scriptAst) === 'ref';
-            const wrapContant = isRef ? (refCall.arguments.length ? refCall.arguments[0] : undefined) : refCall;
-            const wrapType = isRef && refCall.typeArguments?.length ? refCall.typeArguments[0] : undefined;
-            refCalls.push({
-                ...getStartEnd(node),
-                vars: findBindingVars(declaration.name),
-                left: getStartEnd(declaration.name),
-                rightExpression: wrapContant ? getStartEnd(wrapContant) : undefined,
-                rightType: wrapType ? getStartEnd(wrapType) : undefined,
-            });
-        }
-        else if (ts.isShorthandPropertyAssignment(node)) {
-            shorthandPropertys.push(getStartEnd(node));
-        }
-        node.forEachChild(child => deepLoop(child, node, false));
+        node.forEachChild(child => visitNode(child, node, false));
     }
     function findBinaryExpressions(exp: ts.Expression, inRoot: boolean) {
         const binaryExps: typeof labels[0]['binarys'] = [];
@@ -237,7 +170,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
         return binaryExps;
         function worker(node: ts.Expression, parenthesized?: ts.ParenthesizedExpression) {
             if (ts.isIdentifier(node)) {
-                const range = getStartEnd(node);
+                const range = _getStartEnd(node);
                 binaryExps.push({
                     vars: findLabelVars(node, inRoot),
                     left: range,
@@ -259,18 +192,18 @@ export function parse(ts: typeof import('typescript'), content: string) {
                         rightWituoutAs = node.right.expression;
                         rightAs = node.right.type;
                     }
-                    const leftRange = getStartEnd(node.left);
-                    const rightRange = getStartEnd(node.right);
-                    const parentRange = getStartEnd(parent);
+                    const leftRange = _getStartEnd(node.left);
+                    const rightRange = _getStartEnd(node.right);
+                    const parentRange = _getStartEnd(parent);
                     if (parentRange.start <= leftRange.start && parentRange.end >= rightRange.end) { // fix `ref: in` #85
                         binaryExps.push({
                             vars: findLabelVars(node.left, inRoot),
                             left: leftRange,
                             right: {
                                 ...rightRange,
-                                isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(scriptAst) === 'computed',
-                                withoutAs: getStartEnd(rightWituoutAs),
-                                as: rightAs ? getStartEnd(rightAs) : undefined,
+                                isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(sourceFile) === 'computed',
+                                withoutAs: _getStartEnd(rightWituoutAs),
+                                as: rightAs ? _getStartEnd(rightAs) : undefined,
                             },
                             parent: parentRange,
                         });
@@ -292,8 +225,8 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 vars.push({
                     isShortand: false,
                     inRoot,
-                    text: _node.getText(scriptAst), // TODO: remove
-                    ...getStartEnd(_node),
+                    text: _node.getText(sourceFile), // TODO: remove
+                    ..._getStartEnd(_node),
                 });
             }
             // { ? } = ...
@@ -321,8 +254,8 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 vars.push({
                     isShortand: true,
                     inRoot,
-                    text: _node.name.getText(scriptAst), // TODO: remove
-                    ...getStartEnd(_node.name),
+                    text: _node.name.getText(sourceFile), // TODO: remove
+                    ..._getStartEnd(_node.name),
                 });
             }
             // { ...? } = ...
@@ -332,36 +265,115 @@ export function parse(ts: typeof import('typescript'), content: string) {
             }
         }
     }
-    function findBindingVars(left: ts.BindingName) {
-        const vars: SourceMaps.Range[] = [];
-        worker(left);
-        return vars;
-        function worker(_node: ts.Node) {
-            if (ts.isIdentifier(_node)) {
-                vars.push(getStartEnd(_node));
-            }
-            // { ? } = ...
-            // [ ? ] = ...
-            else if (ts.isObjectBindingPattern(_node) || ts.isArrayBindingPattern(_node)) {
-                for (const property of _node.elements) {
-                    if (ts.isBindingElement(property)) {
-                        worker(property.name);
-                    }
+}
+
+export function parse2(ts: typeof import('typescript'), content: string) {
+    const refCalls: {
+        start: number,
+        end: number,
+        vars: {
+            start: number,
+            end: number,
+        }[],
+        left: {
+            start: number,
+            end: number,
+        },
+        rightExpression: undefined | {
+            start: number,
+            end: number,
+        },
+        rightType: undefined | {
+            start: number,
+            end: number,
+        },
+    }[] = [];
+    const shorthandPropertys: {
+        start: number,
+        end: number,
+    }[] = [];
+
+    const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
+    sourceFile.forEachChild(visitNode);
+
+    return {
+        refCalls,
+        shorthandPropertys,
+    };
+
+    function _getStartEnd(node: ts.Node) {
+        return getStartEnd(node, sourceFile);
+    }
+    function _findBindingVars(left: ts.BindingName) {
+        return findBindingVars(ts, left, sourceFile);
+    }
+    function visitNode(node: ts.Node) {
+        if (
+            ts.isVariableDeclarationList(node)
+            && node.declarations.length === 1
+            && node.declarations[0].initializer
+            && ts.isCallExpression(node.declarations[0].initializer)
+            && ts.isIdentifier(node.declarations[0].initializer.expression)
+            && ['ref', 'computed'].includes(node.declarations[0].initializer.expression.getText(sourceFile))
+        ) {
+            const declaration = node.declarations[0];
+            const refCall = node.declarations[0].initializer;
+            const isRef = refCall.expression.getText(sourceFile) === 'ref';
+            const wrapContant = isRef ? (refCall.arguments.length ? refCall.arguments[0] : undefined) : refCall;
+            const wrapType = isRef && refCall.typeArguments?.length ? refCall.typeArguments[0] : undefined;
+            refCalls.push({
+                ..._getStartEnd(node),
+                vars: _findBindingVars(declaration.name),
+                left: _getStartEnd(declaration.name),
+                rightExpression: wrapContant ? _getStartEnd(wrapContant) : undefined,
+                rightType: wrapType ? _getStartEnd(wrapType) : undefined,
+            });
+        }
+        else if (ts.isShorthandPropertyAssignment(node)) {
+            shorthandPropertys.push(_getStartEnd(node));
+        }
+        node.forEachChild(visitNode);
+    }
+}
+
+function findBindingVars(ts: typeof import('typescript'), left: ts.BindingName, sourceFile: ts.SourceFile) {
+    const vars: SourceMaps.Range[] = [];
+    worker(left);
+    return vars;
+    function worker(_node: ts.Node) {
+        if (ts.isIdentifier(_node)) {
+            vars.push(getStartEnd(_node, sourceFile));
+        }
+        // { ? } = ...
+        // [ ? ] = ...
+        else if (ts.isObjectBindingPattern(_node) || ts.isArrayBindingPattern(_node)) {
+            for (const property of _node.elements) {
+                if (ts.isBindingElement(property)) {
+                    worker(property.name);
                 }
             }
-            // { foo: ? } = ...
-            else if (ts.isPropertyAssignment(_node)) {
-                worker(_node.initializer);
-            }
-            // { foo } = ...
-            else if (ts.isShorthandPropertyAssignment(_node)) {
-                vars.push(getStartEnd(_node.name));
-            }
-            // { ...? } = ...
-            // [ ...? ] = ...
-            else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
-                worker(_node.expression);
-            }
+        }
+        // { foo: ? } = ...
+        else if (ts.isPropertyAssignment(_node)) {
+            worker(_node.initializer);
+        }
+        // { foo } = ...
+        else if (ts.isShorthandPropertyAssignment(_node)) {
+            vars.push(getStartEnd(_node.name, sourceFile));
+        }
+        // { ...? } = ...
+        // [ ...? ] = ...
+        else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
+            worker(_node.expression);
         }
     }
+}
+function getStartEnd(node: ts.Node, sourceFile: ts.SourceFile) {
+    // TODO: high cost
+    const start = node.getStart(sourceFile);
+    const end = node.getEnd();
+    return {
+        start: start,
+        end: end,
+    };
 }
