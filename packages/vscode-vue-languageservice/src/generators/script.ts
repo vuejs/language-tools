@@ -450,21 +450,21 @@ export function generate(
         mapSubText(tsOffset, sourceCode.length);
 
         gen.addText(`return {\n`);
-        for (const expose of data.exposeVarNames) {
+        for (const expose of data.returnVarNames) {
             const varName = originalCode.substring(expose.start, expose.end);
             const templateSideRange = gen.addText(varName);
             gen.addText(': ');
-            const scriptSideRange = gen.addCode(
-                varName,
-                expose,
-                SourceMaps.Mode.Offset,
-                {
-                    vueTag: 'scriptSetup',
-                    capabilities: {
-                        diagnostic: true
+            const scriptSideRange = expose.isImport
+                ? gen.addCode(
+                    varName,
+                    expose,
+                    SourceMaps.Mode.Offset,
+                    {
+                        vueTag: 'scriptSetup',
+                        capabilities: { diagnostic: true },
                     },
-                },
-            );
+                )
+                : gen.addText(varName);
             gen.addText(',\n');
 
             teleports.push({
