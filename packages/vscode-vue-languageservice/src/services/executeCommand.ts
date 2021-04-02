@@ -34,10 +34,10 @@ export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOp
 				return;
 
 			if (scriptSetupData.labels.length) {
-				executeUseRefSugar(ts, document, sourceFile, connection, findReferences, tsLanguageService);
+				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, tsLanguageService);
 			}
 			else {
-				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences);
+				executeUseRefSugar(ts, document, sourceFile, connection, findReferences);
 			}
 		}
 		if (command === Commands.HTML_TO_PUG) {
