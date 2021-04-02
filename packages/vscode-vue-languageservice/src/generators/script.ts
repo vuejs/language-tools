@@ -63,7 +63,7 @@ export function generate(
 
         let addText = script.content;
         if (scriptSetup && scriptAst?.exportDefault) {
-            addText = replaceToComment(script.content, scriptAst.exportDefault.start, scriptAst.exportDefault.end);
+            addText = replaceToComment(script.content, scriptAst.exportDefault.start, scriptAst.exportDefault.expression.start);
         }
         gen.addCode(
             addText,
@@ -555,12 +555,12 @@ export function generate(
     function writeExportOptions() {
         gen.addText(`\n`);
         gen.addText(`export const __VLS_options = {\n`);
-        gen.addText(`...(`);
-        const defaultExport = scriptAst?.exportDefault?.args;
-        if (defaultExport) {
+        if (script && scriptAst?.exportDefault?.args) {
+            const args = scriptAst.exportDefault.args;
+            gen.addText(`...(`);
             gen.addCode(
-                defaultExport.text,
-                defaultExport,
+                script.content.substring(args.start, args.end),
+                args,
                 SourceMaps.Mode.Offset,
                 {
                     vueTag: 'script',
@@ -570,11 +570,8 @@ export function generate(
                     },
                 },
             );
+            gen.addText(`),\n`);
         }
-        else {
-            gen.addText(`{}`);
-        }
-        gen.addText(`),\n`);
         if (scriptSetupAst?.defineProps?.args && scriptSetup) {
             gen.addText(`props: (`);
             gen.addCode(

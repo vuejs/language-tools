@@ -368,7 +368,7 @@ function findBindingVars(ts: typeof import('typescript'), left: ts.BindingName, 
         }
     }
 }
-function getStartEnd(node: ts.Node, sourceFile: ts.SourceFile) {
+export function getStartEnd(node: ts.Node, sourceFile: ts.SourceFile) {
     // TODO: high cost
     const start = node.getStart(sourceFile);
     const end = node.getEnd();

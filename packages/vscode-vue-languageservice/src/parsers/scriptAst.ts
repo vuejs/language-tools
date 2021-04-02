@@ -1,4 +1,5 @@
 import type * as ts from 'typescript';
+import { getStartEnd } from './scriptSetupAst';
 
 export type Ast = ReturnType<typeof parse>;
 
@@ -7,15 +8,18 @@ export function parse(ts: typeof import('typescript'), content: string) {
     let exportDefault: {
         start: number,
         end: number,
+        expression: {
+            start: number,
+            end: number,
+        },
         args: {
-            text: string,
             start: number,
             end: number,
         },
     } | undefined;
 
-    const scriptAst = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
-    scriptAst.forEachChild(node => {
+    const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
+    sourceFile.forEachChild(node => {
         if (ts.isExportAssignment(node)) {
             let obj: ts.ObjectLiteralExpression | undefined;
             if (ts.isObjectLiteralExpression(node.expression)) {
@@ -29,11 +33,9 @@ export function parse(ts: typeof import('typescript'), content: string) {
             }
             if (obj) {
                 exportDefault = {
-                    ...getStartEnd(node),
-                    args: {
-                        text: obj.getText(scriptAst),
-                        ...getStartEnd(obj),
-                    },
+                    ..._getStartEnd(node),
+                    expression: _getStartEnd(node.expression),
+                    args: _getStartEnd(obj),
                 };
             }
         }
@@ -43,13 +45,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
         exportDefault,
     };
 
-    function getStartEnd(node: ts.Node) {
-        // TODO: high cost
-        const start = node.getStart(scriptAst);
-        const end = node.getEnd();
-        return {
-            start: start,
-            end: end,
-        };
+    function _getStartEnd(node: ts.Node) {
+        return getStartEnd(node, sourceFile);
     }
 }
