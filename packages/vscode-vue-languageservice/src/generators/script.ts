@@ -280,7 +280,7 @@ export function generate(
             for (const binary of label.binarys) {
                 if (first) {
                     first = false;
-                    gen.addText(`const `);
+                    gen.addText(`let `);
                 }
                 else {
                     gen.addText(`, `);
