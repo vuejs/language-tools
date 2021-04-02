@@ -1,3 +1,10 @@
+### 0.22.27
+
+- feat: report error if import type in `<script setup>` incorrectly
+- perf: `<script setup>` performance small improvement
+- fix: allow `ref:` declarations without initialized
+- fix: export assignment intellisense not working if `<script setup>` exist
+
 ### 0.22.26
 
 - feat: improve events hover info
