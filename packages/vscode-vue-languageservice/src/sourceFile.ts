@@ -11,7 +11,7 @@ import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import * as css from 'vscode-css-languageservice';
-import { ref, computed, reactive, pauseTracking, resetTracking, Ref } from '@vue/reactivity';
+import { ref, computed, reactive, pauseTracking, resetTracking, Ref, ComputedRef } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
 import * as languageServices from './utils/languageServices';
 import * as prettyhtml from '@starptech/prettyhtml';
@@ -455,30 +455,39 @@ export function createSourceFile(
 		const ignoreTemplateCheck = computed(() => descriptor.template?.ignore);
 		const ignoreScriptCheck = computed(() => descriptor.script?.ignore || descriptor.scriptSetup?.ignore);
 
-		const nonTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
-			[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), [], 0],
-			[useTemplateValidation(ignoreTemplateCheck), [], 0],
-			[useScriptExistValidation(ignoreScriptCheck), [], 0],
-		];
-		let templateTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
-			[useTemplateScriptValidation(ignoreTemplateCheck, 1), [], 0],
-			[useTemplateScriptValidation(ignoreTemplateCheck, 2), [], 0],
-			[useTemplateScriptValidation(ignoreTemplateCheck, 3), [], 0],
-		];
-		let scriptTs: [Ref<Diagnostic[]>, Diagnostic[], number][] = [
-			[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), [], 0],
-			[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), [], 0],
-			[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), [], 0],
-			// [useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 4), [], 0], // TODO: support cancel because it's very slow
-			[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), [], 0],
-		];
+		const nonTs: [{
+			result: ComputedRef<Diagnostic[]>;
+			cache: ComputedRef<Diagnostic[]>;
+		}, number][] = [
+				[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), 0],
+				[useTemplateValidation(ignoreTemplateCheck), 0],
+				[useScriptExistValidation(ignoreScriptCheck), 0],
+			];
+		let templateTs: [{
+			result: ComputedRef<Diagnostic[]>;
+			cache: ComputedRef<Diagnostic[]>;
+		}, number][] = [
+				[useTemplateScriptValidation(ignoreTemplateCheck, 1), 0],
+				[useTemplateScriptValidation(ignoreTemplateCheck, 2), 0],
+				[useTemplateScriptValidation(ignoreTemplateCheck, 3), 0],
+			];
+		let scriptTs: [{
+			result: ComputedRef<Diagnostic[]>;
+			cache: ComputedRef<Diagnostic[]>;
+		}, number][] = [
+				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), 0],
+				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), 0],
+				[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), 0],
+				// [useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 4), 0], // TODO: support cancel because it's very slow
+				[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), 0],
+			];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
 
 			// sort by cost
-			templateTs = templateTs.sort((a, b) => a[2] - b[2]);
-			scriptTs = scriptTs.sort((a, b) => a[2] - b[2]);
+			templateTs = templateTs.sort((a, b) => a[1] - b[1]);
+			scriptTs = scriptTs.sort((a, b) => a[1] - b[1]);
 
 			let all = [...nonTs];
 			let mainErrorIndex = -1;
@@ -500,9 +509,11 @@ export function createSourceFile(
 				if (await isCancel?.()) return;
 				const startTime = Date.now();
 				const diag = all[i];
-				diag[1] = diag[0].value;
-				diag[2] = Date.now() - startTime;
-				const results = all.map(diag => diag[1]).flat().concat(sfcErrors.value);
+				diag[1] = Date.now() - startTime;
+				const results = [
+					...all.slice(0, i + 1).map(diag => diag[0].result.value),
+					...all.slice(i + 1).map(diag => diag[0].cache.value),
+				].flat().concat(sfcErrors.value);
 				const resultKeys = new Set(results.map(error =>
 					error.source
 					+ ':' + error.code
@@ -598,14 +609,25 @@ export function createSourceFile(
 				}
 				return result;
 			});
-			return computed(() => {
+			const htmlErrors_cache = ref<Diagnostic[]>([]);
+			const pugErrors_cache = ref<Diagnostic[]>([]);
+			const result = computed(() => {
 				if (ignore.value) return [];
+				htmlErrors_cache.value = htmlErrors.value;
+				pugErrors_cache.value = pugErrors.value;
+				return cacheWithSourceMap.value;
+			});
+			const cacheWithSourceMap = computed(() => {
 				if (!virtualTemplateRaw.textDocument.value) return [];
 				return [
 					...toSourceDiags(htmlErrors.value, virtualTemplateRaw.textDocument.value.uri, virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
 					...toSourceDiags(pugErrors.value, virtualTemplateRaw.textDocument.value.uri, virtualTemplateRaw.pugSourceMap.value ? [virtualTemplateRaw.pugSourceMap.value] : []),
 				];
 			});
+			return {
+				result,
+				cache: cacheWithSourceMap,
+			};
 
 			function getVueCompileErrors(doc: TextDocument) {
 				const result: Diagnostic[] = [];
@@ -678,16 +700,25 @@ export function createSourceFile(
 				}
 				return result;
 			});
-			return computed(() => {
+			const errors_cache = ref<Map<string, css.Diagnostic[]>>(new Map());
+			const result = computed(() => {
+				errors_cache.value = errors.value;
+				return cacheWithSourceMap.value;
+			});
+			const cacheWithSourceMap = computed(() => {
 				let result: css.Diagnostic[] = [];
-				for (const [uri, errs] of errors.value) {
+				for (const [uri, errs] of errors_cache.value) {
 					result = result.concat(toSourceDiags(errs, uri, virtualStyles.sourceMaps.value));
 				}
 				return result as Diagnostic[];
 			});
+			return {
+				result,
+				cache: cacheWithSourceMap,
+			};
 		}
 		function useScriptExistValidation(ignore: Ref<boolean | undefined>) {
-			return computed(() => {
+			const result = computed(() => {
 				if (ignore.value) return [];
 
 				const diags: Diagnostic[] = [];
@@ -711,6 +742,10 @@ export function createSourceFile(
 				}
 				return diags;
 			});
+			return {
+				result,
+				cache: result,
+			};
 		}
 		function useScriptValidation(ignore: Ref<boolean | undefined>, document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
 			const errors = computed(() => {
@@ -733,17 +768,25 @@ export function createSourceFile(
 				}
 				return [];
 			});
-			return computed(() => {
+			const errors_cache = ref<Diagnostic[]>([]);
+			const result = computed(() => {
 				if (ignore.value) return [];
-
+				errors_cache.value = errors.value;
+				return cacheWithSourceMap.value;
+			});
+			const cacheWithSourceMap = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				let result = toTsSourceDiags(errors.value, doc.uri, tsSourceMaps.value);
+				let result = toTsSourceDiags(errors_cache.value, doc.uri, tsSourceMaps.value);
 				if (onlyUnusedCheck) {
 					result = result.filter(error => error.tags?.includes(DiagnosticTag.Unnecessary));
 				}
 				return result;
 			});
+			return {
+				result,
+				cache: cacheWithSourceMap,
+			};
 		}
 		function useTemplateScriptValidation(ignore: Ref<boolean | undefined>, mode: 1 | 2 | 3 | 4) {
 			const errors_1 = computed(() => {
@@ -771,8 +814,7 @@ export function createSourceFile(
 				if (!virtualTemplateGen.textDocument.value
 					|| !virtualTemplateGen.teleportSourceMap.value
 					|| !virtualScriptGen.textDocument.value
-				)
-					return result;
+				) return result;
 				for (const diag of errors_1.value) {
 					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
@@ -790,22 +832,32 @@ export function createSourceFile(
 					}
 				}
 				return result;
-			})
-			return computed(() => {
+			});
+			const errors_1_cache = ref<Diagnostic[]>([]);
+			const errors_2_cache = ref<Diagnostic[]>([]);
+			const result = computed(() => {
 				if (ignore.value) return [];
-
+				errors_1_cache.value = errors_1.value;
+				errors_2_cache.value = errors_2.value;
+				return cacheWithSourceMap.value;
+			});
+			const cacheWithSourceMap = computed(() => {
 				const result_1 = virtualTemplateGen.textDocument.value ? toTsSourceDiags(
-					errors_1.value,
+					errors_1_cache.value,
 					virtualTemplateGen.textDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				const result_2 = virtualScriptGen.textDocument.value ? toTsSourceDiags(
-					errors_2.value,
+					errors_2_cache.value,
 					virtualScriptGen.textDocument.value.uri,
 					tsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
+			return {
+				result,
+				cache: cacheWithSourceMap,
+			};
 		}
 		function toSourceDiags<T = Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
 			const result: T[] = [];
