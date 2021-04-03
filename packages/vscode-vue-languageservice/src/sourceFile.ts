@@ -448,8 +448,6 @@ export function createSourceFile(
 	}
 	function useDiagnostics() {
 
-		let lastResult = new Set<string>();
-
 		const tsOptions = tsLanguageService.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 		const ignoreTemplateCheck = computed(() => descriptor.template?.ignore);
@@ -458,28 +456,28 @@ export function createSourceFile(
 		const nonTs: [{
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
-		}, number][] = [
-				[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), 0],
-				[useTemplateValidation(ignoreTemplateCheck), 0],
-				[useScriptExistValidation(ignoreScriptCheck), 0],
+		}, number, Diagnostic[]][] = [
+				[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), 0, []],
+				[useTemplateValidation(ignoreTemplateCheck), 0, []],
+				[useScriptExistValidation(ignoreScriptCheck), 0, []],
 			];
 		let templateTs: [{
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
-		}, number][] = [
-				[useTemplateScriptValidation(ignoreTemplateCheck, 1), 0],
-				[useTemplateScriptValidation(ignoreTemplateCheck, 2), 0],
-				[useTemplateScriptValidation(ignoreTemplateCheck, 3), 0],
+		}, number, Diagnostic[]][] = [
+				[useTemplateScriptValidation(ignoreTemplateCheck, 1), 0, []],
+				[useTemplateScriptValidation(ignoreTemplateCheck, 2), 0, []],
+				[useTemplateScriptValidation(ignoreTemplateCheck, 3), 0, []],
 			];
 		let scriptTs: [{
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
-		}, number][] = [
-				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), 0],
-				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), 0],
-				[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), 0],
-				// [useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 4), 0], // TODO: support cancel because it's very slow
-				[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), 0],
+		}, number, Diagnostic[]][] = [
+				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), 0, []],
+				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), 0, []],
+				[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), 0, []],
+				// [useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
+				[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
 			];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
@@ -490,50 +488,55 @@ export function createSourceFile(
 			scriptTs = scriptTs.sort((a, b) => a[1] - b[1]);
 
 			let all = [...nonTs];
-			let mainErrorIndex = -1;
+			let mainTsErrorStart = all.length - 1;
+			let mainTsErrorEnd = -1;
 
-			if (lastUpdateChanged.script || lastUpdateChanged.scriptSetup) {
+			const isScriptChanged = lastUpdateChanged.script || lastUpdateChanged.scriptSetup;
+			if (isScriptChanged) {
 				all = all.concat(scriptTs);
-				mainErrorIndex = all.length - 1;
+				mainTsErrorEnd = all.length - 1;
 				all = all.concat(templateTs);
 			}
 			else {
 				all = all.concat(templateTs);
-				mainErrorIndex = all.length - 1;
+				mainTsErrorEnd = all.length - 1;
 				all = all.concat(scriptTs);
 			}
 
-			let sended = false;
+			let isDirty = false;
 
 			for (let i = 0; i < all.length; i++) {
 				if (await isCancel?.()) return;
 				const startTime = Date.now();
 				const diag = all[i];
+				if (!isDirty) {
+					isDirty = isErrorsDirty(diag[2], diag[0].result.value);
+				}
+				diag[2] = diag[0].result.value;
 				diag[1] = Date.now() - startTime;
 				const results = [
 					...all.slice(0, i + 1).map(diag => diag[0].result.value),
-					...all.slice(i + 1).map(diag => diag[0].cache.value),
+					...all.slice(i + 1).map(diag => i >= mainTsErrorStart && !isScriptChanged ? diag[0].cache.value : diag[2]),
 				].flat().concat(sfcErrors.value);
-				const resultKeys = new Set(results.map(error =>
-					error.source
-					+ ':' + error.code
-					+ ':' + error.range.start.line
-					+ ':' + error.range.start.character
-					+ ':' + error.range.end.line
-					+ ':' + error.range.end.character
-				));
 				const isLast = i === all.length - 1
+				if (await isCancel?.()) return;
 				if (
-					(isLast && !sended)
-					|| (
-						!eqSet(lastResult, resultKeys)
-						&& (isLast || i === mainErrorIndex)
-					)
+					isLast
+					|| (isDirty && (i < mainTsErrorStart || i === mainTsErrorEnd))
 				) {
-					sended = true;
-					lastResult = resultKeys;
 					response(dedupe.withDiagnostics(results));
 				}
+			}
+
+			function isErrorsDirty(oldErrors: Diagnostic[], newErrors: Diagnostic[]) {
+				return !eqSet(errorsToKeys(oldErrors), errorsToKeys(newErrors));
+			}
+			function errorsToKeys(errors: Diagnostic[]) {
+				return new Set(errors.map(error =>
+					error.source
+					+ ':' + error.code
+					+ ':' + error.message
+				));
 			}
 		}
 
