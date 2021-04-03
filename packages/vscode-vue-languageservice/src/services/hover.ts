@@ -23,7 +23,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		];
 		const result: Hover = {
 			contents: texts,
-			range: tsResult?.range ?? htmlResult?.range ?? cssResult?.range,
+			range: cssResult?.range ?? htmlResult?.range ?? tsResult?.range,
 		};
 
 		return result;

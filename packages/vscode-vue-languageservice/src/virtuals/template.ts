@@ -273,14 +273,8 @@ export function useTemplateScript(
 							data: {
 								vueTag: 'style',
 								capabilities: {
-									basic: true,
 									references: true,
-									definitions: true,
 									rename: true,
-									diagnostic: true,
-									formatting: false,
-									completion: true,
-									semanticTokens: false,
 									referencesCodeLens: maped.mode === SourceMaps.Mode.Totally, // has 2 modes
 								},
 								beforeRename: maped.patchRename ? (newName => newName.startsWith('.') ? newName.substr(1) : newName) : undefined,
