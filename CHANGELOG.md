@@ -1,3 +1,9 @@
+### 0.22.29
+
+- fix: fix diagnostics shaking
+- fix: events hover info not working if no expression
+- fix: template diagnosis response delay
+
 ### 0.22.28
 
 - fix: reduce diagnostics shaking
