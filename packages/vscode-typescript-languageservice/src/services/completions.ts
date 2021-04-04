@@ -8,15 +8,8 @@ import {
 	TextEdit,
 } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath, getWordStart } from '@volar/shared';
+import { uriToFsPath } from '@volar/shared';
 import * as path from 'upath';
-
-export const wordPatterns: { [lang: string]: RegExp } = {
-	javascript: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
-	typescript: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
-	javascriptreact: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
-	typescriptreact: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
-};
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, rootDir: string) {
 	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
@@ -33,10 +26,14 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const completions = languageService.getCompletionsAtPosition(fileName, offset, _options);
 		if (completions === undefined) return [];
 
-		const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.javascript;
-		const wordStart = getWordStart(wordPattern, position, document);
-		const wordRange = wordStart ? { start: wordStart, end: position } : undefined;
-		const wordRange2 = wordRange ? { start: document.offsetAt(wordRange.start), end: document.offsetAt(wordRange.end) } : undefined;
+		const wordRange2 = completions.optionalReplacementSpan ? {
+			start: completions.optionalReplacementSpan.start,
+			end: completions.optionalReplacementSpan.start + completions.optionalReplacementSpan.length,
+		} : undefined;
+		const wordRange = wordRange2 ? Range.create(
+			document.positionAt(wordRange2.start),
+			document.positionAt(wordRange2.end),
+		) : undefined;
 
 		const entries = completions.entries
 			.map(entry => {
@@ -49,7 +46,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					sortText: entry.sortText,
 					insertText: entry.insertText,
 					preselect: entry.isRecommended,
-					commitCharacters: getCommitCharacters(entry),
+					commitCharacters: getCommitCharacters(entry, completions.isNewIdentifierLocation),
 					data: {
 						fileName,
 						offset,
@@ -191,7 +188,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					return CompletionItemKind.Property;
 			}
 		}
-		function getCommitCharacters(entry: ts.CompletionEntry): string[] | undefined {
+		function getCommitCharacters(entry: ts.CompletionEntry, isNewIdentifierLocation: boolean): string[] | undefined {
+			if (isNewIdentifierLocation) {
+				return undefined;
+			}
+
 			const commitCharacters: string[] = [];
 			switch (entry.kind) {
 				case PConst.Kind.memberGetAccessor:
