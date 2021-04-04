@@ -3,6 +3,7 @@ import { CompletionItem, MarkupKind } from 'vscode-languageserver/node';
 import { CompletionData, TsCompletionData, HtmlCompletionData } from '../types';
 import { SourceFile } from '../sourceFile';
 import { transformLocations } from '@volar/source-map';
+import { transformCompletionItem } from '@volar/source-map';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (item: CompletionItem, newOffset?: number) => {
@@ -33,14 +34,13 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				}
 
 				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem, newTsOffset);
-				vueItem.documentation = data.tsItem.documentation;
+				const newVueItem = transformCompletionItem(data.tsItem, sourceMap);
+				newVueItem.data = data;
 				// TODO: this is a patch for import ts file icon
-				if (vueItem.detail !== data.tsItem.detail + '.ts') {
-					vueItem.detail = data.tsItem.detail;
+				if (newVueItem.detail !== data.tsItem.detail + '.ts') {
+					newVueItem.detail = data.tsItem.detail;
 				}
-				vueItem.additionalTextEdits = data.tsItem.additionalTextEdits
-					? transformLocations(data.tsItem.additionalTextEdits, sourceMap)
-					: undefined;
+				return newVueItem;
 			}
 			return vueItem;
 		}

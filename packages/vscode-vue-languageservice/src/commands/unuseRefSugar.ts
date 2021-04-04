@@ -135,8 +135,6 @@ export async function execute(
         if (item.label !== 'ref')
             continue;
         item = tsLanguageService.doCompletionResolve(item);
-        if (!item.data.importModule)
-            continue;
         if (!item.additionalTextEdits)
             continue;
         for (const edit of item.additionalTextEdits) {

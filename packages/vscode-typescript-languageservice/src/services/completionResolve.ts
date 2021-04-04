@@ -9,17 +9,14 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const offset = newOffset ?? item.data.offset;
 		const name = item.data.name;
 		const source = item.data.source;
-		const detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, {
-			includeCompletionsForModuleExports: true,
-			includeCompletionsWithInsertText: true,
-		});
+		const options = item.data.options;
+		const detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options);
 		const details: string[] = [];
 		if (detail?.source) {
 			const importModule = ts.displayPartsToString(detail.source);
 			const importPath = `'${importModule}'`;
 			const autoImportLabel = `Auto import from ${importPath}`;
 			details.push(autoImportLabel);
-			item.data.importModule = importModule;
 		}
 		if (detail?.displayParts) {
 			details.push(ts.displayPartsToString(detail.displayParts));

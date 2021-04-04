@@ -50,7 +50,7 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getTextDocument),
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
-		doComplete: completions.register(languageService, getTextDocument),
+		doComplete: completions.register(languageService, getTextDocument, host.getCurrentDirectory()),
 		doCompletionResolve: completionResolve.register(languageService, getTextDocument, ts),
 		doHover: hover.register(languageService, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getTextDocument),

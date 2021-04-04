@@ -8,7 +8,8 @@ import {
 	TextEdit,
 } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath, getWordStart } from '@volar/shared';
+import { uriToFsPath, getWordStart, fsPathToUri } from '@volar/shared';
+import * as path from 'upath';
 
 export const wordPatterns: { [lang: string]: RegExp } = {
 	javascript: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
@@ -17,7 +18,7 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 	typescriptreact: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
 };
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, rootDir: string) {
 	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
@@ -35,8 +36,12 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			allowTextChangesInNewFiles: true,
 			providePrefixAndSuffixTextForRename: true,
 		};
+		const _options = {
+			...defaultOptions,
+			...options,
+		};
 
-		const completions = languageService.getCompletionsAtPosition(fileName, offset, { ...defaultOptions, ...options });
+		const completions = languageService.getCompletionsAtPosition(fileName, offset, _options);
 		if (completions === undefined) return [];
 
 		const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.javascript;
@@ -48,6 +53,9 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			.map(entry => {
 				let item: CompletionItem = {
 					label: entry.name,
+					labelDetails: {
+						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(rootDir, entry.source) : undefined,
+					},
 					kind: convertKind(entry.kind),
 					sortText: entry.sortText,
 					insertText: entry.insertText,
@@ -58,6 +66,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 						offset,
 						source: entry.source,
 						name: entry.name,
+						options: _options,
 					},
 				}
 

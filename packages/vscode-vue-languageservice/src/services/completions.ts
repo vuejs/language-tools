@@ -141,13 +141,13 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						});
 					}
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
+						const vueItem = transformCompletionItem(tsItem, sourceMap);
 						const data: CompletionData = {
 							uri: document.uri,
 							docUri: sourceMap.mappedDocument.uri,
 							mode: 'ts',
 							tsItem: tsItem,
 						};
-						const vueItem = transformCompletionItem(tsItem, sourceMap);
 						vueItem.data = data;
 						return vueItem;
 					});
