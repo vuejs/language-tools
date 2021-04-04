@@ -1,3 +1,8 @@
+### 0.23.1
+
+- perf: faster intellisense for `<script setup>`
+- fix: ref sugar variables types incorrect edge case
+
 ### 0.23.0
 
 - 🎉 feat: new split editing mode
