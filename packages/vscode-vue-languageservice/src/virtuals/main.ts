@@ -19,6 +19,7 @@ export function useScriptMain(
 		const hasScript = !!script.value || !!scriptSetup.value;
 		const vueFileName = upath.basename(uriToFsPath(vueDoc.uri));
 		const content = [
+			`import { GlobalComponents as __VLS_CoreGlobalComponents } from '@vue/runtime-core';`,
 			hasScript ? `import __VLS_componentRaw from './${vueFileName}.__VLS_script';` : `// no script`,
 			...(hasScript
 				? [
@@ -34,7 +35,7 @@ export function useScriptMain(
 				]),
 			`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
 			`declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
+			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_CoreGlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
 			`__VLS_ctx.${SearchTexts.Context};`,
 			`__VLS_Components.${SearchTexts.Components};`,
 			`__VLS_options.setup().${SearchTexts.SetupReturns};`,

@@ -43,6 +43,10 @@ type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
 
+declare module '@vue/runtime-core' {
+	export interface GlobalComponents { }
+}
+
 declare global {
 	interface __VLS_GlobalComponents extends Pick<PickNotAny<typeof vue_1, typeof vue_2>,
 		'Transition'
