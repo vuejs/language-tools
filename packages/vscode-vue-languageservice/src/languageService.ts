@@ -2,9 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
 import { getGlobalDoc } from './virtuals/global';
-import { SearchTexts } from './utils/string';
-import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
-import * as SourceMaps from './utils/sourceMaps';
+import { pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -308,6 +306,8 @@ export function createLanguageService(
 	}
 	function createTsLanguageServiceHost() {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
+		// @ts-ignore
+		const importSuggestionsCache = typescript.Completions?.createImportSuggestionsForFileCache?.();
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
 			fileExists: vueHost.fileExists
@@ -344,6 +344,8 @@ export function createLanguageService(
 				}
 				return result;
 			},
+			// @ts-ignore
+			getImportSuggestionsCache: () => importSuggestionsCache,
 		};
 
 		return tsHost;
