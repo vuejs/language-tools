@@ -1,3 +1,14 @@
+### 0.23.0
+
+- 🎉 feat: new split editing mode
+- feat: auto import path preview
+- fix: remove typescript hover info from `<style scoped>` classes
+- perf: faster auto-complete and completion resolve
+
+**Breaking changes**
+
+- revoke: unsupported global component by `app.component(...)` calls, see: https://github.com/johnsoncodehk/volar#using
+
 ### 0.22.29
 
 - fix: fix diagnostics shaking
