@@ -7,7 +7,7 @@ import { parse as parseScriptAst } from '../parsers/scriptAst';
 import { parse as parseScriptSetupAst } from '../parsers/scriptSetupAst';
 import { generate as genScript } from '../generators/script';
 import { generate as genScriptSugg } from '../generators/script_suggestion';
-import * as templateGen from '../generators/template';
+import * as templateGen from '../generators/template_scriptSetup';
 
 export function useScriptSetupGen(
 	ts: typeof import('typescript'),
@@ -40,7 +40,7 @@ export function useScriptSetupGen(
 	);
 	const htmlGen = computed(() => {
 		if (html.value) {
-			return templateGen.generate(html.value, [], [], [], undefined, false);
+			return templateGen.generate(html.value);
 		}
 	})
 	const generateForSuggestion = computed(() =>
@@ -51,17 +51,18 @@ export function useScriptSetupGen(
 			htmlGen.value,
 		)
 	);
+	const lang = computed(() => {
+		return scriptSetup.value && scriptSetup.value.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang) :
+			script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang) :
+				getValidScriptSyntax('js')
+	});
 	const textDocument = computed(() => {
 		if (!generate.value)
 			return;
 
-		const lang = scriptSetup.value && scriptSetup.value.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang) :
-			script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang) :
-				getValidScriptSyntax('js')
-
 		return TextDocument.create(
-			`${uri}.__VLS_script.${lang}`,
-			syntaxToLanguageId(lang),
+			`${uri}.__VLS_script.${lang.value}`,
+			syntaxToLanguageId(lang.value),
 			version++,
 			generate.value.code,
 		);
@@ -70,13 +71,9 @@ export function useScriptSetupGen(
 		if (!generateForSuggestion.value)
 			return;
 
-		const lang = scriptSetup.value && scriptSetup.value.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang)
-			: script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang)
-				: getValidScriptSyntax('js')
-
 		return TextDocument.create(
-			`${uri}.__VLS_script.suggestion.${lang}`,
-			syntaxToLanguageId(lang),
+			`${uri}.__VLS_script.suggestion.${lang.value}`,
+			syntaxToLanguageId(lang.value),
 			version++,
 			generateForSuggestion.value.code,
 		);

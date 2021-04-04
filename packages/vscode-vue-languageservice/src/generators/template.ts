@@ -25,7 +25,7 @@ const formatBrackets = {
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
-const transformContext: TransformContext = {
+export const transformContext: TransformContext = {
 	onError: () => { },
 	helperString: str => str.toString(),
 	replaceNode: node => { },
@@ -45,7 +45,6 @@ export function generate(
 	elementNames: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined,
-	withExportSlots = true,
 ) {
 	let node: vueDom.RootNode;
 	try {
@@ -94,24 +93,22 @@ export function generate(
 		tsCodeGen.addText(`}\n`);
 	}
 
-	if (withExportSlots) {
-		tsCodeGen.addText(`export default {\n`);
-		for (const [exp, slot] of slotExps) {
-			tsCodeGen.addText(`...{} as __VLS_SlotExpMap<typeof ${exp}, typeof ${slot.varName}>,\n`);
-		}
-		for (const [name, slot] of slots) {
-			writeObjectProperty(
-				name,
-				slot.loc,
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.slotNameExport,
-				},
-			);
-			tsCodeGen.addText(`: ${slot.varName},\n`);
-		}
-		tsCodeGen.addText(`};\n`);
+	tsCodeGen.addText(`export default {\n`);
+	for (const [exp, slot] of slotExps) {
+		tsCodeGen.addText(`...{} as __VLS_SlotExpMap<typeof ${exp}, typeof ${slot.varName}>,\n`);
 	}
+	for (const [name, slot] of slots) {
+		writeObjectProperty(
+			name,
+			slot.loc,
+			{
+				vueTag: 'template',
+				capabilities: capabilitiesSet.slotNameExport,
+			},
+		);
+		tsCodeGen.addText(`: ${slot.varName},\n`);
+	}
+	tsCodeGen.addText(`};\n`);
 
 	return {
 		text: tsCodeGen.getText(),
@@ -153,9 +150,9 @@ export function generate(
 				parentEl = node;
 			}
 
+			tags.add(getComponentName(node.tag));
 			tsCodeGen.addText(`{\n`);
 			{
-				tags.add(getComponentName(node.tag));
 
 				writeInlineCss(node);
 				if (parentEl) writeImportSlots(node, parentEl);
@@ -209,44 +206,21 @@ export function generate(
 		}
 		else if (node.type === NodeTypes.IF) {
 			// v-if / v-else-if / v-else
-			let firstIf = true;
-
-			for (const branch of node.branches) {
-				if (branch.condition) {
-					if (branch.condition.type === NodeTypes.SIMPLE_EXPRESSION) {
-
-						tsCodeGen.addText(firstIf ? `if (\n` : `else if (\n`);
-						firstIf = false;
-
-						tsCodeGen.addText(`(`);
-						writeCode(
-							branch.condition.content,
-							{
-								start: branch.condition.loc.start.offset,
-								end: branch.condition.loc.end.offset,
-							},
-							SourceMaps.Mode.Offset,
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.all,
-							},
-							formatBrackets.round,
-						);
-						tsCodeGen.addText(`)\n`);
-						tsCodeGen.addText(`) {\n`);
-						for (const childNode of branch.children) {
-							visitNode(childNode, parentEl);
-						}
-						tsCodeGen.addText('}\n');
-					}
+			for (let i = 0; i < node.branches.length; i++) {
+				const branch = node.branches[i];
+				switch (i) {
+					case 0: tsCodeGen.addText('if'); break;
+					case node.branches.length - 1: tsCodeGen.addText('else'); break;
+					default: tsCodeGen.addText('else if'); break;
 				}
-				else {
-					tsCodeGen.addText('else {\n');
-					for (const childNode of branch.children) {
-						visitNode(childNode, parentEl);
-					}
-					tsCodeGen.addText('}\n');
+				if (branch.condition?.type === NodeTypes.SIMPLE_EXPRESSION) {
+					tsCodeGen.addText(` (${branch.condition.content})`);
 				}
+				tsCodeGen.addText(` {\n`);
+				for (const childNode of branch.children) {
+					visitNode(childNode, parentEl);
+				}
+				tsCodeGen.addText('}\n');
 			}
 		}
 		else if (node.type === NodeTypes.FOR) {

@@ -1,5 +1,5 @@
 import { createScriptGenerator } from '@volar/source-map';
-import type * as templateGen from '../generators/template';
+import type * as templateGen from '../generators/template_scriptSetup';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
 
@@ -95,7 +95,6 @@ export function generate(
         gen.addText(htmlGen.text);
         gen.addText('}\n');
     }
-
 
     return {
         code: gen.getText(),
