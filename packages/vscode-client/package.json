@@ -6,6 +6,7 @@
 	},
 	"dependencies": {
 		"@vue/compiler-sfc": "latest",
+		"@vue/reactivity": "latest",
 		"upath": "latest",
 		"vscode-languageclient": "next"
 	},
