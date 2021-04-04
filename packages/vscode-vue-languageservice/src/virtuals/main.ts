@@ -16,39 +16,42 @@ export function useScriptMain(
 	const textDocument = computed(() => {
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
-		const hasScript = !!script.value || !!scriptSetup.value;
 		const vueFileName = upath.basename(uriToFsPath(vueDoc.uri));
-		const content = [
-			`import { GlobalComponents as __VLS_CoreGlobalComponents } from '@vue/runtime-core';`,
-			hasScript ? `import __VLS_componentRaw from './${vueFileName}.__VLS_script';` : `// no script`,
-			...(hasScript
-				? [
-					`import { __VLS_options } from './${vueFileName}.__VLS_script';`,
-					`export { __VLS_options } from './${vueFileName}.__VLS_script';`,
-					`const __VLS_componentReserve = __VLS_defineComponent(__VLS_componentRaw);`,
-					`type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;`,
-					`export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;`,
-				]
-				: [
-					`export var __VLS_options = {};`,
-					`export var __VLS_component = __VLS_defineComponent({});`,
-				]),
-			`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;`,
-			`declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };`,
-			`declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_CoreGlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;`,
-			`__VLS_ctx.${SearchTexts.Context};`,
-			`__VLS_Components.${SearchTexts.Components};`,
-			`__VLS_options.setup().${SearchTexts.SetupReturns};`,
-			`__VLS_options.props.${SearchTexts.Props};`,
-			`({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};`,
-			``,
-			`export default {} as typeof __VLS_component & {`,
-			`__VLS_raw: typeof __VLS_component`,
-			`__VLS_options: typeof __VLS_options,`,
-			template.value ? `__VLS_slots: typeof import ('./${vueFileName}.__VLS_template').default,` : `// no template`,
-			`};`,
-			hasScript ? `export * from './${vueFileName}.__VLS_script';` : `// no script`,
-		].join('\n');
+		let content = '';
+		content += `import { GlobalComponents as __VLS_CoreGlobalComponents } from '@vue/runtime-core';\n`;
+		if (scriptSetup.value || script.value) {
+			content += `import { __VLS_options } from './${vueFileName}.__VLS_script';\n`;
+			content += `export { __VLS_options } from './${vueFileName}.__VLS_script';\n`;
+			content += `export * from './${vueFileName}.__VLS_script';\n`;
+		}
+		if (scriptSetup.value) {
+			content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+		}
+		else if (script.value) {
+			content += `import __VLS_componentRaw from './${vueFileName}.__VLS_script';\n`;
+			content += `var __VLS_componentReserve = __VLS_defineComponent(__VLS_componentRaw);\n`;
+			content += `type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;\n`;
+			content += `export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;\n`;
+		}
+		else {
+			content += `// no script`
+			content += `export var __VLS_options = {};\n`;
+			content += `export var __VLS_component = __VLS_defineComponent({});\n`;
+		}
+		content += `declare var __VLS_ctx: InstanceType<typeof __VLS_component>;\n`;
+		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;
+		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_CoreGlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;\n`;
+		content += `__VLS_ctx.${SearchTexts.Context};\n`;
+		content += `__VLS_Components.${SearchTexts.Components};\n`;
+		content += `__VLS_options.setup().${SearchTexts.SetupReturns};\n`;
+		content += `__VLS_options.props.${SearchTexts.Props};\n`;
+		content += `({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};\n`;
+		content += `\n`;
+		content += `export default {} as typeof __VLS_component & {\n`;
+		content += `__VLS_raw: typeof __VLS_component\n`;
+		content += `__VLS_options: typeof __VLS_options,\n`;
+		content += template.value ? `__VLS_slots: typeof import ('./${vueFileName}.__VLS_template').default,` : `// no template\n`;
+		content += `};\n`;
 		return TextDocument.create(uri, 'typescript', version++, content);
 	});
 	const sourceMap = computed(() => {

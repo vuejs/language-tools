@@ -51,10 +51,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
         end: number,
         isImport: boolean,
     }[] = [];
-    const imports: {
-        start: number,
-        end: number,
-    }[] = [];
     let defineProps: {
         start: number,
         end: number,
@@ -87,7 +83,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
             }
         }
         else if (ts.isImportDeclaration(node)) {
-            imports.push(_getStartEnd(node));
             if (node.importClause && !node.importClause.isTypeOnly) {
                 if (node.importClause.name) {
                     returnVarNames.push({ ..._getStartEnd(node.importClause.name), isImport: true });
@@ -107,7 +102,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
     return {
         labels,
         returnVarNames,
-        imports,
         defineProps,
         defineEmit,
         dollars,

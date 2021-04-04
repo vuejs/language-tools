@@ -2,7 +2,6 @@ import type { Ast as ScriptAst } from '../parsers/scriptAst';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
-import { replaceToComment } from '../utils/string';
 
 export function generate(
     script: null | {
@@ -22,6 +21,7 @@ export function generate(
     writeScriptSrc();
     writeScript();
     writeScriptSetup();
+    writeExportComponent();
     writeExportOptions();
 
     return {
@@ -62,9 +62,6 @@ export function generate(
             return;
 
         let addText = script.content;
-        if (scriptSetup && scriptAst?.exportDefault) {
-            addText = replaceToComment(script.content, scriptAst.exportDefault.start, scriptAst.exportDefault.expression.start);
-        }
         gen.addCode(
             addText,
             { start: 0, end: script.content.length },
@@ -95,143 +92,6 @@ export function generate(
         const originalCode = scriptSetup.content;
         let sourceCode = scriptSetup.content;
         gen.addText(`\n/* <script setup> */\n`);
-        let newLinesOnly = originalCode.split('\n').map(line => ' '.repeat(line.length)).join('\n');
-        let importPos = 0;
-        for (const _import of data.imports.sort((a, b) => a.start - b.start)) {
-            gen.addCode(
-                newLinesOnly.substring(importPos, _import.start),
-                { start: importPos, end: _import.start },
-                SourceMaps.Mode.Offset,
-                { // for auto import
-                    vueTag: 'scriptSetup',
-                    capabilities: {},
-                },
-            );
-            gen.addCode(
-                originalCode.substring(_import.start, _import.end),
-                { start: _import.start, end: _import.end },
-                SourceMaps.Mode.Offset,
-                {
-                    vueTag: 'scriptSetup',
-                    capabilities: {
-                        basic: true,
-                        references: true,
-                        definitions: true,
-                        rename: true,
-                        semanticTokens: true,
-                        completion: true,
-                        diagnostic: true,
-                    },
-                },
-            );
-            sourceCode = replaceToComment(sourceCode, _import.start, _import.end);
-            importPos = _import.end;
-        }
-        gen.addCode(
-            newLinesOnly.substring(importPos, newLinesOnly.length),
-            { start: importPos, end: newLinesOnly.length },
-            SourceMaps.Mode.Offset,
-            { // for auto import
-                vueTag: 'scriptSetup',
-                capabilities: {},
-            },
-        );
-
-        gen.addText(`\n`);
-        gen.addText(`export default __VLS_defineComponent({\n`);
-        if (data.defineProps?.typeArgs) {
-            gen.addText(`props: ({} as __VLS_DefinePropsToOptions<`);
-            gen.addCode(
-                originalCode.substring(data.defineProps.typeArgs.start, data.defineProps.typeArgs.end),
-                {
-                    start: data.defineProps.typeArgs.start,
-                    end: data.defineProps.typeArgs.end,
-                },
-                SourceMaps.Mode.Offset,
-                {
-                    vueTag: 'scriptSetup',
-                    capabilities: {},
-                },
-            );
-            gen.addText(`>),\n`);
-        }
-        if (data.defineEmit?.typeArgs) {
-            gen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
-            gen.addCode(
-                originalCode.substring(data.defineEmit.typeArgs.start, data.defineEmit.typeArgs.end),
-                {
-                    start: data.defineEmit.typeArgs.start,
-                    end: data.defineEmit.typeArgs.end,
-                },
-                SourceMaps.Mode.Offset,
-                {
-                    vueTag: 'scriptSetup',
-                    capabilities: {},
-                },
-            );
-            gen.addText(`>),\n`);
-        }
-        if (data.defineProps?.args) {
-            gen.addText(`props: `);
-            gen.addCode(
-                originalCode.substring(data.defineProps.args.start, data.defineProps.args.end),
-                {
-                    start: data.defineProps.args.start,
-                    end: data.defineProps.args.end,
-                },
-                SourceMaps.Mode.Offset,
-                {
-                    vueTag: 'scriptSetup',
-                    capabilities: {
-                        basic: true,
-                        references: true,
-                        definitions: true,
-                        diagnostic: true,
-                        rename: true,
-                        completion: true,
-                        semanticTokens: true,
-                    },
-                },
-            );
-            gen.addText(`,\n`);
-        }
-        if (data.defineEmit?.args) {
-            gen.addText(`emits: `);
-            gen.addCode(
-                originalCode.substring(data.defineEmit.args.start, data.defineEmit.args.end),
-                {
-                    start: data.defineEmit.args.start,
-                    end: data.defineEmit.args.end,
-                },
-                SourceMaps.Mode.Offset,
-                {
-                    vueTag: 'scriptSetup',
-                    capabilities: {
-                        basic: true,
-                        references: true,
-                        definitions: true,
-                        diagnostic: true,
-                        rename: true,
-                        completion: true,
-                        semanticTokens: true,
-                    },
-                },
-            );
-            gen.addText(`,\n`);
-        }
-        gen.addText(`async `);
-        gen.addCode(
-            'setup',
-            {
-                start: 0,
-                end: 0,
-            },
-            SourceMaps.Mode.Totally,
-            {
-                vueTag: 'scriptSetup',
-                capabilities: {},
-            });
-        gen.addText(`() {\n`);
 
         const labels = data.labels.sort((a, b) => a.start - b.start);
         let tsOffset = 0;
@@ -280,7 +140,7 @@ export function generate(
             for (const binary of label.binarys) {
                 if (first) {
                     first = false;
-                    gen.addText(`let `);
+                    gen.addText(`const `);
                 }
                 else {
                     gen.addText(`, `);
@@ -449,83 +309,6 @@ export function generate(
         }
         mapSubText(tsOffset, sourceCode.length);
 
-        gen.addText(`return {\n`);
-        for (const expose of data.returnVarNames) {
-            const varName = originalCode.substring(expose.start, expose.end);
-            const templateSideRange = gen.addText(varName);
-            gen.addText(': ');
-            const scriptSideRange = expose.isImport
-                ? gen.addCode(
-                    varName,
-                    expose,
-                    SourceMaps.Mode.Offset,
-                    {
-                        vueTag: 'scriptSetup',
-                        capabilities: { diagnostic: true },
-                    },
-                )
-                : gen.addText(varName);
-            gen.addText(',\n');
-
-            teleports.push({
-                sourceRange: scriptSideRange,
-                mappedRange: templateSideRange,
-                mode: SourceMaps.Mode.Offset,
-                data: {
-                    toSource: {
-                        capabilities: {
-                            definitions: true,
-                            references: true,
-                            rename: true,
-                        },
-                    },
-                    toTarget: {
-                        capabilities: {
-                            definitions: true,
-                            references: true,
-                            rename: true,
-                        },
-                    },
-                },
-            });
-        }
-        for (const label of data.labels) {
-            for (const binary of label.binarys) {
-                for (const refVar of binary.vars) {
-                    if (refVar.inRoot) {
-                        const templateSideRange = gen.addText(refVar.text);
-                        gen.addText(': ');
-                        const scriptSideRange = gen.addText(refVar.text);
-                        gen.addText(', \n');
-
-                        teleports.push({
-                            sourceRange: scriptSideRange,
-                            mappedRange: templateSideRange,
-                            mode: SourceMaps.Mode.Offset,
-                            data: {
-                                toSource: {
-                                    capabilities: {
-                                        definitions: true,
-                                        references: true,
-                                        rename: true,
-                                    },
-                                },
-                                toTarget: {
-                                    capabilities: {
-                                        definitions: true,
-                                        references: true,
-                                        rename: true,
-                                    },
-                                },
-                            },
-                        });
-                    }
-                }
-            }
-        }
-        gen.addText(`};\n`);
-        gen.addText(`}});\n`);
-
         gen.addText(`\n// @ts-ignore\n`);
         gen.addText(`ref${SearchTexts.Ref}\n`); // for execute auto import
 
@@ -551,6 +334,106 @@ export function generate(
                 },
             );
         }
+    }
+    function writeExportComponent() {
+        gen.addText(`\n`);
+        gen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
+        if (script && scriptAst?.exportDefault?.args) {
+            const args = scriptAst.exportDefault.args;
+            gen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
+        }
+        if (scriptSetupAst?.defineProps?.args && scriptSetup) {
+            gen.addText(`props: (${scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end)}),\n`);
+        }
+        if (scriptSetupAst?.defineProps?.typeArgs && scriptSetup) {
+            gen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end)})>,\n`);
+        }
+        if (scriptSetupAst?.defineEmit?.args && scriptSetup) {
+            gen.addText(`emits: (${scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end)}),\n`);
+        }
+        if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
+            gen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end)}>),\n`);
+        }
+        if (scriptSetupAst && scriptSetup) {
+            gen.addText(`setup() {\n`);
+            gen.addText(`return {\n`);
+            for (const expose of scriptSetupAst.returnVarNames) {
+                const varName = scriptSetup.content.substring(expose.start, expose.end);
+                const templateSideRange = gen.addText(varName);
+                gen.addText(': ');
+                const scriptSideRange = expose.isImport
+                    ? gen.addCode(
+                        varName,
+                        expose,
+                        SourceMaps.Mode.Offset,
+                        {
+                            vueTag: 'scriptSetup',
+                            capabilities: { diagnostic: true },
+                        },
+                    )
+                    : gen.addText(varName);
+                gen.addText(',\n');
+
+                teleports.push({
+                    sourceRange: scriptSideRange,
+                    mappedRange: templateSideRange,
+                    mode: SourceMaps.Mode.Offset,
+                    data: {
+                        toSource: {
+                            capabilities: {
+                                definitions: true,
+                                references: true,
+                                rename: true,
+                            },
+                        },
+                        toTarget: {
+                            capabilities: {
+                                definitions: true,
+                                references: true,
+                                rename: true,
+                            },
+                        },
+                    },
+                });
+            }
+            for (const label of scriptSetupAst.labels) {
+                for (const binary of label.binarys) {
+                    for (const refVar of binary.vars) {
+                        if (refVar.inRoot) {
+                            const templateSideRange = gen.addText(refVar.text);
+                            gen.addText(': ');
+                            const scriptSideRange = gen.addText(refVar.text);
+                            gen.addText(', \n');
+
+                            teleports.push({
+                                sourceRange: scriptSideRange,
+                                mappedRange: templateSideRange,
+                                mode: SourceMaps.Mode.Offset,
+                                data: {
+                                    toSource: {
+                                        capabilities: {
+                                            definitions: true,
+                                            references: true,
+                                            rename: true,
+                                        },
+                                    },
+                                    toTarget: {
+                                        capabilities: {
+                                            definitions: true,
+                                            references: true,
+                                            rename: true,
+                                        },
+                                    },
+                                },
+                            });
+                        }
+                    }
+                }
+            }
+            gen.addText(`};\n`);
+            gen.addText(`},\n`);
+        }
+        gen.addText(`});\n`);
     }
     function writeExportOptions() {
         gen.addText(`\n`);
@@ -619,6 +502,19 @@ export function generate(
                         definitions: true,
                         rename: true,
                     },
+                },
+            );
+            gen.addText(`) as const,\n`);
+        }
+        if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
+            gen.addText(`emits: ({} as `);
+            gen.addCode(
+                scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end),
+                scriptSetupAst.defineEmit.typeArgs,
+                SourceMaps.Mode.Offset,
+                {
+                    vueTag: 'scriptSetup',
+                    capabilities: {},
                 },
             );
             gen.addText(`),\n`);

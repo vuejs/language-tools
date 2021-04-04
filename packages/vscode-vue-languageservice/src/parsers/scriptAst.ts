@@ -8,10 +8,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
     let exportDefault: {
         start: number,
         end: number,
-        expression: {
-            start: number,
-            end: number,
-        },
         args: {
             start: number,
             end: number,
@@ -34,7 +30,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
             if (obj) {
                 exportDefault = {
                     ..._getStartEnd(node),
-                    expression: _getStartEnd(node.expression),
                     args: _getStartEnd(obj),
                 };
             }
