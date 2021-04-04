@@ -17,66 +17,41 @@ If you need Type-Checking on command line, you can use [vue-tsc](https://github.
 
 ## Using
 
-<!-- Components services -->
+<!-- Global components support -->
 <details>
-<summary>Components services</summary>
+<summary>Global components support (Updated at 5/4/2021)</summary>
+
+See: https://github.com/vuejs/vue-next/pull/3399#issuecomment-810357702
 
 By default, Local components, Built-in components, native html elements Type-Checking are active.
 
-For Global components, you need to have  `__VLS_GlobalComponents` interface definition or component registeres call, for example:
-
-- `__VLS_GlobalComponents` interface definition:
+For Global components, you need to have Vue 3  `GlobalComponents` interface definition, for example:
 
 ```typescript
-// shims-volar.d.ts
 import { RouterLink, RouterView } from 'vue-router'
 
-declare global {
-	interface __VLS_GlobalComponents {
+declare module '@vue/runtime-core' {
+	export interface GlobalComponents {
 		RouterLink: typeof RouterLink
 		RouterView: typeof RouterView
 	}
 }
 ```
 
-- component registeres call:
-
-```typescript
-// my-global-components-plugin.ts
-import Foo from '@/my-global-components/foo.vue'
-import Bar from '@/my-global-components/bar.vue'
-
-export const plugin: Plugin = {
-    install(app) {
-        app.component('f-o-o', Foo);
-        app.component('BAR', Bar);
-    }
-}
-
-/* The following code will be automatically generated */
-declare global {
-	interface __VLS_GlobalComponents {
-		'f-o-o': typeof Foo
-		'BAR': typeof Bar
-	}
-}
-```
-
 </details>
 
-<!-- v-slot services -->
+<!-- v-slot support -->
 <details>
-<summary>v-slot services</summary>
+<summary>v-slot support</summary>
 
 v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
 
 ```typescript
-// shims-volar.d.ts
 import { RouterLink, RouterView, useLink, RouteLocationNormalized } from 'vue-router'
 import { UnwrapRef, VNode } from 'vue'
 
-declare global {
-	interface __VLS_GlobalComponents {
+declare module '@vue/runtime-core' {
+	export interface GlobalComponents {
 		RouterLink: typeof RouterLink & {
 			__VLS_slots: {
 				default: UnwrapRef<ReturnType<typeof useLink>>
@@ -149,10 +124,8 @@ not checking!
 > tsconfig.json / jsconfig.json is required.
 >
 > Also required `"strict": true` and `"moduleResolution": "node"`.
->
-> If use Vitepress, you should need `"include": ["src/**/*", "src/.vitepress/**/*"]`.
 
-> `__VLS_GlobalComponents` and `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
+> `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
 
 ## Sponsors
 
