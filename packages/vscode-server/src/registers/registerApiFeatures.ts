@@ -6,7 +6,6 @@ import {
     CallHierarchyPrepareRequest,
     CodeActionKind,
     CodeActionRequest,
-    CodeLensRequest,
     CompletionRequest,
     DefinitionRequest,
     ExecuteCommandRequest,
@@ -33,10 +32,6 @@ connection.client.register(RenameRequest.type, {
     prepareProvider: true,
 });
 connection.client.register(SelectionRangeRequest.type, vueFileReg);
-connection.client.register(CodeLensRequest.type, {
-    documentSelector: allFilesReg.documentSelector,
-    resolveProvider: true,
-});
 connection.client.register(SignatureHelpRequest.type, {
     documentSelector: vueFileReg.documentSelector,
     triggerCharacters: ['(', ',', '<'],
