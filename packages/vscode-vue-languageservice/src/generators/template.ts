@@ -45,7 +45,6 @@ export function generate(
 	elementNames: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined,
-	scriptSetupVars?: string[],
 	withExportSlots = true,
 ) {
 	let node: vueDom.RootNode;
@@ -157,14 +156,6 @@ export function generate(
 			tsCodeGen.addText(`{\n`);
 			{
 				tags.add(getComponentName(node.tag));
-
-				if (scriptSetupVars) {
-					for (const scriptSetupVar of scriptSetupVars) {
-						if (node.tag === scriptSetupVar || node.tag === hyphenate(scriptSetupVar)) {
-							tsCodeGen.addText(scriptSetupVar + `; // ignore unused in script setup\n`);
-						}
-					}
-				}
 
 				writeInlineCss(node);
 				if (parentEl) writeImportSlots(node, parentEl);

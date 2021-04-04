@@ -1,7 +1,7 @@
+import { createScriptGenerator } from '@volar/source-map';
+import type * as templateGen from '../generators/template';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
-import { createScriptGenerator } from '@volar/source-map';
-import * as templateGen from './template';
 
 export function generate(
     script: null | {
@@ -12,7 +12,7 @@ export function generate(
         content: string,
     },
     scriptSetupAst: ScriptSetupAst | undefined,
-    html: string | undefined,
+    htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 ) {
 
     if (!scriptSetup) return;
@@ -80,14 +80,19 @@ export function generate(
     function writeTemplate() {
         if (!scriptSetupAst)
             return;
-        if (!html)
+        if (!htmlGen)
             return;
 
         const scriptSetupVars = scriptSetupAst.returnVarNames
             .map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
-        const interpolations = templateGen.generate(html, [], [], [], undefined, scriptSetupVars, false);
         gen.addText('{\n');
-        gen.addText(interpolations.text);
+        for (const scriptSetupVar of scriptSetupVars) {
+            if (htmlGen.tags.has(scriptSetupVar) || htmlGen.tags.has(scriptSetupVar)) {
+                // fix import components unused report
+                gen.addText(scriptSetupVar + ';\n');
+            }
+        }
+        gen.addText(htmlGen.text);
         gen.addText('}\n');
     }
 

@@ -7,6 +7,7 @@ import { parse as parseScriptAst } from '../parsers/scriptAst';
 import { parse as parseScriptSetupAst } from '../parsers/scriptSetupAst';
 import { generate as genScript } from '../generators/script';
 import { generate as genScriptSugg } from '../generators/script_suggestion';
+import * as templateGen from '../generators/template';
 
 export function useScriptSetupGen(
 	ts: typeof import('typescript'),
@@ -37,12 +38,17 @@ export function useScriptSetupGen(
 			scriptSetupAst.value,
 		)
 	);
+	const htmlGen = computed(() => {
+		if (html.value) {
+			return templateGen.generate(html.value, [], [], [], undefined, false);
+		}
+	})
 	const generateForSuggestion = computed(() =>
 		genScriptSugg(
 			script.value,
 			scriptSetup.value,
 			scriptSetupAst.value,
-			html.value,
+			htmlGen.value,
 		)
 	);
 	const textDocument = computed(() => {
