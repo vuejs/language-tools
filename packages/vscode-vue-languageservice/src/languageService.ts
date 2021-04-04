@@ -88,7 +88,6 @@ export function createLanguageService(
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);
 	let dtsMode = ref(false);
-	let initTemplateScript = false; // html components completion require template data
 	let shouldSendUpdate = true;
 	const documents = new UriMap<TextDocument>();
 	const sourceFiles = new UriMap<SourceFile>();
@@ -161,6 +160,13 @@ export function createLanguageService(
 		},
 	});
 
+	if (!isTsPlugin) {
+		 // create virtual scripts
+		update(true);
+		 // force sync typescript host data
+		tsLanguageService.raw.getProgram();
+	}
+
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		tsPlugin,
@@ -219,10 +225,6 @@ export function createLanguageService(
 	function apiHook<T extends Function>(api: T, shouldUpdateTemplateScript = true) {
 		const handler = {
 			apply: function (target: Function, thisArg: any, argumentsList: any[]) {
-				if (!initTemplateScript && !isTsPlugin) {
-					initTemplateScript = true;
-					shouldUpdateTemplateScript = true;
-				}
 				update(shouldUpdateTemplateScript);
 				return target.apply(thisArg, argumentsList);
 			}

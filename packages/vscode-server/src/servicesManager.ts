@@ -54,6 +54,8 @@ export function createServicesManager(
 			service.onDocumentUpdated(change.document);
 		}
 		onDocumentUpdated(change.document);
+		 // preload
+		getMatchService(change.document.uri);
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
 
