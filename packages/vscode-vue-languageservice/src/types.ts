@@ -68,7 +68,6 @@ export type TsApiRegisterOptions = {
 	ts: typeof import('typescript');
 	sourceFiles: Map<string, SourceFile>;
 	tsLanguageService: ts2.LanguageService;
-	getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>;
 	vueHost: ts2.LanguageServiceHost;
 	mapper: ReturnType<typeof createMapper>;
 }

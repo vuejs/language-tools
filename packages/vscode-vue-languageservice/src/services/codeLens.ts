@@ -13,32 +13,8 @@ export const options = {
 	scriptSetupTool: true,
 };
 
-export function register({ sourceFiles, getGlobalTsSourceMaps }: TsApiRegisterOptions) {
+export function register({ sourceFiles }: TsApiRegisterOptions) {
 	return (document: TextDocument) => {
-
-		const globalTsSourceMaps = getGlobalTsSourceMaps?.();
-		const globalTsSourceMap = globalTsSourceMaps?.get(document.uri);
-
-		if (globalTsSourceMap) {
-			const result: CodeLens[] = [];
-			for (const maped of globalTsSourceMap.sourceMap) {
-				if (!maped.data.capabilities.referencesCodeLens) continue;
-				const codeLens: CodeLens = {
-					range: {
-						start: document.positionAt(maped.sourceRange.start),
-						end: document.positionAt(maped.sourceRange.end),
-					},
-					data: {
-						uri: document.uri,
-						offset: maped.sourceRange.start,
-						tsUri: globalTsSourceMap.sourceMap.mappedDocument.uri,
-						tsOffset: maped.mappedRange.start,
-					},
-				};
-				result.push(codeLens);
-			}
-			return result;
-		}
 
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
