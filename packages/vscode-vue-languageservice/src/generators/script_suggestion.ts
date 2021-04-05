@@ -1,4 +1,5 @@
 import { createScriptGenerator } from '@volar/source-map';
+import { hyphenate } from '@vue/shared';
 import type * as templateGen from '../generators/template_scriptSetup';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
@@ -87,7 +88,7 @@ export function generate(
             .map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
         gen.addText('{\n');
         for (const scriptSetupVar of scriptSetupVars) {
-            if (htmlGen.tags.has(scriptSetupVar) || htmlGen.tags.has(scriptSetupVar)) {
+            if (htmlGen.tags.has(scriptSetupVar) || htmlGen.tags.has(hyphenate(scriptSetupVar))) {
                 // fix import components unused report
                 gen.addText(scriptSetupVar + ';\n');
             }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.23.3
+
+- fix: `<script setup>` components unused report incorrect [#122](https://github.com/johnsoncodehk/volar/issues/122)
+
 ## 0.23.2
 
 - fix: `v-if` intellisense not working
