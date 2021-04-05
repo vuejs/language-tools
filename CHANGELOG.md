@@ -3,6 +3,7 @@
 ## 0.23.3
 
 - fix: `<script setup>` components unused report incorrect [#122](https://github.com/johnsoncodehk/volar/issues/122)
+- fix: unused cache to fix completion resolve crash edge cases
 
 ## 0.23.2
 
