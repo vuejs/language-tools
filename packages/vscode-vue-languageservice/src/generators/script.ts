@@ -346,7 +346,7 @@ export function generate(
             gen.addText(`props: (${scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end)}),\n`);
         }
         if (scriptSetupAst?.defineProps?.typeArgs && scriptSetup) {
-            gen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end)})>,\n`);
+            gen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end)}>),\n`);
         }
         if (scriptSetupAst?.defineEmit?.args && scriptSetup) {
             gen.addText(`emits: (${scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end)}),\n`);
