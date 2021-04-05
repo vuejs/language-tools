@@ -214,7 +214,21 @@ export function generate(
 					default: tsCodeGen.addText('else if'); break;
 				}
 				if (branch.condition?.type === NodeTypes.SIMPLE_EXPRESSION) {
-					tsCodeGen.addText(` (${branch.condition.content})`);
+					tsCodeGen.addText(` (`);
+					writeCode(
+						branch.condition.content,
+						{
+							start: branch.condition.loc.start.offset,
+							end: branch.condition.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+						formatBrackets.round,
+					);
+					tsCodeGen.addText(`)`);
 				}
 				tsCodeGen.addText(` {\n`);
 				for (const childNode of branch.children) {
