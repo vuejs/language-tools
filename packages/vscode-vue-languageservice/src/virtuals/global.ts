@@ -93,8 +93,8 @@ declare global {
 			: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> : unknown // evnts: { 'event-1': () => true, 'event-2': () => true }
 		) : __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
 	type __VLS_FirstFunction<F0, F1> =
-		NonNullable<F0> extends (...args: any) => any ? F0 :
-		NonNullable<F1> extends (...args: any) => any ? F1 : unknown;
+		NonNullable<F0> extends (Function | Function[]) ? F0 :
+		NonNullable<F1> extends (Function | Function[]) ? F1 : unknown;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
