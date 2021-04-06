@@ -36,14 +36,15 @@ By default, Local components, Built-in components, native html elements Type-Che
 For Global components, you need to have Vue 3  `GlobalComponents` interface definition, for example:
 
 ```typescript
-import { RouterLink, RouterView } from 'vue-router'
-
-declare module '@vue/runtime-core' {
+// components.d.ts
+declare module 'vue' {
 	export interface GlobalComponents {
-		RouterLink: typeof RouterLink
-		RouterView: typeof RouterView
+      RouterLink: typeof import('vue-router')['RouterLink']
+      RouterView: typeof import('vue-router')['RouterView']
 	}
 }
+
+export { }
 ```
 
 </details>
@@ -55,10 +56,11 @@ declare module '@vue/runtime-core' {
 v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
 
 ```typescript
+// components.d.ts
 import { RouterLink, RouterView, useLink, RouteLocationNormalized } from 'vue-router'
 import { UnwrapRef, VNode } from 'vue'
 
-declare module '@vue/runtime-core' {
+declare module 'vue' {
 	export interface GlobalComponents {
 		RouterLink: typeof RouterLink & {
 			__VLS_slots: {
@@ -75,6 +77,8 @@ declare module '@vue/runtime-core' {
 		}
 	}
 }
+
+export { }
 ```
 
 </details>
