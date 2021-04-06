@@ -10,7 +10,13 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const name = item.data.name;
 		const source = item.data.source;
 		const options = item.data.options;
-		const detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options);
+		let detail: ts.CompletionEntryDetails | undefined;
+		try {
+			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options);
+		}
+		catch (err) {
+			item.detail = `[TS Error] ${err}`;
+		}
 		const details: string[] = [];
 		if (detail?.source) {
 			const importModule = ts.displayPartsToString(detail.source);
