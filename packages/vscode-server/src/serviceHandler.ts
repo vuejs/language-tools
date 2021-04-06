@@ -116,6 +116,17 @@ export function createServiceHandler(
 	}
 	function onDocumentUpdated(document: TextDocument) {
 		const fileName = uriToFsPath(document.uri);
+		const snapshot = snapshots.get(fileName);
+		if (snapshot) {
+			const snapshotLength = snapshot.snapshot.getLength();
+			const documentText = document.getText();
+			if (
+				snapshotLength === documentText.length
+				&& snapshot.snapshot.getText(0, snapshotLength) === documentText
+			) {
+				return;
+			}
+		}
 		const script = scripts.get(fileName);
 		const extraScript = extraScripts.get(fileName);
 		if (script) {
