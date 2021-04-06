@@ -40,6 +40,7 @@ type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
 type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
 type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
 type CoreGlobalComponents = PickNotAny<PickNotAny<PickNotAny<CoreGlobalComponents_1, CoreGlobalComponents_2>, CoreGlobalComponents_3>, {}>;
+type AnyArray<T = any> = T[] | readonly T[];
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
 
@@ -54,8 +55,8 @@ declare global {
 	interface __VLS_GlobalComponents extends CoreGlobalComponents { }
 	var __VLS_defineComponent: PickNotAny<typeof defineComponent_1, typeof defineComponent_2>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
-	function __VLS_getVforKeyType<T>(source: T): T extends any[] ? number : keyof T;
-	function __VLS_getVforIndexType<T>(source: T): T extends any[] ? undefined : number;
+	function __VLS_getVforKeyType<T>(source: T): T extends AnyArray ? number : keyof T;
+	function __VLS_getVforIndexType<T>(source: T): T extends AnyArray ? undefined : number;
 	function __VLS_pickNotAny<T, K>(t: T, k: K): PickNotAny<T, K>;
 	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };
@@ -86,12 +87,12 @@ declare global {
 	type __VLS_EmitEvent<T, E> = T extends { __VLS_raw: infer R } ? __VLS_EmitEvent0<R, E> : __VLS_EmitEvent0<T, E>;
 	type __VLS_EmitEvent0<T, E> =
 		T extends DefineComponent<infer _, infer E2> ? (
-			E2 extends (infer K)[] ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
+			E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
 			: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> : unknown // evnts: { 'event-1': () => true, 'event-2': () => true }
 		) : __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
 	type __VLS_FirstFunction<F0, F1> =
-		NonNullable<F0> extends (Function | Function[]) ? F0 :
-		NonNullable<F1> extends (Function | Function[]) ? F1 : unknown;
+		NonNullable<F0> extends (Function | AnyArray<Function>) ? F0 :
+		NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 : unknown;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
