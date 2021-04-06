@@ -88,10 +88,15 @@ export function createLanguageService(
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);
 	let dtsMode = ref(false);
+	let isInited = false;
 	let shouldSendUpdate = true;
 	const documents = new UriMap<TextDocument>();
 	const sourceFiles = new UriMap<SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
+
+	if (isTsPlugin) {
+		isInited = true;
+	}
 
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost, typescript);
@@ -160,13 +165,6 @@ export function createLanguageService(
 		},
 	});
 
-	if (!isTsPlugin) {
-		 // create virtual scripts
-		update(true);
-		 // force sync typescript host data
-		tsLanguageService.raw.getProgram();
-	}
-
 	return {
 		rootPath: vueHost.getCurrentDirectory(),
 		tsPlugin,
@@ -225,6 +223,13 @@ export function createLanguageService(
 	function apiHook<T extends Function>(api: T, shouldUpdateTemplateScript = true) {
 		const handler = {
 			apply: function (target: Function, thisArg: any, argumentsList: any[]) {
+				if (!isInited) {
+					isInited = true;
+					// create virtual scripts
+					update(true);
+					// force sync typescript host data
+					tsLanguageService.raw.getProgram();
+				}
 				update(shouldUpdateTemplateScript);
 				return target.apply(thisArg, argumentsList);
 			}
@@ -442,9 +447,6 @@ export function createLanguageService(
 		let vueTemplageScriptUpdated = false;
 		let updateNums = uris.length;
 		let currentNums = 0;
-		if (shouldUpdateTemplateScript) {
-			updateNums += templateScriptUpdateUris.size;
-		}
 
 		const _shouldSendUpdate = shouldSendUpdate;
 		if (shouldUpdateTemplateScript) {
@@ -474,6 +476,9 @@ export function createLanguageService(
 				}
 			}
 			templateScriptUpdateUris.add(uri);
+		}
+		if (shouldUpdateTemplateScript) {
+			updateNums += templateScriptUpdateUris.size;
 		}
 		if (vueScriptsUpdated) {
 			tsProjectVersion.value++;
