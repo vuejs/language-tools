@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.23.4
+
+- fix: vnode hooks typing broken in template
+- fix: global components typing broken if no `<script>` block
+- fix: local components typing broken with pnpm [#123](https://github.com/johnsoncodehk/volar/issues/123)
+- fix: init progress broken
+- perf: reuse import suggestions cache
+
 ## 0.23.3
 
 - fix: `<script setup>` components unused report incorrect [#122](https://github.com/johnsoncodehk/volar/issues/122)
