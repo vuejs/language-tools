@@ -1,14 +1,22 @@
 # Volar
 
-> ⚡ The Fastest Vue Language Support Extension
+> ⚡ Fast Vue Language Support Extension
+
+https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
 Volar is a Language Support plugin built specifically for Vue 3. It's based on `@vue/reactivity` to calculate TypeScript on-demand to optimization performance close to native TypeScript language service.
 
-If you need Type-Checking on command line, you can use [vue-tsc](https://github.com/johnsoncodehk/vue-tsc).
-
-[[Marketplace](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)] [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
-
 🛠️ This project is still refactoring to make it easier for contribute.
+
+[[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
+
+Volar does not include ESLint and Prettier, but ESLint and Prettier official extension supported Vue, you could install these yourself if you need.
+
+If you need Type-Checking on command line, use [vue-tsc](https://github.com/johnsoncodehk/vue-tsc).
+
+## Sponsors
+
+If you like this extension, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). Thank you.
 
 ## Quick Start
 
@@ -126,10 +134,3 @@ not checking!
 > Also required `"strict": true` and `"moduleResolution": "node"`.
 
 > `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
-
-## Sponsors
-
-If you like this extension, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). Thank you. :)
-
-<a href="https://github.com/yyx990803"><img src="https://avatars1.githubusercontent.com/u/499550?s=64&amp;v=4" width="32" height="32" alt="@yyx990803" style="border-radius: 50%;"></a>
-<a href="https://github.com/Pizzacus"><img src="https://avatars1.githubusercontent.com/u/7659613?s=64&amp;v=4" width="32" height="32" alt="@Pizzacus" style="border-radius: 50%;"></a>
