@@ -34,7 +34,6 @@ export function useScriptMain(
 			content += `export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;\n`;
 		}
 		else {
-			content += `// no script`
 			content += `export var __VLS_options = {};\n`;
 			content += `export var __VLS_component = __VLS_defineComponent({});\n`;
 		}
