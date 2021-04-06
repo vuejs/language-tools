@@ -1,5 +1,4 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SearchTexts } from '../utils/string';
 import { fsPathToUri } from '@volar/shared';
 import { join } from 'upath';
 
@@ -11,7 +10,6 @@ import type { HTMLAttributes as HTMLAttributes_1 } from '@vue/runtime-dom';
 import type { VNodeProps as VNodeProps_1 } from '@vue/runtime-dom';
 import type { AllowedComponentProps as AllowedComponentProps_1 } from '@vue/runtime-dom';
 import type { PropType as PropType_1 } from '@vue/runtime-dom';
-import type { App as App_1 } from '@vue/runtime-dom';
 import type { EmitsOptions as EmitsOptions_1 } from '@vue/runtime-dom';
 import type { DefineComponent as DefineComponent_1 } from '@vue/runtime-dom';
 import type { defineComponent as defineComponent_1 } from '@vue/runtime-dom';
@@ -22,7 +20,6 @@ import type { HTMLAttributes as HTMLAttributes_2 } from 'vue';
 import type { VNodeProps as VNodeProps_2 } from 'vue';
 import type { AllowedComponentProps as AllowedComponentProps_2 } from 'vue';
 import type { PropType as PropType_2 } from 'vue';
-import type { App as App_2 } from 'vue';
 import type { EmitsOptions as EmitsOptions_2 } from 'vue';
 import type { DefineComponent as DefineComponent_2 } from 'vue';
 import type { defineComponent as defineComponent_2 } from 'vue';
@@ -37,7 +34,6 @@ type HTMLAttributes = PickNotAny<PickNotAny<HTMLAttributes_1, HTMLAttributes_2>,
 type VNodeProps = PickNotAny<VNodeProps_1, VNodeProps_2>;
 type AllowedComponentProps = PickNotAny<AllowedComponentProps_1, AllowedComponentProps_2>;
 type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
-type App = PickNotAny<App_1, App_2>;
 type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
 type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
 
@@ -103,9 +99,6 @@ declare global {
 
 	${genConstructorOverloads()}
 }
-
-declare const app: App;
-app.component${SearchTexts.AppComponentCall};
 `;
 
 	return TextDocument.create(fsPathToUri(join(root, '__VLS_globals.ts')), 'typescript', 0, code);
