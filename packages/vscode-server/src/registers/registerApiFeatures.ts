@@ -4,6 +4,8 @@ import {
 } from '@volar/vscode-vue-languageservice';
 import {
     CallHierarchyPrepareRequest,
+    CodeActionKind,
+    CodeActionRequest,
     CompletionRequest,
     DefinitionRequest,
     ExecuteCommandRequest,
@@ -46,5 +48,20 @@ connection.client.register(ExecuteCommandRequest.type, {
 connection.client.register(CompletionRequest.type, {
     documentSelector: vueFileReg.documentSelector,
     triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
+    resolveProvider: true,
+});
+connection.client.register(CodeActionRequest.type, {
+    documentSelector: vueFileReg.documentSelector,
+    codeActionKinds: [
+        CodeActionKind.Empty,
+        CodeActionKind.QuickFix,
+        CodeActionKind.Refactor,
+        CodeActionKind.RefactorExtract,
+        CodeActionKind.RefactorInline,
+        CodeActionKind.RefactorRewrite,
+        CodeActionKind.Source,
+        CodeActionKind.SourceFixAll,
+        CodeActionKind.SourceOrganizeImports,
+    ],
     resolveProvider: true,
 });

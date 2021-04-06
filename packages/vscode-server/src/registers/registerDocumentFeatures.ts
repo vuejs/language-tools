@@ -1,6 +1,4 @@
 import {
-    CodeActionKind,
-    CodeActionRequest,
     CodeLensRequest,
     DocumentColorRequest,
     DocumentHighlightRequest,
@@ -19,20 +17,5 @@ connection.client.register(DocumentLinkRequest.type, vueFileReg);
 connection.client.register(DocumentColorRequest.type, vueFileReg);
 connection.client.register(CodeLensRequest.type, {
     documentSelector: allFilesReg.documentSelector,
-    resolveProvider: true,
-});
-connection.client.register(CodeActionRequest.type, {
-    documentSelector: vueFileReg.documentSelector,
-    codeActionKinds: [
-        CodeActionKind.Empty,
-        CodeActionKind.QuickFix,
-        CodeActionKind.Refactor,
-        CodeActionKind.RefactorExtract,
-        CodeActionKind.RefactorInline,
-        CodeActionKind.RefactorRewrite,
-        CodeActionKind.Source,
-        CodeActionKind.SourceFixAll,
-        CodeActionKind.SourceOrganizeImports,
-    ],
     resolveProvider: true,
 });
