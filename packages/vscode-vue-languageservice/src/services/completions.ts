@@ -80,14 +80,14 @@ export const vueTags = [
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 
-	return async (document: TextDocument, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return async (uri: string, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
 		const tsResult = getTsResult(sourceFile);
 		if (tsResult) return tsResult;
 
-		const emmetResult = getEmmetResult();
+		const emmetResult = getEmmetResult(sourceFile);
 
 		// precede html for support inline css service
 		const cssResult = getCssResult(sourceFile);
@@ -143,7 +143,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
 						const vueItem = transformCompletionItem(tsItem, sourceMap);
 						const data: CompletionData = {
-							uri: document.uri,
+							uri: uri,
 							docUri: sourceMap.mappedDocument.uri,
 							mode: 'ts',
 							tsItem: tsItem,
@@ -261,7 +261,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					name: 'template',
 					attributes: slots,
 				});
-				const dataProvider = html.newHTMLDataProvider(document.uri, {
+				const dataProvider = html.newHTMLDataProvider(uri, {
 					version: 1.1,
 					tags,
 					globalAttributes,
@@ -312,7 +312,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						}
 						const data: CompletionData = {
 							mode: 'html',
-							uri: document.uri,
+							uri: uri,
 							docUri: sourceMap.mappedDocument.uri,
 							tsItem: tsItem,
 						};
@@ -356,7 +356,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						result.isIncomplete = true;
 					}
 					const data: CompletionData = {
-						uri: document.uri,
+						uri: uri,
 						docUri: sourceMap.mappedDocument.uri,
 						mode: 'css',
 					};
@@ -374,29 +374,29 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			return result;
 		}
 		function getVueResult(sourceFile: SourceFile) {
-			const embededDoc = getEmbeddedDoc(document, { start: position, end: position });
+			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
 			if (embededDoc) {
-				let syntax = languageIdToSyntax(embededDoc.document.languageId);
+				let syntax = languageIdToSyntax(embededDoc.language);
 				if (syntax === 'vue') {
-					const dataProvider = html.newHTMLDataProvider(document.uri, {
+					const dataProvider = html.newHTMLDataProvider(uri, {
 						version: 1.1,
 						tags: vueTags,
 					});
 					languageServices.html.setDataProviders(false, [dataProvider]);
-					const vueHtmlDoc = sourceFile.getVueHtmlDocument();
-					return languageServices.html.doComplete(document, position, vueHtmlDoc);
+					return languageServices.html.doComplete(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument());
 				}
 			}
 		}
-		function getEmmetResult() {
+		function getEmmetResult(sourceFile: SourceFile) {
 			if (!getEmmetConfig) return;
-			const embededDoc = getEmbeddedDoc(document, { start: position, end: position });
+			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
 			if (embededDoc) {
-				const emmetConfig = getEmmetConfig(embededDoc.document.languageId);
+				const emmetConfig = getEmmetConfig(embededDoc.language);
 				if (emmetConfig) {
-					let syntax = languageIdToSyntax(embededDoc.document.languageId);
+					let syntax = languageIdToSyntax(embededDoc.language);
 					if (syntax === 'vue') syntax = 'html';
-					const emmetResult = emmet.doComplete(embededDoc.document, embededDoc.range.start, syntax, emmetConfig);
+					const doc = embededDoc.document ?? sourceFile.getTextDocument();
+					const emmetResult = emmet.doComplete(doc, embededDoc.range.start, syntax, emmetConfig);
 					if (emmetResult && embededDoc.sourceMap) {
 						return transformCompletionList(emmetResult, embededDoc.sourceMap);
 					}

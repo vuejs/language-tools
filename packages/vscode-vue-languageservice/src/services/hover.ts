@@ -1,4 +1,3 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Hover, LocationLink, Position } from 'vscode-languageserver/node';
 import { MarkupContent } from 'vscode-languageserver/node';
 import type { TsApiRegisterOptions } from '../types';
@@ -8,11 +7,11 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 	const findDefinitions = registerFindDefinitions(arguments[0]);
 
-	return (document: TextDocument, position: Position) => {
+	return (uri: string, position: Position) => {
 
-		const tsResult = onTs(document.uri, position);
-		const htmlResult = onHtml(document.uri, position);
-		const cssResult = onCss(document.uri, position);
+		const tsResult = onTs(uri, position);
+		const htmlResult = onHtml(uri, position);
+		const cssResult = onCss(uri, position);
 
 		if (!tsResult && !htmlResult && !cssResult) return;
 

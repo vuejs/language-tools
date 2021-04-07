@@ -8,7 +8,7 @@ connection.onCompletion(async handler => {
     if (!document) return;
 
     return servicesManager?.getMatchService(document.uri)?.doComplete(
-        document,
+        document.uri,
         handler.position,
         handler.context,
         getEmmetConfiguration,
@@ -24,7 +24,7 @@ connection.onCompletionResolve(async item => {
 connection.onHover(handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
-    return servicesManager?.getMatchService(document.uri)?.doHover(document, handler.position);
+    return servicesManager?.getMatchService(document.uri)?.doHover(document.uri, handler.position);
 });
 connection.onSignatureHelp(handler => {
     const document = documents.get(handler.textDocument.uri);

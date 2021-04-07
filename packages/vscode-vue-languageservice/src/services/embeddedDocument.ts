@@ -5,12 +5,13 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceMap } from '../utils/sourceMaps';
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
-	return (document: TextDocument, range: Range): {
-		document: TextDocument,
+	return (uri: string, range: Range): {
+		language: string,
+		document: TextDocument | undefined,
 		range: Range,
 		sourceMap: SourceMap | undefined,
 	} | undefined => {
-		const sourceFile = sourceFiles.get(document.uri);
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
 		const tsResult = getTsResult(sourceFile);
@@ -27,8 +28,9 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		if (pugResult !== undefined) return pugResult;
 
 		return {
+			language: 'vue',
+			document: undefined,
 			sourceMap: undefined,
-			document,
 			range,
 		};
 
@@ -39,6 +41,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 					if (!tsRange.data.capabilities.formatting) continue;
 					return {
 						sourceMap,
+						language: sourceMap.mappedDocument.languageId,
 						document: sourceMap.mappedDocument,
 						range: tsRange,
 					};
@@ -51,6 +54,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 				for (const htmlRange of htmlRanges) {
 					return {
 						sourceMap,
+						language: sourceMap.mappedDocument.languageId,
 						document: sourceMap.mappedDocument,
 						range: htmlRange,
 					};
@@ -63,6 +67,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 				for (const pugRange of pugRanges) {
 					return {
 						sourceMap,
+						language: sourceMap.mappedDocument.languageId,
 						document: sourceMap.mappedDocument,
 						range: pugRange,
 					};
@@ -75,6 +80,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 				for (const cssRange of cssRanges) {
 					return {
 						sourceMap,
+						language: sourceMap.mappedDocument.languageId,
 						document: sourceMap.mappedDocument,
 						range: cssRange,
 					};
