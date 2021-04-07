@@ -21,7 +21,9 @@ export function generate(
     writeScriptSrc();
     writeScript();
     writeScriptSetup();
-    writeExportComponent();
+    if (scriptSetup) {
+        writeExportComponent();
+    }
     writeExportOptions();
 
     return {
