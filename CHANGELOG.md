@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.23.5
+
+- feat: improve types infer without defineComponent [#59](https://github.com/johnsoncodehk/volar/issues/59)
+- fix: handle readonly array in `v-for`
+- fix: template context not update on completion
+- perf: don't update project version if document content no changes
+
 ## 0.23.4
 
 - fix: vnode hooks typing broken in template
