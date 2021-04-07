@@ -84,10 +84,9 @@ export function createLanguageService(
 	isTsPlugin = false,
 ) {
 
-	let lastProjectVersion: string | undefined;
+	let vueProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
 	let tsProjectVersion = ref(0);
-	let dtsMode = ref(false);
 	let isInited = false;
 	let shouldSendUpdate = true;
 	const documents = new UriMap<TextDocument>();
@@ -170,10 +169,6 @@ export function createLanguageService(
 		tsPlugin,
 		tsProgramProxy,
 		update,
-		setDtsMode: (_dtsMode: boolean) => {
-			dtsMode.value = _dtsMode;
-			tsProjectVersion.value++;
-		},
 		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
@@ -237,11 +232,11 @@ export function createLanguageService(
 		return new Proxy<T>(api, handler);
 	}
 	function update(shouldUpdateTemplateScript: boolean) {
-		const currentVersion = vueHost.getProjectVersion?.();
-		if (currentVersion === undefined || currentVersion !== lastProjectVersion) {
+		const newVueProjectVersion = vueHost.getProjectVersion?.();
+		if (newVueProjectVersion === undefined || newVueProjectVersion !== vueProjectVersion) {
 
 			let tsFileChanged = false;
-			lastProjectVersion = currentVersion;
+			vueProjectVersion = newVueProjectVersion;
 			const oldFiles = new Set([...lastScriptVersions.keys()]);
 			const newFiles = new Set([...vueHost.getScriptFileNames()]);
 			const removes: string[] = [];
@@ -463,7 +458,7 @@ export function createLanguageService(
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, 'api', dtsMode));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, 'api'));
 				vueScriptsUpdated = true;
 			}
 			else {

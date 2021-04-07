@@ -39,7 +39,6 @@ export function createSourceFile(
 	tsLanguageService: ts2.LanguageService,
 	ts: typeof import('typescript'),
 	styleMode: 'api' | 'format',
-	dtsMode?: Ref<boolean>,
 ) {
 	// sources
 	const tsProjectVersion = ref<string>();
@@ -116,7 +115,6 @@ export function createSourceFile(
 
 	// map / set
 	const tsSourceMaps = computed(() => {
-		if (dtsMode?.value) return [];
 		const result = [
 			virtualScriptGen.sourceMap.value,
 			virtualScriptGen.sourceMapForSuggestion.value,
@@ -130,14 +128,7 @@ export function createSourceFile(
 
 		const docs = new Map<string, TextDocument>();
 
-		if (dtsMode?.value) {
-			if (virtualScriptRaw.textDocument.value)
-				docs.set(virtualScriptRaw.textDocument.value.uri, virtualScriptRaw.textDocument.value);
-			return docs;
-		}
-
 		docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
-
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
 		if (virtualScriptGen.textDocumentForSuggestion.value)
@@ -146,6 +137,7 @@ export function createSourceFile(
 			docs.set(virtualScriptGen.textDocumentForTemplate.value.uri, virtualScriptGen.textDocumentForTemplate.value);
 		if (virtualTemplateGen.textDocument.value)
 			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
+
 		return docs;
 	});
 
