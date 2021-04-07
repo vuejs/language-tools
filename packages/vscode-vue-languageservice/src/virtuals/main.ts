@@ -28,7 +28,7 @@ export function useScriptMain(
 		}
 		else if (script.value) {
 			content += `import __VLS_componentRaw from './${vueFileName}.__VLS_script';\n`;
-			content += `var __VLS_componentReserve = __VLS_defineComponent(__VLS_componentRaw);\n`;
+			content += `var __VLS_componentReserve = __VLS_defineComponent(__VLS_options);\n`;
 			content += `type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;\n`;
 			content += `export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;\n`;
 		}

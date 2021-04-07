@@ -455,7 +455,7 @@ export function generate(
                     },
                 },
             );
-            gen.addText(`),\n`);
+            gen.addText(`) as const,\n`);
         }
         if (scriptSetupAst?.defineProps?.args && scriptSetup) {
             gen.addText(`props: (`);
