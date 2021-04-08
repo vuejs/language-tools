@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.23.6
+
+- feat: event modifiers auto-complete [#126](https://github.com/johnsoncodehk/volar/issues/126)
+- fix: `v-else-if` type narrowing not works in last branch [#130](https://github.com/johnsoncodehk/volar/issues/130)
+
 ## 0.23.5
 
 - feat: improve types infer without defineComponent [#59](https://github.com/johnsoncodehk/volar/issues/59)
