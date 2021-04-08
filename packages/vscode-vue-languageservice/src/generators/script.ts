@@ -150,10 +150,11 @@ export function generate(
 
                 let leftPos = binary.left.start;
                 for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
+                    const propName = scriptSetup.content.substring(prop.start, prop.end);
                     gen.addText(originalCode.substring(leftPos, prop.start));
                     if (prop.isShortand) {
                         gen.addCode(
-                            prop.text,
+                            propName,
                             prop,
                             SourceMaps.Mode.Offset,
                             {
@@ -166,7 +167,7 @@ export function generate(
                         gen.addText(`: `);
                     }
                     gen.addCode(
-                        `__VLS_refs_${prop.text}`,
+                        `__VLS_refs_${propName}`,
                         prop,
                         SourceMaps.Mode.Totally,
                         {
@@ -189,9 +190,10 @@ export function generate(
 
             for (const binary of label.binarys) {
                 for (const prop of binary.vars) {
+                    const propName = scriptSetup.content.substring(prop.start, prop.end);
                     gen.addText(`let `);
                     const refVarRange = gen.addCode(
-                        prop.text,
+                        propName,
                         {
                             start: prop.start,
                             end: prop.end,
@@ -209,7 +211,7 @@ export function generate(
                     gen.addText(` = (await import('vue')).unref(`);
                     if (binary.right) {
                         gen.addCode(
-                            `__VLS_refs_${prop.text}`,
+                            `__VLS_refs_${propName}`,
                             binary.right,
                             SourceMaps.Mode.Offset, // TODO
                             {
@@ -219,13 +221,13 @@ export function generate(
                         );
                     }
                     else {
-                        gen.addText(`__VLS_refs_${prop.text}`);
+                        gen.addText(`__VLS_refs_${propName}`);
                     }
-                    gen.addText(`); ${prop.text};\n`);
+                    gen.addText(`); ${propName};\n`);
 
                     gen.addText(`const `);
                     const dollarRefVarRange = gen.addCode(
-                        '$' + prop.text,
+                        '$' + propName,
                         {
                             start: prop.start,
                             end: prop.end,
@@ -241,7 +243,7 @@ export function generate(
                     gen.addText(` = (await import('vue')).ref(`);
                     if (binary.right) {
                         gen.addCode(
-                            `__VLS_refs_${prop.text}`,
+                            `__VLS_refs_${propName}`,
                             binary.right,
                             SourceMaps.Mode.Offset, // TODO
                             {
@@ -251,9 +253,9 @@ export function generate(
                         );
                     }
                     else {
-                        gen.addText(`__VLS_refs_${prop.text}`);
+                        gen.addText(`__VLS_refs_${propName}`);
                     }
-                    gen.addText(`); $${prop.text};\n`);
+                    gen.addText(`); $${propName};\n`);
 
                     teleports.push({
                         mode: SourceMaps.Mode.Offset,
@@ -360,7 +362,8 @@ export function generate(
             gen.addText(`setup() {\n`);
             gen.addText(`return {\n`);
             for (const expose of scriptSetupAst.returnVarNames) {
-                const varName = scriptSetup.content.substring(expose.start, expose.end);
+                const content = scriptSetup.content;
+                const varName = content.substring(expose.start, expose.end);
                 const templateSideRange = gen.addText(varName);
                 gen.addText(': ');
                 const scriptSideRange = expose.isImport
@@ -402,9 +405,10 @@ export function generate(
                 for (const binary of label.binarys) {
                     for (const refVar of binary.vars) {
                         if (refVar.inRoot) {
-                            const templateSideRange = gen.addText(refVar.text);
+                            const varName = scriptSetup.content.substring(refVar.start, refVar.end);
+                            const templateSideRange = gen.addText(varName);
                             gen.addText(': ');
-                            const scriptSideRange = gen.addText(refVar.text);
+                            const scriptSideRange = gen.addText(varName);
                             gen.addText(', \n');
 
                             teleports.push({

@@ -84,13 +84,13 @@ export function generate(
         if (!htmlGen)
             return;
 
-        const scriptSetupVars = scriptSetupAst.returnVarNames
-            .map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
+        const varNames = scriptSetupAst.returnVarNames.map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
+
         gen.addText('{\n');
-        for (const scriptSetupVar of scriptSetupVars) {
-            if (htmlGen.tags.has(scriptSetupVar) || htmlGen.tags.has(hyphenate(scriptSetupVar))) {
+        for (const varName of varNames) {
+            if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
                 // fix import components unused report
-                gen.addText(scriptSetupVar + ';\n');
+                gen.addText(varName + ';\n');
             }
         }
         gen.addText(htmlGen.text);

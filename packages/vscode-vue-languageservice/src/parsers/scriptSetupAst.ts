@@ -15,7 +15,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
             vars: {
                 isShortand: boolean,
                 inRoot: boolean,
-                text: string,
                 start: number,
                 end: number,
             }[],
@@ -220,7 +219,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 vars.push({
                     isShortand: false,
                     inRoot,
-                    text: _node.getText(sourceFile), // TODO: remove
                     ..._getStartEnd(_node),
                 });
             }
@@ -249,7 +247,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 vars.push({
                     isShortand: true,
                     inRoot,
-                    text: _node.name.getText(sourceFile), // TODO: remove
                     ..._getStartEnd(_node.name),
                 });
             }
