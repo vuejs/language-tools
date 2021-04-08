@@ -96,12 +96,16 @@ export function generate(html: string) {
 		else if (node.type === NodeTypes.IF) {
 			// v-if / v-else-if / v-else
 			for (let i = 0; i < node.branches.length; i++) {
+
 				const branch = node.branches[i];
-				switch (i) {
-					case 0: text += 'if'; break;
-					case node.branches.length - 1: text += 'else'; break;
-					default: text += 'else if'; break;
-				}
+
+				if (i === 0)
+					text += 'if';
+				else if (branch.condition)
+					text += 'else if';
+				else
+					text += 'else';
+
 				if (branch.condition?.type === NodeTypes.SIMPLE_EXPRESSION) {
 					text += ` (${branch.condition.content})`;
 				}

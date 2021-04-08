@@ -207,12 +207,16 @@ export function generate(
 		else if (node.type === NodeTypes.IF) {
 			// v-if / v-else-if / v-else
 			for (let i = 0; i < node.branches.length; i++) {
+
 				const branch = node.branches[i];
-				switch (i) {
-					case 0: tsCodeGen.addText('if'); break;
-					case node.branches.length - 1: tsCodeGen.addText('else'); break;
-					default: tsCodeGen.addText('else if'); break;
-				}
+
+				if (i === 0)
+					tsCodeGen.addText('if');
+				else if (branch.condition)
+					tsCodeGen.addText('else if');
+				else
+					tsCodeGen.addText('else');
+
 				if (branch.condition?.type === NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(` (`);
 					writeCode(
