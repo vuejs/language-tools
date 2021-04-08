@@ -1,29 +1,29 @@
-import type { TsApiRegisterOptions } from '../types';
+import { getWordStart, languageIdToSyntax } from '@volar/shared';
+import { transformCompletionItem, transformCompletionList } from '@volar/source-map';
+import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
+import type * as ts from 'typescript';
+import * as path from 'upath';
+import * as emmet from 'vscode-emmet-helper';
+import type { TextDocument } from 'vscode-html-languageservice';
+import * as html from 'vscode-html-languageservice';
 import {
-	Position,
 	CompletionItem,
-	CompletionList,
-	TextEdit,
 	CompletionItemKind,
+	CompletionList,
+	Position,
 	Range,
+	TextEdit
 } from 'vscode-languageserver-types';
 import { CompletionContext } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
 import { CompletionData } from '../types';
-import { transformCompletionItem } from '@volar/source-map';
-import { transformCompletionList } from '@volar/source-map';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
-import { languageIdToSyntax, getWordStart } from '@volar/shared';
-import * as html from 'vscode-html-languageservice';
 import * as languageServices from '../utils/languageServices';
-import * as emmet from 'vscode-emmet-helper';
 import * as getEmbeddedDocument from './embeddedDocument';
-import type * as ts from 'typescript';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
-	html: ['<', ':', '@'],
+	html: ['<', ':', '@', '.'/* Event Modifiers */],
 	css: ['.', '@'],
 };
 export const wordPatterns: { [lang: string]: RegExp } = {
@@ -32,7 +32,7 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
-export const vueTags = [
+export const vueTags: html.ITagData[] = [
 	{
 		name: 'template',
 		attributes: [
@@ -76,6 +76,19 @@ export const vueTags = [
 		],
 	},
 ];
+// https://v3.vuejs.org/api/directives.html#v-on
+export const eventModifiers: Record<string, string> = {
+	stop: 'call event.stopPropagation().',
+	prevent: 'call event.preventDefault().',
+	capture: 'add event listener in capture mode.',
+	self: 'only trigger handler if event was dispatched from this element.',
+	// {keyAlias}: 'only trigger handler on certain keys.',
+	once: 'trigger handler at most once.',
+	left: 'only trigger handler for left button mouse events.',
+	right: 'only trigger handler for right button mouse events.',
+	middle: 'only trigger handler for middle button mouse events.',
+	passive: 'attaches a DOM event with { passive: true }.',
+};
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
@@ -169,7 +182,6 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, CompletionItem>();
 				const globalAttributes: html.IAttributeData[] = [
-					// TODO: hardcode
 					{ name: 'v-if' },
 					{ name: 'v-else-if' },
 					{ name: 'v-else' },
@@ -282,6 +294,29 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
+
+					const replacement = getReplacement(htmlResult, sourceMap.mappedDocument);
+					if (replacement) {
+						const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
+						const hasExt = replacement.text.includes('.');
+						if (isEvent && hasExt) {
+							const noExtText = path.trimExt(replacement.text, [], 999);
+							for (const modifier in eventModifiers) {
+								const modifierDes = eventModifiers[modifier];
+								const newItem: html.CompletionItem = {
+									label: noExtText + '.' + modifier,
+									documentation: modifierDes,
+									textEdit: {
+										range: replacement.textEdit.range,
+										newText: noExtText + '.' + modifier,
+									},
+									kind: CompletionItemKind.EnumMember,
+								};
+								htmlResult.items.push(newItem);
+							}
+						}
+					}
+
 					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(htmlItem, sourceMap));
 					const htmlItemsMap = new Map<string, html.CompletionItem>();
 					for (const entry of htmlResult.items) {
@@ -403,6 +438,18 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					return emmetResult;
 				}
 			}
+		}
+	}
+}
+
+function getReplacement(list: html.CompletionList, doc: TextDocument) {
+	for (const item of list.items) {
+		if (item.textEdit && 'range' in item.textEdit) {
+			return {
+				item: item,
+				textEdit: item.textEdit,
+				text: doc.getText(item.textEdit.range)
+			};
 		}
 	}
 }
