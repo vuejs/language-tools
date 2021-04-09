@@ -304,7 +304,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 							for (const modifier in eventModifiers) {
 								const modifierDes = eventModifiers[modifier];
 								const newItem: html.CompletionItem = {
-									label: noExtText + '.' + modifier,
+									label: modifier,
+									filterText: noExtText + '.' + modifier,
 									documentation: modifierDes,
 									textEdit: {
 										range: replacement.textEdit.range,
