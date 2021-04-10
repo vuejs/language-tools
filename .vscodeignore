@@ -6,8 +6,8 @@
 **/*.flow
 .gitignore
 **/tsconfig.json
-**/tsconfig.base.json
-**/tsconfig.tsbuildinfo
+**/tsconfig.*.json
+**/*.tsbuildinfo
 **/tests/
 **/testCases/
 packages/
