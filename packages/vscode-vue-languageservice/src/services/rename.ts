@@ -8,7 +8,7 @@ import { RenameFile } from 'vscode-languageserver/node';
 import { DeleteFile } from 'vscode-languageserver/node';
 import { AnnotatedTextEdit } from 'vscode-languageserver/node';
 import { ResponseError } from 'vscode-languageserver/node';
-import { wordPatterns } from './completions';
+import { wordPatterns } from './completion';
 import { getWordStart } from '@volar/shared';
 import { TsMappingData } from '../utils/sourceMaps';
 

@@ -1,9 +1,9 @@
 import type * as html from 'vscode-html-languageservice';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { parsePugDocument } from './pugDocument';
-import { register as registerComplete } from './services/complete';
+import { register as registerComplete } from './services/completion';
 import { register as registerDocumentLinks } from './services/documentLinks';
-import { register as registerHighlights } from './services/highlights';
+import { register as registerHighlights } from './services/documentHighlight';
 import { register as registerHover } from './services/hover';
 import { register as registerScanner } from './services/scanner';
 import { register as registerSelectRanges } from './services/selectRanges';

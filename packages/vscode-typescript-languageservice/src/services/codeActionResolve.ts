@@ -4,7 +4,7 @@ import {
 } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
-import { Data } from './codeActions';
+import { Data } from './codeAction';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (codeAction: CodeAction) => {

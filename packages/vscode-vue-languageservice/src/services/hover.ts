@@ -1,7 +1,7 @@
 import type { Hover, LocationLink, Position } from 'vscode-languageserver/node';
 import { MarkupContent } from 'vscode-languageserver/node';
 import type { TsApiRegisterOptions } from '../types';
-import { register as registerFindDefinitions } from './definitions';
+import { register as registerFindDefinitions } from './definition';
 
 export function register({ mapper }: TsApiRegisterOptions) {
 

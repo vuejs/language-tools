@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as references from './references';
-import * as definitions from './definitions';
+import * as definitions from './definition';
 import type * as ts from 'typescript';
 
 export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
