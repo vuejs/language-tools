@@ -13,10 +13,10 @@
 	],
 	"references": [
 		{
-			"path": "../shared"
+			"path": "../shared/tsconfig.build.json"
 		},
 		{
-			"path": "../vscode-vue-languageservice"
+			"path": "../vscode-vue-languageservice/tsconfig.build.json"
 		},
 	],
 }

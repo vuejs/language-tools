@@ -1,16 +1,9 @@
 {
-	"extends": "./tsconfig.base.json",
-	"files": [],
-	"include": [],
-	"references": [
-		{
-			"path": "./packages/vscode-client"
-		},
-		{
-			"path": "./packages/vscode-server"
-		},
-		{
-			"path": "./packages/typescript-vue-plugin"
-		},
-	]
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true,
+    },
+    "include": [
+        "packages/*/src",
+    ],
 }

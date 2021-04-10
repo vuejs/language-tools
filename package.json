@@ -251,8 +251,8 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -b",
-		"watch": "tsc -b -w",
+		"compile": "tsc -b tsconfig.build.json",
+		"watch": "tsc -b tsconfig.build.json -w",
 		"pack": "yarn && vsce package --yarn",
 		"publish": "yarn && vsce publish --yarn",
 		"test-install": "cd packages/vscode-vue-languageservice/testCases && yarn",

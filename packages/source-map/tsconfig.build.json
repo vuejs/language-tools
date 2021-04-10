@@ -13,7 +13,7 @@
 	],
 	"references": [
 		{
-			"path": "../shared"
+			"path": "../shared/tsconfig.build.json"
 		},
 	],
 }
