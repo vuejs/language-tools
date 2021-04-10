@@ -1,21 +1,21 @@
+import { transformCompletionList } from '@volar/source-map';
+import type * as html from 'vscode-html-languageservice';
 import type { Position } from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
-import type * as html from 'vscode-html-languageservice';
-import { transformCompletionList } from '@volar/source-map';
 
-export function register(htmlLanguageService: html.LanguageService) {
-    return (pugDocument: PugDocument, position: Position, options?: html.CompletionConfiguration | undefined) => {
+export function register(htmlLs: html.LanguageService) {
+    return (pugDoc: PugDocument, pos: Position, options?: html.CompletionConfiguration | undefined) => {
 
-        const htmlRange = pugDocument.sourceMap.getMappedRange(position);
+        const htmlRange = pugDoc.sourceMap.getMappedRange(pos);
         if (!htmlRange) return;
 
-        const htmlComplete = htmlLanguageService.doComplete(
-            pugDocument.sourceMap.mappedDocument,
+        const htmlComplete = htmlLs.doComplete(
+            pugDoc.sourceMap.mappedDocument,
             htmlRange.start,
-            pugDocument.htmlDocument,
+            pugDoc.htmlDocument,
             options,
         );
 
-        return transformCompletionList(htmlComplete, pugDocument.sourceMap);
+        return transformCompletionList(htmlComplete, pugDoc.sourceMap);
     }
 }

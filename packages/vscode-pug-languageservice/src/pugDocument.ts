@@ -1,32 +1,38 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-import * as SourceMaps from '@volar/source-map';
-import * as html from 'vscode-html-languageservice';
+import * as SourceMap from '@volar/source-map';
 import * as path from 'upath';
+import * as html from 'vscode-html-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
-const lex = require('pug-lexer');
-const parse = require('pug-parser');
+const pugLex = require('pug-lexer');
+const pugParser = require('pug-parser');
 
 export type PugDocument = ReturnType<typeof parsePugDocument>;
 
-export function parsePugDocument(document: TextDocument, htmlLanguageService: html.LanguageService) {
+export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.LanguageService) {
 
-    const fsPath = uriToFsPath(document.uri);
-    const filename = path.basename(fsPath);
-    const src = document.getText();
-    const codeGen = SourceMaps.createScriptGenerator<undefined>();
-    let error: { code: string, msg: string, line: number, column: number, filename: string } | undefined;
+    const fsPath = uriToFsPath(pugTextDoc.uri);
+    const fileName = path.basename(fsPath);
+    const pugCode = pugTextDoc.getText();
+    const codeGen = SourceMap.createScriptGenerator<undefined>();
+    let error: {
+        code: string,
+        msg: string,
+        line: number,
+        column: number,
+        filename: string,
+    } | undefined;
 
     try {
-        const tokens = lex(src, { filename });
-        const ast = parse(tokens, { filename, src });
+        const tokens = pugLex(pugCode, { filename: fileName });
+        const ast = pugParser(tokens, { filename: fileName, src: pugCode });
         visitNode(ast, undefined);
         codeGen.addMapping2({
             data: undefined,
-            mode: SourceMaps.Mode.Totally,
+            mode: SourceMap.Mode.Totally,
             sourceRange: {
-                start: src.trimEnd().length,
-                end: src.trimEnd().length,
+                start: pugCode.trimEnd().length,
+                end: pugCode.trimEnd().length,
             },
             mappedRange: {
                 start: codeGen.getText().length,
@@ -43,18 +49,19 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
     };
 
     const htmlCode = codeGen.getText();
-    const htmlDoc = TextDocument.create(document.uri + '.html', 'html', document.version, htmlCode);
-    const sourceMap = new SourceMaps.SourceMap<undefined>(document, htmlDoc);
+    const htmlTextDoc = TextDocument.create(pugTextDoc.uri + '.html', 'html', pugTextDoc.version, htmlCode);
+    const sourceMap = new SourceMap.SourceMap<undefined>(pugTextDoc, htmlTextDoc);
     for (const mapping of codeGen.getMappings()) {
         sourceMap.add(mapping);
     }
-    const htmlDocument = htmlLanguageService.parseHTMLDocument(htmlDoc);
 
     return {
-        pug: src,
-        html: htmlCode,
+        pugTextDocument: pugTextDoc,
+        htmlTextDocument: htmlTextDoc,
+        htmlDocument: htmlLs.parseHTMLDocument(htmlTextDoc),
+        pugCode,
+        htmlCode,
         sourceMap,
-        htmlDocument,
         error,
     };
 
@@ -66,47 +73,47 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
         }
         else if (node.type === 'Tag') {
             const selfClosing = node.block.nodes.length === 0;
-            writeStartTag(node, selfClosing);
+            addStartTag(node, selfClosing);
             if (!selfClosing) {
                 visitNode(node.block, next);
-                writeEndTag(node, next);
+                addEndTag(node, next);
             }
         }
         else if (node.type === 'Text') {
             codeGen.addCode(
                 node.val,
-                getPugStartEnd(node.line, node.column, node.val.length),
-                SourceMaps.Mode.Offset,
+                getDocRange(node.line, node.column, node.val.length),
+                SourceMap.Mode.Offset,
                 undefined,
             );
         }
     }
-    function writeStartTag(node: TagNode, selfClosing: boolean) {
+    function addStartTag(node: TagNode, selfClosing: boolean) {
         codeGen.addMapping2({
             data: undefined,
-            mode: SourceMaps.Mode.Totally,
-            sourceRange: getPugStartEnd(node.line, node.column, 0),
+            mode: SourceMap.Mode.Totally,
+            sourceRange: getDocRange(node.line, node.column, 0),
             mappedRange: {
                 start: codeGen.getText().length,
                 end: codeGen.getText().length,
             },
         });
         codeGen.addText('<');
-        const tagRange = getPugStartEnd(node.line, node.column, node.name.length);
-        if (src.substring(tagRange.start, tagRange.end) === node.name) {
+        const tagRange = getDocRange(node.line, node.column, node.name.length);
+        if (pugCode.substring(tagRange.start, tagRange.end) === node.name) {
             codeGen.addCode(
                 node.name,
                 tagRange,
-                SourceMaps.Mode.Offset,
+                SourceMap.Mode.Offset,
                 undefined,
             );
         }
         else {
             codeGen.addText(node.name);
         }
-        writeClassesOrStyles(node.attrs, 'class');
+        addClassesOrStyles(node.attrs, 'class');
         for (const attr of node.attrs.filter(attr => attr.name !== 'class')) {
-            writeAttr(attr);
+            addAttr(attr);
         }
         if (selfClosing) {
             codeGen.addText(' />');
@@ -115,13 +122,13 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             codeGen.addText('>');
         }
     }
-    function writeAttr(attr: TagNode['attrs'][0]) {
+    function addAttr(attr: TagNode['attrs'][number]) {
         codeGen.addText(' ');
         if (attr.mustEscape) {
             codeGen.addCode(
                 attr.name,
-                getPugStartEnd(attr.line, attr.column, attr.name.length),
-                SourceMaps.Mode.Offset,
+                getDocRange(attr.line, attr.column, attr.name.length),
+                SourceMap.Mode.Offset,
                 undefined
             );
         }
@@ -138,20 +145,44 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
             val = val.replaceAll(' \\\n', '//\n'); // TODO: required a space for now
             codeGen.addCode(
                 val,
-                getPugStartEnd(attr.line, attr.column, val.length, escapeLength),
-                SourceMaps.Mode.Offset,
+                getDocRange(attr.line, attr.column, val.length, escapeLength),
+                SourceMap.Mode.Offset,
                 undefined
             );
         }
     }
-    function writeClassesOrStyles(classes: TagNode['attrs'], attrName: string) {
+    function addEndTag(node: TagNode, next: Node | undefined) {
+        let nextStart = pugCode.length;
+        if (next) {
+            if (next.type === 'Block') {
+                nextStart = getDocOffset(next.line, 1);
+            }
+            else {
+                nextStart = getDocOffset(next.line, next.column);
+            }
+        }
+        codeGen.addMapping2({
+            data: undefined,
+            mode: SourceMap.Mode.Totally,
+            sourceRange: {
+                start: nextStart,
+                end: nextStart,
+            },
+            mappedRange: {
+                start: codeGen.getText().length,
+                end: codeGen.getText().length,
+            },
+        })
+        codeGen.addText(`</${node.name}>`);
+    }
+    function addClassesOrStyles(classes: TagNode['attrs'], attrName: string) {
         codeGen.addText(' ');
         for (const attr of classes) {
             if (attr.name === attrName && attr.mustEscape) {
                 codeGen.addMapping2({
                     data: undefined,
-                    mode: SourceMaps.Mode.Offset,
-                    sourceRange: getPugStartEnd(attr.line, attr.column, attrName.length),
+                    mode: SourceMap.Mode.Offset,
+                    sourceRange: getDocRange(attr.line, attr.column, attrName.length),
                     mappedRange: {
                         start: codeGen.getText().length,
                         end: codeGen.getText().length + attrName.length,
@@ -168,43 +199,19 @@ export function parsePugDocument(document: TextDocument, htmlLanguageService: ht
                 const escapeLength = attr.mustEscape ? `${attrName}=`.length : 0;
                 codeGen.addCode(
                     attr.val.substr(1, attr.val.length - 2), // remove "
-                    getPugStartEnd(attr.line, attr.column + 1, attr.val.length - 2, escapeLength),
-                    SourceMaps.Mode.Offset,
+                    getDocRange(attr.line, attr.column + 1, attr.val.length - 2, escapeLength),
+                    SourceMap.Mode.Offset,
                     undefined
                 );
             }
         }
         codeGen.addText('"');
     }
-    function writeEndTag(node: TagNode, next: Node | undefined) {
-        let nextStart = src.length;
-        if (next) {
-            if (next.type === 'Block') {
-                nextStart = getPugOffset(next.line, 1);
-            }
-            else {
-                nextStart = getPugOffset(next.line, next.column);
-            }
-        }
-        codeGen.addMapping2({
-            data: undefined,
-            mode: SourceMaps.Mode.Totally,
-            sourceRange: {
-                start: nextStart,
-                end: nextStart,
-            },
-            mappedRange: {
-                start: codeGen.getText().length,
-                end: codeGen.getText().length,
-            },
-        })
-        codeGen.addText(`</${node.name}>`);
+    function getDocOffset(pugLine: number, pugColumn: number) {
+        return pugTextDoc.offsetAt({ line: pugLine - 1, character: pugColumn - 1 });
     }
-    function getPugOffset(line: number, column: number, offset = 0) {
-        return document.offsetAt({ line: line - 1, character: column - 1 }) + offset;
-    }
-    function getPugStartEnd(line: number, column: number, length: number, offset = 0) {
-        const start = document.offsetAt({ line: line - 1, character: column - 1 }) + offset;
+    function getDocRange(pugLine: number, pugColumn: number, length: number, offset = 0) {
+        const start = pugTextDoc.offsetAt({ line: pugLine - 1, character: pugColumn - 1 }) + offset;
         const end = start + length;
         return {
             start,
@@ -220,6 +227,7 @@ type BlockNode = {
     nodes: Node[],
     line: number,
 }
+
 type TagNode = {
     type: 'Tag',
     name: string,

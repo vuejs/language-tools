@@ -1,8 +1,7 @@
+import { InsertReplaceEdit, TextEdit } from 'vscode-languageserver/node';
 import type { SourceMap } from '..';
-import { InsertReplaceEdit } from 'vscode-languageserver/node';
-import { TextEdit } from 'vscode-languageserver/node';
 
-export function transform(textEdit: TextEdit | InsertReplaceEdit, sourceMap: SourceMap): TextEdit | InsertReplaceEdit | undefined {
+export function transform<T extends TextEdit | InsertReplaceEdit>(textEdit: T, sourceMap: SourceMap): T | undefined {
     if (TextEdit.is(textEdit)) {
 
         const range = sourceMap.getSourceRange(textEdit.range.start, textEdit.range.end);

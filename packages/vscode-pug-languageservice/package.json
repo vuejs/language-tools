@@ -8,6 +8,7 @@
 	},
 	"dependencies": {
 		"vscode-languageserver": "next",
+		"pug-beautify": "latest",
 		"pug-lexer": "latest",
 		"pug-parser": "latest"
 	}

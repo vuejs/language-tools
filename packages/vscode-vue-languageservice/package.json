@@ -19,7 +19,6 @@
 		"upath": "latest",
 		"jsonc-parser": "latest",
 		"prettier": "^1.16.4",
-		"pug-beautify": "latest",
 		"vscode-emmet-helper": "latest"
 	}
 }

@@ -1,15 +1,15 @@
-import type { PugDocument } from '../pugDocument';
-import type * as html from 'vscode-html-languageservice';
 import { transformLocations } from '@volar/source-map';
+import type * as html from 'vscode-html-languageservice';
+import type { PugDocument } from '../pugDocument';
 
-export function register(htmlLanguageService: html.LanguageService) {
-    return (pugDocument: PugDocument, documentContext: html.DocumentContext) => {
+export function register(htmlLs: html.LanguageService) {
+    return (pugDoc: PugDocument, docContext: html.DocumentContext) => {
 
-        const htmlResult = htmlLanguageService.findDocumentLinks(
-            pugDocument.sourceMap.mappedDocument,
-            documentContext,
+        const htmlResult = htmlLs.findDocumentLinks(
+            pugDoc.sourceMap.mappedDocument,
+            docContext,
         );
 
-        return transformLocations(htmlResult, pugDocument.sourceMap);
+        return transformLocations(htmlResult, pugDoc.sourceMap);
     }
 }

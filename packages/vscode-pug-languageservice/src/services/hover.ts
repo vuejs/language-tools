@@ -1,21 +1,21 @@
+import { transformHover } from '@volar/source-map';
+import type * as html from 'vscode-html-languageservice';
 import type { Position } from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
-import type * as html from 'vscode-html-languageservice';
-import { transformHover } from '@volar/source-map';
 
-export function register(htmlLanguageService: html.LanguageService) {
-    return (pugDocument: PugDocument, position: Position) => {
+export function register(htmlLs: html.LanguageService) {
+    return (docDoc: PugDocument, pos: Position) => {
 
-        const htmlRange = pugDocument.sourceMap.getMappedRange(position);
+        const htmlRange = docDoc.sourceMap.getMappedRange(pos);
         if (!htmlRange) return;
 
-        const htmlResult = htmlLanguageService.doHover(
-            pugDocument.sourceMap.mappedDocument,
+        const htmlResult = htmlLs.doHover(
+            docDoc.sourceMap.mappedDocument,
             htmlRange.start,
-            pugDocument.htmlDocument,
+            docDoc.htmlDocument,
         );
         if (!htmlResult) return;
 
-        return transformHover(htmlResult, pugDocument.sourceMap);
+        return transformHover(htmlResult, docDoc.sourceMap);
     }
 }

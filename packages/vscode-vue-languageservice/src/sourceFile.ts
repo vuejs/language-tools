@@ -81,7 +81,7 @@ export function createSourceFile(
 		if (virtualTemplateRaw.pugDocument.value) {
 			const pugDoc = virtualTemplateRaw.pugDocument.value;
 			return {
-				html: pugDoc.html,
+				html: pugDoc.htmlCode,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
 					const pugRange = pugDoc.sourceMap.getSourceRange2(htmlStart, htmlEnd);
 					if (pugRange) {

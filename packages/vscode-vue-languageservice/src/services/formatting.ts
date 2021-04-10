@@ -1,20 +1,21 @@
-import {
-	FormattingOptions,
-	TextEdit,
-	Range,
-} from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createSourceFile } from '../sourceFile';
-import { getCheapTsService2 } from '../utils/languageServices';
-import * as prettier from 'prettier';
 import * as prettyhtml from '@starptech/prettyhtml';
 import { notEmpty } from '@volar/shared';
+import { transformTextEdit } from '@volar/source-map';
+import * as prettier from 'prettier';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import {
+	FormattingOptions,
+	Range,
+	TextEdit
+} from 'vscode-languageserver/node';
+import { createSourceFile } from '../sourceFile';
 import type { HtmlApiRegisterOptions } from '../types';
-const pugBeautify = require('pug-beautify');
+import * as sharedServices from '../utils/languageServices';
 
 export function register({ ts }: HtmlApiRegisterOptions) {
 	return (_document: TextDocument, options: FormattingOptions) => {
-		const tsService2 = getCheapTsService2(ts, _document);
+
+		const tsService2 = sharedServices.getCheapTsService2(ts, _document);
 		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText()); // TODO: high cost
 
 		const sourceFile = createSourceFile(document, tsService2.service, ts, 'format');
@@ -156,21 +157,13 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			return result;
 		}
 		function getPugFormattingEdits() {
-			const result: TextEdit[] = [];
+			let result: TextEdit[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				for (const maped of sourceMap) {
-					let newPug = pugBeautify(sourceMap.mappedDocument.getText(), {
-						tab_size: options.tabSize,
-						fill_tab: !options.insertSpaces,
-					});
-					newPug = '\n' + newPug.trim() + '\n';
-					const vueRange = {
-						start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-						end: sourceMap.sourceDocument.positionAt(maped.sourceRange.end),
-					};
-					const textEdit = TextEdit.replace(vueRange, newPug);
-					result.push(textEdit);
-				}
+				const pugEdits = sharedServices.pug.format(sourceMap.pugDocument, options);
+				const vueEdits = pugEdits
+					.map(pugEdit => transformTextEdit(pugEdit, sourceMap))
+					.filter(notEmpty);
+				result = result.concat(vueEdits);
 			}
 			return result;
 		}
@@ -184,7 +177,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const cheapTs = getCheapTsService2(ts, sourceMap.mappedDocument);
+				const cheapTs = sharedServices.getCheapTsService2(ts, sourceMap.mappedDocument);
 				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
