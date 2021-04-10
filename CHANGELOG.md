@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.23.7
+
+- feat: improve type-checking of dynamic slot
+- chore: simplify `v-on` modifiers completion label
+
 ## 0.23.6
 
 - feat: event modifiers auto-complete [#126](https://github.com/johnsoncodehk/volar/issues/126)
