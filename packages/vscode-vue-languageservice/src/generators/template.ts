@@ -93,10 +93,11 @@ export function generate(
 		tsCodeGen.addText(`}\n`);
 	}
 
-	tsCodeGen.addText(`export default {\n`);
+	tsCodeGen.addText(`declare const __VLS_slots:\n`);
 	for (const [exp, slot] of slotExps) {
-		tsCodeGen.addText(`...{} as __VLS_SlotExpMap<typeof ${exp}, typeof ${slot.varName}>,\n`);
+		tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
 	}
+	tsCodeGen.addText(`{\n`);
 	for (const [name, slot] of slots) {
 		writeObjectProperty(
 			name,
@@ -106,9 +107,10 @@ export function generate(
 				capabilities: capabilitiesSet.slotNameExport,
 			},
 		);
-		tsCodeGen.addText(`: ${slot.varName},\n`);
+		tsCodeGen.addText(`: typeof ${slot.varName},\n`);
 	}
 	tsCodeGen.addText(`};\n`);
+	tsCodeGen.addText(`export default __VLS_slots;\n`);
 
 	return {
 		text: tsCodeGen.getText(),
@@ -1141,6 +1143,7 @@ export function generate(
 				prop.type === NodeTypes.DIRECTIVE
 				&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
 				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg.content !== 'name'
 			) {
 				writeObjectProperty(
 					prop.arg.content,
