@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
 		"target": "es2019",
-		"lib": ["ESNext"],
+		"lib": [
+			"ES2020"
+		],
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"sourceMap": true,
@@ -10,7 +12,9 @@
 		"strict": true,
 		"baseUrl": "./",
 		"paths": {
-			"@volar/*": ["packages/*/src"]
+			"@volar/*": [
+				"packages/*/src"
+			]
 		},
 	},
 }
