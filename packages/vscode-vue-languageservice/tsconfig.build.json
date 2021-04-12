@@ -22,6 +22,9 @@
 			"path": "../source-map/tsconfig.build.json"
 		},
 		{
+			"path": "../transforms/tsconfig.build.json"
+		},
+		{
 			"path": "../vscode-pug-languageservice/tsconfig.build.json"
 		},
 		{

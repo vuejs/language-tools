@@ -1,5 +1,5 @@
 import { getWordStart, languageIdToSyntax } from '@volar/shared';
-import { transformCompletionItem, transformCompletionList } from '@volar/source-map';
+import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
 import * as path from 'upath';
@@ -154,7 +154,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						});
 					}
 					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
-						const vueItem = transformCompletionItem(tsItem, sourceMap);
+						const vueItem = transformCompletionItem(
+							tsItem,
+							tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
+						);
 						const data: CompletionData = {
 							uri: uri,
 							docUri: sourceMap.mappedDocument.uri,
@@ -318,7 +321,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						}
 					}
 
-					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(htmlItem, sourceMap));
+					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(
+						htmlItem,
+						htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+					));
 					const htmlItemsMap = new Map<string, html.CompletionItem>();
 					for (const entry of htmlResult.items) {
 						htmlItemsMap.set(entry.label, entry);
@@ -399,7 +405,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {
 						const newText = cssItem.textEdit?.newText || cssItem.insertText || cssItem.label;
 						cssItem.textEdit = TextEdit.replace(wordRange, newText);
-						const vueItem = transformCompletionItem(cssItem, sourceMap);
+						const vueItem = transformCompletionItem(
+							cssItem,
+							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end),
+						);
 						vueItem.data = data;
 						return vueItem;
 					}
@@ -434,7 +443,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					const doc = embededDoc.document ?? sourceFile.getTextDocument();
 					const emmetResult = emmet.doComplete(doc, embededDoc.range.start, syntax, emmetConfig);
 					if (emmetResult && embededDoc.sourceMap) {
-						return transformCompletionList(emmetResult, embededDoc.sourceMap);
+						return transformCompletionList(
+							emmetResult,
+							emmetRange => embededDoc.sourceMap!.getSourceRange(emmetRange.start, emmetRange.end),
+						);
 					}
 					return emmetResult;
 				}

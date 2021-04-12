@@ -1,12 +1,5 @@
-import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-
-export { transform as transformCompletionItem } from './transforms/completionItem';
-export { transform as transformCompletionList } from './transforms/completionList';
-export { transform as transformHover } from './transforms/hover';
-export { transform as transformLocations } from './transforms/locationsLike';
-export { transform as transformLocation } from './transforms/locationLike';
-export { transform as transformTextEdit } from './transforms/textEdit';
+import type { Position } from 'vscode-languageserver/node';
 
 export interface Range {
 	start: number,

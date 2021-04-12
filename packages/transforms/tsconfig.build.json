@@ -9,17 +9,11 @@
 	],
 	"exclude": [
 		"node_modules",
-		".vscode-test",
+		".vscode-test"
 	],
 	"references": [
 		{
 			"path": "../shared/tsconfig.build.json"
-		},
-		{
-			"path": "../source-map/tsconfig.build.json"
-		},
-		{
-			"path": "../transforms/tsconfig.build.json"
 		},
 	],
 }

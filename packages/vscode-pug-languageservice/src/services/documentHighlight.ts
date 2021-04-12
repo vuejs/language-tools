@@ -1,4 +1,4 @@
-import { transformLocations } from '@volar/source-map';
+import { transformLocations } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
 import type { Position } from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
@@ -15,6 +15,9 @@ export function register(htmlLs: html.LanguageService) {
             pugDoc.htmlDocument,
         );
 
-        return transformLocations(htmlResult, pugDoc.sourceMap);
+        return transformLocations(
+            htmlResult,
+            htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+        );
     }
 }

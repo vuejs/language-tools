@@ -1,4 +1,4 @@
-import { transformCompletionList } from '@volar/source-map';
+import { transformCompletionList } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
 import type { Position } from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
@@ -16,6 +16,9 @@ export function register(htmlLs: html.LanguageService) {
             options,
         );
 
-        return transformCompletionList(htmlComplete, pugDoc.sourceMap);
+        return transformCompletionList(
+            htmlComplete,
+            htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+        );
     }
 }

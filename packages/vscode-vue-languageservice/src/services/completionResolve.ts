@@ -1,9 +1,8 @@
-import type { TsApiRegisterOptions } from '../types';
+import { transformCompletionItem } from '@volar/transforms';
 import { CompletionItem, MarkupKind } from 'vscode-languageserver/node';
-import { CompletionData, TsCompletionData, HtmlCompletionData } from '../types';
 import { SourceFile } from '../sourceFile';
-import { transformLocations } from '@volar/source-map';
-import { transformCompletionItem } from '@volar/source-map';
+import type { TsApiRegisterOptions } from '../types';
+import { CompletionData, HtmlCompletionData, TsCompletionData } from '../types';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (item: CompletionItem, newOffset?: number) => {
@@ -34,7 +33,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				}
 
 				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem, newTsOffset);
-				const newVueItem = transformCompletionItem(data.tsItem, sourceMap);
+				const newVueItem = transformCompletionItem(
+					data.tsItem,
+					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
+				);
 				newVueItem.data = data;
 				// TODO: this is a patch for import ts file icon
 				if (newVueItem.detail !== data.tsItem.detail + '.ts') {

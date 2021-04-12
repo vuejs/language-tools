@@ -1,6 +1,6 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import { notEmpty } from '@volar/shared';
-import { transformTextEdit } from '@volar/source-map';
+import { transformTextEdit } from '@volar/transforms';
 import * as prettier from 'prettier';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -161,7 +161,10 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				const pugEdits = sharedServices.pug.format(sourceMap.pugDocument, options);
 				const vueEdits = pugEdits
-					.map(pugEdit => transformTextEdit(pugEdit, sourceMap))
+					.map(pugEdit => transformTextEdit(
+						pugEdit,
+						pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end),
+					))
 					.filter(notEmpty);
 				result = result.concat(vueEdits);
 			}
