@@ -55,8 +55,9 @@ export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 			codeActions: boolean,
 			organizeImports: boolean,
 		},
+		mappings?: SourceMaps.Mapping<TsMappingData>[],
 	) {
-		super(sourceDocument, mappedDocument);
+		super(sourceDocument, mappedDocument, mappings);
 	}
 }
 
@@ -72,8 +73,9 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 			foldingRanges: boolean,
 			formatting: boolean,
 		},
+		mappings?: SourceMaps.Mapping<undefined>[],
 	) {
-		super(sourceDocument, mappedDocument);
+		super(sourceDocument, mappedDocument, mappings);
 	}
 }
 
@@ -83,8 +85,9 @@ export class HtmlSourceMap extends SourceMaps.SourceMap<undefined> {
 		public mappedDocument: TextDocument,
 		public htmlDocument: HTMLDocument,
 		public language: 'html' = 'html',
+		mappings?: SourceMaps.Mapping<undefined>[],
 	) {
-		super(sourceDocument, mappedDocument);
+		super(sourceDocument, mappedDocument, mappings);
 	}
 }
 

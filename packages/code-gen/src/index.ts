@@ -9,13 +9,28 @@ export function createCodeGen<T = undefined>() {
 
 	return {
 		getText: () => text,
-		getMappings: () => mappings,
+		getMappings,
 		addText,
 		addCode,
 		addMapping,
 		addMapping2,
 	}
 
+	function getMappings(sourceRangeParser?: (data: T, range: Range) => Range): Mapping<T>[] {
+		if (!sourceRangeParser) {
+			return mappings;
+		}
+		return mappings.map(mapping => ({
+			...mapping,
+			sourceRange: sourceRangeParser(mapping.data, mapping.sourceRange),
+			additional: mapping.additional
+				? mapping.additional.map(extraMapping => ({
+					...extraMapping,
+					sourceRange: sourceRangeParser(mapping.data, extraMapping.sourceRange),
+				}))
+				: undefined,
+		}));
+	}
 	function addCode(str: string, sourceRange: Range, mode: Mode, data: T) {
 		const targetRange = addText(str);
 		addMapping2({ mappedRange: targetRange, sourceRange, mode, data });

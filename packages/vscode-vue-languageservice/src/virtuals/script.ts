@@ -2,11 +2,11 @@ import type { IDescriptor } from '../types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { TsSourceMap, TeleportSourceMap } from '../utils/sourceMaps';
+import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
 import { parse as parseScriptAst } from '../parsers/scriptAst';
 import { parse as parseScriptSetupAst } from '../parsers/scriptSetupAst';
 import { generate as genScript } from '../generators/script';
-import { generate as genScriptSugg } from '../generators/script_suggestion';
+import { generate as genScriptSuggestion } from '../generators/script_suggestion';
 import * as templateGen from '../generators/template_scriptSetup';
 
 export function useScriptSetupGen(
@@ -30,7 +30,7 @@ export function useScriptSetupGen(
 			? parseScriptSetupAst(ts, scriptSetup.value.content)
 			: undefined
 	);
-	const generate = computed(() =>
+	const codeGen = computed(() =>
 		genScript(
 			script.value,
 			scriptSetup.value,
@@ -43,8 +43,8 @@ export function useScriptSetupGen(
 			return templateGen.generate(html.value);
 		}
 	})
-	const generateForSuggestion = computed(() =>
-		genScriptSugg(
+	const suggestionCodeGen = computed(() =>
+		genScriptSuggestion(
 			script.value,
 			scriptSetup.value,
 			scriptSetupAst.value,
@@ -57,25 +57,25 @@ export function useScriptSetupGen(
 				getValidScriptSyntax('js')
 	});
 	const textDocument = computed(() => {
-		if (!generate.value)
+		if (!codeGen.value)
 			return;
 
 		return TextDocument.create(
 			`${uri}.__VLS_script.${lang.value}`,
 			syntaxToLanguageId(lang.value),
 			version++,
-			generate.value.code,
+			codeGen.value.getText(),
 		);
 	});
 	const textDocumentForSuggestion = computed(() => {
-		if (!generateForSuggestion.value)
+		if (!suggestionCodeGen.value)
 			return;
 
 		return TextDocument.create(
 			`${uri}.__VLS_script.suggestion.${lang.value}`,
 			syntaxToLanguageId(lang.value),
 			version++,
-			generateForSuggestion.value.code,
+			suggestionCodeGen.value.getText(),
 		);
 	});
 	const textDocumentForTemplate = computed(() => {
@@ -94,7 +94,7 @@ export function useScriptSetupGen(
 		);
 	});
 	const sourceMap = computed(() => {
-		if (!generate.value)
+		if (!codeGen.value)
 			return;
 		if (!textDocument.value)
 			return;
@@ -110,46 +110,13 @@ export function useScriptSetupGen(
 				codeActions: true,
 				organizeImports: !script.value?.src && !scriptSetup.value,
 			},
+			codeGen.value.getMappings(parseMappingSourceRange),
 		);
-
-		for (const mapping of generate.value.mappings) {
-			if (mapping.data.vueTag === 'scriptSrc' && script.value?.src) {
-				const vueStart = script.value.content.length
-					? vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src)
-					: (vueDoc.value.getText().substring(script.value.loc.start).indexOf(script.value.src) + script.value.loc.start); // TODO: don't use indexOf()
-				const vueEnd = vueStart + script.value.src.length;
-				sourceMap.add({
-					...mapping,
-					sourceRange: {
-						start: vueStart - 1,
-						end: vueEnd + 1,
-					},
-				});
-			}
-			else if (mapping.data.vueTag === 'script' && script.value) {
-				sourceMap.add({
-					...mapping,
-					sourceRange: {
-						start: script.value.loc.start + mapping.sourceRange.start,
-						end: script.value.loc.start + mapping.sourceRange.end,
-					},
-				});
-			}
-			else if (mapping.data.vueTag === 'scriptSetup' && scriptSetup.value) {
-				sourceMap.add({
-					...mapping,
-					sourceRange: {
-						start: scriptSetup.value.loc.start + mapping.sourceRange.start,
-						end: scriptSetup.value.loc.start + mapping.sourceRange.end,
-					},
-				});
-			}
-		}
 
 		return sourceMap;
 	});
 	const sourceMapForSuggestion = computed(() => {
-		if (!generateForSuggestion.value)
+		if (!suggestionCodeGen.value)
 			return;
 		if (!textDocumentForSuggestion.value)
 			return;
@@ -165,28 +132,8 @@ export function useScriptSetupGen(
 				codeActions: true,
 				organizeImports: true,
 			},
+			suggestionCodeGen.value.getMappings(parseMappingSourceRange),
 		);
-
-		for (const mapping of generateForSuggestion.value.mappings) {
-			if (mapping.data.vueTag === 'script' && script.value) {
-				sourceMap.add({
-					...mapping,
-					sourceRange: {
-						start: script.value.loc.start + mapping.sourceRange.start,
-						end: script.value.loc.start + mapping.sourceRange.end,
-					},
-				});
-			}
-			else if (mapping.data.vueTag === 'scriptSetup' && scriptSetup.value) {
-				sourceMap.add({
-					...mapping,
-					sourceRange: {
-						start: scriptSetup.value.loc.start + mapping.sourceRange.start,
-						end: scriptSetup.value.loc.start + mapping.sourceRange.end,
-					},
-				});
-			}
-		}
 
 		return sourceMap;
 	});
@@ -230,11 +177,11 @@ export function useScriptSetupGen(
 		const doc = textDocumentForTemplate.value ?? textDocument.value;
 		if (!doc)
 			return;
-		if (!generate.value)
+		if (!codeGen.value)
 			return;
 
 		const sourceMap = new TeleportSourceMap(doc);
-		for (const teleport of generate.value.teleports) {
+		for (const teleport of codeGen.value.teleports) {
 			sourceMap.add(teleport);
 		}
 
@@ -251,4 +198,32 @@ export function useScriptSetupGen(
 		sourceMapForTemplate,
 		teleportSourceMap,
 	};
+
+	function parseMappingSourceRange(data: TsMappingData, sourceRange: Range) {
+		if (data.vueTag === 'scriptSrc' && script.value?.src) {
+			const vueStart = script.value.content.length
+				? vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src)
+				: (vueDoc.value.getText().substring(script.value.loc.start).indexOf(script.value.src) + script.value.loc.start); // TODO: don't use indexOf()
+			const vueEnd = vueStart + script.value.src.length;
+			return {
+				start: vueStart - 1,
+				end: vueEnd + 1,
+			};
+		}
+		else if (data.vueTag === 'script' && script.value) {
+			return {
+				start: script.value.loc.start + sourceRange.start,
+				end: script.value.loc.start + sourceRange.end,
+			};
+		}
+		else if (data.vueTag === 'scriptSetup' && scriptSetup.value) {
+			return {
+				start: scriptSetup.value.loc.start + sourceRange.start,
+				end: scriptSetup.value.loc.start + sourceRange.end,
+			};
+		}
+		else {
+			return sourceRange;
+		}
+	}
 }

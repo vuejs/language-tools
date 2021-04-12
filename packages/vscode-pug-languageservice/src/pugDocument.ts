@@ -51,10 +51,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 
     const htmlCode = codeGen.getText();
     const htmlTextDoc = TextDocument.create(pugTextDoc.uri + '.html', 'html', pugTextDoc.version, htmlCode);
-    const sourceMap = new SourceMap.SourceMap<undefined>(pugTextDoc, htmlTextDoc);
-    for (const mapping of codeGen.getMappings()) {
-        sourceMap.add(mapping);
-    }
+    const sourceMap = new SourceMap.SourceMap(pugTextDoc, htmlTextDoc, codeGen.getMappings());
 
     return {
         pugTextDocument: pugTextDoc,

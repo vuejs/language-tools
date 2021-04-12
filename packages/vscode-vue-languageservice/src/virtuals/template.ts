@@ -1,7 +1,5 @@
-import { createCodeGen } from '@volar/code-gen';
 import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
-import { hyphenate } from '@vue/shared';
 import * as upath from 'upath';
 import * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -38,7 +36,7 @@ export function useTemplateScript(
 	const vueFileName = upath.basename(uriToFsPath(_vueDoc.uri));
 	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module)));
 	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped)));
-	const interpolations = computed(() => {
+	const templateCodeGens = computed(() => {
 		if (templateData.value?.html === undefined)
 			return;
 
@@ -51,85 +49,60 @@ export function useTemplateScript(
 		);
 	});
 	const data = computed(() => {
-		if (!interpolations.value)
+		if (!templateCodeGens.value)
 			return;
 
-		const gen = createCodeGen<SourceMaps.TsMappingData>();
+		const codeGen = templateCodeGens.value.codeGen;
 
-		gen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
-		gen.addText(`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
-		gen.addText(`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
+		codeGen.addText(`\n\n`);
+		codeGen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
+		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
+		codeGen.addText(`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
 
 		/* Components */
-		gen.addText('/* Components */\n');
-		gen.addText('declare const __VLS_components: __VLS_GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_PickComponents<typeof __VLS_ctx> & JSX.IntrinsicElements;\n'); // sort by priority
-		gen.addText('declare const __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n');
-		gen.addText('declare const __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n');
-		gen.addText('declare const __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n');
+		codeGen.addText('/* Components */\n');
+		codeGen.addText('declare var __VLS_components: __VLS_GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_PickComponents<typeof __VLS_ctx> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n');
+		codeGen.addText('declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n');
+		codeGen.addText('declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n');
 
 		/* Completion */
-		gen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
+		codeGen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
 
-		gen.addText('/* Completion: Emits */\n');
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.value.tags, name)) continue;
-			gen.addText(`// @ts-ignore\n`);
-			gen.addText(`__VLS_componentEmits['${name}']('');\n`); // TODO
+		codeGen.addText('/* Completion: Emits */\n');
+		for (const name of templateCodeGens.value.tags) {
+			codeGen.addText(`// @ts-ignore\n`);
+			codeGen.addText(`__VLS_componentEmits['${name}']('');\n`); // TODO
 		}
-		gen.addText('/* Completion: Props */\n');
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.value.tags, name)) continue;
-			gen.addText(`// @ts-ignore\n`);
-			gen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
+		codeGen.addText('/* Completion: Props */\n');
+		for (const name of templateCodeGens.value.tags) {
+			codeGen.addText(`// @ts-ignore\n`);
+			codeGen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
 		}
-		gen.addText('/* Completion: Slots */\n');
-		for (const name of [...templateScriptData.components, ...templateScriptData.htmlElements]) {
-			if (!hasElement(interpolations.value.tags, name)) continue;
-			gen.addText(`// @ts-ignore\n`);
-			gen.addText(`__VLS_components['${name}'].__VLS_slots[''];\n`); // TODO
+		codeGen.addText('/* Completion: Slots */\n');
+		for (const name of templateCodeGens.value.tags) {
+			codeGen.addText(`// @ts-ignore\n`);
+			codeGen.addText(`__VLS_components['${name}'].__VLS_slots[''];\n`); // TODO
 		}
 
 		/* CSS Module */
-		gen.addText('/* CSS Module */\n');
-		gen.addText('declare const $style: {\n');
+		codeGen.addText('/* CSS Module */\n');
+		codeGen.addText('declare var $style: {\n');
 		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, false);
-		gen.addText('};\n');
+		codeGen.addText('};\n');
 
 		/* Style Scoped */
-		gen.addText('/* Style Scoped */\n');
-		gen.addText('declare const __VLS_styleScopedClasses: {\n');
+		codeGen.addText('/* Style Scoped */\n');
+		codeGen.addText('declare var __VLS_styleScopedClasses: {\n');
 		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true);
-		gen.addText('};\n');
+		codeGen.addText('};\n');
 
 		/* Props */
-		gen.addText(`/* Props */\n`);
+		codeGen.addText(`/* Props */\n`);
 		const ctxMappings = writeProps();
 
-		/* Interpolations */
-		gen.addText(`/* Interpolations */\n`);
-		// patch
-		const crtOffset = gen.getText().length;
-		for (const maped of interpolations.value.mappings) {
-			gen.addMapping2({
-				...maped,
-				mappedRange: {
-					start: maped.mappedRange.start + crtOffset,
-					end: maped.mappedRange.end + crtOffset,
-				},
-				additional: maped.additional ? maped.additional.map(other => ({
-					...other,
-					mappedRange: {
-						start: other.mappedRange.start + crtOffset,
-						end: other.mappedRange.end + crtOffset,
-					},
-				})) : undefined,
-			});
-		}
-		gen.addText(interpolations.value.text);
-
 		return {
-			text: gen.getText(),
-			mappings: gen.getMappings(),
+			...codeGen,
 			cssModuleMappings,
 			cssScopedMappings,
 			ctxMappings,
@@ -155,8 +128,8 @@ export function useTemplateScript(
 				for (const [className, ranges] of classes) {
 					mappings.get(uri)!.push({
 						tsRange: {
-							start: gen.getText().length + 1, // + '
-							end: gen.getText().length + 1 + className.length,
+							start: codeGen.getText().length + 1, // + '
+							end: codeGen.getText().length + 1 + className.length,
 						},
 						cssRanges: [...ranges].map(range => ({
 							start: range[0],
@@ -167,8 +140,8 @@ export function useTemplateScript(
 					});
 					mappings.get(uri)!.push({
 						tsRange: {
-							start: gen.getText().length,
-							end: gen.getText().length + className.length + 2,
+							start: codeGen.getText().length,
+							end: codeGen.getText().length + className.length + 2,
 						},
 						cssRanges: [...ranges].map(range => ({
 							start: range[0],
@@ -177,7 +150,7 @@ export function useTemplateScript(
 						mode: SourceMaps.Mode.Totally,
 						patchRename,
 					});
-					gen.addText(`'${className}': string,\n`);
+					codeGen.addText(`'${className}': string,\n`);
 				}
 			}
 			return mappings;
@@ -186,11 +159,11 @@ export function useTemplateScript(
 			const propsSet = new Set(templateScriptData.props);
 			const mappings: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 			for (const propName of templateScriptData.context) {
-				gen.addText(`declare var `);
-				const templateSideRange = gen.addText(propName);
-				gen.addText(`: typeof __VLS_ctx.`);
-				const scriptSideRange = gen.addText(propName);
-				gen.addText(`;`);
+				codeGen.addText(`declare var `);
+				const templateSideRange = codeGen.addText(propName);
+				codeGen.addText(`: typeof __VLS_ctx.`);
+				const scriptSideRange = codeGen.addText(propName);
+				codeGen.addText(`;`);
 
 				mappings.push({
 					data: {
@@ -216,9 +189,9 @@ export function useTemplateScript(
 				});
 
 				if (propsSet.has(propName)) {
-					gen.addText(` __VLS_options.props.`);
-					const scriptSideRange2 = gen.addText(propName);
-					gen.addText(`;`);
+					codeGen.addText(` __VLS_options.props.`);
+					const scriptSideRange2 = codeGen.addText(propName);
+					codeGen.addText(`;`);
 
 					mappings.push({
 						data: {
@@ -243,24 +216,27 @@ export function useTemplateScript(
 						mappedRange: templateSideRange,
 					});
 				}
-				gen.addText(`\n`);
+				codeGen.addText(`\n`);
 			}
 			return mappings;
 		}
-		function hasElement(tags: Set<string>, tagName: string) {
-			return tags.has(tagName) || tags.has(hyphenate(tagName));
-		}
 	});
 	const sourceMap = computed(() => {
-		if (data.value && textDocument.value && template.value) {
+		if (data.value && textDoc.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, true, {
-				foldingRanges: false,
-				formatting: false,
-				documentSymbol: false,
-				codeActions: false,
-				organizeImports: false,
-			});
+			const sourceMap = new SourceMaps.TsSourceMap(
+				vueDoc,
+				textDoc.value,
+				true,
+				{
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: false,
+					codeActions: false,
+					organizeImports: false,
+				},
+				data.value.getMappings(parseMappingSourceRange),
+			);
 			for (const [uri, mappings] of [...data.value.cssModuleMappings, ...data.value.cssScopedMappings]) {
 				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.mappedDocument.uri === uri);
 				if (!cssSourceMap) continue;
@@ -287,53 +263,32 @@ export function useTemplateScript(
 					}
 				}
 			}
-			for (const maped of data.value.mappings) {
-				sourceMap.add({
-					...maped,
-					sourceRange: {
-						start: maped.sourceRange.start + template.value.loc.start,
-						end: maped.sourceRange.end + template.value.loc.start,
-					},
-					additional: maped.additional ? maped.additional.map(other => ({
-						...other,
-						sourceRange: {
-							start: other.sourceRange.start + template.value!.loc.start,
-							end: other.sourceRange.end + template.value!.loc.start,
-						},
-					})) : undefined,
-				});
-			}
 
 			return sourceMap;
 		}
 	});
-	const sourceMapForFormatting = computed(() => {
-		if (interpolations.value && textDocumentForFormatting.value && template.value) {
+	const formatSourceMap = computed(() => {
+		if (templateCodeGens.value && formatTextDoc.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocumentForFormatting.value, true, {
-				foldingRanges: false,
-				formatting: true,
-				documentSymbol: false,
-				codeActions: false,
-				organizeImports: false,
-			});
-			for (const maped of interpolations.value.formapMappings) {
-				sourceMap.add({
-					data: maped.data,
-					mode: maped.mode,
-					sourceRange: {
-						start: maped.sourceRange.start + template.value.loc.start,
-						end: maped.sourceRange.end + template.value.loc.start,
-					},
-					mappedRange: maped.mappedRange,
-				});
-			}
+			const sourceMap = new SourceMaps.TsSourceMap(
+				vueDoc,
+				formatTextDoc.value,
+				true,
+				{
+					foldingRanges: false,
+					formatting: true,
+					documentSymbol: false,
+					codeActions: false,
+					organizeImports: false,
+				},
+				templateCodeGens.value.formatCodeGen.getMappings(parseMappingSourceRange),
+			);
 			return sourceMap;
 		}
 	});
 	const cssTextDocument = computed(() => {
-		if (interpolations.value && template.value) {
-			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, interpolations.value.cssCode);
+		if (templateCodeGens.value && template.value) {
+			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, templateCodeGens.value.cssCodeGen.getText());
 			const stylesheet = languageServices.css.parseStylesheet(textDocument);
 			return {
 				textDocument,
@@ -346,7 +301,7 @@ export function useTemplateScript(
 		}
 	});
 	const cssSourceMap = computed(() => {
-		if (interpolations.value && cssTextDocument.value && template.value) {
+		if (templateCodeGens.value && cssTextDocument.value && template.value) {
 			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.CssSourceMap(
 				vueDoc,
@@ -356,58 +311,50 @@ export function useTemplateScript(
 				false,
 				[],
 				{ foldingRanges: false, formatting: false },
+				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange),
 			);
-			for (const maped of interpolations.value.cssMappings) {
-				sourceMap.add({
-					...maped,
-					sourceRange: {
-						start: maped.sourceRange.start + template.value.loc.start,
-						end: maped.sourceRange.end + template.value.loc.start,
-					},
-					additional: maped.additional ? maped.additional.map(other => ({
-						...other,
-						sourceRange: {
-							start: other.sourceRange.start + template.value!.loc.start,
-							end: other.sourceRange.end + template.value!.loc.start,
-						},
-					})) : undefined,
-				});
-			}
 			return sourceMap;
 		}
 	});
-	const textDocument = ref<TextDocument>();
-	const textDocumentForFormatting = ref<TextDocument>();
+	const textDoc = ref<TextDocument>();
+	const formatTextDoc = ref<TextDocument>();
 	const teleportSourceMap = ref<SourceMaps.TeleportSourceMap>();
 
 	return {
 		sourceMap,
-		textDocument,
-		textDocumentForFormatting,
-		sourceMapForFormatting,
+		textDocument: textDoc,
+		textDocumentForFormatting: formatTextDoc,
+		sourceMapForFormatting: formatSourceMap,
 		teleportSourceMap,
 		cssTextDocument,
 		cssSourceMap,
 		update, // TODO: cheapComputed
 	};
 
+	function parseMappingSourceRange(data: any, range: SourceMaps.Range) {
+		const templateOffset = template.value?.loc.start ?? 0;
+		return {
+			start: range.start + templateOffset,
+			end: range.end + templateOffset,
+		};
+	}
 	function update() {
-		if (data.value?.text !== textDocument.value?.getText()) {
-			if (data.value && interpolations.value) {
+		if (data.value?.getText() !== textDoc.value?.getText()) {
+			if (data.value && templateCodeGens.value) {
 				const _version = version++;
-				textDocument.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.text);
-				textDocumentForFormatting.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, interpolations.value.formatCode);
+				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.getText());
+				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, templateCodeGens.value.formatCodeGen.getText());
 
-				const sourceMap = new SourceMaps.TeleportSourceMap(textDocument.value);
+				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value);
 				for (const maped of data.value.ctxMappings) {
 					sourceMap.add(maped);
 				}
 				teleportSourceMap.value = sourceMap;
 			}
 			else {
-				textDocument.value = undefined;
+				textDoc.value = undefined;
 				teleportSourceMap.value = undefined;
-				textDocumentForFormatting.value = undefined;
+				formatTextDoc.value = undefined;
 			}
 		}
 	}

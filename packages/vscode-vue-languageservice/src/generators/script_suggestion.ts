@@ -18,18 +18,20 @@ export function generate(
 
     if (!scriptSetup) return;
 
-    const gen = createCodeGen<SourceMaps.TsMappingData>();
+    const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 
     writeScript();
     writeScriptSetup();
     writeTemplate();
-    gen.addText('\n;export { };\n');
+    codeGen.addText('\n;export { };\n');
+
+    return codeGen;
 
     function writeScript() {
         if (!script)
             return;
 
-        gen.addCode(
+        codeGen.addCode(
             script.content,
             { start: 0, end: script.content.length },
             SourceMaps.Mode.Offset,
@@ -40,7 +42,7 @@ export function generate(
                 },
             },
         );
-        gen.addText('\n');
+        codeGen.addText('\n');
     }
     function writeScriptSetup() {
         if (!scriptSetup)
@@ -66,7 +68,7 @@ export function generate(
                 }
             }
         }
-        gen.addCode(
+        codeGen.addCode(
             noDollarCode,
             { start: 0, end: noDollarCode.length },
             SourceMaps.Mode.Offset,
@@ -86,19 +88,14 @@ export function generate(
 
         const varNames = scriptSetupAst.returnVarNames.map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
 
-        gen.addText('{\n');
+        codeGen.addText('{\n');
         for (const varName of varNames) {
             if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
                 // fix import components unused report
-                gen.addText(varName + ';\n');
+                codeGen.addText(varName + ';\n');
             }
         }
-        gen.addText(htmlGen.text);
-        gen.addText('}\n');
-    }
-
-    return {
-        code: gen.getText(),
-        mappings: gen.getMappings(),
+        codeGen.addText(htmlGen.text);
+        codeGen.addText('}\n');
     }
 }

@@ -61,8 +61,9 @@ export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
+		mappings?: Mapping<Data>[],
 	) {
-		super();
+		super(mappings);
 	}
 
 	cache = new Map<string, {

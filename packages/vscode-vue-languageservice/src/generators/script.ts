@@ -16,7 +16,7 @@ export function generate(
     scriptSetupAst: ScriptSetupAst | undefined,
 ) {
 
-    const gen = createCodeGen<SourceMaps.TsMappingData>();
+    const codeGen = createCodeGen<SourceMaps.TsMappingData>();
     const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 
     writeScriptSrc();
@@ -28,8 +28,7 @@ export function generate(
     writeExportOptions();
 
     return {
-        code: gen.getText(),
-        mappings: gen.getMappings(),
+        ...codeGen,
         teleports,
     };
 
@@ -37,8 +36,8 @@ export function generate(
         if (!script?.src)
             return;
 
-        gen.addText(`export * from `);
-        gen.addCode(
+        codeGen.addText(`export * from `);
+        codeGen.addCode(
             `'${script.src}'`,
             { start: -1, end: -1 },
             SourceMaps.Mode.Offset,
@@ -57,15 +56,15 @@ export function generate(
                 },
             }
         );
-        gen.addText(`;\n`);
-        gen.addText(`export { default } from '${script.src}';\n`);
+        codeGen.addText(`;\n`);
+        codeGen.addText(`export { default } from '${script.src}';\n`);
     }
     function writeScript() {
         if (!script)
             return;
 
         let addText = script.content;
-        gen.addCode(
+        codeGen.addCode(
             addText,
             { start: 0, end: script.content.length },
             SourceMaps.Mode.Offset,
@@ -94,7 +93,7 @@ export function generate(
         const data = scriptSetupAst;
         const originalCode = scriptSetup.content;
         let sourceCode = scriptSetup.content;
-        gen.addText(`\n/* <script setup> */\n`);
+        codeGen.addText(`\n/* <script setup> */\n`);
 
         const labels = data.labels.sort((a, b) => a.start - b.start);
         let tsOffset = 0;
@@ -102,22 +101,22 @@ export function generate(
             mapSubText(tsOffset, label.start);
             let first = true;
 
-            gen.addText(`{ `);
+            codeGen.addText(`{ `);
             for (const binary of label.binarys) {
                 if (first) {
                     first = false;
-                    gen.addText(`let `);
+                    codeGen.addText(`let `);
                 }
                 else {
-                    gen.addText(`, `);
+                    codeGen.addText(`, `);
                 }
                 for (const v of binary.vars) {
                     (v as any)['teleportRange'] = {
-                        start: gen.getText().length + v.start - binary.left.start,
-                        end: gen.getText().length + v.end - binary.left.start,
+                        start: codeGen.getText().length + v.start - binary.left.start,
+                        end: codeGen.getText().length + v.end - binary.left.start,
                     };
                 }
-                gen.addCode(
+                codeGen.addCode(
                     originalCode.substring(binary.left.start, binary.left.end),
                     binary.left,
                     SourceMaps.Mode.Offset,
@@ -133,28 +132,28 @@ export function generate(
                     },
                 );
                 if (binary.right) {
-                    gen.addText(` = `);
-                    gen.addText(originalCode.substring(binary.right.start, binary.right.end));
+                    codeGen.addText(` = `);
+                    codeGen.addText(originalCode.substring(binary.right.start, binary.right.end));
                 }
             }
-            gen.addText(`; }\n`);
+            codeGen.addText(`; }\n`);
 
             first = true;
             for (const binary of label.binarys) {
                 if (first) {
                     first = false;
-                    gen.addText(`const `);
+                    codeGen.addText(`const `);
                 }
                 else {
-                    gen.addText(`, `);
+                    codeGen.addText(`, `);
                 }
 
                 let leftPos = binary.left.start;
                 for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
                     const propName = scriptSetup.content.substring(prop.start, prop.end);
-                    gen.addText(originalCode.substring(leftPos, prop.start));
+                    codeGen.addText(originalCode.substring(leftPos, prop.start));
                     if (prop.isShortand) {
-                        gen.addCode(
+                        codeGen.addCode(
                             propName,
                             prop,
                             SourceMaps.Mode.Offset,
@@ -165,9 +164,9 @@ export function generate(
                                 },
                             },
                         );
-                        gen.addText(`: `);
+                        codeGen.addText(`: `);
                     }
-                    gen.addCode(
+                    codeGen.addCode(
                         `__VLS_refs_${propName}`,
                         prop,
                         SourceMaps.Mode.Totally,
@@ -180,20 +179,20 @@ export function generate(
                     );
                     leftPos = prop.end;
                 }
-                gen.addText(originalCode.substring(leftPos, binary.left.end));
+                codeGen.addText(originalCode.substring(leftPos, binary.left.end));
 
                 if (binary.right) {
-                    gen.addText(` = `);
+                    codeGen.addText(` = `);
                     mapSubText(binary.right.start, binary.right.end);
                 }
             }
-            gen.addText(`;\n`);
+            codeGen.addText(`;\n`);
 
             for (const binary of label.binarys) {
                 for (const prop of binary.vars) {
                     const propName = scriptSetup.content.substring(prop.start, prop.end);
-                    gen.addText(`let `);
-                    const refVarRange = gen.addCode(
+                    codeGen.addText(`let `);
+                    const refVarRange = codeGen.addCode(
                         propName,
                         {
                             start: prop.start,
@@ -209,9 +208,9 @@ export function generate(
                             },
                         },
                     );
-                    gen.addText(` = (await import('vue')).unref(`);
+                    codeGen.addText(` = (await import('vue')).unref(`);
                     if (binary.right) {
-                        gen.addCode(
+                        codeGen.addCode(
                             `__VLS_refs_${propName}`,
                             binary.right,
                             SourceMaps.Mode.Offset, // TODO
@@ -222,12 +221,12 @@ export function generate(
                         );
                     }
                     else {
-                        gen.addText(`__VLS_refs_${propName}`);
+                        codeGen.addText(`__VLS_refs_${propName}`);
                     }
-                    gen.addText(`); ${propName};\n`);
+                    codeGen.addText(`); ${propName};\n`);
 
-                    gen.addText(`const `);
-                    const dollarRefVarRange = gen.addCode(
+                    codeGen.addText(`const `);
+                    const dollarRefVarRange = codeGen.addCode(
                         '$' + propName,
                         {
                             start: prop.start,
@@ -241,9 +240,9 @@ export function generate(
                             },
                         },
                     );
-                    gen.addText(` = (await import('vue')).ref(`);
+                    codeGen.addText(` = (await import('vue')).ref(`);
                     if (binary.right) {
-                        gen.addCode(
+                        codeGen.addCode(
                             `__VLS_refs_${propName}`,
                             binary.right,
                             SourceMaps.Mode.Offset, // TODO
@@ -254,9 +253,9 @@ export function generate(
                         );
                     }
                     else {
-                        gen.addText(`__VLS_refs_${propName}`);
+                        codeGen.addText(`__VLS_refs_${propName}`);
                     }
-                    gen.addText(`); $${propName};\n`);
+                    codeGen.addText(`); $${propName};\n`);
 
                     teleports.push({
                         mode: SourceMaps.Mode.Offset,
@@ -314,11 +313,11 @@ export function generate(
         }
         mapSubText(tsOffset, sourceCode.length);
 
-        gen.addText(`\n// @ts-ignore\n`);
-        gen.addText(`ref${SearchTexts.Ref}\n`); // for execute auto import
+        codeGen.addText(`\n// @ts-ignore\n`);
+        codeGen.addText(`ref${SearchTexts.Ref}\n`); // for execute auto import
 
         function mapSubText(start: number, end: number) {
-            gen.addCode(
+            codeGen.addCode(
                 sourceCode.substring(start, end),
                 {
                     start,
@@ -341,34 +340,34 @@ export function generate(
         }
     }
     function writeExportComponent() {
-        gen.addText(`\n`);
-        gen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
+        codeGen.addText(`\n`);
+        codeGen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
         if (script && scriptAst?.exportDefault?.args) {
             const args = scriptAst.exportDefault.args;
-            gen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
+            codeGen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
         }
         if (scriptSetupAst?.defineProps?.args && scriptSetup) {
-            gen.addText(`props: (${scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end)}),\n`);
+            codeGen.addText(`props: (${scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end)}),\n`);
         }
         if (scriptSetupAst?.defineProps?.typeArgs && scriptSetup) {
-            gen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end)}>),\n`);
+            codeGen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end)}>),\n`);
         }
         if (scriptSetupAst?.defineEmit?.args && scriptSetup) {
-            gen.addText(`emits: (${scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end)}),\n`);
+            codeGen.addText(`emits: (${scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end)}),\n`);
         }
         if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
-            gen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end)}>),\n`);
+            codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end)}>),\n`);
         }
         if (scriptSetupAst && scriptSetup) {
-            gen.addText(`setup() {\n`);
-            gen.addText(`return {\n`);
+            codeGen.addText(`setup() {\n`);
+            codeGen.addText(`return {\n`);
             for (const expose of scriptSetupAst.returnVarNames) {
                 const content = scriptSetup.content;
                 const varName = content.substring(expose.start, expose.end);
-                const templateSideRange = gen.addText(varName);
-                gen.addText(': ');
+                const templateSideRange = codeGen.addText(varName);
+                codeGen.addText(': ');
                 const scriptSideRange = expose.isImport
-                    ? gen.addCode(
+                    ? codeGen.addCode(
                         varName,
                         expose,
                         SourceMaps.Mode.Offset,
@@ -377,8 +376,8 @@ export function generate(
                             capabilities: { diagnostic: true },
                         },
                     )
-                    : gen.addText(varName);
-                gen.addText(',\n');
+                    : codeGen.addText(varName);
+                codeGen.addText(',\n');
 
                 teleports.push({
                     sourceRange: scriptSideRange,
@@ -407,10 +406,10 @@ export function generate(
                     for (const refVar of binary.vars) {
                         if (refVar.inRoot) {
                             const varName = scriptSetup.content.substring(refVar.start, refVar.end);
-                            const templateSideRange = gen.addText(varName);
-                            gen.addText(': ');
-                            const scriptSideRange = gen.addText(varName);
-                            gen.addText(', \n');
+                            const templateSideRange = codeGen.addText(varName);
+                            codeGen.addText(': ');
+                            const scriptSideRange = codeGen.addText(varName);
+                            codeGen.addText(', \n');
 
                             teleports.push({
                                 sourceRange: scriptSideRange,
@@ -437,18 +436,18 @@ export function generate(
                     }
                 }
             }
-            gen.addText(`};\n`);
-            gen.addText(`},\n`);
+            codeGen.addText(`};\n`);
+            codeGen.addText(`},\n`);
         }
-        gen.addText(`});\n`);
+        codeGen.addText(`});\n`);
     }
     function writeExportOptions() {
-        gen.addText(`\n`);
-        gen.addText(`export const __VLS_options = {\n`);
+        codeGen.addText(`\n`);
+        codeGen.addText(`export const __VLS_options = {\n`);
         if (script && scriptAst?.exportDefault?.args) {
             const args = scriptAst.exportDefault.args;
-            gen.addText(`...(`);
-            gen.addCode(
+            codeGen.addText(`...(`);
+            codeGen.addCode(
                 script.content.substring(args.start, args.end),
                 args,
                 SourceMaps.Mode.Offset,
@@ -460,11 +459,11 @@ export function generate(
                     },
                 },
             );
-            gen.addText(`) as const,\n`);
+            codeGen.addText(`) as const,\n`);
         }
         if (scriptSetupAst?.defineProps?.args && scriptSetup) {
-            gen.addText(`props: (`);
-            gen.addCode(
+            codeGen.addText(`props: (`);
+            codeGen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end),
                 scriptSetupAst.defineProps.args,
                 SourceMaps.Mode.Offset,
@@ -477,11 +476,11 @@ export function generate(
                     },
                 },
             );
-            gen.addText(`),\n`);
+            codeGen.addText(`),\n`);
         }
         if (scriptSetupAst?.defineProps?.typeArgs && scriptSetup) {
-            gen.addText(`props: ({} as `);
-            gen.addCode(
+            codeGen.addText(`props: ({} as `);
+            codeGen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end),
                 scriptSetupAst.defineProps.typeArgs,
                 SourceMaps.Mode.Offset,
@@ -494,11 +493,11 @@ export function generate(
                     },
                 },
             );
-            gen.addText(`),\n`);
+            codeGen.addText(`),\n`);
         }
         if (scriptSetupAst?.defineEmit?.args && scriptSetup) {
-            gen.addText(`emits: (`);
-            gen.addCode(
+            codeGen.addText(`emits: (`);
+            codeGen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end),
                 scriptSetupAst.defineEmit.args,
                 SourceMaps.Mode.Offset,
@@ -511,11 +510,11 @@ export function generate(
                     },
                 },
             );
-            gen.addText(`) as const,\n`);
+            codeGen.addText(`) as const,\n`);
         }
         if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
-            gen.addText(`emits: ({} as `);
-            gen.addCode(
+            codeGen.addText(`emits: ({} as `);
+            codeGen.addCode(
                 scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end),
                 scriptSetupAst.defineEmit.typeArgs,
                 SourceMaps.Mode.Offset,
@@ -524,8 +523,8 @@ export function generate(
                     capabilities: {},
                 },
             );
-            gen.addText(`),\n`);
+            codeGen.addText(`),\n`);
         }
-        gen.addText(`};\n`);
+        codeGen.addText(`};\n`);
     }
 }
