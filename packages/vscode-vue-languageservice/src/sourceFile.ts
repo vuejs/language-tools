@@ -1,30 +1,30 @@
-import {
-	Diagnostic,
-	DiagnosticSeverity,
-	CompletionItem,
-	DiagnosticTag,
-	Range,
-} from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath, notEmpty, eqSet } from '@volar/shared';
-import { SourceMap, TsSourceMap } from './utils/sourceMaps';
+import * as prettyhtml from '@starptech/prettyhtml';
+import { eqSet, notEmpty, uriToFsPath } from '@volar/shared';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
-import * as css from 'vscode-css-languageservice';
-import { ref, computed, reactive, pauseTracking, resetTracking, Ref, ComputedRef } from '@vue/reactivity';
+import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
-import * as languageServices from './utils/languageServices';
-import * as prettyhtml from '@starptech/prettyhtml';
+import * as htmlparser2 from 'htmlparser2';
+import * as css from 'vscode-css-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import {
+	CompletionItem,
+	Diagnostic,
+	DiagnosticSeverity,
+	DiagnosticTag,
+	Range
+} from 'vscode-languageserver/node';
 import { IDescriptor, ITemplateScriptData } from './types';
+import * as dedupe from './utils/dedupe';
+import * as languageServices from './utils/languageServices';
+import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
+import { useScriptMain } from './virtuals/main';
 import { useScriptSetupGen } from './virtuals/script';
 import { useScriptFormat } from './virtuals/script.raw';
-import { useScriptMain } from './virtuals/main';
-import { useTemplateRaw } from './virtuals/template.raw';
-import { useTemplateScript } from './virtuals/template';
 import { useStylesRaw } from './virtuals/styles.raw';
-import * as htmlparser2 from 'htmlparser2';
-import * as dedupe from './utils/dedupe';
+import { useTemplateScript } from './virtuals/template';
+import { useTemplateRaw } from './virtuals/template.raw';
 
 export const defaultLanguages = {
 	template: 'html',
@@ -506,17 +506,27 @@ export function createSourceFile(
 				}
 				diag[2] = diag[0].result.value;
 				diag[1] = Date.now() - startTime;
-				const results = [
-					...all.slice(0, i + 1).map(diag => diag[0].result.value),
-					...all.slice(i + 1).map(diag => i >= mainTsErrorStart && !isScriptChanged ? diag[0].cache.value : diag[2]),
-				].flat().concat(sfcErrors.value);
+				const newErrors = all
+					.slice(0, i + 1)
+					.map(diag => diag[0].result.value)
+					.flat()
+					.concat(sfcErrors.value);
+				const oldErrors = all
+					.slice(i + 1)
+					.map(diag => i >= mainTsErrorStart && !isScriptChanged ? diag[0].cache.value : diag[2])
+					.flat();
 				const isLast = i === all.length - 1
 				if (await isCancel?.()) return;
 				if (
 					isLast
-					|| (isDirty && (i < mainTsErrorStart || i === mainTsErrorEnd))
+					|| (isDirty && (
+						i < mainTsErrorStart
+						|| i === mainTsErrorEnd
+						|| oldErrors.length === 0
+					))
 				) {
-					response(dedupe.withDiagnostics(results));
+					isDirty = false;
+					response(dedupe.withDiagnostics(newErrors.concat(oldErrors)));
 				}
 			}
 
