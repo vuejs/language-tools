@@ -23,19 +23,19 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			...options,
 		};
 
-		const completions = languageService.getCompletionsAtPosition(fileName, offset, _options);
-		if (completions === undefined) return [];
+		const info = languageService.getCompletionsAtPosition(fileName, offset, _options);
+		if (info === undefined) return [];
 
-		const wordRange2 = completions.optionalReplacementSpan ? {
-			start: completions.optionalReplacementSpan.start,
-			end: completions.optionalReplacementSpan.start + completions.optionalReplacementSpan.length,
+		const wordRange2 = info.optionalReplacementSpan ? {
+			start: info.optionalReplacementSpan.start,
+			end: info.optionalReplacementSpan.start + info.optionalReplacementSpan.length,
 		} : undefined;
 		const wordRange = wordRange2 ? Range.create(
 			document.positionAt(wordRange2.start),
 			document.positionAt(wordRange2.end),
 		) : undefined;
 
-		const entries = completions.entries
+		const entries = info.entries
 			.map(entry => {
 				let item: CompletionItem = {
 					label: entry.name,
@@ -46,7 +46,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					sortText: entry.sortText,
 					insertText: entry.insertText,
 					preselect: entry.isRecommended,
-					commitCharacters: getCommitCharacters(entry, completions.isNewIdentifierLocation),
+					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
 					data: {
 						fileName,
 						offset,
@@ -56,14 +56,14 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					},
 				}
 
-				item = fuzzyCompletionItem(document, entry, item);
+				item = fuzzyCompletionItem(info, document, entry, item);
 
 				return item;
 			});
 		return entries;
 
 		// from vscode typescript
-		function fuzzyCompletionItem(document: TextDocument, entry: ts.CompletionEntry, item: CompletionItem) {
+		function fuzzyCompletionItem(info: ts.CompletionInfo, document: TextDocument, entry: ts.CompletionEntry, item: CompletionItem) {
 			if (entry.kindModifiers) {
 				const kindModifiers = entry.kindModifiers.split(/,|\s+/g);
 				if (kindModifiers.includes(PConst.KindModifiers.optional)) {
@@ -95,33 +95,46 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				}
 			}
 
-			if (entry.replacementSpan) {
-				/**
-				 * @before
-				 * foo. + ['a/b/c'] => foo.['a/b/c']
-				 * @after
-				 * foo. + ['a/b/c'] => foo['a/b/c']
-				 */
-				const replaceRange = !wordRange2 ? Range.create(
+			if (info.isNewIdentifierLocation && entry.replacementSpan) {
+				const replaceRange = Range.create(
 					document.positionAt(entry.replacementSpan.start),
-					document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
-				) : entry.replacementSpan.start <= wordRange2.start ? Range.create(
-					document.positionAt(entry.replacementSpan.start),
-					document.positionAt(Math.min(entry.replacementSpan.start + entry.replacementSpan.length, wordRange2.start)),
-				) : Range.create(
-					document.positionAt(Math.max(entry.replacementSpan.start, wordRange2.end)),
 					document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
 				);
-				item.additionalTextEdits = [TextEdit.del(replaceRange)];
+				item.textEdit = TextEdit.replace(replaceRange, item.insertText ?? item.label);
 			}
-			if (wordRange) {
-				/**
-				 * @before
-				 * $f + $foo => $$foo
-				 * @after
-				 * $f + $foo => $foo
-				 */
-				item.textEdit = TextEdit.replace(wordRange, item.insertText ?? item.label);
+			else {
+				if (entry.replacementSpan) {
+					/**
+					 * @before
+					 * foo. + ['a/b/c'] => foo.['a/b/c']
+					 * @after
+					 * foo. + ['a/b/c'] => foo['a/b/c']
+					 */
+					const replaceRange = !wordRange2
+						? Range.create(
+							document.positionAt(entry.replacementSpan.start),
+							document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
+						)
+						: entry.replacementSpan.start <= wordRange2.start
+							? Range.create(
+								document.positionAt(entry.replacementSpan.start),
+								document.positionAt(Math.min(entry.replacementSpan.start + entry.replacementSpan.length, wordRange2.start)),
+							)
+							: Range.create(
+								document.positionAt(Math.max(entry.replacementSpan.start, wordRange2.end)),
+								document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
+							);
+					item.additionalTextEdits = [TextEdit.del(replaceRange)];
+				}
+				if (wordRange) {
+					/**
+					 * @before
+					 * $f + $foo => $$foo
+					 * @after
+					 * $f + $foo => $foo
+					 */
+					item.textEdit = TextEdit.replace(wordRange, item.insertText ?? item.label);
+				}
 			}
 
 			return item;
