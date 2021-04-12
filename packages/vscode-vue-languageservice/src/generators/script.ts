@@ -1,3 +1,4 @@
+import { createCodeGen } from '@volar/code-gen';
 import type { Ast as ScriptAst } from '../parsers/scriptAst';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
@@ -15,7 +16,7 @@ export function generate(
     scriptSetupAst: ScriptSetupAst | undefined,
 ) {
 
-    const gen = SourceMaps.createScriptGenerator<SourceMaps.TsMappingData>();
+    const gen = createCodeGen<SourceMaps.TsMappingData>();
     const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 
     writeScriptSrc();

@@ -1,5 +1,5 @@
 import * as SourceMaps from '../utils/sourceMaps';
-import { createScriptGenerator } from '@volar/source-map';
+import { createCodeGen } from '@volar/code-gen';
 import { camelize, hyphenate } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
 import { NodeTypes, transformOn } from '@vue/compiler-dom';
@@ -62,9 +62,9 @@ export function generate(
 			formapMappings: [],
 		};
 	}
-	const tsCodeGen = createScriptGenerator<SourceMaps.TsMappingData>();
-	const tsFormatCodeGen = createScriptGenerator<SourceMaps.TsMappingData>();
-	const cssCodeGen = createScriptGenerator<undefined>();
+	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
+	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
+	const cssCodeGen = createCodeGen<undefined>();
 	const tags = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,

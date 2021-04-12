@@ -1,15 +1,15 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { createCodeGen } from '@volar/code-gen';
 import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
-import { IDescriptor, ITemplateScriptData } from '../types';
+import { hyphenate } from '@vue/shared';
 import * as upath from 'upath';
-import * as SourceMaps from '../utils/sourceMaps';
-import { createScriptGenerator } from '@volar/source-map';
+import * as css from 'vscode-css-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
-import { hyphenate } from '@vue/shared';
+import { IDescriptor, ITemplateScriptData } from '../types';
 import * as languageServices from '../utils/languageServices';
-import * as css from 'vscode-css-languageservice';
+import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
 export function useTemplateScript(
@@ -54,7 +54,7 @@ export function useTemplateScript(
 		if (!interpolations.value)
 			return;
 
-		const gen = createScriptGenerator<SourceMaps.TsMappingData>();
+		const gen = createCodeGen<SourceMaps.TsMappingData>();
 
 		gen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
 		gen.addText(`declare const __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);

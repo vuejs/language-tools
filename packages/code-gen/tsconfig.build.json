@@ -9,7 +9,7 @@
 	],
 	"exclude": [
 		"node_modules",
-		".vscode-test",
+		".vscode-test"
 	],
 	"references": [
 		{
@@ -17,12 +17,6 @@
 		},
 		{
 			"path": "../source-map/tsconfig.build.json"
-		},
-		{
-			"path": "../transforms/tsconfig.build.json"
-		},
-		{
-			"path": "../code-gen/tsconfig.build.json"
 		},
 	],
 }

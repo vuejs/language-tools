@@ -3,6 +3,7 @@ import * as SourceMap from '@volar/source-map';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { createCodeGen } from '@volar/code-gen';
 
 const pugLex = require('pug-lexer');
 const pugParser = require('pug-parser');
@@ -14,7 +15,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
     const fsPath = uriToFsPath(pugTextDoc.uri);
     const fileName = path.basename(fsPath);
     const pugCode = pugTextDoc.getText();
-    const codeGen = SourceMap.createScriptGenerator<undefined>();
+    const codeGen = createCodeGen<undefined>();
     let error: {
         code: string,
         msg: string,

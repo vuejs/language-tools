@@ -1,4 +1,4 @@
-import { createScriptGenerator } from '@volar/source-map';
+import { createCodeGen } from '@volar/code-gen';
 import { hyphenate } from '@vue/shared';
 import type * as templateGen from '../generators/template_scriptSetup';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
@@ -18,7 +18,7 @@ export function generate(
 
     if (!scriptSetup) return;
 
-    const gen = createScriptGenerator<SourceMaps.TsMappingData>();
+    const gen = createCodeGen<SourceMaps.TsMappingData>();
 
     writeScript();
     writeScriptSetup();
