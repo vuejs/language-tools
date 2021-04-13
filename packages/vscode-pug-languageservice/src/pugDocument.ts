@@ -28,18 +28,15 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
         const tokens = pugLex(pugCode, { filename: fileName });
         const ast = pugParser(tokens, { filename: fileName, src: pugCode });
         visitNode(ast, undefined);
-        codeGen.addMapping2({
-            data: undefined,
-            mode: SourceMap.Mode.Totally,
-            sourceRange: {
+        codeGen.addCode(
+            '',
+            {
                 start: pugCode.trimEnd().length,
                 end: pugCode.trimEnd().length,
             },
-            mappedRange: {
-                start: codeGen.getText().length,
-                end: codeGen.getText().length,
-            },
-        })
+            SourceMap.Mode.Totally,
+            undefined,
+        );
     }
     catch (_error) {
         error = {
@@ -87,15 +84,12 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
         }
     }
     function addStartTag(node: TagNode, selfClosing: boolean) {
-        codeGen.addMapping2({
-            data: undefined,
-            mode: SourceMap.Mode.Totally,
-            sourceRange: getDocRange(node.line, node.column, 0),
-            mappedRange: {
-                start: codeGen.getText().length,
-                end: codeGen.getText().length,
-            },
-        });
+        codeGen.addCode(
+            '',
+            getDocRange(node.line, node.column, 0),
+            SourceMap.Mode.Totally,
+            undefined,
+        );
         codeGen.addText('<');
         const tagRange = getDocRange(node.line, node.column, node.name.length);
         if (pugCode.substring(tagRange.start, tagRange.end) === node.name) {
@@ -109,7 +103,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
         else {
             codeGen.addText(node.name);
         }
-        addClassesOrStyles(node.attrs, 'class');
+        addClassesOrStyles(node.attrs.filter(attr => attr.name === 'class'), 'class');
         for (const attr of node.attrs.filter(attr => attr.name !== 'class')) {
             addAttr(attr);
         }
@@ -159,40 +153,37 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
                 nextStart = getDocOffset(next.line, next.column);
             }
         }
-        codeGen.addMapping2({
-            data: undefined,
-            mode: SourceMap.Mode.Totally,
-            sourceRange: {
+        codeGen.addCode(
+            '',
+            {
                 start: nextStart,
                 end: nextStart,
             },
-            mappedRange: {
-                start: codeGen.getText().length,
-                end: codeGen.getText().length,
-            },
-        })
+            SourceMap.Mode.Totally,
+            undefined,
+        );
         codeGen.addText(`</${node.name}>`);
     }
-    function addClassesOrStyles(classes: TagNode['attrs'], attrName: string) {
+    function addClassesOrStyles(attrs: TagNode['attrs'], attrName: string) {
+        if (!attrs.length) return;
         codeGen.addText(' ');
-        for (const attr of classes) {
-            if (attr.name === attrName && attr.mustEscape) {
-                codeGen.addMapping2({
-                    data: undefined,
-                    mode: SourceMap.Mode.Offset,
-                    sourceRange: getDocRange(attr.line, attr.column, attrName.length),
-                    mappedRange: {
-                        start: codeGen.getText().length,
-                        end: codeGen.getText().length + attrName.length,
-                    },
-                });
-            }
+        const escapeAttrs = attrs.filter(attr => attr.mustEscape);
+        if (escapeAttrs.length) {
+            codeGen.addCode(
+                attrName,
+                getDocRange(escapeAttrs[0].line, escapeAttrs[1].column, attrName.length),
+                SourceMap.Mode.Offset,
+                undefined,
+                escapeAttrs.slice(1).map(attr => getDocRange(attr.line, attr.column, attrName.length)),
+            );
         }
-        codeGen.addText(attrName);
+        else {
+            codeGen.addText(attrName);
+        }
         codeGen.addText('=');
         codeGen.addText('"');
-        for (const attr of classes) {
-            if (attr.name === attrName && typeof attr.val !== 'boolean') {
+        for (const attr of attrs) {
+            if (typeof attr.val !== 'boolean') {
                 codeGen.addText(' ');
                 const escapeLength = attr.mustEscape ? `${attrName}=`.length : 0;
                 codeGen.addCode(

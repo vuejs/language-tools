@@ -31,9 +31,19 @@ export function createCodeGen<T = undefined>() {
 				: undefined,
 		}));
 	}
-	function addCode(str: string, sourceRange: Range, mode: Mode, data: T) {
+	function addCode(str: string, sourceRange: Range, mode: Mode, data: T, extraSourceRanges?: Range[]) {
 		const targetRange = addText(str);
-		addMapping2({ mappedRange: targetRange, sourceRange, mode, data });
+		addMapping2({
+			mappedRange: targetRange,
+			sourceRange,
+			mode,
+			data,
+			additional: extraSourceRanges ? extraSourceRanges.map(extraSourceRange => ({
+				mappedRange: targetRange,
+				mode,
+				sourceRange: extraSourceRange,
+			})) : undefined,
+		});
 		return targetRange;
 	}
 	function addMapping(str: string, sourceRange: Range, mode: Mode, data: T) {
