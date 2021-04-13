@@ -48,7 +48,6 @@ export function parse(ts: typeof import('typescript'), content: string) {
     const returnVarNames: {
         start: number,
         end: number,
-        isImport: boolean,
     }[] = [];
     let defineProps: {
         start: number,
@@ -72,23 +71,23 @@ export function parse(ts: typeof import('typescript'), content: string) {
             for (const node_2 of node.declarationList.declarations) {
                 const vars = _findBindingVars(node_2.name);
                 for (const _var of vars) {
-                    returnVarNames.push({ ..._var, isImport: false });
+                    returnVarNames.push(_var);
                 }
             }
         }
         else if (ts.isFunctionDeclaration(node)) {
             if (node.name && ts.isIdentifier(node.name)) {
-                returnVarNames.push({ ..._getStartEnd(node.name), isImport: false });
+                returnVarNames.push(_getStartEnd(node.name));
             }
         }
         else if (ts.isImportDeclaration(node)) {
             if (node.importClause && !node.importClause.isTypeOnly) {
                 if (node.importClause.name) {
-                    returnVarNames.push({ ..._getStartEnd(node.importClause.name), isImport: true });
+                    returnVarNames.push(_getStartEnd(node.importClause.name));
                 }
                 if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
                     for (const element of node.importClause.namedBindings.elements) {
-                        returnVarNames.push({ ..._getStartEnd(element.name), isImport: true });
+                        returnVarNames.push(_getStartEnd(element.name));
                     }
                 }
             }

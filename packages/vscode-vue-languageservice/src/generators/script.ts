@@ -366,17 +366,15 @@ export function generate(
                 const varName = content.substring(expose.start, expose.end);
                 const templateSideRange = codeGen.addText(varName);
                 codeGen.addText(': ');
-                const scriptSideRange = expose.isImport
-                    ? codeGen.addCode(
-                        varName,
-                        expose,
-                        SourceMaps.Mode.Offset,
-                        {
-                            vueTag: 'scriptSetup',
-                            capabilities: { diagnostic: true },
-                        },
-                    )
-                    : codeGen.addText(varName);
+                const scriptSideRange = codeGen.addCode(
+                    varName,
+                    expose,
+                    SourceMaps.Mode.Offset,
+                    {
+                        vueTag: 'scriptSetup',
+                        capabilities: { diagnostic: true },
+                    },
+                );
                 codeGen.addText(',\n');
 
                 teleports.push({
