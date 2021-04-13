@@ -95,7 +95,17 @@
 				},
 				"volar.tsPlugin": {
 					"type": "boolean",
-					"default": false,
+					"enum": [
+						null,
+						true,
+						false
+					],
+					"enumDescriptions": [
+					  "Don't care (Don't reload VSCode)",
+					  "Enable TS Plugin",
+					  "Disable TS Plugin"
+					],
+					"default": null,
 					"description": "Enabled Vue TS Server Plugin."
 				},
 				"volar.tsPluginStatus": {

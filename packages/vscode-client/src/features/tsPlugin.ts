@@ -12,13 +12,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.commands.registerCommand('volar.action.switchTsPlugin', async () => {
         const options = new Map<number, string>();
-        options.set(1, (isConfigEnabled() ? '• ' : '') + 'Enable TS Plugin');
-        options.set(2, (!isConfigEnabled() ? '• ' : '') + 'Disable TS Plugin');
+        const tsPluginStatus = getTsPluginStatus();
+        options.set(0, (tsPluginStatus === null ? '• ' : '') + `Don't care (Don't reload VSCode)`);
+        options.set(1, (tsPluginStatus === true ? '• ' : '') + 'Enable TS Plugin');
+        options.set(2, (tsPluginStatus === false ? '• ' : '') + 'Disable TS Plugin');
         options.set(3, 'Hide TS Plugin Status (or config "volar.tsPluginStatus")');
 
         const select = await userPick(options);
         if (select === undefined) return; // cancle
 
+        if (select === 0) {
+            await vscode.workspace.getConfiguration('volar').update('tsPlugin', null);
+        }
         if (select === 1) {
             await vscode.workspace.getConfiguration('volar').update('tsPlugin', true);
         }
@@ -32,7 +37,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(onConfigUpdated);
 
     function onConfigUpdated() {
-        if (isConfigEnabled() !== tsPluginEnabled) {
+        const tsPluginStatus = getTsPluginStatus();
+        if (tsPluginStatus !== null && tsPluginStatus !== tsPluginEnabled) {
             switchTsPlugin();
         }
         updateStatusBar();
@@ -85,8 +91,9 @@ export async function activate(context: vscode.ExtensionContext) {
             statusBar.text = '[Volar] TS Plugin: Off';
             statusBar.color = new vscode.ThemeColor('titleBar.inactiveForeground');
         }
-        if (isConfigEnabled() !== tsPluginEnabled) {
-            statusBar.text += ' -> ' + (isConfigEnabled() ? 'On' : 'Off');
+        const tsPluginStatus = getTsPluginStatus();
+        if (tsPluginStatus !== null && tsPluginStatus !== tsPluginEnabled) {
+            statusBar.text += ' -> ' + (tsPluginStatus ? 'On' : 'Off');
         }
     }
     function isPluginEnabled() {
@@ -105,7 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         return false;
     }
-    function isConfigEnabled() {
-        return !!vscode.workspace.getConfiguration('volar').get<boolean>('tsPlugin');
+    function getTsPluginStatus() {
+        return vscode.workspace.getConfiguration('volar').get<boolean | null>('tsPlugin');
     }
 }
