@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.24.0
+
+- feat: new option `Don't care` for TS plugin by default to reduce reload vscode
+- feat: check variables is valid returns for `<script setup>`
+- fix: pug template checking broken with vue-tsc [vue-tsc#14](https://github.com/johnsoncodehk/vue-tsc/issues/14)
+- fix: emmet completion working incorrectly [#135](https://github.com/johnsoncodehk/volar/issues/135)
+- fix: import path completion replace range incorrect
+- fix: define slot props as const
+- perf: faster typescript diagnosis response
+
+**Breaking changes**
+
+See: https://github.com/johnsoncodehk/volar/discussions/134
+
+- feat: unsupport `volar.style.defaultLanguage` option
+- feat: unsupport `@vue-ignore`
+
 ## 0.23.7
 
 - feat: improve type-checking of dynamic slot
@@ -49,7 +66,7 @@
 
 **Breaking changes**
 
-- revoke: unsupported global component by `app.component(...)` calls, see: https://github.com/johnsoncodehk/volar#using
+- feat: unsupported global component by `app.component(...)` calls, see: https://github.com/johnsoncodehk/volar#using
 
 ## 0.22.29
 
@@ -168,7 +185,7 @@
 ## 0.22.10
 
 - perf: improve monorepo memory using
-- revoke: remove emit dts feature
+- feat: remove emit dts feature
 
 ## 0.22.9
 
@@ -549,7 +566,7 @@
 
 ## 0.18.6
 
-- revoke: rollback typescript diagnostic modes
+- feat: rollback typescript diagnostic modes
 - perf: faster diagnostics
 
 ## 0.18.5
