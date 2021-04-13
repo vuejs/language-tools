@@ -1,4 +1,4 @@
-import { codeLensOptions, defaultLanguages } from '@volar/vscode-vue-languageservice';
+import { codeLensOptions } from '@volar/vscode-vue-languageservice';
 import type * as emmet from 'vscode-emmet-helper';
 import { connection } from './instances';
 
@@ -8,7 +8,6 @@ export function updateConfigs() {
 
     updateCodeLensConfig();
     updateEmmetConfig();
-    updateDefaultLanguageConfig();
 
     async function updateCodeLensConfig() {
         const [
@@ -23,10 +22,6 @@ export function updateConfigs() {
         codeLensOptions.references = codeLensReferences;
         codeLensOptions.pugTool = codeLensPugTool;
         codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
-    }
-    async function updateDefaultLanguageConfig() {
-        const defalutStyleLanguage = await connection.workspace.getConfiguration('volar.style.defaultLanguage');
-        defaultLanguages.style = defalutStyleLanguage;
     }
     async function updateEmmetConfig() {
         emmetConfig = await connection.workspace.getConfiguration('emmet');

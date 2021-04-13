@@ -8,7 +8,6 @@ import {
 } from '@volar/shared';
 import {
 	createNoStateLanguageService,
-	defaultLanguages
 } from '@volar/vscode-vue-languageservice';
 import {
 	DidChangeConfigurationNotification,
@@ -62,10 +61,6 @@ function onInitialize(params: InitializeParams) {
 				}
 			}
 		}
-	}
-
-	if (options.config['volar.style.defaultLanguage']) {
-		defaultLanguages.style = options.config['volar.style.defaultLanguage'];
 	}
 
 	if (options.mode === 'html') {

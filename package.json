@@ -112,19 +112,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Display TS Server Plugin status bar item."
-				},
-				"volar.style.defaultLanguage": {
-					"type": "string",
-					"enum": [
-						"css",
-						"scss",
-						"less",
-						"sass",
-						"stylus",
-						"postcss"
-					],
-					"default": "css",
-					"description": "Default <style> tag language. (Experimental)"
 				}
 			}
 		},

@@ -64,9 +64,6 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		mode: mode,
 		appRoot: vscode.env.appRoot,
 		language: vscode.env.language,
-		config: {
-			'volar.style.defaultLanguage': vscode.workspace.getConfiguration('volar').get<string>('style.defaultLanguage'),
-		},
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector: fileOnly ?
