@@ -1,3 +1,4 @@
+import { createCodeGen, margeCodeGen } from '@volar/code-gen';
 import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
@@ -52,7 +53,7 @@ export function useTemplateScript(
 		if (!templateCodeGens.value)
 			return;
 
-		const codeGen = templateCodeGens.value.codeGen;
+		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 
 		codeGen.addText(`\n\n`);
 		codeGen.addText(`import { __VLS_options, __VLS_component } from './${vueFileName}';\n`);
@@ -100,6 +101,9 @@ export function useTemplateScript(
 		/* Props */
 		codeGen.addText(`/* Props */\n`);
 		const ctxMappings = writeProps();
+
+		// TODO: unuse any
+		margeCodeGen(codeGen as any, templateCodeGens.value.codeGen);
 
 		return {
 			...codeGen,

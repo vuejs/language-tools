@@ -66,3 +66,24 @@ export function createCodeGen<T = undefined>() {
 		return range;
 	}
 }
+
+export function margeCodeGen<T extends CodeGen>(a: T, b: T) {
+	const aLength = a.getText().length;
+	for (const mapping of b.getMappings()) {
+		a.addMapping2({
+			...mapping,
+			mappedRange: {
+				start: mapping.mappedRange.start + aLength,
+				end: mapping.mappedRange.end + aLength,
+			},
+			additional: mapping.additional ? mapping.additional.map(mapping_2 => ({
+				...mapping_2,
+				mappedRange: {
+					start: mapping_2.mappedRange.start + aLength,
+					end: mapping_2.mappedRange.end + aLength,
+				},
+			})) : undefined,
+		});
+	}
+	a.addText(b.getText());
+}
