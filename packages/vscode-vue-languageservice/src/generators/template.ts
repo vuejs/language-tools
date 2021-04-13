@@ -386,7 +386,7 @@ export function generate(
 				&& prop.name === 'slot'
 			) {
 				if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
-					tsCodeGen.addText(`let `);
+					tsCodeGen.addText(`const `);
 					writeCode(
 						prop.exp.content,
 						{
