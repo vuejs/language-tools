@@ -116,7 +116,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		function withEmmetResult(a: CompletionList, b?: CompletionList): CompletionList {
 			return {
-				isIncomplete: a.isIncomplete,
+				isIncomplete: a.isIncomplete || !!b?.isIncomplete,
 				items: b ? a.items.concat(b.items) : a.items,
 			};
 		}
