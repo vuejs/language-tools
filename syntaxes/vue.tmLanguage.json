@@ -228,41 +228,6 @@
 			]
 		},
 		{
-			"begin": "(?:^\\s+)?(<)((?i:style))\\b(?=[^>]*lang=(['\"])css\\1?)",
-			"captures": {
-				"1": {
-					"name": "punctuation.definition.tag.begin.html"
-				},
-				"2": {
-					"name": "entity.name.tag.style.html"
-				},
-				"3": {
-					"name": "punctuation.definition.tag.html"
-				}
-			},
-			"end": "(<\/)((?i:style))(>)(?:\\s*\\n)?",
-			"name": "source.css.embedded.html",
-			"patterns": [
-				{
-					"include": "#tag-stuff"
-				},
-				{
-					"begin": "(>)",
-					"beginCaptures": {
-						"1": {
-							"name": "punctuation.definition.tag.end.html"
-						}
-					},
-					"end": "(?=<\/(?i:style))",
-					"patterns": [
-						{
-							"include": "source.css"
-						}
-					]
-				}
-			]
-		},
-		{
 			"begin": "(?:^\\s+)?(<)((?i:style))\\b(?=[^>]*lang=(['\"])stylus\\1?)",
 			"captures": {
 				"1": {
@@ -451,7 +416,7 @@
 				}
 			},
 			"end": "(<\/)((?i:style))(>)(?:\\s*\\n)?",
-			"__DEFAULT_STYLE_NAME_START__": null,"name": "source.css.embedded.html","__DEFAULT_STYLE_NAME_END__": null,
+			"name": "source.css.embedded.html",
 			"patterns": [
 				{
 					"include": "#tag-stuff"
@@ -466,7 +431,7 @@
 					"end": "(?=<\/(?i:style))",
 					"patterns": [
 						{
-							"__DEFAULT_STYLE_INCLUDE_START__": null,"include": "source.css","__DEFAULT_STYLE_INCLUDE_END__": null
+							"include": "source.css"
 						}
 					]
 				}

@@ -14,7 +14,6 @@ import * as restart from './features/restart';
 import * as tagClosing from './features/tagClosing';
 import * as semanticTokens from './features/semanticTokens';
 import * as tsPlugin from './features/tsPlugin';
-import * as defaultLanguage from './features/defaultLanguage';
 import { ServerInitializationOptions } from '@volar/shared';
 
 let apiClient: lsp.LanguageClient;
@@ -39,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
 	tsPlugin.activate(context);
-	defaultLanguage.activate();
 
 	startEmbeddedLanguageServices();
 }
