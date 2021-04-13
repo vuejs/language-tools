@@ -4,7 +4,6 @@ import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
 import { hyphenate } from '@vue/shared';
-import * as htmlparser2 from 'htmlparser2';
 import * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -189,39 +188,8 @@ export function createSourceFile(
 			virtualScriptGen.textDocument.value?.version,
 			virtualTemplateGen.textDocument.value?.version,
 		];
+
 		updateSfcErrors();
-
-		const blocks = [
-			newDescriptor.template,
-			newDescriptor.script,
-			newDescriptor.scriptSetup,
-			...newDescriptor.styles,
-			...newDescriptor.customBlocks,
-		].filter(notEmpty);
-
-		const htmlDoc = htmlparser2.parseDocument(newVueDocument.getText(), {
-			withStartIndices: true,
-			withEndIndices: true,
-		});
-		for (const node of htmlDoc.childNodes) {
-			if (
-				node.type === htmlparser2.ElementType.ElementType.Comment
-				&& node.startIndex !== null
-				&& node.endIndex !== null
-			) {
-				const text = newVueDocument.getText().substring(node.startIndex, node.endIndex + 1);
-				if (text.indexOf('@vue-ignore') >= 0) {
-					const afterBlocks = blocks
-						.filter(block => block.loc.start.offset > node.startIndex!)
-						.sort((a, b) => a.loc.start.offset - b.loc.start.offset);
-
-					if (afterBlocks.length) {
-						afterBlocks[0].attrs['__VLS_ignore'] = true;
-					}
-				}
-			}
-		}
-
 		updateTemplate(newDescriptor);
 		updateScript(newDescriptor);
 		updateScriptSetup(newDescriptor);
@@ -272,7 +240,6 @@ export function createSourceFile(
 					start: newDescriptor.template.loc.start.offset,
 					end: newDescriptor.template.loc.end.offset,
 				},
-				ignore: !!newDescriptor.template.attrs['__VLS_ignore'],
 			} : null;
 
 			lastUpdateChanged.template = descriptor.template?.content !== newData?.content;
@@ -282,7 +249,6 @@ export function createSourceFile(
 				descriptor.template.content = newData.content;
 				descriptor.template.loc.start = newData.loc.start;
 				descriptor.template.loc.end = newData.loc.end;
-				descriptor.template.ignore = newData.ignore;
 			}
 			else {
 				descriptor.template = newData;
@@ -297,7 +263,6 @@ export function createSourceFile(
 					start: newDescriptor.script.loc.start.offset,
 					end: newDescriptor.script.loc.end.offset,
 				},
-				ignore: !!newDescriptor.script.attrs['__VLS_ignore'],
 			} : null;
 
 			lastUpdateChanged.script = descriptor.script?.content !== newData?.content;
@@ -308,7 +273,6 @@ export function createSourceFile(
 				descriptor.script.content = newData.content;
 				descriptor.script.loc.start = newData.loc.start;
 				descriptor.script.loc.end = newData.loc.end;
-				descriptor.script.ignore = newData.ignore;
 			}
 			else {
 				descriptor.script = newData;
@@ -322,7 +286,6 @@ export function createSourceFile(
 					start: newDescriptor.scriptSetup.loc.start.offset,
 					end: newDescriptor.scriptSetup.loc.end.offset,
 				},
-				ignore: !!newDescriptor.scriptSetup.attrs['__VLS_ignore'],
 			} : null;
 
 			lastUpdateChanged.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
@@ -332,7 +295,6 @@ export function createSourceFile(
 				descriptor.scriptSetup.content = newData.content;
 				descriptor.scriptSetup.loc.start = newData.loc.start;
 				descriptor.scriptSetup.loc.end = newData.loc.end;
-				descriptor.scriptSetup.ignore = newData.ignore;
 			}
 			else {
 				descriptor.scriptSetup = newData;
@@ -348,7 +310,6 @@ export function createSourceFile(
 						start: style.loc.start.offset,
 						end: style.loc.end.offset,
 					},
-					ignore: !!style.attrs['__VLS_ignore'],
 					module: !!style.module,
 					scoped: !!style.scoped,
 				};
@@ -357,7 +318,6 @@ export function createSourceFile(
 					descriptor.styles[i].content = newData.content;
 					descriptor.styles[i].loc.start = newData.loc.start;
 					descriptor.styles[i].loc.end = newData.loc.end;
-					descriptor.styles[i].ignore = newData.ignore;
 					descriptor.styles[i].module = newData.module;
 					descriptor.styles[i].scoped = newData.scoped;
 				}
@@ -380,7 +340,6 @@ export function createSourceFile(
 						start: block.loc.start.offset,
 						end: block.loc.end.offset,
 					},
-					ignore: !!block.attrs['__VLS_ignore'],
 				};
 				if (descriptor.customBlocks.length > i) {
 					descriptor.customBlocks[i].type = newData.type;
@@ -388,7 +347,6 @@ export function createSourceFile(
 					descriptor.customBlocks[i].content = newData.content;
 					descriptor.customBlocks[i].loc.start = newData.loc.start;
 					descriptor.customBlocks[i].loc.end = newData.loc.end;
-					descriptor.customBlocks[i].ignore = newData.ignore;
 				}
 				else {
 					descriptor.customBlocks.push(newData);
@@ -442,34 +400,32 @@ export function createSourceFile(
 
 		const tsOptions = tsLanguageService.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
-		const ignoreTemplateCheck = computed(() => descriptor.template?.ignore);
-		const ignoreScriptCheck = computed(() => descriptor.script?.ignore || descriptor.scriptSetup?.ignore);
 
 		const nonTs: [{
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
 		}, number, Diagnostic[]][] = [
 				[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), 0, []],
-				[useTemplateValidation(ignoreTemplateCheck), 0, []],
-				[useScriptExistValidation(ignoreScriptCheck), 0, []],
+				[useTemplateValidation(), 0, []],
+				[useScriptExistValidation(), 0, []],
 			];
 		let templateTs: [{
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
 		}, number, Diagnostic[]][] = [
-				[useTemplateScriptValidation(ignoreTemplateCheck, 1), 0, []],
-				[useTemplateScriptValidation(ignoreTemplateCheck, 2), 0, []],
-				[useTemplateScriptValidation(ignoreTemplateCheck, 3), 0, []],
+				[useTemplateScriptValidation(1), 0, []],
+				[useTemplateScriptValidation(2), 0, []],
+				[useTemplateScriptValidation(3), 0, []],
 			];
 		let scriptTs: [{
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
 		}, number, Diagnostic[]][] = [
-				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 1), 0, []],
-				[useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 2), 0, []],
-				[useScriptValidation(ignoreScriptCheck, computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), 0, []],
-				// [useScriptValidation(ignoreScriptCheck, virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
-				[useScriptValidation(ignoreScriptCheck, computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
+				[useScriptValidation(virtualScriptGen.textDocument, 1), 0, []],
+				[useScriptValidation(virtualScriptGen.textDocument, 2), 0, []],
+				[useScriptValidation(computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), 0, []],
+				// [useScriptValidation(virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
+				[useScriptValidation(computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
 			];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
@@ -542,7 +498,7 @@ export function createSourceFile(
 			}
 		}
 
-		function useTemplateValidation(ignore: Ref<boolean | undefined>) {
+		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
 				if (virtualTemplateRaw.textDocument.value && virtualTemplateRaw.htmlDocument.value) {
 					return getVueCompileErrors(virtualTemplateRaw.textDocument.value);
@@ -617,7 +573,6 @@ export function createSourceFile(
 			const htmlErrors_cache = ref<Diagnostic[]>([]);
 			const pugErrors_cache = ref<Diagnostic[]>([]);
 			const result = computed(() => {
-				if (ignore.value) return [];
 				htmlErrors_cache.value = htmlErrors.value;
 				pugErrors_cache.value = pugErrors.value;
 				return cacheWithSourceMap.value;
@@ -693,11 +648,10 @@ export function createSourceFile(
 				return result;
 			}
 		}
-		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined, ignore: boolean | undefined }[]>) {
+		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
-				for (const { textDocument, stylesheet, ignore } of documents.value) {
-					if (ignore) continue;
+				for (const { textDocument, stylesheet } of documents.value) {
 					const cssLanguageService = languageServices.getCssLanguageService(textDocument.languageId);
 					if (!cssLanguageService || !stylesheet) continue;
 					const errs = cssLanguageService.doValidation(textDocument, stylesheet);
@@ -722,10 +676,8 @@ export function createSourceFile(
 				cache: cacheWithSourceMap,
 			};
 		}
-		function useScriptExistValidation(ignore: Ref<boolean | undefined>) {
+		function useScriptExistValidation() {
 			const result = computed(() => {
-				if (ignore.value) return [];
-
 				const diags: Diagnostic[] = [];
 				if (
 					virtualScriptGen.textDocument.value
@@ -752,7 +704,7 @@ export function createSourceFile(
 				cache: result,
 			};
 		}
-		function useScriptValidation(ignore: Ref<boolean | undefined>, document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
+		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -775,7 +727,6 @@ export function createSourceFile(
 			});
 			const errors_cache = ref<Diagnostic[]>([]);
 			const result = computed(() => {
-				if (ignore.value) return [];
 				errors_cache.value = errors.value;
 				return cacheWithSourceMap.value;
 			});
@@ -793,7 +744,7 @@ export function createSourceFile(
 				cache: cacheWithSourceMap,
 			};
 		}
-		function useTemplateScriptValidation(ignore: Ref<boolean | undefined>, mode: 1 | 2 | 3 | 4) {
+		function useTemplateScriptValidation(mode: 1 | 2 | 3 | 4) {
 			const errors_1 = computed(() => {
 				if (mode === 1) { // watching
 					tsProjectVersion.value;
@@ -841,7 +792,6 @@ export function createSourceFile(
 			const errors_1_cache = ref<Diagnostic[]>([]);
 			const errors_2_cache = ref<Diagnostic[]>([]);
 			const result = computed(() => {
-				if (ignore.value) return [];
 				errors_1_cache.value = errors_1.value;
 				errors_2_cache.value = errors_2.value;
 				return cacheWithSourceMap.value;

@@ -300,7 +300,6 @@ export function useTemplateScript(
 				links: [],
 				module: false,
 				scoped: false,
-				ignore: template.value.ignore,
 			};
 		}
 	});

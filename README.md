@@ -101,27 +101,6 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 
 </details>
 
-<!-- Ignore Checking -->
-<details>
-<summary>Ignore Checking</summary>
-
-```vue
-<template>
-checking...
-</template>
-
-<script>
-checking...
-</script>
-
-<!-- @vue-ignore -->
-<style>
-not checking!
-</style>
-```
-
-</details>
-
 ## Note
 
 > You need to disable Vetur to avoid conflicts.

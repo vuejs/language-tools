@@ -1,6 +1,5 @@
 import type { CompletionItem } from 'vscode-languageserver/node';
 import type { SourceFile } from './sourceFile';
-import type { TsSourceMap } from './utils/sourceMaps';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
@@ -33,7 +32,6 @@ export interface IDescriptorBlock {
 		start: number;
 		end: number;
 	};
-	ignore: boolean;
 }
 export interface IDescriptor {
 	template: IDescriptorBlock | null;
