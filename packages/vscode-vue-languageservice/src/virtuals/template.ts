@@ -1,4 +1,4 @@
-import { createCodeGen, margeCodeGen } from '@volar/code-gen';
+import { CodeGen, createCodeGen, margeCodeGen } from '@volar/code-gen';
 import { uriToFsPath } from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
@@ -102,8 +102,7 @@ export function useTemplateScript(
 		codeGen.addText(`/* Props */\n`);
 		const ctxMappings = writeProps();
 
-		// TODO: unuse any
-		margeCodeGen(codeGen as any, templateCodeGens.value.codeGen);
+		margeCodeGen(codeGen as CodeGen, templateCodeGens.value.codeGen as CodeGen);
 
 		return {
 			...codeGen,
