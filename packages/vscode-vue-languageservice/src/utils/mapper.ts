@@ -20,7 +20,6 @@ export function createMapper(
     sourceFiles: Map<string, SourceFile>,
     tsLanguageService: TsLanguageService,
     getTextDocument: (uri: string) => TextDocument | undefined,
-    getGlobalTsSourceMaps?: () => Map<string, { sourceMap: TsSourceMap }>,
 ) {
     return {
         css: {
@@ -148,11 +147,6 @@ export function createMapper(
                     return sourceFile.getTextDocument();
                 }
 
-                const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
-                if (globalTs) {
-                    return globalTs.sourceMap.sourceDocument;
-                }
-
                 const document = tsLanguageService.getTextDocument(tsUri);
                 if (document) {
                     return document;
@@ -271,18 +265,6 @@ export function createMapper(
 
         const document = tsLanguageService.getTextDocument(tsUri);
         if (!document) return [];
-
-        const globalTs = getGlobalTsSourceMaps?.().get(tsUri);
-        if (globalTs) {
-            const tsRange2 = globalTs.sourceMap.getSourceRange2(tsStart, tsEnd);
-            if (tsRange2) {
-                tsStart = tsRange2.start;
-                tsEnd = tsRange2.end;
-            }
-            else {
-                return [];
-            }
-        }
 
         const sourceFile = findSourceFileByTsUri(tsUri);
         if (!sourceFile) {
