@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.24.1
+
+- fix: ref sugar report incorrect errors on `vue-tsc` [vue-tsc#18](https://github.com/johnsoncodehk/vue-tsc/issues/18)
+- fix: `<slot>` should not report error with `defineComponent(function () { ... })` [vue-tsc#21](https://github.com/johnsoncodehk/vue-tsc/issues/21)
+
 ## 0.24.0
 
 - feat: new option `Don't care` for TS plugin by default to reduce reload vscode
