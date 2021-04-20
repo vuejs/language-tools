@@ -17,7 +17,6 @@ import * as completions from './services/completion';
 import * as completionResolve from './services/completionResolve';
 import * as autoClose from './services/autoClose';
 import * as refAutoClose from './services/refAutoClose';
-import * as embeddedDocument from './services/embeddedDocument';
 import * as hover from './services/hover';
 import * as diagnostics from './services/diagnostics';
 import * as formatting from './services/formatting';
@@ -165,7 +164,6 @@ export function createLanguageService(
 		rootPath: vueHost.getCurrentDirectory(),
 		tsPlugin,
 		tsProgramProxy,
-		update,
 		getTextDocument,
 		checkProject: apiHook(() => {
 			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
@@ -340,8 +338,17 @@ export function createLanguageService(
 				? fileName => {
 					if (fileName.endsWith('.vue.ts')) {
 						fileName = upath.trimExt(fileName);
+						const isHostFile = vueHost.getScriptFileNames().includes(fileName);
+						const fileExists = !!vueHost.fileExists?.(fileName);
+						if (!isHostFile && fileExists) {
+							vueProjectVersion += '-old'; // force update
+							update(false); // create virtual files
+						}
+						return fileExists;
 					}
-					return vueHost.fileExists!(fileName);
+					else {
+						return !!vueHost.fileExists?.(fileName);
+					}
 				}
 				: undefined,
 			getProjectVersion: () => {

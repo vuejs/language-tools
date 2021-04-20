@@ -231,10 +231,6 @@ export function createServiceHandler(
 					version: 0,
 					fileWatcher: fileWatcher,
 				});
-				if (fileName.endsWith('.vue')) {
-					projectVersion++;
-					vueLs?.update(false); // create virtual files
-				}
 			}
 			return fileExists;
 		}
