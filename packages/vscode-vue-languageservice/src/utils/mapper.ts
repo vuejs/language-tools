@@ -179,6 +179,7 @@ export function createMapper(
             teleports,
             teleports2,
         },
+        findSourceFileByTsUri,
     };
 
     function teleports(tsUri: string, tsStart: Position, tsEnd?: Position) {

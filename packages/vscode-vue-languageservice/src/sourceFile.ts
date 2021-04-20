@@ -179,6 +179,7 @@ export function createSourceFile(
 			document: virtualTemplateGen.textDocumentForFormatting.value,
 			sourceMap: virtualTemplateGen.sourceMapForFormatting.value,
 		})),
+		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
 	};
 
 	function update(newVueDocument: TextDocument) {
@@ -395,6 +396,26 @@ export function createSourceFile(
 		templateScriptData.htmlElementItems = globalEls;
 		virtualTemplateGen.update(); // TODO
 		return true;
+	}
+	function shouldVerifyTsScript(tsUri: string, mode: 1 | 2 | 3 | 4): 'all' | 'none' | 'unused' {
+		if (tsUri.toLowerCase() === virtualScriptGen.textDocumentForSuggestion.value?.uri.toLowerCase()) {
+			if (mode === 3) {
+				return 'all';
+			}
+			if (mode === 1) {
+				const tsOptions = tsLanguageService.host.getCompilationSettings();
+				const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
+				return anyNoUnusedEnabled ? 'unused' : 'none';
+			}
+			return 'none';
+		}
+		if (tsUri.toLowerCase() === virtualScriptGen.textDocument.value?.uri.toLowerCase()) {
+			if (mode === 3) {
+				return !virtualScriptGen.textDocumentForSuggestion.value ? 'all' : 'none';
+			}
+			return 'all';
+		}
+		return 'all';
 	}
 	function useDiagnostics() {
 

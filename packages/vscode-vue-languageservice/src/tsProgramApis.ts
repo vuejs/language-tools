@@ -1,6 +1,6 @@
 import type { TsApiRegisterOptions } from './types';
 import * as ts from 'typescript';
-import { normalizeFileName } from '@volar/shared';
+import { fsPathToUri, normalizeFileName } from '@volar/shared';
 
 export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions) {
 
@@ -13,41 +13,36 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
     };
 
     function getRootFileNames() {
-        const program = getOriginalProgram();
-        return program.getRootFileNames()
+        return getProgram().getRootFileNames()
             .filter(fileName => tsLanguageService.host.fileExists?.(fileName));
     }
     function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.DiagnosticWithLocation[] {
-        const program = getOriginalProgram();
-        const result = program.getSyntacticDiagnostics(sourceFile, cancellationToken);
-        return transformDiagnostics(result);
+        const result = getProgram().getSyntacticDiagnostics(sourceFile, cancellationToken);
+        return transformDiagnostics(result, 2);
     }
     function getSemanticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-        const program = getOriginalProgram();
-        const result = program.getSemanticDiagnostics(sourceFile, cancellationToken);
-        return transformDiagnostics(result);
+        const result = getProgram().getSemanticDiagnostics(sourceFile, cancellationToken);
+        return transformDiagnostics(result, 1);
     }
     function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-        const program = getOriginalProgram();
-        const result = program.getGlobalDiagnostics(cancellationToken);
+        const result = getProgram().getGlobalDiagnostics(cancellationToken);
         return transformDiagnostics(result);
     }
     function emit(targetSourceFile?: ts.SourceFile, writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-        const program = getOriginalProgram();
-        const result = program.emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
+        const result = getProgram().emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
         return {
             ...result,
             diagnostics: transformDiagnostics(result.diagnostics),
         };
     }
-    function getOriginalProgram() {
+    function getProgram() {
         const program = tsLanguageService.raw.getProgram();
         if (!program) throw '!program';
         return program;
     }
 
     // transform
-    function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(diagnostics: readonly T[]): T[] {
+    function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(diagnostics: readonly T[], mode?: 1 | 2 | 3 | 4): T[] {
         const result: T[] = [];
         for (const diagnostic of diagnostics) {
             if (
@@ -56,6 +51,16 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                 && diagnostic.length !== undefined
             ) {
                 const fileName = normalizeFileName(tsLanguageService.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
+                let checkMode: 'all' | 'none' | 'unused' = 'all';
+                if (mode) {
+                    const uri = fsPathToUri(fileName);
+                    const vueSourceFile = mapper.findSourceFileByTsUri(uri);
+                    if (vueSourceFile) {
+                        checkMode = vueSourceFile.shouldVerifyTsScript(uri, mode);
+                    }
+                }
+                if (checkMode === 'none') continue;
+                if (checkMode === 'unused' && !(diagnostic as ts.Diagnostic).reportsUnnecessary) continue;
                 for (const tsOrVueRange of mapper.ts.from2(
                     fileName,
                     diagnostic.start,
