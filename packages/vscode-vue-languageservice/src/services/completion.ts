@@ -71,8 +71,8 @@ export const vueTags: html.ITagData[] = [
 					{ name: 'less' },
 				],
 			},
-			{ name: 'scoped' },
-			{ name: 'module' },
+			{ name: 'scoped', valueSet: 'v' },
+			{ name: 'module', valueSet: 'v' },
 		],
 	},
 ];
