@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { ref, computed } from '@vue/reactivity';
 import { notEmpty, sleep } from '@volar/shared';
-import { userPick } from './formatAll';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -150,4 +149,26 @@ function useDocDescriptor() {
         splitDocText.value = text;
         return splitDocDescriptor.value;
     }
+}
+export function userPick<K>(options: Map<K, string>, placeholder?: string) {
+    return new Promise<K | undefined>(resolve => {
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.items = [...options.values()].map(option => ({ label: option }));
+        quickPick.placeholder = placeholder;
+        quickPick.onDidChangeSelection(selection => {
+            if (selection[0]) {
+                for (const [key, label] of options) {
+                    if (selection[0].label === label) {
+                        resolve(key);
+                        quickPick.hide();
+                    }
+                }
+            }
+        });
+        quickPick.onDidHide(() => {
+            quickPick.dispose();
+            resolve(undefined);
+        })
+        quickPick.show();
+    });
 }

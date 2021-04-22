@@ -199,11 +199,6 @@
 				"category": "Volar"
 			},
 			{
-				"command": "volar.action.formatAllScripts",
-				"title": "Format All Scripts",
-				"category": "Volar"
-			},
-			{
 				"command": "volar.action.writeVirtualFiles",
 				"title": "Write Virtual Files",
 				"category": "Debug"

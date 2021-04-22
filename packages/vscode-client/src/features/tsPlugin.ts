@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'upath';
 import * as fs from 'fs';
-import { userPick } from './formatAll';
+import { userPick } from './splitEditors';
 
 export async function activate(context: vscode.ExtensionContext) {
 

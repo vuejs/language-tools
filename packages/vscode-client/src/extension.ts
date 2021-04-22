@@ -7,7 +7,6 @@ import * as callGraph from './features/callGraph';
 import * as showReferences from './features/showReferences';
 import * as documentVersion from './features/documentVersion';
 import * as activeSelection from './features/activeSelection';
-import * as formatAll from './features/formatAll';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as restart from './features/restart';
@@ -29,7 +28,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	preview.activate(context);
 	callGraph.activate(context, apiClient);
 	showReferences.activate(context, apiClient);
-	formatAll.activate(context, apiClient);
 	documentVersion.activate(context, docClient);
 	activeSelection.activate(context, apiClient);
 	verifyAll.activate(context, docClient);

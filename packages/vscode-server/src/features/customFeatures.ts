@@ -1,6 +1,5 @@
 import {
     D3Request,
-    FormatAllScriptsRequest,
     RangeSemanticTokensRequest,
     RefCloseRequest,
     RestartServerNotification,
@@ -15,8 +14,7 @@ import * as fs from 'fs-extra';
 import * as path from 'upath';
 import {
     Diagnostic,
-    DiagnosticSeverity,
-    WorkspaceEdit
+    DiagnosticSeverity
 } from 'vscode-languageserver/node';
 import {
     connection,
@@ -37,28 +35,6 @@ connection.onRequest(D3Request.type, handler => {
     const document = documents.get(handler.uri);
     if (!document) return;
     return servicesManager?.getMatchService(document.uri)?.getD3(document);
-});
-connection.onRequest(FormatAllScriptsRequest.type, async options => {
-    if (!servicesManager) return;
-    const progress = await connection.window.createWorkDoneProgress();
-    progress.begin('Format', 0, '', true);
-    for (const [_, service] of servicesManager.services) {
-        const ls = service.getLanguageServiceDontCreate();
-        if (!ls) continue;
-        const sourceFiles = ls.getAllSourceFiles();
-        let i = 0;
-        for (const sourceFile of sourceFiles) {
-            if (progress.token.isCancellationRequested) {
-                continue;
-            }
-            const doc = sourceFile.getTextDocument();
-            progress.report(i++ / sourceFiles.length * 100, path.relative(ls.rootPath, uriToFsPath(doc.uri)));
-            const edits = ls.doFormatting(doc, options) ?? [];
-            const workspaceEdit: WorkspaceEdit = { changes: { [doc.uri]: edits } };
-            await connection.workspace.applyEdit(workspaceEdit);
-        }
-    }
-    progress.done();
 });
 connection.onRequest(WriteVirtualFilesRequest.type, async () => {
     if (!servicesManager) return;

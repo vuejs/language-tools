@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.24.2
+
+- feat: remove `Volar: Format All Scripts` command (please use [Format All Files in Workspace](https://marketplace.visualstudio.com/items?itemName=alexr00.formatallfilesinworkspace) extension for replacement)
+
 ## 0.24.1
 
 - fix: ref sugar report incorrect errors on `vue-tsc` [vue-tsc#18](https://github.com/johnsoncodehk/vue-tsc/issues/18)

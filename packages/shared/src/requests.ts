@@ -1,6 +1,5 @@
 import {
 	DocumentUri,
-	FormattingOptions,
 	Location,
 	NotificationType,
 	NotificationType0,
@@ -36,9 +35,6 @@ export namespace ActiveSelectionRequest {
 }
 export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.verifyAllScripts');
-}
-export namespace FormatAllScriptsRequest {
-	export const type: RequestType<FormattingOptions, undefined, any> = new RequestType('volar.action.formatAllScripts');
 }
 export namespace WriteVirtualFilesRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.writeVirtualFiles');
