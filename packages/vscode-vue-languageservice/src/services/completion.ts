@@ -187,7 +187,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				const globalAttributes: html.IAttributeData[] = [
 					{ name: 'v-if' },
 					{ name: 'v-else-if' },
-					{ name: 'v-else' },
+					{ name: 'v-else', valueSet: 'v' },
 					{ name: 'v-for' },
 				];
 				const slots: html.IAttributeData[] = [];
