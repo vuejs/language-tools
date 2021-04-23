@@ -57,7 +57,7 @@ export const vueTags: html.ITagData[] = [
 					{ name: 'tsx' },
 				],
 			},
-			{ name: 'setup' },
+			{ name: 'setup', valueSet: 'v' },
 		],
 	},
 	{
