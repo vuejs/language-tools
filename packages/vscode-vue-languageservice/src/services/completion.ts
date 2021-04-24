@@ -229,12 +229,18 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 								tsItems.set(propKey, prop);
 							}
 							else {
-								const propName = ':' + hyphenate(name);
+								const propName = hyphenate(name);
 								const propKey = componentName + ':' + propName;
-								attributes.push({
-									name: propName,
-									description: propKey,
-								});
+								attributes.push(
+									{
+										name: propName,
+										description: propKey,
+									},
+									{
+										name: ':' + propName,
+										description: propKey,
+									}
+								);
 								tsItems.set(propKey, prop);
 							}
 						}
@@ -335,15 +341,14 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						if (tsItem) {
 							vueItem.documentation = undefined;
 						}
-						if (vueItem.label.startsWith(':')) {
+						if (
+							(vueItem.label.startsWith(':') || vueItem.label.startsWith('@'))
+							&& !documentation?.startsWith('*:') // not globalAttributes
+						) {
 							vueItem.sortText = '\u0000' + vueItem.sortText;
-						}
-						else if (vueItem.label.startsWith('@')) {
-							vueItem.sortText = '\u0001' + vueItem.sortText;
-						}
-						if (tsItem && !documentation?.startsWith('*:')) { // not globalAttributes
-							vueItem.sortText = '\u0000' + vueItem.sortText;
-							vueItem.kind = CompletionItemKind.Field;
+							if (tsItem) {
+								vueItem.kind = CompletionItemKind.Field;
+							}
 						}
 						else if (vueItem.label.startsWith('v-')) {
 							vueItem.kind = CompletionItemKind.Method;
