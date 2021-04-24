@@ -36,6 +36,11 @@
 				"configuration": "./languages/vue-language-configuration.json"
 			}
 		],
+		"breakpoints": [
+			{
+				"language": "vue"
+			}
+		],
 		"configuration": {
 			"type": "object",
 			"title": "Volar",
