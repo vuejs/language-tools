@@ -341,15 +341,14 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						if (tsItem) {
 							vueItem.documentation = undefined;
 						}
-						if (vueItem.label.startsWith(':')) {
+						if (
+							(vueItem.label.startsWith(':') || vueItem.label.startsWith('@'))
+							&& !documentation?.startsWith('*:') // not globalAttributes
+						) {
 							vueItem.sortText = '\u0000' + vueItem.sortText;
-						}
-						else if (vueItem.label.startsWith('@')) {
-							vueItem.sortText = '\u0001' + vueItem.sortText;
-						}
-						if (tsItem && !documentation?.startsWith('*:')) { // not globalAttributes
-							vueItem.sortText = '\u0000' + vueItem.sortText;
-							vueItem.kind = CompletionItemKind.Field;
+							if (tsItem) {
+								vueItem.kind = CompletionItemKind.Field;
+							}
 						}
 						else if (vueItem.label.startsWith('v-')) {
 							vueItem.kind = CompletionItemKind.Method;
