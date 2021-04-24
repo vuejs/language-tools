@@ -229,12 +229,18 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 								tsItems.set(propKey, prop);
 							}
 							else {
-								const propName = ':' + hyphenate(name);
+								const propName = hyphenate(name);
 								const propKey = componentName + ':' + propName;
-								attributes.push({
-									name: propName,
-									description: propKey,
-								});
+								attributes.push(
+									{
+										name: propName,
+										description: propKey,
+									},
+									{
+										name: ':' + propName,
+										description: propKey,
+									}
+								);
 								tsItems.set(propKey, prop);
 							}
 						}
