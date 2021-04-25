@@ -46,6 +46,9 @@ export namespace RestartServerNotification {
 export namespace ShowReferencesNotification {
 	export const type: NotificationType<{ uri: DocumentUri, position: Position, references: Location[] }> = new NotificationType('vue.findReferences');
 }
+export namespace GetTagStyleRequest {
+	export const type: RequestType<TextDocumentIdentifier, 'both' | 'kebabCase' | 'pascalCase', any> = new RequestType('volar/detectTagStyle');
+}
 
 // semantic tokens
 export namespace RangeSemanticTokensRequest {

@@ -3,7 +3,6 @@ import { eqSet, notEmpty, uriToFsPath } from '@volar/shared';
 import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
-import { hyphenate } from '@vue/shared';
 import * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -148,6 +147,7 @@ export function createSourceFile(
 
 	return {
 		uri: vueUri,
+		getUsedTags: untrack(() => virtualTemplateGen.templateCodeGens.value?.tags),
 		getTextDocument: untrack(() => vueDoc.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
@@ -932,7 +932,6 @@ export function createSourceFile(
 						}
 					}
 					data.set(tagName, { item: tag, bind, on, slot });
-					data.set(hyphenate(tagName), { item: tag, bind, on, slot });
 				}
 				const globalBind = tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
 				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });

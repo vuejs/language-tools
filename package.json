@@ -229,6 +229,11 @@
 				"command": "volar.action.switchTsPlugin",
 				"title": "Switch TS Plugin on / off",
 				"category": "Volar"
+			},
+			{
+				"command": "volar.action.tagStyle",
+				"title": "Change Tag Style",
+				"category": "Volar"
 			}
 		],
 		"menus": {

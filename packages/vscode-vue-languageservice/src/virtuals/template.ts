@@ -323,6 +323,7 @@ export function useTemplateScript(
 	const teleportSourceMap = ref<SourceMaps.TeleportSourceMap>();
 
 	return {
+		templateCodeGens,
 		sourceMap,
 		textDocument: textDoc,
 		textDocumentForFormatting: formatTextDoc,

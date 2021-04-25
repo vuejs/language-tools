@@ -93,7 +93,13 @@ export const eventModifiers: Record<string, string> = {
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 
-	return async (uri: string, position: Position, context?: CompletionContext, getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig) => {
+	return async (
+		uri: string,
+		position: Position,
+		context?: CompletionContext,
+		getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig,
+		getTagStyle?: () => Promise<'both' | 'kebabCase' | 'pascalCase'>,
+	) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
@@ -106,7 +112,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult) return withEmmetResult(cssResult, emmetResult);
 
-		const htmlResult = getHtmlResult(sourceFile);
+		const htmlResult = await getHtmlResult(sourceFile);
 		if (htmlResult) return withEmmetResult(htmlResult, emmetResult);
 
 		const vueResult = getVueResult(sourceFile);
@@ -175,11 +181,12 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			}
 			return result;
 		}
-		function getHtmlResult(sourceFile: SourceFile) {
+		async function getHtmlResult(sourceFile: SourceFile) {
 			let result: CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return;
 			}
+			const tagStyle = await getTagStyle?.() ?? 'both';
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];
@@ -191,90 +198,98 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					{ name: 'v-for' },
 				];
 				const slots: html.IAttributeData[] = [];
-				for (const [componentName, { item, bind, on, slot }] of componentCompletion) {
-					if (componentName === '*') {
-						for (const prop of bind) {
-							const name: string = prop.data.name;
-							if (name.length > 2 && hyphenate(name).startsWith('on-')) {
-								const propName = '@' + hyphenate(name).substr('on-'.length);
-								const propKey = componentName + ':' + propName;
-								globalAttributes.push({
-									name: propName,
-									description: propKey,
-								});
-								tsItems.set(propKey, prop);
-							}
-							else {
-								const propName = ':' + hyphenate(name);
-								const propKey = componentName + ':' + propName;
-								globalAttributes.push({
-									name: propName,
-									description: propKey,
-								});
-								tsItems.set(propKey, prop);
+				for (const [_componentName, { item, bind, on, slot }] of componentCompletion) {
+					const componentNames =
+						tagStyle === 'kebabCase'
+							? new Set([hyphenate(_componentName)])
+							: tagStyle === 'pascalCase'
+								? new Set([_componentName])
+								: new Set([hyphenate(_componentName), _componentName])
+					for (const componentName of componentNames) {
+						if (componentName === '*') {
+							for (const prop of bind) {
+								const name: string = prop.data.name;
+								if (name.length > 2 && hyphenate(name).startsWith('on-')) {
+									const propName = '@' + hyphenate(name).substr('on-'.length);
+									const propKey = componentName + ':' + propName;
+									globalAttributes.push({
+										name: propName,
+										description: propKey,
+									});
+									tsItems.set(propKey, prop);
+								}
+								else {
+									const propName = ':' + hyphenate(name);
+									const propKey = componentName + ':' + propName;
+									globalAttributes.push({
+										name: propName,
+										description: propKey,
+									});
+									tsItems.set(propKey, prop);
+								}
 							}
 						}
-					}
-					else {
-						const attributes: html.IAttributeData[] = [];
-						for (const prop of bind) {
-							const name: string = prop.data.name;
-							if (name.length > 2 && hyphenate(name).startsWith('on-')) {
-								const propName = '@' + hyphenate(name).substr('on-'.length);
+						else {
+							const attributes: html.IAttributeData[] = [];
+							for (const prop of bind) {
+								const name: string = prop.data.name;
+								if (name.length > 2 && hyphenate(name).startsWith('on-')) {
+									const propName = '@' + hyphenate(name).substr('on-'.length);
+									const propKey = componentName + ':' + propName;
+									attributes.push({
+										name: propName,
+										description: propKey,
+									});
+									tsItems.set(propKey, prop);
+								}
+								else {
+									const propName = hyphenate(name);
+									const propKey = componentName + ':' + propName;
+									attributes.push(
+										{
+											name: propName,
+											description: propKey,
+										},
+										{
+											name: ':' + propName,
+											description: propKey,
+										}
+									);
+									tsItems.set(propKey, prop);
+								}
+							}
+							for (const event of on) {
+								const propName = '@' + hyphenate(event.data.name);
 								const propKey = componentName + ':' + propName;
 								attributes.push({
 									name: propName,
 									description: propKey,
 								});
-								tsItems.set(propKey, prop);
+								tsItems.set(propKey, event);
+							}
+							for (const _slot of slot) {
+								const propName = '#' + _slot.data.name;
+								const propKey = componentName + ':' + propName;
+								slots.push({
+									name: propName,
+									description: propKey,
+								});
+								tsItems.set(propKey, _slot);
+							}
+							if (item) {
+								tags.push({
+									name: componentName,
+									description: componentName + ':',
+									attributes,
+								});
+								tsItems.set(componentName + ':', item);
 							}
 							else {
-								const propName = hyphenate(name);
-								const propKey = componentName + ':' + propName;
-								attributes.push(
-									{
-										name: propName,
-										description: propKey,
-									},
-									{
-										name: ':' + propName,
-										description: propKey,
-									}
-								);
-								tsItems.set(propKey, prop);
+								tags.push({
+									name: componentName,
+									attributes,
+								});
 							}
-						}
-						for (const event of on) {
-							const propName = '@' + hyphenate(event.data.name);
-							const propKey = componentName + ':' + propName;
-							attributes.push({
-								name: propName,
-								description: propKey,
-							});
-							tsItems.set(propKey, event);
-						}
-						for (const _slot of slot) {
-							const propName = '#' + _slot.data.name;
-							const propKey = componentName + ':' + propName;
-							slots.push({
-								name: propName,
-								description: propKey,
-							});
-							tsItems.set(propKey, _slot);
-						}
-						if (item) {
-							tags.push({
-								name: componentName,
-								description: componentName + ':',
-								attributes,
-							});
-							tsItems.set(componentName + ':', item);
-						}
-						else {
-							tags.push({
-								name: componentName,
-								attributes,
-							});
 						}
 					}
 				}

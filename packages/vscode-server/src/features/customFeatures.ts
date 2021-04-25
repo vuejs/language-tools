@@ -7,7 +7,8 @@ import {
     TagCloseRequest,
     uriToFsPath,
     VerifyAllScriptsRequest,
-    WriteVirtualFilesRequest
+    WriteVirtualFilesRequest,
+    GetTagStyleRequest
 } from '@volar/shared';
 import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
@@ -105,4 +106,7 @@ connection.onRequest(TagCloseRequest.type, handler => {
     const document = documents.get(handler.textDocument.uri);
     if (!document) return;
     return noStateLs.doAutoClose(document, handler.position);
+});
+connection.onRequest(GetTagStyleRequest.type, handler => {
+    return servicesManager?.getMatchService(handler.uri)?.detectTagStyle(handler.uri);
 });
