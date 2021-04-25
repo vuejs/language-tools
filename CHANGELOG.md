@@ -2,7 +2,13 @@
 
 ## 0.24.2
 
-- feat: remove `Volar: Format All Scripts` command (please use [Format All Files in Workspace](https://marketplace.visualstudio.com/items?itemName=alexr00.formatallfilesinworkspace) extension for replacement)
+- feat: new IDE option `volar.preferredTagNameCase` [#156](https://github.com/johnsoncodehk/volar/issues/156)
+- feat: new status bar item for support change completion tag name case
+- feat: component tag name case convertion
+- feat: support adding breakpoints [#107](https://github.com/johnsoncodehk/volar/issues/107)
+- fix: don't report error if class name does not exist in `$style` [#157](https://github.com/johnsoncodehk/volar/issues/157)
+- fix: don't complete attribute value for `v-else`, `scoped`, `module`, `setup`
+- revoke: remove `Volar: Format All Scripts` command (use [Format All Files in Workspace](https://marketplace.visualstudio.com/items?itemName=alexr00.formatallfilesinworkspace) extension for replacement)
 
 ## 0.24.1
 
