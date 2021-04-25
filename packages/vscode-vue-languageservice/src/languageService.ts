@@ -2,7 +2,7 @@ import { TextDocument, Position } from 'vscode-languageserver-textdocument';
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
 import { getGlobalDoc } from './virtuals/global';
-import { pauseTracking, resetTracking, ref } from '@vue/reactivity';
+import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
@@ -197,7 +197,7 @@ export function createLanguageService(
 		detectTagStyle: apiHook(tagStyle.register(options)),
 		getCodeActions: apiHook(codeActions.register(options), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
-		doExecuteCommand: apiHook(executeCommand.register(options), false),
+		doExecuteCommand: apiHook(executeCommand.register(options, apiHook(references.register(options))), false),
 		doCompletionResolve: apiHook(completionResolve.register(options), false),
 		doCodeLensResolve: apiHook(codeLensResolve.register(options), false),
 		getSignatureHelp: apiHook(signatureHelp.register(options), false),

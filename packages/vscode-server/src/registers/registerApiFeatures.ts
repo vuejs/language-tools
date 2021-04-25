@@ -41,6 +41,8 @@ connection.client.register(ExecuteCommandRequest.type, {
         Commands.PUG_TO_HTML,
         Commands.SWITCH_REF_SUGAR,
         Commands.SHOW_REFERENCES,
+        Commands.CONVERT_TO_KEBAB_CASE,
+        Commands.CONVERT_TO_PASCAL_CASE,
     ]
 });
 connection.client.register(CompletionRequest.type, {

@@ -20,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
     const tagStyles = new UriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-    statusBar.command = 'volar.action.tagStyle';
+    statusBar.command = 'volar.action.tagNameCase';
 
     onChangeDocument(vscode.window.activeTextEditor?.document);
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(e => {
@@ -29,7 +29,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((doc) => {
         tagStyles.delete(doc.uri.toString());
     }));
-    context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagStyle', async () => {
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagNameCase', async () => {
 
         const crtDoc = vscode.window.activeTextEditor?.document;
         if (!crtDoc) return;
@@ -40,24 +40,50 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
         options.set(1, (crtTagStyle === 'kebabCase' ? '• ' : '') + 'Component Using kebab-case');
         options.set(2, (crtTagStyle === 'pascalCase' ? '• ' : '') + 'Component Using PascalCase');
         options.set(3, 'Detect Component name from Content');
+        // Converts
+        options.set(4, 'Convert Component name to kebab-case');
+        options.set(5, 'Convert Component name to PascalCase');
 
         const select = await userPick(options);
         if (select === undefined) return; // cancle
 
         if (select === 0) {
             tagStyles.set(crtDoc.uri.toString(), 'both');
+            updateStatusBarText('both');
         }
         if (select === 1) {
             tagStyles.set(crtDoc.uri.toString(), 'kebabCase');
+            updateStatusBarText('kebabCase');
         }
         if (select === 2) {
             tagStyles.set(crtDoc.uri.toString(), 'pascalCase');
+            updateStatusBarText('pascalCase');
         }
         if (select === 3) {
             const detectStyle = await languageClient.sendRequest(GetTagStyleRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
             tagStyles.set(crtDoc.uri.toString(), detectStyle);
+            updateStatusBarText(detectStyle);
         }
-        onChangeDocument(crtDoc);
+        if (select === 4) {
+            vscode.commands.executeCommand('volar.action.tagNameCase.convertToKebabCase');
+        }
+        if (select === 5) {
+            vscode.commands.executeCommand('volar.action.tagNameCase.convertToPascalCase');
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagNameCase.convertToKebabCase', async () => {
+        if (vscode.window.activeTextEditor) {
+            await vscode.commands.executeCommand('volar.server.executeConvertToKebabCase', vscode.window.activeTextEditor.document.uri.toString());
+            tagStyles.set(vscode.window.activeTextEditor.document.uri.toString(), 'kebabCase');
+            updateStatusBarText('kebabCase');
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagNameCase.convertToPascalCase', async () => {
+        if (vscode.window.activeTextEditor) {
+            await vscode.commands.executeCommand('volar.server.executeConvertToPascalCase', vscode.window.activeTextEditor.document.uri.toString());
+            tagStyles.set(vscode.window.activeTextEditor.document.uri.toString(), 'pascalCase');
+            updateStatusBarText('pascalCase');
+        }
     }));
 
     async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {

@@ -1,17 +1,16 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { Position, TextDocument } from 'vscode-languageserver-textdocument';
+import { Location } from 'vscode-languageserver-types';
 import type { Connection } from 'vscode-languageserver/node';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { Commands } from '../commands';
-import { register as registerFindReferences } from './references';
-import { execute as executeShowReferences } from '../commands/showReferences';
+import { execute as executeConvertToKebabCase } from '../commands/convertToKebabCase';
 import { execute as executeHtmlToPug } from '../commands/htmlToPug';
 import { execute as executePugToHtml } from '../commands/pugToHtml';
-import { execute as executeUseRefSugar } from '../commands/useRefSugar';
+import { execute as executeShowReferences } from '../commands/showReferences';
 import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
+import { execute as executeUseRefSugar } from '../commands/useRefSugar';
+import type { TsApiRegisterOptions } from '../types';
 
-export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOptions) {
-
-	const findReferences = registerFindReferences(arguments[0]);
+export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOptions, findReferences: (uri: string, position: Position) => Location[]) {
 
 	return async (document: TextDocument, command: string, args: any[] | undefined, connection: Connection) => {
 
@@ -24,10 +23,6 @@ export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOp
 			return;
 
 		if (command === Commands.SWITCH_REF_SUGAR) {
-
-			const desc = sourceFile.getDescriptor();
-			if (!desc.scriptSetup)
-				return;
 
 			const scriptSetupData = sourceFile.getScriptSetupData();
 			if (!scriptSetupData)
@@ -45,6 +40,12 @@ export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOp
 		}
 		if (command === Commands.PUG_TO_HTML) {
 			executePugToHtml(document, sourceFile, connection);
+		}
+		if (command === Commands.CONVERT_TO_KEBAB_CASE) {
+			executeConvertToKebabCase(document, sourceFile, connection, findReferences, 'kebab');
+		}
+		if (command === Commands.CONVERT_TO_PASCAL_CASE) {
+			executeConvertToKebabCase(document, sourceFile, connection, findReferences, 'pascal');
 		}
 	}
 }

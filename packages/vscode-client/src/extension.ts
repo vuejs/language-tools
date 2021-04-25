@@ -13,7 +13,7 @@ import * as restart from './features/restart';
 import * as tagClosing from './features/tagClosing';
 import * as semanticTokens from './features/semanticTokens';
 import * as tsPlugin from './features/tsPlugin';
-import * as tagStyle from './features/tagStyle';
+import * as tagNameCase from './features/tagNameCase';
 import { ServerInitializationOptions } from '@volar/shared';
 
 let apiClient: lsp.LanguageClient;
@@ -27,7 +27,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	splitEditors.activate(context);
 	preview.activate(context);
-	tagStyle.activate(context, apiClient);
+	tagNameCase.activate(context, apiClient);
 	callGraph.activate(context, apiClient);
 	showReferences.activate(context, apiClient);
 	documentVersion.activate(context, docClient);

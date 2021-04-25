@@ -248,8 +248,18 @@
 				"category": "Volar"
 			},
 			{
-				"command": "volar.action.tagStyle",
-				"title": "Change Tag Style",
+				"command": "volar.action.tagNameCase",
+				"title": "Change Tag Name Case",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.tagNameCase.convertToKebabCase",
+				"title": "Convert Tag Name Case to kebab-case",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.tagNameCase.convertToPascalCase",
+				"title": "Convert Tag Name Case to PascalCase",
 				"category": "Volar"
 			}
 		],

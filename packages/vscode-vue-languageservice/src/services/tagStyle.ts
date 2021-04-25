@@ -11,6 +11,9 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		const usedTags = sourceFile.getUsedTags() ?? new Set();
 
 		let anyComponentUsed = false;
+		let hasPascalCase = false;
+		let hasKebabCase = false;
+
 		for (const component of components) {
 			if (usedTags.has(component) || usedTags.has(hyphenate(component))) {
 				anyComponentUsed = true;
@@ -20,10 +23,6 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		if (!anyComponentUsed) {
 			return 'unsure'; // not sure component style, because do not have any componnent using in <template> for check
 		}
-
-		let hasPascalCase = false;
-		let hasKebabCase = false;
-
 		for (const tagName of usedTags) {
 			if (tagName !== hyphenate(tagName)) {
 				hasPascalCase = true;
