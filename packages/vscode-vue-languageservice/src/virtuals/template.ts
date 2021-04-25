@@ -88,7 +88,7 @@ export function useTemplateScript(
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');
-		codeGen.addText('declare var $style: {\n');
+		codeGen.addText('declare var $style: Record<string, string> & {\n');
 		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, false);
 		codeGen.addText('};\n');
 
