@@ -54,7 +54,7 @@ export function createServicesManager(
 			service.onDocumentUpdated(change.document);
 		}
 		onDocumentUpdated(change.document);
-		 // preload
+		// preload
 		getMatchService(change.document.uri);
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
@@ -142,7 +142,7 @@ export function createServicesManager(
 			const projectValid = matchLs.checkProject();
 			if (!projectValid) {
 				connection.window.showWarningMessage(
-					"Volar cannot offer intellisense auto completion due to your project being a Vue 2 project and not having @vue/runtime-dom installed. You can find more information at https://github.com/johnsoncodehk/volar"
+					"Cannot import Vue 3 types from @vue/runtime-dom. If you are using Vue 2, you may need to install @vue/runtime-dom in additionally."
 				);
 			}
 		}
