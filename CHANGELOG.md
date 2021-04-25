@@ -1,10 +1,14 @@
 # Changelog
 
+## 0.24.3
+
+- fix: component tag name case conversion not working edge case
+
 ## 0.24.2
 
 - feat: new IDE option `volar.preferredTagNameCase` [#156](https://github.com/johnsoncodehk/volar/issues/156)
 - feat: new status bar item for support change completion tag name case
-- feat: component tag name case convertion
+- feat: component tag name case conversion
 - feat: support adding breakpoints [#107](https://github.com/johnsoncodehk/volar/issues/107)
 - fix: don't report error if class name does not exist in `$style` [#157](https://github.com/johnsoncodehk/volar/issues/157)
 - fix: don't complete attribute value for `v-else`, `scoped`, `module`, `setup`

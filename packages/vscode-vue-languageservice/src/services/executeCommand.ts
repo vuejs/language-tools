@@ -2,7 +2,7 @@ import type { Position, TextDocument } from 'vscode-languageserver-textdocument'
 import { Location } from 'vscode-languageserver-types';
 import type { Connection } from 'vscode-languageserver/node';
 import { Commands } from '../commands';
-import { execute as executeConvertToKebabCase } from '../commands/convertToKebabCase';
+import { execute as executeConvertTagNameCase } from '../commands/convertTagNameCase';
 import { execute as executeHtmlToPug } from '../commands/htmlToPug';
 import { execute as executePugToHtml } from '../commands/pugToHtml';
 import { execute as executeShowReferences } from '../commands/showReferences';
@@ -42,10 +42,10 @@ export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOp
 			executePugToHtml(document, sourceFile, connection);
 		}
 		if (command === Commands.CONVERT_TO_KEBAB_CASE) {
-			executeConvertToKebabCase(document, sourceFile, connection, findReferences, 'kebab');
+			executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'kebab');
 		}
 		if (command === Commands.CONVERT_TO_PASCAL_CASE) {
-			executeConvertToKebabCase(document, sourceFile, connection, findReferences, 'pascal');
+			executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'pascal');
 		}
 	}
 }

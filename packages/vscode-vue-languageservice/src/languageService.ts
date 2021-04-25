@@ -190,6 +190,7 @@ export function createLanguageService(
 		},
 		getSemanticTokens: apiHook(semanticTokens.register(options)),
 		getD3: apiHook(d3.register(options)),
+		executeCommand: apiHook(executeCommand.register(options, references.register(options))),
 
 		doHover: apiHook(hover.register(options), getShouldUpdateTemplateScript),
 		doComplete: apiHook(completions.register(options), getShouldUpdateTemplateScript),
@@ -197,7 +198,6 @@ export function createLanguageService(
 		detectTagStyle: apiHook(tagStyle.register(options)),
 		getCodeActions: apiHook(codeActions.register(options), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
-		doExecuteCommand: apiHook(executeCommand.register(options, apiHook(references.register(options))), false),
 		doCompletionResolve: apiHook(completionResolve.register(options), false),
 		doCodeLensResolve: apiHook(codeLensResolve.register(options), false),
 		getSignatureHelp: apiHook(signatureHelp.register(options), false),

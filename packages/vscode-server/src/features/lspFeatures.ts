@@ -59,7 +59,7 @@ connection.onExecuteCommand(handler => {
     const uri = handler.arguments?.[0];
     const document = documents.get(uri);
     if (!document) return;
-    return servicesManager?.getMatchService(uri)?.doExecuteCommand(document, handler.command, handler.arguments, connection);
+    return servicesManager?.getMatchService(uri)?.executeCommand(document, handler.command, handler.arguments, connection);
 });
 connection.onCodeAction(handler => {
     const uri = handler.textDocument.uri;
