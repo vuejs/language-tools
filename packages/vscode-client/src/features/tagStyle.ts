@@ -62,7 +62,22 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
     async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
         if (newDoc?.languageId === 'vue') {
-            const crtStyle = tagStyles.get(newDoc.uri.toString()) ?? await languageClient.sendRequest(GetTagStyleRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+            let crtStyle = tagStyles.get(newDoc.uri.toString());
+            if (!crtStyle) {
+                const mode = vscode.workspace.getConfiguration('volar').get<string>('preferredTagNameCase');
+                if (mode === 'both') {
+                    crtStyle = 'both';
+                }
+                else if (mode === 'kebab') {
+                    crtStyle = 'kebabCase';
+                }
+                else if (mode === 'pascal') {
+                    crtStyle = 'pascalCase';
+                }
+                else {
+                    crtStyle = await languageClient.sendRequest(GetTagStyleRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+                }
+            }
             tagStyles.set(newDoc.uri.toString(), crtStyle);
             updateStatusBarText(crtStyle);
             statusBar.show();

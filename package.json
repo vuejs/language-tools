@@ -117,6 +117,23 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Display TS Server Plugin status bar item."
+				},
+				"volar.preferredTagNameCase": {
+					"type": "string",
+					"enum": [
+						"auto",
+						"both",
+						"kebab",
+						"pascal"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content",
+						"<kebab-case> and <PascalCase>",
+						"<kebab-case>",
+						"<PascalCase>"
+					],
+					"default": "auto",
+					"description": "Preferred tag name case."
 				}
 			}
 		},
