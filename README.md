@@ -20,7 +20,7 @@ If you like this extension, please consider to becoming a [Sponsor](https://gith
 
 ## Quick Start
 
-- [volar-starter](https://github.com/johnsoncodehk/volar-starter) (base on [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts))
+- [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts)
 - [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
@@ -29,7 +29,7 @@ If you like this extension, please consider to becoming a [Sponsor](https://gith
 <details>
 <summary>Global components support (Updated at 5/4/2021)</summary>
 
-See: https://github.com/vuejs/vue-next/pull/3399#issuecomment-810357702
+See: https://github.com/vuejs/vue-next/pull/3399
 
 By default, Local components, Built-in components, native html elements Type-Checking are active.
 
@@ -39,8 +39,8 @@ For Global components, you need to have Vue 3  `GlobalComponents` interface defi
 // components.d.ts
 declare module 'vue' {
 	export interface GlobalComponents {
-      RouterLink: typeof import('vue-router')['RouterLink']
-      RouterView: typeof import('vue-router')['RouterView']
+		RouterLink: typeof import('vue-router')['RouterLink']
+		RouterView: typeof import('vue-router')['RouterView']
 	}
 }
 
