@@ -194,7 +194,7 @@ export function createLanguageService(
 		doHover: apiHook(hover.register(options), getShouldUpdateTemplateScript),
 		doComplete: apiHook(completions.register(options), getShouldUpdateTemplateScript),
 
-		detectTagStyle: apiHook(tagStyle.register(options), false),
+		detectTagStyle: apiHook(tagStyle.register(options)),
 		getCodeActions: apiHook(codeActions.register(options), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
 		doExecuteCommand: apiHook(executeCommand.register(options), false),

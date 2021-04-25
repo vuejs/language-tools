@@ -98,7 +98,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		position: Position,
 		context?: CompletionContext,
 		getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig,
-		getTagStyle?: () => Promise<'both' | 'kebabCase' | 'pascalCase'>,
+		getTagStyle?: () => Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>,
 	) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;

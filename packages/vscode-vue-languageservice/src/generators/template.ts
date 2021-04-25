@@ -51,6 +51,7 @@ export function generate(
 	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const cssCodeGen = createCodeGen<undefined>();
 	const tags = new Set<string>();
+	const tags_2 = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
 		loc: SourceMaps.Range,
@@ -107,6 +108,7 @@ export function generate(
 		formatCodeGen: tsFormatCodeGen,
 		cssCodeGen: cssCodeGen,
 		tags,
+		tags_2,
 	};
 
 	function getComponentName(tagName: string) {
@@ -140,6 +142,7 @@ export function generate(
 			}
 
 			tags.add(getComponentName(node.tag));
+			tags_2.add(node.tag);
 			tsCodeGen.addText(`{\n`);
 			{
 

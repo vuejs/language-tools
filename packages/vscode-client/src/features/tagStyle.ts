@@ -6,11 +6,19 @@ import { GetTagStyleRequest, UriMap } from '@volar/shared';
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
 
     await languageClient.onReady();
-    languageClient.onRequest(GetTagStyleRequest.type, handler => {
-        return tagStyles.get(handler.uri) ?? 'both';
+    languageClient.onRequest(GetTagStyleRequest.type, async handler => {
+        let crtStyle = tagStyles.get(handler.uri);
+        if (crtStyle === 'unsure') {
+            crtStyle = await languageClient.sendRequest(GetTagStyleRequest.type, handler);
+            tagStyles.set(handler.uri, crtStyle);
+            if (handler.uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
+                updateStatusBarText(crtStyle);
+            }
+        }
+        return crtStyle ?? 'both';
     });
 
-    const tagStyles = new UriMap<'both' | 'kebabCase' | 'pascalCase'>();
+    const tagStyles = new UriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
     statusBar.command = 'volar.action.tagStyle';
 
@@ -56,19 +64,25 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
         if (newDoc?.languageId === 'vue') {
             const crtStyle = tagStyles.get(newDoc.uri.toString()) ?? await languageClient.sendRequest(GetTagStyleRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
             tagStyles.set(newDoc.uri.toString(), crtStyle);
-            if (crtStyle === 'both') {
-                statusBar.text = '<BOTH>';
-            }
-            else if (crtStyle === 'kebabCase') {
-                statusBar.text = '<kebab-case>';
-            }
-            else if (crtStyle === 'pascalCase') {
-                statusBar.text = '<PascalCase>';
-            }
+            updateStatusBarText(crtStyle);
             statusBar.show();
         }
         else {
             statusBar.hide();
+        }
+    }
+    function updateStatusBarText(crtStyle: "both" | "kebabCase" | "pascalCase" | "unsure") {
+        if (crtStyle === 'unsure') {
+            statusBar.text = '<UNSURE>';
+        }
+        if (crtStyle === 'both') {
+            statusBar.text = '<BOTH>';
+        }
+        else if (crtStyle === 'kebabCase') {
+            statusBar.text = '<kebab-case>';
+        }
+        else if (crtStyle === 'pascalCase') {
+            statusBar.text = '<PascalCase>';
         }
     }
 }
