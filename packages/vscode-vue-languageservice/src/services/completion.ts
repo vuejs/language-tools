@@ -149,7 +149,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		// precede html for support inline css service
 		const cssResult = getCssResult(sourceFile);
-		cache = { uri, tsResult, emmetResult };
+		cache = { uri, cssResult, emmetResult };
 		if (cssResult) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
 
 		const htmlResult = await getHtmlResult(sourceFile);
