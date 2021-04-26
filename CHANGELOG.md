@@ -2,7 +2,10 @@
 
 ## 0.24.3
 
+- feat: new IDE option `volar.preferredAttrNameCase`
+- feat: support change props completion name case in status bar
 - fix: component tag name case conversion not working edge case
+- perf: fix html completion should not calculate every times typing
 
 ## 0.24.2
 
