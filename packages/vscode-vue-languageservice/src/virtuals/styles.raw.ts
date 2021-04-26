@@ -3,27 +3,21 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import * as languageServices from '../utils/languageServices';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as css from 'vscode-css-languageservice';
 import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
+import type { DocumentContext } from 'vscode-html-languageservice';
 
 export function useStylesRaw(
 	ts: typeof import('typescript'),
-	tsLanguageService: ts2.LanguageService,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
 	mode: 'api' | 'format',
+	documentContext: DocumentContext | undefined
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
 		const vueDoc = getUnreactiveDoc();
-		const compilerHost = ts.createCompilerHost(tsLanguageService.host.getCompilationSettings());
-		const documentContext = {
-			resolveReference: (ref: string, base: string) => {
-				return resolvePath(ref, base);
-			},
-		};
 		const documents: {
 			textDocument: TextDocument,
 			stylesheet: css.Stylesheet | undefined,
@@ -73,7 +67,7 @@ export function useStylesRaw(
 			});
 
 			function findLinks(ls1: css.LanguageService, textDocument: TextDocument, stylesheet: css.Stylesheet) {
-				const links = ls1.findDocumentLinks(textDocument, stylesheet, documentContext);
+				const links = documentContext ? ls1.findDocumentLinks(textDocument, stylesheet, documentContext) : [];
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
@@ -97,25 +91,6 @@ export function useStylesRaw(
 			}
 		}
 		return documents;
-
-		function resolvePath(ref: string, base: string) {
-			const resolveResult = ts.resolveModuleName(ref, base, tsLanguageService.host.getCompilationSettings(), compilerHost);
-			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
-			for (const failed of failedLookupLocations) {
-				let path = failed;
-				if (path.endsWith('.d.ts')) {
-					path = upath.trimExt(path);
-					path = upath.trimExt(path);
-				}
-				else {
-					path = upath.trimExt(path);
-				}
-				if (ts.sys.fileExists(uriToFsPath(path))) {
-					return path;
-				}
-			}
-			return ref;
-		}
 	});
 	const sourceMaps = computed(() => {
 		const vueDoc = getUnreactiveDoc();

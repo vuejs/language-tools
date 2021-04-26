@@ -1,6 +1,6 @@
 import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { TeleportMappingData } from '../utils/sourceMaps';
+import type { CssSourceMap, TeleportMappingData } from '../utils/sourceMaps';
 import type { TeleportSideData } from '../utils/sourceMaps';
 import type { TsMappingData } from '../utils/sourceMaps';
 import type { TsSourceMap } from '../utils/sourceMaps';
@@ -25,6 +25,7 @@ export function createMapper(
         css: {
             from: (cssUri: string, cssStart: Position, cssEnd?: Position) => {
                 const result: {
+                    sourceMap: CssSourceMap,
                     textDocument: TextDocument,
                     start: Position,
                     end: Position,
@@ -34,6 +35,7 @@ export function createMapper(
                         if (sourceMap.mappedDocument.uri === cssUri) {
                             for (const vueRange of sourceMap.getSourceRanges(cssStart, cssEnd)) {
                                 result.push({
+                                    sourceMap: sourceMap,
                                     textDocument: sourceMap.sourceDocument,
                                     start: vueRange.start,
                                     end: vueRange.end,
@@ -46,6 +48,7 @@ export function createMapper(
             },
             to: (vueUri: string, vueStart: Position, vueEnd?: Position) => {
                 const result: {
+                    sourceMap: CssSourceMap,
                     textDocument: TextDocument,
                     stylesheet: Stylesheet,
                     start: Position,
@@ -59,6 +62,7 @@ export function createMapper(
                         if (!cssLs || !sourceMap.stylesheet) continue;
                         for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
+                                sourceMap: sourceMap,
                                 textDocument: sourceMap.mappedDocument,
                                 stylesheet: sourceMap.stylesheet,
                                 start: cssRange.start,

@@ -23,8 +23,8 @@ import * as getEmbeddedDocument from './embeddedDocument';
 
 export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
-	html: ['<', ':', '@', '.'/* Event Modifiers */],
-	css: ['.', '@'],
+	html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
+	css: ['.', '@', '/'/* path completion */],
 };
 export const wordPatterns: { [lang: string]: RegExp } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
@@ -90,7 +90,7 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLanguageService, documentContext }: TsApiRegisterOptions) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -123,13 +123,13 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				cache.emmetResult = getEmmetResult(sourceFile);
 			}
 			if (cache.cssResult?.isIncomplete) {
-				cache.cssResult = getCssResult(sourceFile);
+				cache.cssResult = await getCssResult(sourceFile);
 			}
 			if (cache.htmlResult?.isIncomplete) {
 				cache.htmlResult = await getHtmlResult(sourceFile);
 			}
 			if (cache.vueResult?.isIncomplete) {
-				cache.vueResult = getVueResult(sourceFile);
+				cache.vueResult = await getVueResult(sourceFile);
 			}
 			const lists = [
 				cache.tsResult,
@@ -143,12 +143,12 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		const tsResult = getTsResult(sourceFile);
 		cache = { uri, tsResult };
-		if (tsResult) return tsResult;
+		if (tsResult?.items.length) return tsResult;
 
 		const emmetResult = getEmmetResult(sourceFile);
 
 		// precede html for support inline css service
-		const cssResult = getCssResult(sourceFile);
+		const cssResult = await getCssResult(sourceFile);
 		cache = { uri, cssResult, emmetResult };
 		if (cssResult) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
 
@@ -156,7 +156,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		cache = { uri, htmlResult, emmetResult };
 		if (htmlResult) return emmetResult ? combineResults(htmlResult, emmetResult) : htmlResult;
 
-		const vueResult = getVueResult(sourceFile);
+		const vueResult = await getVueResult(sourceFile);
 		cache = { uri, vueResult, emmetResult };
 		if (vueResult) return emmetResult ? combineResults(vueResult, emmetResult) : vueResult;
 
@@ -328,8 +328,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						};
 					}
 					const htmlResult = sourceMap.language === 'html'
-						? languageServices.html.doComplete(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
-						: languageServices.pug.doComplete(sourceMap.pugDocument, htmlRange.start)
+						? await languageServices.html.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
+						: await languageServices.pug.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -410,7 +410,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			}
 			return result;
 		}
-		function getCssResult(sourceFile: SourceFile) {
+		async function getCssResult(sourceFile: SourceFile) {
 			let result: CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.css.includes(context.triggerCharacter)) {
 				return;
@@ -429,7 +429,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = getWordStart(wordPattern, cssRange.end, sourceMap.mappedDocument);
 					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
-					const cssResult = cssLanguageService.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
+					const cssResult = await cssLanguageService.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -454,7 +454,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			}
 			return result;
 		}
-		function getVueResult(sourceFile: SourceFile) {
+		async function getVueResult(sourceFile: SourceFile) {
 			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
 			if (embededDoc) {
 				let syntax = languageIdToSyntax(embededDoc.language);
@@ -464,7 +464,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						tags: vueTags,
 					});
 					languageServices.html.setDataProviders(false, [dataProvider]);
-					return languageServices.html.doComplete(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument());
+					return await languageServices.html.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
 				}
 			}
 		}

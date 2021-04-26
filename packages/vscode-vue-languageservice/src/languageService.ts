@@ -6,7 +6,7 @@ import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
-import { HTMLDocument } from 'vscode-html-languageservice';
+import { DocumentContext, HTMLDocument } from 'vscode-html-languageservice';
 import * as languageServices from './utils/languageServices';
 import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';
 import { createMapper } from './utils/mapper';
@@ -97,6 +97,39 @@ export function createLanguageService(
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
 	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost, typescript);
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
+	const compilerHost = typescript.createCompilerHost(vueHost.getCompilationSettings());
+	const documentContext: DocumentContext = {
+		resolveReference(ref: string, base: string) {
+
+			const resolveResult = typescript.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
+			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+			const dirs = new Set<string>();
+
+			for (const failed of failedLookupLocations) {
+				let path = failed;
+				if (path.endsWith('index.d.ts')) {
+					dirs.add(path.substr(0, path.length - '/index.d.ts'.length));
+				}
+				if (path.endsWith('.d.ts')) {
+					path = upath.trimExt(path);
+					path = upath.trimExt(path);
+				}
+				else {
+					path = upath.trimExt(path);
+				}
+				if (typescript.sys.fileExists(path) || typescript.sys.fileExists(uriToFsPath(path))) {
+					return path;
+				}
+			}
+			for (const dir of dirs) {
+				if (typescript.sys.directoryExists(dir) || typescript.sys.directoryExists(uriToFsPath(dir))) {
+					return dir;
+				}
+			}
+
+			return undefined;
+		},
+	}
 
 	const mapper = createMapper(sourceFiles, tsLanguageService, getTextDocument);
 	const options: TsApiRegisterOptions = {
@@ -105,6 +138,7 @@ export function createLanguageService(
 		tsLanguageService,
 		vueHost,
 		mapper,
+		documentContext,
 	};
 	const _callHierarchy = callHierarchy.register(options);
 	const findDefinition = definitions.register(options);
@@ -491,7 +525,7 @@ export function createLanguageService(
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, 'api'));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, 'api', options.documentContext));
 				vueScriptsUpdated = true;
 			}
 			else {

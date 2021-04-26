@@ -4,6 +4,7 @@ import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
 import * as css from 'vscode-css-languageservice';
+import type { DocumentContext } from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	CompletionItem,
@@ -37,6 +38,7 @@ export function createSourceFile(
 	tsLanguageService: ts2.LanguageService,
 	ts: typeof import('typescript'),
 	styleMode: 'api' | 'format',
+	documentContext: DocumentContext | undefined,
 ) {
 	// sources
 	const tsProjectVersion = ref<string>();
@@ -70,7 +72,7 @@ export function createSourceFile(
 	const sfcErrors = ref<Diagnostic[]>([]);
 
 	// virtual scripts
-	const _virtualStyles = useStylesRaw(ts, tsLanguageService, untrack(() => vueDoc.value), computed(() => descriptor.styles), styleMode);
+	const _virtualStyles = useStylesRaw(ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), styleMode, documentContext);
 	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template));
 	const templateData = computed<undefined | {
 		html?: string,

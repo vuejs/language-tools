@@ -11,22 +11,15 @@ import { notEmpty } from '@volar/shared';
 import * as languageServices from '../utils/languageServices';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
-	return (document: TextDocument) => {
+export function register({ documentContext, sourceFiles, vueHost }: TsApiRegisterOptions) {
+	return async (document: TextDocument) => {
 		const sourceFile = sourceFiles.get(document.uri);
 		if (!sourceFile) return;
-
-		const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
-		const documentContext = {
-			resolveReference: (ref: string, base: string) => {
-				return resolvePath(ref, base);
-			},
-		}
 
 		const tsResult = getTsResult(sourceFile);
 		const tsResult2 = getTsResult2(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
-		const cssResult = getCssResult(sourceFile);
+		const cssResult = await getCssResult(sourceFile);
 
 		return [
 			...cssResult,
@@ -159,13 +152,13 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 			}
 			return result;
 		}
-		function getCssResult(sourceFile: SourceFile) {
+		async function getCssResult(sourceFile: SourceFile) {
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
 				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				const links = cssLanguageService.findDocumentLinks(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
+				const links = await cssLanguageService.findDocumentLinks2(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
 					if (vueRange) {
@@ -177,26 +170,6 @@ export function register({ ts, sourceFiles, vueHost }: TsApiRegisterOptions) {
 				}
 			}
 			return result;
-		}
-		function resolvePath(ref: string, base: string) {
-			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
-			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
-
-			for (const failed of failedLookupLocations) {
-				let path = failed;
-				if (path.endsWith('.d.ts')) {
-					path = upath.trimExt(path);
-					path = upath.trimExt(path);
-				}
-				else {
-					path = upath.trimExt(path);
-				}
-				if (ts.sys.fileExists(uriToFsPath(path))) {
-					return path;
-				}
-			}
-
-			return ref;
 		}
 	}
 }

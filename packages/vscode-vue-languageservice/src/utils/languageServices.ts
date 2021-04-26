@@ -5,11 +5,46 @@ import type * as ts from 'typescript';
 import * as TS2 from '@volar/vscode-typescript-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { fsPathToUri, uriToFsPath } from '@volar/shared';
+import * as fs from 'fs';
 
-export const html = HTML.getLanguageService();
-export const css = CSS.getCSSLanguageService();
-export const scss = CSS.getSCSSLanguageService();
-export const less = CSS.getLESSLanguageService();
+const fileSystemProvider: HTML.FileSystemProvider = {
+    stat: (uri) => {
+        return new Promise<HTML.FileStat>((resolve, reject) => {
+            fs.stat(uriToFsPath(uri), (err, stats) => {
+                if (stats) {
+                    resolve({
+                        type: stats.isFile() ? HTML.FileType.File
+                            : stats.isDirectory() ? HTML.FileType.Directory
+                                : stats.isSymbolicLink() ? HTML.FileType.SymbolicLink
+                                    : HTML.FileType.Unknown,
+                        ctime: stats.ctimeMs,
+                        mtime: stats.mtimeMs,
+                        size: stats.size,
+                    });
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    },
+    readDirectory: (uri) => {
+        return new Promise<[string, HTML.FileType][]>((resolve, reject) => {
+            fs.readdir(uriToFsPath(uri), (err, files) => {
+                if (files) {
+                    resolve(files.map(file => [file, HTML.FileType.File]));
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    },
+}
+export const html = HTML.getLanguageService({ fileSystemProvider });
+export const css = CSS.getCSSLanguageService({ fileSystemProvider });
+export const scss = CSS.getSCSSLanguageService({ fileSystemProvider });
+export const less = CSS.getLESSLanguageService({ fileSystemProvider });
 export const pug = Pug.getLanguageService(html);
 
 export const postcss: CSS.LanguageService = {
