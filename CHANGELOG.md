@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.24.4
+
+- feat: support path completion for template languages (html, pug)
+- feat: support path completion for style languages (css, less, scss, postcss)
+- feat: support css code action
+- feat: dynamic resolve url links in css
+- fix: filter invalid component names [#159](https://github.com/johnsoncodehk/volar/issues/159)
+- fix: css completion broken
+- fix: don't increase indent on `<script>`, `<style>`
+
 ## 0.24.3
 
 - feat: new IDE option `volar.preferredAttrNameCase`
