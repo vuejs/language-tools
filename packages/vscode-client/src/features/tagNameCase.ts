@@ -120,10 +120,10 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
             statusBar.text = '<BOTH>';
         }
         else if (crtStyle === 'kebabCase') {
-            statusBar.text = '<kebab-case>';
+            statusBar.text = '<tag-name>';
         }
         else if (crtStyle === 'pascalCase') {
-            statusBar.text = '<PascalCase>';
+            statusBar.text = '<TagName>';
         }
     }
 }
