@@ -1,4 +1,4 @@
-import { getWordStart, languageIdToSyntax } from '@volar/shared';
+import { getWordStart, languageIdToSyntax, notEmpty } from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
@@ -14,7 +14,7 @@ import {
 	Range,
 	TextEdit
 } from 'vscode-languageserver-types';
-import { CompletionContext } from 'vscode-languageserver/node';
+import { CompletionContext, CompletionTriggerKind } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
 import { CompletionData } from '../types';
@@ -91,7 +91,16 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
+	let cache: {
+		uri: string,
+		tsResult?: CompletionList,
+		emmetResult?: CompletionList,
+		cssResult?: CompletionList,
+		htmlResult?: CompletionList,
+		vueResult?: CompletionList,
+	} | undefined = undefined;
 
 	return async (
 		uri: string,
@@ -106,27 +115,58 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
+		if (context?.triggerKind === CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
+			if (cache.tsResult?.isIncomplete) {
+				cache.tsResult = getTsResult(sourceFile);
+			}
+			if (cache.emmetResult?.isIncomplete) {
+				cache.emmetResult = getEmmetResult(sourceFile);
+			}
+			if (cache.cssResult?.isIncomplete) {
+				cache.cssResult = getCssResult(sourceFile);
+			}
+			if (cache.htmlResult?.isIncomplete) {
+				cache.htmlResult = await getHtmlResult(sourceFile);
+			}
+			if (cache.vueResult?.isIncomplete) {
+				cache.vueResult = getVueResult(sourceFile);
+			}
+			const lists = [
+				cache.tsResult,
+				cache.emmetResult,
+				cache.cssResult,
+				cache.htmlResult,
+				cache.vueResult,
+			];
+			return combineResults(...lists.filter(notEmpty));
+		}
+
 		const tsResult = getTsResult(sourceFile);
+		cache = { uri, tsResult };
 		if (tsResult) return tsResult;
 
 		const emmetResult = getEmmetResult(sourceFile);
 
 		// precede html for support inline css service
 		const cssResult = getCssResult(sourceFile);
-		if (cssResult) return withEmmetResult(cssResult, emmetResult);
+		cache = { uri, tsResult, emmetResult };
+		if (cssResult) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
 
 		const htmlResult = await getHtmlResult(sourceFile);
-		if (htmlResult) return withEmmetResult(htmlResult, emmetResult);
+		cache = { uri, htmlResult, emmetResult };
+		if (htmlResult) return emmetResult ? combineResults(htmlResult, emmetResult) : htmlResult;
 
 		const vueResult = getVueResult(sourceFile);
-		if (vueResult) return withEmmetResult(vueResult, emmetResult);
+		cache = { uri, vueResult, emmetResult };
+		if (vueResult) return emmetResult ? combineResults(vueResult, emmetResult) : vueResult;
 
+		cache = { uri, emmetResult };
 		return emmetResult;
 
-		function withEmmetResult(a: CompletionList, b?: CompletionList): CompletionList {
+		function combineResults(...lists: CompletionList[]) {
 			return {
-				isIncomplete: a.isIncomplete || !!b?.isIncomplete,
-				items: b ? a.items.concat(b.items) : a.items,
+				isIncomplete: lists.some(list => list.isIncomplete),
+				items: lists.map(list => list.items).flat(),
 			};
 		}
 		function getTsResult(sourceFile: SourceFile) {
