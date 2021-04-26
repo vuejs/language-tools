@@ -108,5 +108,5 @@ connection.onRequest(TagCloseRequest.type, handler => {
     return noStateLs.doAutoClose(document, handler.position);
 });
 connection.onRequest(GetTagStyleRequest.type, handler => {
-    return servicesManager?.getMatchService(handler.uri)?.detectTagStyle(handler.uri);
+    return servicesManager?.getMatchService(handler.uri)?.detectTagNameCase(handler.uri);
 });

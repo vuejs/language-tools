@@ -39,7 +39,7 @@ import * as codeLensResolve from './services/codeLensResolve';
 import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRange';
-import * as tagStyle from './services/tagStyle';
+import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
 import { UriMap } from '@volar/shared';
 
@@ -195,7 +195,7 @@ export function createLanguageService(
 		doHover: apiHook(hover.register(options), getShouldUpdateTemplateScript),
 		doComplete: apiHook(completions.register(options), getShouldUpdateTemplateScript),
 
-		detectTagStyle: apiHook(tagStyle.register(options)),
+		detectTagNameCase: apiHook(tagNameCase.register(options)),
 		getCodeActions: apiHook(codeActions.register(options), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
 		doCompletionResolve: apiHook(completionResolve.register(options), false),
