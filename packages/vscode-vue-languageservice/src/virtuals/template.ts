@@ -71,17 +71,17 @@ export function useTemplateScript(
 		codeGen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
 
 		codeGen.addText('/* Completion: Emits */\n');
-		for (const name of templateCodeGens.value.tags) {
+		for (const name of templateCodeGens.value.usedComponents) {
 			codeGen.addText(`// @ts-ignore\n`);
 			codeGen.addText(`__VLS_componentEmits['${name}']('');\n`); // TODO
 		}
 		codeGen.addText('/* Completion: Props */\n');
-		for (const name of templateCodeGens.value.tags) {
+		for (const name of templateCodeGens.value.usedComponents) {
 			codeGen.addText(`// @ts-ignore\n`);
 			codeGen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
 		}
 		codeGen.addText('/* Completion: Slots */\n');
-		for (const name of templateCodeGens.value.tags) {
+		for (const name of templateCodeGens.value.usedComponents) {
 			codeGen.addText(`// @ts-ignore\n`);
 			codeGen.addText(`__VLS_components['${name}'].__VLS_slots[''];\n`); // TODO
 		}

@@ -1,50 +1,101 @@
 import type { TsApiRegisterOptions } from '../types';
 import { hyphenate } from '@vue/shared';
+import { SourceFile } from '../sourceFile';
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
-	return (uri: string): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' => {
+	return (uri: string): {
+		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
+		attr: 'kebabCase' | 'pascalCase' | 'unsure',
+	} => {
 
 		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile) return 'unsure';
+		if (!sourceFile) return {
+			tag: 'unsure',
+			attr: 'unsure',
+		};
 
-		const components = sourceFile.getTemplateScriptData().components;
-		const usedTags = sourceFile.getUsedTags() ?? new Set();
+		return {
+			tag: getTagNameCase(sourceFile),
+			attr: getAttrNameCase(sourceFile),
+		};
 
-		let anyComponentUsed = false;
-		let hasPascalCase = false;
-		let hasKebabCase = false;
+		function getAttrNameCase(sourceFile: SourceFile): 'kebabCase' | 'pascalCase' | 'unsure' {
 
-		for (const component of components) {
-			if (usedTags.has(component) || usedTags.has(hyphenate(component))) {
-				anyComponentUsed = true;
-				break;
+			const attrNames = sourceFile.getTemplateAttrNames() ?? new Set();
+
+			let hasPascalCase = false;
+			let hasKebabCase = false;
+
+			for (const tagName of attrNames) {
+				// attrName
+				if (tagName !== hyphenate(tagName)) {
+					hasPascalCase = true;
+					break;
+				}
 			}
-		}
-		if (!anyComponentUsed) {
-			return 'unsure'; // not sure component style, because do not have any componnent using in <template> for check
-		}
-		for (const tagName of usedTags) {
-			if (tagName !== hyphenate(tagName)) {
-				hasPascalCase = true;
-				break;
+			for (const tagName of attrNames) {
+				// attr-name
+				if (tagName.indexOf('-') >= 0) {
+					hasKebabCase = true;
+					break;
+				}
 			}
-		}
-		for (const component of components) {
-			if (component !== hyphenate(component) && usedTags.has(hyphenate(component))) {
-				hasKebabCase = true;
-				break;
-			}
-		}
 
-		if (hasPascalCase && hasKebabCase) {
-			return 'both';
+			if (hasPascalCase && hasKebabCase) {
+				return 'kebabCase';
+			}
+			if (hasPascalCase) {
+				return 'pascalCase';
+			}
+			if (hasKebabCase) {
+				return 'kebabCase';
+			}
+			return 'unsure';
 		}
-		if (hasPascalCase) {
-			return 'pascalCase';
+		function getTagNameCase(sourceFile: SourceFile): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
+
+			const components = sourceFile.getTemplateScriptData().components;
+			const tagNames = sourceFile.getTemplateTagNames() ?? new Set();
+
+			let anyComponentUsed = false;
+			let hasPascalCase = false;
+			let hasKebabCase = false;
+
+			for (const component of components) {
+				if (tagNames.has(component) || tagNames.has(hyphenate(component))) {
+					anyComponentUsed = true;
+					break;
+				}
+			}
+			if (!anyComponentUsed) {
+				return 'unsure'; // not sure component style, because do not have any componnent using in <template> for check
+			}
+			for (const tagName of tagNames) {
+				// TagName
+				if (tagName !== hyphenate(tagName)) {
+					hasPascalCase = true;
+					break;
+				}
+			}
+			for (const component of components) {
+				// Tagname -> tagname
+				// TagName -> tag-name
+				if (component !== hyphenate(component) && tagNames.has(hyphenate(component))) {
+					hasKebabCase = true;
+					break;
+				}
+			}
+
+			if (hasPascalCase && hasKebabCase) {
+				return 'both';
+			}
+			if (hasPascalCase) {
+				return 'pascalCase';
+			}
+			if (hasKebabCase) {
+				return 'kebabCase';
+			}
+			return 'unsure';
 		}
-		if (hasKebabCase) {
-			return 'kebabCase';
-		}
-		return 'unsure';
 	}
 }

@@ -134,6 +134,23 @@
 					],
 					"default": "auto",
 					"description": "Preferred tag name case."
+				},
+				"volar.preferredAttrNameCase": {
+					"type": "string",
+					"enum": [
+						"auto-kebab",
+						"auto-pascal",
+						"kebab",
+						"pascal"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content (Preference kebab-case)",
+						"Auto Detect from Content (Preference pascalCase)",
+						"kebab-case",
+						"pascalCase"
+					],
+					"default": "auto-kebab",
+					"description": "Preferred attr name case."
 				}
 			}
 		},

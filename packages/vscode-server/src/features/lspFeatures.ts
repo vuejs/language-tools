@@ -1,4 +1,4 @@
-import { ActiveSelectionRequest, notEmpty, GetTagStyleRequest } from '@volar/shared';
+import { ActiveSelectionRequest, notEmpty, GetClientNameCasesRequest } from '@volar/shared';
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { getEmmetConfiguration } from '../configs';
 import { connection, documents, servicesManager, noStateLs } from '../instances';
@@ -12,7 +12,7 @@ connection.onCompletion(async handler => {
         handler.position,
         handler.context,
         getEmmetConfiguration,
-        () => connection.sendRequest(GetTagStyleRequest.type, {
+        () => connection.sendRequest(GetClientNameCasesRequest.type, {
             uri: handler.textDocument.uri
         }),
     );

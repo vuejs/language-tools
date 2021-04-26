@@ -147,7 +147,8 @@ export function createSourceFile(
 
 	return {
 		uri: vueUri,
-		getUsedTags: untrack(() => virtualTemplateGen.templateCodeGens.value?.tags_2),
+		getTemplateTagNames: untrack(() => virtualTemplateGen.templateCodeGens.value?.tagNames),
+		getTemplateAttrNames: untrack(() => virtualTemplateGen.templateCodeGens.value?.attrNames),
 		getTextDocument: untrack(() => vueDoc.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),

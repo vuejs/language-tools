@@ -98,7 +98,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		position: Position,
 		context?: CompletionContext,
 		getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig,
-		getTagStyle?: () => Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>,
+		getTagStyle?: () => Promise<{
+			tag: 'both' | 'kebabCase' | 'pascalCase',
+			attr: 'kebabCase' | 'pascalCase',
+		}>,
 	) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -186,7 +189,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return;
 			}
-			const tagStyle = await getTagStyle?.() ?? 'both';
+			const nameCases = await getTagStyle?.() ?? { tag: 'both', attr: 'kebabCase' };
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];
@@ -200,96 +203,69 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				const slots: html.IAttributeData[] = [];
 				for (const [_componentName, { item, bind, on, slot }] of componentCompletion) {
 					const componentNames =
-						tagStyle === 'kebabCase'
+						nameCases.tag === 'kebabCase'
 							? new Set([hyphenate(_componentName)])
-							: tagStyle === 'pascalCase'
+							: nameCases.tag === 'pascalCase'
 								? new Set([_componentName])
 								: new Set([hyphenate(_componentName), _componentName])
 					for (const componentName of componentNames) {
-						if (componentName === '*') {
-							for (const prop of bind) {
-								const name: string = prop.data.name;
-								if (name.length > 2 && hyphenate(name).startsWith('on-')) {
-									const propName = '@' + hyphenate(name).substr('on-'.length);
-									const propKey = componentName + ':' + propName;
-									globalAttributes.push({
-										name: propName,
-										description: propKey,
-									});
-									tsItems.set(propKey, prop);
-								}
-								else {
-									const propName = ':' + hyphenate(name);
-									const propKey = componentName + ':' + propName;
-									globalAttributes.push({
-										name: propName,
-										description: propKey,
-									});
-									tsItems.set(propKey, prop);
-								}
-							}
-						}
-						else {
-							const attributes: html.IAttributeData[] = [];
-							for (const prop of bind) {
-								const name: string = prop.data.name;
-								if (name.length > 2 && hyphenate(name).startsWith('on-')) {
-									const propName = '@' + hyphenate(name).substr('on-'.length);
-									const propKey = componentName + ':' + propName;
-									attributes.push({
-										name: propName,
-										description: propKey,
-									});
-									tsItems.set(propKey, prop);
-								}
-								else {
-									const propName = hyphenate(name);
-									const propKey = componentName + ':' + propName;
-									attributes.push(
-										{
-											name: propName,
-											description: propKey,
-										},
-										{
-											name: ':' + propName,
-											description: propKey,
-										}
-									);
-									tsItems.set(propKey, prop);
-								}
-							}
-							for (const event of on) {
-								const propName = '@' + hyphenate(event.data.name);
+						const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
+						for (const prop of bind) {
+							const _name: string = prop.data.name;
+							const name = nameCases.attr === 'pascalCase' ? _name : hyphenate(_name);
+							if (hyphenate(name).startsWith('on-')) {
+								const propName = '@' + name.substr('on-'.length);
 								const propKey = componentName + ':' + propName;
 								attributes.push({
 									name: propName,
 									description: propKey,
 								});
-								tsItems.set(propKey, event);
-							}
-							for (const _slot of slot) {
-								const propName = '#' + _slot.data.name;
-								const propKey = componentName + ':' + propName;
-								slots.push({
-									name: propName,
-									description: propKey,
-								});
-								tsItems.set(propKey, _slot);
-							}
-							if (item) {
-								tags.push({
-									name: componentName,
-									description: componentName + ':',
-									attributes,
-								});
-								tsItems.set(componentName + ':', item);
+								tsItems.set(propKey, prop);
 							}
 							else {
-								tags.push({
-									name: componentName,
-									attributes,
-								});
+								const propName = name;
+								const propKey = componentName + ':' + propName;
+								attributes.push(
+									{
+										name: propName,
+										description: propKey,
+									},
+									{
+										name: ':' + propName,
+										description: propKey,
+									}
+								);
+								tsItems.set(propKey, prop);
 							}
+						}
+						for (const event of on) {
+							const name = nameCases.attr === 'pascalCase' ? event.data.name : hyphenate(event.data.name);
+							const propName = '@' + name;
+							const propKey = componentName + ':' + propName;
+							attributes.push({
+								name: propName,
+								description: propKey,
+							});
+							tsItems.set(propKey, event);
+						}
+						for (const _slot of slot) {
+							const propName = '#' + _slot.data.name;
+							const propKey = componentName + ':' + propName;
+							slots.push({
+								name: propName,
+								description: propKey,
+							});
+							tsItems.set(propKey, _slot);
+						}
+						if (componentName !== '*') {
+							tags.push({
+								name: componentName,
+								description: componentName + ':',
+								attributes,
+							});
+						}
+						if (item) {
+							tsItems.set(componentName + ':', item);
 						}
 					}
 				}

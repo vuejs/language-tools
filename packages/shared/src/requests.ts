@@ -46,8 +46,17 @@ export namespace RestartServerNotification {
 export namespace ShowReferencesNotification {
 	export const type: NotificationType<{ uri: DocumentUri, position: Position, references: Location[] }> = new NotificationType('vue.findReferences');
 }
-export namespace GetTagStyleRequest {
-	export const type: RequestType<TextDocumentIdentifier, 'both' | 'kebabCase' | 'pascalCase' | 'unsure', any> = new RequestType('volar/detectTagStyle');
+export namespace GetServerNameCasesRequest {
+	export const type: RequestType<TextDocumentIdentifier, {
+		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
+		attr: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
+	}, any> = new RequestType('volar/getTagNameCaseServer');
+}
+export namespace GetClientNameCasesRequest {
+	export const type: RequestType<TextDocumentIdentifier, {
+		tag: 'both' | 'kebabCase' | 'pascalCase',
+		attr: 'kebabCase' | 'pascalCase',
+	}, any> = new RequestType('volar/getTagNameCaseClient');
 }
 
 // semantic tokens

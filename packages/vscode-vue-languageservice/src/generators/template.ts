@@ -50,8 +50,9 @@ export function generate(
 	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const cssCodeGen = createCodeGen<undefined>();
-	const tags = new Set<string>();
-	const tags_2 = new Set<string>();
+	const usedComponents = new Set<string>();
+	const tagNames = new Set<string>();
+	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
 		loc: SourceMaps.Range,
@@ -107,8 +108,9 @@ export function generate(
 		codeGen: tsCodeGen,
 		formatCodeGen: tsFormatCodeGen,
 		cssCodeGen: cssCodeGen,
-		tags,
-		tags_2,
+		usedComponents,
+		tagNames,
+		attrNames,
 	};
 
 	function getComponentName(tagName: string) {
@@ -141,8 +143,8 @@ export function generate(
 				parentEl = node;
 			}
 
-			tags.add(getComponentName(node.tag));
-			tags_2.add(node.tag);
+			usedComponents.add(getComponentName(node.tag));
+			tagNames.add(node.tag);
 			tsCodeGen.addText(`{\n`);
 			{
 
@@ -642,6 +644,10 @@ export function generate(
 					continue;
 				}
 
+				if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION) {
+					attrNames.add(prop.arg.content);
+				}
+
 				// camelize name
 				const diagStart = tsCodeGen.getText().length;
 				// `'${propName}': (${propValue})`
@@ -749,6 +755,8 @@ export function generate(
 				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
 				const propName2 = prop.name;
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
+
+				attrNames.add(prop.name);
 
 				if (isClassOrStyleAttr) {
 					tsCodeGen.addText(`// @ts-ignore\n`);

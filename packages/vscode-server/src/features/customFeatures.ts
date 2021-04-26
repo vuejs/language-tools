@@ -8,7 +8,7 @@ import {
     uriToFsPath,
     VerifyAllScriptsRequest,
     WriteVirtualFilesRequest,
-    GetTagStyleRequest
+    GetServerNameCasesRequest
 } from '@volar/shared';
 import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
 import * as fs from 'fs-extra';
@@ -107,6 +107,6 @@ connection.onRequest(TagCloseRequest.type, handler => {
     if (!document) return;
     return noStateLs.doAutoClose(document, handler.position);
 });
-connection.onRequest(GetTagStyleRequest.type, handler => {
+connection.onRequest(GetServerNameCasesRequest.type, handler => {
     return servicesManager?.getMatchService(handler.uri)?.detectTagNameCase(handler.uri);
 });
