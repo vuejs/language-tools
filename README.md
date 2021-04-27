@@ -10,7 +10,7 @@ Volar is a Language Support plugin built specifically for Vue 3. It's based on [
 
 [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
-Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions supporte Vue, so you could install these yourself if needed.
+Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions supports Vue, so you could install these yourself if needed.
 
 If you need Type-Checking on command line, use [vue-tsc](https://github.com/johnsoncodehk/vue-tsc).
 
