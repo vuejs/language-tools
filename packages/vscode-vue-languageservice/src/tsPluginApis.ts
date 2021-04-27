@@ -180,8 +180,8 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
             return {
                 fileName: vueRange.fileName,
                 textSpan: {
-                    start: vueRange.start,
-                    length: vueRange.end - vueRange.start,
+                    start: vueRange.range.start,
+                    length: vueRange.range.end - vueRange.range.start,
                 },
             }
         }

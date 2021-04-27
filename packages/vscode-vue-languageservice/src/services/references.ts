@@ -28,7 +28,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (!tsRange.data.capabilities.references)
 				continue;
 
-			withTeleports(tsRange.textDocument.uri, tsRange.start);
+			withTeleports(tsRange.textDocument.uri, tsRange.range.start);
 
 			function withTeleports(uri: string, position: Position) {
 
@@ -56,7 +56,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const vueRange of mapper.ts.from(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
 				vueResult.push({
 					uri: vueRange.textDocument.uri,
-					range: vueRange,
+					range: vueRange.range,
 				});
 			}
 		}
@@ -72,7 +72,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		for (const cssRange of mapper.css.to(uri, position)) {
 			const cssLocs = cssRange.languageService.findReferences(
 				cssRange.textDocument,
-				cssRange.start,
+				cssRange.range.start,
 				cssRange.stylesheet,
 			);
 			cssResult = cssResult.concat(cssLocs);
@@ -83,7 +83,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const vueRange of mapper.css.from(cssLoc.uri, cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
 					uri: vueRange.textDocument.uri,
-					range: vueRange,
+					range: vueRange.range,
 				});
 			}
 		}

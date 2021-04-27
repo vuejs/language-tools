@@ -36,7 +36,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (!tsRange.sourceMap?.capabilities.codeActions)
 				continue;
 
-			let tsCodeActions = tsRange.languageService.getCodeActions(tsRange.textDocument.uri, tsRange, tsContext);
+			let tsCodeActions = tsRange.languageService.getCodeActions(tsRange.textDocument.uri, tsRange.range, tsContext);
 			if (!tsCodeActions)
 				continue;
 
@@ -74,7 +74,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				),
 				only: context.only,
 			};
-			const cssCodeActions = cssRange.languageService.doCodeActions2(cssRange.textDocument, cssRange, cssContext, cssRange.stylesheet);
+			const cssCodeActions = cssRange.languageService.doCodeActions2(cssRange.textDocument, cssRange.range, cssContext, cssRange.stylesheet);
 			for (const cssCodeAction of cssCodeActions) {
 
 				// TODO

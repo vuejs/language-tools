@@ -11,15 +11,15 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (!tsRange.data.capabilities.completion)
 				continue;
 
-			const defs = tsRange.languageService.findDefinition(tsRange.textDocument.uri, tsRange.start);
+			const defs = tsRange.languageService.findDefinition(tsRange.textDocument.uri, tsRange.range.start);
 			let isDef = false;
 			for (const def of defs) {
 				const uri = Location.is(def) ? def.uri : def.targetUri;
 				const range = Location.is(def) ? def.range : def.targetSelectionRange;
 				if (
 					uri === tsRange.textDocument.uri
-					&& range.end.line === tsRange.start.line
-					&& range.end.character === tsRange.start.character
+					&& range.end.line === tsRange.range.start.line
+					&& range.end.character === tsRange.range.start.character
 				) {
 					isDef = true;
 					break;
@@ -29,7 +29,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (isDef)
 				continue;
 
-			const typeDefs = tsRange.languageService.findTypeDefinition(tsRange.textDocument.uri, tsRange.start);
+			const typeDefs = tsRange.languageService.findTypeDefinition(tsRange.textDocument.uri, tsRange.range.start);
 			for (const typeDefine of typeDefs) {
 				const uri = Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
 				const range = Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;

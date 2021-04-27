@@ -42,7 +42,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (!tsRange.data.capabilities.definitions)
 				continue;
 
-			withTeleports(tsRange.textDocument.uri, tsRange.start, true);
+			withTeleports(tsRange.textDocument.uri, tsRange.range.start, true);
 
 			function withTeleports(uri: string, position: Position, isOriginal: boolean) {
 
@@ -75,7 +75,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			if (tsLoc.isOriginal && tsLoc.originSelectionRange) {
 				const ranges = mapper.ts.from(tsLoc.originalUri, tsLoc.originSelectionRange.start, tsLoc.originSelectionRange.end);
 				if (ranges.length) {
-					originSelectionRange = ranges[0];
+					originSelectionRange = ranges[0].range;
 				}
 			}
 		}
@@ -88,8 +88,8 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 			vueResult.push({
 				targetUri: targetSelectionRange[0].textDocument.uri,
-				targetRange: targetRange.length ? targetRange[0] : targetSelectionRange[0],
-				targetSelectionRange: targetSelectionRange[0],
+				targetRange: targetRange.length ? targetRange[0].range : targetSelectionRange[0].range,
+				targetSelectionRange: targetSelectionRange[0].range,
 				originSelectionRange,
 			});
 		}
@@ -105,7 +105,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		for (const cssRange of mapper.css.to(uri, position)) {
 			const cssLoc = cssRange.languageService.findDefinition(
 				cssRange.textDocument,
-				cssRange.start,
+				cssRange.range.start,
 				cssRange.stylesheet,
 			);
 			if (cssLoc) {
@@ -118,7 +118,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const vueRange of mapper.css.from(cssLoc.uri, cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
 					uri: vueRange.textDocument.uri,
-					range: vueRange,
+					range: vueRange.range,
 				});
 			}
 		}

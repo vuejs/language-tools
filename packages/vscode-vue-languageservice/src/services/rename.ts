@@ -60,7 +60,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			) {
 				const tsPrepare = tsRange.languageService.prepareRename(
 					tsRange.textDocument.uri,
-					tsRange.start,
+					tsRange.range.start,
 				);
 				if (!tsPrepare)
 					continue;
@@ -69,7 +69,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 					return tsPrepare;
 
 				for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsPrepare.start, tsPrepare.end))
-					return vueRange;
+					return vueRange.range;
 			}
 		}
 	}
@@ -103,7 +103,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				|| (typeof tsRange.data.capabilities.rename === 'object' && tsRange.data.capabilities.rename.in)
 			) {
 				const newName_2 = tsRange.data.beforeRename ? tsRange.data.beforeRename(newName) : newName;
-				withTeleports(tsRange.textDocument.uri, tsRange.start, newName_2);
+				withTeleports(tsRange.textDocument.uri, tsRange.range.start, newName_2);
 
 				function withTeleports(uri: string, position: Position, newName: string) {
 
@@ -150,10 +150,10 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	function onCssPrepare(uri: string, position: Position) {
 		for (const cssRange of mapper.css.to(uri, position)) {
 			const wordPattern = wordPatterns[cssRange.textDocument.languageId] ?? wordPatterns.css;
-			const wordStart = getWordStart(wordPattern, cssRange.end, cssRange.textDocument);
+			const wordStart = getWordStart(wordPattern, cssRange.range.end, cssRange.textDocument);
 			if (wordStart) {
-				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordStart, cssRange.end)) {
-					return vueRange;
+				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordStart, cssRange.range.end)) {
+					return vueRange.range;
 				}
 			}
 		}
@@ -168,7 +168,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		for (const cssRange of mapper.css.to(uri, position)) {
 			const cssWorkspaceEdit = cssRange.languageService.doRename(
 				cssRange.textDocument,
-				cssRange.start,
+				cssRange.range.start,
 				newName,
 				cssRange.stylesheet,
 			);
@@ -194,7 +194,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 					}
 					vueResult.changes[vueRange.textDocument.uri].push({
 						newText: cssEdit.newText,
-						range: vueRange,
+						range: vueRange.range,
 					});
 				}
 			}
@@ -262,7 +262,7 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 					|| (typeof vueRange.data.capabilities.rename === 'object' && vueRange.data.capabilities.rename.out)
 				) {
 					const newText_2 = vueRange.data?.doRename
-						? vueRange.data.doRename(vueRange.textDocument.getText(vueRange), tsEdit.newText)
+						? vueRange.data.doRename(vueRange.textDocument.getText(vueRange.range), tsEdit.newText)
 						: tsEdit.newText;
 
 					if (!vueResult.changes) {
@@ -273,7 +273,7 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 					}
 					vueResult.changes[vueRange.textDocument.uri].push({
 						newText: newText_2,
-						range: vueRange,
+						range: vueRange.range,
 					});
 					hasResult = true;
 				}
@@ -298,9 +298,9 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOp
 					for (const vueRange of mapper.ts.from(tsDocEdit.textDocument.uri, tsEdit.range.start, tsEdit.range.end)) {
 						if (isValidRange(vueRange.data)) {
 							_vueDocEdit.edits.push({
-								annotationId: AnnotatedTextEdit.is(tsEdit) ? tsEdit.annotationId : undefined,
+								annotationId: AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
 								newText: tsEdit.newText,
-								range: vueRange,
+								range: vueRange.range,
 							});
 						}
 					}

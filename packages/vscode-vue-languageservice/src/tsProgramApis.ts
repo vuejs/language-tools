@@ -74,8 +74,8 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                         const newDiagnostic: T = {
                             ...diagnostic,
                             file,
-                            start: tsOrVueRange.start,
-                            length: tsOrVueRange.end - tsOrVueRange.start,
+                            start: tsOrVueRange.range.start,
+                            length: tsOrVueRange.range.end - tsOrVueRange.range.start,
                         };
                         const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
                         if (relatedInformation) {

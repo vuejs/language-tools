@@ -39,7 +39,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 			const tsHover = tsRange.languageService.doHover(
 				tsRange.textDocument.uri,
-				tsRange.start,
+				tsRange.range.start,
 				isExtra,
 			);
 			if (!tsHover) continue;
@@ -64,7 +64,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsHover.range.start, tsHover.range.end)) {
 					result = {
 						...tsHover,
-						range: vueRange,
+						range: vueRange.range,
 					};
 				}
 			}
@@ -84,12 +84,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			const htmlHover = htmlRange.language === 'html'
 				? htmlRange.languageService.doHover(
 					htmlRange.textDocument,
-					htmlRange.start,
+					htmlRange.range.start,
 					htmlRange.htmlDocument,
 				)
 				: htmlRange.languageService.doHover(
 					htmlRange.pugDocument,
-					htmlRange.start,
+					htmlRange.range.start,
 				)
 			if (!htmlHover)
 				continue;
@@ -101,7 +101,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const vueRange of mapper.html.from(htmlRange.textDocument.uri, htmlHover.range.start, htmlHover.range.end)) {
 				result = {
 					...htmlHover,
-					range: vueRange,
+					range: vueRange.range,
 				};
 			}
 		}
@@ -116,7 +116,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		for (const cssMaped of mapper.css.to(uri, position)) {
 			const cssHover = cssMaped.languageService.doHover(
 				cssMaped.textDocument,
-				cssMaped.start,
+				cssMaped.range.start,
 				cssMaped.stylesheet,
 			);
 			if (!cssHover)
@@ -129,7 +129,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const vueRange of mapper.css.from(cssMaped.textDocument.uri, cssHover.range.start, cssHover.range.end)) {
 				result = {
 					...cssHover,
-					range: vueRange,
+					range: vueRange.range,
 				};
 			}
 		}
