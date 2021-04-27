@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.24.5
+
+- fix: css hover quick info not working
+- perf: perf: don't send source map to lsp protocol to avoid json parse
+
 ## 0.24.4
 
 - feat: support path completion for template languages (html, pug)
