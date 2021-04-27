@@ -4,19 +4,19 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
-Volar is a Language Support plugin built specifically for Vue 3. It's based on `@vue/reactivity` to calculate TypeScript on-demand to optimization performance close to native TypeScript language service.
+Volar is a Language Support plugin built specifically for Vue 3. It's based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate TypeScript on-demand to optimize performance similar to the native TypeScript language service.
 
-🛠️ This project is still refactoring to make it easier for contribute.
+🛠️ This project is still in refactoring to make contributing easier.
 
 [[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
-Volar does not include ESLint and Prettier, but ESLint and Prettier official extension supported Vue, you could install these yourself if you need.
+Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions supporte Vue, so you could install these yourself if needed.
 
 If you need Type-Checking on command line, use [vue-tsc](https://github.com/johnsoncodehk/vue-tsc).
 
 ## Sponsors
 
-If you like this extension, please consider to becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). Thank you.
+If you like this extension, please consider becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). Thank you.
 
 ## Quick Start
 
