@@ -64,25 +64,26 @@ declare global {
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : unknown;
 	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
+	type __VLS_UnknownToAny<T> = T extends unknown ? any : T;
 	type __VLS_EmitEvent2<F, E> =
 		F extends {
 			(event: E, ...payload: infer P): infer R
 			(...args: any): any
 			(...args: any): any
 			(...args: any): any
-		} ? (...payload: P) => R
+		} ? (...payload: __VLS_UnknownToAny<P>) => __VLS_UnknownToAny<R>
 		: F extends {
 			(event: E, ...payload: infer P): infer R
 			(...args: any): any
 			(...args: any): any
-		} ? (...payload: P) => R
+		} ? (...payload: __VLS_UnknownToAny<P>) => __VLS_UnknownToAny<R>
 		: F extends {
 			(event: E, ...payload: infer P): infer R
 			(...args: any): any
-		} ? (...payload: P) => R
+		} ? (...payload: __VLS_UnknownToAny<P>) => __VLS_UnknownToAny<R>
 		: F extends {
 			(event: E, ...payload: infer P): infer R
-		} ? (...payload: P) => R
+		} ? (...payload: __VLS_UnknownToAny<P>) => __VLS_UnknownToAny<R>
 		: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 	type __VLS_EmitEvent<T, E> = T extends { __VLS_raw: infer R } ? __VLS_EmitEvent0<R, E> : __VLS_EmitEvent0<T, E>;
 	type __VLS_EmitEvent0<T, E> =
