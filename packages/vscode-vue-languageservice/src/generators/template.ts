@@ -296,7 +296,7 @@ export function generate(
 						capabilities: capabilitiesSet.noFormatting,
 					},
 				);
-				tsCodeGen.addText(` = __VLS_pickNotAny(${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
+				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName}, ${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
 
 				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
