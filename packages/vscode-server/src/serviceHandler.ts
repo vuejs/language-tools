@@ -4,24 +4,23 @@ import { FsPathSet, FsPathMap } from '@volar/shared';
 import type * as ts from 'typescript';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection, Disposable, TextDocuments, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
+import type { Disposable, TextDocuments, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 
 export type ServiceHandler = ReturnType<typeof createServiceHandler>;
 
 export function createServiceHandler(
+	mode: 'api' | 'doc',
 	tsConfig: string,
 	ts: typeof import('typescript'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	connection: Connection,
 	documents: TextDocuments<TextDocument>,
-	isConnectionInited: () => boolean,
 	fileUpdatedCb: (fileName: string) => any,
 	_onProjectFilesUpdate: (() => void) | undefined,
+	workDoneProgress: WorkDoneProgressServerReporter,
 ) {
 
 	let projectVersion = 0;
 	let parsedCommandLine: ts.ParsedCommandLine;
-	let workDoneProgress: WorkDoneProgressServerReporter | undefined;
 	let vueLs: LanguageService | undefined;
 	const snapshots = new FsPathMap<{
 		version: string,
@@ -41,7 +40,6 @@ export function createServiceHandler(
 	const disposables: Disposable[] = [];
 
 	update();
-	prepareNextProgress();
 
 	return {
 		update,
@@ -51,30 +49,28 @@ export function createServiceHandler(
 		getLanguageServiceDontCreate: () => vueLs,
 		getParsedCommandLine: () => parsedCommandLine,
 		dispose,
-		prepareNextProgress,
 	};
 
 	function getLanguageService() {
 		if (!vueLs) {
 			vueLs = createLanguageService(languageServiceHost, { typescript: ts }, async p => {
 				if (p === 0) {
-					workDoneProgress?.begin('Initializing Vue language features');
+					if (mode === 'api') {
+						workDoneProgress.begin('Initializing Vue language features (API)');
+					}
+					else {
+						workDoneProgress.begin('Initializing Vue language features (Document)');
+					}
 				}
 				if (p < 1) {
-					workDoneProgress?.report(p * 100);
+					workDoneProgress.report(p * 100);
 				}
 				else {
-					prepareNextProgress();
+					workDoneProgress.done();
 				}
 			});
 		}
 		return vueLs;
-	}
-	async function prepareNextProgress() {
-		workDoneProgress?.done();
-		if (isConnectionInited()) {
-			workDoneProgress = await connection.window.createWorkDoneProgress();
-		}
 	}
 	function update() {
 

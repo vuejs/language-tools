@@ -8,6 +8,7 @@ import { createServiceHandler, ServiceHandler } from './serviceHandler';
 export type ServicesManager = ReturnType<typeof createServicesManager>;
 
 export function createServicesManager(
+	mode: 'api' | 'doc',
 	ts: typeof import('typescript'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	connection: Connection,
@@ -17,7 +18,6 @@ export function createServicesManager(
 	_onProjectFilesUpdate?: () => void,
 ) {
 
-	let connectionInited = false;
 	let filesUpdateTrigger = false;
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
@@ -64,7 +64,6 @@ export function createServicesManager(
 		getMatchService,
 		getMatchTsConfig,
 		restartAll,
-		onConnectionInited,
 	};
 
 	async function onDocumentUpdated(changeDoc: TextDocument) {
@@ -147,13 +146,7 @@ export function createServicesManager(
 			}
 		}
 	}
-	async function onConnectionInited() {
-		connectionInited = true;
-		for (const [_, service] of services) {
-			service.prepareNextProgress();
-		}
-	}
-	function onTsConfigChanged(tsConfig: string) {
+	async function onTsConfigChanged(tsConfig: string) {
 		for (const doc of documents.all()) {
 			if (doc.languageId === 'vue') {
 				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
@@ -166,14 +159,14 @@ export function createServicesManager(
 		}
 		if (ts.sys.fileExists(tsConfig)) {
 			services.set(tsConfig, createServiceHandler(
+				mode,
 				tsConfig,
 				ts,
 				tsLocalized,
-				connection,
 				documents,
-				() => connectionInited,
 				onFileUpdated,
 				_onProjectFilesUpdate,
+				await connection.window.createWorkDoneProgress(),
 			));
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {

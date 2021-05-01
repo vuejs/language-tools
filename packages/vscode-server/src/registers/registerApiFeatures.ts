@@ -5,6 +5,7 @@ import {
 import {
     CallHierarchyPrepareRequest,
     CompletionRequest,
+    Connection,
     DefinitionRequest,
     ExecuteCommandRequest,
     HoverRequest,
@@ -16,37 +17,38 @@ import {
 } from 'vscode-languageserver/node';
 import {
     allFilesReg,
-    connection,
     vueFileReg
-} from '../instances';
+} from '../features/shared';
 
-connection.client.register(ReferencesRequest.type, vueFileReg);
-connection.client.register(DefinitionRequest.type, vueFileReg);
-connection.client.register(CallHierarchyPrepareRequest.type, allFilesReg);
-connection.client.register(TypeDefinitionRequest.type, vueFileReg);
-connection.client.register(HoverRequest.type, vueFileReg);
-connection.client.register(RenameRequest.type, {
-    documentSelector: vueFileReg.documentSelector,
-    prepareProvider: true,
-});
-connection.client.register(SelectionRangeRequest.type, vueFileReg);
-connection.client.register(SignatureHelpRequest.type, {
-    documentSelector: vueFileReg.documentSelector,
-    triggerCharacters: ['(', ',', '<'],
-    retriggerCharacters: [')'],
-});
-connection.client.register(ExecuteCommandRequest.type, {
-    commands: [
-        Commands.HTML_TO_PUG,
-        Commands.PUG_TO_HTML,
-        Commands.SWITCH_REF_SUGAR,
-        Commands.SHOW_REFERENCES,
-        Commands.CONVERT_TO_KEBAB_CASE,
-        Commands.CONVERT_TO_PASCAL_CASE,
-    ]
-});
-connection.client.register(CompletionRequest.type, {
-    documentSelector: vueFileReg.documentSelector,
-    triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
-    resolveProvider: true,
-});
+export function register(connection: Connection) {
+    connection.client.register(ReferencesRequest.type, vueFileReg);
+    connection.client.register(DefinitionRequest.type, vueFileReg);
+    connection.client.register(CallHierarchyPrepareRequest.type, allFilesReg);
+    connection.client.register(TypeDefinitionRequest.type, vueFileReg);
+    connection.client.register(HoverRequest.type, vueFileReg);
+    connection.client.register(RenameRequest.type, {
+        documentSelector: vueFileReg.documentSelector,
+        prepareProvider: true,
+    });
+    connection.client.register(SelectionRangeRequest.type, vueFileReg);
+    connection.client.register(SignatureHelpRequest.type, {
+        documentSelector: vueFileReg.documentSelector,
+        triggerCharacters: ['(', ',', '<'],
+        retriggerCharacters: [')'],
+    });
+    connection.client.register(ExecuteCommandRequest.type, {
+        commands: [
+            Commands.HTML_TO_PUG,
+            Commands.PUG_TO_HTML,
+            Commands.SWITCH_REF_SUGAR,
+            Commands.SHOW_REFERENCES,
+            Commands.CONVERT_TO_KEBAB_CASE,
+            Commands.CONVERT_TO_PASCAL_CASE,
+        ]
+    });
+    connection.client.register(CompletionRequest.type, {
+        documentSelector: vueFileReg.documentSelector,
+        triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
+        resolveProvider: true,
+    });
+}

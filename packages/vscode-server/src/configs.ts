@@ -1,10 +1,10 @@
 import { codeLensOptions } from '@volar/vscode-vue-languageservice';
 import type * as emmet from 'vscode-emmet-helper';
-import { connection } from './instances';
+import { Connection } from 'vscode-languageserver/node';
 
 let emmetConfig: any;
 
-export function updateConfigs() {
+export function updateConfigs(connection: Connection) {
 
     updateCodeLensConfig();
     updateEmmetConfig();

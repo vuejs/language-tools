@@ -7,44 +7,48 @@ import {
 	uriToFsPath
 } from '@volar/shared';
 import {
-	createNoStateLanguageService,
+	createNoStateLanguageService
 } from '@volar/vscode-vue-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
+	createConnection,
 	DidChangeConfigurationNotification,
 	InitializeParams,
 	InitializeResult,
+	ProposedFeatures,
+	TextDocuments,
 	TextDocumentSyncKind
 } from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
-import './features/customFeatures';
-import './features/lspFeatures';
-import { connection, documents, servicesManager, setServicesManager, setNoStateLs } from './instances';
-import { createServicesManager } from './servicesManager';
+import { createServicesManager, ServicesManager } from './servicesManager';
 
-let mode: ServerInitializationOptions['mode'] = 'api';
+const connection = createConnection(ProposedFeatures.all);
+const documents = new TextDocuments(TextDocument);
+
+let options: ServerInitializationOptions;
+let folders: string[] = [];
 
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
-connection.onDidChangeConfiguration(updateConfigs);
+connection.onDidChangeConfiguration(() => updateConfigs(connection));
 connection.listen();
 documents.listen(connection);
 
 function onInitialize(params: InitializeParams) {
 
-	const options: ServerInitializationOptions = params.initializationOptions;
-	const folders = params.workspaceFolders
+	options = params.initializationOptions;
+	folders = params.workspaceFolders
 		? params.workspaceFolders
 			.map(folder => folder.uri)
 			.filter(uri => uri.startsWith('file:/'))
 			.map(uri => uriToFsPath(uri))
 		: [];
+
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 		}
 	};
-
-	mode = options.mode;
 
 	if (options.mode === 'api') {
 		result.capabilities.workspace = {
@@ -63,20 +67,29 @@ function onInitialize(params: InitializeParams) {
 		}
 	}
 
+	return result;
+}
+async function onInitialized() {
+
+	let servicesManager: ServicesManager | undefined;
+
 	if (options.mode === 'html') {
-		setNoStateLs(createNoStateLanguageService({ typescript: loadVscodeTypescript(options.appRoot) }));
+		const noStateLs = createNoStateLanguageService({ typescript: loadVscodeTypescript(options.appRoot) });
+		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
 	}
 	else if (options.mode === 'api') {
-		setServicesManager(createServicesManager(
+		servicesManager = createServicesManager(
+			'api',
 			loadVscodeTypescript(options.appRoot),
 			loadVscodeTypescriptLocalized(options.appRoot, options.language),
 			connection,
 			documents,
 			folders,
-		));
+		);
 	}
 	else if (options.mode === 'doc') {
-		setServicesManager(createServicesManager(
+		servicesManager = createServicesManager(
+			'doc',
 			loadVscodeTypescript(options.appRoot),
 			loadVscodeTypescriptLocalized(options.appRoot, options.language),
 			connection,
@@ -84,18 +97,19 @@ function onInitialize(params: InitializeParams) {
 			folders,
 			async (uri: string) => await connection.sendRequest(DocumentVersionRequest.type, { uri }),
 			async () => await connection.sendNotification(SemanticTokensChangedNotification.type),
-		));
+		);
 	}
 
-	return result;
-}
-function onInitialized() {
-	switch (mode) {
-		case 'api': import('./registers/registerApiFeatures'); break;
-		case 'doc': import('./registers/registerDocumentFeatures'); break;
-		case 'html': import('./registers/registerHtmlFeatures'); break;
+	if (servicesManager) {
+		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
+		(await import('./features/lspFeatures')).register(connection, documents, servicesManager);
 	}
-	servicesManager?.onConnectionInited();
+
+	switch (options.mode) {
+		case 'api': (await import('./registers/registerApiFeatures')).register(connection); break;
+		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection); break;
+		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
+	}
 	connection.client.register(DidChangeConfigurationNotification.type, undefined);
-	updateConfigs();
+	updateConfigs(connection);
 }

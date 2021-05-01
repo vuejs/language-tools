@@ -89,7 +89,6 @@ export function createLanguageService(
 	let tsProjectVersion = 0;
 	let tsProjectVersionWithoutTemplate = 0;
 	let lastCompletionUpdateVersion = -1;
-	let shouldSendUpdate = true;
 	const documents = new UriMap<TextDocument>();
 	const sourceFiles = new UriMap<SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
@@ -507,20 +506,11 @@ export function createLanguageService(
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
 		let vueTemplateScriptUpdated = false;
-		let updateNums = uris.length;
-		let currentNums = 0;
 
-		const _shouldSendUpdate = shouldSendUpdate;
 		if (shouldUpdateTemplateScript) {
-			shouldSendUpdate = false;
+			onUpdate?.(0);
 		}
-
 		for (const uri of uris) {
-			if (_shouldSendUpdate) {
-				onUpdate?.(currentNums / updateNums);
-			}
-			currentNums++;
-
 			const sourceFile = sourceFiles.get(uri);
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
@@ -539,29 +529,22 @@ export function createLanguageService(
 			}
 			templateScriptUpdateUris.add(uri);
 		}
-		if (shouldUpdateTemplateScript) {
-			updateNums += templateScriptUpdateUris.size;
-		}
 		if (vueScriptsUpdated) {
 			updateTsProject(false);
 		}
 		if (shouldUpdateTemplateScript) {
+			let currentNums = 0;
 			for (const uri of templateScriptUpdateUris) {
-				if (_shouldSendUpdate) {
-					onUpdate?.(currentNums / updateNums);
-				}
-				currentNums++;
 				if (sourceFiles.get(uri)?.updateTemplateScript()) {
 					vueTemplateScriptUpdated = true;
 				}
+				onUpdate?.(++currentNums / templateScriptUpdateUris.size);
 			}
 			templateScriptUpdateUris.clear();
+			onUpdate?.(1);
 		}
 		if (vueTemplateScriptUpdated) {
 			updateTsProject(true);
-		}
-		if (_shouldSendUpdate) {
-			onUpdate?.(1);
 		}
 	}
 	function unsetSourceFiles(uris: string[]) {
