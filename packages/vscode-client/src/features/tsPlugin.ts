@@ -96,23 +96,24 @@ export async function activate(context: vscode.ExtensionContext) {
             statusBar.text += ' -> ' + (tsPluginStatus ? 'On' : 'Off');
         }
     }
-    function isPluginEnabled() {
-        const volar = vscode.extensions.getExtension('johnsoncodehk.volar');
-        if (!volar) {
-            return false;
-        }
+}
 
-        const packageJson = path.join(volar.extensionPath, 'package.json');
-        try {
-            const packageText = fs.readFileSync(packageJson, 'utf8');
-            if (packageText.indexOf(`"typescriptServerPlugins"`) >= 0) {
-                return true;
-            }
-        } catch { }
-
+export function isPluginEnabled() {
+    const volar = vscode.extensions.getExtension('johnsoncodehk.volar');
+    if (!volar) {
         return false;
     }
-    function getTsPluginStatus() {
-        return vscode.workspace.getConfiguration('volar').get<boolean | null>('tsPlugin');
-    }
+
+    const packageJson = path.join(volar.extensionPath, 'package.json');
+    try {
+        const packageText = fs.readFileSync(packageJson, 'utf8');
+        if (packageText.indexOf(`"typescriptServerPlugins"`) >= 0) {
+            return true;
+        }
+    } catch { }
+
+    return false;
+}
+function getTsPluginStatus() {
+    return vscode.workspace.getConfiguration('volar').get<boolean | null>('tsPlugin');
 }

@@ -9,6 +9,7 @@ export function register(
     connection: Connection,
     documents: TextDocuments<TextDocument>,
     servicesManager: ServicesManager,
+    enabledTsPlugin: boolean,
 ) {
     connection.onCompletion(async handler => {
         const document = documents.get(handler.textDocument.uri);
@@ -97,7 +98,11 @@ export function register(
     connection.onReferences(handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;
-        return servicesManager?.getMatchService(document.uri)?.findReferences(document.uri, handler.position);
+        const result = servicesManager?.getMatchService(document.uri)?.findReferences(document.uri, handler.position);
+        if (enabledTsPlugin && document.languageId !== 'vue') {
+            return result?.filter(loc => loc.uri.endsWith('.vue'));
+        }
+        return result;
     });
     connection.onDefinition(handler => {
         const document = documents.get(handler.textDocument.uri);

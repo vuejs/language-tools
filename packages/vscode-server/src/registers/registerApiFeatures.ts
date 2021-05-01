@@ -20,10 +20,10 @@ import {
     vueFileReg
 } from '../features/shared';
 
-export function register(connection: Connection) {
-    connection.client.register(ReferencesRequest.type, vueFileReg);
+export function register(connection: Connection, enabledTsPlugin: boolean) {
+    connection.client.register(ReferencesRequest.type, enabledTsPlugin ? vueFileReg : allFilesReg);
     connection.client.register(DefinitionRequest.type, vueFileReg);
-    connection.client.register(CallHierarchyPrepareRequest.type, allFilesReg);
+    connection.client.register(CallHierarchyPrepareRequest.type, allFilesReg); // TODO: vueFileReg
     connection.client.register(TypeDefinitionRequest.type, vueFileReg);
     connection.client.register(HoverRequest.type, vueFileReg);
     connection.client.register(RenameRequest.type, {

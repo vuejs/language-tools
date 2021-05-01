@@ -102,11 +102,11 @@ async function onInitialized() {
 
 	if (servicesManager) {
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(connection, documents, servicesManager);
+		(await import('./features/lspFeatures')).register(connection, documents, servicesManager, options.tsPlugin);
 	}
 
 	switch (options.mode) {
-		case 'api': (await import('./registers/registerApiFeatures')).register(connection); break;
+		case 'api': (await import('./registers/registerApiFeatures')).register(connection, options.tsPlugin); break;
 		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection); break;
 		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
 	}
