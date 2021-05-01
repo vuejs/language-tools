@@ -1,9 +1,16 @@
 # Changelog
 
+## 0.24.6
+
+- 🎉 feat: support find references in `*.ts` even ts plugin disabled
+- fix: `Set<any>` item type incorrect in `v-for`
+- fix: server initializing progress not working
+- fix: add patching for `@vue/composition-api` event types for now
+
 ## 0.24.5
 
 - fix: css hover quick info not working
-- perf: perf: don't send source map to lsp protocol to avoid json parse
+- perf: don't send source map to lsp protocol to avoid json parse
 
 ## 0.24.4
 
@@ -756,7 +763,6 @@ See: https://github.com/johnsoncodehk/volar/discussions/134
 
 - fix: fix some Call Hierarchy failed cases
 - perf: faster typescript language service for new `<script setup>`
-
 
 ## 0.16.0
 
