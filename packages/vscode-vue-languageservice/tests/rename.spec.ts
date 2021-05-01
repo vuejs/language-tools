@@ -26,7 +26,7 @@ describe('renaming', () => {
 
     it('rename in <script>', () => {
         const result = tester.languageService.rename.doRename(
-            doc,
+            doc.uri,
             doc.positionAt(locs.b2.start),
             'bar',
         );
@@ -49,7 +49,7 @@ describe('renaming', () => {
     });
     it('rename in <template>', () => {
         const result = tester.languageService.rename.doRename(
-            doc,
+            doc.uri,
             doc.positionAt(locs.a2.start),
             'bar',
         );
