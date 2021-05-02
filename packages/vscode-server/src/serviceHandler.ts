@@ -5,6 +5,7 @@ import type * as ts from 'typescript';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Disposable, TextDocuments, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
+import { getEmmetConfiguration } from './configs';
 
 export type ServiceHandler = ReturnType<typeof createServiceHandler>;
 
@@ -193,6 +194,8 @@ export function createServiceHandler(
 			getCompilationSettings: () => parsedCommandLine.options,
 			getScriptVersion,
 			getScriptSnapshot,
+			// vue
+			getEmmetConfig: getEmmetConfiguration,
 		};
 
 		if (tsLocalized) {

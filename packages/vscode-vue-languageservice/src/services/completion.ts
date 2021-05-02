@@ -90,7 +90,7 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ sourceFiles, tsLanguageService, documentContext }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLanguageService, documentContext, vueHost }: TsApiRegisterOptions) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -106,8 +106,8 @@ export function register({ sourceFiles, tsLanguageService, documentContext }: Ts
 		uri: string,
 		position: Position,
 		context?: CompletionContext,
-		getEmmetConfig?: (syntax: string) => emmet.VSCodeEmmetConfig,
-		getTagStyle?: () => Promise<{
+		/** internal */
+		__getTagStyle?: () => Promise<{
 			tag: 'both' | 'kebabCase' | 'pascalCase',
 			attr: 'kebabCase' | 'pascalCase',
 		}>,
@@ -120,7 +120,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext }: Ts
 				cache.tsResult = getTsResult(sourceFile);
 			}
 			if (cache.emmetResult?.isIncomplete) {
-				cache.emmetResult = getEmmetResult(sourceFile);
+				cache.emmetResult = await getEmmetResult(sourceFile);
 			}
 			if (cache.cssResult?.isIncomplete) {
 				cache.cssResult = await getCssResult(sourceFile);
@@ -145,7 +145,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext }: Ts
 		cache = { uri, tsResult };
 		if (tsResult?.items.length) return tsResult;
 
-		const emmetResult = getEmmetResult(sourceFile);
+		const emmetResult = await getEmmetResult(sourceFile);
 
 		// precede html for support inline css service
 		const cssResult = await getCssResult(sourceFile);
@@ -229,7 +229,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext }: Ts
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return;
 			}
-			const nameCases = await getTagStyle?.() ?? { tag: 'both', attr: 'kebabCase' };
+			const nameCases = await __getTagStyle?.() ?? { tag: 'both', attr: 'kebabCase' };
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];
@@ -468,11 +468,11 @@ export function register({ sourceFiles, tsLanguageService, documentContext }: Ts
 				}
 			}
 		}
-		function getEmmetResult(sourceFile: SourceFile) {
-			if (!getEmmetConfig) return;
+		async function getEmmetResult(sourceFile: SourceFile) {
+			if (!vueHost.getEmmetConfig) return;
 			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
 			if (embededDoc) {
-				const emmetConfig = getEmmetConfig(embededDoc.language);
+				const emmetConfig = await vueHost.getEmmetConfig(embededDoc.language);
 				if (emmetConfig) {
 					let syntax = languageIdToSyntax(embededDoc.language);
 					if (syntax === 'vue') syntax = 'html';

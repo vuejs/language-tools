@@ -1,12 +1,12 @@
 import { TagCloseRequest } from '@volar/shared';
-import { NoStateLanguageService } from '@volar/vscode-vue-languageservice';
+import { DocumentLanguageService } from '@volar/vscode-vue-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { Connection, TextDocuments } from 'vscode-languageserver/node';
 
 export function register(
     connection: Connection,
     documents: TextDocuments<TextDocument>,
-    noStateLs: NoStateLanguageService,
+    noStateLs: DocumentLanguageService,
 ) {
     connection.onDocumentFormatting(handler => {
         const document = documents.get(handler.textDocument.uri);

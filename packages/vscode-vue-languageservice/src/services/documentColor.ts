@@ -1,14 +1,11 @@
+import type { ColorInformation } from 'vscode-languageserver/node';
+import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import {
-	ColorInformation,
-} from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFile';
 import * as languageServices from '../utils/languageServices';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
-	return (document: TextDocument) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return (uri: string) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
 		const cssResult = getCssResult(sourceFile);

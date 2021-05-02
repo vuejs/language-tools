@@ -80,10 +80,9 @@ export function register(
                 if (progress.token.isCancellationRequested) {
                     continue;
                 }
-                const doc = sourceFile.getTextDocument();
                 let _result: Diagnostic[] = [];
-                await ls.doValidation(doc, result => {
-                    connection.sendDiagnostics({ uri: doc.uri, diagnostics: result });
+                await ls.doValidation(sourceFile.uri, result => {
+                    connection.sendDiagnostics({ uri: sourceFile.uri, diagnostics: result });
                     _result = result;
                 });
                 errors += _result.filter(error => error.severity === DiagnosticSeverity.Error).length;
@@ -95,9 +94,9 @@ export function register(
         connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
     });
     connection.onRequest(RangeSemanticTokensRequest.type, async handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.getSemanticTokens(document, handler.range);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.getSemanticTokens(handler.textDocument.uri, handler.range);
     });
     connection.onRequest(SemanticTokenLegendRequest.type, () => semanticTokenLegend);
     connection.onRequest(GetServerNameCasesRequest.type, handler => {

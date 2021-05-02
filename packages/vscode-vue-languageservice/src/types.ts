@@ -4,6 +4,7 @@ import type * as ts2 from '@volar/vscode-typescript-languageservice';
 import type { TextDocument, DocumentContext } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { createMapper } from './utils/mapper';
+import type { LanguageServiceHost } from './languageService';
 
 export interface TsCompletionData {
 	mode: 'ts',
@@ -66,7 +67,7 @@ export type TsApiRegisterOptions = {
 	ts: typeof import('typescript/lib/tsserverlibrary');
 	sourceFiles: Map<string, SourceFile>;
 	tsLanguageService: ts2.LanguageService;
-	vueHost: ts2.LanguageServiceHost;
+	vueHost: LanguageServiceHost;
 	mapper: ReturnType<typeof createMapper>;
 	documentContext: DocumentContext;
 }

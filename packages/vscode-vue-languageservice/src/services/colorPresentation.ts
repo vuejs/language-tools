@@ -1,17 +1,16 @@
-import type { TsApiRegisterOptions } from '../types';
 import {
-	ColorPresentation,
 	Color,
+	ColorPresentation,
 	Range,
-	TextEdit,
+	TextEdit
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFile';
+import type { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
 import * as languageServices from '../utils/languageServices';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
-	return (document: TextDocument, color: Color, range: Range) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return (uri: string, color: Color, range: Range) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
 		const cssResult = getCssResult(sourceFile);

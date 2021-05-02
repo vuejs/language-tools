@@ -1,15 +1,14 @@
-import type { TsApiRegisterOptions } from '../types';
-import {
+import type {
 	Position,
-	SelectionRange,
+	SelectionRange
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFile';
+import type { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
 import * as languageServices from '../utils/languageServices';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	return (document: TextDocument, positions: Position[]) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return (uri: string, positions: Position[]) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
 		const tsResult = getTsResult(sourceFile);

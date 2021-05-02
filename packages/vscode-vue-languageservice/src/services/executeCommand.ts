@@ -1,4 +1,4 @@
-import type { Position, TextDocument } from 'vscode-languageserver-textdocument';
+import type { Position } from 'vscode-languageserver-textdocument';
 import { Location } from 'vscode-languageserver-types';
 import type { Connection } from 'vscode-languageserver/node';
 import { Commands } from '../commands';
@@ -12,15 +12,17 @@ import type { TsApiRegisterOptions } from '../types';
 
 export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOptions, findReferences: (uri: string, position: Position) => Location[]) {
 
-	return async (document: TextDocument, command: string, args: any[] | undefined, connection: Connection) => {
+	return async (uri: string, command: string, args: any[] | undefined, connection: Connection) => {
 
 		if (command === Commands.SHOW_REFERENCES && args) {
 			executeShowReferences(args[0], args[1], args[2], connection);
 		}
 
-		const sourceFile = sourceFiles.get(document.uri);
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)
 			return;
+
+		const document = sourceFile.getTextDocument();
 
 		if (command === Commands.SWITCH_REF_SUGAR) {
 

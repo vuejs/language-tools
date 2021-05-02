@@ -2,7 +2,6 @@ import { ActiveSelectionRequest, GetClientNameCasesRequest, notEmpty } from '@vo
 import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { Connection, TextDocuments } from 'vscode-languageserver/node';
-import { getEmmetConfiguration } from '../configs';
 import type { ServicesManager } from '../servicesManager';
 
 export function register(
@@ -12,18 +11,16 @@ export function register(
     enabledTsPlugin: boolean,
 ) {
     connection.onCompletion(async handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-
-        return servicesManager.getMatchService(document.uri)?.doComplete(
-            document.uri,
-            handler.position,
-            handler.context,
-            getEmmetConfiguration,
-            () => connection.sendRequest(GetClientNameCasesRequest.type, {
-                uri: handler.textDocument.uri
-            }),
-        );
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.doComplete(
+                handler.textDocument.uri,
+                handler.position,
+                handler.context,
+                () => connection.sendRequest(GetClientNameCasesRequest.type, {
+                    uri: handler.textDocument.uri
+                }),
+            );
     });
     connection.onCompletionResolve(async item => {
         const uri: string | undefined = item.data?.uri;
@@ -33,40 +30,46 @@ export function register(
         return servicesManager.getMatchService(uri)?.doCompletionResolve(item, newOffset) ?? item;
     });
     connection.onHover(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.doHover(document.uri, handler.position);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.doHover(handler.textDocument.uri, handler.position);
     });
     connection.onSignatureHelp(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.getSignatureHelp(document, handler.position);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.getSignatureHelp(handler.textDocument.uri, handler.position);
     });
     connection.onSelectionRanges(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.getSelectionRanges(document, handler.positions);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.getSelectionRanges(handler.textDocument.uri, handler.positions);
     });
     connection.onPrepareRename(handler => {
-        return servicesManager.getMatchService(handler.textDocument.uri)?.prepareRename(handler.textDocument.uri, handler.position);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.prepareRename(handler.textDocument.uri, handler.position);
     });
     connection.onRenameRequest(handler => {
-        return servicesManager.getMatchService(handler.textDocument.uri)?.doRename(handler.textDocument.uri, handler.position, handler.newName);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.doRename(handler.textDocument.uri, handler.position, handler.newName);
     });
     connection.onCodeLens(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.getCodeLens(document);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.getCodeLens(handler.textDocument.uri);
     });
     connection.onCodeLensResolve(codeLens => {
         const uri = codeLens.data?.uri;
-        return servicesManager.getMatchService(uri)?.doCodeLensResolve(codeLens) ?? codeLens;
+        return servicesManager
+            .getMatchService(uri)
+            ?.doCodeLensResolve(codeLens) ?? codeLens;
     });
     connection.onExecuteCommand(handler => {
         const uri = handler.arguments?.[0];
-        const document = documents.get(uri);
-        if (!document) return;
-        return servicesManager.getMatchService(uri)?.__internal__.executeCommand(document, handler.command, handler.arguments, connection);
+        return servicesManager
+            .getMatchService(uri)
+            ?.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
     });
     connection.onCodeAction(handler => {
         const uri = handler.textDocument.uri;
@@ -94,62 +97,66 @@ export function register(
         return codeAction;
     });
     connection.onReferences(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        const result = servicesManager.getMatchService(document.uri)?.findReferences(document.uri, handler.position);
-        if (enabledTsPlugin && document.languageId !== 'vue') {
+        const result = servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findReferences(handler.textDocument.uri, handler.position);
+        if (enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
             return result?.filter(loc => loc.uri.endsWith('.vue'));
         }
         return result;
     });
     connection.onDefinition(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.findDefinition(document.uri, handler.position);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findDefinition(handler.textDocument.uri, handler.position);
     });
     connection.onTypeDefinition(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.findTypeDefinition(document.uri, handler.position);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findTypeDefinition(handler.textDocument.uri, handler.position);
     });
     connection.onDocumentColor(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.findDocumentColors(document);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findDocumentColors(handler.textDocument.uri);
     });
     connection.onColorPresentation(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.getColorPresentations(document, handler.color, handler.range);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.getColorPresentations(handler.textDocument.uri, handler.color, handler.range);
     });
     connection.onDocumentHighlight(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.findDocumentHighlights(document, handler.position);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findDocumentHighlights(handler.textDocument.uri, handler.position);
     });
     connection.onDocumentSymbol(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.findDocumentSymbols(document);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findDocumentSymbols(handler.textDocument.uri);
     });
     connection.onDocumentLinks(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.findDocumentLinks(document);
+        return servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.findDocumentLinks(handler.textDocument.uri);
     });
     connection.languages.callHierarchy.onPrepare(handler => {
-        const document = documents.get(handler.textDocument.uri);
-        if (!document) return [];
-        const items = servicesManager.getMatchService(document.uri)?.callHierarchy.doPrepare(document, handler.position);
+        const items = servicesManager
+            .getMatchService(handler.textDocument.uri)
+            ?.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
         return items?.length ? items : null;
     });
     connection.languages.callHierarchy.onIncomingCalls(handler => {
         const { uri } = handler.item.data as { uri: string };
-        return servicesManager.getMatchService(uri)?.callHierarchy.getIncomingCalls(handler.item) ?? [];
+        return servicesManager
+            .getMatchService(uri)
+            ?.callHierarchy.getIncomingCalls(handler.item) ?? [];
     });
     connection.languages.callHierarchy.onOutgoingCalls(handler => {
         const { uri } = handler.item.data as { uri: string };
-        return servicesManager.getMatchService(uri)?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
+        return servicesManager
+            .getMatchService(uri)
+            ?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
     });
     connection.workspace.onWillRenameFiles(handler => {
         const edits = handler.files
@@ -157,13 +164,11 @@ export function register(
                 return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
             })
             .filter(notEmpty)
-
         if (edits.length) {
             const result = edits[0];
             margeWorkspaceEdits(result, ...edits.slice(1));
             return result;
         }
-
         return null;
     });
 }

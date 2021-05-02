@@ -1,40 +1,36 @@
-import type { TsApiRegisterOptions } from '../types';
-import {
-	Position,
-	Range,
-	CallHierarchyItem,
-	CallHierarchyIncomingCall,
-	CallHierarchyOutgoingCall,
-} from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { notEmpty, uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
+import type {
+	CallHierarchyIncomingCall,
+	CallHierarchyItem,
+	CallHierarchyOutgoingCall,
+	Position,
+	Range
+} from 'vscode-languageserver/node';
+import type { TsApiRegisterOptions } from '../types';
 import * as dedupe from '../utils/dedupe';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	function doPrepare(document: TextDocument, position: Position) {
+	function doPrepare(uri: string, position: Position) {
 		let vueItems: CallHierarchyItem[] = [];
 
-		if (document.languageId !== 'vue') {
-			vueItems = worker(document.uri, position);
-		}
-		else {
-			const sourceFile = sourceFiles.get(document.uri);
-			if (sourceFile) {
-				for (const sourceMap of sourceFile.getTsSourceMaps()) {
-					for (const tsRange of sourceMap.getMappedRanges(position)) {
-						if (!tsRange.data.capabilities.references) continue;
-						const items = worker(sourceMap.mappedDocument.uri, tsRange.start);
-						vueItems = vueItems.concat(items);
-					}
+		const sourceFile = sourceFiles.get(uri);
+		if (sourceFile) {
+			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				for (const tsRange of sourceMap.getMappedRanges(position)) {
+					if (!tsRange.data.capabilities.references) continue;
+					const items = worker(sourceMap.mappedDocument.uri, tsRange.start);
+					vueItems = vueItems.concat(items);
 				}
 			}
+		}
+		else {
+			vueItems = worker(uri, position);
 		}
 
 		for (const vueItem of vueItems) {
 			vueItem.data = {
-				uri: document.uri,
-				offset: document.offsetAt(position),
+				uri: uri,
 			};
 		}
 

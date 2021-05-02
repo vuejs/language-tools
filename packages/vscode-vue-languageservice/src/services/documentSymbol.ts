@@ -1,20 +1,20 @@
-import type { TsApiRegisterOptions } from '../types';
+import { notEmpty } from '@volar/shared';
 import {
-	SymbolInformation,
-	SymbolKind,
 	Location,
 	Range,
+	SymbolInformation,
+	SymbolKind
 } from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFile';
+import type { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
 import * as languageServices from '../utils/languageServices';
-import { notEmpty } from '@volar/shared';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	return (document: TextDocument) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return (uri: string) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
+		const document = sourceFile.getTextDocument();
 		const vueResult = getVueResult(sourceFile);
 		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
@@ -37,7 +37,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				result.push({
 					name: '<template>',
 					kind: SymbolKind.Module,
-					location: Location.create(document.uri, Range.create(
+					location: Location.create(uri, Range.create(
 						document.positionAt(desc.template.loc.start),
 						document.positionAt(desc.template.loc.end),
 					)),
@@ -47,7 +47,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				result.push({
 					name: '<script>',
 					kind: SymbolKind.Module,
-					location: Location.create(document.uri, Range.create(
+					location: Location.create(uri, Range.create(
 						document.positionAt(desc.script.loc.start),
 						document.positionAt(desc.script.loc.end),
 					)),
@@ -57,7 +57,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				result.push({
 					name: '<script setup>',
 					kind: SymbolKind.Module,
-					location: Location.create(document.uri, Range.create(
+					location: Location.create(uri, Range.create(
 						document.positionAt(desc.scriptSetup.loc.start),
 						document.positionAt(desc.scriptSetup.loc.end),
 					)),
@@ -67,7 +67,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				result.push({
 					name: `<${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(notEmpty).join(' ')}>`,
 					kind: SymbolKind.Module,
-					location: Location.create(document.uri, Range.create(
+					location: Location.create(uri, Range.create(
 						document.positionAt(style.loc.start),
 						document.positionAt(style.loc.end),
 					)),
@@ -77,7 +77,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				result.push({
 					name: `<${customBlock.type}>`,
 					kind: SymbolKind.Module,
-					location: Location.create(document.uri, Range.create(
+					location: Location.create(uri, Range.create(
 						document.positionAt(customBlock.loc.start),
 						document.positionAt(customBlock.loc.end),
 					)),
@@ -98,7 +98,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					if (vueRange) {
 						map.set(`${sourceMap.mappedDocument.offsetAt(s.location.range.start)}:${sourceMap.mappedDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
 							...s,
-							location: Location.create(document.uri, vueRange),
+							location: Location.create(uri, vueRange),
 						});
 					}
 				}
@@ -121,7 +121,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					if (vueRange) {
 						result.push({
 							...s,
-							location: Location.create(document.uri, vueRange),
+							location: Location.create(uri, vueRange),
 						});
 					}
 				}
@@ -141,7 +141,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 					if (vueRange) {
 						result.push({
 							...s,
-							location: Location.create(document.uri, vueRange),
+							location: Location.create(uri, vueRange),
 						});
 					}
 				}

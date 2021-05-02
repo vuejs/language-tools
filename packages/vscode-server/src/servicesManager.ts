@@ -81,11 +81,11 @@ export function createServicesManager(
 		}
 
 		if (await isCancel()) return;
-		await sendDocumentDiagnostics(changeDoc, changedFileName, isCancel);
+		await sendDocumentDiagnostics(changeDoc.uri, changedFileName, isCancel);
 
 		for (const doc of otherDocs) {
 			if (await isCancel()) break;
-			await sendDocumentDiagnostics(doc, changedFileName, isCancel);
+			await sendDocumentDiagnostics(doc.uri, changedFileName, isCancel);
 		}
 	}
 	async function onFileUpdated(fileName?: string) {
@@ -101,7 +101,7 @@ export function createServicesManager(
 		}
 
 		for (const doc of openedDocs) {
-			await sendDocumentDiagnostics(doc, fileName);
+			await sendDocumentDiagnostics(doc.uri, fileName);
 		}
 	}
 	function getIsCancel(uri: string, version: number) {
@@ -119,9 +119,9 @@ export function createServicesManager(
 			return _isCancel;
 		};
 	}
-	async function sendDocumentDiagnostics(document: TextDocument, changedFileName?: string, isCancel?: () => Promise<boolean>) {
+	async function sendDocumentDiagnostics(uri: string, changedFileName?: string, isCancel?: () => Promise<boolean>) {
 
-		const matchTsConfig = getMatchTsConfig(document.uri);
+		const matchTsConfig = getMatchTsConfig(uri);
 		if (!matchTsConfig) return;
 
 		const matchService = services.get(matchTsConfig);
@@ -131,9 +131,9 @@ export function createServicesManager(
 		const matchLs = matchService.getLanguageService();
 
 		let send = false; // is vue document
-		await matchLs.doValidation(document, async result => {
+		await matchLs.doValidation(uri, async result => {
 			send = true;
-			connection.sendDiagnostics({ uri: document.uri, diagnostics: result });
+			connection.sendDiagnostics({ uri: uri, diagnostics: result });
 		}, isCancel);
 
 		if (send && !checkedProject.has(matchTsConfig)) {

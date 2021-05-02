@@ -42,17 +42,20 @@ import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
 import { UriMap } from '@volar/shared';
+import type * as emmet from 'vscode-emmet-helper';
 
-export type NoStateLanguageService = ReturnType<typeof createNoStateLanguageService>;
+export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
-export type LanguageServiceHost = ts.LanguageServiceHost;
+export type LanguageServiceHost = ts.LanguageServiceHost & {
+	getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
+};
 export type Dependencies = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	// TODO: vscode-html-languageservice
 	// TODO: vscode-css-languageservice
 };
 
-export function createNoStateLanguageService({ typescript: ts }: Dependencies) {
+export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
 	const cache = new Map<string, [number, HTMLDocument]>();
 	const options: HtmlApiRegisterOptions = {
 		ts,
@@ -224,7 +227,6 @@ export function createLanguageService(
 		findDocumentSymbols: apiHook(documentSymbol.register(options), false),
 		findDocumentLinks: apiHook(documentLink.register(options), false),
 		findDocumentColors: apiHook(documentColor.register(options), false),
-		...createNoStateLanguageService({ typescript: ts }),
 		dispose: tsLanguageService.dispose,
 
 		__internal__: {

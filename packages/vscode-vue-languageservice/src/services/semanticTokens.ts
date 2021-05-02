@@ -1,11 +1,17 @@
-import type { TsApiRegisterOptions } from '../types';
-import { CancellationToken, Range, ResultProgressReporter, SemanticTokensBuilder, SemanticTokensLegend, SemanticTokensPartialResult } from 'vscode-languageserver/node';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import { hyphenate } from '@vue/shared';
-import * as languageServices from '../utils/languageServices';
-import * as html from 'vscode-html-languageservice';
 import * as ts2 from '@volar/vscode-typescript-languageservice';
+import { hyphenate } from '@vue/shared';
+import * as html from 'vscode-html-languageservice';
+import {
+	CancellationToken,
+	Range,
+	ResultProgressReporter,
+	SemanticTokensBuilder,
+	SemanticTokensLegend,
+	SemanticTokensPartialResult
+} from 'vscode-languageserver/node';
+import type { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
+import * as languageServices from '../utils/languageServices';
 
 type TokenData = [number, number, number, number, number | undefined];
 
@@ -25,9 +31,12 @@ export const semanticTokenLegend: SemanticTokensLegend = {
 };
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	return (document: TextDocument, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return (uri: string, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
+
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
+
+		const document = sourceFile.getTextDocument();
 		const offsetRange = range ?
 			{
 				start: document.offsetAt(range.start),

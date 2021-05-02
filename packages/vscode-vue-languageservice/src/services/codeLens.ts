@@ -1,11 +1,7 @@
-import type { TsApiRegisterOptions } from '../types';
-import {
-	CodeLens,
-	Range,
-} from 'vscode-languageserver';
-import { SourceFile } from '../sourceFile';
+import type { CodeLens, Range } from 'vscode-languageserver';
 import { Commands } from '../commands';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
 
 export const options = {
 	references: true,
@@ -14,11 +10,12 @@ export const options = {
 };
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
-	return (document: TextDocument) => {
+	return (uri: string) => {
 
-		const sourceFile = sourceFiles.get(document.uri);
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
+		const document = sourceFile.getTextDocument();
 		let result: CodeLens[] = [];
 
 		if (options.references) {
@@ -45,7 +42,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 							end: document.positionAt(maped.sourceRange.end),
 						},
 						data: {
-							uri: document.uri,
+							uri: uri,
 							offset: maped.sourceRange.start,
 							tsUri: sourceMap.mappedDocument.uri,
 							tsOffset: maped.mappedRange.start,
@@ -69,7 +66,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 					command: {
 						title: 'ref sugar ' + (data.labels.length ? '☑' : '☐'),
 						command: Commands.SWITCH_REF_SUGAR,
-						arguments: [document.uri],
+						arguments: [uri],
 					},
 				});
 			}
@@ -112,7 +109,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 				command: {
 					title: 'pug ' + (current === 'pug' ? '☑' : '☐'),
 					command: current === 'pug' ? Commands.PUG_TO_HTML : Commands.HTML_TO_PUG,
-					arguments: [document.uri],
+					arguments: [uri],
 				},
 			});
 			return result;

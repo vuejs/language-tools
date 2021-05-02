@@ -1,15 +1,11 @@
+import type { DocumentHighlight, Position } from 'vscode-languageserver/node';
+import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import {
-	Position,
-	DocumentHighlight,
-} from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFile';
 import * as languageServices from '../utils/languageServices';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	return (document: TextDocument, position: Position) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return (uri: string, position: Position) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
 		const htmlResult = getHtmlResult(sourceFile);

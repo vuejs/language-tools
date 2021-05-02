@@ -1,21 +1,18 @@
-import type { TsApiRegisterOptions } from '../types';
-import {
-	Range,
-	DocumentLink,
-} from 'vscode-languageserver/node';
-import { SourceFile } from '../sourceFile';
+import { fsPathToUri, notEmpty, uriToFsPath } from '@volar/shared';
 import * as jsonc from 'jsonc-parser';
-import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import * as upath from 'upath';
-import { notEmpty } from '@volar/shared';
-import * as languageServices from '../utils/languageServices';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { DocumentLink, Range } from 'vscode-languageserver/node';
+import type { SourceFile } from '../sourceFile';
+import type { TsApiRegisterOptions } from '../types';
+import * as languageServices from '../utils/languageServices';
 
 export function register({ documentContext, sourceFiles, vueHost }: TsApiRegisterOptions) {
-	return async (document: TextDocument) => {
-		const sourceFile = sourceFiles.get(document.uri);
+	return async (uri: string) => {
+		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
+		const document = sourceFile.getTextDocument();
 		const tsResult = getTsResult(sourceFile);
 		const tsResult2 = getTsResult2(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
@@ -35,7 +32,7 @@ export function register({ documentContext, sourceFiles, vueHost }: TsApiRegiste
 				const scriptContent = sourceMap.mappedDocument.getText();
 				const root = jsonc.parseTree(scriptContent);
 				if (!root) continue;
-				const scriptDoc = TextDocument.create(document.uri, 'typescript', 0, scriptContent);
+				const scriptDoc = TextDocument.create(uri, 'typescript', 0, scriptContent);
 
 				result = result.concat([
 					getExtendsLink(scriptDoc, root),
@@ -128,7 +125,7 @@ export function register({ documentContext, sourceFiles, vueHost }: TsApiRegiste
 							start: document.positionAt(maped.sourceRange.start),
 							end: document.positionAt(maped.sourceRange.end),
 						},
-						target: document.uri, // TODO
+						target: uri, // TODO
 					});
 				}
 			}

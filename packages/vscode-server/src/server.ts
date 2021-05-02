@@ -7,7 +7,7 @@ import {
 	uriToFsPath
 } from '@volar/shared';
 import {
-	createNoStateLanguageService
+	getDocumentLanguageService
 } from '@volar/vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -74,7 +74,7 @@ async function onInitialized() {
 	let servicesManager: ServicesManager | undefined;
 
 	if (options.mode === 'html') {
-		const noStateLs = createNoStateLanguageService({ typescript: loadVscodeTypescript(options.appRoot) });
+		const noStateLs = getDocumentLanguageService({ typescript: loadVscodeTypescript(options.appRoot) });
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
 	}
 	else if (options.mode === 'api') {
