@@ -362,10 +362,10 @@ export function createSourceFile(
 		}
 	}
 	function updateTemplateScript() {
-		if (templateScriptData.projectVersion === tsLanguageService.host.getProjectVersion?.()) {
+		if (templateScriptData.projectVersion === tsLanguageService.__internal__.host.getProjectVersion?.()) {
 			return false;
 		}
-		templateScriptData.projectVersion = tsLanguageService.host.getProjectVersion?.();
+		templateScriptData.projectVersion = tsLanguageService.__internal__.host.getProjectVersion?.();
 
 		const doc = virtualScriptMain.textDocument.value;
 		const docText = doc.getText();
@@ -411,7 +411,7 @@ export function createSourceFile(
 				return 'all';
 			}
 			if (mode === 1) {
-				const tsOptions = tsLanguageService.host.getCompilationSettings();
+				const tsOptions = tsLanguageService.__internal__.host.getCompilationSettings();
 				const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 				return anyNoUnusedEnabled ? 'unused' : 'none';
 			}
@@ -427,7 +427,7 @@ export function createSourceFile(
 	}
 	function useDiagnostics() {
 
-		const tsOptions = tsLanguageService.host.getCompilationSettings();
+		const tsOptions = tsLanguageService.__internal__.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 
 		const nonTs: [{
@@ -458,7 +458,7 @@ export function createSourceFile(
 			];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
-			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
+			tsProjectVersion.value = tsLanguageService.__internal__.host.getProjectVersion?.();
 
 			// sort by cost
 			templateTs = templateTs.sort((a, b) => a[1] - b[1]);
@@ -710,7 +710,7 @@ export function createSourceFile(
 				const diags: Diagnostic[] = [];
 				if (
 					virtualScriptGen.textDocument.value
-					&& !tsLanguageService.getTextDocument2(virtualScriptGen.textDocument.value.uri)
+					&& !tsLanguageService.__internal__.getTextDocument2(virtualScriptGen.textDocument.value.uri)
 				) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script) continue;
@@ -947,7 +947,7 @@ export function createSourceFile(
 			return data;
 		});
 		return () => {
-			tsProjectVersion.value = tsLanguageService.host.getProjectVersion?.();
+			tsProjectVersion.value = tsLanguageService.__internal__.host.getProjectVersion?.();
 			return result.value;
 		};
 	}

@@ -38,7 +38,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 		}[] = [];
 
 		const sourceFile = sourceFiles.get(document.uri);
-		const tsDoc = tsLanguageService.getTextDocument(document.uri);
+		const tsDoc = tsLanguageService.__internal__.getTextDocument(document.uri);
 
 		if (sourceFile) {
 

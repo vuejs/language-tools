@@ -143,7 +143,7 @@ export function createMapper(
                     return sourceFile.getTextDocument();
                 }
 
-                const document = tsLanguageService.getTextDocument(tsUri);
+                const document = tsLanguageService.__internal__.getTextDocument(tsUri);
                 if (document) {
                     return document;
                 }
@@ -157,7 +157,7 @@ export function createMapper(
                         isVirtualFile: true,
                     }
                 }
-                const tsDoc = tsLanguageService.getTextDocument(vueUri);
+                const tsDoc = tsLanguageService.__internal__.getTextDocument(vueUri);
                 if (tsDoc) {
                     return {
                         languageService: tsLanguageService,
@@ -221,7 +221,7 @@ export function createMapper(
     };
     function fromTs(tsUri: string, tsStart: Position, tsEnd?: Position) {
 
-        const tsDoc = tsLanguageService.getTextDocument(tsUri);
+        const tsDoc = tsLanguageService.__internal__.getTextDocument(tsUri);
         if (!tsDoc) return [];
 
         const _result = fromTs2(
@@ -260,7 +260,7 @@ export function createMapper(
         }[] = [];
         const tsUri = fsPathToUri(tsFsPath);
 
-        const document = tsLanguageService.getTextDocument(tsUri);
+        const document = tsLanguageService.__internal__.getTextDocument(tsUri);
         if (!document) return [];
 
         const sourceFile = findSourceFileByTsUri(tsUri);
@@ -345,13 +345,13 @@ export function createMapper(
                         textDocument: sourceMap.mappedDocument,
                         range: tsRange,
                         data: tsRange.data,
-                        languageService: tsLanguageService.raw,
+                        languageService: tsLanguageService.__internal__.raw,
                     });
                 }
             }
         }
         else {
-            const tsDoc = tsLanguageService.getTextDocument(fsPathToUri(vueFsPath));
+            const tsDoc = tsLanguageService.__internal__.getTextDocument(fsPathToUri(vueFsPath));
             if (tsDoc) {
                 result.push({
                     sourceMap: undefined,
@@ -376,7 +376,7 @@ export function createMapper(
                             referencesCodeLens: true,
                         },
                     },
-                    languageService: tsLanguageService.raw,
+                    languageService: tsLanguageService.__internal__.raw,
                 });
             }
         }

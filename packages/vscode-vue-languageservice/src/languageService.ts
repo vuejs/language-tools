@@ -146,14 +146,14 @@ export function createLanguageService(
 	// ts plugin proxy
 	const _tsPluginApis = tsPluginApis.register(options);
 	const tsPlugin: Partial<ts.LanguageService> = {
-		getSemanticDiagnostics: apiHook(tsLanguageService.raw.getSemanticDiagnostics, false),
-		getEncodedSemanticClassifications: apiHook(tsLanguageService.raw.getEncodedSemanticClassifications, false),
+		getSemanticDiagnostics: apiHook(tsLanguageService.__internal__.raw.getSemanticDiagnostics, false),
+		getEncodedSemanticClassifications: apiHook(tsLanguageService.__internal__.raw.getEncodedSemanticClassifications, false),
 		getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-		getCompletionEntryDetails: apiHook(tsLanguageService.raw.getCompletionEntryDetails, false), // not sure
-		getCompletionEntrySymbol: apiHook(tsLanguageService.raw.getCompletionEntrySymbol, false), // not sure
-		getQuickInfoAtPosition: apiHook(tsLanguageService.raw.getQuickInfoAtPosition, false),
-		getSignatureHelpItems: apiHook(tsLanguageService.raw.getSignatureHelpItems, false),
-		getRenameInfo: apiHook(tsLanguageService.raw.getRenameInfo, false),
+		getCompletionEntryDetails: apiHook(tsLanguageService.__internal__.raw.getCompletionEntryDetails, false), // not sure
+		getCompletionEntrySymbol: apiHook(tsLanguageService.__internal__.raw.getCompletionEntrySymbol, false), // not sure
+		getQuickInfoAtPosition: apiHook(tsLanguageService.__internal__.raw.getQuickInfoAtPosition, false),
+		getSignatureHelpItems: apiHook(tsLanguageService.__internal__.raw.getSignatureHelpItems, false),
+		getRenameInfo: apiHook(tsLanguageService.__internal__.raw.getRenameInfo, false),
 		findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
 		getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
 		getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
@@ -177,7 +177,7 @@ export function createLanguageService(
 	};
 
 	// ts program proxy
-	const tsProgram = tsLanguageService.raw.getProgram();
+	const tsProgram = tsLanguageService.__internal__.raw.getProgram();
 	if (!tsProgram) throw '!tsProgram';
 
 	const tsProgramApis_2 = tsProgramApis.register(options);
@@ -499,7 +499,7 @@ export function createLanguageService(
 		if (documents.has(uri)) {
 			return documents.get(uri);
 		}
-		return tsLanguageService.getTextDocument(uri);
+		return tsLanguageService.__internal__.getTextDocument(uri);
 	}
 	function getSourceFile(uri: string) {
 		return sourceFiles.get(uri);

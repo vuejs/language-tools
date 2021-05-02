@@ -27,17 +27,14 @@ import type { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
 
-export function createLanguageService(host: LanguageServiceHost, ts: typeof import('typescript')) {
+export function createLanguageService(host: LanguageServiceHost, ts: typeof import('typescript/lib/tsserverlibrary')) {
 
 	const documents = new Map<string, [string, TextDocument]>();
-	const shPlugin = ShPlugin({ typescript: ts as any });
+	const shPlugin = ShPlugin({ typescript: ts });
 	let languageService = ts.createLanguageService(host);
 	languageService = shPlugin.decorate(languageService);
 
 	return {
-		raw: languageService,
-		host,
-
 		findDefinition: definitions.register(languageService, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getTextDocument),
 		findReferences: references.register(languageService, getTextDocument),
@@ -59,11 +56,16 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		doValidation: diagnostics.register(languageService, getTextDocument, ts),
 		getFoldingRanges: foldingRanges.register(languageService, getTextDocument, ts),
 		getDocumentSemanticTokens: semanticTokens.register(languageService, getTextDocument),
-		...callHierarchy.register(languageService, getTextDocument),
+		callHierarchy: callHierarchy.register(languageService, getTextDocument),
 
-		getTextDocument: getTextDocumentNoChecking,
-		getTextDocument2: getTextDocument,
 		dispose,
+
+		__internal__: {
+			raw: languageService,
+			host,
+			getTextDocument: getTextDocumentNoChecking,
+			getTextDocument2: getTextDocument,
+		},
 	};
 
 	function getTextDocument(uri: string) {

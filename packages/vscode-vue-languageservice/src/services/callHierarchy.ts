@@ -42,7 +42,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	}
 	function getIncomingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
-		const tsIncomingItems = tsItems.map(tsLanguageService.provideCallHierarchyIncomingCalls).flat();
+		const tsIncomingItems = tsItems.map(tsLanguageService.callHierarchy.getIncomingCalls).flat();
 		const vueIncomingItems: CallHierarchyIncomingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
 			const vueResult = toVueCallHierarchyItem(tsIncomingItem.from, tsIncomingItem.fromRanges);
@@ -57,7 +57,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	}
 	function getOutgoingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
-		const tsIncomingItems = tsItems.map(tsLanguageService.provideCallHierarchyOutgoingCalls).flat();
+		const tsIncomingItems = tsItems.map(tsLanguageService.callHierarchy.getOutgoingCalls).flat();
 		const vueIncomingItems: CallHierarchyOutgoingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
 			const vueResult = toVueCallHierarchyItem(tsIncomingItem.to, tsIncomingItem.fromRanges);
@@ -79,7 +79,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 	function worker(tsDocUri: string, tsPos: Position) {
 		const vueOrTsItems: CallHierarchyItem[] = [];
-		const tsItems = tsLanguageService.prepareCallHierarchy(tsDocUri, tsPos);
+		const tsItems = tsLanguageService.callHierarchy.doPrepare(tsDocUri, tsPos);
 		for (const tsItem of tsItems) {
 			const result = toVueCallHierarchyItem(tsItem, []);
 			if (!result) continue;

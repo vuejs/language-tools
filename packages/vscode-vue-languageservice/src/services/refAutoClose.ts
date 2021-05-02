@@ -33,7 +33,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 			for (const typeDefine of typeDefs) {
 				const uri = Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
 				const range = Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-				const defineDoc = tsRange.languageService.getTextDocument(uri);
+				const defineDoc = tsRange.languageService.__internal__.getTextDocument(uri);
 				if (!defineDoc)
 					continue;
 				const typeName = defineDoc.getText(range);

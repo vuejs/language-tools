@@ -9,7 +9,7 @@ import * as typeConverters from '../utils/typeConverters';
 import * as upath from 'upath';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	function prepareCallHierarchy(uri: string, position: vscode.Position) {
+	function doPrepare(uri: string, position: vscode.Position) {
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
@@ -21,7 +21,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const items = Array.isArray(calls) ? calls : [calls];
 		return items.map(item => fromProtocolCallHierarchyItem(item));
 	}
-	function provideCallHierarchyIncomingCalls(item: vscode.CallHierarchyItem) {
+	function getIncomingCalls(item: vscode.CallHierarchyItem) {
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
 		const fileName = uriToFsPath(item.uri);
@@ -32,7 +32,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const items = Array.isArray(calls) ? calls : [calls];
 		return items.map(item => fromProtocolCallHierchyIncomingCall(item));
 	}
-	function provideCallHierarchyOutgoingCalls(item: vscode.CallHierarchyItem) {
+	function getOutgoingCalls(item: vscode.CallHierarchyItem) {
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
 		const fileName = uriToFsPath(item.uri);
@@ -46,9 +46,9 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	}
 
 	return {
-		prepareCallHierarchy,
-		provideCallHierarchyIncomingCalls,
-		provideCallHierarchyOutgoingCalls,
+		doPrepare,
+		getIncomingCalls,
+		getOutgoingCalls,
 	};
 
 	function isSourceFileItem(item: ts.CallHierarchyItem) {

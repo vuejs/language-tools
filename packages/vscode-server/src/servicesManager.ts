@@ -210,7 +210,7 @@ export function createServicesManager(
 			const hasVueFile = parsedCommandLine.fileNames.some(fileName => upath.extname(fileName) === '.vue');
 			if (!hasVueFile) continue;
 			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.getTsService().getTextDocument(uri)) {
+			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.getTsService().__internal__.getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
 				if (!upath.relative(tsConfigDir, fileName).startsWith('..')) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);

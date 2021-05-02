@@ -59,11 +59,11 @@ export interface ITemplateScriptData {
 }
 
 export type HtmlApiRegisterOptions = {
-	ts: typeof import('typescript');
+	ts: typeof import('typescript/lib/tsserverlibrary');
 	getHtmlDocument(document: TextDocument): HTMLDocument;
 }
 export type TsApiRegisterOptions = {
-	ts: typeof import('typescript');
+	ts: typeof import('typescript/lib/tsserverlibrary');
 	sourceFiles: Map<string, SourceFile>;
 	tsLanguageService: ts2.LanguageService;
 	vueHost: ts2.LanguageServiceHost;

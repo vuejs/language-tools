@@ -71,7 +71,7 @@ export function getCssLanguageService(lang: string) {
 let tsScriptVersion = 0;
 let tsScript: ts.IScriptSnapshot | undefined;
 let tsService: ts.LanguageService | undefined;
-export function getCheapTsService(ts: typeof import('typescript'), code: string) {
+export function getCheapTsService(ts: typeof import('typescript/lib/tsserverlibrary'), code: string) {
     if (!tsService) {
         tsService = ts.createLanguageService({
             getCompilationSettings: () => ({}),
@@ -93,7 +93,7 @@ export function getCheapTsService(ts: typeof import('typescript'), code: string)
 let tsScriptVersion2 = 0;
 let tsScript2: ts.IScriptSnapshot | undefined;
 let tsService2: TS2.LanguageService | undefined;
-export function getCheapTsService2(ts: typeof import('typescript'), doc: TextDocument) {
+export function getCheapTsService2(ts: typeof import('typescript/lib/tsserverlibrary'), doc: TextDocument) {
     if (!tsService2) {
         tsService2 = TS2.createLanguageService(
             {
