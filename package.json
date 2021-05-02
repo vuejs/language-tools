@@ -299,10 +299,10 @@
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
-		"pack": "yarn && vsce package --yarn",
-		"publish": "yarn && vsce publish --yarn",
-		"test-install": "cd packages/vscode-vue-languageservice/testCases && yarn",
-		"test": "npm run test-install && jest"
+		"pack": "yarn && npm run test && vsce package --yarn",
+		"publish": "yarn && npm run test && vsce publish --yarn",
+		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
+		"test": "jest"
 	},
 	"devDependencies": {
 		"vsce": "latest",
