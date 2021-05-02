@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.25.0
+
+- feat: split status bar item `<TagName attr-name>` to `Tag: xxx`, `Attr: xxx`
+- fix: tag name case status bar item not working on start
+- fix: `<style module>` class name renaming result incorrect
+- fix: hyphenat component renaming not working
+- fix: ref sugar renaming result incorrect with destructure
+- fix: ref sugar renaming not working on right expression
+
 ## 0.24.6
 
 - 🎉 feat: support find references in `*.ts` even ts plugin disabled
