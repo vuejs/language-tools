@@ -16,107 +16,85 @@ const tests: {
         length: number,
     }[],
     result: string,
-}[] = [
-        {
-            fileName: path.resolve(__dirname, '../testCases/scriptSetup.vue'),
-            actions: [
-                {
-                    position: Position.create(0, 13),
-                    newName: 'bar',
-                    length: 4,
-                },
-                {
-                    position: Position.create(3, 5),
-                    newName: 'bar',
-                    length: 4,
-                },
-            ],
-            result: `
+}[] = [{
+    fileName: path.resolve(__dirname, '../testCases/scriptSetup.vue'),
+    actions: [{
+        position: Position.create(0, 13),
+        newName: 'bar',
+        length: 4,
+    }, {
+        position: Position.create(3, 5),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
 <template>{{ bar }}</template>
 
 <script lang="ts" setup>
 ref: bar = 1;
-</script>
-        `.trim(),
-        },
-        {
-            fileName: path.resolve(__dirname, '../testCases/cssScoped.vue'),
-            actions: [
-                {
-                    position: Position.create(5, 0),
-                    newName: '.bar',
-                    length: 5,
-                },
-                {
-                    position: Position.create(1, 16),
-                    newName: 'bar',
-                    length: 4,
-                },
-            ],
-            result: `
+</script>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/cssScoped.vue'),
+    actions: [{
+        position: Position.create(5, 0),
+        newName: '.bar',
+        length: 5,
+    }, {
+        position: Position.create(1, 16),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
 <template>
     <div class="bar"></div>
 </template>
 
 <style scoped>
 .bar { }
-</style>
-        `.trim(),
-        },
-        {
-            fileName: path.resolve(__dirname, '../testCases/cssModule.vue'),
-            actions: [
-                {
-                    position: Position.create(5, 0),
-                    newName: '.bar',
-                    length: 5,
-                },
-                {
-                    position: Position.create(1, 24),
-                    newName: 'bar',
-                    length: 4,
-                },
-            ],
-            result: `
+</style>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/cssModule.vue'),
+    actions: [{
+        position: Position.create(5, 0),
+        newName: '.bar',
+        length: 5,
+    }, {
+        position: Position.create(1, 24),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
 <template>
     <div :class="$style.bar"></div>
 </template>
 
 <style module>
 .bar { }
-</style>
-        `.trim(),
-        },
-        {
-            fileName: path.resolve(__dirname, '../testCases/scriptSetup_component.vue'),
-            actions: [
-                {
-                    position: Position.create(6, 7),
-                    newName: 'CcDd',
-                    length: 5,
-                },
-                {
-                    position: Position.create(1, 5),
-                    newName: 'CcDd',
-                    length: 5,
-                },
-                {
-                    position: Position.create(1, 12),
-                    newName: 'CcDd',
-                    length: 5,
-                },
-                {
-                    position: Position.create(2, 5),
-                    newName: 'cc-dd',
-                    length: 6,
-                },
-                {
-                    position: Position.create(2, 13),
-                    newName: 'cc-dd',
-                    length: 6,
-                },
-            ],
-            result: `
+</style>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/scriptSetup_component.vue'),
+    actions: [{
+        position: Position.create(6, 7),
+        newName: 'CcDd',
+        length: 5,
+    }, {
+        position: Position.create(1, 5),
+        newName: 'CcDd',
+        length: 5,
+    }, {
+        position: Position.create(1, 12),
+        newName: 'CcDd',
+        length: 5,
+    }, {
+        position: Position.create(2, 5),
+        newName: 'cc-dd',
+        length: 6,
+    }, {
+        position: Position.create(2, 13),
+        newName: 'cc-dd',
+        length: 6,
+    }],
+    result: `
 <template>
     <CcDd></CcDd>
     <cc-dd></cc-dd>
@@ -124,10 +102,86 @@ ref: bar = 1;
 
 <script lang="ts" setup>
 import CcDd from './scriptSetup.vue';
-</script>
-        `.trim(),
-        },
-    ];
+</script>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/scriptSetup_prop.vue'),
+    actions: [{
+        position: Position.create(4, 14),
+        newName: 'bar',
+        length: 4,
+    }, {
+        position: Position.create(0, 13),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
+<template>{{ bar }}</template>
+
+<script lang="ts" setup>
+import { defineProps } from '@vue/runtime-core';
+defineProps({ bar: String });
+</script>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/scriptSetup_typeProp.vue'),
+    actions: [{
+        position: Position.create(4, 14),
+        newName: 'bar',
+        length: 4,
+    }, {
+        position: Position.create(0, 13),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
+<template>{{ bar }}</template>
+
+<script lang="ts" setup>
+import { defineProps } from '@vue/runtime-core';
+defineProps<{ bar: string }>();
+</script>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/scriptSetup_refSugar.vue'),
+    actions: [{
+        position: Position.create(3, 8),
+        newName: 'bar',
+        length: 4,
+    }, {
+        position: Position.create(0, 13),
+        newName: 'bar',
+        length: 4,
+    }, {
+        position: Position.create(7, 0),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
+<template>{{ bar }}</template>
+
+<script lang="ts" setup>
+ref: ({ foo: bar } = useFoo());
+function useFoo() {
+    return { foo: '' };
+}
+bar;
+</script>`.trim(),
+}, {
+    fileName: path.resolve(__dirname, '../testCases/scriptSetup_refSugar.vue'),
+    actions: [{
+        position: Position.create(5, 13),
+        newName: 'bar',
+        length: 4,
+    }],
+    result: `
+<template>{{ foo }}</template>
+
+<script lang="ts" setup>
+ref: ({ bar: foo } = useFoo());
+function useFoo() {
+    return { bar: '' };
+}
+foo;
+</script>`.trim(),
+}];
 
 for (const test of tests) {
 

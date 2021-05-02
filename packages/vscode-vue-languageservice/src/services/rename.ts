@@ -122,6 +122,14 @@ export function register({ mapper }: TsApiRegisterOptions) {
 						for (const editUri in tsWorkspaceEdit.changes) {
 							const textEdits = tsWorkspaceEdit.changes[editUri];
 							for (const textEdit of textEdits) {
+								if (
+									textEdit.newText !== newName
+									&& textEdit.newText.indexOf(':') >= 0
+									&& textEdit.newText.split(':')[0] === newName
+								) {
+									// patching foo => bar: foo
+									continue;
+								}
 								loopChecker.add({ uri: editUri, range: textEdit.range });
 								for (const teleRange of mapper.ts.teleports(editUri, textEdit.range.start, textEdit.range.end)) {
 									if (!teleRange.sideData.capabilities.rename)
