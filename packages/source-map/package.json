@@ -3,6 +3,6 @@
 	"version": "1.0.0",
 	"main": "out/index.js",
 	"dependencies": {
-		"@volar/shared": "1.0.0"
+		"@volar/shared": "^1.0.0"
 	}
 }

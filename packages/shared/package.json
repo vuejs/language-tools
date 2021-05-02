@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"main": "out/index.js",
 	"dependencies": {
-		"vscode-languageserver": "next",
-		"upath": "latest"
+		"vscode-languageserver": "^7.1.0-next.4",
+		"upath": "^2.0.1"
 	},
 	"devDependencies": {
 		"typescript": "latest"

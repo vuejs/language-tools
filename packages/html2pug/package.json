@@ -6,9 +6,9 @@
 		"@types/pug": "latest"
 	},
 	"dependencies": {
-		"pug": "latest",
-		"htmlparser2": "latest",
-		"domhandler": "latest",
-		"domelementtype": "latest"
+		"pug": "^3.0.2",
+		"htmlparser2": "^6.1.0",
+		"domhandler": "^4.2.0",
+		"domelementtype": "^2.2.0"
 	}
 }

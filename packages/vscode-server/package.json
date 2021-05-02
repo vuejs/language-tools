@@ -6,10 +6,10 @@
 		"@types/fs-extra": "latest"
 	},
 	"dependencies": {
-		"vscode-vue-languageservice": "1.0.0",
-		"vscode-languageserver": "next",
-		"vscode-languageserver-textdocument": "latest",
-		"fs-extra": "latest",
-		"upath": "latest"
+		"vscode-vue-languageservice": "^1.0.0",
+		"vscode-languageserver": "^7.1.0-next.4",
+		"vscode-languageserver-textdocument": "^1.0.1",
+		"fs-extra": "^9.1.0",
+		"upath": "^2.0.1"
 	}
 }
