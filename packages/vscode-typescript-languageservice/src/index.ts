@@ -27,8 +27,16 @@ import type { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
 
-export function createLanguageService(host: LanguageServiceHost, ts: typeof import('typescript/lib/tsserverlibrary')) {
+export function createLanguageService(_host: LanguageServiceHost, ts: typeof import('typescript/lib/tsserverlibrary')) {
 
+	// @ts-ignore
+	const importSuggestionsCache = ts.Completions?.createImportSuggestionsForFileCache?.();
+	const host = {
+		..._host,
+		// @ts-ignore
+		// TODO: crash on 'addListener' from 'node:process', reuse because TS has same problem
+		getImportSuggestionsCache: () => importSuggestionsCache,
+	};
 	const documents = new Map<string, [string, TextDocument]>();
 	const shPlugin = ShPlugin({ typescript: ts });
 	let languageService = ts.createLanguageService(host);

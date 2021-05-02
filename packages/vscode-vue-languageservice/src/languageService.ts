@@ -371,8 +371,6 @@ export function createLanguageService(
 	}
 	function createTsLanguageServiceHost() {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-		// @ts-ignore
-		const importSuggestionsCache = ts.Completions?.createImportSuggestionsForFileCache?.();
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
 			fileExists: vueHost.fileExists
@@ -418,9 +416,6 @@ export function createLanguageService(
 				}
 				return result;
 			},
-			// @ts-ignore
-			// TODO: crash on 'addListener' from 'node:process', reuse because TS has same problem
-			getImportSuggestionsCache: () => importSuggestionsCache,
 		};
 
 		return tsHost;
