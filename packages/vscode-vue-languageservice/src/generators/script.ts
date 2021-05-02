@@ -133,7 +133,7 @@ export function generate(
                 );
                 if (binary.right) {
                     codeGen.addText(` = `);
-                    codeGen.addText(originalCode.substring(binary.right.start, binary.right.end));
+                    mapSubText(binary.right.start, binary.right.end);
                 }
             }
             codeGen.addText(`; }\n`);
@@ -183,7 +183,7 @@ export function generate(
 
                 if (binary.right) {
                     codeGen.addText(` = `);
-                    mapSubText(binary.right.start, binary.right.end);
+                    codeGen.addText(originalCode.substring(binary.right.start, binary.right.end));
                 }
             }
             codeGen.addText(`;\n`);
