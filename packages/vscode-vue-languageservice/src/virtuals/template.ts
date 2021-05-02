@@ -89,7 +89,7 @@ export function useTemplateScript(
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');
 		codeGen.addText('declare var $style: Record<string, string> & {\n');
-		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, false);
+		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, true);
 		codeGen.addText('};\n');
 
 		/* Style Scoped */
@@ -256,8 +256,8 @@ export function useTemplateScript(
 									rename: true,
 									referencesCodeLens: maped.mode === SourceMaps.Mode.Totally, // has 2 modes
 								},
-								beforeRename: maped.patchRename ? (newName => newName.startsWith('.') ? newName.substr(1) : newName) : undefined,
-								doRename: maped.patchRename ? ((oldName, newName) => '.' + newName) : undefined,
+								beforeRename: maped.patchRename ? beforeCssRename : undefined,
+								doRename: maped.patchRename ? doCssRename : undefined,
 							},
 							mode: maped.mode,
 							sourceRange: vueRange,
@@ -361,4 +361,11 @@ export function useTemplateScript(
 			}
 		}
 	}
+}
+
+function beforeCssRename(newName: string) {
+	return newName.startsWith('.') ? newName.substr(1) : newName;
+}
+function doCssRename(oldName: string, newName: string) {
+	return '.' + newName;
 }

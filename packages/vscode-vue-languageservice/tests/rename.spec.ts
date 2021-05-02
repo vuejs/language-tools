@@ -1,78 +1,151 @@
-import { createTester } from './common';
 import { fsPathToUri } from '@volar/shared';
-import { Position } from 'vscode-languageserver/node';
 import * as path from 'upath';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextEdit } from 'vscode-languageserver-types';
+import { Position } from 'vscode-languageserver/node';
+import { createTester } from './common';
 
-const scriptSetupLocs = {
-    template_foo: Position.create(0, 13),
-    script_foo: Position.create(3, 5),
-};
+const volarRoot = path.resolve(__dirname, '../../..');
+const testRoot = path.resolve(__dirname, '../testCases');
+const tester = createTester(testRoot);
+const tests: {
+    fileName: string,
+    actions: {
+        position: Position,
+        newName: string,
+        length: number,
+    }[],
+    result: string,
+}[] = [
+        {
+            fileName: path.resolve(__dirname, '../testCases/scriptSetup.vue'),
+            actions: [
+                {
+                    position: Position.create(0, 13),
+                    newName: 'bar',
+                    length: 4,
+                },
+                {
+                    position: Position.create(3, 5),
+                    newName: 'bar',
+                    length: 4,
+                },
+            ],
+            result: `
+<template>{{ bar }}</template>
 
-describe('renaming', () => {
+<script lang="ts" setup>
+ref: bar = 1;
+</script>
+        `.trim(),
+        },
+        {
+            fileName: path.resolve(__dirname, '../testCases/cssScoped.vue'),
+            actions: [
+                {
+                    position: Position.create(5, 0),
+                    newName: '.bar',
+                    length: 5,
+                },
+                {
+                    position: Position.create(1, 16),
+                    newName: 'bar',
+                    length: 4,
+                },
+            ],
+            result: `
+<template>
+    <div class="bar"></div>
+</template>
 
-    const root = path.resolve(__dirname, '../testCases');
-    const tester = createTester(root);
-    const fileName = path.resolve(__dirname, '../testCases/scriptSetup.vue');
+<style scoped>
+.bar { }
+</style>
+        `.trim(),
+        },
+        {
+            fileName: path.resolve(__dirname, '../testCases/cssModule.vue'),
+            actions: [
+                {
+                    position: Position.create(5, 0),
+                    newName: '.bar',
+                    length: 5,
+                },
+                {
+                    position: Position.create(1, 24),
+                    newName: 'bar',
+                    length: 4,
+                },
+            ],
+            result: `
+<template>
+    <div :class="$style.bar"></div>
+</template>
+
+<style module>
+.bar { }
+</style>
+        `.trim(),
+        },
+    ];
+
+for (const test of tests) {
+
+    const fileName = test.fileName;
     const uri = fsPathToUri(fileName);
     const script = tester.host.getScriptSnapshot(fileName);
 
-    it('should scriptSetup.vue exist', () => {
-        expect(!!script).toBe(true);
+    describe(`renaming ${path.basename(fileName)}`, () => {
+
+        it(`should ${path.basename(fileName)} exist`, () => {
+            expect(!!script).toBe(true);
+        });
+        if (!script) return;
+
+        const scriptText = script.getText(0, script.getLength());
+
+        for (const action of test.actions) {
+            for (let i = 0; i < action.length; i++) {
+                const location = `${path.relative(volarRoot, fileName)}:${action.position.line + 1}:${action.position.character + i + 1}`;
+                it(`rename ${location} => ${action.newName}`, () => {
+                    const result = tester.languageService.rename.doRename(
+                        uri,
+                        { line: action.position.line, character: action.position.character + i },
+                        action.newName,
+                    );
+
+                    const textEdits = result?.changes?.[uri];
+                    expect(!!textEdits).toEqual(true);
+                    if (!textEdits) return;
+
+                    const textResult = applyTextEdits(scriptText, textEdits);
+                    expect(textResult).toEqual(test.result);
+                });
+            }
+        }
     });
-    if (!script) return;
+}
 
-    it('rename in <script>', () => {
-        const result = tester.languageService.rename.doRename(
-            uri,
-            scriptSetupLocs.script_foo,
-            'bar',
-        );
-        const changes = result?.changes?.[uri];
+function applyTextEdits(originalText: string, textEdits: TextEdit[]) {
 
-        expect(!!changes).toEqual(true);
-        if (!changes) return;
+    const document = TextDocument.create('', '', 0, originalText);
+    textEdits = textEdits.sort((a, b) => document.offsetAt(b.range.start) - document.offsetAt(a.range.start));
 
-        expect(changes.length).toEqual(2);
-        expect(changes.some(change =>
-            change.range.start.line === scriptSetupLocs.script_foo.line
-            && change.range.start.character === scriptSetupLocs.script_foo.character
-            && change.range.end.line === scriptSetupLocs.script_foo.line
-            && change.range.end.character === scriptSetupLocs.script_foo.character + 'foo'.length
-            && change.newText === 'bar'
-        )).toBe(true);
-        expect(changes.some(change =>
-            change.range.start.line === scriptSetupLocs.template_foo.line
-            && change.range.start.character === scriptSetupLocs.template_foo.character
-            && change.range.end.line === scriptSetupLocs.template_foo.line
-            && change.range.end.character === scriptSetupLocs.template_foo.character + 'foo'.length
-            && change.newText === 'bar'
-        )).toBe(true);
-    });
-    it('rename in <template>', () => {
-        const result = tester.languageService.rename.doRename(
-            uri,
-            scriptSetupLocs.template_foo,
-            'bar',
-        );
-        const changes = result?.changes?.[uri];
+    let newText = document.getText();
+    for (const textEdit of textEdits) {
+        newText = editText(
+            newText,
+            document.offsetAt(textEdit.range.start),
+            document.offsetAt(textEdit.range.end),
+            textEdit.newText
+        )
+    }
 
-        expect(!!changes).toEqual(true);
-        if (!changes) return;
+    return newText;
 
-        expect(changes.length).toEqual(2);
-        expect(changes.some(change =>
-            change.range.start.line === scriptSetupLocs.script_foo.line
-            && change.range.start.character === scriptSetupLocs.script_foo.character
-            && change.range.end.line === scriptSetupLocs.script_foo.line
-            && change.range.end.character === scriptSetupLocs.script_foo.character + 'foo'.length
-            && change.newText === 'bar'
-        )).toBe(true);
-        expect(changes.some(change =>
-            change.range.start.line === scriptSetupLocs.template_foo.line
-            && change.range.start.character === scriptSetupLocs.template_foo.character
-            && change.range.end.line === scriptSetupLocs.template_foo.line
-            && change.range.end.character === scriptSetupLocs.template_foo.character + 'foo'.length
-            && change.newText === 'bar'
-        )).toBe(true);
-    });
-});
+    function editText(sourceText: string, startOffset: number, endOffset: number, newText: string) {
+        return sourceText.substring(0, startOffset)
+            + newText
+            + sourceText.substring(endOffset, sourceText.length)
+    }
+}
