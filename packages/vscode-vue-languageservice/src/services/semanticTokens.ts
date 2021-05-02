@@ -1,4 +1,4 @@
-import * as ts2 from '@volar/vscode-typescript-languageservice';
+import * as ts2 from 'vscode-typescript-languageservice';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import {

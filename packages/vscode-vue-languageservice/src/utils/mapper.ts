@@ -5,7 +5,7 @@ import type { CssSourceMap, TeleportMappingData } from '../utils/sourceMaps';
 import type { TeleportSideData } from '../utils/sourceMaps';
 import type { TsMappingData } from '../utils/sourceMaps';
 import type { TsSourceMap } from '../utils/sourceMaps';
-import type { LanguageService as TsLanguageService } from '@volar/vscode-typescript-languageservice';
+import type { LanguageService as TsLanguageService } from 'vscode-typescript-languageservice';
 import type { LanguageService as CssLanguageService } from 'vscode-css-languageservice';
 import type { LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
 import type { LanguageService as PugLanguageService } from '@volar/vscode-pug-languageservice';

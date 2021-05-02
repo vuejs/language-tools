@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vscode-typescript-languageservice",
+	"name": "vscode-typescript-languageservice",
 	"version": "1.0.0",
 	"main": "out/index.js",
 	"devDependencies": {

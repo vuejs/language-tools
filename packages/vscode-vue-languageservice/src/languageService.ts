@@ -5,7 +5,7 @@ import { getGlobalDoc } from './virtuals/global';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
-import * as ts2 from '@volar/vscode-typescript-languageservice';
+import * as ts2 from 'vscode-typescript-languageservice';
 import { DocumentContext, HTMLDocument } from 'vscode-html-languageservice';
 import * as languageServices from './utils/languageServices';
 import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';

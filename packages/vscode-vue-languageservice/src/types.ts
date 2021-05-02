@@ -1,6 +1,6 @@
 import type { CompletionItem } from 'vscode-languageserver/node';
 import type { SourceFile } from './sourceFile';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import type * as ts2 from 'vscode-typescript-languageservice';
 import type { TextDocument, DocumentContext } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { createMapper } from './utils/mapper';

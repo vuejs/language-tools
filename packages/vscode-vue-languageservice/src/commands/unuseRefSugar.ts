@@ -3,7 +3,7 @@ import type { Position } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import type { LanguageService as TsLanguageService } from '@volar/vscode-typescript-languageservice';
+import type { LanguageService as TsLanguageService } from 'vscode-typescript-languageservice';
 import { TextEdit } from 'vscode-languageserver/node';
 import { sleep } from '@volar/shared';
 import { SearchTexts } from '../utils/string';

@@ -1,6 +1,6 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import { eqSet, notEmpty, uriToFsPath } from '@volar/shared';
-import type * as ts2 from '@volar/vscode-typescript-languageservice';
+import type * as ts2 from 'vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
 import * as css from 'vscode-css-languageservice';
