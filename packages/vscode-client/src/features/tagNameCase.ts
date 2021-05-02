@@ -131,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
                 }
                 else {
                     const templateCases = await languageClient.sendRequest(GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
-                    tagCase = templateCases.tag;
+                    tagCase = templateCases?.tag;
                 }
             }
             if (!attrCase) {
