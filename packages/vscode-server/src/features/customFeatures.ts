@@ -19,7 +19,7 @@ import {
     DiagnosticSeverity,
     TextDocuments
 } from 'vscode-languageserver/node';
-import { ServicesManager } from '../servicesManager';
+import type { ServicesManager } from '../servicesManager';
 
 export function register(
     connection: Connection,
@@ -27,20 +27,19 @@ export function register(
     servicesManager: ServicesManager,
 ) {
     connection.onNotification(RestartServerNotification.type, async () => {
-        servicesManager?.restartAll();
+        servicesManager.restartAll();
     });
     connection.onRequest(RefCloseRequest.type, handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;
-        return servicesManager?.getMatchService(document.uri)?.doRefAutoClose(document, handler.position);
+        return servicesManager.getMatchService(document.uri)?.doRefAutoClose(document, handler.position);
     });
     connection.onRequest(D3Request.type, handler => {
         const document = documents.get(handler.uri);
         if (!document) return;
-        return servicesManager?.getMatchService(document.uri)?.getD3(document);
+        return servicesManager.getMatchService(document.uri)?.getD3(document);
     });
     connection.onRequest(WriteVirtualFilesRequest.type, async () => {
-        if (!servicesManager) return;
         const progress = await connection.window.createWorkDoneProgress();
         progress.begin('Write', 0, '', true);
         for (const [_, service] of servicesManager.services) {
@@ -65,8 +64,6 @@ export function register(
         progress.done();
     });
     connection.onRequest(VerifyAllScriptsRequest.type, async () => {
-
-        if (!servicesManager) return;
 
         let errors = 0;
         let warnings = 0;
@@ -100,10 +97,10 @@ export function register(
     connection.onRequest(RangeSemanticTokensRequest.type, async handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;
-        return servicesManager?.getMatchService(document.uri)?.getSemanticTokens(document, handler.range);
+        return servicesManager.getMatchService(document.uri)?.getSemanticTokens(document, handler.range);
     });
     connection.onRequest(SemanticTokenLegendRequest.type, () => semanticTokenLegend);
     connection.onRequest(GetServerNameCasesRequest.type, handler => {
-        return servicesManager?.getMatchService(handler.uri)?.detectTagNameCase(handler.uri);
+        return servicesManager.getMatchService(handler.uri)?.detectTagNameCase(handler.uri);
     });
 }
