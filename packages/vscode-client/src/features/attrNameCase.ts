@@ -7,7 +7,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
     await languageClient.onReady();
 
-    while (typeof (await languageClient.sendRequest(PingRequest.type)) !== 'boolean') {
+    while (await languageClient.sendRequest(PingRequest.type) !== 'pong') {
         await sleep(100);
     }
 

@@ -30,7 +30,7 @@ export function register(
     connection.onNotification(RestartServerNotification.type, async () => {
         servicesManager.restartAll();
     });
-    connection.onRequest(PingRequest.type, () => true);
+    connection.onRequest(PingRequest.type, () => 'pong' as const);
     connection.onRequest(RefCloseRequest.type, handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;

@@ -14,7 +14,7 @@ import {
 } from 'vscode-languageserver/node';
 
 export namespace PingRequest {
-	export const type: RequestType0<boolean | null | undefined, any> = new RequestType0('volar/ping');
+	export const type: RequestType0<'pong' | null | undefined, any> = new RequestType0('volar/ping');
 }
 export namespace D3Request {
 	export const type: RequestType<TextDocumentIdentifier, string | null | undefined, any> = new RequestType('volar/d3');
