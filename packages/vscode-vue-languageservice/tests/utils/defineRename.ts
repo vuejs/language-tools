@@ -34,7 +34,7 @@ export function defineRename(test: {
             for (let i = 0; i < action.length; i++) {
                 const location = `${path.relative(volarRoot, fileName)}:${action.position.line + 1}:${action.position.character + i + 1}`;
                 it(`rename ${location} => ${action.newName}`, () => {
-                    const result = tester.languageService.rename.doRename(
+                    const result = tester.languageService.doRename(
                         uri,
                         { line: action.position.line, character: action.position.character + i },
                         action.newName,

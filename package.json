@@ -305,7 +305,7 @@
 		"compile": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
 		"pack": "yarn && npm run test && vsce package --yarn",
-		"publish": "yarn && npm run test && vsce publish --yarn",
+		"publish": "yarn && npm run test && lerna publish && vsce publish --yarn",
 		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
 		"test": "jest"
 	},
