@@ -26,6 +26,6 @@ export function register(
     connection.onRequest(TagCloseRequest.type, handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;
-        return noStateLs.doAutoClose(document, handler.position);
+        return noStateLs.doTagComplete(document, handler.position);
     });
 }

@@ -15,7 +15,7 @@ import { TsMappingData } from '../utils/sourceMaps';
 export function register({ mapper }: TsApiRegisterOptions) {
 
 	return {
-		onPrepare: (uri: string, position: Position) => {
+		prepareRename: (uri: string, position: Position) => {
 
 			const tsResult = onTsPrepare(uri, position);
 			if (tsResult) {
@@ -82,7 +82,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		const tsOldUri = tsMaped.textDocument.uri;
 		const tsNewUri = tsMaped.isVirtualFile ? newUri + '.ts' : newUri;
-		const tsResult = tsMaped.languageService.onFileName(tsOldUri, tsNewUri);
+		const tsResult = tsMaped.languageService.getEditsForFileRename(tsOldUri, tsNewUri);
 		if (!tsResult)
 			return;
 

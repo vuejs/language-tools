@@ -70,7 +70,7 @@ export function getWordStart(wordPattern: RegExp, position: Position, document: 
     }
     return undefined;
 }
-export function loadVscodeTypescript(appRoot: string): typeof import('typescript') {
+export function loadVscodeTypescript(appRoot: string): typeof import('typescript/lib/tsserverlibrary') {
     const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript');
     return require(path.toUnix(tsPath));
 }

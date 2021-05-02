@@ -9,7 +9,7 @@ export type ServicesManager = ReturnType<typeof createServicesManager>;
 
 export function createServicesManager(
 	mode: 'api' | 'doc',
-	ts: typeof import('typescript'),
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	connection: Connection,
 	documents: TextDocuments<TextDocument>,
@@ -138,7 +138,7 @@ export function createServicesManager(
 
 		if (send && !checkedProject.has(matchTsConfig)) {
 			checkedProject.add(matchTsConfig);
-			const projectValid = matchLs.checkProject();
+			const projectValid = matchLs.__internal__.checkProject();
 			if (!projectValid) {
 				connection.window.showWarningMessage(
 					"Cannot import Vue 3 types from @vue/runtime-dom. If you are using Vue 2, you may need to install @vue/runtime-dom in additionally."
@@ -210,7 +210,7 @@ export function createServicesManager(
 			const hasVueFile = parsedCommandLine.fileNames.some(fileName => upath.extname(fileName) === '.vue');
 			if (!hasVueFile) continue;
 			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.getTsService().getTextDocument(uri)) {
+			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.getTsService().getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
 				if (!upath.relative(tsConfigDir, fileName).startsWith('..')) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);

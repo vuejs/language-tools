@@ -12,7 +12,7 @@ import * as upath from 'upath';
 import * as dedupe from '../utils/dedupe';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
-	function onPrepare(document: TextDocument, position: Position) {
+	function doPrepare(document: TextDocument, position: Position) {
 		let vueItems: CallHierarchyItem[] = [];
 
 		if (document.languageId !== 'vue') {
@@ -40,7 +40,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 		return dedupe.withLocations(vueItems);
 	}
-	function onIncomingCalls(item: CallHierarchyItem) {
+	function getIncomingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLanguageService.provideCallHierarchyIncomingCalls).flat();
 		const vueIncomingItems: CallHierarchyIncomingCall[] = [];
@@ -55,7 +55,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		}
 		return dedupe.withCallHierarchyIncomingCalls(vueIncomingItems);
 	}
-	function onOutgoingCalls(item: CallHierarchyItem) {
+	function getOutgoingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLanguageService.provideCallHierarchyOutgoingCalls).flat();
 		const vueIncomingItems: CallHierarchyOutgoingCall[] = [];
@@ -72,9 +72,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	}
 
 	return {
-		onPrepare,
-		onIncomingCalls,
-		onOutgoingCalls,
+		doPrepare,
+		getIncomingCalls,
+		getOutgoingCalls,
 	}
 
 	function worker(tsDocUri: string, tsPos: Position) {

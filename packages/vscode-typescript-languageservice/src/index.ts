@@ -43,7 +43,7 @@ export function createLanguageService(host: LanguageServiceHost, ts: typeof impo
 		findReferences: references.register(languageService, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getTextDocument),
 		doRename: rename.register(languageService, getTextDocument),
-		onFileName: fileRename.register(languageService, getTextDocument),
+		getEditsForFileRename: fileRename.register(languageService, getTextDocument),
 		getCodeActions: codeActions.register(languageService, getTextDocument),
 		doCodeActionResolve: codeActionResolve.register(languageService, getTextDocument),
 

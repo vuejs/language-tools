@@ -32,12 +32,12 @@ export function register(
     connection.onRequest(RefCloseRequest.type, handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.doRefAutoClose(document, handler.position);
+        return servicesManager.getMatchService(document.uri)?.__internal__.doRefAutoClose(document, handler.position);
     });
     connection.onRequest(D3Request.type, handler => {
         const document = documents.get(handler.uri);
         if (!document) return;
-        return servicesManager.getMatchService(document.uri)?.getD3(document);
+        return servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
     });
     connection.onRequest(WriteVirtualFilesRequest.type, async () => {
         const progress = await connection.window.createWorkDoneProgress();
@@ -45,14 +45,14 @@ export function register(
         for (const [_, service] of servicesManager.services) {
             const ls = service.getLanguageServiceDontCreate();
             if (!ls) continue;
-            const globalDocs = ls.getGlobalDocs();
+            const globalDocs = ls.__internal__.getGlobalDocs();
             for (const globalDoc of globalDocs) {
                 await fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
             }
-            const sourceFiles = ls.getAllSourceFiles();
+            const sourceFiles = ls.__internal__.getAllSourceFiles();
             let i = 0;
             for (const sourceFile of sourceFiles) {
-                progress.report(i++ / sourceFiles.length * 100, path.relative(ls.rootPath, uriToFsPath(sourceFile.uri)));
+                progress.report(i++ / sourceFiles.length * 100, path.relative(ls.__internal__.rootPath, uriToFsPath(sourceFile.uri)));
                 for (const [uri, doc] of sourceFile.getTsDocuments()) {
                     if (progress.token.isCancellationRequested) {
                         break;
@@ -73,10 +73,10 @@ export function register(
         for (const [_, service] of servicesManager.services) {
             const ls = service.getLanguageServiceDontCreate();
             if (!ls) continue;
-            const sourceFiles = ls.getAllSourceFiles();
+            const sourceFiles = ls.__internal__.getAllSourceFiles();
             let i = 0;
             for (const sourceFile of sourceFiles) {
-                progress.report(i++ / sourceFiles.length * 100, path.relative(ls.rootPath, uriToFsPath(sourceFile.uri)));
+                progress.report(i++ / sourceFiles.length * 100, path.relative(ls.__internal__.rootPath, uriToFsPath(sourceFile.uri)));
                 if (progress.token.isCancellationRequested) {
                     continue;
                 }
@@ -101,6 +101,6 @@ export function register(
     });
     connection.onRequest(SemanticTokenLegendRequest.type, () => semanticTokenLegend);
     connection.onRequest(GetServerNameCasesRequest.type, handler => {
-        return servicesManager.getMatchService(handler.uri)?.detectTagNameCase(handler.uri);
+        return servicesManager.getMatchService(handler.uri)?.__internal__.detectTagNameCase(handler.uri);
     });
 }

@@ -14,13 +14,13 @@ export = function init(modules: { typescript: typeof import('typescript/lib/tsse
 	function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
 
 		const proxyHost = createProxyHost(ts, info);
-		const vueLs = createLanguageService(proxyHost.host, { typescript: ts }, undefined, true);
+		const vueLs = createLanguageService({ typescript: ts }, proxyHost.host, true);
 
 		vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
 		return new Proxy(info.languageService, {
 			get: (target: any, property: keyof ts.LanguageService) => {
-				return vueLs.tsPlugin[property] || target[property];
+				return vueLs.__internal__.tsPlugin[property] || target[property];
 			},
 		});
 	}

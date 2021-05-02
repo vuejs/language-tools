@@ -47,21 +47,21 @@ export type NoStateLanguageService = ReturnType<typeof createNoStateLanguageServ
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts.LanguageServiceHost;
 export type Dependencies = {
-	typescript: typeof import('typescript'),
+	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	// TODO: vscode-html-languageservice
 	// TODO: vscode-css-languageservice
 };
 
-export function createNoStateLanguageService({ typescript }: Dependencies) {
+export function createNoStateLanguageService({ typescript: ts }: Dependencies) {
 	const cache = new Map<string, [number, HTMLDocument]>();
 	const options: HtmlApiRegisterOptions = {
-		ts: typescript,
+		ts,
 		getHtmlDocument,
 	};
 	return {
 		doFormatting: formatting.register(options),
 		getFoldingRanges: foldingRanges.register(options),
-		doAutoClose: autoClose.register(options),
+		doTagComplete: autoClose.register(options),
 		findLinkedEditingRanges: linkedEditingRanges.register(options),
 	}
 	function getHtmlDocument(document: TextDocument) {
@@ -78,9 +78,8 @@ export function createNoStateLanguageService({ typescript }: Dependencies) {
 	}
 }
 export function createLanguageService(
+	{ typescript: ts }: Dependencies,
 	vueHost: LanguageServiceHost,
-	{ typescript }: Dependencies,
-	onUpdate?: (progress: number) => void,
 	isTsPlugin = false,
 ) {
 
@@ -92,15 +91,16 @@ export function createLanguageService(
 	const documents = new UriMap<TextDocument>();
 	const sourceFiles = new UriMap<SourceFile>();
 	const templateScriptUpdateUris = new Set<string>();
+	const initProgressCallback: ((p: number) => void)[] = [];
 
 	const tsLanguageServiceHost = createTsLanguageServiceHost();
-	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost, typescript);
+	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost, ts);
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
-	const compilerHost = typescript.createCompilerHost(vueHost.getCompilationSettings());
+	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: DocumentContext = {
 		resolveReference(ref: string, base: string) {
 
-			const resolveResult = typescript.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
+			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
 			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
 
@@ -116,12 +116,12 @@ export function createLanguageService(
 				else {
 					path = upath.trimExt(path);
 				}
-				if (typescript.sys.fileExists(path) || typescript.sys.fileExists(uriToFsPath(path))) {
+				if (ts.sys.fileExists(path) || ts.sys.fileExists(uriToFsPath(path))) {
 					return path;
 				}
 			}
 			for (const dir of dirs) {
-				if (typescript.sys.directoryExists(dir) || typescript.sys.directoryExists(uriToFsPath(dir))) {
+				if (ts.sys.directoryExists(dir) || ts.sys.directoryExists(uriToFsPath(dir))) {
 					return dir;
 				}
 			}
@@ -132,7 +132,7 @@ export function createLanguageService(
 
 	const mapper = createMapper(sourceFiles, tsLanguageService, getTextDocument);
 	const options: TsApiRegisterOptions = {
-		ts: typescript,
+		ts: ts,
 		sourceFiles,
 		tsLanguageService,
 		vueHost,
@@ -141,7 +141,7 @@ export function createLanguageService(
 	};
 	const _callHierarchy = callHierarchy.register(options);
 	const findDefinition = definitions.register(options);
-	const doRename = rename.register(options);
+	const renames = rename.register(options);
 
 	// ts plugin proxy
 	const _tsPluginApis = tsPluginApis.register(options);
@@ -195,40 +195,23 @@ export function createLanguageService(
 	});
 
 	return {
-		rootPath: vueHost.getCurrentDirectory(),
-		tsPlugin,
-		tsProgramProxy,
-		getTextDocument,
-		checkProject: apiHook(() => {
-			const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
-			return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
-		}),
-		getTsService: () => tsLanguageService,
-		getGlobalDocs: () => [globalDoc],
-		getSourceFile: apiHook(getSourceFile),
-		getAllSourceFiles: apiHook(getAllSourceFiles),
 		doValidation: apiHook(diagnostics.register(options)),
 		findDefinition: apiHook(findDefinition.on),
 		findReferences: apiHook(references.register(options)),
 		findTypeDefinition: apiHook(findDefinition.onType),
 		callHierarchy: {
-			onPrepare: apiHook(_callHierarchy.onPrepare),
-			onIncomingCalls: apiHook(_callHierarchy.onIncomingCalls),
-			onOutgoingCalls: apiHook(_callHierarchy.onOutgoingCalls),
+			doPrepare: apiHook(_callHierarchy.doPrepare),
+			getIncomingCalls: apiHook(_callHierarchy.getIncomingCalls),
+			getOutgoingCalls: apiHook(_callHierarchy.getOutgoingCalls),
 		},
-		rename: {
-			onPrepare: apiHook(doRename.onPrepare),
-			doRename: apiHook(doRename.doRename),
-			onRenameFile: apiHook(doRename.onRenameFile, false),
-		},
+		prepareRename: apiHook(renames.prepareRename),
+		doRename: apiHook(renames.doRename),
+		getEditsForFileRename: apiHook(renames.onRenameFile, false),
 		getSemanticTokens: apiHook(semanticTokens.register(options)),
-		getD3: apiHook(d3.register(options)),
-		executeCommand: apiHook(executeCommand.register(options, references.register(options))),
 
 		doHover: apiHook(hover.register(options), getShouldUpdateTemplateScript),
 		doComplete: apiHook(completions.register(options), getShouldUpdateTemplateScript),
 
-		detectTagNameCase: apiHook(tagNameCase.register(options)),
 		getCodeActions: apiHook(codeActions.register(options), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
 		doCompletionResolve: apiHook(completionResolve.register(options), false),
@@ -241,9 +224,30 @@ export function createLanguageService(
 		findDocumentSymbols: apiHook(documentSymbol.register(options), false),
 		findDocumentLinks: apiHook(documentLink.register(options), false),
 		findDocumentColors: apiHook(documentColor.register(options), false),
-		doRefAutoClose: apiHook(refAutoClose.register(options), false),
-		...createNoStateLanguageService({ typescript }),
+		...createNoStateLanguageService({ typescript: ts }),
 		dispose: tsLanguageService.dispose,
+
+		__internal__: {
+			rootPath: vueHost.getCurrentDirectory(),
+			tsPlugin,
+			tsProgramProxy,
+			onInitProgress(cb: (p: number) => void) {
+				initProgressCallback.push(cb);
+			},
+			getTextDocument,
+			checkProject: apiHook(() => {
+				const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
+				return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
+			}),
+			getTsService: () => tsLanguageService,
+			getGlobalDocs: () => [globalDoc],
+			getSourceFile: apiHook(getSourceFile),
+			getAllSourceFiles: apiHook(getAllSourceFiles),
+			getD3: apiHook(d3.register(options)),
+			executeCommand: apiHook(executeCommand.register(options, references.register(options))),
+			detectTagNameCase: apiHook(tagNameCase.register(options)),
+			doRefAutoClose: apiHook(refAutoClose.register(options), false),
+		},
 	};
 
 	function getShouldUpdateTemplateScript(uri: string, pos: Position) {
@@ -366,7 +370,7 @@ export function createLanguageService(
 	function createTsLanguageServiceHost() {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		// @ts-ignore
-		const importSuggestionsCache = typescript.Completions?.createImportSuggestionsForFileCache?.();
+		const importSuggestionsCache = ts.Completions?.createImportSuggestionsForFileCache?.();
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
 			fileExists: vueHost.fileExists
@@ -461,7 +465,7 @@ export function createLanguageService(
 			const uri = fsPathToUri(fileName);
 			if (uri === globalDoc.uri) {
 				const text = globalDoc.getText();
-				const snapshot = typescript.ScriptSnapshot.fromString(text);
+				const snapshot = ts.ScriptSnapshot.fromString(text);
 				scriptSnapshots.set(fileName, [version, snapshot]);
 				return snapshot;
 			}
@@ -469,7 +473,7 @@ export function createLanguageService(
 				const doc = sourceFile.getTsDocuments().get(uri);
 				if (doc) {
 					const text = doc.getText();
-					const snapshot = typescript.ScriptSnapshot.fromString(text);
+					const snapshot = ts.ScriptSnapshot.fromString(text);
 					scriptSnapshots.set(fileName, [version, snapshot]);
 					return snapshot;
 				}
@@ -508,14 +512,16 @@ export function createLanguageService(
 		let vueTemplateScriptUpdated = false;
 
 		if (shouldUpdateTemplateScript) {
-			onUpdate?.(0);
+			for (const cb of initProgressCallback) {
+				cb(0);
+			}
 		}
 		for (const uri of uris) {
 			const sourceFile = sourceFiles.get(uri);
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, typescript, 'api', options.documentContext));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, ts, 'api', options.documentContext));
 				vueScriptsUpdated = true;
 			}
 			else {
@@ -538,10 +544,15 @@ export function createLanguageService(
 				if (sourceFiles.get(uri)?.updateTemplateScript()) {
 					vueTemplateScriptUpdated = true;
 				}
-				onUpdate?.(++currentNums / templateScriptUpdateUris.size);
+				for (const cb of initProgressCallback) {
+					cb(++currentNums / templateScriptUpdateUris.size);
+				}
 			}
 			templateScriptUpdateUris.clear();
-			onUpdate?.(1);
+			for (const cb of initProgressCallback) {
+				cb(1);
+			}
+			initProgressCallback.length = 0;
 		}
 		if (vueTemplateScriptUpdated) {
 			updateTsProject(true);

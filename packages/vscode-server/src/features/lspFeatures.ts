@@ -48,10 +48,10 @@ export function register(
         return servicesManager.getMatchService(document.uri)?.getSelectionRanges(document, handler.positions);
     });
     connection.onPrepareRename(handler => {
-        return servicesManager.getMatchService(handler.textDocument.uri)?.rename.onPrepare(handler.textDocument.uri, handler.position);
+        return servicesManager.getMatchService(handler.textDocument.uri)?.prepareRename(handler.textDocument.uri, handler.position);
     });
     connection.onRenameRequest(handler => {
-        return servicesManager.getMatchService(handler.textDocument.uri)?.rename.doRename(handler.textDocument.uri, handler.position, handler.newName);
+        return servicesManager.getMatchService(handler.textDocument.uri)?.doRename(handler.textDocument.uri, handler.position, handler.newName);
     });
     connection.onCodeLens(handler => {
         const document = documents.get(handler.textDocument.uri);
@@ -66,7 +66,7 @@ export function register(
         const uri = handler.arguments?.[0];
         const document = documents.get(uri);
         if (!document) return;
-        return servicesManager.getMatchService(uri)?.executeCommand(document, handler.command, handler.arguments, connection);
+        return servicesManager.getMatchService(uri)?.__internal__.executeCommand(document, handler.command, handler.arguments, connection);
     });
     connection.onCodeAction(handler => {
         const uri = handler.textDocument.uri;
@@ -140,21 +140,21 @@ export function register(
     connection.languages.callHierarchy.onPrepare(handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return [];
-        const items = servicesManager.getMatchService(document.uri)?.callHierarchy.onPrepare(document, handler.position);
+        const items = servicesManager.getMatchService(document.uri)?.callHierarchy.doPrepare(document, handler.position);
         return items?.length ? items : null;
     });
     connection.languages.callHierarchy.onIncomingCalls(handler => {
         const { uri } = handler.item.data as { uri: string };
-        return servicesManager.getMatchService(uri)?.callHierarchy.onIncomingCalls(handler.item) ?? [];
+        return servicesManager.getMatchService(uri)?.callHierarchy.getIncomingCalls(handler.item) ?? [];
     });
     connection.languages.callHierarchy.onOutgoingCalls(handler => {
         const { uri } = handler.item.data as { uri: string };
-        return servicesManager.getMatchService(uri)?.callHierarchy.onOutgoingCalls(handler.item) ?? [];
+        return servicesManager.getMatchService(uri)?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
     });
     connection.workspace.onWillRenameFiles(handler => {
         const edits = handler.files
             .map(file => {
-                return servicesManager.getMatchService(file.oldUri)?.rename.onRenameFile(file.oldUri, file.newUri);
+                return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
             })
             .filter(notEmpty)
 
