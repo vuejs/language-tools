@@ -5,5 +5,8 @@
 	"devDependencies": {
 		"typescript": "latest"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"@volar/shared": "1.0.0",
+		"vscode-vue-languageservice": "1.0.0"
+	}
 }

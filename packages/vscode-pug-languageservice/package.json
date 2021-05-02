@@ -7,6 +7,10 @@
 		"vscode-html-languageservice": "latest"
 	},
 	"dependencies": {
+		"@volar/shared": "1.0.0",
+		"@volar/source-map": "1.0.0",
+		"@volar/transforms": "1.0.0",
+		"@volar/code-gen": "1.0.0",
 		"vscode-languageserver": "next",
 		"pug-beautify": "latest",
 		"pug-lexer": "latest",

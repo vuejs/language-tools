@@ -6,6 +6,7 @@
 		"vscode": "latest"
 	},
 	"dependencies": {
+		"@volar/shared": "1.0.0",
 		"@vue/compiler-sfc": "latest",
 		"@vue/reactivity": "latest",
 		"upath": "latest",

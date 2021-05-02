@@ -8,6 +8,13 @@
 		"@types/prettier": "^1.16.4"
 	},
 	"dependencies": {
+		"@volar/shared": "1.0.0",
+		"@volar/html2pug": "1.0.0",
+		"@volar/source-map": "1.0.0",
+		"@volar/transforms": "1.0.0",
+		"@volar/code-gen": "1.0.0",
+		"vscode-pug-languageservice": "1.0.0",
+		"vscode-typescript-languageservice": "1.0.0",
 		"@vue/compiler-sfc": "latest",
 		"@vue/compiler-dom": "latest",
 		"@vue/reactivity": "latest",

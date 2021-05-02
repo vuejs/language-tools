@@ -6,6 +6,7 @@
 		"@types/fs-extra": "latest"
 	},
 	"dependencies": {
+		"vscode-vue-languageservice": "1.0.0",
 		"vscode-languageserver": "next",
 		"vscode-languageserver-textdocument": "latest",
 		"fs-extra": "latest",

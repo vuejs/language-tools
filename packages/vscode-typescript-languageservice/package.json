@@ -6,6 +6,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
+		"@volar/shared": "1.0.0",
 		"vscode-languageserver-textdocument": "latest",
 		"vscode-languageserver": "next",
 		"typescript-vscode-sh-plugin": "0.6.14"
