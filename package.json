@@ -310,11 +310,12 @@
 		"test": "jest"
 	},
 	"devDependencies": {
-		"vsce": "latest",
 		"@types/jest": "latest",
 		"jest": "latest",
+		"lerna": "latest",
 		"ts-jest": "latest",
-		"typescript": "latest"
+		"typescript": "latest",
+		"vsce": "latest"
 	},
 	"workspaces": [
 		"packages/*"
