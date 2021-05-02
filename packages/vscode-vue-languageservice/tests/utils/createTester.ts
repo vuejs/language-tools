@@ -1,4 +1,4 @@
-import { createLanguageService, LanguageServiceHost } from '..';
+import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript';
 import * as path from 'upath';
 
