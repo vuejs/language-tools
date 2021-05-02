@@ -1,4 +1,5 @@
 {
+	"private": true,
 	"name": "@volar/vscode-server",
 	"version": "1.0.0",
 	"devDependencies": {
