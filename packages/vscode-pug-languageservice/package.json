@@ -1,19 +1,19 @@
 {
 	"name": "vscode-pug-languageservice",
-	"version": "1.0.0",
+	"version": "0.25.0",
 	"main": "out/index.js",
 	"devDependencies": {
 		"@types/pug": "latest",
 		"vscode-html-languageservice": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "^1.0.0",
-		"@volar/source-map": "^1.0.0",
-		"@volar/transforms": "^1.0.0",
-		"@volar/code-gen": "^1.0.0",
-		"vscode-languageserver": "^7.1.0-next.4",
+		"@volar/code-gen": "^0.25.0",
+		"@volar/shared": "^0.25.0",
+		"@volar/source-map": "^0.25.0",
+		"@volar/transforms": "^0.25.0",
 		"pug-beautify": "^0.1.1",
 		"pug-lexer": "^5.0.1",
-		"pug-parser": "^6.0.0"
+		"pug-parser": "^6.0.0",
+		"vscode-languageserver": "^7.1.0-next.4"
 	}
 }

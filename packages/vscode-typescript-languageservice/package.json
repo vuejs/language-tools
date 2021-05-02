@@ -1,14 +1,14 @@
 {
 	"name": "vscode-typescript-languageservice",
-	"version": "1.0.0",
+	"version": "0.25.0",
 	"main": "out/index.js",
 	"devDependencies": {
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "^1.0.0",
-		"vscode-languageserver-textdocument": "^1.0.1",
+		"@volar/shared": "^0.25.0",
+		"typescript-vscode-sh-plugin": "^0.6.14",
 		"vscode-languageserver": "^7.1.0-next.4",
-		"typescript-vscode-sh-plugin": "^0.6.14"
+		"vscode-languageserver-textdocument": "^1.0.1"
 	}
 }

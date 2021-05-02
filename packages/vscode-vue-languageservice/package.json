@@ -1,32 +1,32 @@
 {
 	"name": "vscode-vue-languageservice",
-	"version": "1.0.0",
+	"version": "0.25.0",
 	"main": "out/index.js",
 	"devDependencies": {
-		"typescript": "latest",
 		"@types/estree": "latest",
-		"@types/prettier": "^1.16.4"
+		"@types/prettier": "^1.16.4",
+		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "^1.0.0",
-		"@volar/html2pug": "^1.0.0",
-		"@volar/source-map": "^1.0.0",
-		"@volar/transforms": "^1.0.0",
-		"@volar/code-gen": "^1.0.0",
-		"vscode-pug-languageservice": "^1.0.0",
-		"vscode-typescript-languageservice": "^1.0.0",
-		"@vue/compiler-sfc": "^3.0.11",
+		"@starptech/prettyhtml": "^0.10.0",
+		"@volar/code-gen": "^0.25.0",
+		"@volar/html2pug": "^0.25.0",
+		"@volar/shared": "^0.25.0",
+		"@volar/source-map": "^0.25.0",
+		"@volar/transforms": "^0.25.0",
 		"@vue/compiler-dom": "^3.0.11",
+		"@vue/compiler-sfc": "^3.0.11",
 		"@vue/reactivity": "^3.0.11",
 		"@vue/shared": "^3.0.11",
-		"@starptech/prettyhtml": "^0.10.0",
-		"vscode-css-languageservice": "^5.1.1",
-		"vscode-html-languageservice": "^4.0.3",
-		"vscode-languageserver-textdocument": "^1.0.1",
-		"vscode-languageserver": "^7.1.0-next.4",
-		"upath": "^2.0.1",
 		"jsonc-parser": "^3.0.0",
 		"prettier": "^1.16.4",
-		"vscode-emmet-helper": "^2.6.2"
+		"upath": "^2.0.1",
+		"vscode-css-languageservice": "^5.1.1",
+		"vscode-emmet-helper": "^2.6.2",
+		"vscode-html-languageservice": "^4.0.3",
+		"vscode-languageserver": "^7.1.0-next.4",
+		"vscode-languageserver-textdocument": "^1.0.1",
+		"vscode-pug-languageservice": "^0.25.0",
+		"vscode-typescript-languageservice": "^0.25.0"
 	}
 }

@@ -1,15 +1,15 @@
 {
 	"private": true,
 	"name": "@volar/vscode-server",
-	"version": "1.0.0",
+	"version": "0.25.0",
 	"devDependencies": {
 		"@types/fs-extra": "latest"
 	},
 	"dependencies": {
-		"vscode-vue-languageservice": "^1.0.0",
+		"fs-extra": "^9.1.0",
+		"upath": "^2.0.1",
 		"vscode-languageserver": "^7.1.0-next.4",
 		"vscode-languageserver-textdocument": "^1.0.1",
-		"fs-extra": "^9.1.0",
-		"upath": "^2.0.1"
+		"vscode-vue-languageservice": "^0.25.0"
 	}
 }
