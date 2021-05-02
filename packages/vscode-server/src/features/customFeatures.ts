@@ -1,6 +1,7 @@
 import {
     D3Request,
     GetServerNameCasesRequest,
+    PingRequest,
     RangeSemanticTokensRequest,
     RefCloseRequest,
     RestartServerNotification,
@@ -9,7 +10,6 @@ import {
     VerifyAllScriptsRequest,
     WriteVirtualFilesRequest
 } from '@volar/shared';
-import { semanticTokenLegend } from 'vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import * as path from 'upath';
 import { TextDocument } from 'vscode-css-languageservice';
@@ -19,6 +19,7 @@ import {
     DiagnosticSeverity,
     TextDocuments
 } from 'vscode-languageserver/node';
+import { semanticTokenLegend } from 'vscode-vue-languageservice';
 import type { ServicesManager } from '../servicesManager';
 
 export function register(
@@ -29,6 +30,7 @@ export function register(
     connection.onNotification(RestartServerNotification.type, async () => {
         servicesManager.restartAll();
     });
+    connection.onRequest(PingRequest.type, () => true);
     connection.onRequest(RefCloseRequest.type, handler => {
         const document = documents.get(handler.textDocument.uri);
         if (!document) return;

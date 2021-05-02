@@ -107,10 +107,10 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 		position: Position,
 		context?: CompletionContext,
 		/** internal */
-		__getTagStyle?: () => Promise<{
-			tag: 'both' | 'kebabCase' | 'pascalCase',
-			attr: 'kebabCase' | 'pascalCase',
-		}>,
+		getNameCase?: {
+			tag: () => Promise<'both' | 'kebabCase' | 'pascalCase'>,
+			attr: () => Promise<'kebabCase' | 'pascalCase'>,
+		},
 	) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -229,7 +229,15 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return;
 			}
-			const nameCases = await __getTagStyle?.() ?? { tag: 'both', attr: 'kebabCase' };
+			let nameCases = { tag: 'both', attr: 'kebabCase' };
+			if (getNameCase) {
+				const clientCases = await Promise.all([
+					getNameCase.tag(),
+					getNameCase.attr(),
+				]);
+				nameCases.tag = clientCases[0];
+				nameCases.attr = clientCases[1];
+			}
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];

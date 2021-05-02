@@ -1,4 +1,4 @@
-import { ActiveSelectionRequest, GetClientNameCasesRequest, notEmpty } from '@volar/shared';
+import { ActiveSelectionRequest, GetClientTarNameCaseRequest, GetClientAttrNameCaseRequest, notEmpty } from '@volar/shared';
 import { margeWorkspaceEdits } from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { Connection, TextDocuments } from 'vscode-languageserver/node';
@@ -17,9 +17,14 @@ export function register(
                 handler.textDocument.uri,
                 handler.position,
                 handler.context,
-                () => connection.sendRequest(GetClientNameCasesRequest.type, {
-                    uri: handler.textDocument.uri
-                }),
+                {
+                    tag: () => connection.sendRequest(GetClientTarNameCaseRequest.type, {
+                        uri: handler.textDocument.uri
+                    }),
+                    attr: () => connection.sendRequest(GetClientAttrNameCaseRequest.type, {
+                        uri: handler.textDocument.uri
+                    }),
+                },
             );
     });
     connection.onCompletionResolve(async item => {

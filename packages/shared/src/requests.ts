@@ -13,6 +13,9 @@ import {
 	TextDocumentPositionParams,
 } from 'vscode-languageserver/node';
 
+export namespace PingRequest {
+	export const type: RequestType0<boolean | null | undefined, any> = new RequestType0('volar/ping');
+}
 export namespace D3Request {
 	export const type: RequestType<TextDocumentIdentifier, string | null | undefined, any> = new RequestType('volar/d3');
 }
@@ -52,11 +55,11 @@ export namespace GetServerNameCasesRequest {
 		attr: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 	}, any> = new RequestType('volar/getTagNameCaseServer');
 }
-export namespace GetClientNameCasesRequest {
-	export const type: RequestType<TextDocumentIdentifier, {
-		tag: 'both' | 'kebabCase' | 'pascalCase',
-		attr: 'kebabCase' | 'pascalCase',
-	}, any> = new RequestType('volar/getTagNameCaseClient');
+export namespace GetClientAttrNameCaseRequest {
+	export const type: RequestType<TextDocumentIdentifier, 'kebabCase' | 'pascalCase', any> = new RequestType('volar/getTagNameCaseClient');
+}
+export namespace GetClientTarNameCaseRequest {
+	export const type: RequestType<TextDocumentIdentifier, 'both' | 'kebabCase' | 'pascalCase', any> = new RequestType('volar/getTagNameCaseClient');
 }
 
 // semantic tokens

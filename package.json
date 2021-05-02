@@ -278,6 +278,11 @@
 				"command": "volar.action.tagNameCase.convertToPascalCase",
 				"title": "Convert Tag Name Case to PascalCase",
 				"category": "Volar"
+			},
+			{
+				"command": "volar.action.attrNameCase",
+				"title": "Change Attr Name Case",
+				"category": "Volar"
 			}
 		],
 		"menus": {
