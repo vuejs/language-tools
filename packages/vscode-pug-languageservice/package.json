@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vscode-pug-languageservice",
+	"name": "vscode-pug-languageservice",
 	"version": "1.0.0",
 	"main": "out/index.js",
 	"devDependencies": {

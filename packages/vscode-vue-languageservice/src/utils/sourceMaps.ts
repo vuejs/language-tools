@@ -2,7 +2,7 @@ import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
-import type { PugDocument } from '@volar/vscode-pug-languageservice';
+import type { PugDocument } from 'vscode-pug-languageservice';
 import * as SourceMaps from '@volar/source-map';
 
 export interface TsMappingData {

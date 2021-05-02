@@ -1,6 +1,6 @@
 import * as CSS from 'vscode-css-languageservice';
 import * as HTML from 'vscode-html-languageservice';
-import * as Pug from '@volar/vscode-pug-languageservice';
+import * as Pug from 'vscode-pug-languageservice';
 import type * as ts from 'typescript';
 import * as TS2 from 'vscode-typescript-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
