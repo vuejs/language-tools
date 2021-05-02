@@ -1,5 +1,5 @@
 import { ActiveSelectionRequest, GetClientNameCasesRequest, notEmpty } from '@volar/shared';
-import { margeWorkspaceEdits } from '@volar/vscode-vue-languageservice';
+import { margeWorkspaceEdits } from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { Connection, TextDocuments } from 'vscode-languageserver/node';
 import type { ServicesManager } from '../servicesManager';

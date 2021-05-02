@@ -1,4 +1,4 @@
-import { createLanguageService } from '@volar/vscode-vue-languageservice'
+import { createLanguageService } from 'vscode-vue-languageservice'
 import { sleep } from '@volar/shared';
 import * as path from 'upath';
 

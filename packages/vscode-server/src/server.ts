@@ -8,7 +8,7 @@ import {
 } from '@volar/shared';
 import {
 	getDocumentLanguageService
-} from '@volar/vscode-vue-languageservice';
+} from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	createConnection,

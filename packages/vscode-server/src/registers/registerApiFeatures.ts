@@ -1,7 +1,7 @@
 import {
     Commands,
     triggerCharacter
-} from '@volar/vscode-vue-languageservice';
+} from 'vscode-vue-languageservice';
 import {
     CallHierarchyPrepareRequest,
     CompletionRequest,

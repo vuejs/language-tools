@@ -1,5 +1,5 @@
 import { fsPathToUri, normalizeFileName, uriToFsPath } from '@volar/shared';
-import { createLanguageService, LanguageService, LanguageServiceHost } from '@volar/vscode-vue-languageservice';
+import { createLanguageService, LanguageService, LanguageServiceHost } from 'vscode-vue-languageservice';
 import { FsPathSet, FsPathMap } from '@volar/shared';
 import type * as ts from 'typescript';
 import * as upath from 'upath';

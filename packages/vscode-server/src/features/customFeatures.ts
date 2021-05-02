@@ -9,7 +9,7 @@ import {
     VerifyAllScriptsRequest,
     WriteVirtualFilesRequest
 } from '@volar/shared';
-import { semanticTokenLegend } from '@volar/vscode-vue-languageservice';
+import { semanticTokenLegend } from 'vscode-vue-languageservice';
 import * as fs from 'fs-extra';
 import * as path from 'upath';
 import { TextDocument } from 'vscode-css-languageservice';

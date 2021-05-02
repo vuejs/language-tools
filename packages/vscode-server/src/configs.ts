@@ -1,4 +1,4 @@
-import { codeLensOptions } from '@volar/vscode-vue-languageservice';
+import { codeLensOptions } from 'vscode-vue-languageservice';
 import type * as emmet from 'vscode-emmet-helper';
 import { Connection } from 'vscode-languageserver/node';
 

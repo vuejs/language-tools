@@ -1,5 +1,5 @@
 import { TagCloseRequest } from '@volar/shared';
-import { DocumentLanguageService } from '@volar/vscode-vue-languageservice';
+import { DocumentLanguageService } from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
 import { Connection, TextDocuments } from 'vscode-languageserver/node';
 
