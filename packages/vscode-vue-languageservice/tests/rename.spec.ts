@@ -1,83 +1,78 @@
 import { createTester } from './common';
 import { fsPathToUri } from '@volar/shared';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Position } from 'vscode-languageserver/node';
 import * as path from 'upath';
+
+const scriptSetupLocs = {
+    template_foo: Position.create(0, 13),
+    script_foo: Position.create(3, 5),
+};
 
 describe('renaming', () => {
 
     const root = path.resolve(__dirname, '../testCases');
     const tester = createTester(root);
-    const fileName = path.resolve(__dirname, '../testCases/rename.vue');
+    const fileName = path.resolve(__dirname, '../testCases/scriptSetup.vue');
+    const uri = fsPathToUri(fileName);
     const script = tester.host.getScriptSnapshot(fileName);
 
-    it('shouse vue script exist', () => {
+    it('should scriptSetup.vue exist', () => {
         expect(!!script).toBe(true);
     });
     if (!script) return;
 
-    const text = script.getText(0, script.getLength());
-    const doc = TextDocument.create(fsPathToUri(fileName), 'vue', 0, text);
-    const locs = {
-        a1: getLocation(text, 'a1'),
-        a2: getLocation(text, 'a2'),
-        b1: getLocation(text, 'b1'),
-        b2: getLocation(text, 'b2'),
-    };
-
     it('rename in <script>', () => {
         const result = tester.languageService.rename.doRename(
-            doc.uri,
-            doc.positionAt(locs.b2.start),
+            uri,
+            scriptSetupLocs.script_foo,
             'bar',
         );
-        const changes = result?.changes?.[doc.uri];
+        const changes = result?.changes?.[uri];
 
         expect(!!changes).toEqual(true);
         if (!changes) return;
 
         expect(changes.length).toEqual(2);
-        expect(!!changes.find(change =>
-            doc.offsetAt(change.range.start) === locs.a1.end
-            && doc.offsetAt(change.range.end) === locs.a2.start
+        expect(changes.some(change =>
+            change.range.start.line === scriptSetupLocs.script_foo.line
+            && change.range.start.character === scriptSetupLocs.script_foo.character
+            && change.range.end.line === scriptSetupLocs.script_foo.line
+            && change.range.end.character === scriptSetupLocs.script_foo.character + 'foo'.length
             && change.newText === 'bar'
         )).toBe(true);
-        expect(!!changes.find(change =>
-            doc.offsetAt(change.range.start) === locs.b1.end
-            && doc.offsetAt(change.range.end) === locs.b2.start
+        expect(changes.some(change =>
+            change.range.start.line === scriptSetupLocs.template_foo.line
+            && change.range.start.character === scriptSetupLocs.template_foo.character
+            && change.range.end.line === scriptSetupLocs.template_foo.line
+            && change.range.end.character === scriptSetupLocs.template_foo.character + 'foo'.length
             && change.newText === 'bar'
         )).toBe(true);
     });
     it('rename in <template>', () => {
         const result = tester.languageService.rename.doRename(
-            doc.uri,
-            doc.positionAt(locs.a2.start),
+            uri,
+            scriptSetupLocs.template_foo,
             'bar',
         );
-        const changes = result?.changes?.[doc.uri];
+        const changes = result?.changes?.[uri];
 
         expect(!!changes).toEqual(true);
         if (!changes) return;
 
         expect(changes.length).toEqual(2);
-        expect(!!changes.find(change =>
-            doc.offsetAt(change.range.start) === locs.a1.end
-            && doc.offsetAt(change.range.end) === locs.a2.start
+        expect(changes.some(change =>
+            change.range.start.line === scriptSetupLocs.script_foo.line
+            && change.range.start.character === scriptSetupLocs.script_foo.character
+            && change.range.end.line === scriptSetupLocs.script_foo.line
+            && change.range.end.character === scriptSetupLocs.script_foo.character + 'foo'.length
             && change.newText === 'bar'
         )).toBe(true);
-        expect(!!changes.find(change =>
-            doc.offsetAt(change.range.start) === locs.b1.end
-            && doc.offsetAt(change.range.end) === locs.b2.start
+        expect(changes.some(change =>
+            change.range.start.line === scriptSetupLocs.template_foo.line
+            && change.range.start.character === scriptSetupLocs.template_foo.character
+            && change.range.end.line === scriptSetupLocs.template_foo.line
+            && change.range.end.character === scriptSetupLocs.template_foo.character + 'foo'.length
             && change.newText === 'bar'
         )).toBe(true);
     });
 });
-
-function getLocation(text: string, name: string) {
-    const searchText = `/*${name}*/`;
-    const start = text.indexOf(searchText);
-    const end = start + searchText.length;
-    return {
-        start,
-        end,
-    };
-}
