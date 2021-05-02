@@ -879,10 +879,11 @@ export function generate(
 			}
 		}
 		function addStartWrap() {
+			const componentName = getComponentName(node.tag);
 			{ // start tag
 				tsCodeGen.addText(`__VLS_components`);
 				writePropertyAccess(
-					getComponentName(node.tag),
+					componentName,
 					{
 						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
 						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
@@ -890,6 +891,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.tag,
+						beforeRename: node.tag === componentName ? undefined : unHyphenatComponentName,
 						doRename: keepHyphenateName,
 					},
 				);
@@ -898,7 +900,7 @@ export function generate(
 			if (!node.isSelfClosing && !htmlToTemplate) { // end tag
 				tsCodeGen.addText(`__VLS_components`);
 				writePropertyAccess(
-					getComponentName(node.tag),
+					componentName,
 					{
 						start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
 						end: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
@@ -906,6 +908,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.tag,
+						beforeRename: node.tag === componentName ? undefined : unHyphenatComponentName,
 						doRename: keepHyphenateName,
 					},
 				);
@@ -1259,7 +1262,12 @@ export function generate(
 	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		if (validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
-			return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			if (sourceRange.end - sourceRange.start === mapCode.length) {
+				return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			}
+			else {
+				return writeCode(mapCode, sourceRange, SourceMaps.Mode.Expand, data);
+			}
 		}
 		else {
 			tsCodeGen.addText(`[`);
@@ -1348,6 +1356,9 @@ export function generate(
 	}
 };
 
+function unHyphenatComponentName(newName: string) {
+	return camelize('-' + newName);
+}
 function keepHyphenateName(oldName: string, newName: string) {
 	if (oldName === hyphenate(oldName)) {
 		return hyphenate(newName);
