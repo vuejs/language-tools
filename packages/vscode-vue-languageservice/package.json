@@ -4,6 +4,7 @@
 	"main": "out/index.js",
 	"devDependencies": {
 		"typescript": "latest",
+		"@types/estree": "latest",
 		"@types/prettier": "^1.16.4"
 	},
 	"dependencies": {
