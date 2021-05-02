@@ -12,6 +12,15 @@
 		"strict": true,
 		"baseUrl": "./",
 		"paths": {
+			"vscode-pug-languageservice": [
+				"packages/vscode-pug-languageservice/src"
+			],
+			"vscode-typescript-languageservice": [
+				"packages/vscode-typescript-languageservice/src"
+			],
+			"vscode-vue-languageservice": [
+				"packages/vscode-vue-languageservice/src"
+			],
 			"@volar/*": [
 				"packages/*/src"
 			]
