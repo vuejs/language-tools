@@ -2,6 +2,9 @@
 	"private": true,
 	"name": "@volar/vscode-server",
 	"version": "0.25.0",
+	"files": [
+		"out"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git"
