@@ -3,6 +3,10 @@
 	"name": "@volar/typescript-vue-plugin",
 	"version": "0.25.0",
 	"main": "out/index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git"
+	},
 	"devDependencies": {
 		"typescript": "latest"
 	},

@@ -2,6 +2,10 @@
 	"name": "vscode-vue-languageservice",
 	"version": "0.25.0",
 	"main": "out/index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git"
+	},
 	"devDependencies": {
 		"@types/estree": "latest",
 		"@types/prettier": "^1.16.4",

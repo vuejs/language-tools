@@ -2,6 +2,10 @@
 	"name": "@volar/shared",
 	"version": "0.25.0",
 	"main": "out/index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git"
+	},
 	"dependencies": {
 		"upath": "^2.0.1",
 		"vscode-languageserver": "^7.1.0-next.4"
