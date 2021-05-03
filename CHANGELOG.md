@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.1
+
+- fix: fix released npm package size
+
 ## 0.25.0
 
 - feat: split status bar item `<TagName attr-name>` to `Tag: xxx`, `Attr: xxx`
