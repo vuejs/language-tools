@@ -1,6 +1,6 @@
 {
 	"name": "@volar/transforms",
-	"version": "0.25.0",
+	"version": "0.25.1",
 	"main": "out/index.js",
 	"files": [
 		"out"
@@ -10,6 +10,6 @@
 		"url": "https://github.com/johnsoncodehk/volar.git"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.25.0"
+		"@volar/shared": "^0.25.1"
 	}
 }

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "@volar/typescript-vue-plugin",
-	"version": "0.25.0",
+	"version": "0.25.1",
 	"main": "out/index.js",
 	"files": [
 		"out"
@@ -14,7 +14,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.25.0",
-		"vscode-vue-languageservice": "^0.25.0"
+		"@volar/shared": "^0.25.1",
+		"vscode-vue-languageservice": "^0.25.1"
 	}
 }

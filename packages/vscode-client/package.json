@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "@volar/vscode-client",
-	"version": "0.25.0",
+	"version": "0.25.1",
 	"engines": {
 		"vscode": "latest"
 	},
@@ -13,7 +13,7 @@
 		"url": "https://github.com/johnsoncodehk/volar.git"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.25.0",
+		"@volar/shared": "^0.25.1",
 		"@vue/compiler-sfc": "^3.0.11",
 		"@vue/reactivity": "^3.0.11",
 		"upath": "^2.0.1",
