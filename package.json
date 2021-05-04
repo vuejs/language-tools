@@ -254,6 +254,11 @@
 				"icon": "images/split-editors.png"
 			},
 			{
+				"command": "volar.action.splitEditors2",
+				"title": "Start Split Editing Mode",
+				"category": "Volar (Experimental)"
+			},
+			{
 				"command": "volar.action.preview",
 				"title": "Start Preview Client",
 				"category": "Volar (Experimental)",

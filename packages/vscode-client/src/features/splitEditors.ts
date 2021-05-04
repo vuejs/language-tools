@@ -43,14 +43,10 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    context.subscriptions.push(vscode.commands.registerCommand('volar.action.splitEditors', async _ => {
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.splitEditors', async _ => onSplit(0)));
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.splitEditors2', async _ => onSplit(1)));
 
-        const options = new Map<number, string>();
-        options.set(0, 'Split Editors');
-        options.set(1, '(Experimental) Start Split Editing Mode');
-        const option = await userPick(options);
-        if (option === undefined) return;
-
+    async function onSplit(option: number) {
         splits.length = 0;
 
         const editor = vscode.window.activeTextEditor;
@@ -110,7 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
                 splits.length = 0;
             });
         }
-    }));
+    }
 
     function getValidSplit(editor: vscode.TextEditor, selections: readonly vscode.Selection[]) {
         for (const split of splits) {
