@@ -2,6 +2,8 @@
 
 ## 0.25.1
 
+- feat: move "Start Split Editing Mode" to command
+- fix: props auto-complete not working
 - fix: fix released npm package size
 
 ## 0.25.0
