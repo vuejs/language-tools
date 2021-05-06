@@ -932,7 +932,7 @@ export function createSourceFile(
 						}
 					}
 					{
-						const searchText = `__VLS_components['${tagName}'].__VLS_slots['`;
+						const searchText = `__VLS_components_0['${tagName}'].__VLS_slots['`;
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;

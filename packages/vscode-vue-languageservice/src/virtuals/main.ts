@@ -22,15 +22,15 @@ export function useScriptMain(
 			content += `import { __VLS_options } from './${vueFileName}.__VLS_script';\n`;
 			content += `export { __VLS_options } from './${vueFileName}.__VLS_script';\n`;
 			content += `export * from './${vueFileName}.__VLS_script';\n`;
-		}
-		if (scriptSetup.value) {
-			content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
-		}
-		else if (script.value) {
-			content += `import __VLS_componentRaw from './${vueFileName}.__VLS_script';\n`;
-			content += `var __VLS_componentReserve = __VLS_defineComponent(__VLS_options);\n`;
-			content += `type __VLS_ComponentType<T> = T extends new (...args: any) => any ? T : typeof __VLS_componentReserve;\n`;
-			content += `export declare var __VLS_component: __VLS_ComponentType<typeof __VLS_componentRaw>;\n`;
+
+			if (scriptSetup.value) {
+				content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+				content += `export { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+			}
+			else if (script.value) {
+				content += `import __VLS_component from './${vueFileName}.__VLS_script';\n`;
+				content += `export { default as __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+			}
 		}
 		else {
 			content += `export var __VLS_options = {};\n`;

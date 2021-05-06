@@ -414,7 +414,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_components['${getComponentName(parentEl.tag)}'].__VLS_slots`);
+				tsCodeGen.addText(`__VLS_components_0['${getComponentName(parentEl.tag)}'].__VLS_slots`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
@@ -519,7 +519,7 @@ export function generate(
 				// __VLS_options.props
 				if (!checking)
 					tsCodeGen.addText(`// @ts-ignore\n`);
-				tsCodeGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.props`);
+				tsCodeGen.addText(`__VLS_components_0['${getComponentName(node.tag)}'].__VLS_options.props`);
 				writePropertyAccess(
 					name,
 					{
@@ -542,7 +542,7 @@ export function generate(
 				// __VLS_options.emits
 				if (!checking)
 					tsCodeGen.addText(`// @ts-ignore\n`);
-				tsCodeGen.addText(`__VLS_components['${getComponentName(node.tag)}'].__VLS_options.emits`);
+				tsCodeGen.addText(`__VLS_components_0['${getComponentName(node.tag)}'].__VLS_options.emits`);
 				writePropertyAccess(
 					name,
 					{
@@ -617,13 +617,15 @@ export function generate(
 		}
 	}
 	function writeProps(node: ElementNode, forDirectiveClassOrStyle: boolean) {
-		const varName = `__VLS_${elementIndex++}`;
+
+		let startDiag: number | undefined;
+		let endDiag: number | undefined;
 
 		if (forDirectiveClassOrStyle) {
-			tsCodeGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+			tsCodeGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}']({\n`);
 		}
 		else {
-			addStartWrap();
+			startDiag = addStartWrap();
 		}
 
 		for (const prop of node.props) {
@@ -848,10 +850,31 @@ export function generate(
 		}
 
 		if (forDirectiveClassOrStyle) {
-			tsCodeGen.addText(`};\;`)
+			tsCodeGen.addText(`});\;`)
 		}
 		else {
-			addEndWrap();
+			endDiag = addEndWrap();
+		}
+
+		if (startDiag && endDiag) {
+			addMapping(
+				tsCodeGen,
+				{
+					mappedRange: {
+						start: startDiag,
+						end: endDiag,
+					},
+					sourceRange: {
+						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+					},
+					mode: SourceMaps.Mode.Totally,
+					data: {
+						vueTag: 'template',
+						capabilities: capabilitiesSet.diagnosticOnly,
+					},
+				},
+			);
 		}
 
 		function writeAttrValue(attrNode: vueDom.TextNode | undefined) {
@@ -914,24 +937,16 @@ export function generate(
 				);
 				tsCodeGen.addText(`;\n`);
 			}
-
-			tsCodeGen.addText(`const `);
-			writeCode(
-				varName,
-				{
-					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-				},
-				SourceMaps.Mode.Totally,
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.diagnosticOnly,
-				},
-			);
-			tsCodeGen.addText(`: typeof __VLS_componentProps['${getComponentName(node.tag)}'] = {\n`);
+			tsCodeGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'](`);
+			const diagStart = tsCodeGen.getText().length;
+			tsCodeGen.addText(`{\n`);
+			return diagStart;
 		}
 		function addEndWrap() {
-			tsCodeGen.addText(`}; ${varName};\n`);
+			tsCodeGen.addText(`}`);
+			const diagEnd = tsCodeGen.getText().length;
+			tsCodeGen.addText(`);\n`);
+			return diagEnd;
 		}
 	}
 	function writeClassScopeds(node: ElementNode) {
@@ -1011,7 +1026,7 @@ export function generate(
 					else {
 						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
 					}
-					tsCodeGen.addText(`typeof __VLS_componentProps['${getComponentName(node.tag)}'][`)
+					tsCodeGen.addText(`(typeof __VLS_componentPropsBase['${getComponentName(node.tag)}'] & __VLS_GlobalAttrs & Record<string, unknown>)[`)
 					writeCodeWithQuotes(
 						key_2,
 						{

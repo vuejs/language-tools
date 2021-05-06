@@ -58,9 +58,12 @@ declare global {
 	function __VLS_getVforKeyType<T>(source: T): T extends AnyArray ? number : keyof T;
 	function __VLS_getVforIndexType<T>(source: T): T extends AnyArray ? undefined : number;
 	function __VLS_pickForItem<S, T1, T2>(source: S, forOfItem: T1, forInItem: T2): S extends { [Symbol.iterator](): infer _ } ? T1 : T2;
-	type __VLS_PropsType<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C;
-	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_PropsType<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_PropsType<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_PropsType<T[K]>> & Record<string, unknown> };
+	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C
+	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: T[K] extends { __VLS_raw: infer C } ? C : T[K] };
+	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
+	type __VLS_MapPropsType<T> = { [K in keyof T]: T[K] extends (...args: any) => any
+		? T[K]
+		: FunctionalComponent<__VLS_ExtractComponentProps<T[K]> & __VLS_GlobalAttrs & Record<string, unknown>> };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : unknown;
 	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
