@@ -13,7 +13,6 @@ import type { PropType as PropType_1 } from '@vue/runtime-dom';
 import type { EmitsOptions as EmitsOptions_1 } from '@vue/runtime-dom';
 import type { DefineComponent as DefineComponent_1 } from '@vue/runtime-dom';
 import type { defineComponent as defineComponent_1 } from '@vue/runtime-dom';
-import type { GlobalComponents as CoreGlobalComponents_1 } from '@vue/runtime-dom';
 
 import * as vue_2 from 'vue';
 import type { FunctionalComponent as FunctionalComponent_2 } from 'vue';
@@ -24,22 +23,17 @@ import type { PropType as PropType_2 } from 'vue';
 import type { EmitsOptions as EmitsOptions_2 } from 'vue';
 import type { DefineComponent as DefineComponent_2 } from 'vue';
 import type { defineComponent as defineComponent_2 } from 'vue';
-import type { GlobalComponents as CoreGlobalComponents_2 } from 'vue';
-
-import type { HTMLAttributes as HTMLAttributes_3 } from "@vue/runtime-dom/types/jsx";
-import type { GlobalComponents as CoreGlobalComponents_3 } from '@vue/runtime-core';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 
 type FunctionalComponent<T> = PickNotAny<FunctionalComponent_1<T>, FunctionalComponent_2<T>>;
-type HTMLAttributes = PickNotAny<PickNotAny<HTMLAttributes_1, HTMLAttributes_2>, HTMLAttributes_3>;
+type HTMLAttributes = PickNotAny<HTMLAttributes_1, HTMLAttributes_2>;
 type VNodeProps = PickNotAny<VNodeProps_1, VNodeProps_2>;
 type AllowedComponentProps = PickNotAny<AllowedComponentProps_1, AllowedComponentProps_2>;
 type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
 type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
 type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
-type CoreGlobalComponents = PickNotAny<PickNotAny<PickNotAny<CoreGlobalComponents_1, CoreGlobalComponents_2>, CoreGlobalComponents_3>, {}>;
 type AnyArray<T = any> = T[] | readonly T[];
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
@@ -52,7 +46,6 @@ declare global {
 		| 'Suspense'
 		| 'Teleport'
 	> { }
-	interface __VLS_GlobalComponents extends CoreGlobalComponents { }
 	var __VLS_defineComponent: PickNotAny<typeof defineComponent_1, typeof defineComponent_2>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
 	function __VLS_getVforKeyType<T>(source: T): T extends AnyArray ? number : keyof T;
