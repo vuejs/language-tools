@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.2
+
+- feat: improve component tag hover info
+- feat: improve component types for `export default { ... }`
+- feat: support for generic functional component
+
 ## 0.25.1
 
 - feat: move "Start Split Editing Mode" to command
