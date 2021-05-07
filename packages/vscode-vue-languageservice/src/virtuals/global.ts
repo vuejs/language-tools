@@ -62,9 +62,10 @@ declare global {
 	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: T[K] extends { __VLS_raw: infer C } ? C : T[K] };
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]: T[K] extends (...args: any) => any
-		? T[K]
-		: FunctionalComponent<__VLS_ExtractComponentProps<T[K]> & __VLS_GlobalAttrs & Record<string, unknown>> };
+	type __VLS_MapPropsType<T> = { [K in keyof T]: T[K] extends (arg: infer _1) => infer _2
+		? T[K] : T[K] extends (arg: infer A, ...rest: infer _3) => infer R
+		? (props: A) => R : (props: __VLS_ExtractComponentProps<T[K]> & __VLS_GlobalAttrs & Record<string, unknown>) => any
+	};
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : unknown;
 	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
