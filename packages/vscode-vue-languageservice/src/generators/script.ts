@@ -22,9 +22,7 @@ export function generate(
     writeScriptSrc();
     writeScript();
     writeScriptSetup();
-    if (scriptSetup) {
-        writeExportComponent();
-    }
+    writeExportComponent();
     writeExportOptions();
 
     return {
@@ -457,7 +455,7 @@ export function generate(
                     },
                 },
             );
-            codeGen.addText(`) as const,\n`);
+            codeGen.addText(`),\n`);
         }
         if (scriptSetupAst?.defineProps?.args && scriptSetup) {
             codeGen.addText(`props: (`);
@@ -508,7 +506,7 @@ export function generate(
                     },
                 },
             );
-            codeGen.addText(`) as const,\n`);
+            codeGen.addText(`),\n`);
         }
         if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
             codeGen.addText(`emits: ({} as `);

@@ -63,7 +63,7 @@ export function useTemplateScript(
 		/* Components */
 		codeGen.addText('/* Components */\n');
 		codeGen.addText('declare var __VLS_components_0: __VLS_GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_PickComponents<typeof __VLS_ctx>;\n'); // has __VLS_options
-		codeGen.addText('declare var __VLS_components: __VLS_ExtractRawComponents<typeof __VLS_components_0> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare var __VLS_components: __VLS_ExtractRawComponents<__VLS_GlobalComponents> & __VLS_ExtractRawComponents<typeof __VLS_vmUnwrap.components> & __VLS_ExtractRawComponents<__VLS_PickComponents<typeof __VLS_ctx>> & JSX.IntrinsicElements;\n'); // sort by priority
 		codeGen.addText('declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n');
 		codeGen.addText('declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n');
 		codeGen.addText('declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n');

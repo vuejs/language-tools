@@ -28,15 +28,18 @@ export function useScriptMain(
 				content += `export { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
 			}
 			else if (script.value) {
-				content += `import __VLS_component from './${vueFileName}.__VLS_script';\n`;
-				content += `export { default as __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+				content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
+				content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
+				content += `export declare var __VLS_component: typeof __VLS_component_1 extends (new (...args: infer _1) => infer _2)\n`;
+				content += `    ? typeof __VLS_component_1 : typeof __VLS_component_1 extends ((...args: infer _3) => infer _4)\n`;
+				content += `    ? typeof __VLS_component_1 : typeof __VLS_component_2;\n`;
 			}
 		}
 		else {
 			content += `export var __VLS_options = {};\n`;
 			content += `export var __VLS_component = __VLS_defineComponent({});\n`;
 		}
-		content += `declare var __VLS_ctx: InstanceType<typeof __VLS_component>;\n`;
+		content += `declare var __VLS_ctx: __VLS_PickNotAny<InstanceType<typeof __VLS_component>, ReturnType<typeof __VLS_component>>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;
 		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
