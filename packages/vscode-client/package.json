@@ -10,7 +10,8 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/johnsoncodehk/volar.git"
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vscode-client"
 	},
 	"dependencies": {
 		"@volar/shared": "^0.25.2",
