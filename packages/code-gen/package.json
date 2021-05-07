@@ -1,6 +1,6 @@
 {
 	"name": "@volar/code-gen",
-	"version": "0.25.1",
+	"version": "0.25.2",
 	"main": "out/index.js",
 	"files": [
 		"out"
@@ -10,7 +10,7 @@
 		"url": "https://github.com/johnsoncodehk/volar.git"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.25.1",
-		"@volar/source-map": "^0.25.1"
+		"@volar/shared": "^0.25.2",
+		"@volar/source-map": "^0.25.2"
 	}
 }
