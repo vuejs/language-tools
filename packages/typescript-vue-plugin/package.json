@@ -3,6 +3,7 @@
 	"name": "@volar/typescript-vue-plugin",
 	"version": "0.25.2",
 	"main": "out/index.js",
+	"license": "MIT",
 	"files": [
 		"out"
 	],
