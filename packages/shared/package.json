@@ -4,7 +4,8 @@
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
-		"out"
+		"out/**/*.js",
+		"out/**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",

@@ -4,7 +4,8 @@
 	"version": "0.25.2",
 	"license": "MIT",
 	"files": [
-		"out"
+		"out/**/*.js",
+		"out/**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
