@@ -1,6 +1,5 @@
 {
-	"private": true,
-	"name": "@volar/typescript-vue-plugin",
+	"name": "typescript-vue-plugin",
 	"version": "0.25.2",
 	"main": "out/index.js",
 	"license": "MIT",

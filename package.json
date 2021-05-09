@@ -301,7 +301,7 @@
 		},
 		"typescriptServerPlugins-off": [
 			{
-				"name": "@volar/typescript-vue-plugin"
+				"name": "typescript-vue-plugin"
 			}
 		]
 	},
