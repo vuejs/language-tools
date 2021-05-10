@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.3
+
+- perf: fix pug semantic tokens performance loophole ([#162](https://github.com/johnsoncodehk/volar/issues/162))
+- feat: released `typescript-vue-plugin` ([#169](https://github.com/johnsoncodehk/volar/issues/169))
+- fix: split editors icon size incorrect ([#170](https://github.com/johnsoncodehk/volar/issues/170))
+
 ## 0.25.2
 
 - feat: improve component tag hover info
