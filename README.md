@@ -15,9 +15,10 @@ Volar does not include ESLint and Prettier, but the official [ESLint](https://ma
 ## By-product
 
 - [vue-tsc](https://github.com/johnsoncodehk/vue-tsc): Type-Checking on command line
-- [vscode-vue-languageservice](https://www.npmjs.com/package/vscode-vue-languageservice) : Generic language server for Vue
-- [vscode-pug-languageservice](https://www.npmjs.com/package/vscode-pug-languageservice): Generic language server for Pug
-- [vscode-typescript-languageservice](https://www.npmjs.com/package/vscode-typescript-languageservice): Generic language server for TypeScript
+- [typescript-vue-plugin](https://www.npmjs.com/package/typescript-vue-plugin): See [#169](https://github.com/johnsoncodehk/volar/issues/169#issuecomment-832377254).
+- [vscode-vue-languageservice](https://www.npmjs.com/package/vscode-vue-languageservice) : Generic language server module for Vue
+- [vscode-pug-languageservice](https://www.npmjs.com/package/vscode-pug-languageservice): Generic language server module for Pug
+- [vscode-typescript-languageservice](https://www.npmjs.com/package/vscode-typescript-languageservice): Generic language server module for TypeScript
 
 ## Sponsors
 
