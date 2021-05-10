@@ -13,33 +13,42 @@ export function register(htmlLs: html.LanguageService) {
 
         const htmlScanner = htmlLs.createScanner(pugDoc.htmlCode, htmlRange.start);
 
-        let token = html.TokenType.Unknown;
-        let offset = 0;
-        let end = 0;
+        let offset: number | undefined;
+        let end: number | undefined;
 
         return {
-            scan,
-            getTokenType: () => token,
-            getTokenOffset: () => offset,
+            scan: () => {
+                offset = undefined;
+                end = undefined;
+                return htmlScanner.scan();
+            },
+            getTokenOffset: () => {
+                getTokenRange();
+                return offset!;
+            },
+            getTokenEnd: () => {
+                getTokenRange();
+                return end!;
+            },
+            getTokenText: htmlScanner.getTokenText,
             getTokenLength: htmlScanner.getTokenLength,
-            getTokenEnd: () => end,
-            getTokenText: () => pugDoc.pugCode.substring(offset, end),
             getTokenError: htmlScanner.getTokenError,
             getScannerState: htmlScanner.getScannerState,
         };
 
-        function scan() {
-            token = htmlScanner.scan();
-            const htmlOffset = htmlScanner.getTokenOffset();
-            const htmlEnd = htmlScanner.getTokenEnd();
-            const pugRange = pugDoc.sourceMap.getSourceRange2(htmlOffset, htmlEnd);
-            if (pugRange) {
-                offset = pugRange.start;
-                end = pugRange.end;
-                return token;
-            }
-            else {
-                return html.TokenType.Unknown;
+        function getTokenRange() {
+            if (offset === undefined || end === undefined) {
+                const htmlOffset = htmlScanner.getTokenOffset();
+                const htmlEnd = htmlScanner.getTokenEnd();
+                const pugRange = pugDoc.sourceMap.getSourceRange2(htmlOffset, htmlEnd);
+                if (pugRange) {
+                    offset = pugRange.start;
+                    end = pugRange.end;
+                }
+                else {
+                    offset = -1;
+                    end = -1;
+                }
             }
         }
     }

@@ -152,36 +152,23 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 
-				let start = offsetRange.start;
-				let end = offsetRange.end;
-
-				for (const mapping of sourceMap) {
-					const _start = mapping.sourceRange.start;
-					const _end = mapping.sourceRange.end;
-					if (_start >= offsetRange.start && _start < start) {
-						start = _start;
-					}
-					if (_end <= offsetRange.end && _end > end) {
-						end = _end;
-					}
-				}
-
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
-					? languageServices.html.createScanner(docText, start)
-					: languageServices.pug.createScanner(sourceMap.pugDocument, start)
+					? languageServices.html.createScanner(docText, offsetRange.start)
+					: languageServices.pug.createScanner(sourceMap.pugDocument, offsetRange.start)
 				if (!scanner) continue;
 
 				let token = scanner.scan();
-				while (token !== html.TokenType.EOS && scanner.getTokenEnd() <= end) {
+				while (token !== html.TokenType.EOS) {
 					if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
-						const tokenOffset = scanner.getTokenOffset();
-						const tokenLength = scanner.getTokenLength();
-						const tokenText = docText.substr(tokenOffset, tokenLength);
+						const tokenText = scanner.getTokenText();
 						if (components.has(tokenText)) {
+							const tokenOffset = scanner.getTokenOffset();
+							const tokenLength = scanner.getTokenLength();
 							const vueRange = sourceMap.getSourceRange2(tokenOffset);
 							if (vueRange) {
 								const vueOffset = vueRange.start;
+								if (vueOffset > offsetRange.end) break; // TODO: fix source map perf and break in while condition
 								const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
 								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
 							}
