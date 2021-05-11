@@ -1,6 +1,6 @@
 {
 	"name": "vscode-typescript-languageservice",
-	"version": "0.25.3",
+	"version": "0.25.4",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,7 +16,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.25.3",
+		"@volar/shared": "^0.25.4",
 		"typescript-vscode-sh-plugin": "^0.6.14",
 		"vscode-languageserver": "^7.1.0-next.4",
 		"vscode-languageserver-textdocument": "^1.0.1"
