@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.4
+
+- feat: improve embedded languages syntax highlight
+- feat: support html snippets in template
+- feat: add create workspace snippets command
+- fix: pug autocomplete broken with class attribute ([#177](https://github.com/johnsoncodehk/volar/issues/177))
+
 ## 0.25.3
 
 - perf: fix pug semantic tokens performance loophole ([#162](https://github.com/johnsoncodehk/volar/issues/162))
