@@ -173,10 +173,15 @@
 					"source.ts": "typescript",
 					"source.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
-					"source.directive.vue": "javascript",
-					"expression.embbeded.vue": "javascript",
 					"css.embbeded.vue": "css"
 				}
+			},
+			{
+				"path": "./syntaxes/html-injection.json",
+				"scopeName": "html.injection",
+				"injectTo": [
+					"text.html.vue"
+				]
 			},
 			{
 				"path": "./syntaxes/pug-injection.json",

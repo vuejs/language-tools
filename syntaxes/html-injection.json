@@ -1,0 +1,9 @@
+{
+	"scopeName": "html.injection",
+	"injectionSelector": "L:meta.tag",
+	"patterns": [
+		{
+			"include": "text.html.vue#vue-directives"
+		}
+	]
+}
