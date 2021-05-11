@@ -288,6 +288,11 @@
 				"command": "volar.action.attrNameCase",
 				"title": "Change Attr Name Case",
 				"category": "Volar"
+			},
+			{
+				"command": "volar.action.createWorkspaceSnippets",
+				"title": "Create Workspace Snippets",
+				"category": "Volar"
 			}
 		],
 		"menus": {

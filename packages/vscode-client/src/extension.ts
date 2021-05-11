@@ -5,6 +5,7 @@ import * as lsp from 'vscode-languageclient/node';
 import * as activeSelection from './features/activeSelection';
 import * as attrNameCase from './features/attrNameCase';
 import * as callGraph from './features/callGraph';
+import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentVersion from './features/documentVersion';
 import * as preview from './features/preview';
 import * as restart from './features/restart';
@@ -28,6 +29,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	splitEditors.activate(context);
 	preview.activate(context);
+	createWorkspaceSnippets.activate(context);
 	tagNameCase.activate(context, apiClient);
 	attrNameCase.activate(context, apiClient);
 	callGraph.activate(context, apiClient);
