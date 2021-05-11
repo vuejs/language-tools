@@ -171,7 +171,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
         if (escapeAttrs.length) {
             codeGen.addCode(
                 attrName,
-                getDocRange(escapeAttrs[0].line, escapeAttrs[1].column, attrName.length),
+                getDocRange(escapeAttrs[0].line, escapeAttrs[0].column, attrName.length),
                 SourceMap.Mode.Offset,
                 undefined,
                 escapeAttrs.slice(1).map(attr => getDocRange(attr.line, attr.column, attrName.length)),
