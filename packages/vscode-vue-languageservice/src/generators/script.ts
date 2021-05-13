@@ -91,7 +91,6 @@ export function generate(
         const data = scriptSetupAst;
         const originalCode = scriptSetup.content;
         let sourceCode = scriptSetup.content;
-        codeGen.addText(`\n/* <script setup> */\n`);
 
         const labels = data.labels.sort((a, b) => a.start - b.start);
         let tsOffset = 0;
