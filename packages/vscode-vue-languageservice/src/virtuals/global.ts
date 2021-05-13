@@ -90,10 +90,10 @@ declare global {
 			(event: E, ...payload: infer P): infer R
 		} ? (...payload: __VLS_UnknownToAny<P>) => __VLS_UnknownToAny<R>
 		: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
-	type __VLS_EmitEvent<T, E> = T extends { __VLS_raw: infer R } ? __VLS_EmitEvent0<R, E> : __VLS_EmitEvent0<T, E>;
-	type __VLS_EmitEvent0<T, E> =
+	type __VLS_EmitEvent<T, E> =
 		T extends DefineComponent<infer _, infer E2> ? (
-			E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
+			E2 extends unknown ? unknown // no emits option
+			: E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
 			: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> : unknown // evnts: { 'event-1': () => true, 'event-2': () => true }
 		) : __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
 	type __VLS_FirstFunction<F0, F1> =
