@@ -13,7 +13,7 @@ import {
 	Position,
 	Range,
 	TextEdit
-} from 'vscode-languageserver-types';
+} from 'vscode-languageserver';
 import { CompletionContext, CompletionTriggerKind } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
@@ -220,7 +220,10 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 				}
 			}
 			if (result) {
-				result.items = result.items.filter(result => result.label.indexOf('__VLS_') === -1);
+				result.items = result.items.filter((result: CompletionItem) =>
+					result.label.indexOf('__VLS_') === -1
+					&& (!result.labelDetails?.qualifier || result.labelDetails.qualifier.indexOf('__VLS_') === -1)
+				);
 			}
 			return result;
 		}
