@@ -163,6 +163,7 @@
 					"text.html.vue": "vue",
 					"text.html": "html",
 					"text.pug": "jade",
+					"text": "plaintext",
 					"source.css": "css",
 					"source.scss": "scss",
 					"source.less": "less",
