@@ -5,51 +5,56 @@ import { userPick } from './splitEditors';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    const tsPluginEnabled = isPluginEnabled();
     const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-    statusBar.command = 'volar.action.switchTsPlugin';
-    onConfigUpdated();
+    statusBar.command = 'volar.action.toggleTsPlugin';
+    updateTsPlugin();
+    updateTsPluginStatus();
 
-    context.subscriptions.push(vscode.commands.registerCommand('volar.action.switchTsPlugin', async () => {
-        const options = new Map<number, string>();
-        const tsPluginStatus = getTsPluginStatus();
-        options.set(0, (tsPluginStatus === null ? '• ' : '') + `Don't care (Don't reload VSCode)`);
-        options.set(1, (tsPluginStatus === true ? '• ' : '') + 'Enable TS Plugin');
-        options.set(2, (tsPluginStatus === false ? '• ' : '') + 'Disable TS Plugin');
-        options.set(3, 'Hide TS Plugin Status (or config "volar.tsPluginStatus")');
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.toggleTsPlugin', async () => {
+        const options = new Map<boolean | number, string>();
+        const _isTsPluginEnabled = isTsPluginEnabled();
+        options.set(true, (_isTsPluginEnabled === true ? '• ' : '') + 'Enable TS Plugin');
+        options.set(false, (_isTsPluginEnabled === false ? '• ' : '') + 'Disable TS Plugin');
 
         const select = await userPick(options);
         if (select === undefined) return; // cancle
 
-        if (select === 0) {
-            await vscode.workspace.getConfiguration('volar').update('tsPlugin', null);
-        }
-        if (select === 1) {
-            await vscode.workspace.getConfiguration('volar').update('tsPlugin', true);
-        }
-        if (select === 2) {
-            await vscode.workspace.getConfiguration('volar').update('tsPlugin', false);
-        }
-        if (select === 3) {
-            await vscode.workspace.getConfiguration('volar').update('tsPluginStatus', false);
+        if (select !== _isTsPluginEnabled) {
+            toggleTsPlugin();
         }
     }));
-    vscode.workspace.onDidChangeConfiguration(onConfigUpdated);
+    vscode.workspace.onDidChangeConfiguration(updateTsPlugin);
+    vscode.workspace.onDidChangeConfiguration(updateTsPluginStatus);
 
-    function onConfigUpdated() {
-        const tsPluginStatus = getTsPluginStatus();
-        if (tsPluginStatus !== null && tsPluginStatus !== tsPluginEnabled) {
-            switchTsPlugin();
+    async function updateTsPlugin() {
+        const shouldTsPluginEnabled = getTsPluginConfig();
+        const _isTsPluginEnabled = isTsPluginEnabled();
+        if (shouldTsPluginEnabled !== null && shouldTsPluginEnabled !== _isTsPluginEnabled) {
+            const msg = shouldTsPluginEnabled
+                ? `Workspace using TS plugin but it's disabled, do you want to turn it on?`
+                : `Workspace unused TS plugin but it's enabled, do you want to turn it off?`;
+            const btnText = shouldTsPluginEnabled ? 'Enable TS Plugin' : 'Disable TS Plugin';
+            const toggle = await vscode.window.showInformationMessage(msg, btnText);
+            if (toggle === btnText) {
+                toggleTsPlugin();
+            }
         }
-        updateStatusBar();
-        if (vscode.workspace.getConfiguration('volar').get<boolean>('tsPluginStatus')) {
+    }
+    function updateTsPluginStatus() {
+        if (getTsPluginStatusConfig()) {
+            if (isTsPluginEnabled()) {
+                statusBar.text = 'Vue TS Plugin ☑';
+            }
+            else {
+                statusBar.text = 'Vue TS Plugin ☐';
+            }
             statusBar.show();
         }
         else {
             statusBar.hide();
         }
     }
-    function switchTsPlugin() {
+    function toggleTsPlugin() {
         const volar = vscode.extensions.getExtension('johnsoncodehk.volar');
         if (!volar) {
             vscode.window.showWarningMessage('Extension [Volar - johnsoncodehk.volar] not found.');
@@ -62,12 +67,12 @@ export async function activate(context: vscode.ExtensionContext) {
             if (packageText.indexOf(`"typescriptServerPlugins-off"`) >= 0) {
                 const newText = packageText.replace(`"typescriptServerPlugins-off"`, `"typescriptServerPlugins"`);
                 fs.writeFileSync(packageJson, newText, 'utf8');
-                showReload(true);
+                showReload();
             }
             else if (packageText.indexOf(`"typescriptServerPlugins"`) >= 0) {
                 const newText = packageText.replace(`"typescriptServerPlugins"`, `"typescriptServerPlugins-off"`);
                 fs.writeFileSync(packageJson, newText, 'utf8');
-                showReload(false);
+                showReload();
             }
             else {
                 vscode.window.showWarningMessage('Unknow package.json status.');
@@ -77,28 +82,14 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showWarningMessage('Volar package.json update failed.');
         }
     }
-    async function showReload(enabled: boolean) {
-        const reload = await vscode.window.showInformationMessage(`Volar TS Plugin ${enabled ? 'enabled' : 'disabled'}, please reload VSCode to refresh TS Server.`, 'Reload Window');
+    async function showReload() {
+        const reload = await vscode.window.showInformationMessage('Please reload VSCode to restart TS Server.', 'Reload Window');
         if (reload === undefined) return; // cancel
         vscode.commands.executeCommand('workbench.action.reloadWindow');
     }
-    function updateStatusBar() {
-        if (tsPluginEnabled) {
-            statusBar.text = '[Volar] TS Plugin: On';
-            statusBar.color = undefined;
-        }
-        else {
-            statusBar.text = '[Volar] TS Plugin: Off';
-            statusBar.color = new vscode.ThemeColor('titleBar.inactiveForeground');
-        }
-        const tsPluginStatus = getTsPluginStatus();
-        if (tsPluginStatus !== null && tsPluginStatus !== tsPluginEnabled) {
-            statusBar.text += ' -> ' + (tsPluginStatus ? 'On' : 'Off');
-        }
-    }
 }
 
-export function isPluginEnabled() {
+export function isTsPluginEnabled() {
     const volar = vscode.extensions.getExtension('johnsoncodehk.volar');
     if (!volar) {
         return false;
@@ -114,6 +105,9 @@ export function isPluginEnabled() {
 
     return false;
 }
-function getTsPluginStatus() {
+function getTsPluginConfig() {
     return vscode.workspace.getConfiguration('volar').get<boolean | null>('tsPlugin');
+}
+function getTsPluginStatusConfig() {
+    return vscode.workspace.getConfiguration('volar').get<boolean>('tsPluginStatus');
 }

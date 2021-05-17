@@ -86,7 +86,7 @@
 				"volar.codeLens.pugTools": {
 					"type": "boolean",
 					"default": true,
-					"description": "[html ☑ | pug ☐] code lens."
+					"description": "[pug ☐] code lens."
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
@@ -270,7 +270,7 @@
 				"icon": "$(open-preview)"
 			},
 			{
-				"command": "volar.action.switchTsPlugin",
+				"command": "volar.action.toggleTsPlugin",
 				"title": "Switch TS Plugin on / off",
 				"category": "Volar"
 			},

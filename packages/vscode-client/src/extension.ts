@@ -66,7 +66,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		mode: mode,
 		appRoot: vscode.env.appRoot,
 		language: vscode.env.language,
-		tsPlugin: tsPlugin.isPluginEnabled(),
+		tsPlugin: tsPlugin.isTsPluginEnabled(),
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector: fileOnly ?
