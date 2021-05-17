@@ -547,6 +547,98 @@
 			]
 		},
 		{
+			"begin": "(<)(?:([a-zA-Z0-9:-]+))\\b(?=[^>]*\\blang\\s*=\\s*('json'|\"json\"))",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.custom.html"
+				}
+			},
+			"end": "(?<=^<\/)([a-zA-Z0-9:-]+)(>)",
+			"endCaptures": {
+				"1": {
+					"name": "entity.name.tag.custom.html"
+				},
+				"2": {
+					"name": "punctuation.definition.tag.html"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#tag-stuff"
+				},
+				{
+					"begin": "(>)",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html"
+						}
+					},
+					"end": "(^<\/)",
+					"patterns": [
+						{
+							"begin": "\\G",
+							"end": "(?=^<\/)",
+							"name": "source.json.embedded.html",
+							"patterns": [
+								{
+									"include": "source.json"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"begin": "(<)(?:([a-zA-Z0-9:-]+))\\b(?=[^>]*\\blang\\s*=\\s*('jsonc'|\"jsonc\"))",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.custom.html"
+				}
+			},
+			"end": "(?<=^<\/)([a-zA-Z0-9:-]+)(>)",
+			"endCaptures": {
+				"1": {
+					"name": "entity.name.tag.custom.html"
+				},
+				"2": {
+					"name": "punctuation.definition.tag.html"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#tag-stuff"
+				},
+				{
+					"begin": "(>)",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html"
+						}
+					},
+					"end": "(^<\/)",
+					"patterns": [
+						{
+							"begin": "\\G",
+							"end": "(?=^<\/)",
+							"name": "source.json.comments.embedded.html",
+							"patterns": [
+								{
+									"include": "source.json.comments"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
 			"begin": "(<\/?)([a-zA-Z0-9:-]+)",
 			"beginCaptures": {
 				"1": {
@@ -865,7 +957,7 @@
 							"name": "punctuation.definition.string.end.html"
 						}
 					],
-					"name": "css.embbeded.vue",
+					"name": "source.css.embedded.html",
 					"patterns": [
 						{
 							"include": "source.css#comment-block"

@@ -173,7 +173,8 @@
 					"source.ts": "typescript",
 					"source.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
-					"css.embbeded.vue": "css"
+					"source.json.comments": "jsonc",
+					"source.json": "json"
 				}
 			},
 			{
