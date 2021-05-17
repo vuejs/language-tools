@@ -3,6 +3,22 @@
 		"vue"
 	],
 	"name": "Vue SFC",
+	"injections": {
+		"L:meta.tag": {
+			"patterns": [
+				{
+					"include": "#vue-directives"
+				}
+			]
+		},
+		"L:text.pug -comment -string.comment": {
+			"patterns": [
+				{
+					"include": "#vue-interpolations"
+				}
+			]
+		}
+	},
 	"patterns": [
 		{
 			"include": "text.html.basic#comment"
@@ -97,10 +113,7 @@
 					"name": "text.html.embedded.html.vue",
 					"patterns": [
 						{
-							"include": "#tag-stuff-wrap"
-						},
-						{
-							"include": "text.html.basic"
+							"include": "#html-start-stuff"
 						}
 					]
 				},

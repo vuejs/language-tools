@@ -177,20 +177,6 @@
 					"source.json.comments": "jsonc",
 					"source.json": "json"
 				}
-			},
-			{
-				"path": "./syntaxes/html-injection.json",
-				"scopeName": "html.injection",
-				"injectTo": [
-					"text.html.vue"
-				]
-			},
-			{
-				"path": "./syntaxes/pug-injection.json",
-				"scopeName": "pug.injection",
-				"injectTo": [
-					"text.html.vue"
-				]
 			}
 		],
 		"semanticTokenScopes": [
