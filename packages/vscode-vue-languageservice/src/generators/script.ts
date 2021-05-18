@@ -24,6 +24,7 @@ export function generate(
     writeScriptSetup();
     writeExportComponent();
     writeExportOptions();
+    writeConstNameOption();
 
     return {
         ...codeGen,
@@ -521,5 +522,14 @@ export function generate(
             codeGen.addText(`),\n`);
         }
         codeGen.addText(`};\n`);
+    }
+    function writeConstNameOption() {
+        codeGen.addText(`\n`);
+        codeGen.addText(`export const __VLS_name = __VLS_getNameOption(`);
+        if (script && scriptAst?.exportDefault?.args) {
+            const args = scriptAst.exportDefault.args;
+            codeGen.addText(`${script.content.substring(args.start, args.end)} as const`);
+        }
+        codeGen.addText(`);\n`);
     }
 }

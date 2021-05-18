@@ -57,6 +57,7 @@ declare global {
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
 	function __VLS_getVforKeyType<T>(source: T): T extends AnyArray ? number : keyof T;
 	function __VLS_getVforIndexType<T>(source: T): T extends AnyArray ? undefined : number;
+	function __VLS_getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 	function __VLS_pickForItem<S, T1, T2>(source: S, forOfItem: T1, forInItem: T2): S extends { [Symbol.iterator](): infer _ } ? T1 : T2;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
 	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C
@@ -106,6 +107,7 @@ declare global {
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent<infer _> ? K : never]:
 		T[K] extends never ? any : T[K] // fix https://github.com/johnsoncodehk/vue-tsc/issues/21
 	};
+	type __VLS_SelfComponent<N, C, O> = string extends N ? {} : N extends string ? { [P in N]: C & { __VLS_raw: C, __VLS_options: O } } : {};
 
 	${genConstructorOverloads()}
 }
