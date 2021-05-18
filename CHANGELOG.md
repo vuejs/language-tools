@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.7
+
+- 🎉 feat: support for named recursive components ([#190](https://github.com/johnsoncodehk/volar/issues/190))
+
 ## 0.25.6
 
 - fix: custom events type-checking broken
