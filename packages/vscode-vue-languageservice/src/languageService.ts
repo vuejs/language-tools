@@ -93,6 +93,7 @@ export function createLanguageService(
 	let lastCompletionUpdateVersion = -1;
 	const documents = new UriMap<TextDocument>();
 	const sourceFiles = new UriMap<SourceFile>();
+	const uriTsDocumentMap: Map<string, TextDocument> = new Map();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
 
@@ -106,7 +107,7 @@ export function createLanguageService(
 			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
 			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
-
+			
 			for (const failed of failedLookupLocations) {
 				let path = failed;
 				if (path.endsWith('index.d.ts')) {
@@ -445,11 +446,9 @@ export function createLanguageService(
 			if (uri === globalDoc.uri) {
 				return globalDoc.version.toString();
 			}
-			for (const [_, sourceFile] of sourceFiles) {
-				const doc = sourceFile.getTsDocuments().get(uri);
-				if (doc) {
-					return doc.version.toString();
-				}
+			let doc = uriTsDocumentMap.get(uri)
+			if (doc) {
+				return doc.version.toString();
 			}
 			return vueHost.getScriptVersion(fileName);
 		}
@@ -518,7 +517,7 @@ export function createLanguageService(
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, ts, 'api', options.documentContext));
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, ts, 'api', options.documentContext, uriTsDocumentMap));
 				vueScriptsUpdated = true;
 			}
 			else {

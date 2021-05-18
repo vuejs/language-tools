@@ -41,6 +41,7 @@ export function createSourceFile(
 	ts: typeof import('typescript'),
 	styleMode: 'api' | 'format',
 	documentContext: DocumentContext | undefined,
+	uriTsDocumentMap: Map<string, TextDocument>
 ) {
 	// sources
 	const tsProjectVersion = ref<string>();
@@ -130,7 +131,7 @@ export function createSourceFile(
 	const tsDocuments = computed(() => {
 
 		const docs = new Map<string, TextDocument>();
-
+		
 		docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
@@ -140,7 +141,9 @@ export function createSourceFile(
 			docs.set(virtualScriptGen.textDocumentForTemplate.value.uri, virtualScriptGen.textDocumentForTemplate.value);
 		if (virtualTemplateGen.textDocument.value)
 			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
-
+		for (let [key, textDocument] of docs) {
+			uriTsDocumentMap.set(key, textDocument)
+		}
 		return docs;
 	});
 
