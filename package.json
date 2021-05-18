@@ -175,7 +175,8 @@
 					"source.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
 					"source.json.comments": "jsonc",
-					"source.json": "json"
+					"source.json": "json",
+					"source.yaml": "yaml"
 				}
 			}
 		],
