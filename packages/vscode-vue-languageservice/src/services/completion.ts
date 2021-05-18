@@ -146,11 +146,11 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 			return combineResults(...lists.filter(notEmpty));
 		}
 
-		const tsResult = getTsResult(sourceFile);
-		cache = { uri, tsResult };
-		if (tsResult?.items.length) return tsResult;
-
 		const emmetResult = await getEmmetResult(sourceFile);
+
+		const tsResult = getTsResult(sourceFile);
+		cache = { uri, tsResult, emmetResult };
+		if (tsResult) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
 
 		// precede html for support inline css service
 		const cssResult = await getCssResult(sourceFile);
@@ -525,10 +525,10 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 			if (embededDoc) {
 				const emmetConfig = await vueHost.getEmmetConfig(embededDoc.language);
 				if (emmetConfig) {
-					let syntax = languageIdToSyntax(embededDoc.language);
-					if (syntax === 'vue') syntax = 'html';
+					let mode = emmet.getEmmetMode(embededDoc.language === 'vue' ? 'html' : embededDoc.language);
+					if (!mode) return;
 					const doc = embededDoc.document ?? sourceFile.getTextDocument();
-					const emmetResult = emmet.doComplete(doc, embededDoc.range.start, syntax, emmetConfig);
+					const emmetResult = emmet.doComplete(doc, embededDoc.range.start, mode, emmetConfig);
 					if (emmetResult && embededDoc.sourceMap) {
 						return transformCompletionList(
 							emmetResult,
