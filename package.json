@@ -4,7 +4,7 @@
 	"displayName": "Volar",
 	"description": "Language support for Vue 3",
 	"icon": "images/icon.png",
-	"version": "0.25.6",
+	"version": "0.25.7",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
@@ -310,7 +310,7 @@
 		"compile": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
 		"pack": "yarn && npm run test && vsce package --yarn",
-		"publish": "yarn && npm run test && lerna publish && vsce publish --yarn",
+		"publish": "yarn && npm run test && lerna publish --no-push --no-git-tag-version && vsce publish --yarn",
 		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
 		"test": "jest"
 	},
