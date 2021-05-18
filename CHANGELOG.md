@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.6
+
+- fix: custom events type-checking broken
+- perf: optimize get script version ([#186](https://github.com/johnsoncodehk/volar/issues/186))
+
 ## 0.25.5
 
 - feat: improve UX for TS plugin status bar
