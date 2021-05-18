@@ -107,7 +107,7 @@ declare global {
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent<infer _> ? K : never]:
 		T[K] extends never ? any : T[K] // fix https://github.com/johnsoncodehk/vue-tsc/issues/21
 	};
-	type __VLS_SelfComponent<N, C, O> = string extends N ? {} : N extends string ? { [P in N]: C & { __VLS_raw: C, __VLS_options: O } } : {};
+	type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 
 	${genConstructorOverloads()}
 }

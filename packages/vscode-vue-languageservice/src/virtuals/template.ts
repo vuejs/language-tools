@@ -62,7 +62,7 @@ export function useTemplateScript(
 
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('declare var __VLS_ownComponent: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component, typeof __VLS_options>;\n');
+		codeGen.addText('declare var __VLS_ownComponent: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component & { __VLS_raw: typeof __VLS_component, __VLS_options: typeof __VLS_options, __VLS_slots: typeof __VLS_slots }>;\n');
 		codeGen.addText('declare var __VLS_components_0: __VLS_GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_PickComponents<typeof __VLS_ctx> & typeof __VLS_ownComponent;\n'); // has __VLS_options
 		codeGen.addText('declare var __VLS_components: __VLS_ExtractRawComponents<__VLS_GlobalComponents> & __VLS_ExtractRawComponents<typeof __VLS_vmUnwrap.components> & __VLS_ExtractRawComponents<__VLS_PickComponents<typeof __VLS_ctx>> & __VLS_ExtractRawComponents<typeof __VLS_ownComponent> & JSX.IntrinsicElements;\n'); // sort by priority
 		codeGen.addText('declare var __VLS_componentPropsBase: __VLS_MapPropsTypeBase<typeof __VLS_components>;\n');

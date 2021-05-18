@@ -42,7 +42,7 @@ export function useScriptMain(
 		}
 		content += `declare var __VLS_ctx: __VLS_PickNotAny<InstanceType<typeof __VLS_component>, ReturnType<typeof __VLS_component>>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;
-		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx> & __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component, typeof __VLS_options>;\n`;
+		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx> & __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
 		content += `__VLS_options.setup().${SearchTexts.SetupReturns};\n`;
