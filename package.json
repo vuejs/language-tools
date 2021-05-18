@@ -161,6 +161,7 @@
 				"path": "./syntaxes/vue.tmLanguage.json",
 				"embeddedLanguages": {
 					"text.html.vue": "vue",
+					"text.html.markdown": "markdown",
 					"text.html": "html",
 					"text.pug": "jade",
 					"text": "plaintext",
