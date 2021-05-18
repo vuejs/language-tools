@@ -93,7 +93,7 @@ export function createLanguageService(
 	let lastCompletionUpdateVersion = -1;
 	const documents = new UriMap<TextDocument>();
 	const sourceFiles = new UriMap<SourceFile>();
-	const stringDocMap: Map<string, TextDocument> = new Map();
+	const uriTsDocumentMap: Map<string, TextDocument> = new Map();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
 
@@ -446,18 +446,10 @@ export function createLanguageService(
 			if (uri === globalDoc.uri) {
 				return globalDoc.version.toString();
 			}
-			let doc = stringDocMap.get(uri)
+			let doc = uriTsDocumentMap.get(uri)
 			if (doc) {
 				return doc.version.toString();
 			}
-			// for (const [_, sourceFile] of sourceFiles) {
-			// 	// debugger
-			// 	const document = sourceFile.getTsDocuments()
-			// 	const doc = document.get(uri);
-			// 	if (doc) {
-			// 		return doc.version.toString();
-			// 	}
-			// }
 			return vueHost.getScriptVersion(fileName);
 		}
 		function getScriptSnapshot(fileName: string) {
@@ -525,13 +517,7 @@ export function createLanguageService(
 			const doc = getTextDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				// TODO: sourceFile
-				// 这里注册所有的 tsdoc 到时候只需要o 1 搞定 
-				const newSourceFile = createSourceFile(doc, tsLanguageService, ts, 'api', options.documentContext, stringDocMap);
-				// for (let [key, textDocument] of sourceFileDocMap) {
-				// 	stringDocMap.set(key, textDocument)
-				// }
-				sourceFiles.set(uri, newSourceFile);
+				sourceFiles.set(uri, createSourceFile(doc, tsLanguageService, ts, 'api', options.documentContext, uriTsDocumentMap));
 				vueScriptsUpdated = true;
 			}
 			else {
