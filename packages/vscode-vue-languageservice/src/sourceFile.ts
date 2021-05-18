@@ -4,6 +4,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
 import * as css from 'vscode-css-languageservice';
+import * as json from 'vscode-json-languageservice';
 import type { DocumentContext } from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
@@ -22,6 +23,7 @@ import { useScriptMain } from './virtuals/main';
 import { useScriptSetupGen } from './virtuals/script';
 import { useScriptFormat } from './virtuals/script.raw';
 import { useStylesRaw } from './virtuals/styles.raw';
+import { useJsonsRaw } from './virtuals/jsons.raw';
 import { useTemplateScript } from './virtuals/template';
 import { useTemplateRaw } from './virtuals/template.raw';
 
@@ -73,6 +75,7 @@ export function createSourceFile(
 
 	// virtual scripts
 	const _virtualStyles = useStylesRaw(ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), styleMode, documentContext);
+	const virtualJsonBlocks = useJsonsRaw(untrack(() => vueDoc.value), computed(() => descriptor.customBlocks));
 	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template));
 	const templateData = computed<undefined | {
 		html?: string,
@@ -159,6 +162,7 @@ export function createSourceFile(
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getMainTsDoc: untrack(() => virtualScriptMain.textDocument.value),
 		getCssSourceMaps: untrack(() => virtualStyles.sourceMaps.value),
+		getJsonSourceMaps: untrack(() => virtualJsonBlocks.sourceMaps.value),
 		getHtmlSourceMaps: untrack(() => virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
 		getPugSourceMaps: untrack(() => virtualTemplateRaw.pugSourceMap.value ? [virtualTemplateRaw.pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
@@ -431,10 +435,11 @@ export function createSourceFile(
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 
 		const nonTs: [{
-			result: ComputedRef<Diagnostic[]>;
-			cache: ComputedRef<Diagnostic[]>;
+			result: ComputedRef<Promise<Diagnostic[]> | Diagnostic[]>;
+			cache: ComputedRef<Promise<Diagnostic[]> | Diagnostic[]>;
 		}, number, Diagnostic[]][] = [
 				[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), 0, []],
+				[useJsonsValidation(computed(() => virtualJsonBlocks.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
 				[useScriptExistValidation(), 0, []],
 			];
@@ -487,19 +492,22 @@ export function createSourceFile(
 				const startTime = Date.now();
 				const diag = all[i];
 				if (!isDirty) {
-					isDirty = isErrorsDirty(diag[2], diag[0].result.value);
+					isDirty = isErrorsDirty(diag[2], await diag[0].result.value);
 				}
-				diag[2] = diag[0].result.value;
+				diag[2] = await diag[0].result.value;
 				diag[1] = Date.now() - startTime;
-				const newErrors = all
+				const _newErrors = all
 					.slice(0, i + 1)
-					.map(diag => diag[0].result.value)
+					.map(async diag => await diag[0].result.value)
+					.flat()
+				const newErrors = (await Promise.all(_newErrors))
 					.flat()
 					.concat(sfcErrors.value);
-				const oldErrors = all
+				const _oldErrors = all
 					.slice(i + 1)
-					.map(diag => i >= mainTsErrorStart && !isScriptChanged ? diag[0].cache.value : diag[2])
-					.flat();
+					.map(async diag => i >= mainTsErrorStart && !isScriptChanged ? await diag[0].cache.value : diag[2])
+				const oldErrors = (await Promise.all(_oldErrors))
+					.flat();;
 				const isLast = i === all.length - 1
 				if (await isCancel?.()) return;
 				if (
@@ -697,6 +705,42 @@ export function createSourceFile(
 				let result: css.Diagnostic[] = [];
 				for (const [uri, errs] of errors_cache.value) {
 					result = result.concat(toSourceDiags(errs, uri, virtualStyles.sourceMaps.value));
+				}
+				return result as Diagnostic[];
+			});
+			return {
+				result,
+				cache: cacheWithSourceMap,
+			};
+		}
+		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument, jsonDocument: json.JSONDocument }[]>) {
+			const errors = computed(async () => {
+				let result = new Map<string, css.Diagnostic[]>();
+				for (const { textDocument, jsonDocument } of documents.value) {
+					const errs = await languageServices.json.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
+						? {
+							comments: 'error',
+							trailingCommas: 'error',
+						}
+						: {
+							comments: 'ignore',
+							trailingCommas: 'warning',
+						});
+					if (errs) result.set(textDocument.uri, errs);
+				}
+				return result;
+			});
+			const errors_cache = ref<Promise<Map<string, css.Diagnostic[]>>>();
+			const result = computed(() => {
+				errors_cache.value = errors.value;
+				return cacheWithSourceMap.value;
+			});
+			const cacheWithSourceMap = computed(async () => {
+				let result: css.Diagnostic[] = [];
+				if (errors_cache.value) {
+					for (const [uri, errs] of await errors_cache.value) {
+						result = result.concat(toSourceDiags(errs, uri, virtualJsonBlocks.sourceMaps.value));
+					}
 				}
 				return result as Diagnostic[];
 			});

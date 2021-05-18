@@ -48,7 +48,12 @@ export function register(connection: Connection, enabledTsPlugin: boolean) {
     });
     connection.client.register(CompletionRequest.type, {
         documentSelector: vueFileReg.documentSelector,
-        triggerCharacters: [...triggerCharacter.typescript, ...triggerCharacter.html],
+        triggerCharacters: [
+            ...triggerCharacter.typescript,
+            ...triggerCharacter.html,
+            ...triggerCharacter.css,
+            ...triggerCharacter.json,
+        ],
         resolveProvider: true,
     });
 }

@@ -3,6 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
+import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
 
 export interface TsMappingData {
@@ -73,6 +74,17 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 			foldingRanges: boolean,
 			formatting: boolean,
 		},
+		mappings?: SourceMaps.Mapping<undefined>[],
+	) {
+		super(sourceDocument, mappedDocument, mappings);
+	}
+}
+
+export class JsonSourceMap extends SourceMaps.SourceMap<undefined> {
+	constructor(
+		public sourceDocument: TextDocument,
+		public mappedDocument: TextDocument,
+		public jsonDocument: JSONDocument,
 		mappings?: SourceMaps.Mapping<undefined>[],
 	) {
 		super(sourceDocument, mappedDocument, mappings);

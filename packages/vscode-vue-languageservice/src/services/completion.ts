@@ -25,6 +25,7 @@ export const triggerCharacter = {
 	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
 	html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
 	css: ['.', '@', '/'/* path completion */],
+	json: ['"', ':'],
 };
 export const wordPatterns: { [lang: string]: RegExp } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
@@ -98,6 +99,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 		tsResult?: CompletionList,
 		emmetResult?: CompletionList,
 		cssResult?: CompletionList,
+		jsonResult?: CompletionList,
 		htmlResult?: CompletionList,
 		vueResult?: CompletionList,
 	} | undefined = undefined;
@@ -125,6 +127,9 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 			if (cache.cssResult?.isIncomplete) {
 				cache.cssResult = await getCssResult(sourceFile);
 			}
+			if (cache.jsonResult?.isIncomplete) {
+				cache.jsonResult = await getJsonResult(sourceFile);
+			}
 			if (cache.htmlResult?.isIncomplete) {
 				cache.htmlResult = await getHtmlResult(sourceFile);
 			}
@@ -151,6 +156,10 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 		const cssResult = await getCssResult(sourceFile);
 		cache = { uri, cssResult, emmetResult };
 		if (cssResult) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
+
+		const jsonResult = await getJsonResult(sourceFile);
+		cache = { uri, jsonResult, emmetResult };
+		if (jsonResult) return emmetResult ? combineResults(jsonResult, emmetResult) : jsonResult;
 
 		const htmlResult = await getHtmlResult(sourceFile);
 		cache = { uri, htmlResult, emmetResult };
@@ -458,8 +467,39 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 						);
 						vueItem.data = data;
 						return vueItem;
+					});
+					result.items = result.items.concat(vueItems);
+				}
+			}
+			return result;
+		}
+		async function getJsonResult(sourceFile: SourceFile) {
+			let result: CompletionList | undefined = undefined;
+			if (context?.triggerCharacter && !triggerCharacter.json.includes(context.triggerCharacter)) {
+				return;
+			}
+			for (const sourceMap of sourceFile.getJsonSourceMaps()) {
+				const jsonRanges = sourceMap.getMappedRanges(position);
+				for (const cssRange of jsonRanges) {
+					if (!result) {
+						result = {
+							isIncomplete: false,
+							items: [],
+						};
 					}
-					);
+					const jsonLs = languageServices.json;
+					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.jsonDocument);
+					if (!jsonResult) continue;
+					if (jsonResult.isIncomplete) {
+						result.isIncomplete = true;
+					}
+					const vueItems: CompletionItem[] = jsonResult.items.map(jsonItem => {
+						const vueItem = transformCompletionItem(
+							jsonItem,
+							jsonRange => sourceMap.getSourceRange(jsonRange.start, jsonRange.end),
+						);
+						return vueItem;
+					});
 					result.items = result.items.concat(vueItems);
 				}
 			}

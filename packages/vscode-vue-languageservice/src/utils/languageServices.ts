@@ -1,6 +1,7 @@
 import * as CSS from 'vscode-css-languageservice';
 import * as HTML from 'vscode-html-languageservice';
 import * as Pug from 'vscode-pug-languageservice';
+import * as Json from 'vscode-json-languageservice';
 import type * as ts from 'typescript';
 import * as TS2 from 'vscode-typescript-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
@@ -46,6 +47,7 @@ export const css = CSS.getCSSLanguageService({ fileSystemProvider });
 export const scss = CSS.getSCSSLanguageService({ fileSystemProvider });
 export const less = CSS.getLESSLanguageService({ fileSystemProvider });
 export const pug = Pug.getLanguageService(html);
+export const json = Json.getLanguageService({ /* TODO */ });
 
 export const postcss: CSS.LanguageService = {
     ...scss,

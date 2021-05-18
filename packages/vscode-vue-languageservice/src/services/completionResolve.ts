@@ -6,7 +6,10 @@ import { CompletionData, HtmlCompletionData, TsCompletionData } from '../types';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (item: CompletionItem, newOffset?: number) => {
-		const data: CompletionData = item.data;
+
+		const data: CompletionData | undefined = item.data;
+		if (!data) return item;
+
 		const sourceFile = sourceFiles.get(data.uri);
 		if (!sourceFile) return item;
 
