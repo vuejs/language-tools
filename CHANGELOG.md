@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.25.5
+
+- feat: improve UX for TS plugin status bar
+- feat: support syntax highlighting for `lang="json"`, `lang="jsonc"`, `lang="yaml"`, `lang="md"` ([#127](https://github.com/johnsoncodehk/volar/issues/127))
+- feat: support validation for `lang="json"`, `lang="jsonc"`
+- feat: support emmet for JSX, TSX ([#184](https://github.com/johnsoncodehk/volar/issues/184))
+- fix: fix template syntax highlighting broken edge cases
+- fix: fix auto-import not working edge cases
+- fix: should not have auto-import from virtual files
+- fix: native events types incorrect if component do not have emits option ([#180](https://github.com/johnsoncodehk/volar/issues/180))
+
 ## 0.25.4
 
 - feat: improve embedded languages syntax highlight
