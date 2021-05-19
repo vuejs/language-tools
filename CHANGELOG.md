@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.8
+
+- feat: support for `<component :is>` type-checking
+
 ## 0.25.7
 
 - 🎉 feat: support for named recursive components ([#190](https://github.com/johnsoncodehk/volar/issues/190))
