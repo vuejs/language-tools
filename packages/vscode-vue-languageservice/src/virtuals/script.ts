@@ -32,6 +32,7 @@ export function useScriptSetupGen(
 	);
 	const codeGen = computed(() =>
 		genScript(
+			uri,
 			script.value,
 			scriptSetup.value,
 			scriptAst.value,

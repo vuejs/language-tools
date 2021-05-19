@@ -3,8 +3,10 @@ import type { Ast as ScriptAst } from '../parsers/scriptAst';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
+import * as path from 'upath';
 
 export function generate(
+    uri: string,
     script: null | {
         src?: string,
         content: string,
@@ -525,11 +527,17 @@ export function generate(
     }
     function writeConstNameOption() {
         codeGen.addText(`\n`);
-        codeGen.addText(`export const __VLS_name = __VLS_getNameOption(`);
         if (script && scriptAst?.exportDefault?.args) {
             const args = scriptAst.exportDefault.args;
+            codeGen.addText(`export const __VLS_name = __VLS_getNameOption(`);
             codeGen.addText(`${script.content.substring(args.start, args.end)} as const`);
+            codeGen.addText(`);\n`);
         }
-        codeGen.addText(`);\n`);
+        else if (scriptSetup && path.extname(uri) === '.vue') {
+            codeGen.addText(`export declare const __VLS_name: '${path.basename(path.trimExt(uri))};'\n`);
+        }
+        else {
+            codeGen.addText(`export const __VLS_name = undefined;\n`);
+        }
     }
 }
