@@ -1,6 +1,6 @@
 {
 	"name": "vscode-vue-languageservice",
-	"version": "0.25.9",
+	"version": "0.25.10",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
