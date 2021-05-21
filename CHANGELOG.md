@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.9
+
+- feat: support recursive components for `<script setup>`
+- fix: improve type-checking for `<component :is>` ([#196](https://github.com/johnsoncodehk/volar/issues/196))
+- fix: fix `<template>` block syntax highlighting broken edge cases ([#192](https://github.com/johnsoncodehk/volar/issues/192#issuecomment-845089387))
+
 ## 0.25.8
 
 - feat: support for `<component :is>` type-checking
