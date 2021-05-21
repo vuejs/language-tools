@@ -577,7 +577,17 @@
 			]
 		},
 		"template-tag": {
-			"begin": "(<)(template)\\b(>?)",
+			"patterns": [
+				{
+					"include": "#template-tag-1"
+				},
+				{
+					"include": "#template-tag-2"
+				}
+			]
+		},
+		"template-tag-1": {
+			"begin": "(<)(template)\\b(>)",
 			"beginCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.begin.html.vue"
@@ -605,13 +615,54 @@
 							"name": "punctuation.definition.tag.begin.html.vue"
 						},
 						"3": {
-							"name": "entity.name.tag.$2.html.vue"
+							"name": "entity.name.tag.$3.html.vue"
+						}
+					},
+					"name": "meta.template-tag.end",
+					"patterns": [
+						{
+							"include": "#html-stuff"
+						}
+					]
+				}
+			]
+		},
+		"template-tag-2": {
+			"begin": "(<)(template)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html.vue"
+				},
+				"2": {
+					"name": "entity.name.tag.$2.html.vue"
+				}
+			},
+			"end": "(/?>)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.end.html.vue"
+				}
+			},
+			"name": "meta.template-tag.start",
+			"patterns": [
+				{
+					"begin": "\\G",
+					"end": "(?=/>)|((</)(template)\\b)",
+					"endCaptures": {
+						"2": {
+							"name": "punctuation.definition.tag.begin.html.vue"
+						},
+						"3": {
+							"name": "entity.name.tag.$3.html.vue"
 						}
 					},
 					"name": "meta.template-tag.end",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
+						},
+						{
+							"include": "#html-stuff"
 						}
 					]
 				}
