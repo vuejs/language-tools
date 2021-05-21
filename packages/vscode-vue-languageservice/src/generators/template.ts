@@ -895,10 +895,10 @@ export function generate(
 						capabilities: capabilitiesSet.all
 					},
 				);
-				tsCodeGen.addText('`');
+				tsCodeGen.addText('` as const');
 			}
 			else {
-				tsCodeGen.addText('true');
+				tsCodeGen.addText('true as const');
 			}
 		}
 		function addStartWrap() {
