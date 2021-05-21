@@ -577,13 +577,16 @@
 			]
 		},
 		"template-tag": {
-			"begin": "(<)(template)\\b",
+			"begin": "(<)(template)\\b(>?)",
 			"beginCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.begin.html.vue"
 				},
 				"2": {
 					"name": "entity.name.tag.$2.html.vue"
+				},
+				"3": {
+					"name": "punctuation.definition.tag.end.html.vue"
 				}
 			},
 			"end": "(/?>)",
@@ -596,7 +599,7 @@
 			"patterns": [
 				{
 					"begin": "\\G",
-					"end": "(?=/>)|((</)(template))",
+					"end": "(?=/>)|((</)(template)\\b)",
 					"endCaptures": {
 						"2": {
 							"name": "punctuation.definition.tag.begin.html.vue"
