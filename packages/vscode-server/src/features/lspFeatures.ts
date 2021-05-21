@@ -1,7 +1,7 @@
 import { ActiveSelectionRequest, GetClientTarNameCaseRequest, GetClientAttrNameCaseRequest, notEmpty } from '@volar/shared';
 import { margeWorkspaceEdits } from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-css-languageservice';
-import { Connection, TextDocuments } from 'vscode-languageserver/node';
+import { Connection, Location, LocationLink, TextDocuments } from 'vscode-languageserver/node';
 import type { ServicesManager } from '../servicesManager';
 
 export function register(
@@ -105,15 +105,24 @@ export function register(
         const result = servicesManager
             .getMatchService(handler.textDocument.uri)
             ?.findReferences(handler.textDocument.uri, handler.position);
-        if (enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
-            return result?.filter(loc => loc.uri.endsWith('.vue'));
+        if (result && enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
+            return result.filter(loc => loc.uri.endsWith('.vue'));
         }
         return result;
     });
     connection.onDefinition(handler => {
-        return servicesManager
+        const result = servicesManager
             .getMatchService(handler.textDocument.uri)
             ?.findDefinition(handler.textDocument.uri, handler.position);
+        if (result && enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
+            return (result as (Location | LocationLink)[]).filter(loc => {
+                if (Location.is(loc))
+                    return loc.uri.endsWith('.vue');
+                else
+                    return loc.targetUri.endsWith('.vue');
+            }) as Location[] | LocationLink[];
+        }
+        return result;
     });
     connection.onTypeDefinition(handler => {
         return servicesManager
