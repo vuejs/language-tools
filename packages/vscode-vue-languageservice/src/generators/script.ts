@@ -534,7 +534,7 @@ export function generate(
             codeGen.addText(`);\n`);
         }
         else if (scriptSetup && path.extname(uri) === '.vue') {
-            codeGen.addText(`export declare const __VLS_name: '${path.basename(path.trimExt(uri))};'\n`);
+            codeGen.addText(`export declare const __VLS_name: '${path.basename(path.trimExt(uri))}';\n`);
         }
         else {
             codeGen.addText(`export const __VLS_name = undefined;\n`);
