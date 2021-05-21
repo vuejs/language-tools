@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.10
+
+- fix: `<template>` tag child nodes syntax highlighting broken
+
 ## 0.25.9
 
 - feat: support recursive components for `<script setup>`
