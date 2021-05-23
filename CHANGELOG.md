@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.11
+
+- feat: support find definition in `*.ts` even ts plugin disabled
+- feat: new experimental preview feature
+- fix: `<script setup>` component name incorrect
+- fix: inline style breaks SFC syntax highlighting ([#199](https://github.com/johnsoncodehk/volar/issues/199))
+
 ## 0.25.10
 
 - fix: `<template>` tag child nodes syntax highlighting broken
