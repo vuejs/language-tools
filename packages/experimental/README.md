@@ -4,12 +4,14 @@
 
 Currently only support for Vue 3 + Vite.
 
+Example: https://github.com/johnsoncodehk/volar-starter
+
 1. Install [@volar/experimental](https://www.npmjs.com/package/@volar/experimental).
 2. Use Vue plugin.
     ```ts
     // main.ts
     import { createApp } from 'vue';
-    import * as volar from '@volar/experimental';
+    import * as volar from '@volar/experimental/client';
 
     const app = createApp(App);
     app.use(volar.vuePlugin);
@@ -20,7 +22,7 @@ Currently only support for Vue 3 + Vite.
     // vite.config.ts
     import { defineConfig } from 'vite';
     import vue from '@vitejs/plugin-vue';
-    import * as volar from '../volar/packages/experimental';
+    import * as volar from '../volar/packages/experimental/compiler';
 
     export default defineConfig({
         // ...
