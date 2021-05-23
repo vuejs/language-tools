@@ -11,5 +11,8 @@
 		{
 			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"
 		},
+		{
+			"path": "./packages/experimental/tsconfig.build.json"
+		},
 	]
 }

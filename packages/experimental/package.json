@@ -1,0 +1,20 @@
+{
+	"name": "@volar/experimental",
+	"version": "0.25.10",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/shared"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^1.2.2",
+		"@vue/runtime-core": "3.0.11",
+		"vite": "^2.3.3"
+	}
+}

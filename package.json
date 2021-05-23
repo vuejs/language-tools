@@ -23,7 +23,8 @@
 		"pug"
 	],
 	"activationEvents": [
-		"onLanguage:vue"
+		"onLanguage:vue",
+		"onWebviewPanel:preview"
 	],
 	"main": "./node_modules/@volar/vscode-client/out/extension",
 	"contributes": {
@@ -255,7 +256,7 @@
 			},
 			{
 				"command": "volar.action.preview",
-				"title": "Start Preview Client",
+				"title": "Preview",
 				"category": "Volar (Experimental)",
 				"icon": "$(open-preview)"
 			},
@@ -288,6 +289,12 @@
 				"command": "volar.action.createWorkspaceSnippets",
 				"title": "Create Workspace Snippets",
 				"category": "Volar"
+			},
+			{
+				"command": "volar.action.selectElement",
+				"title": "Select Element",
+				"category": "Volar",
+				"icon": "$(search)"
 			}
 		],
 		"menus": {
@@ -295,6 +302,16 @@
 				{
 					"command": "volar.action.splitEditors",
 					"when": "editorLangId == vue",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.preview",
+					"when": "editorLangId == vue && false",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.selectElement",
+					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				}
 			]

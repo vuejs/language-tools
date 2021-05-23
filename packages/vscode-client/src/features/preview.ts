@@ -1,74 +1,124 @@
 import * as vscode from 'vscode';
-import * as path from 'upath';
+import { parse } from '@vue/compiler-sfc';
+
+let defaultServerUrl = 'http://localhost:3000/';
+let panel: vscode.WebviewPanel | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
+
+    context.subscriptions.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
+        panel?.webview.postMessage({ sender: 'volar', command: 'selectElement' });
+    }));
+
     context.subscriptions.push(vscode.commands.registerCommand('volar.action.preview', async () => {
 
-        let defaultServerUrl = 'http://localhost:3000/preview#';
-        let lastEditor: vscode.TextEditor | undefined;
+        const serverUrl = await createInputBox(defaultServerUrl, 'Preview Server URL...');
+        if (!serverUrl) return;
 
-        const serverUrl = vscode.window.createInputBox();
-        serverUrl.placeholder = 'Preview Server URL...';
-        serverUrl.value = defaultServerUrl;
-        serverUrl.onDidAccept(() => {
-            defaultServerUrl = serverUrl.value;
-            const panel = vscode.window.createWebviewPanel(
-                'vuePreview',
-                'Preview',
-                vscode.ViewColumn.Beside,
-                { enableScripts: true },
-            );
+        defaultServerUrl = serverUrl;
+        panel = vscode.window.createWebviewPanel(
+            'preview',
+            'Preview',
+            vscode.ViewColumn.Beside,
+            {
+                enableScripts: true,
+            },
+        );
 
-            const changeDisposable = vscode.window.onDidChangeActiveTextEditor(update);
-            const messageDisposable = panel.webview.onDidReceiveMessage(async message => {
-                switch (message.command) {
-                    case 'alert':
-                        const text = message.data;
-                        vscode.window.showInformationMessage(text);
-                        return;
-                    case 'goToOffset':
-                        const offset: number = message.data;
-                        if (lastEditor) {
-                            const position = lastEditor.document.positionAt(offset);
-                            await vscode.window.showTextDocument(lastEditor.document, lastEditor.viewColumn);
-                            lastEditor.selection = new vscode.Selection(position, position);
-                        }
-                        return;
-                }
-            });
+        updatePanel(panel);
+        update(serverUrl);
+    }));
 
-            panel.onDidDispose(() => {
-                changeDisposable.dispose();
-                messageDisposable.dispose();
-            });
+    context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('preview', new PreviewSerializer()));
+}
 
-            update();
+class PreviewSerializer implements vscode.WebviewPanelSerializer {
+    async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: { url: string }) {
+        updatePanel(webviewPanel);
+        update(state.url);
+    }
+}
 
-            function update() {
+function updatePanel(_panel: vscode.WebviewPanel) {
+    // const changeDisposable = vscode.window.onDidChangeActiveTextEditor(update);
+    const messageDisposable = _panel.webview.onDidReceiveMessage(async message => {
+        switch (message.command) {
+            case 'log': {
+                const text = message.data;
+                vscode.window.showInformationMessage(text);
+                break;
+            }
+            case 'goToTemplate': {
+                const data = message.data as {
+                    fileName: string,
+                    range: [number, number],
+                };
+                const doc = await vscode.workspace.openTextDocument(data.fileName);
+                const sfc = parse(doc.getText());
+                const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
+                const start = doc.positionAt(data.range[0] + offset);
+                const end = doc.positionAt(data.range[1] + offset);
+                await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
                 const editor = vscode.window.activeTextEditor;
-                if (!editor) return;
+                if (editor) {
+                    editor.selection = new vscode.Selection(start, end);
+                    editor.revealRange(new vscode.Range(start, end));
+                }
+                break;
+            }
+        }
+    });
 
-                const document = editor.document;
-                if (document.languageId !== 'vue') return;
+    _panel.onDidDispose(() => {
+        // changeDisposable.dispose();
+        messageDisposable.dispose();
+    });
 
-                panel.title = 'Preview ' + path.basename(document.fileName);
-                panel.webview.html = `
+    panel = _panel;
+}
+function update(serverUrl: string) {
+    if (!panel) return;
+
+    // const editor = vscode.window.activeTextEditor;
+    // if (!editor) return;
+
+    // const document = editor.document;
+    // if (document.languageId !== 'vue') return;
+
+    // panel.title = 'Preview ' + path.basename(document.fileName);
+    panel.title = 'Volar Preview ';
+    panel.webview.html = getWebviewContent(serverUrl);
+}
+function createInputBox(defaultValue: string, placeholder: string) {
+    return new Promise<string | undefined>(resolve => {
+        const serverUrl = vscode.window.createInputBox();
+        serverUrl.placeholder = placeholder;
+        serverUrl.value = defaultValue;
+        serverUrl.onDidAccept(() => resolve(serverUrl.value));
+        serverUrl.onDidHide(() => resolve(undefined))
+        serverUrl.show();
+    });
+}
+function getWebviewContent(url: string) {
+    return `
 <style>
 body {
     padding: 0;
+    background-color: #fff;
 }
 </style>
 <script>
 const vscode = acquireVsCodeApi();
-window.onmessage = function(e) {
-    vscode.postMessage(JSON.parse(e.data));
-};
+vscode.setState({ url: '${url}' });
+window.addEventListener('message', e => {
+    if (e.data.sender === 'volar') {
+        document.getElementById('preview').contentWindow.postMessage(e.data, '*');
+    }
+    else {
+        vscode.postMessage(e.data);
+    }
+});
 </script>
-<iframe src="${serverUrl.value}${document.uri.fsPath}" frameborder="0" style="display: block; margin: 0px; overflow: hidden; width: 100%; height: 100vh;" />
+<iframe id="preview" src="${url}" frameborder="0" style="display: block; margin: 0px; overflow: hidden; width: 100%; height: 100vh;" />
 `;
-                lastEditor = editor;
-            }
-        });
-        serverUrl.show();
-    }));
 }
