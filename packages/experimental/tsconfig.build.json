@@ -1,16 +1,12 @@
 {
-	"extends": "../../tsconfig.base.json",
-	"compilerOptions": {
-		"target": "es5",
-		"module": "es2015",
-		"outDir": "out",
-		"rootDir": "src",
-	},
-	"include": [
-		"src"
-	],
-	"exclude": [
-		"node_modules",
-		".vscode-test"
-	],
+	"files": [],
+	"include": [],
+	"references": [
+		{
+			"path": "./tsconfig.build-client.json"
+		},
+		{
+			"path": "./tsconfig.build-compiler.json"
+		},
+	]
 }
