@@ -62,7 +62,7 @@ declare global {
 	function __VLS_getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 	function __VLS_pickForItem<S, T1, T2>(source: S, forOfItem: T1, forInItem: T2): S extends { [Symbol.iterator](): infer _ } ? T1 : T2;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
-	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer Props } ? Props : C extends FunctionalComponent<infer R> ? R : C
+	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer P1 } ? P1 : C extends FunctionalComponent<infer P2> ? P2 : C extends { props: infer P3 } ? P3 : C;
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: __VLS_ExtractRawComponent<T[K]> };
 	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
