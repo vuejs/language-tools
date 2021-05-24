@@ -68,7 +68,7 @@ declare global {
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: T[K] extends (arg: infer _1) => infer _2
 		? T[K] : T[K] extends (arg: infer A, ...rest: infer _3) => infer R
-		? (props: A) => R : (props: __VLS_ExtractComponentProps<T[K]> & __VLS_GlobalAttrs & Record<string, unknown>) => any
+		? (props: A) => R : (props: __VLS_ExtractComponentProps<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_ExtractComponentProps<T[K]>> & Record<string, unknown>) => any
 	};
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : unknown;
