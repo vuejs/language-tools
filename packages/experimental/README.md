@@ -22,7 +22,7 @@ Example: https://github.com/johnsoncodehk/volar-starter
     // vite.config.ts
     import { defineConfig } from 'vite';
     import vue from '@vitejs/plugin-vue';
-    import * as volar from '../volar/packages/experimental/compiler';
+    import * as volar from '@volar/experimental/compiler';
 
     export default defineConfig({
         // ...
