@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.12
+
+- feat: support props type override ([#202](https://github.com/johnsoncodehk/volar/issues/202#issuecomment-846670594))
+- fix: support `<component :is>` type-checking with VNode ([vue-tsc#34](https://github.com/johnsoncodehk/vue-tsc/issues/34))
+- fix: cannot find module 'upath' with pnpm ([#204](https://github.com/johnsoncodehk/volar/issues/204))
+
 ## 0.25.11
 
 - feat: support find definition in `*.ts` even ts plugin disabled
