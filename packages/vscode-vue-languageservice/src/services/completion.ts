@@ -1,4 +1,4 @@
-import { getWordStart, languageIdToSyntax, notEmpty } from '@volar/shared';
+import { getWordRange, languageIdToSyntax, notEmpty } from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
 import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
@@ -447,7 +447,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
 					if (!cssLanguageService || !sourceMap.stylesheet) continue;
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
-					const wordStart = getWordStart(wordPattern, cssRange.end, sourceMap.mappedDocument);
+					const wordStart = getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
 					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
 					const cssResult = await cssLanguageService.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext);
 					if (cssResult.isIncomplete) {

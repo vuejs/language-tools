@@ -9,7 +9,7 @@ import { DeleteFile } from 'vscode-languageserver/node';
 import { AnnotatedTextEdit } from 'vscode-languageserver/node';
 import { ResponseError } from 'vscode-languageserver/node';
 import { wordPatterns } from './completion';
-import { getWordStart } from '@volar/shared';
+import { getWordRange } from '@volar/shared';
 import { TsMappingData } from '../utils/sourceMaps';
 
 export function register({ mapper }: TsApiRegisterOptions) {
@@ -17,28 +17,28 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	return {
 		prepareRename: (uri: string, position: Position) => {
 
-			const tsResult = onTsPrepare(uri, position);
-			if (tsResult) {
-				return tsResult;
-			}
-
 			const cssResult = onCssPrepare(uri, position);
 			if (cssResult) {
 				return cssResult;
 			}
-		},
-		doRename: (uri: string, position: Position, newName: string) => {
 
-			const tsResult = onTs(uri, position, newName);
+			const tsResult = onTsPrepare(uri, position);
 			if (tsResult) {
-				doDedupe(tsResult);
 				return tsResult;
 			}
+		},
+		doRename: (uri: string, position: Position, newName: string) => {
 
 			const cssResult = onCss(uri, position, newName);
 			if (cssResult) {
 				doDedupe(cssResult);
 				return cssResult;
+			}
+
+			const tsResult = onTs(uri, position, newName);
+			if (tsResult) {
+				doDedupe(tsResult);
+				return tsResult;
 			}
 
 			function doDedupe(workspaceEdit: WorkspaceEdit) {
@@ -158,9 +158,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	function onCssPrepare(uri: string, position: Position) {
 		for (const cssRange of mapper.css.to(uri, position)) {
 			const wordPattern = wordPatterns[cssRange.textDocument.languageId] ?? wordPatterns.css;
-			const wordStart = getWordStart(wordPattern, cssRange.range.end, cssRange.textDocument);
-			if (wordStart) {
-				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordStart, cssRange.range.end)) {
+			const wordRange = getWordRange(wordPattern, cssRange.range.end, cssRange.textDocument);
+			if (wordRange) {
+				for (const vueRange of mapper.css.from(cssRange.textDocument.uri, wordRange.start, wordRange.end)) {
 					return vueRange.range;
 				}
 			}

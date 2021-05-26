@@ -48,7 +48,7 @@ export function isInsideRange(parent: Range, child: Range) {
     if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
     return true;
 }
-export function getWordStart(wordPattern: RegExp, position: Position, document: TextDocument): Position | undefined {
+export function getWordRange(wordPattern: RegExp, position: Position, document: TextDocument): Range | undefined {
     const lineStart: Position = {
         line: position.line,
         character: 0,
@@ -65,7 +65,10 @@ export function getWordStart(wordPattern: RegExp, position: Position, document: 
         const matchStart = match.index + lineStartOffset;
         const matchEnd = matchStart + match[0].length;
         if (offset >= matchStart && offset <= matchEnd) {
-            return document.positionAt(matchStart);
+            return {
+                start: document.positionAt(matchStart),
+                end: document.positionAt(matchEnd),
+            };
         }
     }
     return undefined;
