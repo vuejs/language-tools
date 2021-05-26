@@ -34,7 +34,6 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						break;
 					}
 				}
-
 				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem, newTsOffset);
 				const newVueItem = transformCompletionItem(
 					data.tsItem,
