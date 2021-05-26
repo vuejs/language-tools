@@ -2,6 +2,7 @@ import type * as ts from 'typescript';
 import { CompletionItem, TextEdit } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
+import { handleKindModifiers } from './completion';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (item: CompletionItem, newOffset?: number): CompletionItem => {
@@ -31,6 +32,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			item.documentation = ts.displayPartsToString(detail.documentation);
 		}
 		if (details.length) item.detail = details.join('\n');
+
+		if (detail) {
+			handleKindModifiers(item, detail);
+		}
 
 		if (detail?.codeActions) {
 			if (!item.additionalTextEdits) item.additionalTextEdits = [];

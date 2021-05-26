@@ -34,10 +34,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						break;
 					}
 				}
-				// fix: https://github.com/johnsoncodehk/volar/issues/198
-				let detailBeforeResolve = data.tsItem.detail;
 				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem, newTsOffset);
-				data.tsItem.detail = detailBeforeResolve;
 				const newVueItem = transformCompletionItem(
 					data.tsItem,
 					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),

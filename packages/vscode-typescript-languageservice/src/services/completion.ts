@@ -56,6 +56,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					},
 				}
 
+				handleKindModifiers(item, entry);
 				item = fuzzyCompletionItem(info, document, entry, item);
 
 				return item;
@@ -64,37 +65,6 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		// from vscode typescript
 		function fuzzyCompletionItem(info: ts.CompletionInfo, document: TextDocument, entry: ts.CompletionEntry, item: CompletionItem) {
-			if (entry.kindModifiers) {
-				const kindModifiers = entry.kindModifiers.split(/,|\s+/g);
-				if (kindModifiers.includes(PConst.KindModifiers.optional)) {
-					if (!item.insertText) {
-						item.insertText = item.label;
-					}
-
-					if (!item.filterText) {
-						item.filterText = item.label;
-					}
-					item.label += '?';
-				}
-
-				if (kindModifiers.includes(PConst.KindModifiers.color)) {
-					item.kind = CompletionItemKind.Color;
-				}
-
-				if (entry.kind === PConst.Kind.script) {
-					for (const extModifier of PConst.KindModifiers.fileExtensionKindModifiers) {
-						if (kindModifiers.includes(extModifier)) {
-							if (entry.name.toLowerCase().endsWith(extModifier)) {
-								item.detail = entry.name;
-							} else {
-								item.detail = entry.name + extModifier;
-							}
-							break;
-						}
-					}
-				}
-			}
-
 			if (info.isNewIdentifierLocation && entry.replacementSpan) {
 				const replaceRange = Range.create(
 					document.positionAt(entry.replacementSpan.start),
@@ -237,6 +207,39 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					break;
 			}
 			return commitCharacters.length === 0 ? undefined : commitCharacters;
+		}
+	}
+}
+
+export function handleKindModifiers(item: CompletionItem, entry: ts.CompletionEntry | ts.CompletionEntryDetails) {
+	if (entry.kindModifiers) {
+		const kindModifiers = entry.kindModifiers.split(/,|\s+/g);
+		if (kindModifiers.includes(PConst.KindModifiers.optional)) {
+			if (!item.insertText) {
+				item.insertText = item.label;
+			}
+
+			if (!item.filterText) {
+				item.filterText = item.label;
+			}
+			item.label += '?';
+		}
+
+		if (kindModifiers.includes(PConst.KindModifiers.color)) {
+			item.kind = CompletionItemKind.Color;
+		}
+
+		if (entry.kind === PConst.Kind.script) {
+			for (const extModifier of PConst.KindModifiers.fileExtensionKindModifiers) {
+				if (kindModifiers.includes(extModifier)) {
+					if (entry.name.toLowerCase().endsWith(extModifier)) {
+						item.detail = entry.name;
+					} else {
+						item.detail = entry.name + extModifier;
+					}
+					break;
+				}
+			}
 		}
 	}
 }
