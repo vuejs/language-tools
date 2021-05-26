@@ -86,7 +86,7 @@ function update(serverUrl: string) {
     // if (document.languageId !== 'vue') return;
 
     // panel.title = 'Preview ' + path.basename(document.fileName);
-    panel.title = 'Volar Preview ';
+    panel.title = 'Volar WebView';
     panel.webview.html = getWebviewContent(serverUrl);
 }
 function createInputBox(defaultValue: string, placeholder: string) {

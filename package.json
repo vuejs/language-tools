@@ -256,7 +256,7 @@
 			},
 			{
 				"command": "volar.action.preview",
-				"title": "Preview",
+				"title": "Open WebView / Preview",
 				"category": "Volar (Experimental)",
 				"icon": "$(open-preview)"
 			},
