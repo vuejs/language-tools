@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.13
+
+- fix: add patching for a serious TS freeze bug ([#205](https://github.com/johnsoncodehk/volar/issues/205)) ([vscode#124561](https://github.com/microsoft/vscode/issues/124561))
+
 ## 0.25.12
 
 - feat: support props type override ([#202](https://github.com/johnsoncodehk/volar/issues/202#issuecomment-846670594))
