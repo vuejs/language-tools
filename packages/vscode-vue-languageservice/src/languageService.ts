@@ -83,7 +83,6 @@ export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
 export function createLanguageService(
 	{ typescript: ts }: Dependencies,
 	vueHost: LanguageServiceHost,
-	isTsPlugin = false,
 ) {
 
 	let vueProjectVersion: string | undefined;
@@ -107,7 +106,7 @@ export function createLanguageService(
 			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
 			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
-			
+
 			for (const failed of failedLookupLocations) {
 				let path = failed;
 				if (path.endsWith('index.d.ts')) {
@@ -417,6 +416,17 @@ export function createLanguageService(
 				}
 				return result;
 			},
+			getScriptKind(fileName) {
+				switch (upath.extname(fileName)) {
+					case '.vue': return ts.ScriptKind.JSON; // can't use External, Unknown
+					case '.js': return ts.ScriptKind.JS;
+					case '.jsx': return ts.ScriptKind.JSX;
+					case '.ts': return ts.ScriptKind.TS;
+					case '.tsx': return ts.ScriptKind.TSX;
+					case '.json': return ts.ScriptKind.JSON;
+					default: return ts.ScriptKind.Unknown;
+				}
+			},
 		};
 
 		return tsHost;
@@ -432,12 +442,7 @@ export function createLanguageService(
 						tsFileNames.push(uriToFsPath(uri)); // virtual .ts
 					}
 				}
-				if (isTsPlugin) {
-					tsFileNames.push(fileName); // .vue + .ts
-				}
-				else if (!sourceFile && !fileName.endsWith('.vue')) {
-					tsFileNames.push(fileName); // .ts
-				}
+				tsFileNames.push(fileName); // .vue + .ts
 			}
 			return tsFileNames;
 		}

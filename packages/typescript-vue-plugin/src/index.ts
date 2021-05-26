@@ -2,36 +2,48 @@ import { createLanguageService } from 'vscode-vue-languageservice'
 import { sleep } from '@volar/shared';
 import * as path from 'upath';
 
-export = function init(modules: { typescript: typeof import('typescript/lib/tsserverlibrary') }) {
-	const ts = modules.typescript;
+const init: ts.server.PluginModuleFactory = (modules) => {
+	const { typescript: ts } = modules;
 	const vueFilesGetter = new WeakMap<ts.server.Project, () => string[]>();
+	const pluginModule: ts.server.PluginModule = {
+		create(info) {
 
-	return {
-		create,
-		getExternalFiles,
-	};
+			// fix: https://github.com/johnsoncodehk/volar/issues/205
+			info.project.getScriptKind = fileName => {
+				switch (path.extname(fileName)) {
+					case '.vue': return ts.ScriptKind.JSON; // can't use External, Unknown
+					case '.js': return ts.ScriptKind.JS;
+					case '.jsx': return ts.ScriptKind.JSX;
+					case '.ts': return ts.ScriptKind.TS;
+					case '.tsx': return ts.ScriptKind.TSX;
+					case '.json': return ts.ScriptKind.JSON;
+					default: return ts.ScriptKind.Unknown;
+				}
+			};
 
-	function create(info: ts.server.PluginCreateInfo): ts.LanguageService {
+			const proxyHost = createProxyHost(ts, info);
+			const vueLs = createLanguageService(modules, proxyHost.host);
 
-		const proxyHost = createProxyHost(ts, info);
-		const vueLs = createLanguageService({ typescript: ts }, proxyHost.host, true);
+			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
-		vueFilesGetter.set(info.project, proxyHost.getVueFiles);
-
-		return new Proxy(info.languageService, {
-			get: (target: any, property: keyof ts.LanguageService) => {
-				return vueLs.__internal__.tsPlugin[property] || target[property];
-			},
-		});
+			return new Proxy(info.languageService, {
+				get: (target: any, property: keyof ts.LanguageService) => {
+					return vueLs.__internal__.tsPlugin[property] || target[property];
+				},
+			});
+		},
+		getExternalFiles(project) {
+			const getVueFiles = vueFilesGetter.get(project);
+			if (!getVueFiles) {
+				return [];
+			}
+			return getVueFiles().filter(fileName => project.fileExists(fileName));
+		},
 	}
-	function getExternalFiles(project: ts.server.Project): string[] {
-		const getVueFiles = vueFilesGetter.get(project);
-		if (!getVueFiles) {
-			return [];
-		}
-		return getVueFiles().filter(fileName => project.fileExists(fileName));
-	}
-}
+	return pluginModule;
+};
+
+export = init;
 
 function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), info: ts.server.PluginCreateInfo) {
 
