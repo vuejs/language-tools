@@ -36,8 +36,8 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
     function getImplementationAtPosition(fileName: string, position: number): ReturnType<ts.LanguageService['getImplementationAtPosition']> {
         return findLocations(fileName, position, 'implementation') as ts.ImplementationLocation[];
     }
-    function findRenameLocations(fileName: string, position: number): ReturnType<ts.LanguageService['findRenameLocations']> {
-        return findLocations(fileName, position, 'rename') as ts.RenameLocation[];
+    function findRenameLocations(fileName: string, position: number, findInStrings: boolean, findInComments: boolean, providePrefixAndSuffixTextForRename?: boolean): ReturnType<ts.LanguageService['findRenameLocations']> {
+        return findLocations(fileName, position, 'rename', findInStrings, findInComments, providePrefixAndSuffixTextForRename) as ts.RenameLocation[];
     }
     function findLocations(
         fileName: string,
