@@ -89,10 +89,10 @@
 					"default": true,
 					"description": "[pug ☐] code lens."
 				},
-				"volar.showSplitEditorsIcon": {
+				"volar.icon.splitEditors": {
 					"type": "boolean",
 					"default": true,
-					"description": "show split editor icon in title area of editor"
+					"description": "Show split editor icon in title area of editor."
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
@@ -306,7 +306,7 @@
 			"editor/title": [
 				{
 					"command": "volar.action.splitEditors",
-					"when": "editorLangId == vue && config.volar.showSplitEditorsIcon == true",
+					"when": "editorLangId == vue && config.volar.icon.splitEditors",
 					"group": "navigation"
 				},
 				{
