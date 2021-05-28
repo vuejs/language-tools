@@ -760,7 +760,7 @@ export function createSourceFile(
 					&& !tsLanguageService.__internal__.getTextDocument2(virtualScriptGen.textDocument.value.uri)
 				) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
-						if (!script) continue;
+						if (!script || script.content === '') continue;
 						diags.push(Diagnostic.create(
 							{
 								start: vueDoc.value.positionAt(script.loc.start),
