@@ -112,7 +112,7 @@
 						"Disable TS Plugin"
 					],
 					"default": null,
-					"description": "Enabled Vue TS Server Plugin."
+					"description": "Enable Vue TS Server Plugin.\nSince TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases, this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you need to enable this setting."
 				},
 				"volar.tsPluginStatus": {
 					"type": "boolean",
