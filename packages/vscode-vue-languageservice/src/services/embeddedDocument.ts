@@ -38,7 +38,6 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const tsRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const tsRange of tsRanges) {
-					if (!tsRange.data.capabilities.formatting) continue;
 					return {
 						sourceMap,
 						language: sourceMap.mappedDocument.languageId,
