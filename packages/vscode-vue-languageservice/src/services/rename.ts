@@ -17,28 +17,28 @@ export function register({ mapper }: TsApiRegisterOptions) {
 	return {
 		prepareRename: (uri: string, position: Position) => {
 
-			const cssResult = onCssPrepare(uri, position);
-			if (cssResult) {
-				return cssResult;
-			}
-
 			const tsResult = onTsPrepare(uri, position);
 			if (tsResult) {
 				return tsResult;
 			}
-		},
-		doRename: (uri: string, position: Position, newName: string) => {
 
-			const cssResult = onCss(uri, position, newName);
+			const cssResult = onCssPrepare(uri, position);
 			if (cssResult) {
-				doDedupe(cssResult);
 				return cssResult;
 			}
+		},
+		doRename: (uri: string, position: Position, newName: string) => {
 
 			const tsResult = onTs(uri, position, newName);
 			if (tsResult) {
 				doDedupe(tsResult);
 				return tsResult;
+			}
+
+			const cssResult = onCss(uri, position, newName);
+			if (cssResult) {
+				doDedupe(cssResult);
+				return cssResult;
 			}
 
 			function doDedupe(workspaceEdit: WorkspaceEdit) {
