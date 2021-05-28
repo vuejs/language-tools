@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.25.14
+
+- feat: add option to hide the split icon at the top right corner ([#195](https://github.com/johnsoncodehk/volar/issues/195))
+- feat: add ts plugin description link in ts plugin menu
+- fix: file icons are emptied when importing ([#198](https://github.com/johnsoncodehk/volar/issues/198))
+- fix: css prepareRename range incorrect if no `<template>` ([#212](https://github.com/johnsoncodehk/volar/issues/212))
+- fix: don't report `lang="ts"` missing if script content is empty ([#215](https://github.com/johnsoncodehk/volar/issues/215))
+- fix: ts plugin features broken with json script kind [0386094](https://github.com/johnsoncodehk/volar/commit/038609477093911674cf842e3650bc8daf4d733d)
+- fix: component rename breaks the component source file ([#206](https://github.com/johnsoncodehk/volar/issues/206))
+- fix: emmet should not working in template expression interpolations
+
 ## 0.25.13
 
 - fix: add patching for a serious TS freeze bug ([#205](https://github.com/johnsoncodehk/volar/issues/205)) ([vscode#124561](https://github.com/microsoft/vscode/issues/124561))
