@@ -11,15 +11,19 @@ export async function activate(context: vscode.ExtensionContext) {
     updateTsPluginStatus();
 
     context.subscriptions.push(vscode.commands.registerCommand('volar.action.toggleTsPlugin', async () => {
-        const options = new Map<boolean | number, string>();
+        const options = new Map<boolean | 3, string>();
         const _isTsPluginEnabled = isTsPluginEnabled();
         options.set(true, (_isTsPluginEnabled === true ? '• ' : '') + 'Enable TS Plugin');
         options.set(false, (_isTsPluginEnabled === false ? '• ' : '') + 'Disable TS Plugin');
+        options.set(3, 'What is TS Plugin?');
 
         const select = await userPick(options);
         if (select === undefined) return; // cancle
 
-        if (select !== _isTsPluginEnabled) {
+        if (select === 3) {
+            vscode.env.openExternal(vscode.Uri.parse('https://github.com/johnsoncodehk/volar/discussions/219'));
+        }
+        else if (select !== _isTsPluginEnabled) {
             toggleTsPlugin();
         }
     }));
