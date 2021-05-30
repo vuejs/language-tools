@@ -131,7 +131,7 @@ export function createSourceFile(
 	const tsDocuments = computed(() => {
 
 		const docs = new Map<string, TextDocument>();
-		
+
 		docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
 		if (virtualScriptGen.textDocument.value)
 			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
@@ -268,8 +268,8 @@ export function createSourceFile(
 		function updateScript(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.script ? {
 				src: newDescriptor.script.src,
-				lang: newDescriptor.script.lang ?? defaultLanguages.script,
-				content: newDescriptor.script.content,
+				lang: newDescriptor.script.src ? 'ts' : newDescriptor.script.lang ?? defaultLanguages.script,
+				content: newDescriptor.script.src ? '' : newDescriptor.script.content,
 				loc: {
 					start: newDescriptor.script.loc.start.offset,
 					end: newDescriptor.script.loc.end.offset,
