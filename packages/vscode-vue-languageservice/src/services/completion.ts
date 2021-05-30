@@ -358,18 +358,20 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					const replacement = getReplacement(htmlResult, sourceMap.mappedDocument);
 					if (replacement) {
 						const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
-						const hasExt = replacement.text.includes('.');
-						if (isEvent && hasExt) {
-							const noExtText = path.trimExt(replacement.text, [], 999);
+						const hasModifier = replacement.text.includes('.');
+						if (isEvent && hasModifier) {
+							const modifiers = replacement.text.split('.').slice(1);
+							const textWithoutModifier = path.trimExt(replacement.text, [], 999);
 							for (const modifier in eventModifiers) {
+								if (modifiers.includes(modifier)) continue;
 								const modifierDes = eventModifiers[modifier];
 								const newItem: html.CompletionItem = {
 									label: modifier,
-									filterText: noExtText + '.' + modifier,
+									filterText: textWithoutModifier + '.' + modifier,
 									documentation: modifierDes,
 									textEdit: {
 										range: replacement.textEdit.range,
-										newText: noExtText + '.' + modifier,
+										newText: textWithoutModifier + '.' + modifier,
 									},
 									kind: CompletionItemKind.EnumMember,
 								};
