@@ -197,6 +197,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					let tsItems = tsLanguageService.doComplete(sourceMap.mappedDocument.uri, tsRange.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
+						includeCompletionsForImportStatements: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
 						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					});
 					if (tsRange.data.vueTag === 'template') {
@@ -271,7 +272,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					for (const componentName of componentNames) {
 						const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
 						for (const prop of bind) {
-							const _name: string = prop.data.name;
+							const _name: string = prop.data.__volar__.name;
 							const name = nameCases.attr === 'pascalCase' ? _name : hyphenate(_name);
 							if (hyphenate(name).startsWith('on-')) {
 								const propName = '@' + name.substr('on-'.length);
@@ -299,7 +300,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							}
 						}
 						for (const event of on) {
-							const name = nameCases.attr === 'pascalCase' ? event.data.name : hyphenate(event.data.name);
+							const name = nameCases.attr === 'pascalCase' ? event.data.__volar__.name : hyphenate(event.data.__volar__.name);
 							const propName = '@' + name;
 							const propKey = componentName + ':' + propName;
 							attributes.push({
@@ -309,7 +310,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							tsItems.set(propKey, event);
 						}
 						for (const _slot of slot) {
-							const propName = '#' + _slot.data.name;
+							const propName = '#' + _slot.data.__volar__.name;
 							const propKey = componentName + ':' + propName;
 							slots.push({
 								name: propName,

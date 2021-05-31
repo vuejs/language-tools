@@ -7,7 +7,7 @@ import {
 	Position,
 } from 'vscode-languageserver/node';
 import * as previewer from '../utils/previewer';
-import { uriToFsPath } from '@volar/shared';
+import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
@@ -22,7 +22,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const parts: string[] = [];
 		const displayString = ts.displayPartsToString(info.displayParts);
-		const documentation = previewer.markdownDocumentation(info.documentation, info.tags);
+		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags ?? [], { toResource: fsPathToUri });
 
 		if (displayString && !documentOnly) {
 			parts.push(['```typescript', displayString, '```'].join('\n'));

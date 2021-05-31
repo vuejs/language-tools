@@ -6,14 +6,14 @@ import { handleKindModifiers } from './completion';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (item: CompletionItem, newOffset?: number): CompletionItem => {
-		const fileName = item.data.fileName;
-		const offset = newOffset ?? item.data.offset;
-		const name = item.data.name;
-		const source = item.data.source;
-		const options = item.data.options;
+		const fileName = item.data.__volar__.fileName;
+		const offset = newOffset ?? item.data.__volar__.offset;
+		const name = item.data.__volar__.name;
+		const source = item.data.__volar__.source;
+		const options = item.data.__volar__.options;
 		let detail: ts.CompletionEntryDetails | undefined;
 		try {
-			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options);
+			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, item.data);
 		}
 		catch (err) {
 			item.detail = `[TS Error] ${err}`;

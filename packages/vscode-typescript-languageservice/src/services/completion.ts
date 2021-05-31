@@ -40,7 +40,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				let item: CompletionItem = {
 					label: entry.name,
 					labelDetails: {
-						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(rootDir, entry.source) : undefined,
+						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(rootDir, entry.source) : entry.source,
 					},
 					kind: convertKind(entry.kind),
 					sortText: entry.sortText,
@@ -48,11 +48,14 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					preselect: entry.isRecommended,
 					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
 					data: {
-						fileName,
-						offset,
-						source: entry.source,
-						name: entry.name,
-						options: _options,
+						__volar__: {
+							fileName,
+							offset,
+							source: entry.source,
+							name: entry.name,
+							options: _options,
+						},
+						...entry.data,
 					},
 				}
 

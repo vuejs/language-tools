@@ -383,15 +383,15 @@ export function createSourceFile(
 		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
 
 		components = components.filter(entry => {
-			const name = entry.data.name as string;
+			const name = entry.data.__volar__.name as string;
 			return name.indexOf('$') === -1 && !name.startsWith('_');
 		});
 
-		const contextNames = context.map(entry => entry.data.name);
-		const componentNames = components.map(entry => entry.data.name);
-		const propNames = props.map(entry => entry.data.name);
-		const setupReturnNames = setupReturns.map(entry => entry.data.name);
-		const htmlElementNames = globalEls.map(entry => entry.data.name);
+		const contextNames = context.map(entry => entry.data.__volar__.name);
+		const componentNames = components.map(entry => entry.data.__volar__.name);
+		const propNames = props.map(entry => entry.data.__volar__.name);
+		const setupReturnNames = setupReturns.map(entry => entry.data.__volar__.name);
+		const htmlElementNames = globalEls.map(entry => entry.data.__volar__.name);
 
 		if (eqSet(new Set(contextNames), new Set(templateScriptData.context))
 			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
@@ -958,7 +958,7 @@ export function createSourceFile(
 				const doc = virtualTemplateGen.textDocument.value;
 				const text = doc.getText();
 				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
-					const tagName = tag.data.name;
+					const tagName = tag.data.__volar__.name;
 					let bind: CompletionItem[] = [];
 					let on: CompletionItem[] = [];
 					let slot: CompletionItem[] = [];
