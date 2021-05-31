@@ -5,7 +5,7 @@ import type { TsApiRegisterOptions } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';
 import { uriToFsPath } from '@volar/shared';
-import { camelize, capitalize } from '@vue/runtime-core';
+import { camelize, capitalize } from '@vue/shared';
 import { parse as parseScriptAst } from '../parsers/scriptAst';
 
 export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiRegisterOptions) {
