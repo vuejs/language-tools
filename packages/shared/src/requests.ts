@@ -75,3 +75,9 @@ export namespace SemanticTokenLegendRequest {
 export namespace SemanticTokensChangedNotification {
 	export const type: NotificationType0 = new NotificationType0('vue.semanticTokensChanged');
 }
+export namespace TsVersionChanged {
+	export const type: NotificationType<string> = new NotificationType('volar.tsVersionChanged');
+}
+export namespace UseWorkspaceTsdkChanged {
+	export const type: NotificationType<boolean> = new NotificationType('volar.useWorkspaceTsdkChanged');
+}

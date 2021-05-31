@@ -73,12 +73,14 @@ export function getWordRange(wordPattern: RegExp, position: Position, document: 
     }
     return undefined;
 }
-export function loadWorkspaceTypescript(root: string, tsdk: string): typeof import('typescript/lib/tsserverlibrary') {
-    const tsPath = path.join(root, tsdk, 'tsserverlibrary.js');
-    return require(path.toUnix(tsPath));
+export function loadWorkspaceTypescript(root: string, tsdk: string): typeof import('typescript/lib/tsserverlibrary') | undefined {
+    const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, 'tsserverlibrary.js') : path.join(root, tsdk, 'tsserverlibrary.js');
+    if (fs.existsSync(tsPath)) {
+        return require(path.toUnix(tsPath));
+    }
 }
 export function loadWorkspaceTypescriptLocalized(root: string, tsdk: string, lang: string): MapLike<string> | undefined {
-    const tsPath = path.join(root, tsdk, lang, 'diagnosticMessages.generated.json');
+    const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, lang, 'diagnosticMessages.generated.json') : path.join(root, tsdk, lang, 'diagnosticMessages.generated.json');
     if (fs.existsSync(tsPath)) {
         return require(path.toUnix(tsPath));
     }

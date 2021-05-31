@@ -6,7 +6,9 @@ import {
 	loadVscodeTypescriptLocalized,
 	SemanticTokensChangedNotification,
 	ServerInitializationOptions,
-	uriToFsPath
+	uriToFsPath,
+	TsVersionChanged,
+	UseWorkspaceTsdkChanged
 } from '@volar/shared';
 import {
 	getDocumentLanguageService
@@ -115,26 +117,47 @@ async function onInitialized() {
 		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
 	}
 	connection.client.register(DidChangeConfigurationNotification.type, undefined);
-	updateConfigs(connection);
+	connection.onNotification(UseWorkspaceTsdkChanged.type, useWorkspaceTsdk => {
+		if (useWorkspaceTsdk !== options.useWorkspaceTsdk) {
+			options.useWorkspaceTsdk = useWorkspaceTsdk;
+			servicesManager?.restartAll();
+		}
+	});
 	updateTsdk = async () => {
 		const newTsdk: string | undefined = await connection.workspace.getConfiguration('typescript.tsdk') ?? undefined;
 		if (newTsdk !== options.tsdk) {
 			options.tsdk = newTsdk;
-			servicesManager?.restartAll();
+			if (options.useWorkspaceTsdk) {
+				servicesManager?.restartAll();
+			}
 		}
 	};
+	updateConfigs(connection);
 }
 
 function getTs() {
-	if (options.tsdk) {
-		for (const folder of folders) {
-			const ts = loadWorkspaceTypescript(folder, options.tsdk);
-			if (ts) {
-				return {
-					module: ts,
-					localized: loadWorkspaceTypescriptLocalized(folder, options.tsdk, options.language),
-				};
+	const result = getTsWorker();
+	connection.sendNotification(TsVersionChanged.type, result.module.version);
+	return result;
+}
+function getTsWorker() {
+	if (options.useWorkspaceTsdk) {
+		if (options.tsdk) {
+			for (const folder of folders) {
+				const ts = loadWorkspaceTypescript(folder, options.tsdk);
+				if (ts) {
+					return {
+						module: ts,
+						localized: loadWorkspaceTypescriptLocalized(folder, options.tsdk, options.language),
+					};
+				}
+				else if (options.mode === 'api') {
+					connection.window.showWarningMessage(`Load Workspace TS failed. TS module not found from '${options.tsdk}'.`);
+				}
 			}
+		}
+		else if (options.mode === 'api') {
+			connection.window.showWarningMessage(`Load Workspace TS failed. 'typescript.tsdk' missing.`);
 		}
 	}
 	return {

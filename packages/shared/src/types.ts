@@ -4,4 +4,5 @@ export interface ServerInitializationOptions {
     language: string,
     tsPlugin: boolean,
     tsdk: string | undefined,
+    useWorkspaceTsdk: boolean,
 }

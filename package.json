@@ -300,6 +300,11 @@
 				"title": "Select Element",
 				"category": "Volar",
 				"icon": "$(search)"
+			},
+			{
+				"command": "volar.selectTypeScriptVersion",
+				"title": "Select TypeScript Version...",
+				"category": "Volar"
 			}
 		],
 		"menus": {

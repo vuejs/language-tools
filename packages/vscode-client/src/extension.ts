@@ -15,6 +15,7 @@ import * as splitEditors from './features/splitEditors';
 import * as tagClosing from './features/tagClosing';
 import * as tagNameCase from './features/tagNameCase';
 import * as tsPlugin from './features/tsPlugin';
+import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 
@@ -42,6 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
 	tsPlugin.activate(context);
+	tsVersion.activate(context, [apiClient, docClient]);
 
 	startEmbeddedLanguageServices();
 }
@@ -68,6 +70,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		language: vscode.env.language,
 		tsPlugin: tsPlugin.isTsPluginEnabled(),
 		tsdk: vscode.workspace.getConfiguration('typescript').get<string>('tsdk') ?? undefined,
+		useWorkspaceTsdk: tsVersion.getUseWorkspaceTsdk(context),
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector: fileOnly ?
