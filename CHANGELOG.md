@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.15
+
+feat: auto import component in template ([#194](https://github.com/johnsoncodehk/volar/issues/194))
+feat: filter duplicate event modifiers completion
+fix: path completion not working for `<script src>` without `lang="ts"` ([#223](https://github.com/johnsoncodehk/volar/issues/223))
+
 ## 0.25.14
 
 - feat: add option to hide the split icon at the top right corner ([#195](https://github.com/johnsoncodehk/volar/issues/195))
