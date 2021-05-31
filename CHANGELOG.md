@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.17
+
+- feat: support for change TS version by `typescript.tsdk` option ([#224](https://github.com/johnsoncodehk/volar/issues/224))
+- feat: support for TS 4.3
+- fix: auto import component should prior choice `<script setup>`
+- fix: disable component auto import if no any `<script>` block
+
 ## 0.25.16
 
 - fix: language server broken with incorrect module importing
