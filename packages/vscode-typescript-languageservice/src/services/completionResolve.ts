@@ -19,27 +19,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			item.detail = `[TS Error] ${err}`;
 		}
 		const details: string[] = [];
-		if (detail?.source) {
-			const importModule = ts.displayPartsToString(detail.source);
-			const importPath = `'${importModule}'`;
-			const autoImportLabel = `Auto import from ${importPath}`;
-			details.push(autoImportLabel);
-		}
-		if (detail?.displayParts) {
-			details.push(ts.displayPartsToString(detail.displayParts));
-		}
-		if (detail?.documentation) {
-			item.documentation = ts.displayPartsToString(detail.documentation);
-		}
-		if (details.length) item.detail = details.join('\n');
-
-		if (detail) {
-			handleKindModifiers(item, detail);
-		}
 
 		if (detail?.codeActions) {
 			if (!item.additionalTextEdits) item.additionalTextEdits = [];
 			for (const action of detail.codeActions) {
+				details.push(action.description);
 				for (const changes of action.changes) {
 					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span }
@@ -50,6 +34,18 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					});
 				}
 			}
+		}
+
+		if (detail?.displayParts) {
+			details.push(ts.displayPartsToString(detail.displayParts));
+		}
+		if (detail?.documentation) {
+			item.documentation = ts.displayPartsToString(detail.documentation);
+		}
+		if (details.length) item.detail = details.join('\n');
+
+		if (detail) {
+			handleKindModifiers(item, detail);
 		}
 
 		return item;

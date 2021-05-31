@@ -3,7 +3,7 @@ import { getStartEnd } from './scriptSetupAst';
 
 export type Ast = ReturnType<typeof parse>;
 
-export function parse(ts: typeof import('typescript'), content: string) {
+export function parse(ts: typeof import('typescript'), content: string, withComponentOption = false, withNode = false) {
 
     let exportDefault: {
         start: number,
@@ -12,6 +12,12 @@ export function parse(ts: typeof import('typescript'), content: string) {
             start: number,
             end: number,
         },
+        argsNode: ts.ObjectLiteralExpression | undefined,
+        componentsOption: {
+            start: number,
+            end: number,
+        } | undefined,
+        componentsOptionNode: ts.ObjectLiteralExpression | undefined,
     } | undefined;
 
     const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
@@ -28,15 +34,29 @@ export function parse(ts: typeof import('typescript'), content: string) {
                 }
             }
             if (obj) {
+                let componentsOptionNode: ts.ObjectLiteralExpression | undefined;
+                if (withComponentOption) {
+                    obj.forEachChild(node => {
+                        if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
+                            if (node.name.escapedText === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
+                                componentsOptionNode = node.initializer;
+                            }
+                        }
+                    });
+                }
                 exportDefault = {
                     ..._getStartEnd(node),
                     args: _getStartEnd(obj),
+                    argsNode: withNode ? obj : undefined,
+                    componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
+                    componentsOptionNode: withNode ? componentsOptionNode : undefined,
                 };
             }
         }
     });
 
     return {
+        sourceFile,
         exportDefault,
     };
 

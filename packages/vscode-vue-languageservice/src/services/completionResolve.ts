@@ -1,10 +1,14 @@
 import { transformCompletionItem } from '@volar/transforms';
-import { CompletionItem, MarkupKind } from 'vscode-languageserver/node';
+import { CompletionItem, MarkupKind, TextEdit, Range } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import { CompletionData, HtmlCompletionData, TsCompletionData } from '../types';
+import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
+import * as path from 'upath';
+import { uriToFsPath } from '@volar/shared';
+import { camelize, capitalize } from '@vue/runtime-core';
+import { parse as parseScriptAst } from '../parsers/scriptAst';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiRegisterOptions) {
 	return (item: CompletionItem, newOffset?: number) => {
 
 		const data: CompletionData | undefined = item.data;
@@ -18,6 +22,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		}
 		if (data.mode === 'html') {
 			return getHtmlResult(sourceFile, item, data);
+		}
+		if (data.mode === 'autoImport') {
+			return getAutoImportResult(sourceFile, item, data);
 		}
 
 		return item;
@@ -75,5 +82,86 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 			return vueItem;
 		}
+		function getAutoImportResult(sourceFile: SourceFile, vueItem: CompletionItem, data: AutoImportComponentCompletionData) {
+			const filePath = uriToFsPath(data.importUri);
+			const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
+			let importPath = path.relative(path.dirname(data.uri), data.importUri);
+			if (!importPath.startsWith('.')) {
+				importPath = './' + importPath;
+			}
+			vueItem.labelDetails = { qualifier: rPath };
+			vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
+			const descriptor = sourceFile.getDescriptor();
+			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content) : undefined;
+			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content) : undefined;
+			const anyImport = scriptSetupImport ?? scriptImport;
+			let withSemicolon = true;
+			let quote = '"';
+			if (anyImport) {
+				withSemicolon = anyImport.text.endsWith(';');
+				quote = anyImport.text.includes("'") ? "'" : '"';
+			}
+			const componentName = capitalize(camelize(vueItem.label));
+			const insertText = `\nimport ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`;
+			const textDoc = sourceFile.getTextDocument();
+			if (descriptor.scriptSetup) {
+				vueItem.additionalTextEdits = [
+					TextEdit.insert(
+						textDoc.positionAt(descriptor.scriptSetup.loc.start + (scriptSetupImport ? scriptSetupImport.end : 0)),
+						insertText,
+					),
+				];
+			}
+			if (descriptor.script) {
+				vueItem.additionalTextEdits = [
+					TextEdit.insert(
+						textDoc.positionAt(descriptor.script.loc.start + (scriptImport ? scriptImport.end : 0)),
+						insertText,
+					),
+				];
+				const scriptAst = parseScriptAst(ts, descriptor.script.content, true, true);
+				const exportDefault = scriptAst.exportDefault;
+				if (exportDefault) {
+					const printer = ts.createPrinter();
+					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
+						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
+						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptAst.sourceFile);
+						vueItem.additionalTextEdits.push(TextEdit.replace(
+							Range.create(
+								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.start),
+								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.end),
+							),
+							printText,
+						));
+					}
+					else if (exportDefault.args && exportDefault.argsNode) {
+						(exportDefault.argsNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`));
+						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptAst.sourceFile);
+						vueItem.additionalTextEdits.push(TextEdit.replace(
+							Range.create(
+								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.start),
+								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.end),
+							),
+							printText,
+						));
+					}
+				}
+			}
+			return vueItem;
+		}
+	}
+
+	function getLastImportNode(code: string) {
+		const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.Latest);
+		let importNode: ts.ImportDeclaration | undefined;
+		sourceFile.forEachChild(node => {
+			if (ts.isImportDeclaration(node)) {
+				importNode = node;
+			}
+		});
+		return importNode ? {
+			text: importNode.getFullText(sourceFile).trim(),
+			end: importNode.getEnd(),
+		} : undefined;
 	}
 }

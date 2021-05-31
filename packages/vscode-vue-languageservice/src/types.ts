@@ -23,8 +23,13 @@ export interface CssCompletionData {
 	docUri: string,
 	mode: 'css',
 }
+export interface AutoImportComponentCompletionData {
+	mode: 'autoImport',
+	uri: string,
+	importUri: string,
+}
 
-export type CompletionData = TsCompletionData | HtmlCompletionData | CssCompletionData;
+export type CompletionData = TsCompletionData | HtmlCompletionData | CssCompletionData | AutoImportComponentCompletionData;
 
 export interface IDescriptorBlock {
 	lang: string;

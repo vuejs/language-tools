@@ -1,6 +1,6 @@
-import { getWordRange, languageIdToSyntax, notEmpty } from '@volar/shared';
+import { getWordRange, languageIdToSyntax, notEmpty, uriToFsPath } from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
-import { hyphenate, isGloballyWhitelisted } from '@vue/shared';
+import { hyphenate, capitalize, camelize, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
 import * as path from 'upath';
 import * as emmet from 'vscode-emmet-helper';
@@ -333,6 +333,26 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					name: 'template',
 					attributes: slots,
 				});
+				for (const [key, vueFile] of sourceFiles) {
+					let baseName = path.basename(vueFile.uri, '.vue');
+					if (baseName.toLowerCase() === 'index') {
+						baseName = path.basename(path.dirname(vueFile.uri));
+					}
+					const componentName_1 = hyphenate(baseName);
+					const componentName_2 = capitalize(camelize(baseName));
+					let i: number | '' = '';
+					if (componentCompletion.has(componentName_1) || componentCompletion.has(componentName_2)) {
+						i = 1;
+						while (componentCompletion.has(componentName_1 + i) || componentCompletion.has(componentName_2 + i)) {
+							i++;
+						}
+					}
+					tags.push({
+						name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
+						description: key,
+						attributes: [],
+					});
+				}
 				const dataProvider = html.newHTMLDataProvider(uri, {
 					version: 1.1,
 					tags,
@@ -390,33 +410,52 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					}
 					for (const vueItem of vueItems) {
 						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
-						const tsItem = documentation ? tsItems.get(documentation) : undefined;
-						if (tsItem) {
+						const importFile = documentation ? sourceFiles.get(documentation) : undefined;
+						if (importFile) {
+							const filePath = uriToFsPath(importFile.uri);
+							const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
 							vueItem.documentation = undefined;
-						}
-						if (
-							(vueItem.label.startsWith(':') || vueItem.label.startsWith('@'))
-							&& !documentation?.startsWith('*:') // not globalAttributes
-						) {
-							vueItem.sortText = '\u0000' + vueItem.sortText;
-							if (tsItem) {
-								vueItem.kind = CompletionItemKind.Field;
-							}
-						}
-						else if (vueItem.label.startsWith('v-')) {
-							vueItem.kind = CompletionItemKind.Method;
-							vueItem.sortText = '\u0002' + vueItem.sortText;
+							vueItem.labelDetails = { qualifier: rPath };
+							vueItem.filterText = rPath;
+							vueItem.detail = rPath;
+							vueItem.kind = CompletionItemKind.File;
+							vueItem.sortText = '\u0003' + vueItem.sortText;
+							const data: CompletionData = {
+								mode: 'autoImport',
+								uri: uri,
+								importUri: importFile.uri,
+							};
+							vueItem.data = data;
 						}
 						else {
-							vueItem.sortText = '\u0001' + vueItem.sortText;
+							const tsItem = documentation ? tsItems.get(documentation) : undefined;
+							if (tsItem) {
+								vueItem.documentation = undefined;
+							}
+							if (
+								(vueItem.label.startsWith(':') || vueItem.label.startsWith('@'))
+								&& !documentation?.startsWith('*:') // not globalAttributes
+							) {
+								vueItem.sortText = '\u0000' + vueItem.sortText;
+								if (tsItem) {
+									vueItem.kind = CompletionItemKind.Field;
+								}
+							}
+							else if (vueItem.label.startsWith('v-')) {
+								vueItem.kind = CompletionItemKind.Method;
+								vueItem.sortText = '\u0002' + vueItem.sortText;
+							}
+							else {
+								vueItem.sortText = '\u0001' + vueItem.sortText;
+							}
+							const data: CompletionData = {
+								mode: 'html',
+								uri: uri,
+								docUri: sourceMap.mappedDocument.uri,
+								tsItem: tsItem,
+							};
+							vueItem.data = data;
 						}
-						const data: CompletionData = {
-							mode: 'html',
-							uri: uri,
-							docUri: sourceMap.mappedDocument.uri,
-							tsItem: tsItem,
-						};
-						vueItem.data = data;
 					}
 					{ // filter HTMLAttributes
 						const temp = new Map<string, CompletionItem>();
