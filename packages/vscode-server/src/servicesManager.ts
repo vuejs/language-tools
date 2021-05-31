@@ -9,8 +9,10 @@ export type ServicesManager = ReturnType<typeof createServicesManager>;
 
 export function createServicesManager(
 	mode: 'api' | 'doc',
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	tsLocalized: ts.MapLike<string> | undefined,
+	getTs: () => {
+		module: typeof import('typescript/lib/tsserverlibrary'),
+		localized: ts.MapLike<string> | undefined,
+	},
 	connection: Connection,
 	documents: TextDocuments<TextDocument>,
 	rootPaths: string[],
@@ -19,10 +21,11 @@ export function createServicesManager(
 ) {
 
 	let filesUpdateTrigger = false;
+	const originalTs = getTs().module;
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const services = new Map<string, ServiceHandler>();
-	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
+	const tsConfigSet = new Set(rootPaths.map(rootPath => originalTs.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
 	const tsConfigs = [...tsConfigSet].filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)));
 	const checkedProject = new Set<string>();
 
@@ -30,7 +33,7 @@ export function createServicesManager(
 		onTsConfigChanged(tsConfig);
 	}
 	for (const rootPath of rootPaths) {
-		ts.sys.watchDirectory!(rootPath, async fileName => {
+		originalTs.sys.watchDirectory!(rootPath, async fileName => {
 			if (tsConfigNames.includes(upath.basename(fileName))) {
 				// tsconfig.json changed
 				onTsConfigChanged(fileName);
@@ -147,6 +150,9 @@ export function createServicesManager(
 		}
 	}
 	async function onTsConfigChanged(tsConfig: string) {
+		const _ts = getTs();
+		const ts = _ts.module;
+		const tsLocalized = _ts.localized;
 		for (const doc of documents.all()) {
 			if (doc.languageId === 'vue') {
 				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });

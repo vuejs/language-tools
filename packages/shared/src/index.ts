@@ -73,6 +73,16 @@ export function getWordRange(wordPattern: RegExp, position: Position, document: 
     }
     return undefined;
 }
+export function loadWorkspaceTypescript(root: string, tsdk: string): typeof import('typescript/lib/tsserverlibrary') {
+    const tsPath = path.join(root, tsdk, 'tsserverlibrary.js');
+    return require(path.toUnix(tsPath));
+}
+export function loadWorkspaceTypescriptLocalized(root: string, tsdk: string, lang: string): MapLike<string> | undefined {
+    const tsPath = path.join(root, tsdk, lang, 'diagnosticMessages.generated.json');
+    if (fs.existsSync(tsPath)) {
+        return require(path.toUnix(tsPath));
+    }
+}
 export function loadVscodeTypescript(appRoot: string): typeof import('typescript/lib/tsserverlibrary') {
     const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript');
     return require(path.toUnix(tsPath));

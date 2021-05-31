@@ -1,5 +1,7 @@
 import {
 	DocumentVersionRequest,
+	loadWorkspaceTypescript,
+	loadWorkspaceTypescriptLocalized,
 	loadVscodeTypescript,
 	loadVscodeTypescriptLocalized,
 	SemanticTokensChangedNotification,
@@ -27,10 +29,14 @@ const documents = new TextDocuments(TextDocument);
 
 let options: ServerInitializationOptions;
 let folders: string[] = [];
+let updateTsdk: Function | undefined;
 
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
-connection.onDidChangeConfiguration(() => updateConfigs(connection));
+connection.onDidChangeConfiguration(() => {
+	updateTsdk?.();
+	updateConfigs(connection);
+});
 connection.listen();
 documents.listen(connection);
 
@@ -74,14 +80,13 @@ async function onInitialized() {
 	let servicesManager: ServicesManager | undefined;
 
 	if (options.mode === 'html') {
-		const noStateLs = getDocumentLanguageService({ typescript: loadVscodeTypescript(options.appRoot) });
+		const noStateLs = getDocumentLanguageService({ typescript: getTs().module });
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
 	}
 	else if (options.mode === 'api') {
 		servicesManager = createServicesManager(
 			'api',
-			loadVscodeTypescript(options.appRoot),
-			loadVscodeTypescriptLocalized(options.appRoot, options.language),
+			getTs,
 			connection,
 			documents,
 			folders,
@@ -90,8 +95,7 @@ async function onInitialized() {
 	else if (options.mode === 'doc') {
 		servicesManager = createServicesManager(
 			'doc',
-			loadVscodeTypescript(options.appRoot),
-			loadVscodeTypescriptLocalized(options.appRoot, options.language),
+			getTs,
 			connection,
 			documents,
 			folders,
@@ -112,4 +116,29 @@ async function onInitialized() {
 	}
 	connection.client.register(DidChangeConfigurationNotification.type, undefined);
 	updateConfigs(connection);
+	updateTsdk = async () => {
+		const newTsdk: string | undefined = await connection.workspace.getConfiguration('typescript.tsdk') ?? undefined;
+		if (newTsdk !== options.tsdk) {
+			options.tsdk = newTsdk;
+			servicesManager?.restartAll();
+		}
+	};
+}
+
+function getTs() {
+	if (options.tsdk) {
+		for (const folder of folders) {
+			const ts = loadWorkspaceTypescript(folder, options.tsdk);
+			if (ts) {
+				return {
+					module: ts,
+					localized: loadWorkspaceTypescriptLocalized(folder, options.tsdk, options.language),
+				};
+			}
+		}
+	}
+	return {
+		module: loadVscodeTypescript(options.appRoot),
+		localized: loadVscodeTypescriptLocalized(options.appRoot, options.language),
+	}
 }

@@ -3,4 +3,5 @@ export interface ServerInitializationOptions {
     appRoot: string,
     language: string,
     tsPlugin: boolean,
+    tsdk: string | undefined,
 }
