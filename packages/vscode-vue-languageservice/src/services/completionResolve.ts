@@ -112,7 +112,7 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 					),
 				];
 			}
-			if (descriptor.script) {
+			else if (descriptor.script) {
 				vueItem.additionalTextEdits = [
 					TextEdit.insert(
 						textDoc.positionAt(descriptor.script.loc.start + (scriptImport ? scriptImport.end : 0)),
