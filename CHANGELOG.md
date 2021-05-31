@@ -1,10 +1,14 @@
 # Changelog
 
+## 0.25.16
+
+- fix: language server broken with incorrect module importing
+
 ## 0.25.15
 
-feat: auto import component in template ([#194](https://github.com/johnsoncodehk/volar/issues/194))
-feat: filter duplicate event modifiers completion
-fix: path completion not working for `<script src>` without `lang="ts"` ([#223](https://github.com/johnsoncodehk/volar/issues/223))
+- feat: auto import component in template ([#194](https://github.com/johnsoncodehk/volar/issues/194))
+- feat: filter duplicate event modifiers completion
+- fix: path completion not working for `<script src>` without `lang="ts"` ([#223](https://github.com/johnsoncodehk/volar/issues/223))
 
 ## 0.25.14
 
