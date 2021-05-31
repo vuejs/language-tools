@@ -333,25 +333,28 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					name: 'template',
 					attributes: slots,
 				});
-				for (const [key, vueFile] of sourceFiles) {
-					let baseName = path.basename(vueFile.uri, '.vue');
-					if (baseName.toLowerCase() === 'index') {
-						baseName = path.basename(path.dirname(vueFile.uri));
-					}
-					const componentName_1 = hyphenate(baseName);
-					const componentName_2 = capitalize(camelize(baseName));
-					let i: number | '' = '';
-					if (componentCompletion.has(componentName_1) || componentCompletion.has(componentName_2)) {
-						i = 1;
-						while (componentCompletion.has(componentName_1 + i) || componentCompletion.has(componentName_2 + i)) {
-							i++;
+				const descriptor = sourceFile.getDescriptor();
+				if (descriptor.script || descriptor.scriptSetup) {
+					for (const [key, vueFile] of sourceFiles) {
+						let baseName = path.basename(vueFile.uri, '.vue');
+						if (baseName.toLowerCase() === 'index') {
+							baseName = path.basename(path.dirname(vueFile.uri));
 						}
+						const componentName_1 = hyphenate(baseName);
+						const componentName_2 = capitalize(camelize(baseName));
+						let i: number | '' = '';
+						if (componentCompletion.has(componentName_1) || componentCompletion.has(componentName_2)) {
+							i = 1;
+							while (componentCompletion.has(componentName_1 + i) || componentCompletion.has(componentName_2 + i)) {
+								i++;
+							}
+						}
+						tags.push({
+							name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
+							description: key,
+							attributes: [],
+						});
 					}
-					tags.push({
-						name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
-						description: key,
-						attributes: [],
-					});
 				}
 				const dataProvider = html.newHTMLDataProvider(uri, {
 					version: 1.1,
