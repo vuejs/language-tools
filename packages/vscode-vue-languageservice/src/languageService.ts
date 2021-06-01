@@ -83,6 +83,7 @@ export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
 export function createLanguageService(
 	{ typescript: ts }: Dependencies,
 	vueHost: LanguageServiceHost,
+	isTsPlugin = false,
 ) {
 
 	let vueProjectVersion: string | undefined;
@@ -442,7 +443,12 @@ export function createLanguageService(
 						tsFileNames.push(uriToFsPath(uri)); // virtual .ts
 					}
 				}
-				tsFileNames.push(fileName); // .vue + .ts
+				if (isTsPlugin) {
+					tsFileNames.push(fileName); // .vue + .ts
+				}
+				else if (!fileName.endsWith('.vue')) {
+					tsFileNames.push(fileName); // .ts
+				}
 			}
 			return tsFileNames;
 		}

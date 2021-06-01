@@ -22,7 +22,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 
 			const proxyHost = createProxyHost(ts, info);
-			const vueLs = createLanguageService(modules, proxyHost.host);
+			const vueLs = createLanguageService(modules, proxyHost.host, true);
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
