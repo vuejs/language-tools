@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.18
+
+- fix: fix vue-tsc build failed
+
 ## 0.25.17
 
 - feat: support for change TS version by `typescript.tsdk` option ([#224](https://github.com/johnsoncodehk/volar/issues/224))
