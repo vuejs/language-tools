@@ -1,5 +1,5 @@
 export { semanticTokenLegend } from './services/semanticTokens';
-export { triggerCharacter } from './services/completion';
+export { triggerCharacter, options as completionOptions } from './services/completion';
 export { margeWorkspaceEdits } from './services/rename';
 export { options as codeLensOptions } from './services/codeLens';
 export * from './utils/sourceMaps';

@@ -104,6 +104,11 @@
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`. (Experimental)"
 				},
+				"volar.completion.alwaysShowFileExtension": {
+					"type": "boolean",
+					"default": false,
+					"description": "always show file extension of path completion"
+				},
 				"volar.tsPlugin": {
 					"type": "boolean",
 					"enum": [

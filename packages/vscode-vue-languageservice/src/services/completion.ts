@@ -33,6 +33,10 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
+
+export const options = {
+	alwaysShowFileExtension: false
+}
 export const vueTags: html.ITagData[] = [
 	{
 		name: 'template',
@@ -149,6 +153,13 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 		const emmetResult = await getEmmetResult(sourceFile);
 
 		const tsResult = getTsResult(sourceFile);
+		if (tsResult && options.alwaysShowFileExtension) {
+			tsResult.items.forEach(item => {
+				if (item.kind === CompletionItemKind.File && item.detail) {
+					item.label = item.detail;
+				}
+			})
+		}
 		cache = { uri, tsResult, emmetResult };
 		if (tsResult) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
 

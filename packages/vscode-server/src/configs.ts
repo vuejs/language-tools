@@ -1,4 +1,4 @@
-import { codeLensOptions } from 'vscode-vue-languageservice';
+import { codeLensOptions, completionOptions } from 'vscode-vue-languageservice';
 import type * as emmet from 'vscode-emmet-helper';
 import { Connection } from 'vscode-languageserver/node';
 
@@ -8,7 +8,7 @@ export function updateConfigs(connection: Connection) {
 
     updateCodeLensConfig();
     updateEmmetConfig();
-
+    updateCompletionConfig();
     async function updateCodeLensConfig() {
         const [
             codeLensReferences,
@@ -25,6 +25,14 @@ export function updateConfigs(connection: Connection) {
     }
     async function updateEmmetConfig() {
         emmetConfig = await connection.workspace.getConfiguration('emmet');
+    }
+    async function updateCompletionConfig() {
+        const [
+            completionAlwaysShowFileExtension,
+        ] = await Promise.all([
+            connection.workspace.getConfiguration('volar.completion.alwaysShowFileExtension'),
+        ]);
+        completionOptions.alwaysShowFileExtension = completionAlwaysShowFileExtension
     }
 }
 export function getEmmetConfiguration(syntax: string): emmet.VSCodeEmmetConfig {
