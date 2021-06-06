@@ -16,8 +16,8 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 	let uriTsDocumentMap = new Map();
 	return (document: TextDocument, options: FormattingOptions) => {
 
-		const dummyTsLs = sharedServices.getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTsLs, ts, undefined, uriTsDocumentMap);
+		const dummyTs = sharedServices.getDummyTsLs(ts, document.getText());
+		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();
@@ -179,8 +179,8 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const dummyTsLs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument);
-				const textEdits = dummyTsLs.doFormatting(sourceMap.mappedDocument.uri, options);
+				const dummyTs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument.getText());
+				const textEdits = dummyTs.ls.doFormatting(dummyTs.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
 						if (!vueRange.data.capabilities.formatting) continue;

@@ -1,4 +1,4 @@
-import { uriToFsPath } from '@volar/shared';
+import { fsPathToUri, uriToFsPath } from '@volar/shared';
 import * as fs from 'fs';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-css-languageservice';
@@ -73,12 +73,12 @@ export function getCssLs(lang: string) {
 let dummyTsScriptVersionn = 0;
 let dummyTsScript: ts.IScriptSnapshot | undefined;
 let dummyTsLs: ts2.LanguageService | undefined;
-export function getDummyTsLs(ts: typeof import('typescript/lib/tsserverlibrary'), doc: TextDocument) {
+export function getDummyTsLs(ts: typeof import('typescript/lib/tsserverlibrary'), docText: string) {
     if (!dummyTsLs) {
         dummyTsLs = ts2.createLanguageService(
             {
                 getCompilationSettings: () => ({}),
-                getScriptFileNames: () => [uriToFsPath(doc.uri)],
+                getScriptFileNames: () => [uriToFsPath(fsPathToUri('dummy.ts'))],
                 getScriptVersion: () => dummyTsScriptVersionn.toString(),
                 getScriptSnapshot: () => dummyTsScript,
                 getCurrentDirectory: () => '',
@@ -88,6 +88,9 @@ export function getDummyTsLs(ts: typeof import('typescript/lib/tsserverlibrary')
         );
     }
     dummyTsScriptVersionn++;
-    dummyTsScript = ts.ScriptSnapshot.fromString(doc.getText());
-    return dummyTsLs;
+    dummyTsScript = ts.ScriptSnapshot.fromString(docText);
+    return {
+        ls: dummyTsLs,
+        uri: fsPathToUri('dummy.ts'),
+    };
 }
