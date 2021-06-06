@@ -132,9 +132,9 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
+				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs || !sourceMap.stylesheet) continue;
+				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				for (const s of symbols) {
 					const vueRange = sourceMap.getSourceRange(s.location.range.start, s.location.range.end);

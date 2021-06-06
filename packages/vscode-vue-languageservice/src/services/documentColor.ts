@@ -15,9 +15,9 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				let colors = cssLanguageService.findDocumentColors(sourceMap.mappedDocument, sourceMap.stylesheet);
+				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs || !sourceMap.stylesheet) continue;
+				let colors = cssLs.findDocumentColors(sourceMap.mappedDocument, sourceMap.stylesheet);
 				for (const color of colors) {
 					const vueRange = sourceMap.getSourceRange(color.range.start, color.range.end);
 					if (vueRange) {

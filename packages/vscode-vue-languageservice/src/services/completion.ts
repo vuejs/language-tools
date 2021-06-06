@@ -489,12 +489,12 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							items: [],
 						};
 					}
-					const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-					if (!cssLanguageService || !sourceMap.stylesheet) continue;
+					const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+					if (!cssLs || !sourceMap.stylesheet) continue;
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
 					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
-					const cssResult = await cssLanguageService.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext);
+					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}

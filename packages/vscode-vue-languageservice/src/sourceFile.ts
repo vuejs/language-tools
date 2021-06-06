@@ -691,9 +691,9 @@ export function createSourceFile(
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const { textDocument, stylesheet } of documents.value) {
-					const cssLanguageService = sharedLs.getCssLs(textDocument.languageId);
-					if (!cssLanguageService || !stylesheet) continue;
-					const errs = cssLanguageService.doValidation(textDocument, stylesheet);
+					const cssLs = sharedLs.getCssLs(textDocument.languageId);
+					if (!cssLs || !stylesheet) continue;
+					const errs = cssLs.doValidation(textDocument, stylesheet);
 					if (errs) result.set(textDocument.uri, errs);
 				}
 				return result;

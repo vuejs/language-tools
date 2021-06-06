@@ -38,10 +38,10 @@ export function useStylesRaw(
 				stylesheet: css.Stylesheet,
 			}[] = [];
 			let stylesheet: css.Stylesheet | undefined = undefined;
-			const cssLanguageService = sharedLs.getCssLs(lang);
-			if (cssLanguageService) {
-				stylesheet = cssLanguageService.parseStylesheet(document);
-				findLinks(cssLanguageService, document, stylesheet);
+			const cssLs = sharedLs.getCssLs(lang);
+			if (cssLs) {
+				stylesheet = cssLs.parseStylesheet(document);
+				findLinks(cssLs, document, stylesheet);
 			}
 			documents.push({
 				textDocument: document,

@@ -63,10 +63,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			let result: SelectionRange[] = [];
 			for (const position of positions) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
-					const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-					if (!cssLanguageService || !sourceMap.stylesheet) continue;
+					const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+					if (!cssLs || !sourceMap.stylesheet) continue;
 					for (const cssRange of sourceMap.getMappedRanges(position)) {
-						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.mappedDocument, [cssRange.start], sourceMap.stylesheet);
+						const selectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, [cssRange.start], sourceMap.stylesheet);
 						for (const selectRange of selectRanges) {
 							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
 							if (vueRange) {

@@ -153,9 +153,9 @@ export function register({ documentContext, sourceFiles, vueHost }: TsApiRegiste
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLanguageService || !sourceMap.stylesheet) continue;
-				const links = await cssLanguageService.findDocumentLinks2(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
+				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs || !sourceMap.stylesheet) continue;
+				const links = await cssLs.findDocumentLinks2(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
 					if (vueRange) {

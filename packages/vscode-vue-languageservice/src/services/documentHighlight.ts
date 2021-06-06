@@ -62,10 +62,10 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getCssResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLanguageService || !sourceMap.stylesheet) continue;
+				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs || !sourceMap.stylesheet) continue;
 				for (const cssRange of sourceMap.getMappedRanges(position)) {
-					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
+					const highlights = cssLs.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {
 						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
 						if (vueRange) {

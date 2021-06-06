@@ -63,9 +63,9 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
-				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLanguageService) continue;
-				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.mappedDocument);
+				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs) continue;
+				const foldingRanges = cssLs.getFoldingRanges(sourceMap.mappedDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
 			return result;

@@ -39,9 +39,9 @@ export function parse(
 }
 function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
     const result = new Map<string, Set<[number, number]>>();
-    const cssLanguageService = sharedLs.getCssLs(doc.languageId);
-    if (!cssLanguageService) return result;
-    const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
+    const cssLs = sharedLs.getCssLs(doc.languageId);
+    if (!cssLs) return result;
+    const symbols = cssLs.findDocumentSymbols(doc, ss);
     const usedNodes = new Set<number>();
     for (const s of symbols) {
         if (s.kind === css.SymbolKind.Class) {

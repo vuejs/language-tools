@@ -19,11 +19,11 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		function getCssResult(sourceFile: SourceFile) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLanguageService || !sourceMap.stylesheet) continue;
+				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs || !sourceMap.stylesheet) continue;
 				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const cssRange of cssRanges) {
-					const _result = cssLanguageService.getColorPresentations(sourceMap.mappedDocument, sourceMap.stylesheet, color, cssRange);
+					const _result = cssLs.getColorPresentations(sourceMap.mappedDocument, sourceMap.stylesheet, color, cssRange);
 					for (const item of _result) {
 						if (item.textEdit) {
 							if (TextEdit.is(item.textEdit)) {
