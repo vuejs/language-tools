@@ -2,7 +2,7 @@ import { codeLensOptions } from 'vscode-vue-languageservice';
 import type * as emmet from 'vscode-emmet-helper';
 import { Connection } from 'vscode-languageserver/node';
 
-let emmetConfig: any;
+let emmetConfig: any = {};
 
 export function updateConfigs(connection: Connection) {
 
