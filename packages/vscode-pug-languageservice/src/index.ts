@@ -9,6 +9,15 @@ import { register as registerHover } from './services/hover';
 import { register as registerScanner } from './services/scanner';
 import { register as registerSelectRanges } from './services/selectRanges';
 
+// fix TS2742
+export type {
+    HTMLDocument,
+    DocumentContext,
+    CompletionConfiguration,
+    TokenType,
+    ScannerState,
+} from 'vscode-html-languageservice';
+
 export { PugDocument } from './pugDocument';
 
 export type LanguageService = ReturnType<typeof getLanguageService>;
