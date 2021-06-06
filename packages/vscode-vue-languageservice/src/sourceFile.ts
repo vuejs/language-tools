@@ -728,7 +728,12 @@ export function createSourceFile(
 							comments: 'ignore',
 							trailingCommas: 'warning',
 						});
-					if (errs) result.set(textDocument.uri, errs);
+					if (errs) {
+						for (const err of errs) {
+							err.source = err.source ?? 'json';
+						}
+						result.set(textDocument.uri, errs);
+					}
 				}
 				return result;
 			});

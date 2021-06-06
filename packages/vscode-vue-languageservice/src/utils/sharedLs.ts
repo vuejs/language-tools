@@ -7,6 +7,7 @@ import * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
+import { getSchemaRequestService } from './schemaRequestService';
 
 const fileSystemProvider: html.FileSystemProvider = {
     stat: (uri) => {
@@ -47,7 +48,7 @@ export const cssLs = css.getCSSLanguageService({ fileSystemProvider });
 export const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
 export const lessLs = css.getLESSLanguageService({ fileSystemProvider });
 export const pugLs = pug.getLanguageService(htmlLs);
-export const jsonLs = json.getLanguageService({ /* TODO */ });
+export const jsonLs = json.getLanguageService({ schemaRequestService: getSchemaRequestService() });
 export const postcssLs: css.LanguageService = {
     ...scssLs,
     doValidation: (document, stylesheet, documentSettings) => {
