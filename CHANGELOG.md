@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.25.19
+
+- feat: support json schema request service ([#243](https://github.com/johnsoncodehk/volar/issues/243))
+- feat: support shortest component auto-import path ([#233](https://github.com/johnsoncodehk/volar/issues/233))
+- fix: component auto-import not working with dash ([#249](https://github.com/johnsoncodehk/volar/issues/249))
+- fix: fix some `Cannot read property ...` errors ([#247](https://github.com/johnsoncodehk/volar/issues/247)) ([#251](https://github.com/johnsoncodehk/volar/issues/251))
+- fix: syntax highlighting not working for `lang="jsx"`
+- fix: folding not working for jsx ([#234](https://github.com/johnsoncodehk/volar/issues/234))
+
 ## 0.25.18
 
 - fix: fix vue-tsc build failed
