@@ -16,7 +16,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 	let uriTsDocumentMap = new Map();
 	return (document: TextDocument, options: FormattingOptions) => {
 
-		const dummyTs = sharedServices.getDummyTsLs(ts, document.getText());
+		const dummyTs = sharedServices.getDummyTsLs(ts, document);
 		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap);
 		let newDocument = document;
 
@@ -179,7 +179,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const dummyTs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument.getText());
+				const dummyTs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument);
 				const textEdits = dummyTs.ls.doFormatting(dummyTs.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {

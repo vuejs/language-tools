@@ -13,7 +13,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 	return (document: TextDocument) => {
 
 		let uriTsDocumentMap = new Map();
-		const dummyTs = getDummyTsLs(ts, document.getText());
+		const dummyTs = getDummyTsLs(ts, document);
 		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
@@ -53,7 +53,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTs = getDummyTsLs(ts, sourceMap.mappedDocument.getText());
+				const dummyTs = getDummyTsLs(ts, sourceMap.mappedDocument);
 				const foldingRanges = dummyTs.ls.getFoldingRanges(dummyTs.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
