@@ -11,7 +11,7 @@ import {
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 type TokenData = [number, number, number, number, number | undefined];
 
@@ -154,8 +154,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
-					? languageServices.html.createScanner(docText, offsetRange.start)
-					: languageServices.pug.createScanner(sourceMap.pugDocument, offsetRange.start)
+					? sharedLs.htmlLs.createScanner(docText, offsetRange.start)
+					: sharedLs.pugLs.createScanner(sourceMap.pugDocument, offsetRange.start)
 				if (!scanner) continue;
 
 				let token = scanner.scan();

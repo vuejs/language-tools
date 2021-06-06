@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 import * as json from 'vscode-json-languageservice';
 
 export function useJsonsRaw(
@@ -27,7 +27,7 @@ export function useJsonsRaw(
 				documents.push({
 					index: i,
 					textDocument: document,
-					jsonDocument: languageServices.json.parseJSONDocument(document),
+					jsonDocument: sharedLs.jsonLs.parseJSONDocument(document),
 				});
 			}
 		}

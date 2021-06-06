@@ -5,7 +5,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DocumentLink, Range } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 export function register({ documentContext, sourceFiles, vueHost }: TsApiRegisterOptions) {
 	return async (uri: string) => {
@@ -135,8 +135,8 @@ export function register({ documentContext, sourceFiles, vueHost }: TsApiRegiste
 			const result: DocumentLink[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const links = sourceMap.language === 'html'
-					? languageServices.html.findDocumentLinks(sourceMap.mappedDocument, documentContext)
-					: languageServices.pug.findDocumentLinks(sourceMap.pugDocument, documentContext)
+					? sharedLs.htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
+					: sharedLs.pugLs.findDocumentLinks(sourceMap.pugDocument, documentContext)
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
 					if (vueRange) {
@@ -153,7 +153,7 @@ export function register({ documentContext, sourceFiles, vueHost }: TsApiRegiste
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				const links = await cssLanguageService.findDocumentLinks2(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {

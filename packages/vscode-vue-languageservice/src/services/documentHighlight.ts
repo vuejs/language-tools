@@ -1,7 +1,7 @@
 import type { DocumentHighlight, Position } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (uri: string, position: Position) => {
@@ -42,8 +42,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 
 					const highlights = sourceMap.language === 'html'
-						? languageServices.html.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
-						: languageServices.pug.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
+						? sharedLs.htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
+						: sharedLs.pugLs.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {
@@ -62,7 +62,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getCssResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				for (const cssRange of sourceMap.getMappedRanges(position)) {
 					const highlights = cssLanguageService.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);

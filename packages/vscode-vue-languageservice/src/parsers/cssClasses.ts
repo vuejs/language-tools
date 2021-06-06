@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 import * as css from 'vscode-css-languageservice';
 
 export function parse(
@@ -39,7 +39,7 @@ export function parse(
 }
 function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
     const result = new Map<string, Set<[number, number]>>();
-    const cssLanguageService = languageServices.getCssLanguageService(doc.languageId);
+    const cssLanguageService = sharedLs.getCssLs(doc.languageId);
     if (!cssLanguageService) return result;
     const symbols = cssLanguageService.findDocumentSymbols(doc, ss);
     const usedNodes = new Set<number>();

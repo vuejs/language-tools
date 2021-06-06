@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 import * as css from 'vscode-css-languageservice';
 import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
@@ -38,7 +38,7 @@ export function useStylesRaw(
 				stylesheet: css.Stylesheet,
 			}[] = [];
 			let stylesheet: css.Stylesheet | undefined = undefined;
-			const cssLanguageService = languageServices.getCssLanguageService(lang);
+			const cssLanguageService = sharedLs.getCssLs(lang);
 			if (cssLanguageService) {
 				stylesheet = cssLanguageService.parseStylesheet(document);
 				findLinks(cssLanguageService, document, stylesheet);
@@ -64,7 +64,7 @@ export function useStylesRaw(
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, version++, text);
-					const ls2 = languageServices.getCssLanguageService(lang);
+					const ls2 = sharedLs.getCssLs(lang);
 					if (!ls2) continue;
 					const stylesheet = ls2.parseStylesheet(doc);
 					linkStyles.push({

@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
 	return (uri: string, color: Color, range: Range) => {
@@ -19,7 +19,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		function getCssResult(sourceFile: SourceFile) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const cssRange of cssRanges) {

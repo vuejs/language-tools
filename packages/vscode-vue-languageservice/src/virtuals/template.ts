@@ -7,7 +7,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
 import { IDescriptor, ITemplateScriptData } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
@@ -295,7 +295,7 @@ export function useTemplateScript(
 	const cssTextDocument = computed(() => {
 		if (templateCodeGens.value && template.value) {
 			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, templateCodeGens.value.cssCodeGen.getText());
-			const stylesheet = languageServices.css.parseStylesheet(textDocument);
+			const stylesheet = sharedLs.cssLs.parseStylesheet(textDocument);
 			return {
 				textDocument,
 				stylesheet,

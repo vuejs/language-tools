@@ -10,16 +10,14 @@ import {
 } from 'vscode-languageserver/node';
 import { createSourceFile } from '../sourceFile';
 import type { HtmlApiRegisterOptions } from '../types';
-import * as sharedServices from '../utils/languageServices';
+import * as sharedServices from '../utils/sharedLs';
 
 export function register({ ts }: HtmlApiRegisterOptions) {
 	let uriTsDocumentMap = new Map();
-	return (_document: TextDocument, options: FormattingOptions) => {
+	return (document: TextDocument, options: FormattingOptions) => {
 
-		const tsService2 = sharedServices.getCheapTsService2(ts, _document);
-		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText()); // TODO: high cost
-
-		const sourceFile = createSourceFile(document, tsService2.service, ts, undefined, uriTsDocumentMap);
+		const dummyTsLs = sharedServices.getDummyTsLs(ts, document);
+		const sourceFile = createSourceFile(document, dummyTsLs, ts, undefined, uriTsDocumentMap);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();
@@ -160,7 +158,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 		function getPugFormattingEdits() {
 			let result: TextEdit[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const pugEdits = sharedServices.pug.format(sourceMap.pugDocument, options);
+				const pugEdits = sharedServices.pugLs.format(sourceMap.pugDocument, options);
 				const vueEdits = pugEdits
 					.map(pugEdit => transformTextEdit(
 						pugEdit,
@@ -181,8 +179,8 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const cheapTs = sharedServices.getCheapTsService2(ts, sourceMap.mappedDocument);
-				const textEdits = cheapTs.service.doFormatting(cheapTs.uri, options);
+				const dummyTsLs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument);
+				const textEdits = dummyTsLs.doFormatting(sourceMap.mappedDocument.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
 						if (!vueRange.data.capabilities.formatting) continue;

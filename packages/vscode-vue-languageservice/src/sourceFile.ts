@@ -16,7 +16,7 @@ import {
 } from 'vscode-languageserver/node';
 import { IDescriptor, ITemplateScriptData } from './types';
 import * as dedupe from './utils/dedupe';
-import * as languageServices from './utils/languageServices';
+import * as sharedLs from './utils/sharedLs';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { useScriptMain } from './virtuals/main';
@@ -69,7 +69,7 @@ export function createSourceFile(
 		htmlElementItems: [],
 	});
 	const vueHtmlDocument = computed(() => {
-		return languageServices.html.parseHTMLDocument(vueDoc.value);
+		return sharedLs.htmlLs.parseHTMLDocument(vueDoc.value);
 	});
 	const sfcErrors = ref<Diagnostic[]>([]);
 
@@ -691,7 +691,7 @@ export function createSourceFile(
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const { textDocument, stylesheet } of documents.value) {
-					const cssLanguageService = languageServices.getCssLanguageService(textDocument.languageId);
+					const cssLanguageService = sharedLs.getCssLs(textDocument.languageId);
 					if (!cssLanguageService || !stylesheet) continue;
 					const errs = cssLanguageService.doValidation(textDocument, stylesheet);
 					if (errs) result.set(textDocument.uri, errs);
@@ -719,7 +719,7 @@ export function createSourceFile(
 			const errors = computed(async () => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const { textDocument, jsonDocument } of documents.value) {
-					const errs = await languageServices.json.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
+					const errs = await sharedLs.jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
 						? {
 							comments: 'error',
 							trailingCommas: 'error',

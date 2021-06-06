@@ -1,7 +1,7 @@
 import type { ColorInformation } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 export function register({ sourceFiles }: TsApiRegisterOptions) {
 	return (uri: string) => {
@@ -15,7 +15,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 			const result: ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				let colors = cssLanguageService.findDocumentColors(sourceMap.mappedDocument, sourceMap.stylesheet);
 				for (const color of colors) {

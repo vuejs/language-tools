@@ -4,7 +4,7 @@ import type {
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (uri: string, positions: Position[]) => {
@@ -43,8 +43,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 					for (const htmlRange of sourceMap.getMappedRanges(position)) {
 						const selectRanges = sourceMap.language === 'html'
-							? languageServices.html.getSelectionRanges(sourceMap.mappedDocument, [htmlRange.start])
-							: languageServices.pug.getSelectionRanges(sourceMap.pugDocument, [htmlRange.start])
+							? sharedLs.htmlLs.getSelectionRanges(sourceMap.mappedDocument, [htmlRange.start])
+							: sharedLs.pugLs.getSelectionRanges(sourceMap.pugDocument, [htmlRange.start])
 						for (const selectRange of selectRanges) {
 							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
 							if (vueRange) {
@@ -63,7 +63,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			let result: SelectionRange[] = [];
 			for (const position of positions) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
-					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+					const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 					if (!cssLanguageService || !sourceMap.stylesheet) continue;
 					for (const cssRange of sourceMap.getMappedRanges(position)) {
 						const selectRanges = cssLanguageService.getSelectionRanges(sourceMap.mappedDocument, [cssRange.start], sourceMap.stylesheet);

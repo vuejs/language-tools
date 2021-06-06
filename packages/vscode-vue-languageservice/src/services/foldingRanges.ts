@@ -1,21 +1,20 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
 import { FoldingRange } from 'vscode-languageserver/node';
 import { createSourceFile } from '../sourceFile';
-import { getCheapTsService2 } from '../utils/languageServices';
+import { getDummyTsLs } from '../utils/sharedLs';
 import { notEmpty } from '@volar/shared';
 import type { HtmlApiRegisterOptions } from '../types';
 
 export function register({ ts }: HtmlApiRegisterOptions) {
-	return (_document: TextDocument) => {
-		const tsService2 = getCheapTsService2(ts, _document);
-		let document = TextDocument.create(tsService2.uri, _document.languageId, _document.version, _document.getText());
-		let uriTsDocumentMap = new Map();
-		const sourceFile = createSourceFile(document, tsService2.service, ts, undefined, uriTsDocumentMap);
+	return (document: TextDocument) => {
 
+		let uriTsDocumentMap = new Map();
+		const dummyTsLs = getDummyTsLs(ts, document);
+		const sourceFile = createSourceFile(document, dummyTsLs, ts, undefined, uriTsDocumentMap);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
@@ -41,7 +40,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 					+ content.split('\n').map(line => ' '.repeat(line.length)).join('\n')
 					+ docTextWithoutBlocks.substring(block.loc.end);
 			}
-			return languageServices.html.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
+			return sharedLs.htmlLs.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
 		}
 		function getTsResult(sourceFile: SourceFile) {
 			const tsSourceMaps = [
@@ -54,8 +53,8 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const cheapTs = getCheapTsService2(ts, sourceMap.mappedDocument);
-				const foldingRanges = cheapTs.service.getFoldingRanges(cheapTs.uri);
+				const dummyTsLs = getDummyTsLs(ts, sourceMap.mappedDocument);
+				const foldingRanges = dummyTsLs.getFoldingRanges(sourceMap.mappedDocument.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}
 			return result;
@@ -64,7 +63,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService) continue;
 				const foldingRanges = cssLanguageService.getFoldingRanges(sourceMap.mappedDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));

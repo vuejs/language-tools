@@ -7,7 +7,7 @@ import {
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 
 export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 	return (uri: string) => {
@@ -114,7 +114,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let symbols = languageServices.html.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument);
+				let symbols = sharedLs.htmlLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument);
 				if (!symbols) continue;
 				for (const s of symbols) {
 					const vueRange = sourceMap.getSourceRange(s.location.range.start, s.location.range.end);
@@ -132,7 +132,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+				const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLanguageService || !sourceMap.stylesheet) continue;
 				let symbols = cssLanguageService.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
 				if (!symbols) continue;

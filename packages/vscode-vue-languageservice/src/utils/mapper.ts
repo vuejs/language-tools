@@ -14,7 +14,7 @@ import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
 import type { SourceFile } from '../sourceFile';
 import type * as ts from 'typescript';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from './sharedLs';
 import { fsPathToUri, uriToFsPath } from '@volar/shared';
 import { Range as MapedRange } from '@volar/source-map';
 
@@ -57,7 +57,7 @@ export function createMapper(
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
-                        const cssLs = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+                        const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
                         if (!cssLs || !sourceMap.stylesheet) continue;
                         for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
@@ -116,7 +116,7 @@ export function createMapper(
                                 textDocument: sourceMap.mappedDocument,
                                 htmlDocument: sourceMap.htmlDocument,
                                 range: cssRange,
-                                languageService: languageServices.html,
+                                languageService: sharedLs.htmlLs,
                             });
                         }
                     }
@@ -127,7 +127,7 @@ export function createMapper(
                                 textDocument: sourceMap.mappedDocument,
                                 pugDocument: sourceMap.pugDocument,
                                 range: cssRange,
-                                languageService: languageServices.pug,
+                                languageService: sharedLs.pugLs,
                             });
                         }
                     }

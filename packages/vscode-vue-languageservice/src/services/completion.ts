@@ -18,7 +18,7 @@ import { CompletionContext, CompletionTriggerKind } from 'vscode-languageserver/
 import { SourceFile } from '../sourceFile';
 import type { TsApiRegisterOptions } from '../types';
 import { CompletionData } from '../types';
-import * as languageServices from '../utils/languageServices';
+import * as sharedLs from '../utils/sharedLs';
 import * as getEmbeddedDocument from './embeddedDocument';
 
 export const triggerCharacter = {
@@ -362,7 +362,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					tags,
 					globalAttributes,
 				});
-				languageServices.html.setDataProviders(true, [dataProvider]);
+				sharedLs.htmlLs.setDataProviders(true, [dataProvider]);
 
 				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 					if (!result) {
@@ -372,8 +372,8 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 						};
 					}
 					const htmlResult = sourceMap.language === 'html'
-						? await languageServices.html.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
-						: await languageServices.pug.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
+						? await sharedLs.htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
+						: await sharedLs.pugLs.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -489,7 +489,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							items: [],
 						};
 					}
-					const cssLanguageService = languageServices.getCssLanguageService(sourceMap.mappedDocument.languageId);
+					const cssLanguageService = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
 					if (!cssLanguageService || !sourceMap.stylesheet) continue;
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
@@ -532,7 +532,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							items: [],
 						};
 					}
-					const jsonLs = languageServices.json;
+					const jsonLs = sharedLs.jsonLs;
 					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.jsonDocument);
 					if (!jsonResult) continue;
 					if (jsonResult.isIncomplete) {
@@ -559,8 +559,8 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 						version: 1.1,
 						tags: vueTags,
 					});
-					languageServices.html.setDataProviders(false, [dataProvider]);
-					return await languageServices.html.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
+					sharedLs.htmlLs.setDataProviders(false, [dataProvider]);
+					return await sharedLs.htmlLs.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
 				}
 			}
 		}

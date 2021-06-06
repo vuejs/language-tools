@@ -7,7 +7,7 @@ import * as upath from 'upath';
 import type * as ts from 'typescript';
 import * as ts2 from 'vscode-typescript-languageservice';
 import { DocumentContext, HTMLDocument } from 'vscode-html-languageservice';
-import * as languageServices from './utils/languageServices';
+import * as sharedLs from './utils/sharedLs';
 import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';
 import { createMapper } from './utils/mapper';
 import * as tsPluginApis from './tsPluginApis';
@@ -75,7 +75,7 @@ export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
 				return cacheHtmlDoc;
 			}
 		}
-		const htmlDoc = languageServices.html.parseHTMLDocument(document);
+		const htmlDoc = sharedLs.htmlLs.parseHTMLDocument(document);
 		cache.set(document.uri, [document.version, htmlDoc]);
 		return htmlDoc;
 	}
