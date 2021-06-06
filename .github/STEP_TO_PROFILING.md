@@ -1,4 +1,4 @@
-# Setp To Profiling
+# Step To Profiling
 
 ## Setup Chrome Inspect
 
