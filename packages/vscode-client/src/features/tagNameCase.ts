@@ -15,8 +15,10 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
         let tagCase = tagCases.get(handler.uri);
         if (tagCase === 'unsure') {
             const templateCases = await languageClient.sendRequest(GetServerNameCasesRequest.type, handler);
-            tagCase = templateCases.tag;
-            tagCases.set(handler.uri, tagCase);
+            if (templateCases) {
+                tagCase = templateCases.tag;
+                tagCases.set(handler.uri, tagCase);
+            }
         }
         if (handler.uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
             updateStatusBarText(tagCase);
@@ -70,8 +72,10 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
         }
         if (select === 3) {
             const detects = await languageClient.sendRequest(GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
-            tagCases.set(crtDoc.uri.toString(), detects.tag);
-            updateStatusBarText(detects.tag);
+            if (detects) {
+                tagCases.set(crtDoc.uri.toString(), detects.tag);
+                updateStatusBarText(detects.tag);
+            }
         }
         if (select === 7) {
             vscode.commands.executeCommand('volar.action.tagNameCase.convertToKebabCase');
@@ -114,7 +118,9 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
                     tagCase = templateCases?.tag;
                 }
             }
-            tagCases.set(newDoc.uri.toString(), tagCase);
+            if (tagCase) {
+                tagCases.set(newDoc.uri.toString(), tagCase);
+            }
             updateStatusBarText(tagCase);
             statusBar.show();
         }

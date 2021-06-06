@@ -53,7 +53,7 @@ export namespace GetServerNameCasesRequest {
 	export const type: RequestType<TextDocumentIdentifier, {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
-	}, any> = new RequestType('volar/getTagNameCaseServer');
+	} | null | undefined, any> = new RequestType('volar/getTagNameCaseServer');
 }
 export namespace GetClientAttrNameCaseRequest {
 	export const type: RequestType<TextDocumentIdentifier, 'kebabCase' | 'pascalCase', any> = new RequestType('volar/getAttrNameCaseClient');

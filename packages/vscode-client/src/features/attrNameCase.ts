@@ -57,8 +57,10 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
         }
         if (select === 6) {
             const detects = await languageClient.sendRequest(GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
-            attrCases.set(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
-            updateStatusBarText(getValidAttrCase(detects.attr));
+            if (detects) {
+                attrCases.set(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
+                updateStatusBarText(getValidAttrCase(detects.attr));
+            }
         }
     }));
 
@@ -75,18 +77,22 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
                 }
                 else {
                     const templateCases = await languageClient.sendRequest(GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
-                    attrCase = getValidAttrCase(templateCases.attr);
-                    if (templateCases.attr === 'both') {
-                        if (attrMode === 'auto-kebab') {
-                            attrCase = 'kebabCase';
-                        }
-                        else if (attrMode === 'auto-pascal') {
-                            attrCase = 'pascalCase';
+                    if (templateCases) {
+                        attrCase = getValidAttrCase(templateCases.attr);
+                        if (templateCases.attr === 'both') {
+                            if (attrMode === 'auto-kebab') {
+                                attrCase = 'kebabCase';
+                            }
+                            else if (attrMode === 'auto-pascal') {
+                                attrCase = 'pascalCase';
+                            }
                         }
                     }
                 }
             }
-            attrCases.set(newDoc.uri.toString(), attrCase ?? 'unsure');
+            if (attrCase) {
+                attrCases.set(newDoc.uri.toString(), attrCase ?? 'unsure');
+            }
             updateStatusBarText(attrCase);
             statusBar.show();
         }
