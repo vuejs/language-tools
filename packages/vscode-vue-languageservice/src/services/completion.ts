@@ -420,7 +420,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
 							vueItem.documentation = undefined;
 							vueItem.labelDetails = { qualifier: rPath };
-							vueItem.filterText = rPath;
+							vueItem.filterText = vueItem.label + ' ' + rPath;
 							vueItem.detail = rPath;
 							vueItem.kind = CompletionItemKind.File;
 							vueItem.sortText = '\u0003' + vueItem.sortText;
