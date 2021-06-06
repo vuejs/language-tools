@@ -39,7 +39,6 @@ export function createSourceFile(
 	initialDocument: TextDocument,
 	tsLanguageService: ts2.LanguageService,
 	ts: typeof import('typescript'),
-	styleMode: 'api' | 'format',
 	documentContext: DocumentContext | undefined,
 	uriTsDocumentMap: Map<string, TextDocument>
 ) {
@@ -75,7 +74,7 @@ export function createSourceFile(
 	const sfcErrors = ref<Diagnostic[]>([]);
 
 	// virtual scripts
-	const _virtualStyles = useStylesRaw(ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), styleMode, documentContext);
+	const _virtualStyles = useStylesRaw(ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), documentContext);
 	const virtualJsonBlocks = useJsonsRaw(untrack(() => vueDoc.value), computed(() => descriptor.customBlocks));
 	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template));
 	const templateData = computed<undefined | {

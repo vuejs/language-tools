@@ -12,7 +12,6 @@ export function useStylesRaw(
 	ts: typeof import('typescript'),
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
-	mode: 'api' | 'format',
 	documentContext: DocumentContext | undefined
 ) {
 	let version = 0;
@@ -32,20 +31,6 @@ export function useStylesRaw(
 			const style = styles.value[i];
 			const lang = style.lang;
 			let content = style.content;
-			if (lang === 'postcss' && mode === 'api') {
-				// TODO: this is temporarily fix, wait for https://github.com/microsoft/vscode-css-languageservice/issues/237
-				const lines = style.content.split('\n');
-				for (let i = 0; i < lines.length; i++) {
-					const line = lines[i];
-					let trimedLine = line.trim();
-					if (trimedLine.startsWith('@') && trimedLine.endsWith(';')) {
-						const offset = line.length - line.trimStart().length;
-						const parts = line.substring(offset).split(' ');
-						lines[i] = line.substring(0, offset) + parts[0] + ' ' + parts.slice(1).join('_');
-					}
-				}
-				content = lines.join('\n');
-			}
 			const documentUri = vueDoc.uri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, version++, content);
 			const linkStyles: {
