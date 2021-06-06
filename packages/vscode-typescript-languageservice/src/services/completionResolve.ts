@@ -3,14 +3,16 @@ import { CompletionItem, TextEdit } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 import { handleKindModifiers } from './completion';
+import type { Data } from './completion';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (item: CompletionItem, newOffset?: number): CompletionItem => {
-		const fileName = item.data.__volar__.fileName;
-		const offset = newOffset ?? item.data.__volar__.offset;
-		const name = item.data.__volar__.name;
-		const source = item.data.__volar__.source;
-		const options = item.data.__volar__.options;
+		const data: Data = item.data.__volar__;
+		const fileName = data.fileName;
+		const offset = newOffset ?? data.offset;
+		const name = data.name;
+		const source = data.source;
+		const options = data.options;
 		let detail: ts.CompletionEntryDetails | undefined;
 		try {
 			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, item.data);

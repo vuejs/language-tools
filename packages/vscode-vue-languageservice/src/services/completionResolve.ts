@@ -83,8 +83,8 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 			return vueItem;
 		}
 		function getAutoImportResult(sourceFile: SourceFile, vueItem: CompletionItem, data: AutoImportComponentCompletionData) {
-			const filePath = uriToFsPath(data.importUri);
-			const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
+			const importFile = uriToFsPath(data.importUri);
+			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
 			let importPath = path.relative(path.dirname(data.uri), data.importUri);
 			if (!importPath.startsWith('.')) {
 				importPath = './' + importPath;
@@ -94,21 +94,14 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 			const descriptor = sourceFile.getDescriptor();
 			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content) : undefined;
 			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content) : undefined;
-			const anyImport = scriptSetupImport ?? scriptImport;
-			let withSemicolon = true;
-			let quote = '"';
-			if (anyImport) {
-				withSemicolon = anyImport.text.endsWith(';');
-				quote = anyImport.text.includes("'") ? "'" : '"';
-			}
 			const componentName = capitalize(camelize(vueItem.label));
-			const insertText = `\nimport ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`;
 			const textDoc = sourceFile.getTextDocument();
+			const insertText = planAInsertText() ?? planBInsertText();
 			if (descriptor.scriptSetup) {
 				vueItem.additionalTextEdits = [
 					TextEdit.insert(
 						textDoc.positionAt(descriptor.scriptSetup.loc.start + (scriptSetupImport ? scriptSetupImport.end : 0)),
-						insertText,
+						'\n' + insertText,
 					),
 				];
 			}
@@ -116,7 +109,7 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 				vueItem.additionalTextEdits = [
 					TextEdit.insert(
 						textDoc.positionAt(descriptor.script.loc.start + (scriptImport ? scriptImport.end : 0)),
-						insertText,
+						'\n' + insertText,
 					),
 				];
 				const scriptAst = parseScriptAst(ts, descriptor.script.content, true, true);
@@ -148,6 +141,36 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 				}
 			}
 			return vueItem;
+
+			function planAInsertText() {
+
+				const scriptUrl = sourceFile.getVirtualScriptUri();
+				if (!scriptUrl) return;
+
+				const tsImportName = componentName + 'Vue';
+				const tsDetail = tsLanguageService.__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
+				if (tsDetail?.codeActions) {
+					for (const action of tsDetail.codeActions) {
+						for (const change of action.changes) {
+							for (const textChange of change.textChanges) {
+								if (textChange.newText.indexOf(`import ${tsImportName} `) >= 0) {
+									return textChange.newText.replace(`import ${tsImportName} `, `import ${componentName} `).trim();
+								}
+							}
+						}
+					}
+				}
+			}
+			function planBInsertText() {
+				const anyImport = scriptSetupImport ?? scriptImport;
+				let withSemicolon = true;
+				let quote = '"';
+				if (anyImport) {
+					withSemicolon = anyImport.text.endsWith(';');
+					quote = anyImport.text.includes("'") ? "'" : '"';
+				}
+				return `import ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`;
+			}
 		}
 	}
 

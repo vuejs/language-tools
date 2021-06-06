@@ -189,6 +189,7 @@ export function createSourceFile(
 			sourceMap: virtualTemplateGen.sourceMapForFormatting.value,
 		})),
 		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
+		getVirtualScriptUri: untrack(() => virtualScriptGen.textDocument.value?.uri),
 	};
 
 	function update(newVueDocument: TextDocument) {

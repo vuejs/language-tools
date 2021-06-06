@@ -11,6 +11,14 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 import * as path from 'upath';
 
+export interface Data {
+	fileName: string,
+	offset: number,
+	source: string | undefined,
+	name: string,
+	options: ts.GetCompletionsAtPositionOptions | undefined,
+}
+
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, rootDir: string) {
 	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
 		const document = getTextDocument(uri);
@@ -37,6 +45,13 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const entries = info.entries
 			.map(entry => {
+				const data: Data = {
+					fileName,
+					offset,
+					source: entry.source,
+					name: entry.name,
+					options: _options,
+				};
 				let item: CompletionItem = {
 					label: entry.name,
 					labelDetails: {
@@ -48,13 +63,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					preselect: entry.isRecommended,
 					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
 					data: {
-						__volar__: {
-							fileName,
-							offset,
-							source: entry.source,
-							name: entry.name,
-							options: _options,
-						},
+						__volar__: data,
 						...entry.data,
 					},
 				}
