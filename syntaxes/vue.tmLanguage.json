@@ -346,7 +346,7 @@
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.jsx"
+							"include": "source.js.jsx"
 						}
 					]
 				},
