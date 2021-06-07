@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.25.20
+
+fix: remove `fs-extra` to fix `at-least-node` module missing
+
 ## 0.25.19
 
 - feat: support json schema request service ([#243](https://github.com/johnsoncodehk/volar/issues/243))
