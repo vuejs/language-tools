@@ -90,13 +90,21 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 				importPath = './' + importPath;
 			}
 			vueItem.labelDetails = { qualifier: rPath };
-			vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
 			const descriptor = sourceFile.getDescriptor();
 			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content) : undefined;
 			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content) : undefined;
 			const componentName = capitalize(camelize(vueItem.label));
 			const textDoc = sourceFile.getTextDocument();
-			const insertText = planAInsertText() ?? planBInsertText();
+			let insertText = '';
+			const planAResult = planAInsertText();
+			if (planAResult) {
+				insertText = planAResult.insertText;
+				vueItem.detail = planAResult.description + '\n\n' + rPath;
+			}
+			else {
+				insertText = planBInsertText();
+				vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
+			}
 			if (descriptor.scriptSetup) {
 				vueItem.additionalTextEdits = [
 					TextEdit.insert(
@@ -147,14 +155,17 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 				const scriptUrl = sourceFile.getVirtualScriptUri();
 				if (!scriptUrl) return;
 
-				const tsImportName = componentName + 'Vue';
+				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 				const tsDetail = tsLanguageService.__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
 				if (tsDetail?.codeActions) {
 					for (const action of tsDetail.codeActions) {
 						for (const change of action.changes) {
 							for (const textChange of change.textChanges) {
 								if (textChange.newText.indexOf(`import ${tsImportName} `) >= 0) {
-									return textChange.newText.replace(`import ${tsImportName} `, `import ${componentName} `).trim();
+									return {
+										insertText: textChange.newText.replace(`import ${tsImportName} `, `import ${componentName} `).trim(),
+										description: action.description,
+									};
 								}
 							}
 						}
