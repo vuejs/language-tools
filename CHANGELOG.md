@@ -1,8 +1,14 @@
 # Changelog
 
+## 0.25.21
+
+- feat: support for typescript pnp
+- feat: improve component auto-import path calculate
+- fix: `Write Virtual Files` command not working
+
 ## 0.25.20
 
-fix: remove `fs-extra` to fix `at-least-node` module missing
+- fix: remove `fs-extra` to fix `at-least-node` module missing
 
 ## 0.25.19
 
