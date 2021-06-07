@@ -42,28 +42,20 @@ export function register(
         return servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
     });
     connection.onRequest(WriteVirtualFilesRequest.type, async () => {
-        const progress = await connection.window.createWorkDoneProgress();
-        progress.begin('Write', 0, '', true);
         for (const [_, service] of servicesManager.services) {
             const ls = service.getLanguageServiceDontCreate();
             if (!ls) continue;
             const globalDocs = ls.__internal__.getGlobalDocs();
             for (const globalDoc of globalDocs) {
-                await fs.writeFile.__promisify__(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
+                fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
             }
             const sourceFiles = ls.__internal__.getAllSourceFiles();
-            let i = 0;
             for (const sourceFile of sourceFiles) {
-                progress.report(i++ / sourceFiles.length * 100, path.relative(ls.__internal__.rootPath, uriToFsPath(sourceFile.uri)));
                 for (const [uri, doc] of sourceFile.getTsDocuments()) {
-                    if (progress.token.isCancellationRequested) {
-                        break;
-                    }
-                    await fs.writeFile.__promisify__(uriToFsPath(uri), doc.getText(), "utf8");
+                    fs.writeFile(uriToFsPath(uri), doc.getText(), () => {});
                 }
             }
         }
-        progress.done();
     });
     connection.onRequest(VerifyAllScriptsRequest.type, async () => {
 
