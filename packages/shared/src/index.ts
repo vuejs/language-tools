@@ -74,7 +74,7 @@ export function getWordRange(wordPattern: RegExp, position: Position, document: 
     return undefined;
 }
 export function loadWorkspaceTypescript(root: string, tsdk: string): typeof import('typescript/lib/tsserverlibrary') | undefined {
-    const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, 'tsserverlibrary.js') : path.join(root, tsdk, 'tsserverlibrary.js');
+    const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, 'tsserver.js') : path.join(root, tsdk, 'tsserver.js');
     if (fs.existsSync(tsPath)) {
         return require(path.toUnix(tsPath));
     }

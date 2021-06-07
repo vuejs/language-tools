@@ -1,5 +1,5 @@
 import { createLanguageService, LanguageServiceHost } from '../..';
-import * as ts from 'typescript/lib/tsserverlibrary';
+import * as ts from 'typescript/lib/tsserver';
 import * as path from 'upath';
 
 export function createTester(root: string) {
