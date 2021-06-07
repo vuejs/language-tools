@@ -10,7 +10,7 @@ import {
     VerifyAllScriptsRequest,
     WriteVirtualFilesRequest
 } from '@volar/shared';
-import * as fs from 'fs-extra';
+import * as fs from 'fs';
 import * as path from 'upath';
 import { TextDocument } from 'vscode-css-languageservice';
 import {
@@ -49,7 +49,7 @@ export function register(
             if (!ls) continue;
             const globalDocs = ls.__internal__.getGlobalDocs();
             for (const globalDoc of globalDocs) {
-                await fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
+                await fs.writeFile.__promisify__(uriToFsPath(globalDoc.uri), globalDoc.getText(), "utf8");
             }
             const sourceFiles = ls.__internal__.getAllSourceFiles();
             let i = 0;
@@ -59,7 +59,7 @@ export function register(
                     if (progress.token.isCancellationRequested) {
                         break;
                     }
-                    await fs.writeFile(uriToFsPath(uri), doc.getText(), "utf8");
+                    await fs.writeFile.__promisify__(uriToFsPath(uri), doc.getText(), "utf8");
                 }
             }
         }
