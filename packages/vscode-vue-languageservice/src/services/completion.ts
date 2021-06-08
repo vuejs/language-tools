@@ -472,6 +472,8 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					}
 					result.items = result.items.concat(vueItems);
 				}
+
+				sharedLs.htmlLs.setDataProviders(true, []);
 			}
 			return result;
 		}
