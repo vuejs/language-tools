@@ -105,7 +105,7 @@ export function register(
         const result = servicesManager
             .getMatchService(handler.textDocument.uri)
             ?.findReferences(handler.textDocument.uri, handler.position);
-        if (result && enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
+        if (result && !enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
             return result.filter(loc => loc.uri.endsWith('.vue'));
         }
         return result;
@@ -114,7 +114,7 @@ export function register(
         const result = servicesManager
             .getMatchService(handler.textDocument.uri)
             ?.findDefinition(handler.textDocument.uri, handler.position);
-        if (result && enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
+        if (result && !enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
             return (result as (Location | LocationLink)[]).filter(loc => {
                 if (Location.is(loc))
                     return loc.uri.endsWith('.vue');
