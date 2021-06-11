@@ -63,6 +63,13 @@ export function generate(html: string) {
 					}
 				}
 				else if (
+					prop.type === NodeTypes.DIRECTIVE
+					&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
+					&& prop.arg.content !== ''
+				) {
+					text += `(${prop.arg.content});\n`;
+				}
+				else if (
 					prop.type === NodeTypes.ATTRIBUTE
 					&& prop.name === 'ref'
 					&& prop.value
