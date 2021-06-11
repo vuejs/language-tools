@@ -1,8 +1,16 @@
 # Changelog
 
+## 0.25.22
+
+- feat: improve TS diagnostic message #259
+- fix: incorrect unescaping of literal strings #262
+- fix: dynamic slot name do not consume variable #263
+- fix: temporary html completion info leak to hover info
+- fix: TS definition result duplicate
+
 ## 0.25.21
 
-- feat: support for typescript pnp
+- feat: support for typescript pnp #248
 - feat: improve component auto-import path calculate
 - fix: `Write Virtual Files` command not working
 
