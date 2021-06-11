@@ -2,8 +2,9 @@ import {
 	Diagnostic,
 	DiagnosticTag,
 	DiagnosticSeverity,
+	DiagnosticRelatedInformation,
 } from 'vscode-languageserver/node';
-import { uriToFsPath } from '@volar/shared';
+import { fsPathToUri, notEmpty, uriToFsPath } from '@volar/shared';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -44,53 +45,63 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		return translateDiagnostics(document, errors);
 
 		function translateDiagnostics(document: TextDocument, input: readonly ts.Diagnostic[]) {
-			let output: Diagnostic[] = [];
+			return input.map(diag => translateDiagnostic(diag, document)).filter(notEmpty);
+		}
+		function translateDiagnostic(diag: ts.Diagnostic, document: TextDocument): Diagnostic | undefined {
 
-			for (const diag of input) {
-				if (diag.start === undefined) continue;
-				if (diag.length === undefined) continue;
+			if (!diag.start) return;
+			if (!diag.length) return;
 
-				const diagnostic: Diagnostic = {
+			const diagnostic: Diagnostic = {
+				range: {
+					start: document.positionAt(diag.start),
+					end: document.positionAt(diag.start + diag.length),
+				},
+				severity: translateErrorType(diag.category),
+				source: 'ts',
+				code: diag.code,
+				message: getMessageText(diag),
+			};
+
+			if (diag.relatedInformation) {
+				diagnostic.relatedInformation = diag.relatedInformation
+					.map(rErr => translateDiagnosticRelated(rErr))
+					.filter(notEmpty);
+			}
+			if (diag.reportsUnnecessary) {
+				if (diagnostic.tags === undefined) diagnostic.tags = [];
+				diagnostic.tags.push(DiagnosticTag.Unnecessary);
+			}
+			if (diag.reportsDeprecated) {
+				if (diagnostic.tags === undefined) diagnostic.tags = [];
+				diagnostic.tags.push(DiagnosticTag.Deprecated);
+			}
+
+			return diagnostic;
+		}
+		function translateDiagnosticRelated(diag: ts.Diagnostic): DiagnosticRelatedInformation | undefined {
+
+			if (!diag.start) return;
+			if (!diag.length) return;
+
+			let document: TextDocument | undefined;
+			if (diag.file) {
+				document = getTextDocument(fsPathToUri(diag.file.fileName));
+			}
+			if (!document) return;
+
+			const diagnostic: DiagnosticRelatedInformation = {
+				location: {
+					uri: document.uri,
 					range: {
 						start: document.positionAt(diag.start),
 						end: document.positionAt(diag.start + diag.length),
 					},
-					severity: translateErrorType(diag.category),
-					source: 'ts',
-					code: diag.code,
-					message: getMessageText(diag),
-				};
+				},
+				message: getMessageText(diag),
+			};
 
-				if (diag.reportsUnnecessary) {
-					if (diagnostic.tags === undefined) diagnostic.tags = [];
-					diagnostic.tags.push(DiagnosticTag.Unnecessary);
-				}
-				if (diag.reportsDeprecated) {
-					if (diagnostic.tags === undefined) diagnostic.tags = [];
-					diagnostic.tags.push(DiagnosticTag.Deprecated);
-				}
-
-				output.push(diagnostic);
-				function getMessageText(diag: ts.Diagnostic | ts.DiagnosticMessageChain, level = 0) {
-					let messageText = '  '.repeat(level);
-
-					if (typeof diag.messageText === 'string') {
-						messageText += diag.messageText;
-					}
-					else {
-						messageText += diag.messageText.messageText;
-						if (diag.messageText.next) {
-							for (const info of diag.messageText.next) {
-								messageText += '\n' + getMessageText(info, level + 1);
-							}
-						}
-					}
-
-					return messageText;
-				}
-			}
-
-			return output;
+			return diagnostic;
 		}
 		function translateErrorType(input: ts.DiagnosticCategory): DiagnosticSeverity {
 			switch (input) {
@@ -103,6 +114,23 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	};
 }
 
+function getMessageText(diag: ts.Diagnostic | ts.DiagnosticMessageChain, level = 0) {
+	let messageText = '  '.repeat(level);
+
+	if (typeof diag.messageText === 'string') {
+		messageText += diag.messageText;
+	}
+	else {
+		messageText += diag.messageText.messageText;
+		if (diag.messageText.next) {
+			for (const info of diag.messageText.next) {
+				messageText += '\n' + getMessageText(info, level + 1);
+			}
+		}
+	}
+
+	return messageText;
+}
 export function getEmitDeclarations(compilerOptions: ts.CompilerOptions): boolean {
 	return !!(compilerOptions.declaration || compilerOptions.composite);
 }

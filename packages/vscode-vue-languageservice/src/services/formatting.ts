@@ -17,7 +17,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 	return (document: TextDocument, options: FormattingOptions) => {
 
 		const dummyTs = sharedServices.getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap);
+		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap, () => []);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();

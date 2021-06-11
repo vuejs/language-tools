@@ -14,7 +14,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 
 		let uriTsDocumentMap = new Map();
 		const dummyTs = getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap);
+		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap, () => []);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);

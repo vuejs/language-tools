@@ -13,12 +13,13 @@ import {
 	DiagnosticSeverity,
 	DiagnosticTag,
 	Range,
+	Position,
 	DiagnosticRelatedInformation
 } from 'vscode-languageserver/node';
 import { IDescriptor, ITemplateScriptData } from './types';
 import * as dedupe from './utils/dedupe';
 import * as sharedLs from './utils/sharedLs';
-import { SourceMap, TsSourceMap } from './utils/sourceMaps';
+import { SourceMap, TsMappingData, TsSourceMap } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { useScriptMain } from './virtuals/main';
 import { useScriptSetupGen } from './virtuals/script';
@@ -41,7 +42,12 @@ export function createSourceFile(
 	tsLanguageService: ts2.LanguageService,
 	ts: typeof import('typescript'),
 	documentContext: DocumentContext | undefined,
-	uriTsDocumentMap: Map<string, TextDocument>
+	uriTsDocumentMap: Map<string, TextDocument>,
+	tsLocToVueLoc: (tsUri: string, tsStart: Position, tsEnd?: Position | undefined) => {
+		textDocument: TextDocument;
+		range: Range;
+		data?: TsMappingData;
+	}[]
 ) {
 	// sources
 	const tsProjectVersion = ref<string>();
@@ -927,23 +933,12 @@ export function createSourceFile(
 					if (vueError.relatedInformation) {
 						const vueInfos: DiagnosticRelatedInformation[] = [];
 						for (const info of vueError.relatedInformation) {
-							 // TODO: find external relatedInformation errors
 							const vueInfoRange = findVueRange(info.location.uri, info.location.range);
 							if (vueInfoRange) {
 								vueInfos.push({
 									location: {
-										uri: vueUri,
+										uri: vueInfoRange.uri,
 										range: vueInfoRange,
-									},
-									message: info.message,
-								});
-							}
-							else {
-								// TODO: remove this
-								vueInfos.push({
-									location: {
-										uri: vueUri,
-										range: vueRange,
 									},
 									message: info.message,
 								});
@@ -958,27 +953,41 @@ export function createSourceFile(
 
 			function findVueRange(virtualUri: string, virtualRange: Range) {
 				for (const sourceMap of sourceMaps) {
-					if (sourceMap.mappedDocument.uri !== virtualUri)
-						continue;
-					const vueRange = sourceMap.getSourceRange(virtualRange.start, virtualRange.end);
-					if (!vueRange || !vueRange.data.capabilities.diagnostic)
-						continue;
-					return vueRange;
+					if (sourceMap.mappedDocument.uri === virtualUri) {
+
+						const vueRange = sourceMap.getSourceRange(virtualRange.start, virtualRange.end);
+						if (vueRange && vueRange.data.capabilities.diagnostic) {
+							return {
+								uri: vueUri,
+								start: vueRange.start,
+								end: vueRange.end,
+							};
+						}
+
+						// patching for ref sugar
+						// TODO: move to source map
+						const vueStartRange = sourceMap.getSourceRange(virtualRange.start);
+						if (vueStartRange && vueStartRange.data.capabilities.diagnostic) {
+							const vueEndRange = sourceMap.getSourceRange(virtualRange.end);
+							if (vueStartRange && vueEndRange && vueStartRange.data.capabilities.diagnostic && vueEndRange.data.capabilities.diagnostic) {
+								return {
+									uri: vueUri,
+									start: vueStartRange.start,
+									end: vueEndRange.start,
+								};
+							}
+						}
+					}
 				}
-				// patching for ref sugar
-				for (const sourceMap of sourceMaps) {
-					if (sourceMap.mappedDocument.uri !== virtualUri)
-						continue;
-					const vueStartRange = sourceMap.getSourceRange(virtualRange.start);
-					if (!vueStartRange || !vueStartRange.data.capabilities.diagnostic)
-						continue;
-					const vueEndRange = sourceMap.getSourceRange(virtualRange.end);
-					if (!vueEndRange || !vueEndRange.data.capabilities.diagnostic)
-						continue;
-					return {
-						start: vueStartRange.start,
-						end: vueEndRange.start,
-					};
+				const vueLocs = tsLocToVueLoc(virtualUri, virtualRange.start, virtualRange.end);
+				for (const vueLoc of vueLocs) {
+					if (!vueLoc.data || vueLoc.data.capabilities.diagnostic) {
+						return {
+							uri: vueLoc.textDocument.uri,
+							start: vueLoc.range.start,
+							end: vueLoc.range.end,
+						};
+					}
 				}
 			}
 		}
