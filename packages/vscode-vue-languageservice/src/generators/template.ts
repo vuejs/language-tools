@@ -879,7 +879,7 @@ export function generate(
 
 		function writeAttrValue(attrNode: vueDom.TextNode | undefined) {
 			if (attrNode) {
-				tsCodeGen.addText('`');
+				tsCodeGen.addText('"');
 				let start = attrNode.loc.start.offset;
 				let end = attrNode.loc.end.offset;
 				if (end - start > attrNode.content.length) {
@@ -887,7 +887,7 @@ export function generate(
 					end--;
 				}
 				writeCode(
-					attrNode.content.replace(/`/g, '\\`'),
+					toUnicode(attrNode.content),
 					{ start, end },
 					SourceMaps.Mode.Offset,
 					{
@@ -895,7 +895,7 @@ export function generate(
 						capabilities: capabilitiesSet.all
 					},
 				);
-				tsCodeGen.addText('` as const');
+				tsCodeGen.addText('" as const');
 			}
 			else {
 				tsCodeGen.addText('true as const');
@@ -1193,7 +1193,7 @@ export function generate(
 				prop.type === NodeTypes.ATTRIBUTE
 				&& prop.name !== 'name' // slot name
 			) {
-				const propValue = prop.value !== undefined ? `\`${prop.value.content.replace(/`/g, '\\`')}\`` : 'true';
+				const propValue = prop.value !== undefined ? `"${toUnicode(prop.value.content)}"` : 'true';
 				writeObjectProperty(
 					prop.name,
 					{
@@ -1371,6 +1371,15 @@ export function generate(
 	}
 };
 
+function toUnicode(str: string) {
+	return str.split('').map(value => {
+		var temp = value.charCodeAt(0).toString(16).padStart(4, '0');
+		if (temp.length > 2) {
+			return '\\u' + temp;
+		}
+		return value;
+	}).join('');
+}
 function unHyphenatComponentName(newName: string) {
 	return camelize('-' + newName);
 }
