@@ -12,7 +12,8 @@ import {
 	Diagnostic,
 	DiagnosticSeverity,
 	DiagnosticTag,
-	Range
+	Range,
+	DiagnosticRelatedInformation
 } from 'vscode-languageserver/node';
 import { IDescriptor, ITemplateScriptData } from './types';
 import * as dedupe from './utils/dedupe';
@@ -917,40 +918,69 @@ export function createSourceFile(
 		function toTsSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
 			const result: Diagnostic[] = [];
 			for (const error of errors) {
-				let found = false;
-				for (const sourceMap of sourceMaps) {
-					if (sourceMap.mappedDocument.uri !== virtualScriptUri)
-						continue;
-					const vueRange = sourceMap.getSourceRange(error.range.start, error.range.end);
-					if (!vueRange || !vueRange.data.capabilities.diagnostic)
-						continue;
-					result.push({
+				const vueRange = findVueRange(virtualScriptUri, error.range);
+				if (vueRange) {
+					const vueError: Diagnostic = {
 						...error,
 						range: vueRange,
-					});
-					found = true;
-				}
-				if (!found) { // patching for ref sugar
-					for (const sourceMap of sourceMaps) {
-						if (sourceMap.mappedDocument.uri !== virtualScriptUri)
-							continue;
-						const vueStartRange = sourceMap.getSourceRange(error.range.start);
-						if (!vueStartRange || !vueStartRange.data.capabilities.diagnostic)
-							continue;
-						const vueEndRange = sourceMap.getSourceRange(error.range.end);
-						if (!vueEndRange || !vueEndRange.data.capabilities.diagnostic)
-							continue;
-						result.push({
-							...error,
-							range: {
-								start: vueStartRange.start,
-								end: vueEndRange.start,
-							},
-						});
+					};
+					if (vueError.relatedInformation) {
+						const vueInfos: DiagnosticRelatedInformation[] = [];
+						for (const info of vueError.relatedInformation) {
+							 // TODO: find external relatedInformation errors
+							const vueInfoRange = findVueRange(info.location.uri, info.location.range);
+							if (vueInfoRange) {
+								vueInfos.push({
+									location: {
+										uri: vueUri,
+										range: vueInfoRange,
+									},
+									message: info.message,
+								});
+							}
+							else {
+								// TODO: remove this
+								vueInfos.push({
+									location: {
+										uri: vueUri,
+										range: vueRange,
+									},
+									message: info.message,
+								});
+							}
+						}
+						vueError.relatedInformation = vueInfos;
 					}
+					result.push(vueError);
 				}
 			}
 			return result;
+
+			function findVueRange(virtualUri: string, virtualRange: Range) {
+				for (const sourceMap of sourceMaps) {
+					if (sourceMap.mappedDocument.uri !== virtualUri)
+						continue;
+					const vueRange = sourceMap.getSourceRange(virtualRange.start, virtualRange.end);
+					if (!vueRange || !vueRange.data.capabilities.diagnostic)
+						continue;
+					return vueRange;
+				}
+				// patching for ref sugar
+				for (const sourceMap of sourceMaps) {
+					if (sourceMap.mappedDocument.uri !== virtualUri)
+						continue;
+					const vueStartRange = sourceMap.getSourceRange(virtualRange.start);
+					if (!vueStartRange || !vueStartRange.data.capabilities.diagnostic)
+						continue;
+					const vueEndRange = sourceMap.getSourceRange(virtualRange.end);
+					if (!vueEndRange || !vueEndRange.data.capabilities.diagnostic)
+						continue;
+					return {
+						start: vueStartRange.start,
+						end: vueEndRange.start,
+					};
+				}
+			}
 		}
 	}
 	function useComponentCompletionData() {

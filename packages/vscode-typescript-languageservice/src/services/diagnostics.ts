@@ -58,7 +58,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					severity: translateErrorType(diag.category),
 					source: 'ts',
 					code: diag.code,
-					message: typeof diag.messageText === 'string' ? diag.messageText : diag.messageText.messageText,
+					message: getMessageText(diag),
 				};
 
 				if (diag.reportsUnnecessary) {
@@ -71,6 +71,23 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				}
 
 				output.push(diagnostic);
+				function getMessageText(diag: ts.Diagnostic | ts.DiagnosticMessageChain, level = 0) {
+					let messageText = '  '.repeat(level);
+
+					if (typeof diag.messageText === 'string') {
+						messageText += diag.messageText;
+					}
+					else {
+						messageText += diag.messageText.messageText;
+						if (diag.messageText.next) {
+							for (const info of diag.messageText.next) {
+								messageText += '\n' + getMessageText(info, level + 1);
+							}
+						}
+					}
+
+					return messageText;
+				}
 			}
 
 			return output;
