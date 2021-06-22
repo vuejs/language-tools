@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 
 export type Ast = ReturnType<typeof parse>;
 
-export function parse(ts: typeof import('typescript'), content: string) {
+export function parse(ts: typeof import('typescript'), content: string, lang: string) {
     const labels: {
         start: number,
         end: number,
@@ -64,7 +64,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
     let defineEmit: typeof defineProps;
     const dollars: number[] = [];
 
-    const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
+    const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
 
     sourceFile.forEachChild(node => {
         if (ts.isVariableStatement(node)) {
@@ -258,7 +258,7 @@ export function parse(ts: typeof import('typescript'), content: string) {
     }
 }
 
-export function parse2(ts: typeof import('typescript'), content: string) {
+export function parse2(ts: typeof import('typescript'), content: string, lang: string) {
     const refCalls: {
         start: number,
         end: number,
@@ -284,7 +284,7 @@ export function parse2(ts: typeof import('typescript'), content: string) {
         end: number,
     }[] = [];
 
-    const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
+    const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
     sourceFile.forEachChild(visitNode);
 
     return {

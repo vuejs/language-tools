@@ -3,7 +3,7 @@ import { getStartEnd } from './scriptSetupAst';
 
 export type Ast = ReturnType<typeof parse>;
 
-export function parse(ts: typeof import('typescript'), content: string, withComponentOption = false, withNode = false) {
+export function parse(ts: typeof import('typescript'), content: string, lang: string, withComponentOption = false, withNode = false) {
 
     let exportDefault: {
         start: number,
@@ -20,7 +20,7 @@ export function parse(ts: typeof import('typescript'), content: string, withComp
         componentsOptionNode: ts.ObjectLiteralExpression | undefined,
     } | undefined;
 
-    const sourceFile = ts.createSourceFile('', content, ts.ScriptTarget.Latest);
+    const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
     sourceFile.forEachChild(node => {
         if (ts.isExportAssignment(node)) {
             let obj: ts.ObjectLiteralExpression | undefined;

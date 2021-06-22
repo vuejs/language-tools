@@ -91,8 +91,8 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 			}
 			vueItem.labelDetails = { qualifier: rPath };
 			const descriptor = sourceFile.getDescriptor();
-			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content) : undefined;
-			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content) : undefined;
+			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content, descriptor.script.lang) : undefined;
+			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content, descriptor.scriptSetup.lang) : undefined;
 			const componentName = capitalize(camelize(vueItem.label));
 			const textDoc = sourceFile.getTextDocument();
 			let insertText = '';
@@ -120,7 +120,7 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 						'\n' + insertText,
 					),
 				];
-				const scriptAst = parseScriptAst(ts, descriptor.script.content, true, true);
+				const scriptAst = parseScriptAst(ts, descriptor.script.content, descriptor.script.lang, true, true);
 				const exportDefault = scriptAst.exportDefault;
 				if (exportDefault) {
 					const printer = ts.createPrinter();
@@ -185,8 +185,8 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 		}
 	}
 
-	function getLastImportNode(code: string) {
-		const sourceFile = ts.createSourceFile('', code, ts.ScriptTarget.Latest);
+	function getLastImportNode(code: string, lang: string) {
+		const sourceFile = ts.createSourceFile('foo.' + lang, code, ts.ScriptTarget.Latest);
 		let importNode: ts.ImportDeclaration | undefined;
 		sourceFile.forEachChild(node => {
 			if (ts.isImportDeclaration(node)) {

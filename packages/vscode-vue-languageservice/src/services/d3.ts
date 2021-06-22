@@ -8,6 +8,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as references from './references';
 import * as definitions from './definition';
 import type * as ts from 'typescript';
+import { languageIdToSyntax } from '@volar/shared';
 
 export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
 
@@ -60,7 +61,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualCode = sourceMap.mappedDocument.getText();
-				const scriptAst = ts.createSourceFile('', virtualCode, ts.ScriptTarget.Latest);
+				const scriptAst = ts.createSourceFile('foo.' + languageIdToSyntax(sourceMap.mappedDocument.languageId), virtualCode, ts.ScriptTarget.Latest);
 
 				nodeWalker(scriptAst);
 
@@ -205,7 +206,7 @@ export function register({ ts, sourceFiles, tsLanguageService }: TsApiRegisterOp
 		else if (tsDoc) {
 			// TODO: extract to function
 			const virtualCode = tsDoc.getText();
-			const scriptAst = ts.createSourceFile('', virtualCode, ts.ScriptTarget.Latest);
+			const scriptAst = ts.createSourceFile('foo.' + languageIdToSyntax(tsDoc.languageId), virtualCode, ts.ScriptTarget.Latest);
 
 			nodeWalker(scriptAst, tsDoc);
 

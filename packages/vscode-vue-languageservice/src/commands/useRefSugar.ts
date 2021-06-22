@@ -24,7 +24,7 @@ export async function execute(
     const descriptor = sourceFile.getDescriptor();
     if (!descriptor.scriptSetup) return;
 
-    const genData2 = parse2(ts, descriptor.scriptSetup.content);
+    const genData2 = parse2(ts, descriptor.scriptSetup.content, descriptor.scriptSetup.lang);
 
     let edits: TextEdit[] = [];
     let varsNum = 0;

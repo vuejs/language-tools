@@ -22,12 +22,12 @@ export function useScriptSetupGen(
 
 	const scriptAst = computed(() =>
 		script.value
-			? parseScriptAst(ts, script.value.content)
+			? parseScriptAst(ts, script.value.content, script.value.lang)
 			: undefined
 	);
 	const scriptSetupAst = computed(() =>
 		scriptSetup.value
-			? parseScriptSetupAst(ts, scriptSetup.value.content)
+			? parseScriptSetupAst(ts, scriptSetup.value.content, scriptSetup.value.lang)
 			: undefined
 	);
 	const codeGen = computed(() =>
