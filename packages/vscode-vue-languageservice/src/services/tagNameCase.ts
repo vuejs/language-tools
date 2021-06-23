@@ -1,8 +1,8 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import { hyphenate } from '@vue/shared';
 import { SourceFile } from '../sourceFile';
 
-export function register({ sourceFiles }: TsApiRegisterOptions) {
+export function register({ sourceFiles }: ApiLanguageServiceContext) {
 	return (uri: string): {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'pascalCase' | 'unsure',

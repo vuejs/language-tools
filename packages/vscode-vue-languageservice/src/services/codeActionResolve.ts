@@ -1,10 +1,10 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import type { CodeAction } from 'vscode-languageserver-types';
 import { tsEditToVueEdit } from './rename';
 
-export function register({ tsLanguageService, mapper }: TsApiRegisterOptions) {
+export function register({ tsLs, mapper }: ApiLanguageServiceContext) {
 	return (codeAction: CodeAction) => {
-		codeAction = tsLanguageService.doCodeActionResolve(codeAction);
+		codeAction = tsLs.doCodeActionResolve(codeAction);
 		if (codeAction.edit) {
 			codeAction.edit = tsEditToVueEdit(codeAction.edit, mapper, () => true);
 		}

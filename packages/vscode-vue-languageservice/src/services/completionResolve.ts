@@ -1,14 +1,14 @@
 import { transformCompletionItem } from '@volar/transforms';
 import { CompletionItem, MarkupKind, TextEdit, Range } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';
 import { uriToFsPath } from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parse as parseScriptAst } from '../parsers/scriptAst';
 
-export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceContext) {
 	return (item: CompletionItem, newOffset?: number) => {
 
 		const data: CompletionData | undefined = item.data;
@@ -41,7 +41,7 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 						break;
 					}
 				}
-				data.tsItem = tsLanguageService.doCompletionResolve(data.tsItem, newTsOffset);
+				data.tsItem = tsLs.doCompletionResolve(data.tsItem, newTsOffset);
 				const newVueItem = transformCompletionItem(
 					data.tsItem,
 					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
@@ -59,7 +59,7 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 			let tsItem: CompletionItem | undefined = data.tsItem;
 			if (!tsItem) return vueItem;
 
-			tsItem = tsLanguageService.doCompletionResolve(tsItem);
+			tsItem = tsLs.doCompletionResolve(tsItem);
 			vueItem.tags = [...vueItem.tags ?? [], ...tsItem.tags ?? []];
 
 			const details: string[] = [];
@@ -156,7 +156,7 @@ export function register({ sourceFiles, tsLanguageService, ts, vueHost }: TsApiR
 				if (!scriptUrl) return;
 
 				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-				const tsDetail = tsLanguageService.__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
+				const tsDetail = tsLs.__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
 				if (tsDetail?.codeActions) {
 					for (const action of tsDetail.codeActions) {
 						for (const change of action.changes) {

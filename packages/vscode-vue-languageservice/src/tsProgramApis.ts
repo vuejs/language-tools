@@ -1,8 +1,8 @@
-import type { TsApiRegisterOptions } from './types';
+import type { ApiLanguageServiceContext } from './types';
 import * as ts from 'typescript';
 import { fsPathToUri, normalizeFileName } from '@volar/shared';
 
-export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions) {
+export function register({ mapper, tsLs, ts }: ApiLanguageServiceContext) {
 
     return {
         getRootFileNames,
@@ -14,7 +14,7 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
 
     function getRootFileNames() {
         return getProgram().getRootFileNames()
-            .filter(fileName => tsLanguageService.__internal__.host.fileExists?.(fileName));
+            .filter(fileName => tsLs.__internal__.host.fileExists?.(fileName));
     }
     function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.DiagnosticWithLocation[] {
         const result = getProgram().getSyntacticDiagnostics(sourceFile, cancellationToken);
@@ -36,7 +36,7 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
         };
     }
     function getProgram() {
-        const program = tsLanguageService.__internal__.raw.getProgram();
+        const program = tsLs.__internal__.raw.getProgram();
         if (!program) throw '!program';
         return program;
     }
@@ -50,7 +50,7 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                 && diagnostic.start !== undefined
                 && diagnostic.length !== undefined
             ) {
-                const fileName = normalizeFileName(tsLanguageService.__internal__.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
+                const fileName = normalizeFileName(tsLs.__internal__.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
                 let checkMode: 'all' | 'none' | 'unused' = 'all';
                 if (mode) {
                     const uri = fsPathToUri(fileName);
@@ -66,7 +66,7 @@ export function register({ mapper, tsLanguageService, ts }: TsApiRegisterOptions
                     diagnostic.start,
                     diagnostic.start + diagnostic.length,
                 )) {
-                    if (!tsLanguageService.__internal__.host.fileExists?.(tsOrVueRange.fileName)) continue;
+                    if (!tsLs.__internal__.host.fileExists?.(tsOrVueRange.fileName)) continue;
                     if (!tsOrVueRange.data || tsOrVueRange.data.capabilities.diagnostic) {
                         const file = tsOrVueRange.fileName === fileName
                             ? diagnostic.file

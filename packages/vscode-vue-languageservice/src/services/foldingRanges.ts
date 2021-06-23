@@ -1,20 +1,20 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
-import * as sharedLs from '../utils/sharedLs';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
 import { FoldingRange } from 'vscode-languageserver/node';
 import { createSourceFile } from '../sourceFile';
 import { getDummyTsLs } from '../utils/sharedLs';
 import { notEmpty } from '@volar/shared';
-import type { HtmlApiRegisterOptions } from '../types';
+import type { HtmlLanguageServiceContext } from '../types';
 
-export function register({ ts }: HtmlApiRegisterOptions) {
+export function register(context: HtmlLanguageServiceContext) {
+	const { ts, htmlLs, getCssLs } = context;
 	return (document: TextDocument) => {
 
 		let uriTsDocumentMap = new Map();
 		const dummyTs = getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap, () => []);
+		const sourceFile = createSourceFile(document, dummyTs.ls, uriTsDocumentMap, context);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
@@ -40,7 +40,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 					+ content.split('\n').map(line => ' '.repeat(line.length)).join('\n')
 					+ docTextWithoutBlocks.substring(block.loc.end);
 			}
-			return sharedLs.htmlLs.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
+			return htmlLs.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
 		}
 		function getTsResult(sourceFile: SourceFile) {
 			const tsSourceMaps = [
@@ -63,7 +63,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 			let result: FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
-				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs) continue;
 				const foldingRanges = cssLs.getFoldingRanges(sourceMap.mappedDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));

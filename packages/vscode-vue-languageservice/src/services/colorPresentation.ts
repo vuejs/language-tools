@@ -5,10 +5,9 @@ import {
 	TextEdit
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
-import * as sharedLs from '../utils/sharedLs';
+import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles }: TsApiRegisterOptions) {
+export function register({ sourceFiles, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string, color: Color, range: Range) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -19,7 +18,7 @@ export function register({ sourceFiles }: TsApiRegisterOptions) {
 		function getCssResult(sourceFile: SourceFile) {
 			let result: ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;
 				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const cssRange of cssRanges) {

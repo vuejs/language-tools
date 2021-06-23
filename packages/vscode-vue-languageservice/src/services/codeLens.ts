@@ -1,7 +1,7 @@
 import type { CodeLens, Range } from 'vscode-languageserver';
 import { Commands } from '../commands';
 import type { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 
 export const options = {
 	references: true,
@@ -9,7 +9,7 @@ export const options = {
 	scriptSetupTool: true,
 };
 
-export function register({ sourceFiles }: TsApiRegisterOptions) {
+export function register({ sourceFiles }: ApiLanguageServiceContext) {
 	return (uri: string) => {
 
 		const sourceFile = sourceFiles.get(uri);

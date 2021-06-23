@@ -1,13 +1,13 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor } from '../types';
+import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as sharedLs from '../utils/sharedLs';
 
 export function useTemplateRaw(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
+	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
@@ -22,7 +22,7 @@ export function useTemplateRaw(
 	});
 	const htmlDocument = computed(() => {
 		if (textDocument.value?.languageId === 'html') {
-			return sharedLs.htmlLs.parseHTMLDocument(textDocument.value);
+			return context.htmlLs.parseHTMLDocument(textDocument.value);
 		}
 	});
 	const htmlSourceMap = computed(() => {
@@ -50,7 +50,7 @@ export function useTemplateRaw(
 	});
 	const pugDocument = computed(() => {
 		if (textDocument.value?.languageId === 'jade') {
-			return sharedLs.pugLs.parsePugDocument(textDocument.value);
+			return context.pugLs.parsePugDocument(textDocument.value);
 		}
 	});
 	const pugSourceMap = computed(() => {

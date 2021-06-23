@@ -6,10 +6,9 @@ import {
 	SymbolKind
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
-import * as sharedLs from '../utils/sharedLs';
+import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs, htmlLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -92,7 +91,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
-				let symbols = tsLanguageService.findWorkspaceSymbols(sourceMap.mappedDocument.uri);
+				let symbols = tsLs.findWorkspaceSymbols(sourceMap.mappedDocument.uri);
 				for (const s of symbols) {
 					const vueRange = sourceMap.getSourceRange(s.location.range.start, s.location.range.end);
 					if (vueRange) {
@@ -114,7 +113,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				let symbols = sharedLs.htmlLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument);
+				let symbols = htmlLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument);
 				if (!symbols) continue;
 				for (const s of symbols) {
 					const vueRange = sourceMap.getSourceRange(s.location.range.start, s.location.range.end);
@@ -132,7 +131,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			const result: SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;
 				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
 				if (!symbols) continue;

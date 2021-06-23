@@ -1,9 +1,9 @@
 import type { Hover, LocationLink, Position } from 'vscode-languageserver/node';
 import { MarkupContent } from 'vscode-languageserver/node';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import { register as registerFindDefinitions } from './definition';
 
-export function register({ mapper }: TsApiRegisterOptions) {
+export function register({ mapper, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
 
 	const findDefinitions = registerFindDefinitions(arguments[0]);
 
@@ -82,12 +82,12 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		// vue -> html
 		for (const htmlRange of mapper.html.to(uri, position)) {
 			const htmlHover = htmlRange.language === 'html'
-				? htmlRange.languageService.doHover(
+				? htmlLs.doHover(
 					htmlRange.textDocument,
 					htmlRange.range.start,
 					htmlRange.htmlDocument,
 				)
-				: htmlRange.languageService.doHover(
+				: pugLs.doHover(
 					htmlRange.pugDocument,
 					htmlRange.range.start,
 				)
@@ -113,11 +113,13 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		let result: Hover | undefined;
 
 		// vue -> css
-		for (const cssMaped of mapper.css.to(uri, position)) {
-			const cssHover = cssMaped.languageService.doHover(
-				cssMaped.textDocument,
-				cssMaped.range.start,
-				cssMaped.stylesheet,
+		for (const cssRange of mapper.css.to(uri, position)) {
+			const cssLs = getCssLs(cssRange.textDocument.languageId);
+			if (!cssLs) continue;
+			const cssHover = cssLs.doHover(
+				cssRange.textDocument,
+				cssRange.range.start,
+				cssRange.stylesheet,
 			);
 			if (!cssHover)
 				continue;
@@ -126,7 +128,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				continue;
 			}
 			// css -> vue
-			for (const vueRange of mapper.css.from(cssMaped.textDocument.uri, cssHover.range.start, cssHover.range.end)) {
+			for (const vueRange of mapper.css.from(cssRange.textDocument.uri, cssHover.range.start, cssHover.range.end)) {
 				result = {
 					...cssHover,
 					range: vueRange.range,

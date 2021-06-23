@@ -6,15 +6,11 @@ import type { TeleportSideData } from '../utils/sourceMaps';
 import type { TsMappingData } from '../utils/sourceMaps';
 import type { TsSourceMap } from '../utils/sourceMaps';
 import type { LanguageService as TsLanguageService } from 'vscode-typescript-languageservice';
-import type { LanguageService as CssLanguageService } from 'vscode-css-languageservice';
-import type { LanguageService as HtmlLanguageService } from 'vscode-html-languageservice';
-import type { LanguageService as PugLanguageService } from 'vscode-pug-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
 import type { SourceFile } from '../sourceFile';
 import type * as ts from 'typescript';
-import * as sharedLs from './sharedLs';
 import { fsPathToUri, uriToFsPath } from '@volar/shared';
 import { Range as MapedRange } from '@volar/source-map';
 
@@ -52,20 +48,17 @@ export function createMapper(
                     textDocument: TextDocument,
                     stylesheet: Stylesheet,
                     range: Range,
-                    languageService: CssLanguageService,
                 }[] = [];
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
                     for (const sourceMap of sourceFile.getCssSourceMaps()) {
-                        const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
-                        if (!cssLs || !sourceMap.stylesheet) continue;
+                        if (!sourceMap.stylesheet) continue;
                         for (const cssRange of sourceMap.getMappedRanges(vueStart, vueEnd)) {
                             result.push({
                                 sourceMap: sourceMap,
                                 textDocument: sourceMap.mappedDocument,
                                 stylesheet: sourceMap.stylesheet,
                                 range: cssRange,
-                                languageService: cssLs,
                             });
                         }
                     }
@@ -99,13 +92,11 @@ export function createMapper(
                     textDocument: TextDocument,
                     htmlDocument: HTMLDocument,
                     range: Range,
-                    languageService: HtmlLanguageService,
                 } | {
                     language: 'pug',
                     textDocument: TextDocument,
                     pugDocument: PugDocument,
                     range: Range,
-                    languageService: PugLanguageService,
                 })[] = [];
                 const sourceFile = sourceFiles.get(vueUri);
                 if (sourceFile) {
@@ -116,7 +107,6 @@ export function createMapper(
                                 textDocument: sourceMap.mappedDocument,
                                 htmlDocument: sourceMap.htmlDocument,
                                 range: cssRange,
-                                languageService: sharedLs.htmlLs,
                             });
                         }
                     }
@@ -127,7 +117,6 @@ export function createMapper(
                                 textDocument: sourceMap.mappedDocument,
                                 pugDocument: sourceMap.pugDocument,
                                 range: cssRange,
-                                languageService: sharedLs.pugLs,
                             });
                         }
                     }

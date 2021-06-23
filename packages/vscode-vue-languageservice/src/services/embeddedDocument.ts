@@ -1,10 +1,10 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import type { Range } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceMap } from '../utils/sourceMaps';
 
-export function register({ sourceFiles }: TsApiRegisterOptions) {
+export function register({ sourceFiles }: ApiLanguageServiceContext) {
 	return (uri: string, range: Range): {
 		language: string,
 		document: TextDocument | undefined,

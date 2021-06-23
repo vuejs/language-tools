@@ -7,6 +7,7 @@ import * as attrNameCase from './features/attrNameCase';
 import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentVersion from './features/documentVersion';
+import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as restart from './features/restart';
 import * as semanticTokens from './features/semanticTokens';
@@ -36,6 +37,8 @@ export async function activate(context: vscode.ExtensionContext) {
 	callGraph.activate(context, apiClient);
 	showReferences.activate(context, apiClient);
 	documentVersion.activate(context, docClient);
+	documentContent.activate(context, apiClient);
+	documentContent.activate(context, docClient);
 	activeSelection.activate(context, apiClient);
 	verifyAll.activate(context, docClient);
 	virtualFiles.activate(context, docClient);

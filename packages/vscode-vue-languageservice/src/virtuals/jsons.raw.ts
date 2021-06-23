@@ -1,13 +1,13 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor } from '../types';
+import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as sharedLs from '../utils/sharedLs';
 import * as json from 'vscode-json-languageservice';
 
 export function useJsonsRaw(
 	getUnreactiveDoc: () => TextDocument,
 	customBlocks: Ref<IDescriptor['customBlocks']>,
+	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
@@ -27,7 +27,7 @@ export function useJsonsRaw(
 				documents.push({
 					index: i,
 					textDocument: document,
-					jsonDocument: sharedLs.jsonLs.parseJSONDocument(document),
+					jsonDocument: context.jsonLs.parseJSONDocument(document),
 				});
 			}
 		}

@@ -1,8 +1,8 @@
-import type { TsApiRegisterOptions } from './types';
+import type { ApiLanguageServiceContext } from './types';
 import type * as ts from 'typescript';
 import { notEmpty } from '@volar/shared';
 
-export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ mapper, tsLs }: ApiLanguageServiceContext) {
 
     return {
         getCompletionsAtPosition,
@@ -17,7 +17,7 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
 
     // apis
     function getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ReturnType<ts.LanguageService['getCompletionsAtPosition']> {
-        const info = tsLanguageService.__internal__.raw.getCompletionsAtPosition(fileName, position, options);
+        const info = tsLs.__internal__.raw.getCompletionsAtPosition(fileName, position, options);
         if (!info) return;
         return {
             ...info,
@@ -54,11 +54,11 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
         return symbols.map(transformDocumentSpanLike).filter(notEmpty);
 
         function withTeleports(fileName: string, position: number) {
-            const _symbols = mode === 'definition' ? tsLanguageService.__internal__.raw.getDefinitionAtPosition(fileName, position)
-                : mode === 'typeDefinition' ? tsLanguageService.__internal__.raw.getTypeDefinitionAtPosition(fileName, position)
-                    : mode === 'references' ? tsLanguageService.__internal__.raw.getReferencesAtPosition(fileName, position)
-                        : mode === 'implementation' ? tsLanguageService.__internal__.raw.getImplementationAtPosition(fileName, position)
-                            : mode === 'rename' ? tsLanguageService.__internal__.raw.findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename)
+            const _symbols = mode === 'definition' ? tsLs.__internal__.raw.getDefinitionAtPosition(fileName, position)
+                : mode === 'typeDefinition' ? tsLs.__internal__.raw.getTypeDefinitionAtPosition(fileName, position)
+                    : mode === 'references' ? tsLs.__internal__.raw.getReferencesAtPosition(fileName, position)
+                        : mode === 'implementation' ? tsLs.__internal__.raw.getImplementationAtPosition(fileName, position)
+                            : mode === 'rename' ? tsLs.__internal__.raw.findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename)
                                 : undefined;
             if (!_symbols) return;
             symbols = symbols.concat(_symbols);
@@ -91,7 +91,7 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
         };
 
         function withTeleports(fileName: string, position: number) {
-            const _symbols = tsLanguageService.__internal__.raw.getDefinitionAndBoundSpan(fileName, position);
+            const _symbols = tsLs.__internal__.raw.getDefinitionAndBoundSpan(fileName, position);
             if (!_symbols) return;
             if (!textSpan) {
                 textSpan = _symbols.textSpan;
@@ -118,7 +118,7 @@ export function register({ mapper, tsLanguageService }: TsApiRegisterOptions) {
         return symbols.map(transformReferencedSymbol).filter(notEmpty);
 
         function withTeleports(fileName: string, position: number) {
-            const _symbols = tsLanguageService.__internal__.raw.findReferences(fileName, position);
+            const _symbols = tsLs.__internal__.raw.findReferences(fileName, position);
             if (!_symbols) return;
             symbols = symbols.concat(_symbols);
             for (const symbol of _symbols) {

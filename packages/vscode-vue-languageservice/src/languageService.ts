@@ -5,10 +5,8 @@ import { getGlobalDoc } from './virtuals/global';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
-import * as ts2 from 'vscode-typescript-languageservice';
 import { DocumentContext, HTMLDocument } from 'vscode-html-languageservice';
-import * as sharedLs from './utils/sharedLs';
-import { HtmlApiRegisterOptions, TsApiRegisterOptions } from './types';
+import { HtmlLanguageServiceContext, ApiLanguageServiceContext } from './types';
 import { createMapper } from './utils/mapper';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
@@ -43,11 +41,19 @@ import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
 import { UriMap } from '@volar/shared';
 import type * as emmet from 'vscode-emmet-helper';
+// context
+import * as fs from 'fs';
+import * as css from 'vscode-css-languageservice';
+import * as html from 'vscode-html-languageservice';
+import * as json from 'vscode-json-languageservice';
+import * as pug from 'vscode-pug-languageservice';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
+	schemaRequestService?: json.SchemaRequestService,
 };
 export type Dependencies = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
@@ -57,15 +63,15 @@ export type Dependencies = {
 
 export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
 	const cache = new Map<string, [number, HTMLDocument]>();
-	const options: HtmlApiRegisterOptions = {
-		ts,
+	const context: HtmlLanguageServiceContext = {
+		...createContext(ts),
 		getHtmlDocument,
 	};
 	return {
-		doFormatting: formatting.register(options),
-		getFoldingRanges: foldingRanges.register(options),
-		doTagComplete: autoClose.register(options),
-		findLinkedEditingRanges: linkedEditingRanges.register(options),
+		doFormatting: formatting.register(context),
+		getFoldingRanges: foldingRanges.register(context),
+		doTagComplete: autoClose.register(context),
+		findLinkedEditingRanges: linkedEditingRanges.register(context),
 	}
 	function getHtmlDocument(document: TextDocument) {
 		const _cache = cache.get(document.uri);
@@ -75,7 +81,7 @@ export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
 				return cacheHtmlDoc;
 			}
 		}
-		const htmlDoc = sharedLs.htmlLs.parseHTMLDocument(document);
+		const htmlDoc = context.htmlLs.parseHTMLDocument(document);
 		cache.set(document.uri, [document.version, htmlDoc]);
 		return htmlDoc;
 	}
@@ -97,8 +103,8 @@ export function createLanguageService(
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
 
-	const tsLanguageServiceHost = createTsLanguageServiceHost();
-	const tsLanguageService = ts2.createLanguageService(tsLanguageServiceHost, ts);
+	const tsLsHost = createTsLanguageServiceHost();
+	const tsLs = ts2.createLanguageService(tsLsHost, ts);
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: DocumentContext = {
@@ -134,30 +140,29 @@ export function createLanguageService(
 		},
 	}
 
-	const mapper = createMapper(sourceFiles, tsLanguageService, getTextDocument);
-	const options: TsApiRegisterOptions = {
-		ts: ts,
-		sourceFiles,
-		tsLanguageService,
+	const context: ApiLanguageServiceContext = {
+		...createContext(ts, vueHost),
 		vueHost,
-		mapper,
+		sourceFiles,
+		tsLs,
+		mapper: createMapper(sourceFiles, tsLs, getTextDocument),
 		documentContext,
 	};
-	const _callHierarchy = callHierarchy.register(options);
-	const findDefinition = definitions.register(options);
-	const renames = rename.register(options);
+	const _callHierarchy = callHierarchy.register(context);
+	const findDefinition = definitions.register(context);
+	const renames = rename.register(context);
 
 	// ts plugin proxy
-	const _tsPluginApis = tsPluginApis.register(options);
+	const _tsPluginApis = tsPluginApis.register(context);
 	const tsPlugin: Partial<ts.LanguageService> = {
-		getSemanticDiagnostics: apiHook(tsLanguageService.__internal__.raw.getSemanticDiagnostics, false),
-		getEncodedSemanticClassifications: apiHook(tsLanguageService.__internal__.raw.getEncodedSemanticClassifications, false),
+		getSemanticDiagnostics: apiHook(tsLs.__internal__.raw.getSemanticDiagnostics, false),
+		getEncodedSemanticClassifications: apiHook(tsLs.__internal__.raw.getEncodedSemanticClassifications, false),
 		getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-		getCompletionEntryDetails: apiHook(tsLanguageService.__internal__.raw.getCompletionEntryDetails, false), // not sure
-		getCompletionEntrySymbol: apiHook(tsLanguageService.__internal__.raw.getCompletionEntrySymbol, false), // not sure
-		getQuickInfoAtPosition: apiHook(tsLanguageService.__internal__.raw.getQuickInfoAtPosition, false),
-		getSignatureHelpItems: apiHook(tsLanguageService.__internal__.raw.getSignatureHelpItems, false),
-		getRenameInfo: apiHook(tsLanguageService.__internal__.raw.getRenameInfo, false),
+		getCompletionEntryDetails: apiHook(tsLs.__internal__.raw.getCompletionEntryDetails, false), // not sure
+		getCompletionEntrySymbol: apiHook(tsLs.__internal__.raw.getCompletionEntrySymbol, false), // not sure
+		getQuickInfoAtPosition: apiHook(tsLs.__internal__.raw.getQuickInfoAtPosition, false),
+		getSignatureHelpItems: apiHook(tsLs.__internal__.raw.getSignatureHelpItems, false),
+		getRenameInfo: apiHook(tsLs.__internal__.raw.getRenameInfo, false),
 		findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
 		getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
 		getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
@@ -181,10 +186,10 @@ export function createLanguageService(
 	};
 
 	// ts program proxy
-	const tsProgram = tsLanguageService.__internal__.raw.getProgram();
+	const tsProgram = tsLs.__internal__.raw.getProgram();
 	if (!tsProgram) throw '!tsProgram';
 
-	const tsProgramApis_2 = tsProgramApis.register(options);
+	const tsProgramApis_2 = tsProgramApis.register(context);
 	const tsProgramApis_3: Partial<typeof tsProgram> = {
 		emit: apiHook(tsProgramApis_2.emit),
 		getRootFileNames: apiHook(tsProgramApis_2.getRootFileNames),
@@ -199,9 +204,9 @@ export function createLanguageService(
 	});
 
 	return {
-		doValidation: apiHook(diagnostics.register(options)),
+		doValidation: apiHook(diagnostics.register(context)),
 		findDefinition: apiHook(findDefinition.on),
-		findReferences: apiHook(references.register(options)),
+		findReferences: apiHook(references.register(context)),
 		findTypeDefinition: apiHook(findDefinition.onType),
 		callHierarchy: {
 			doPrepare: apiHook(_callHierarchy.doPrepare),
@@ -211,24 +216,24 @@ export function createLanguageService(
 		prepareRename: apiHook(renames.prepareRename),
 		doRename: apiHook(renames.doRename),
 		getEditsForFileRename: apiHook(renames.onRenameFile, false),
-		getSemanticTokens: apiHook(semanticTokens.register(options)),
+		getSemanticTokens: apiHook(semanticTokens.register(context)),
 
-		doHover: apiHook(hover.register(options), getShouldUpdateTemplateScript),
-		doComplete: apiHook(completions.register(options), getShouldUpdateTemplateScript),
+		doHover: apiHook(hover.register(context), getShouldUpdateTemplateScript),
+		doComplete: apiHook(completions.register(context), getShouldUpdateTemplateScript),
 
-		getCodeActions: apiHook(codeActions.register(options), false),
-		doCodeActionResolve: apiHook(codeActionResolve.register(options), false),
-		doCompletionResolve: apiHook(completionResolve.register(options), false),
-		doCodeLensResolve: apiHook(codeLensResolve.register(options), false),
-		getSignatureHelp: apiHook(signatureHelp.register(options), false),
-		getSelectionRanges: apiHook(selectionRanges.register(options), false),
-		getColorPresentations: apiHook(colorPresentations.register(options), false),
-		getCodeLens: apiHook(codeLens.register(options), false),
-		findDocumentHighlights: apiHook(documentHighlight.register(options), false),
-		findDocumentSymbols: apiHook(documentSymbol.register(options), false),
-		findDocumentLinks: apiHook(documentLink.register(options), false),
-		findDocumentColors: apiHook(documentColor.register(options), false),
-		dispose: tsLanguageService.dispose,
+		getCodeActions: apiHook(codeActions.register(context), false),
+		doCodeActionResolve: apiHook(codeActionResolve.register(context), false),
+		doCompletionResolve: apiHook(completionResolve.register(context), false),
+		doCodeLensResolve: apiHook(codeLensResolve.register(context), false),
+		getSignatureHelp: apiHook(signatureHelp.register(context), false),
+		getSelectionRanges: apiHook(selectionRanges.register(context), false),
+		getColorPresentations: apiHook(colorPresentations.register(context), false),
+		getCodeLens: apiHook(codeLens.register(context), false),
+		findDocumentHighlights: apiHook(documentHighlight.register(context), false),
+		findDocumentSymbols: apiHook(documentSymbol.register(context), false),
+		findDocumentLinks: apiHook(documentLink.register(context), false),
+		findDocumentColors: apiHook(documentColor.register(context), false),
+		dispose: tsLs.dispose,
 
 		__internal__: {
 			rootPath: vueHost.getCurrentDirectory(),
@@ -239,17 +244,17 @@ export function createLanguageService(
 			},
 			getTextDocument,
 			checkProject: apiHook(() => {
-				const vueImportErrors = tsLanguageService.doValidation(globalDoc.uri, { semantic: true });
+				const vueImportErrors = tsLs.doValidation(globalDoc.uri, { semantic: true });
 				return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
 			}),
-			getTsService: () => tsLanguageService,
+			getTsService: () => tsLs,
 			getGlobalDocs: () => [globalDoc],
 			getSourceFile: apiHook(getSourceFile),
 			getAllSourceFiles: apiHook(getAllSourceFiles),
-			getD3: apiHook(d3.register(options)),
-			executeCommand: apiHook(executeCommand.register(options, references.register(options))),
-			detectTagNameCase: apiHook(tagNameCase.register(options)),
-			doRefAutoClose: apiHook(refAutoClose.register(options), false),
+			getD3: apiHook(d3.register(context)),
+			executeCommand: apiHook(executeCommand.register(context, references.register(context))),
+			detectTagNameCase: apiHook(tagNameCase.register(context)),
+			doRefAutoClose: apiHook(refAutoClose.register(context), false),
 		},
 	};
 
@@ -268,13 +273,13 @@ export function createLanguageService(
 		return false;
 
 		function isInTemplate() {
-			const tsRanges = mapper.ts.to(uri, pos);
+			const tsRanges = context.mapper.ts.to(uri, pos);
 			for (const tsRange of tsRanges) {
 				if (tsRange.data.vueTag === 'template') {
 					return true;
 				}
 			}
-			const htmlRanges = mapper.html.to(uri, pos);
+			const htmlRanges = context.mapper.html.to(uri, pos);
 			if (htmlRanges.length) {
 				return true;
 			}
@@ -506,7 +511,7 @@ export function createLanguageService(
 		if (documents.has(uri)) {
 			return documents.get(uri);
 		}
-		return tsLanguageService.__internal__.getTextDocument(uri);
+		return tsLs.__internal__.getTextDocument(uri);
 	}
 	function getSourceFile(uri: string) {
 		return sourceFiles.get(uri);
@@ -530,11 +535,9 @@ export function createLanguageService(
 			if (!sourceFile) {
 				sourceFiles.set(uri, createSourceFile(
 					doc,
-					tsLanguageService,
-					ts,
-					options.documentContext,
+					tsLs,
 					uriTsDocumentMap,
-					mapper.ts.from,
+					context,
 				));
 				vueScriptsUpdated = true;
 			}
@@ -587,6 +590,79 @@ export function createLanguageService(
 		tsProjectVersion++;
 		if (!isTemplateUpdate) {
 			tsProjectVersionWithoutTemplate++;
+		}
+	}
+}
+function createContext(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	vueHost?: LanguageServiceHost,
+) {
+	const fileSystemProvider: html.FileSystemProvider = {
+		stat: (uri) => {
+			return new Promise<html.FileStat>((resolve, reject) => {
+				fs.stat(uriToFsPath(uri), (err, stats) => {
+					if (stats) {
+						resolve({
+							type: stats.isFile() ? html.FileType.File
+								: stats.isDirectory() ? html.FileType.Directory
+									: stats.isSymbolicLink() ? html.FileType.SymbolicLink
+										: html.FileType.Unknown,
+							ctime: stats.ctimeMs,
+							mtime: stats.mtimeMs,
+							size: stats.size,
+						});
+					}
+					else {
+						reject(err);
+					}
+				});
+			});
+		},
+		readDirectory: (uri) => {
+			return new Promise<[string, html.FileType][]>((resolve, reject) => {
+				fs.readdir(uriToFsPath(uri), (err, files) => {
+					if (files) {
+						resolve(files.map(file => [file, html.FileType.File]));
+					}
+					else {
+						reject(err);
+					}
+				});
+			});
+		},
+	}
+	const htmlLs = html.getLanguageService({ fileSystemProvider });
+	const cssLs = css.getCSSLanguageService({ fileSystemProvider });
+	const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
+	const lessLs = css.getLESSLanguageService({ fileSystemProvider });
+	const pugLs = pug.getLanguageService(htmlLs);
+	const jsonLs = json.getLanguageService({ schemaRequestService: vueHost?.schemaRequestService });
+	const postcssLs: css.LanguageService = {
+		...scssLs,
+		doValidation: (document, stylesheet, documentSettings) => {
+			let errors = scssLs.doValidation(document, stylesheet, documentSettings);
+			errors = errors.filter(error => error.code !== 'css-semicolonexpected');
+			errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
+			errors = errors.filter(error => error.code !== 'unknownAtRules');
+			return errors;
+		},
+	};
+
+	return {
+		ts,
+		htmlLs,
+		pugLs,
+		jsonLs,
+		getCssLs,
+		vueHost,
+	};
+
+	function getCssLs(lang: string) {
+		switch (lang) {
+			case 'css': return cssLs;
+			case 'scss': return scssLs;
+			case 'less': return lessLs;
+			case 'postcss': return postcssLs;
 		}
 	}
 }

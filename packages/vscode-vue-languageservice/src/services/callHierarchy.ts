@@ -7,10 +7,10 @@ import type {
 	Position,
 	Range
 } from 'vscode-languageserver/node';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 	function doPrepare(uri: string, position: Position) {
 		let vueItems: CallHierarchyItem[] = [];
 
@@ -38,7 +38,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	}
 	function getIncomingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
-		const tsIncomingItems = tsItems.map(tsLanguageService.callHierarchy.getIncomingCalls).flat();
+		const tsIncomingItems = tsItems.map(tsLs.callHierarchy.getIncomingCalls).flat();
 		const vueIncomingItems: CallHierarchyIncomingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
 			const vueResult = toVueCallHierarchyItem(tsIncomingItem.from, tsIncomingItem.fromRanges);
@@ -53,7 +53,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 	}
 	function getOutgoingCalls(item: CallHierarchyItem) {
 		const tsItems = tsTsCallHierarchyItem(item);
-		const tsIncomingItems = tsItems.map(tsLanguageService.callHierarchy.getOutgoingCalls).flat();
+		const tsIncomingItems = tsItems.map(tsLs.callHierarchy.getOutgoingCalls).flat();
 		const vueIncomingItems: CallHierarchyOutgoingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
 			const vueResult = toVueCallHierarchyItem(tsIncomingItem.to, tsIncomingItem.fromRanges);
@@ -75,7 +75,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 	function worker(tsDocUri: string, tsPos: Position) {
 		const vueOrTsItems: CallHierarchyItem[] = [];
-		const tsItems = tsLanguageService.callHierarchy.doPrepare(tsDocUri, tsPos);
+		const tsItems = tsLs.callHierarchy.doPrepare(tsDocUri, tsPos);
 		for (const tsItem of tsItems) {
 			const result = toVueCallHierarchyItem(tsItem, []);
 			if (!result) continue;

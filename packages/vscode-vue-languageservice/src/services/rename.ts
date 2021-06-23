@@ -1,4 +1,4 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import type { Position } from 'vscode-languageserver/node';
 import type { WorkspaceEdit } from 'vscode-languageserver/node';
 import * as dedupe from '../utils/dedupe';
@@ -12,7 +12,7 @@ import { wordPatterns } from './completion';
 import { getWordRange } from '@volar/shared';
 import { TsMappingData } from '../utils/sourceMaps';
 
-export function register({ mapper }: TsApiRegisterOptions) {
+export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 
 	return {
 		prepareRename: (uri: string, position: Position) => {
@@ -174,7 +174,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// vue -> css
 		for (const cssRange of mapper.css.to(uri, position)) {
-			const cssWorkspaceEdit = cssRange.languageService.doRename(
+			const cssLs = getCssLs(cssRange.textDocument.languageId);
+			if (!cssLs) continue;
+			const cssWorkspaceEdit = cssLs.doRename(
 				cssRange.textDocument,
 				cssRange.range.start,
 				newName,
@@ -245,7 +247,7 @@ export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: Workspac
 		}
 	}
 }
-export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: TsApiRegisterOptions['mapper'], isValidRange: (data?: TsMappingData) => boolean) {
+export function tsEditToVueEdit(tsResult: WorkspaceEdit, mapper: ApiLanguageServiceContext['mapper'], isValidRange: (data?: TsMappingData) => boolean) {
 	const vueResult: WorkspaceEdit = {};
 	let hasResult = false;
 

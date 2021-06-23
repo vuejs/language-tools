@@ -173,6 +173,7 @@ export function createServicesManager(
 				onFileUpdated,
 				_onProjectFilesUpdate,
 				await connection.window.createWorkDoneProgress(),
+				connection,
 			));
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {

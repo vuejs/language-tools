@@ -16,9 +16,8 @@ import {
 } from 'vscode-languageserver';
 import { CompletionContext, CompletionTriggerKind } from 'vscode-languageserver/node';
 import { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import { CompletionData } from '../types';
-import * as sharedLs from '../utils/sharedLs';
 import * as getEmbeddedDocument from './embeddedDocument';
 
 export const triggerCharacter = {
@@ -91,7 +90,7 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ sourceFiles, tsLanguageService, documentContext, vueHost }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost }: ApiLanguageServiceContext) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -194,7 +193,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 						};
 					}
 					const quotePreference = tsRange.data.vueTag === 'template' ? 'single' : 'auto';
-					let tsItems = tsLanguageService.doComplete(sourceMap.mappedDocument.uri, tsRange.start, {
+					let tsItems = tsLs.doComplete(sourceMap.mappedDocument.uri, tsRange.start, {
 						quotePreference,
 						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
 						includeCompletionsForImportStatements: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
@@ -362,7 +361,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					tags,
 					globalAttributes,
 				});
-				sharedLs.htmlLs.setDataProviders(true, [dataProvider]);
+				htmlLs.setDataProviders(true, [dataProvider]);
 
 				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 					if (!result) {
@@ -372,8 +371,8 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 						};
 					}
 					const htmlResult = sourceMap.language === 'html'
-						? await sharedLs.htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
-						: await sharedLs.pugLs.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
+						? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
+						: await pugLs.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -473,7 +472,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 					result.items = result.items.concat(vueItems);
 				}
 
-				sharedLs.htmlLs.setDataProviders(true, []);
+				htmlLs.setDataProviders(true, []);
 			}
 			return result;
 		}
@@ -491,7 +490,7 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							items: [],
 						};
 					}
-					const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 					if (!cssLs || !sourceMap.stylesheet) continue;
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
@@ -534,7 +533,6 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 							items: [],
 						};
 					}
-					const jsonLs = sharedLs.jsonLs;
 					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.jsonDocument);
 					if (!jsonResult) continue;
 					if (jsonResult.isIncomplete) {
@@ -561,8 +559,8 @@ export function register({ sourceFiles, tsLanguageService, documentContext, vueH
 						version: 1.1,
 						tags: vueTags,
 					});
-					sharedLs.htmlLs.setDataProviders(false, [dataProvider]);
-					return await sharedLs.htmlLs.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
+					htmlLs.setDataProviders(false, [dataProvider]);
+					return await htmlLs.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
 				}
 			}
 		}

@@ -2,6 +2,8 @@ import { xhr, XHRResponse, getErrorStatusDescription } from 'request-light';
 import { URI as Uri } from 'vscode-uri';
 import * as fs from 'fs';
 import type * as json from 'vscode-json-languageservice';
+import type { Connection } from 'vscode-languageserver';
+import { VSCodeContentRequest } from '@volar/shared';
 
 function getHTTPRequestService(): json.SchemaRequestService {
     return (uri: string, _encoding?: string) => {
@@ -31,7 +33,7 @@ function getFileRequestService(): json.SchemaRequestService {
 const http = getHTTPRequestService();
 const file = getFileRequestService();
 
-export function getSchemaRequestService(handledSchemas: string[] = ['https', 'http', 'file']) {
+export function getSchemaRequestService(connection: Connection, handledSchemas: string[] = ['https', 'http', 'file']) {
     const builtInHandlers: { [protocol: string]: json.SchemaRequestService | undefined } = {};
     for (let protocol of handledSchemas) {
         if (protocol === 'file') {
@@ -48,12 +50,10 @@ export function getSchemaRequestService(handledSchemas: string[] = ['https', 'ht
             return builtInHandler(uri);
         }
 
-        // TODO
-        // return connection.sendRequest(VSCodeContentRequest.type, uri).then(responseText => {
-        //     return responseText;
-        // }, error => {
-        //     return Promise.reject(error.message);
-        // });
-        return new Promise(resolve => resolve(''));
+        return connection.sendRequest(VSCodeContentRequest.type, uri).then(responseText => {
+            return responseText;
+        }, error => {
+            return Promise.reject(error.message);
+        });
     };
 }

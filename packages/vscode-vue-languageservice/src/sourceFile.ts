@@ -5,7 +5,6 @@ import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
 import * as css from 'vscode-css-languageservice';
 import * as json from 'vscode-json-languageservice';
-import type { DocumentContext } from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
 	CompletionItem,
@@ -13,13 +12,11 @@ import {
 	DiagnosticSeverity,
 	DiagnosticTag,
 	Range,
-	Position,
 	DiagnosticRelatedInformation
 } from 'vscode-languageserver/node';
-import { IDescriptor, ITemplateScriptData } from './types';
+import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from './types';
 import * as dedupe from './utils/dedupe';
-import * as sharedLs from './utils/sharedLs';
-import { SourceMap, TsMappingData, TsSourceMap } from './utils/sourceMaps';
+import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { useScriptMain } from './virtuals/main';
 import { useScriptSetupGen } from './virtuals/script';
@@ -39,15 +36,9 @@ export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(
 	initialDocument: TextDocument,
-	tsLanguageService: ts2.LanguageService,
-	ts: typeof import('typescript'),
-	documentContext: DocumentContext | undefined,
+	tsLs: ts2.LanguageService,
 	uriTsDocumentMap: Map<string, TextDocument>,
-	tsLocToVueLoc: (tsUri: string, tsStart: Position, tsEnd?: Position | undefined) => {
-		textDocument: TextDocument;
-		range: Range;
-		data?: TsMappingData;
-	}[]
+	context: LanguageServiceContext,
 ) {
 	// sources
 	const tsProjectVersion = ref<string>();
@@ -76,14 +67,14 @@ export function createSourceFile(
 		htmlElementItems: [],
 	});
 	const vueHtmlDocument = computed(() => {
-		return sharedLs.htmlLs.parseHTMLDocument(vueDoc.value);
+		return context.htmlLs.parseHTMLDocument(vueDoc.value);
 	});
 	const sfcErrors = ref<Diagnostic[]>([]);
 
 	// virtual scripts
-	const _virtualStyles = useStylesRaw(ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), documentContext);
-	const virtualJsonBlocks = useJsonsRaw(untrack(() => vueDoc.value), computed(() => descriptor.customBlocks));
-	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template));
+	const _virtualStyles = useStylesRaw(context.ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), context);
+	const virtualJsonBlocks = useJsonsRaw(untrack(() => vueDoc.value), computed(() => descriptor.customBlocks), context);
+	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), context);
 	const templateData = computed<undefined | {
 		html?: string,
 		htmlToTemplate?: (start: number, end: number) => number | undefined,
@@ -113,12 +104,13 @@ export function createSourceFile(
 		_virtualStyles.textDocuments,
 		_virtualStyles.sourceMaps,
 		templateData,
+		context,
 	);
 	const virtualStyles = {
 		textDocuments: computed(() => [virtualTemplateGen.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(notEmpty)),
 		sourceMaps: computed(() => [virtualTemplateGen.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
 	};
-	const virtualScriptGen = useScriptSetupGen(ts, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
+	const virtualScriptGen = useScriptSetupGen(context.ts, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
 	const virtualScriptRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.script));
 	const virtualScriptSetupRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
 	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
@@ -376,18 +368,18 @@ export function createSourceFile(
 		}
 	}
 	function updateTemplateScript() {
-		if (templateScriptData.projectVersion === tsLanguageService.__internal__.host.getProjectVersion?.()) {
+		if (templateScriptData.projectVersion === tsLs.__internal__.host.getProjectVersion?.()) {
 			return false;
 		}
-		templateScriptData.projectVersion = tsLanguageService.__internal__.host.getProjectVersion?.();
+		templateScriptData.projectVersion = tsLs.__internal__.host.getProjectVersion?.();
 
 		const doc = virtualScriptMain.textDocument.value;
 		const docText = doc.getText();
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
-		let components = docText.indexOf(SearchTexts.Components) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
-		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
+		let components = docText.indexOf(SearchTexts.Components) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
+		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
 
 		components = components.filter(entry => {
 			const name = entry.data.__volar__.name as string;
@@ -425,7 +417,7 @@ export function createSourceFile(
 				return 'all';
 			}
 			if (mode === 1) {
-				const tsOptions = tsLanguageService.__internal__.host.getCompilationSettings();
+				const tsOptions = tsLs.__internal__.host.getCompilationSettings();
 				const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 				return anyNoUnusedEnabled ? 'unused' : 'none';
 			}
@@ -441,7 +433,7 @@ export function createSourceFile(
 	}
 	function useDiagnostics() {
 
-		const tsOptions = tsLanguageService.__internal__.host.getCompilationSettings();
+		const tsOptions = tsLs.__internal__.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 
 		const nonTs: [{
@@ -473,7 +465,7 @@ export function createSourceFile(
 			];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
-			tsProjectVersion.value = tsLanguageService.__internal__.host.getProjectVersion?.();
+			tsProjectVersion.value = tsLs.__internal__.host.getProjectVersion?.();
 
 			// sort by cost
 			templateTs = templateTs.sort((a, b) => a[1] - b[1]);
@@ -699,7 +691,7 @@ export function createSourceFile(
 			const errors = computed(() => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const { textDocument, stylesheet } of documents.value) {
-					const cssLs = sharedLs.getCssLs(textDocument.languageId);
+					const cssLs = context.getCssLs(textDocument.languageId);
 					if (!cssLs || !stylesheet) continue;
 					const errs = cssLs.doValidation(textDocument, stylesheet);
 					if (errs) result.set(textDocument.uri, errs);
@@ -727,7 +719,7 @@ export function createSourceFile(
 			const errors = computed(async () => {
 				let result = new Map<string, css.Diagnostic[]>();
 				for (const { textDocument, jsonDocument } of documents.value) {
-					const errs = await sharedLs.jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
+					const errs = await context.jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
 						? {
 							comments: 'error',
 							trailingCommas: 'error',
@@ -769,7 +761,7 @@ export function createSourceFile(
 				const diags: Diagnostic[] = [];
 				if (
 					virtualScriptGen.textDocument.value
-					&& !tsLanguageService.__internal__.getTextDocument2(virtualScriptGen.textDocument.value.uri)
+					&& !tsLs.__internal__.getTextDocument2(virtualScriptGen.textDocument.value.uri)
 				) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script || script.content === '') continue;
@@ -800,16 +792,16 @@ export function createSourceFile(
 				const doc = document.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLanguageService.doValidation(doc.uri, { semantic: true });
+					return tsLs.doValidation(doc.uri, { semantic: true });
 				}
 				else if (mode === 2) {
-					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
+					return tsLs.doValidation(doc.uri, { syntactic: true });
 				}
 				else if (mode === 3) {
-					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
+					return tsLs.doValidation(doc.uri, { suggestion: true });
 				}
 				else if (mode === 4) {
-					return tsLanguageService.doValidation(doc.uri, { declaration: true });
+					return tsLs.doValidation(doc.uri, { declaration: true });
 				}
 				return [];
 			});
@@ -840,16 +832,16 @@ export function createSourceFile(
 				const doc = virtualTemplateGen.textDocument.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLanguageService.doValidation(doc.uri, { semantic: true });
+					return tsLs.doValidation(doc.uri, { semantic: true });
 				}
 				else if (mode === 2) {
-					return tsLanguageService.doValidation(doc.uri, { syntactic: true });
+					return tsLs.doValidation(doc.uri, { syntactic: true });
 				}
 				else if (mode === 3) {
-					return tsLanguageService.doValidation(doc.uri, { suggestion: true });
+					return tsLs.doValidation(doc.uri, { suggestion: true });
 				}
 				else if (mode === 4) {
-					return tsLanguageService.doValidation(doc.uri, { declaration: true });
+					return tsLs.doValidation(doc.uri, { declaration: true });
 				}
 				return [];
 			});
@@ -865,7 +857,7 @@ export function createSourceFile(
 					const propRights = virtualTemplateGen.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
 					for (const propRight of propRights) {
 						if (propRight.data.isAdditionalReference) continue;
-						const definitions = tsLanguageService.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.start);
+						const definitions = tsLs.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
 							if (definition.targetUri !== virtualScriptGen.textDocument.value.uri) continue;
 							result.push({
@@ -979,7 +971,7 @@ export function createSourceFile(
 						}
 					}
 				}
-				const vueLocs = tsLocToVueLoc(virtualUri, virtualRange.start, virtualRange.end);
+				const vueLocs = 'mapper' in context ? context.mapper.ts.from(virtualUri, virtualRange.start, virtualRange.end) : [];
 				for (const vueLoc of vueLocs) {
 					if (!vueLoc.data || vueLoc.data.capabilities.diagnostic) {
 						return {
@@ -1011,7 +1003,7 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							bind = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
+							bind = tsLs.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -1019,7 +1011,7 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							on = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
+							on = tsLs.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -1027,18 +1019,18 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							slot = tsLanguageService.doComplete(doc.uri, doc.positionAt(offset));
+							slot = tsLs.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					data.set(tagName, { item: tag, bind, on, slot });
 				}
-				const globalBind = tsLanguageService.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
+				const globalBind = tsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
 				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });
 			}
 			return data;
 		});
 		return () => {
-			tsProjectVersion.value = tsLanguageService.__internal__.host.getProjectVersion?.();
+			tsProjectVersion.value = tsLs.__internal__.host.getProjectVersion?.();
 			return result.value;
 		};
 	}

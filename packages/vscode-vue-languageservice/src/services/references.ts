@@ -1,9 +1,9 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import type { Position } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ mapper }: TsApiRegisterOptions) {
+export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 
 	return (uri: string, position: Position) => {
 
@@ -70,7 +70,9 @@ export function register({ mapper }: TsApiRegisterOptions) {
 
 		// vue -> css
 		for (const cssRange of mapper.css.to(uri, position)) {
-			const cssLocs = cssRange.languageService.findReferences(
+			const cssLs = getCssLs(cssRange.textDocument.languageId);
+			if (!cssLs) continue;
+			const cssLocs = cssLs.findReferences(
 				cssRange.textDocument,
 				cssRange.range.start,
 				cssRange.stylesheet,

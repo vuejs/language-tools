@@ -8,9 +8,9 @@ import { execute as executePugToHtml } from '../commands/pugToHtml';
 import { execute as executeShowReferences } from '../commands/showReferences';
 import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
 import { execute as executeUseRefSugar } from '../commands/useRefSugar';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOptions, findReferences: (uri: string, position: Position) => Location[]) {
+export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext, findReferences: (uri: string, position: Position) => Location[]) {
 
 	return async (uri: string, command: string, args: any[] | undefined, connection: Connection) => {
 
@@ -31,7 +31,7 @@ export function register({ sourceFiles, tsLanguageService, ts }: TsApiRegisterOp
 				return;
 
 			if (scriptSetupData.labels.length) {
-				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, tsLanguageService);
+				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, tsLs);
 			}
 			else {
 				executeUseRefSugar(ts, document, sourceFile, connection, findReferences);

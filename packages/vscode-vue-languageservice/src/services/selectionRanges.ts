@@ -3,10 +3,9 @@ import type {
 	SelectionRange
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
-import * as sharedLs from '../utils/sharedLs';
+import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string, positions: Position[]) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -22,7 +21,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				for (const sourceMap of sourceFile.getTsSourceMaps()) {
 					for (const tsRange of sourceMap.getMappedRanges(position)) {
 						if (!tsRange.data.capabilities.basic) continue;
-						const selectRange = tsLanguageService.getSelectionRange(sourceMap.mappedDocument.uri, tsRange.start);
+						const selectRange = tsLs.getSelectionRange(sourceMap.mappedDocument.uri, tsRange.start);
 						if (selectRange) {
 							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
 							if (vueRange) {
@@ -43,8 +42,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 					for (const htmlRange of sourceMap.getMappedRanges(position)) {
 						const selectRanges = sourceMap.language === 'html'
-							? sharedLs.htmlLs.getSelectionRanges(sourceMap.mappedDocument, [htmlRange.start])
-							: sharedLs.pugLs.getSelectionRanges(sourceMap.pugDocument, [htmlRange.start])
+							? htmlLs.getSelectionRanges(sourceMap.mappedDocument, [htmlRange.start])
+							: pugLs.getSelectionRanges(sourceMap.pugDocument, [htmlRange.start])
 						for (const selectRange of selectRanges) {
 							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
 							if (vueRange) {
@@ -63,7 +62,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			let result: SelectionRange[] = [];
 			for (const position of positions) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
-					const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 					if (!cssLs || !sourceMap.stylesheet) continue;
 					for (const cssRange of sourceMap.getMappedRanges(position)) {
 						const selectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, [cssRange.start], sourceMap.stylesheet);

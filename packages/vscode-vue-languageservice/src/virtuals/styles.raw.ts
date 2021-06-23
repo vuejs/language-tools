@@ -1,18 +1,16 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor } from '../types';
+import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as sharedLs from '../utils/sharedLs';
 import * as css from 'vscode-css-languageservice';
 import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
-import type { DocumentContext } from 'vscode-html-languageservice';
 
 export function useStylesRaw(
 	ts: typeof import('typescript'),
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
-	documentContext: DocumentContext | undefined
+	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
@@ -38,7 +36,7 @@ export function useStylesRaw(
 				stylesheet: css.Stylesheet,
 			}[] = [];
 			let stylesheet: css.Stylesheet | undefined = undefined;
-			const cssLs = sharedLs.getCssLs(lang);
+			const cssLs = context.getCssLs(lang);
 			if (cssLs) {
 				stylesheet = cssLs.parseStylesheet(document);
 				findLinks(cssLs, document, stylesheet);
@@ -52,7 +50,7 @@ export function useStylesRaw(
 			});
 
 			function findLinks(ls1: css.LanguageService, textDocument: TextDocument, stylesheet: css.Stylesheet) {
-				const links = documentContext ? ls1.findDocumentLinks(textDocument, stylesheet, documentContext) : [];
+				const links = 'documentContext' in context ? ls1.findDocumentLinks(textDocument, stylesheet, context.documentContext) : [];
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
@@ -64,7 +62,7 @@ export function useStylesRaw(
 
 					const lang = upath.extname(link.target).substr(1);
 					const doc = TextDocument.create(link.target, lang, version++, text);
-					const ls2 = sharedLs.getCssLs(lang);
+					const ls2 = context.getCssLs(lang);
 					if (!ls2) continue;
 					const stylesheet = ls2.parseStylesheet(doc);
 					linkStyles.push({

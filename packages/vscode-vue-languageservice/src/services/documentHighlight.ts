@@ -1,9 +1,8 @@
 import type { DocumentHighlight, Position } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
-import * as sharedLs from '../utils/sharedLs';
+import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string, position: Position) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -22,7 +21,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const tsRange of sourceMap.getMappedRanges(position)) {
 					if (!tsRange.data.capabilities.basic) continue;
-					const highlights = tsLanguageService.findDocumentHighlights(sourceMap.mappedDocument.uri, tsRange.start);
+					const highlights = tsLs.findDocumentHighlights(sourceMap.mappedDocument.uri, tsRange.start);
 					for (const highlight of highlights) {
 						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
 						if (vueRange) {
@@ -42,8 +41,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 
 					const highlights = sourceMap.language === 'html'
-						? sharedLs.htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
-						: sharedLs.pugLs.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
+						? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
+						: pugLs.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {
@@ -62,7 +61,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		function getCssResult(sourceFile: SourceFile) {
 			const result: DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssLs = sharedLs.getCssLs(sourceMap.mappedDocument.languageId);
+				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;
 				for (const cssRange of sourceMap.getMappedRanges(position)) {
 					const highlights = cssLs.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);

@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as sharedLs from '../utils/sharedLs';
 import * as css from 'vscode-css-languageservice';
+import { LanguageServiceContext } from '../types';
 
 export function parse(
     styleDocuments: {
@@ -11,17 +11,18 @@ export function parse(
             stylesheet: css.Stylesheet;
         }[];
     }[],
+    context: LanguageServiceContext,
 ) {
     const result = new Map<string, Map<string, Set<[number, number]>>>();
     for (const sourceMap of styleDocuments) {
         if (!sourceMap.stylesheet) continue;
-        for (const [className, offsets] of findClassNames(sourceMap.textDocument, sourceMap.stylesheet)) {
+        for (const [className, offsets] of findClassNames(sourceMap.textDocument, sourceMap.stylesheet, context)) {
             for (const offset of offsets) {
                 addClassName(sourceMap.textDocument.uri, className, offset);
             }
         }
         for (const link of sourceMap.links) {
-            for (const [className, offsets] of findClassNames(link.textDocument, link.stylesheet)) {
+            for (const [className, offsets] of findClassNames(link.textDocument, link.stylesheet, context)) {
                 for (const offset of offsets) {
                     addClassName(link.textDocument.uri, className, offset);
                 }
@@ -37,9 +38,9 @@ export function parse(
         result.get(uri)!.get(className)?.add(range);
     }
 }
-function findClassNames(doc: TextDocument, ss: css.Stylesheet) {
+function findClassNames(doc: TextDocument, ss: css.Stylesheet, context: LanguageServiceContext) {
     const result = new Map<string, Set<[number, number]>>();
-    const cssLs = sharedLs.getCssLs(doc.languageId);
+    const cssLs = context.getCssLs(doc.languageId);
     if (!cssLs) return result;
     const symbols = cssLs.findDocumentSymbols(doc, ss);
     const usedNodes = new Set<number>();

@@ -1,9 +1,9 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { Location } from 'vscode-languageserver/node';
 
-export function register({ mapper }: TsApiRegisterOptions) {
+export function register({ mapper }: ApiLanguageServiceContext) {
 	return (document: TextDocument, position: Position): string | undefined | null => {
 
 		for (const tsRange of mapper.ts.to(document.uri, position)) {

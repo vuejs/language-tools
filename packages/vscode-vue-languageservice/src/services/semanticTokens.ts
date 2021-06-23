@@ -10,8 +10,7 @@ import {
 	SemanticTokensPartialResult
 } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
-import type { TsApiRegisterOptions } from '../types';
-import * as sharedLs from '../utils/sharedLs';
+import type { ApiLanguageServiceContext } from '../types';
 
 type TokenData = [number, number, number, number, number | undefined];
 
@@ -30,7 +29,7 @@ export const semanticTokenLegend: SemanticTokensLegend = {
 	tokenModifiers: tsLegend.modifiers,
 };
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs, htmlLs, pugLs }: ApiLanguageServiceContext) {
 	return (uri: string, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -131,7 +130,7 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 						start: sourceMap.mappedDocument.positionAt(maped.mappedRange.start),
 						end: sourceMap.mappedDocument.positionAt(maped.mappedRange.end),
 					};
-					const tokens = tsLanguageService.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
+					const tokens = tsLs.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
 					if (!tokens)
 						continue;
 					for (const token of tokens) {
@@ -154,8 +153,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
-					? sharedLs.htmlLs.createScanner(docText, offsetRange.start)
-					: sharedLs.pugLs.createScanner(sourceMap.pugDocument, offsetRange.start)
+					? htmlLs.createScanner(docText, offsetRange.start)
+					: pugLs.createScanner(sourceMap.pugDocument, offsetRange.start)
 				if (!scanner) continue;
 
 				let token = scanner.scan();

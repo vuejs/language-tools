@@ -1,11 +1,11 @@
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import {
 	CodeLens,
 } from 'vscode-languageserver/node';
 import * as findReferences from './references';
 import { Commands } from '../commands';
 
-export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOptions) {
+export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 	const _findReferences = findReferences.register(arguments[0]);
 	return (codeLens: CodeLens) => {
 
@@ -13,8 +13,8 @@ export function register({ sourceFiles, tsLanguageService }: TsApiRegisterOption
 		const offset: number | undefined = codeLens.data.offset;
 		const tsUri: string | undefined = codeLens.data.tsUri;
 		const tsOffset: number | undefined = codeLens.data.tsOffset;
-		const doc = uri ? sourceFiles.get(uri)?.getTextDocument() ?? tsLanguageService.__internal__.getTextDocument(uri) : undefined;
-		const tsDoc = tsUri ? tsLanguageService.__internal__.getTextDocument(tsUri) : undefined;
+		const doc = uri ? sourceFiles.get(uri)?.getTextDocument() ?? tsLs.__internal__.getTextDocument(uri) : undefined;
+		const tsDoc = tsUri ? tsLs.__internal__.getTextDocument(tsUri) : undefined;
 		const sourceFile = uri ? sourceFiles.get(uri) : undefined;
 
 		if (uri && doc && tsDoc && offset !== undefined && tsOffset !== undefined) {

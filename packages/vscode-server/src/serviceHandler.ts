@@ -4,8 +4,9 @@ import { FsPathSet, FsPathMap } from '@volar/shared';
 import type * as ts from 'typescript';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Disposable, TextDocuments, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
+import type { Disposable, TextDocuments, WorkDoneProgressServerReporter, Connection } from 'vscode-languageserver/node';
 import { getEmmetConfiguration } from './configs';
+import { getSchemaRequestService } from './schemaRequestService';
 
 export type ServiceHandler = ReturnType<typeof createServiceHandler>;
 
@@ -18,6 +19,7 @@ export function createServiceHandler(
 	fileUpdatedCb: (fileName: string) => any,
 	_onProjectFilesUpdate: (() => void) | undefined,
 	workDoneProgress: WorkDoneProgressServerReporter,
+	connection: Connection,
 ) {
 
 	let projectVersion = 0;
@@ -173,6 +175,9 @@ export function createServiceHandler(
 	function createLanguageServiceHost() {
 
 		const host: LanguageServiceHost = {
+			// vue
+			getEmmetConfig: getEmmetConfiguration,
+			schemaRequestService: getSchemaRequestService(connection),
 			// ts
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -194,8 +199,6 @@ export function createServiceHandler(
 			getCompilationSettings: () => parsedCommandLine.options,
 			getScriptVersion,
 			getScriptSnapshot,
-			// vue
-			getEmmetConfig: getEmmetConfiguration,
 		};
 
 		if (tsLocalized) {

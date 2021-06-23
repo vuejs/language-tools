@@ -9,15 +9,16 @@ import {
 	TextEdit
 } from 'vscode-languageserver/node';
 import { createSourceFile } from '../sourceFile';
-import type { HtmlApiRegisterOptions } from '../types';
+import type { HtmlLanguageServiceContext } from '../types';
 import * as sharedServices from '../utils/sharedLs';
 
-export function register({ ts }: HtmlApiRegisterOptions) {
+export function register(context: HtmlLanguageServiceContext) {
+	const { ts } = context;
 	let uriTsDocumentMap = new Map();
 	return (document: TextDocument, options: FormattingOptions) => {
 
 		const dummyTs = sharedServices.getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTs.ls, ts, undefined, uriTsDocumentMap, () => []);
+		const sourceFile = createSourceFile(document, dummyTs.ls, uriTsDocumentMap, context);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();
@@ -158,7 +159,7 @@ export function register({ ts }: HtmlApiRegisterOptions) {
 		function getPugFormattingEdits() {
 			let result: TextEdit[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const pugEdits = sharedServices.pugLs.format(sourceMap.pugDocument, options);
+				const pugEdits = context.pugLs.format(sourceMap.pugDocument, options);
 				const vueEdits = pugEdits
 					.map(pugEdit => transformTextEdit(
 						pugEdit,

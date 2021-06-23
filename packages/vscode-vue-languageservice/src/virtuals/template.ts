@@ -6,8 +6,7 @@ import * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
-import { IDescriptor, ITemplateScriptData } from '../types';
-import * as sharedLs from '../utils/sharedLs';
+import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
@@ -30,13 +29,14 @@ export function useTemplateScript(
 		html?: string,
 		htmlToTemplate?: (start: number, end: number) => number | undefined,
 	} | undefined>,
+	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = upath.basename(uriToFsPath(_vueDoc.uri));
-	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module)));
-	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped)));
+	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module), context));
+	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {
 		if (templateData.value?.html === undefined)
 			return;
@@ -295,7 +295,7 @@ export function useTemplateScript(
 	const cssTextDocument = computed(() => {
 		if (templateCodeGens.value && template.value) {
 			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, templateCodeGens.value.cssCodeGen.getText());
-			const stylesheet = sharedLs.cssLs.parseStylesheet(textDocument);
+			const stylesheet = context.getCssLs('css')!.parseStylesheet(textDocument);
 			return {
 				textDocument,
 				stylesheet,

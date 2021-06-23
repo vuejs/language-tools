@@ -2,11 +2,11 @@ import { transformLocations } from '@volar/transforms';
 import { WorkspaceEdit } from 'vscode-languageserver-types';
 import type { CodeAction, CodeActionContext } from 'vscode-languageserver/node';
 import { CodeActionKind, Range, TextDocumentEdit } from 'vscode-languageserver/node';
-import type { TsApiRegisterOptions } from '../types';
+import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
 
-export function register({ mapper }: TsApiRegisterOptions) {
+export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 
 	return (uri: string, range: Range, context: CodeActionContext) => {
 
@@ -67,6 +67,8 @@ export function register({ mapper }: TsApiRegisterOptions) {
 		const result: CodeAction[] = [];
 
 		for (const cssRange of mapper.css.to(uri, range.start, range.end)) {
+			const cssLs = getCssLs(cssRange.textDocument.languageId);
+			if (!cssLs) continue;
 			const cssContext: CodeActionContext = {
 				diagnostics: transformLocations(
 					context.diagnostics,
@@ -74,7 +76,7 @@ export function register({ mapper }: TsApiRegisterOptions) {
 				),
 				only: context.only,
 			};
-			const cssCodeActions = cssRange.languageService.doCodeActions2(cssRange.textDocument, cssRange.range, cssContext, cssRange.stylesheet);
+			const cssCodeActions = cssLs.doCodeActions2(cssRange.textDocument, cssRange.range, cssContext, cssRange.stylesheet);
 			for (const cssCodeAction of cssCodeActions) {
 
 				// TODO
