@@ -64,7 +64,7 @@ declare global {
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
 	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer P1 } ? P1 : C extends FunctionalComponent<infer P2> ? P2 : C extends { props: infer P3 } ? P3 : C;
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: __VLS_ExtractRawComponent<T[K]> };
-	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
+	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T extends () => Promise<{ default: infer U }> ? U : T;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
 	type __VLS_MapPropsType<T> = { [K in keyof T]: T[K] extends (arg: infer _1) => infer _2
 		? T[K] : T[K] extends (arg: infer A, ...rest: infer _3) => infer R
