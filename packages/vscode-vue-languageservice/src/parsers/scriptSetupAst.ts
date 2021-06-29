@@ -92,6 +92,14 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
                 }
             }
         }
+        else if (ts.isClassDeclaration(node)) {
+            if (node.name) {
+                returnVarNames.push(_getStartEnd(node.name));
+            }
+        }
+        else if (ts.isEnumDeclaration(node)) {
+            returnVarNames.push(_getStartEnd(node.name));
+        }
     });
     sourceFile.forEachChild(node => {
         visitNode(node, sourceFile, true);
