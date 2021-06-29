@@ -50,8 +50,6 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
         end: number,
     }[] = [];
     let defineProps: {
-        start: number,
-        end: number,
         args?: {
             start: number,
             end: number,
@@ -152,7 +150,6 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
             const arg: ts.Expression | undefined = node.arguments.length ? node.arguments[0] : undefined;
             const typeArg: ts.TypeNode | undefined = node.typeArguments?.length ? node.typeArguments[0] : undefined;
             const call = {
-                ..._getStartEnd(node),
                 args: arg ? _getStartEnd(arg) : undefined,
                 typeArgs: typeArg ? _getStartEnd(typeArg) : undefined,
             };
