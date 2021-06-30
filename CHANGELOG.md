@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.24
+
+- fix: prevent throw error with unknown tag's properties #284
+- fix: add patch for `<script src>` TS file path ([vue-tsc#30](https://github.com/johnsoncodehk/vue-tsc/issues/30))
+
 ## 0.25.23
 
 - feat: expose ClassDeclaration, EnumDeclaration from `<script setup>` #274
