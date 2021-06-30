@@ -1003,7 +1003,7 @@ export function generate(
 
 				tsCodeGen.addText(`let ${var_on}!: { `);
 				tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-				tsCodeGen.addText(`: __VLS_FirstFunction<\n`);
+				tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
 				if (key_1 !== key_3) {
 					tsCodeGen.addText(`__VLS_FirstFunction<\n`);
 					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
@@ -1025,7 +1025,7 @@ export function generate(
 						capabilities: capabilitiesSet.attr,
 					},
 				);
-				tsCodeGen.addText(`]> };\n`);
+				tsCodeGen.addText(`]>>\n};\n`);
 
 				const transformResult = transformOn(prop, node, transformContext);
 				for (const prop_2 of transformResult.props) {
@@ -1043,63 +1043,55 @@ export function generate(
 						},
 					);
 					tsCodeGen.addText(`: `);
-
-					if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
-						if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
-							if (value.content === prop.exp.content) {
-								writeCode(
-									value.content,
-									{
-										start: prop.exp.loc.start.offset,
-										end: prop.exp.loc.end.offset,
-									},
-									SourceMaps.Mode.Offset,
-									{
-										vueTag: 'template',
-										capabilities: capabilitiesSet.all,
-									},
-									formatBrackets.empty,
-								);
-							}
-							else {
-								tsCodeGen.addText(value.content);
-							}
-						}
-						else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
-							for (const child of value.children) {
-								if (typeof child === 'string') {
-									tsCodeGen.addText(child);
-								}
-								else if (typeof child === 'symbol') {
-									// ignore
-								}
-								else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
-									if (child.content === prop.exp.content) {
-										writeCode(
-											child.content,
-											{
-												start: prop.exp.loc.start.offset,
-												end: prop.exp.loc.end.offset,
-											},
-											SourceMaps.Mode.Offset,
-											{
-												vueTag: 'template',
-												capabilities: capabilitiesSet.all,
-											},
-											formatBrackets.empty,
-										);
-									}
-									else {
-										tsCodeGen.addText(child.content);
-									}
-								}
-							}
-						}
-					}
-					else {
-						tsCodeGen.addText(`undefined`);
-					}
+					appendExpressionNode(prop);
 					tsCodeGen.addText(`\n};\n`);
+
+					function appendExpressionNode(prop: vueDom.DirectiveNode) {
+						if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+							if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
+								appendSimpleExpressionNode(value, prop.exp);
+							}
+							else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
+								appendCompoundExpressionNode(value, prop.exp);
+							}
+						}
+						else {
+							tsCodeGen.addText(`undefined`);
+						}
+					}
+					function appendCompoundExpressionNode(node: vueDom.CompoundExpressionNode, exp: vueDom.SimpleExpressionNode) {
+						for (const child of node.children) {
+							if (typeof child === 'string') {
+								tsCodeGen.addText(child);
+							}
+							else if (typeof child === 'symbol') {
+								// ignore
+							}
+							else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
+								appendSimpleExpressionNode(child, exp);
+							}
+						}
+					}
+					function appendSimpleExpressionNode(node: vueDom.SimpleExpressionNode, exp: vueDom.SimpleExpressionNode) {
+						if (node.content === exp.content) {
+							writeCode(
+								node.content,
+								{
+									start: exp.loc.start.offset,
+									end: exp.loc.end.offset,
+								},
+								SourceMaps.Mode.Offset,
+								{
+									vueTag: 'template',
+									capabilities: capabilitiesSet.all,
+								},
+								formatBrackets.empty,
+							);
+						}
+						else {
+							tsCodeGen.addText(node.content);
+						}
+					}
 				}
 			}
 		}
