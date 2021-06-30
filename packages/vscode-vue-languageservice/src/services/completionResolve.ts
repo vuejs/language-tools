@@ -123,6 +123,7 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 				const scriptAst = parseScriptAst(ts, descriptor.script.content, descriptor.script.lang, true, true);
 				const exportDefault = scriptAst.exportDefault;
 				if (exportDefault) {
+					// https://github.com/microsoft/TypeScript/issues/36174
 					const printer = ts.createPrinter();
 					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
 						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
@@ -132,7 +133,7 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.start),
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.end),
 							),
-							printText,
+							unescape(printText.replace(/\\u/g, '%u')),
 						));
 					}
 					else if (exportDefault.args && exportDefault.argsNode) {
@@ -143,7 +144,7 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.start),
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.end),
 							),
-							printText,
+							unescape(printText.replace(/\\u/g, '%u')),
 						));
 					}
 				}
