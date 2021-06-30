@@ -483,12 +483,7 @@ export function generate(
 					write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 				}
 				else if (prop.name === 'on') {
-					if (prop.arg.content.startsWith('update:')) {
-						write('props', prop.arg.content.substr('update:'.length), prop.arg.loc.start.offset + 'update:'.length, prop.arg.loc.end.offset, true);
-					}
-					else {
-						write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
-					}
+					write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 				}
 			}
 			else if (
@@ -1003,43 +998,34 @@ export function generate(
 				let key_1 = prop.arg.content;
 				let keyOffset = 0;
 
-				if (prop.arg.content.startsWith('update:')) {
-					keyOffset = 'update:'.length;
-					key_1 = prop.arg.content.substr(keyOffset);
-					tsCodeGen.addText(`let ${var_on}!: { `);
-					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-					tsCodeGen.addText(`: ($event: InstanceType<typeof __VLS_components['${getComponentName(node.tag)}']>['$props']['${key_1}']) => void };\n`);
+				const key_2 = camelize('on-' + key_1);
+				const key_3 = camelize(key_1);
+
+				tsCodeGen.addText(`let ${var_on}!: { `);
+				tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
+				tsCodeGen.addText(`: __VLS_FirstFunction<\n`);
+				if (key_1 !== key_3) {
+					tsCodeGen.addText(`__VLS_FirstFunction<\n`);
+					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
+					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>\n`);
+					tsCodeGen.addText(`>,\n`);
 				}
 				else {
-					const key_2 = camelize('on-' + key_1);
-					const key_3 = camelize(key_1);
-
-					tsCodeGen.addText(`let ${var_on}!: { `);
-					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-					tsCodeGen.addText(`: __VLS_FirstFunction<\n`);
-					if (key_1 !== key_3) {
-						tsCodeGen.addText(`__VLS_FirstFunction<\n`);
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>\n`);
-						tsCodeGen.addText(`>,\n`);
-					}
-					else {
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
-					}
-					tsCodeGen.addText(`(typeof __VLS_componentPropsBase['${getComponentName(node.tag)}'] & __VLS_GlobalAttrs & Record<string, unknown>)[`)
-					writeCodeWithQuotes(
-						key_2,
-						{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-						},
-					);
-					tsCodeGen.addText(`]> };\n`);
+					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
 				}
+				tsCodeGen.addText(`(typeof __VLS_componentPropsBase['${getComponentName(node.tag)}'] & __VLS_GlobalAttrs & Record<string, unknown>)[`)
+				writeCodeWithQuotes(
+					key_2,
+					{
+						start: prop.arg.loc.start.offset,
+						end: prop.arg.loc.end.offset,
+					},
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.attr,
+					},
+				);
+				tsCodeGen.addText(`]> };\n`);
 
 				const transformResult = transformOn(prop, node, transformContext);
 				for (const prop_2 of transformResult.props) {
