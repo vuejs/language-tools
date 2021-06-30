@@ -37,9 +37,15 @@ export function generate(
         if (!script?.src)
             return;
 
+        let src = script.src;
+
+        if (src.endsWith('.d.ts')) src = path.removeExt(src, '.d.ts');
+        else if (src.endsWith('.ts')) src = path.removeExt(src, '.ts');
+        else if (src.endsWith('.tsx')) src = path.removeExt(src, '.tsx');
+
         codeGen.addText(`export * from `);
         codeGen.addCode(
-            `'${script.src}'`,
+            `'${src}'`,
             { start: -1, end: -1 },
             SourceMaps.Mode.Offset,
             {
@@ -58,7 +64,7 @@ export function generate(
             }
         );
         codeGen.addText(`;\n`);
-        codeGen.addText(`export { default } from '${script.src}';\n`);
+        codeGen.addText(`export { default } from '${src}';\n`);
     }
     function writeScript() {
         if (!script)
