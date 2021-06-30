@@ -774,7 +774,7 @@ export function generate(
 					},
 				);
 				tsCodeGen.addText(': ');
-				writeAttrValue(prop.value);
+				writeAttrValue(prop.value, getComponentName(node.tag), propName);
 				const diagEnd = tsCodeGen.getText().length;
 				tsCodeGen.addText(',\n');
 				addMapping(tsCodeGen, {
@@ -807,7 +807,7 @@ export function generate(
 						},
 					);
 					tsCodeGen.addText(': ');
-					writeAttrValue(prop.value);
+					writeAttrValue(prop.value, getComponentName(node.tag), propName);
 					tsCodeGen.addText(',\n');
 				}
 			}
@@ -872,7 +872,7 @@ export function generate(
 			);
 		}
 
-		function writeAttrValue(attrNode: vueDom.TextNode | undefined) {
+		function writeAttrValue(attrNode: vueDom.TextNode | undefined, componentName: string, propName: string) {
 			if (attrNode) {
 				tsCodeGen.addText('"');
 				let start = attrNode.loc.start.offset;
@@ -890,10 +890,10 @@ export function generate(
 						capabilities: capabilitiesSet.all
 					},
 				);
-				tsCodeGen.addText('" as const');
+				tsCodeGen.addText('"');
 			}
 			else {
-				tsCodeGen.addText('true as const');
+				tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps['${componentName}'], '${propName}'>`);
 			}
 		}
 		function addStartWrap() {
