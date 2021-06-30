@@ -67,7 +67,7 @@ declare global {
 	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
 	type __VLS_MapPropsType<T> = { [K in keyof T]:
-		T[K] extends FunctionalComponent<infer A> ? (props: A & JSX.IntrinsicAttributes) => any
+		T[K] extends FunctionalComponent<infer A> ? (props: A & JSX.IntrinsicAttributes & Record<string, unknown>) => any
 		: (props: __VLS_ExtractComponentProps<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_ExtractComponentProps<T[K]>> & Record<string, unknown>) => any
 	};
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
