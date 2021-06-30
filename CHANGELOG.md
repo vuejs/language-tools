@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.25.23
+
+- feat: expose ClassDeclaration, EnumDeclaration from `<script setup>` #274
+- fix: template context broken with `<script lang="tsx">` #275
+- fix: don't convert source code to unicode with component auto-import #272
+- fix: don't infer `update:xxx` event type by props #266
+- fix: functional component type-check behavior inconsistent with JSX #268
+
 ## 0.25.22
 
 - feat: improve TS diagnostic message #259
