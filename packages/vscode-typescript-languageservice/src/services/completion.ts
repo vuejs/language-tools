@@ -17,6 +17,7 @@ export interface Data {
 	source: string | undefined,
 	name: string,
 	options: ts.GetCompletionsAtPositionOptions | undefined,
+	tsData: any,
 }
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, rootDir: string) {
@@ -51,6 +52,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					source: entry.source,
 					name: entry.name,
 					options: _options,
+					tsData: entry.data,
 				};
 				let item: CompletionItem = {
 					label: entry.name,
@@ -62,10 +64,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					insertText: entry.insertText,
 					preselect: entry.isRecommended,
 					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
-					data: {
-						__volar__: data,
-						...entry.data,
-					},
+					data,
 				}
 
 				handleKindModifiers(item, entry);

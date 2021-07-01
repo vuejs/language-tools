@@ -1,6 +1,7 @@
 import { getWordRange, languageIdToSyntax, notEmpty, uriToFsPath } from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
 import { hyphenate, capitalize, camelize, isGloballyWhitelisted } from '@vue/shared';
+import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
 import type * as ts from 'typescript';
 import * as path from 'upath';
 import * as emmet from 'vscode-emmet-helper';
@@ -271,8 +272,8 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 					for (const componentName of componentNames) {
 						const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
 						for (const prop of bind) {
-							const _name: string = prop.data.__volar__.name;
-							const name = nameCases.attr === 'pascalCase' ? _name : hyphenate(_name);
+							const data: Data = prop.data;
+							const name = nameCases.attr === 'pascalCase' ? data.name : hyphenate(data.name);
 							if (hyphenate(name).startsWith('on-')) {
 								const propName = '@' + name.substr('on-'.length);
 								const propKey = componentName + ':' + propName;
@@ -299,7 +300,8 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 							}
 						}
 						for (const event of on) {
-							const name = nameCases.attr === 'pascalCase' ? event.data.__volar__.name : hyphenate(event.data.__volar__.name);
+							const data: Data = event.data;
+							const name = nameCases.attr === 'pascalCase' ? data.name : hyphenate(data.name);
 							const propName = '@' + name;
 							const propKey = componentName + ':' + propName;
 							attributes.push({
@@ -309,7 +311,8 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 							tsItems.set(propKey, event);
 						}
 						for (const _slot of slot) {
-							const propName = '#' + _slot.data.__volar__.name;
+							const data: Data = _slot.data;
+							const propName = '#' + data.name;
 							const propKey = componentName + ':' + propName;
 							slots.push({
 								name: propName,

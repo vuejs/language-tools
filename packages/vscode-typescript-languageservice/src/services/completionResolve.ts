@@ -7,7 +7,7 @@ import type { Data } from './completion';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
 	return (item: CompletionItem, newOffset?: number): CompletionItem => {
-		const data: Data = item.data.__volar__;
+		const data: Data = item.data;
 		const fileName = data.fileName;
 		const offset = newOffset ?? data.offset;
 		const name = data.name;
@@ -15,7 +15,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const options = data.options;
 		let detail: ts.CompletionEntryDetails | undefined;
 		try {
-			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, item.data);
+			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, data.tsData);
 		}
 		catch (err) {
 			item.detail = `[TS Error] ${err}`;
