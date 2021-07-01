@@ -1,29 +1,35 @@
 # Changelog
 
+## 0.25.25
+
+- fix: can't assign expression to no args event ([#270](https://github.com/johnsoncodehk/volar/issues/270))
+- fix: empty attr type incorrect ([#261](https://github.com/johnsoncodehk/volar/issues/261))
+- fix: completion resolve broken in TS 3.4
+
 ## 0.25.24
 
-- fix: prevent throw error with unknown tag's properties #284
+- fix: prevent throw error with unknown tag's properties ([#284](https://github.com/johnsoncodehk/volar/issues/284))
 - fix: add patch for `<script src>` TS file path ([vue-tsc#30](https://github.com/johnsoncodehk/vue-tsc/issues/30))
 
 ## 0.25.23
 
-- feat: expose ClassDeclaration, EnumDeclaration from `<script setup>` #274
-- fix: template context broken with `<script lang="tsx">` #275
-- fix: don't convert source code to unicode with component auto-import #272
-- fix: don't infer `update:xxx` event type by props #266
-- fix: functional component type-check behavior inconsistent with JSX #268
+- feat: expose ClassDeclaration, EnumDeclaration from `<script setup>` ([#274](https://github.com/johnsoncodehk/volar/issues/274))
+- fix: template context broken with `<script lang="tsx">` ([#275](https://github.com/johnsoncodehk/volar/issues/275))
+- fix: don't convert source code to unicode with component auto-import ([#272](https://github.com/johnsoncodehk/volar/issues/272))
+- fix: don't infer `update:xxx` event type by props ([#266](https://github.com/johnsoncodehk/volar/issues/266))
+- fix: functional component type-check behavior inconsistent with JSX ([#268](https://github.com/johnsoncodehk/volar/issues/268))
 
 ## 0.25.22
 
-- feat: improve TS diagnostic message #259
-- fix: incorrect unescaping of literal strings #262
-- fix: dynamic slot name do not consume variable #263
+- feat: improve TS diagnostic message ([#259](https://github.com/johnsoncodehk/volar/issues/259))
+- fix: incorrect unescaping of literal strings ([#262](https://github.com/johnsoncodehk/volar/issues/262))
+- fix: dynamic slot name do not consume variable ([#263](https://github.com/johnsoncodehk/volar/issues/263))
 - fix: temporary html completion info leak to hover info
 - fix: TS definition result duplicate
 
 ## 0.25.21
 
-- feat: support for typescript pnp #248
+- feat: support for typescript pnp ([#248](https://github.com/johnsoncodehk/volar/issues/248))
 - feat: improve component auto-import path calculate
 - fix: `Write Virtual Files` command not working
 
