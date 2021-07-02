@@ -1,6 +1,7 @@
 import { createCodeGen } from '@volar/code-gen';
 import { hyphenate } from '@vue/shared';
 import type * as templateGen from '../generators/template_scriptSetup';
+import type { Ast as ScriptAst } from '../parsers/scriptAst';
 import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
 import * as SourceMaps from '../utils/sourceMaps';
 
@@ -12,6 +13,7 @@ export function generate(
     scriptSetup: null | {
         content: string,
     },
+    scriptAst: ScriptAst | undefined,
     scriptSetupAst: ScriptSetupAst | undefined,
     htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 ) {
@@ -81,15 +83,20 @@ export function generate(
         );
     }
     function writeTemplate() {
-        if (!scriptSetupAst)
-            return;
         if (!htmlGen)
             return;
 
-        const varNames = scriptSetupAst.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
+        let bindingNames: string[] = [];
+
+        if (scriptSetupAst) {
+            bindingNames = bindingNames.concat(scriptSetupAst.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? ''));
+        }
+        if (scriptAst) {
+            bindingNames = bindingNames.concat(scriptAst.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
+        }
 
         codeGen.addText('{\n');
-        for (const varName of varNames) {
+        for (const varName of bindingNames) {
             if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
                 // fix import components unused report
                 codeGen.addText(varName + ';\n');

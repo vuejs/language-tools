@@ -1,26 +1,20 @@
 import type * as ts from 'typescript';
-import { getStartEnd } from './scriptSetupAst';
+import { getStartEnd, TextRange, collectBindings } from './scriptSetupAst';
 
 export type Ast = ReturnType<typeof parse>;
 
 export function parse(ts: typeof import('typescript'), content: string, lang: string, withComponentOption = false, withNode = false) {
 
-    let exportDefault: {
-        start: number,
-        end: number,
-        args: {
-            start: number,
-            end: number,
-        },
+    let exportDefault: (TextRange & {
+        args: TextRange,
         argsNode: ts.ObjectLiteralExpression | undefined,
-        componentsOption: {
-            start: number,
-            end: number,
-        } | undefined,
+        componentsOption: TextRange | undefined,
         componentsOptionNode: ts.ObjectLiteralExpression | undefined,
-    } | undefined;
+    }) | undefined;
 
     const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
+    const bindings = collectBindings(ts, sourceFile);
+
     sourceFile.forEachChild(node => {
         if (ts.isExportAssignment(node)) {
             let obj: ts.ObjectLiteralExpression | undefined;
@@ -58,6 +52,7 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
     return {
         sourceFile,
         exportDefault,
+        bindings,
     };
 
     function _getStartEnd(node: ts.Node) {

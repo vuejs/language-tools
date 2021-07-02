@@ -364,11 +364,29 @@ export function generate(
         if (scriptSetupAst?.emitsTypeArg && scriptSetup) {
             codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.emitsTypeArg.start, scriptSetupAst.emitsTypeArg.end)}>),\n`);
         }
+        codeGen.addText(`setup() {\n`);
+        codeGen.addText(`return {\n`);
+        const bindingsArr: {
+            bindings: { start: number, end: number }[],
+            content: string,
+            vueTag: 'script' | 'scriptSetup',
+        }[] = [];
         if (scriptSetupAst && scriptSetup) {
-            codeGen.addText(`setup() {\n`);
-            codeGen.addText(`return {\n`);
-            for (const expose of scriptSetupAst.bindings) {
-                const content = scriptSetup.content;
+            bindingsArr.push({
+                bindings: scriptSetupAst.bindings,
+                content: scriptSetup.content,
+                vueTag: 'scriptSetup',
+            });
+        }
+        if (scriptAst && script) {
+            bindingsArr.push({
+                bindings: scriptAst.bindings,
+                content: script.content,
+                vueTag: 'script',
+            });
+        }
+        for (const { bindings, content, vueTag } of bindingsArr) {
+            for (const expose of bindings) {
                 const varName = content.substring(expose.start, expose.end);
                 const templateSideRange = codeGen.addText(varName);
                 codeGen.addText(': ');
@@ -377,7 +395,7 @@ export function generate(
                     expose,
                     SourceMaps.Mode.Offset,
                     {
-                        vueTag: 'scriptSetup',
+                        vueTag,
                         capabilities: { diagnostic: true },
                     },
                 );
@@ -405,6 +423,8 @@ export function generate(
                     },
                 });
             }
+        }
+        if (scriptSetupAst && scriptSetup) {
             for (const label of scriptSetupAst.labels) {
                 for (const binary of label.binarys) {
                     for (const refVar of binary.vars) {
@@ -440,9 +460,10 @@ export function generate(
                     }
                 }
             }
-            codeGen.addText(`};\n`);
-            codeGen.addText(`},\n`);
         }
+        codeGen.addText(`};\n`);
+        codeGen.addText(`},\n`);
+
         codeGen.addText(`});\n`);
     }
     function writeExportOptions() {

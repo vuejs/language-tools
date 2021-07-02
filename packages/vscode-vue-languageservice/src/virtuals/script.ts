@@ -48,6 +48,7 @@ export function useScriptSetupGen(
 		genScriptSuggestion(
 			script.value,
 			scriptSetup.value,
+			scriptAst.value,
 			scriptSetupAst.value,
 			htmlGen.value,
 		)
