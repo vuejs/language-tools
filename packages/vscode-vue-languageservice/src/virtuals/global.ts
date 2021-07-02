@@ -67,7 +67,7 @@ declare global {
 		} : P[K]
 	}
 	type __VLS_ConstAttrType_Props<C> = (C extends (payload: infer P) => any ? P : {}) & Record<string, unknown>;
-	type __VLS_ConstAttrType<C, K extends string> = NonNullable<__VLS_ConstAttrType_Props<C>[K]> extends boolean ? true : "";
+	type __VLS_ConstAttrType<C, K extends string> = true extends __VLS_ConstAttrType_Props<C>[K] ? true : "";
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 	type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
