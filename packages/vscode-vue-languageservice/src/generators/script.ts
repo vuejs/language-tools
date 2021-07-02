@@ -364,105 +364,107 @@ export function generate(
         if (scriptSetupAst?.emitsTypeArg && scriptSetup) {
             codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.emitsTypeArg.start, scriptSetupAst.emitsTypeArg.end)}>),\n`);
         }
-        codeGen.addText(`setup() {\n`);
-        codeGen.addText(`return {\n`);
-        const bindingsArr: {
-            bindings: { start: number, end: number }[],
-            content: string,
-            vueTag: 'script' | 'scriptSetup',
-        }[] = [];
-        if (scriptSetupAst && scriptSetup) {
-            bindingsArr.push({
-                bindings: scriptSetupAst.bindings,
-                content: scriptSetup.content,
-                vueTag: 'scriptSetup',
-            });
-        }
-        if (scriptAst && script) {
-            bindingsArr.push({
-                bindings: scriptAst.bindings,
-                content: script.content,
-                vueTag: 'script',
-            });
-        }
-        for (const { bindings, content, vueTag } of bindingsArr) {
-            for (const expose of bindings) {
-                const varName = content.substring(expose.start, expose.end);
-                const templateSideRange = codeGen.addText(varName);
-                codeGen.addText(': ');
-                const scriptSideRange = codeGen.addCode(
-                    varName,
-                    expose,
-                    SourceMaps.Mode.Offset,
-                    {
-                        vueTag,
-                        capabilities: { diagnostic: true },
-                    },
-                );
-                codeGen.addText(',\n');
-
-                teleports.push({
-                    sourceRange: scriptSideRange,
-                    mappedRange: templateSideRange,
-                    mode: SourceMaps.Mode.Offset,
-                    data: {
-                        toSource: {
-                            capabilities: {
-                                definitions: true,
-                                references: true,
-                                rename: true,
-                            },
-                        },
-                        toTarget: {
-                            capabilities: {
-                                definitions: true,
-                                references: true,
-                                rename: true,
-                            },
-                        },
-                    },
+        if (scriptSetup) {
+            const bindingsArr: {
+                bindings: { start: number, end: number }[],
+                content: string,
+                vueTag: 'script' | 'scriptSetup',
+            }[] = [];
+            if (scriptSetupAst) {
+                bindingsArr.push({
+                    bindings: scriptSetupAst.bindings,
+                    content: scriptSetup.content,
+                    vueTag: 'scriptSetup',
                 });
             }
-        }
-        if (scriptSetupAst && scriptSetup) {
-            for (const label of scriptSetupAst.labels) {
-                for (const binary of label.binarys) {
-                    for (const refVar of binary.vars) {
-                        if (refVar.inRoot) {
-                            const varName = scriptSetup.content.substring(refVar.start, refVar.end);
-                            const templateSideRange = codeGen.addText(varName);
-                            codeGen.addText(': ');
-                            const scriptSideRange = codeGen.addText(varName);
-                            codeGen.addText(', \n');
+            if (scriptAst && script) {
+                bindingsArr.push({
+                    bindings: scriptAst.bindings,
+                    content: script.content,
+                    vueTag: 'script',
+                });
+            }
+            codeGen.addText(`setup() {\n`);
+            codeGen.addText(`return {\n`);
+            for (const { bindings, content, vueTag } of bindingsArr) {
+                for (const expose of bindings) {
+                    const varName = content.substring(expose.start, expose.end);
+                    const templateSideRange = codeGen.addText(varName);
+                    codeGen.addText(': ');
+                    const scriptSideRange = codeGen.addCode(
+                        varName,
+                        expose,
+                        SourceMaps.Mode.Offset,
+                        {
+                            vueTag,
+                            capabilities: { diagnostic: true },
+                        },
+                    );
+                    codeGen.addText(',\n');
 
-                            teleports.push({
-                                sourceRange: scriptSideRange,
-                                mappedRange: templateSideRange,
-                                mode: SourceMaps.Mode.Offset,
-                                data: {
-                                    toSource: {
-                                        capabilities: {
-                                            definitions: true,
-                                            references: true,
-                                            rename: true,
-                                        },
-                                    },
-                                    toTarget: {
-                                        capabilities: {
-                                            definitions: true,
-                                            references: true,
-                                            rename: true,
-                                        },
-                                    },
+                    teleports.push({
+                        sourceRange: scriptSideRange,
+                        mappedRange: templateSideRange,
+                        mode: SourceMaps.Mode.Offset,
+                        data: {
+                            toSource: {
+                                capabilities: {
+                                    definitions: true,
+                                    references: true,
+                                    rename: true,
                                 },
-                            });
+                            },
+                            toTarget: {
+                                capabilities: {
+                                    definitions: true,
+                                    references: true,
+                                    rename: true,
+                                },
+                            },
+                        },
+                    });
+                }
+            }
+            if (scriptSetupAst && scriptSetup) {
+                for (const label of scriptSetupAst.labels) {
+                    for (const binary of label.binarys) {
+                        for (const refVar of binary.vars) {
+                            if (refVar.inRoot) {
+                                const varName = scriptSetup.content.substring(refVar.start, refVar.end);
+                                const templateSideRange = codeGen.addText(varName);
+                                codeGen.addText(': ');
+                                const scriptSideRange = codeGen.addText(varName);
+                                codeGen.addText(', \n');
+
+                                teleports.push({
+                                    sourceRange: scriptSideRange,
+                                    mappedRange: templateSideRange,
+                                    mode: SourceMaps.Mode.Offset,
+                                    data: {
+                                        toSource: {
+                                            capabilities: {
+                                                definitions: true,
+                                                references: true,
+                                                rename: true,
+                                            },
+                                        },
+                                        toTarget: {
+                                            capabilities: {
+                                                definitions: true,
+                                                references: true,
+                                                rename: true,
+                                            },
+                                        },
+                                    },
+                                });
+                            }
                         }
                     }
                 }
             }
+            codeGen.addText(`};\n`);
+            codeGen.addText(`},\n`);
         }
-        codeGen.addText(`};\n`);
-        codeGen.addText(`},\n`);
 
         codeGen.addText(`});\n`);
     }

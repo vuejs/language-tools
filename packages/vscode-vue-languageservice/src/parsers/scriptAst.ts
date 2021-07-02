@@ -3,7 +3,7 @@ import { getStartEnd, TextRange, collectBindings } from './scriptSetupAst';
 
 export type Ast = ReturnType<typeof parse>;
 
-export function parse(ts: typeof import('typescript'), content: string, lang: string, withComponentOption = false, withNode = false) {
+export function parse(ts: typeof import('typescript'), content: string, lang: string, hasScriptSetup: boolean, withComponentOption = false, withNode = false) {
 
     let exportDefault: (TextRange & {
         args: TextRange,
@@ -13,7 +13,7 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
     }) | undefined;
 
     const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
-    const bindings = collectBindings(ts, sourceFile);
+    const bindings = hasScriptSetup ? collectBindings(ts, sourceFile) : [];
 
     sourceFile.forEachChild(node => {
         if (ts.isExportAssignment(node)) {

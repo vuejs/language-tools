@@ -22,7 +22,7 @@ export function useScriptSetupGen(
 
 	const scriptAst = computed(() =>
 		script.value
-			? parseScriptAst(ts, script.value.content, script.value.lang)
+			? parseScriptAst(ts, script.value.content, script.value.lang, !!scriptSetup.value)
 			: undefined
 	);
 	const scriptSetupAst = computed(() =>

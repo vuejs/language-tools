@@ -83,6 +83,8 @@ export function generate(
         );
     }
     function writeTemplate() {
+        if (!scriptSetup)
+            return;
         if (!htmlGen)
             return;
 
