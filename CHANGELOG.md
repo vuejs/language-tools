@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.25.26
+
+- feat: support `withDefaults()` in `<script setup>`
+- feat: expose `<script>` variables to template in `<script setup>`
+- feat: change defineEmit to defineEmits in `<script setup>` (defineEmit still support a period of time)
+- fix: improve event type infer ([#286](https://github.com/johnsoncodehk/volar/issues/286)) ([#287](https://github.com/johnsoncodehk/volar/issues/287))
+- fix: improve empty attribute type infer ([#288](https://github.com/johnsoncodehk/volar/issues/288))
+
 ## 0.25.25
 
 - fix: can't assign expression to no args event ([#270](https://github.com/johnsoncodehk/volar/issues/270))
