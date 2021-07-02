@@ -61,7 +61,8 @@ declare global {
 	function __VLS_getVforIndexType<T>(source: T): T extends AnyArray ? undefined : number;
 	function __VLS_getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 	function __VLS_pickForItem<S, T1, T2>(source: S, forOfItem: T1, forInItem: T2): S extends { [Symbol.iterator](): infer _ } ? T1 : T2;
-	type __VLS_ConstAttrType<C, K extends keyof any> = C extends (payload: { [_ in K]: infer P }) => any ? (NonNullable<P> extends boolean ? boolean : string) : unknown;
+	type __VLS_ConstAttrType_Props<C> = (C extends (payload: infer P) => any ? P : {}) & Record<string, unknown>;
+	type __VLS_ConstAttrType<C, K extends string> = NonNullable<__VLS_ConstAttrType_Props<C>[K]> extends boolean ? boolean : string;
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 	type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
