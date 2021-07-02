@@ -352,22 +352,22 @@ export function generate(
             const args = scriptAst.exportDefault.args;
             codeGen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
         }
-        if (scriptSetupAst?.defineProps?.args && scriptSetup) {
-            codeGen.addText(`props: (${scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end)}),\n`);
+        if (scriptSetupAst?.propsRuntimeArg && scriptSetup) {
+            codeGen.addText(`props: (${scriptSetup.content.substring(scriptSetupAst.propsRuntimeArg.start, scriptSetupAst.propsRuntimeArg.end)}),\n`);
         }
-        if (scriptSetupAst?.defineProps?.typeArgs && scriptSetup) {
-            codeGen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end)}>),\n`);
+        if (scriptSetupAst?.propsTypeArg && scriptSetup) {
+            codeGen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupAst.propsTypeArg.start, scriptSetupAst.propsTypeArg.end)}>),\n`);
         }
-        if (scriptSetupAst?.defineEmit?.args && scriptSetup) {
-            codeGen.addText(`emits: (${scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end)}),\n`);
+        if (scriptSetupAst?.emitsRuntimeArg && scriptSetup) {
+            codeGen.addText(`emits: (${scriptSetup.content.substring(scriptSetupAst.emitsRuntimeArg.start, scriptSetupAst.emitsRuntimeArg.end)}),\n`);
         }
-        if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
-            codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end)}>),\n`);
+        if (scriptSetupAst?.emitsTypeArg && scriptSetup) {
+            codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupAst.emitsTypeArg.start, scriptSetupAst.emitsTypeArg.end)}>),\n`);
         }
         if (scriptSetupAst && scriptSetup) {
             codeGen.addText(`setup() {\n`);
             codeGen.addText(`return {\n`);
-            for (const expose of scriptSetupAst.returnVarNames) {
+            for (const expose of scriptSetupAst.bindings) {
                 const content = scriptSetup.content;
                 const varName = content.substring(expose.start, expose.end);
                 const templateSideRange = codeGen.addText(varName);
@@ -465,11 +465,11 @@ export function generate(
             );
             codeGen.addText(`),\n`);
         }
-        if (scriptSetupAst?.defineProps?.args && scriptSetup) {
+        if (scriptSetupAst?.propsRuntimeArg && scriptSetup) {
             codeGen.addText(`props: (`);
             codeGen.addCode(
-                scriptSetup.content.substring(scriptSetupAst.defineProps.args.start, scriptSetupAst.defineProps.args.end),
-                scriptSetupAst.defineProps.args,
+                scriptSetup.content.substring(scriptSetupAst.propsRuntimeArg.start, scriptSetupAst.propsRuntimeArg.end),
+                scriptSetupAst.propsRuntimeArg,
                 SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
@@ -482,11 +482,11 @@ export function generate(
             );
             codeGen.addText(`),\n`);
         }
-        if (scriptSetupAst?.defineProps?.typeArgs && scriptSetup) {
+        if (scriptSetupAst?.propsTypeArg && scriptSetup) {
             codeGen.addText(`props: ({} as `);
             codeGen.addCode(
-                scriptSetup.content.substring(scriptSetupAst.defineProps.typeArgs.start, scriptSetupAst.defineProps.typeArgs.end),
-                scriptSetupAst.defineProps.typeArgs,
+                scriptSetup.content.substring(scriptSetupAst.propsTypeArg.start, scriptSetupAst.propsTypeArg.end),
+                scriptSetupAst.propsTypeArg,
                 SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
@@ -499,11 +499,11 @@ export function generate(
             );
             codeGen.addText(`),\n`);
         }
-        if (scriptSetupAst?.defineEmit?.args && scriptSetup) {
+        if (scriptSetupAst?.emitsRuntimeArg && scriptSetup) {
             codeGen.addText(`emits: (`);
             codeGen.addCode(
-                scriptSetup.content.substring(scriptSetupAst.defineEmit.args.start, scriptSetupAst.defineEmit.args.end),
-                scriptSetupAst.defineEmit.args,
+                scriptSetup.content.substring(scriptSetupAst.emitsRuntimeArg.start, scriptSetupAst.emitsRuntimeArg.end),
+                scriptSetupAst.emitsRuntimeArg,
                 SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',
@@ -516,11 +516,11 @@ export function generate(
             );
             codeGen.addText(`),\n`);
         }
-        if (scriptSetupAst?.defineEmit?.typeArgs && scriptSetup) {
+        if (scriptSetupAst?.emitsTypeArg && scriptSetup) {
             codeGen.addText(`emits: ({} as `);
             codeGen.addCode(
-                scriptSetup.content.substring(scriptSetupAst.defineEmit.typeArgs.start, scriptSetupAst.defineEmit.typeArgs.end),
-                scriptSetupAst.defineEmit.typeArgs,
+                scriptSetup.content.substring(scriptSetupAst.emitsTypeArg.start, scriptSetupAst.emitsTypeArg.end),
+                scriptSetupAst.emitsTypeArg,
                 SourceMaps.Mode.Offset,
                 {
                     vueTag: 'scriptSetup',

@@ -86,7 +86,7 @@ export function generate(
         if (!htmlGen)
             return;
 
-        const varNames = scriptSetupAst.returnVarNames.map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
+        const varNames = scriptSetupAst.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? '');
 
         codeGen.addText('{\n');
         for (const varName of varNames) {

@@ -3,119 +3,56 @@ import type * as ts from 'typescript';
 
 export type Ast = ReturnType<typeof parse>;
 
+export interface TextRange {
+    start: number,
+    end: number,
+}
+
 export function parse(ts: typeof import('typescript'), content: string, lang: string) {
-    const labels: {
-        start: number,
-        end: number,
+    const labels: (TextRange & {
         binarys: {
-            parent: {
-                start: number,
-                end: number,
-            },
-            vars: {
+            parent: TextRange,
+            vars: (TextRange & {
                 isShortand: boolean,
                 inRoot: boolean,
-                start: number,
-                end: number,
-            }[],
-            left: {
-                start: number,
-                end: number,
-            },
-            right: undefined | {
-                start: number,
-                end: number,
+            })[],
+            left: TextRange,
+            right: undefined | (TextRange & {
                 isComputedCall: boolean,
-                withoutAs: {
-                    start: number,
-                    end: number,
-                },
-                as: undefined | {
-                    start: number,
-                    end: number,
-                },
-            },
+                withoutAs: TextRange,
+                as: undefined | TextRange,
+            }),
         }[],
-        label: {
-            start: number,
-            end: number,
-        },
-        parent: {
-            start: number,
-            end: number,
-        },
-    }[] = [];
-    const returnVarNames: {
-        start: number,
-        end: number,
-    }[] = [];
-    let defineProps: {
-        args?: {
-            start: number,
-            end: number,
-        },
-        typeArgs?: {
-            start: number,
-            end: number,
-        },
-    } | undefined;
-    let defineEmit: typeof defineProps;
+        label: TextRange,
+        parent: TextRange,
+    })[] = [];
+    let withDefaultsArg: TextRange | undefined;
+    let propsRuntimeArg: TextRange | undefined;
+    let propsTypeArg: TextRange | undefined;
+    let emitsRuntimeArg: TextRange | undefined;
+    let emitsTypeArg: TextRange | undefined;
     const dollars: number[] = [];
 
     const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
+    const bindings = collectBindings(ts, sourceFile);
 
-    sourceFile.forEachChild(node => {
-        if (ts.isVariableStatement(node)) {
-            for (const node_2 of node.declarationList.declarations) {
-                const vars = _findBindingVars(node_2.name);
-                for (const _var of vars) {
-                    returnVarNames.push(_var);
-                }
-            }
-        }
-        else if (ts.isFunctionDeclaration(node)) {
-            if (node.name && ts.isIdentifier(node.name)) {
-                returnVarNames.push(_getStartEnd(node.name));
-            }
-        }
-        else if (ts.isImportDeclaration(node)) {
-            if (node.importClause && !node.importClause.isTypeOnly) {
-                if (node.importClause.name) {
-                    returnVarNames.push(_getStartEnd(node.importClause.name));
-                }
-                if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
-                    for (const element of node.importClause.namedBindings.elements) {
-                        returnVarNames.push(_getStartEnd(element.name));
-                    }
-                }
-            }
-        }
-        else if (ts.isClassDeclaration(node)) {
-            if (node.name) {
-                returnVarNames.push(_getStartEnd(node.name));
-            }
-        }
-        else if (ts.isEnumDeclaration(node)) {
-            returnVarNames.push(_getStartEnd(node.name));
-        }
-    });
     sourceFile.forEachChild(node => {
         visitNode(node, sourceFile, true);
     });
 
     return {
         labels,
-        returnVarNames,
-        defineProps,
-        defineEmit,
+        bindings,
         dollars,
+        withDefaultsArg,
+        propsRuntimeArg,
+        propsTypeArg,
+        emitsRuntimeArg,
+        emitsTypeArg,
     };
 
     function _getStartEnd(node: ts.Node) {
         return getStartEnd(node, sourceFile);
-    }
-    function _findBindingVars(left: ts.BindingName) {
-        return findBindingVars(ts, left, sourceFile);
     }
     function visitNode(node: ts.Node, parent: ts.Node, inRoot: boolean) {
         if (
@@ -139,25 +76,37 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
         else if (
             ts.isCallExpression(node)
             && ts.isIdentifier(node.expression)
-            && (
-                node.expression.getText(sourceFile) === 'defineProps'
-                || node.expression.getText(sourceFile) === 'defineEmit'
-            )
         ) {
-            // TODO: handle this
-            // import * as vue from 'vue'
-            // const props = vue.defineProps...
-            const arg: ts.Expression | undefined = node.arguments.length ? node.arguments[0] : undefined;
-            const typeArg: ts.TypeNode | undefined = node.typeArguments?.length ? node.typeArguments[0] : undefined;
-            const call = {
-                args: arg ? _getStartEnd(arg) : undefined,
-                typeArgs: typeArg ? _getStartEnd(typeArg) : undefined,
-            };
-            if (node.expression.getText(sourceFile) === 'defineProps') {
-                defineProps = call;
+            const callText = node.expression.getText(sourceFile);
+            if (
+                callText === 'defineProps'
+                || callText === 'defineEmit' // TODO: remove this in future
+                || callText === 'defineEmits'
+            ) {
+                if (node.arguments.length) {
+                    const runtimeArg = node.arguments[0];
+                    if (callText === 'defineProps') {
+                        propsRuntimeArg = _getStartEnd(runtimeArg);
+                    }
+                    else {
+                        emitsRuntimeArg = _getStartEnd(runtimeArg);
+                    }
+                }
+                else if (node.typeArguments?.length) {
+                    const typeArg = node.typeArguments[0];
+                    if (callText === 'defineProps') {
+                        propsTypeArg = _getStartEnd(typeArg);
+                    }
+                    else {
+                        emitsTypeArg = _getStartEnd(typeArg);
+                    }
+                }
             }
-            else if (node.expression.getText(sourceFile) === 'defineEmit') {
-                defineEmit = call;
+            else if (callText === 'withDefaults') {
+                if (node.arguments.length >= 2) {
+                    const arg = node.arguments[1];
+                    withDefaultsArg = _getStartEnd(arg);
+                }
             }
         }
         node.forEachChild(child => visitNode(child, node, false));
@@ -263,31 +212,59 @@ export function parse(ts: typeof import('typescript'), content: string, lang: st
     }
 }
 
+export function collectBindings(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
+    const bindings: TextRange[] = [];
+    sourceFile.forEachChild(node => {
+        if (ts.isVariableStatement(node)) {
+            for (const node_2 of node.declarationList.declarations) {
+                const vars = _findBindingVars(node_2.name);
+                for (const _var of vars) {
+                    bindings.push(_var);
+                }
+            }
+        }
+        else if (ts.isFunctionDeclaration(node)) {
+            if (node.name && ts.isIdentifier(node.name)) {
+                bindings.push(_getStartEnd(node.name));
+            }
+        }
+        else if (ts.isImportDeclaration(node)) {
+            if (node.importClause && !node.importClause.isTypeOnly) {
+                if (node.importClause.name) {
+                    bindings.push(_getStartEnd(node.importClause.name));
+                }
+                if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+                    for (const element of node.importClause.namedBindings.elements) {
+                        bindings.push(_getStartEnd(element.name));
+                    }
+                }
+            }
+        }
+        else if (ts.isClassDeclaration(node)) {
+            if (node.name) {
+                bindings.push(_getStartEnd(node.name));
+            }
+        }
+        else if (ts.isEnumDeclaration(node)) {
+            bindings.push(_getStartEnd(node.name));
+        }
+    });
+    return bindings;
+    function _getStartEnd(node: ts.Node) {
+        return getStartEnd(node, sourceFile);
+    }
+    function _findBindingVars(left: ts.BindingName) {
+        return findBindingVars(ts, left, sourceFile);
+    }
+}
 export function parse2(ts: typeof import('typescript'), content: string, lang: string) {
-    const refCalls: {
-        start: number,
-        end: number,
-        vars: {
-            start: number,
-            end: number,
-        }[],
-        left: {
-            start: number,
-            end: number,
-        },
-        rightExpression: undefined | {
-            start: number,
-            end: number,
-        },
-        rightType: undefined | {
-            start: number,
-            end: number,
-        },
-    }[] = [];
-    const shorthandPropertys: {
-        start: number,
-        end: number,
-    }[] = [];
+    const refCalls: (TextRange & {
+        vars: TextRange[],
+        left: TextRange,
+        rightExpression: undefined | TextRange,
+        rightType: undefined | TextRange,
+    })[] = [];
+    const shorthandPropertys: TextRange[] = [];
 
     const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
     sourceFile.forEachChild(visitNode);

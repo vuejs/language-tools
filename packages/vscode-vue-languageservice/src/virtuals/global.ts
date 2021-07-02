@@ -61,6 +61,11 @@ declare global {
 	function __VLS_getVforIndexType<T>(source: T): T extends AnyArray ? undefined : number;
 	function __VLS_getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 	function __VLS_pickForItem<S, T1, T2>(source: S, forOfItem: T1, forInItem: T2): S extends { [Symbol.iterator](): infer _ } ? T1 : T2;
+	function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
+		[K in keyof P]: K extends keyof D ? P[K] & {
+			default: D[K]
+		} : P[K]
+	}
 	type __VLS_ConstAttrType_Props<C> = (C extends (payload: infer P) => any ? P : {}) & Record<string, unknown>;
 	type __VLS_ConstAttrType<C, K extends string> = NonNullable<__VLS_ConstAttrType_Props<C>[K]> extends boolean ? true : "";
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
@@ -110,7 +115,7 @@ declare global {
 		NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 : unknown;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
-	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: { type: PropType<T[K]>, required: {} extends Pick<T, K> ? false : true } };
+	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: PropType<NonNullable<T[K]>>, required: false } : { type: PropType<T[K]>, required: true } };
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent<infer _> ? K : never]:
 		T[K] extends never ? any : T[K] // fix https://github.com/johnsoncodehk/vue-tsc/issues/21
 	};
