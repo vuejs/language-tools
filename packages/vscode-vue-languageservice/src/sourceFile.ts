@@ -179,7 +179,7 @@ export function createSourceFile(
 			document: virtualScriptGen.textDocument.value,
 			sourceMap: virtualScriptGen.sourceMap.value,
 		})),
-		getScriptSetupData: untrack(() => virtualScriptGen.scriptSetupAst.value),
+		getScriptSetupData: untrack(() => virtualScriptGen.scriptSetupRanges.value),
 		getScriptsRaw: untrack(() => ({
 			documents: [virtualScriptRaw.textDocument.value, virtualScriptSetupRaw.textDocument.value].filter(notEmpty),
 			sourceMaps: [virtualScriptRaw.sourceMap.value, virtualScriptSetupRaw.sourceMap.value].filter(notEmpty),

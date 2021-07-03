@@ -6,7 +6,7 @@ import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportCompone
 import * as path from 'upath';
 import { uriToFsPath } from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
-import { parse as parseScriptAst } from '../parsers/scriptAst';
+import { parseScriptRanges } from '../parsers/scriptRanges';
 
 export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceContext) {
 	return (item: CompletionItem, newOffset?: number) => {
@@ -120,14 +120,14 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 						'\n' + insertText,
 					),
 				];
-				const scriptAst = parseScriptAst(ts, descriptor.script.content, descriptor.script.lang, true, true);
-				const exportDefault = scriptAst.exportDefault;
+				const scriptRanges = parseScriptRanges(ts, descriptor.script.content, descriptor.script.lang, true, true);
+				const exportDefault = scriptRanges.exportDefault;
 				if (exportDefault) {
 					// https://github.com/microsoft/TypeScript/issues/36174
 					const printer = ts.createPrinter();
 					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
 						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptAst.sourceFile);
+						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptRanges.sourceFile);
 						vueItem.additionalTextEdits.push(TextEdit.replace(
 							Range.create(
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.start),
@@ -138,7 +138,7 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 					}
 					else if (exportDefault.args && exportDefault.argsNode) {
 						(exportDefault.argsNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`));
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptAst.sourceFile);
+						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptRanges.sourceFile);
 						vueItem.additionalTextEdits.push(TextEdit.replace(
 							Range.create(
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.start),

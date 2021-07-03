@@ -3,8 +3,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
-import { parse as parseScriptAst } from '../parsers/scriptAst';
-import { parse as parseScriptSetupAst } from '../parsers/scriptSetupAst';
+import { parseScriptRanges } from '../parsers/scriptRanges';
+import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { generate as genScript } from '../generators/script';
 import { generate as genScriptSuggestion } from '../generators/script_suggestion';
 import * as templateGen from '../generators/template_scriptSetup';
@@ -20,14 +20,14 @@ export function useScriptSetupGen(
 	let version = 0;
 	const uri = vueDoc.value.uri;
 
-	const scriptAst = computed(() =>
+	const scriptRanges = computed(() =>
 		script.value
-			? parseScriptAst(ts, script.value.content, script.value.lang, !!scriptSetup.value)
+			? parseScriptRanges(ts, script.value.content, script.value.lang, !!scriptSetup.value)
 			: undefined
 	);
-	const scriptSetupAst = computed(() =>
+	const scriptSetupRanges = computed(() =>
 		scriptSetup.value
-			? parseScriptSetupAst(ts, scriptSetup.value.content, scriptSetup.value.lang)
+			? parseScriptSetupRanges(ts, scriptSetup.value.content, scriptSetup.value.lang)
 			: undefined
 	);
 	const codeGen = computed(() =>
@@ -35,8 +35,8 @@ export function useScriptSetupGen(
 			uri,
 			script.value,
 			scriptSetup.value,
-			scriptAst.value,
-			scriptSetupAst.value,
+			scriptRanges.value,
+			scriptSetupRanges.value,
 		)
 	);
 	const htmlGen = computed(() => {
@@ -48,8 +48,8 @@ export function useScriptSetupGen(
 		genScriptSuggestion(
 			script.value,
 			scriptSetup.value,
-			scriptAst.value,
-			scriptSetupAst.value,
+			scriptRanges.value,
+			scriptSetupRanges.value,
 			htmlGen.value,
 		)
 	);
@@ -191,7 +191,7 @@ export function useScriptSetupGen(
 	});
 
 	return {
-		scriptSetupAst,
+		scriptSetupRanges,
 		textDocument,
 		textDocumentForSuggestion,
 		textDocumentForTemplate,

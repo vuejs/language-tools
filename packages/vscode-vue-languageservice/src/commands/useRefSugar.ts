@@ -5,7 +5,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import { TextEdit } from 'vscode-languageserver/node';
 import { sleep } from '@volar/shared';
-import { parse2 } from '../parsers/scriptSetupAst';
+import { parseRefSugarRanges } from '../parsers/scriptSetupRanges';
 
 export async function execute(
     ts: typeof import('typescript'),
@@ -24,7 +24,7 @@ export async function execute(
     const descriptor = sourceFile.getDescriptor();
     if (!descriptor.scriptSetup) return;
 
-    const genData2 = parse2(ts, descriptor.scriptSetup.content, descriptor.scriptSetup.lang);
+    const genData2 = parseRefSugarRanges(ts, descriptor.scriptSetup.content, descriptor.scriptSetup.lang);
 
     let edits: TextEdit[] = [];
     let varsNum = 0;

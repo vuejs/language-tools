@@ -1,8 +1,8 @@
 import { createCodeGen } from '@volar/code-gen';
 import { hyphenate } from '@vue/shared';
 import type * as templateGen from '../generators/template_scriptSetup';
-import type { Ast as ScriptAst } from '../parsers/scriptAst';
-import type { Ast as ScriptSetupAst } from '../parsers/scriptSetupAst';
+import type { ScriptRanges } from '../parsers/scriptRanges';
+import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function generate(
@@ -13,8 +13,8 @@ export function generate(
     scriptSetup: null | {
         content: string,
     },
-    scriptAst: ScriptAst | undefined,
-    scriptSetupAst: ScriptSetupAst | undefined,
+    scriptRanges: ScriptRanges | undefined,
+    scriptSetupRanges: ScriptSetupRanges | undefined,
     htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 ) {
 
@@ -49,14 +49,14 @@ export function generate(
     function writeScriptSetup() {
         if (!scriptSetup)
             return;
-        if (!scriptSetupAst)
+        if (!scriptSetupRanges)
             return;
 
         let noDollarCode = scriptSetup.content;
-        for (const dollar of scriptSetupAst.dollars) {
+        for (const dollar of scriptSetupRanges.dollars) {
             noDollarCode = noDollarCode.substring(0, dollar) + ' ' + noDollarCode.substring(dollar + 1); // replace '$'
         }
-        for (const label of scriptSetupAst.labels) {
+        for (const label of scriptSetupRanges.labels) {
             noDollarCode = noDollarCode.substring(0, label.label.start) + 'let' + noDollarCode.substring(label.label.end).replace(':', ' '); // replace 'ref:'
             if (label.binarys.length) {
                 const start = label.binarys[0];
@@ -90,11 +90,11 @@ export function generate(
 
         let bindingNames: string[] = [];
 
-        if (scriptSetupAst) {
-            bindingNames = bindingNames.concat(scriptSetupAst.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? ''));
+        if (scriptSetupRanges) {
+            bindingNames = bindingNames.concat(scriptSetupRanges.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? ''));
         }
-        if (scriptAst) {
-            bindingNames = bindingNames.concat(scriptAst.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
+        if (scriptRanges) {
+            bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
         }
 
         codeGen.addText('{\n');
