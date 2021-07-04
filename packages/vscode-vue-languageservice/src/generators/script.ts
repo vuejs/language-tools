@@ -352,19 +352,21 @@ export function generate(
             const args = scriptRanges.exportDefault.args;
             codeGen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
         }
-        if (scriptSetupRanges?.propsRuntimeArg && scriptSetup) {
-            codeGen.addText(`props: (${scriptSetup.content.substring(scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end)}),\n`);
-        }
-        if (scriptSetupRanges?.propsTypeArg && scriptSetup) {
-            codeGen.addText(`props: ({} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end)}>),\n`);
-        }
-        if (scriptSetupRanges?.emitsRuntimeArg && scriptSetup) {
-            codeGen.addText(`emits: (${scriptSetup.content.substring(scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end)}),\n`);
-        }
-        if (scriptSetupRanges?.emitsTypeArg && scriptSetup) {
-            codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end)}>),\n`);
-        }
-        if (scriptSetup) {
+        if (scriptSetup && scriptSetupRanges) {
+            if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
+                codeGen.addText(`props: (`);
+                if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`__VLS_mergePropDefaults(`);
+                if (scriptSetupRanges.propsRuntimeArg) codeGen.addText(scriptSetup.content.substring(scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end));
+                else if (scriptSetupRanges.propsTypeArg) codeGen.addText(`{} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end)}>`);
+                if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`, ${scriptSetup.content.substring(scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end)})`);
+                codeGen.addText(`),\n`);
+            }
+            if (scriptSetupRanges.emitsRuntimeArg) {
+                codeGen.addText(`emits: (${scriptSetup.content.substring(scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end)}),\n`);
+            }
+            else if (scriptSetupRanges.emitsTypeArg) {
+                codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end)}>),\n`);
+            }
             const bindingsArr: {
                 bindings: { start: number, end: number }[],
                 content: string,
