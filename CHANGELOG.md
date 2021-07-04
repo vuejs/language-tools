@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.27
+
+- fix: hover broken with jsdoc @link tag ([#289](https://github.com/johnsoncodehk/volar/issues/289))
+- fix: prop type incorrect in template with `withDefaults()` ([#290](https://github.com/johnsoncodehk/volar/issues/290))
+
 ## 0.25.26
 
 - feat: support `withDefaults()` in `<script setup>`
