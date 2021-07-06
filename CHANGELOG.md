@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.28
+
+- feat: improve `volar.autoCompleteRefs` and make it out of experimental ([#201](https://github.com/johnsoncodehk/volar/issues/201))
+- fix: ref sugar not working with nullish coalescing operator ([#291](https://github.com/johnsoncodehk/volar/issues/291))
+
 ## 0.25.27
 
 - fix: hover broken with jsdoc @link tag ([#289](https://github.com/johnsoncodehk/volar/issues/289))
