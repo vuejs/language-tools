@@ -42,7 +42,7 @@ export function register({ mapper }: ApiLanguageServiceContext) {
 						case 'Ref':
 						case 'ComputedRef':
 						case 'WritableComputedRef':
-							return '.value';
+							return '${1:.value}';
 					}
 				}
 			}
