@@ -120,36 +120,30 @@ export function parseScriptSetupRanges(ts: typeof import('typescript'), content:
                     right: undefined,
                 });
             }
-            if (ts.isBinaryExpression(node)) {
-                if (ts.isBinaryExpression(node.left) || ts.isBinaryExpression(node.right) || ts.isParenthesizedExpression(node.left) || ts.isParenthesizedExpression(node.right)) {
-                    worker(node.left);
-                    worker(node.right);
+            else if (ts.isBinaryExpression(node)) {
+                let parent: ts.Node = parenthesized ?? node;
+                let right = node.right;
+                let rightWituoutAs = right;
+                let rightAs: ts.TypeNode | undefined;
+                if (ts.isAsExpression(node.right)) {
+                    rightWituoutAs = node.right.expression;
+                    rightAs = node.right.type;
                 }
-                else {
-                    let parent: ts.Node = parenthesized ?? node;
-                    let right = node.right;
-                    let rightWituoutAs = right;
-                    let rightAs: ts.TypeNode | undefined;
-                    if (ts.isAsExpression(node.right)) {
-                        rightWituoutAs = node.right.expression;
-                        rightAs = node.right.type;
-                    }
-                    const leftRange = _getStartEnd(node.left);
-                    const rightRange = _getStartEnd(node.right);
-                    const parentRange = _getStartEnd(parent);
-                    if (parentRange.start <= leftRange.start && parentRange.end >= rightRange.end) { // fix `ref: in` #85
-                        binaryExps.push({
-                            vars: findLabelVars(node.left, inRoot),
-                            left: leftRange,
-                            right: {
-                                ...rightRange,
-                                isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(sourceFile) === 'computed',
-                                withoutAs: _getStartEnd(rightWituoutAs),
-                                as: rightAs ? _getStartEnd(rightAs) : undefined,
-                            },
-                            parent: parentRange,
-                        });
-                    }
+                const leftRange = _getStartEnd(node.left);
+                const rightRange = _getStartEnd(node.right);
+                const parentRange = _getStartEnd(parent);
+                if (parentRange.start <= leftRange.start && parentRange.end >= rightRange.end) { // fix `ref: in` #85
+                    binaryExps.push({
+                        vars: findLabelVars(node.left, inRoot),
+                        left: leftRange,
+                        right: {
+                            ...rightRange,
+                            isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(sourceFile) === 'computed',
+                            withoutAs: _getStartEnd(rightWituoutAs),
+                            as: rightAs ? _getStartEnd(rightAs) : undefined,
+                        },
+                        parent: parentRange,
+                    });
                 }
             }
             else if (ts.isParenthesizedExpression(node)) {
