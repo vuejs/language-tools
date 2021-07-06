@@ -101,8 +101,8 @@
 				},
 				"volar.autoCompleteRefs": {
 					"type": "boolean",
-					"default": false,
-					"description": "Auto-complete Ref value with `.value`. (Experimental)"
+					"default": true,
+					"description": "Auto-complete Ref value with `.value`."
 				},
 				"volar.tsPlugin": {
 					"type": "boolean",
