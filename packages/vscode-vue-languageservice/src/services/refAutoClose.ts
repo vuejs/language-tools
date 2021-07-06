@@ -2,8 +2,10 @@ import type { ApiLanguageServiceContext } from '../types';
 import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { Location } from 'vscode-languageserver/node';
+import { uriToFsPath } from '@volar/shared';
 
-export function register({ mapper }: ApiLanguageServiceContext) {
+export function register({ mapper, ts }: ApiLanguageServiceContext) {
+
 	return (document: TextDocument, position: Position): string | undefined | null => {
 
 		for (const tsRange of mapper.ts.to(document.uri, position)) {
@@ -11,22 +13,9 @@ export function register({ mapper }: ApiLanguageServiceContext) {
 			if (!tsRange.data.capabilities.completion)
 				continue;
 
-			const defs = tsRange.languageService.findDefinition(tsRange.textDocument.uri, tsRange.range.start);
-			let isDef = false;
-			for (const def of defs) {
-				const uri = Location.is(def) ? def.uri : def.targetUri;
-				const range = Location.is(def) ? def.range : def.targetSelectionRange;
-				if (
-					uri === tsRange.textDocument.uri
-					&& range.end.line === tsRange.range.start.line
-					&& range.end.character === tsRange.range.start.character
-				) {
-					isDef = true;
-					break;
-				}
-			}
-
-			if (isDef)
+			// TODO: use computed
+			const sourceFile = ts.createSourceFile(uriToFsPath(tsRange.textDocument.uri), tsRange.textDocument.getText(), ts.ScriptTarget.Latest);
+			if (isBlacklistNode(sourceFile, tsRange.textDocument.offsetAt(tsRange.range.start)))
 				continue;
 
 			const typeDefs = tsRange.languageService.findTypeDefinition(tsRange.textDocument.uri, tsRange.range.start);
@@ -46,6 +35,30 @@ export function register({ mapper }: ApiLanguageServiceContext) {
 					}
 				}
 			}
+		}
+	}
+
+	function isBlacklistNode(node: ts.Node, pos: number) {
+		if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+			return true;
+		}
+		else if (ts.isShorthandPropertyAssignment(node)) {
+			return true;
+		}
+		else if (ts.isImportDeclaration(node)) {
+			return true;
+		}
+		else {
+			let _isBlacklistNode = false;
+			node.forEachChild(node => {
+				if (_isBlacklistNode) return;
+				if (pos >= node.getFullStart() && pos <= node.getEnd()) {
+					if (isBlacklistNode(node, pos)) {
+						_isBlacklistNode = true;
+					}
+				}
+			});
+			return _isBlacklistNode;
 		}
 	}
 }
