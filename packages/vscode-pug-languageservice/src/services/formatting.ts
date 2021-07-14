@@ -6,6 +6,10 @@ const pugBeautify = require('pug-beautify');
 export function register() {
     return (pugDoc: PugDocument, options: FormattingOptions) => {
 
+        if (pugDoc.pugCode.trim() === '') {
+            return []; // fix https://github.com/johnsoncodehk/volar/issues/304
+        }
+
         const prefixesLength = pugDoc.pugCode.length - pugDoc.pugCode.trimStart().length;
         const suffixesLength = pugDoc.pugCode.length - pugDoc.pugCode.trimEnd().length;
         const prefixes = pugDoc.pugCode.substr(0, prefixesLength);
