@@ -87,39 +87,37 @@ export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 		return vueOrTsItems;
 	}
 	function toVueCallHierarchyItem(tsItem: CallHierarchyItem, tsRanges: Range[]): [CallHierarchyItem, Range[]] | undefined {
-		let isVirtual = false;
-		for (const sourceFile of sourceFiles.values()) {
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				if (sourceMap.mappedDocument.uri !== tsItem.uri) {
-					continue;
-				}
-				isVirtual = true;
-				let vueRange: Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end);
-				if (!vueRange) {
-					// TODO: <script> range
-					vueRange = {
-						start: sourceMap.sourceDocument.positionAt(0),
-						end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
-					};
-				}
-				const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end);
-				if (!vueSelectionRange) {
-					continue;
-				}
-				const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)).filter(notEmpty);
-				const vueItem: CallHierarchyItem = {
-					...tsItem,
-					name: tsItem.name === upath.basename(uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
-					uri: sourceMap.sourceDocument.uri,
-					range: vueRange,
-					selectionRange: vueSelectionRange,
-				}
-				return [vueItem, vueRanges];
-			}
+		if (!sourceFiles.getTsDocuments().get(tsItem.uri)) {
+			return [tsItem, tsRanges]; // not virtual file
 		}
-		if (!isVirtual) {
-			return [tsItem, tsRanges];
+
+		const sourceMap = sourceFiles.getTsSourceMaps().get(tsItem.uri);
+		if (!sourceMap)
+			return;
+
+		let vueRange: Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end);
+		if (!vueRange) {
+			// TODO: <script> range
+			vueRange = {
+				start: sourceMap.sourceDocument.positionAt(0),
+				end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
+			};
 		}
+
+		const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end);
+		if (!vueSelectionRange)
+			return;
+
+		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)).filter(notEmpty);
+		const vueItem: CallHierarchyItem = {
+			...tsItem,
+			name: tsItem.name === upath.basename(uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
+			uri: sourceMap.sourceDocument.uri,
+			range: vueRange,
+			selectionRange: vueSelectionRange,
+		}
+
+		return [vueItem, vueRanges];
 	}
 	function tsTsCallHierarchyItem(item: CallHierarchyItem) {
 		if (upath.extname(item.uri) !== '.vue') {

@@ -2,7 +2,7 @@ import * as prettyhtml from '@starptech/prettyhtml';
 import { eqSet, notEmpty, uriToFsPath } from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
-import { computed, ComputedRef, pauseTracking, reactive, ref, Ref, resetTracking } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, ref, Ref } from '@vue/reactivity';
 import * as css from 'vscode-css-languageservice';
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -26,6 +26,7 @@ import { useJsonsRaw } from './virtuals/jsons.raw';
 import { useTemplateScript } from './virtuals/template';
 import { useTemplateRaw } from './virtuals/template.raw';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
+import { untrack } from './utils/untrack';
 
 export const defaultLanguages = {
 	template: 'html',
@@ -38,7 +39,6 @@ export type SourceFile = ReturnType<typeof createSourceFile>;
 export function createSourceFile(
 	initialDocument: TextDocument,
 	tsLs: ts2.LanguageService,
-	uriTsDocumentMap: Map<string, TextDocument>,
 	context: LanguageServiceContext,
 ) {
 	// sources
@@ -140,9 +140,7 @@ export function createSourceFile(
 			docs.set(virtualScriptGen.textDocumentForTemplate.value.uri, virtualScriptGen.textDocumentForTemplate.value);
 		if (virtualTemplateGen.textDocument.value)
 			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
-		for (let [key, textDocument] of docs) {
-			uriTsDocumentMap.set(key, textDocument)
-		}
+
 		return docs;
 	});
 
@@ -190,6 +188,18 @@ export function createSourceFile(
 		})),
 		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
 		getVirtualScriptUri: untrack(() => virtualScriptGen.textDocument.value?.uri),
+
+		refs: {
+			cssSourceMaps: virtualStyles.sourceMaps,
+			htmlSourceMap: virtualTemplateRaw.htmlSourceMap,
+			tsSourceMaps: tsSourceMaps,
+			tsDocuments: tsDocuments,
+			mainTsDocument: virtualScriptMain.textDocument,
+			tsTeleports: computed(() => [
+				virtualTemplateGen.teleportSourceMap.value,
+				virtualScriptGen.teleportSourceMap.value,
+			].filter(notEmpty)),
+		},
 	};
 
 	function update(newVueDocument: TextDocument) {
@@ -762,7 +772,7 @@ export function createSourceFile(
 				const diags: Diagnostic[] = [];
 				if (
 					virtualScriptGen.textDocument.value
-					&& !tsLs.__internal__.getTextDocument2(virtualScriptGen.textDocument.value.uri)
+					&& !tsLs.__internal__.getValidTextDocument(virtualScriptGen.textDocument.value.uri)
 				) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script || script.content === '') continue;
@@ -972,14 +982,15 @@ export function createSourceFile(
 						}
 					}
 				}
-				const vueLocs = 'mapper' in context ? context.mapper.ts.from(virtualUri, virtualRange.start, virtualRange.end) : [];
-				for (const vueLoc of vueLocs) {
-					if (!vueLoc.data || vueLoc.data.capabilities.diagnostic) {
-						return {
-							uri: vueLoc.textDocument.uri,
-							start: vueLoc.range.start,
-							end: vueLoc.range.end,
-						};
+				if ('sourceFiles' in context) {
+					for (const vueLoc of context.sourceFiles.fromTsLocation(virtualUri, virtualRange.start, virtualRange.end)) {
+						if (vueLoc.type === 'source-ts' || vueLoc.range.data.capabilities.diagnostic) {
+							return {
+								uri: vueLoc.uri,
+								start: vueLoc.range.start,
+								end: vueLoc.range.end,
+							};
+						}
 					}
 				}
 			}
@@ -1034,13 +1045,5 @@ export function createSourceFile(
 			tsProjectVersion.value = tsLs.__internal__.host.getProjectVersion?.();
 			return result.value;
 		};
-	}
-	function untrack<T extends (...args: any[]) => any>(source: T) {
-		return ((...args: any[]) => {
-			pauseTracking();
-			const result = source(...args);
-			resetTracking();
-			return result;
-		}) as T;
 	}
 }

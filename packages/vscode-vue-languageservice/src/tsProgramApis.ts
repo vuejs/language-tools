@@ -2,7 +2,7 @@ import type { ApiLanguageServiceContext } from './types';
 import * as ts from 'typescript';
 import { fsPathToUri, normalizeFileName } from '@volar/shared';
 
-export function register({ mapper, tsLs, ts }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext) {
 
     return {
         getRootFileNames,
@@ -54,28 +54,39 @@ export function register({ mapper, tsLs, ts }: ApiLanguageServiceContext) {
                 let checkMode: 'all' | 'none' | 'unused' = 'all';
                 if (mode) {
                     const uri = fsPathToUri(fileName);
-                    const vueSourceFile = mapper.findSourceFileByTsUri(uri);
+                    const vueSourceFile = sourceFiles.getSourceFileByTsUri(uri);
                     if (vueSourceFile) {
                         checkMode = vueSourceFile.shouldVerifyTsScript(uri, mode);
                     }
                 }
                 if (checkMode === 'none') continue;
                 if (checkMode === 'unused' && !(diagnostic as ts.Diagnostic).reportsUnnecessary) continue;
-                for (const tsOrVueRange of mapper.ts.from2(
-                    fileName,
+                for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
+                    fsPathToUri(fileName),
                     diagnostic.start,
                     diagnostic.start + diagnostic.length,
                 )) {
-                    if (!tsLs.__internal__.host.fileExists?.(tsOrVueRange.fileName)) continue;
-                    if (!tsOrVueRange.data || tsOrVueRange.data.capabilities.diagnostic) {
-                        const file = tsOrVueRange.fileName === fileName
+
+                    if (!tsLs.__internal__.host.fileExists?.(fsPathToUri(tsOrVueLoc.uri)))
+                        continue;
+
+                    if (tsOrVueLoc.type === 'source-ts' || tsOrVueLoc.range.data.capabilities.diagnostic) {
+                        let file = fsPathToUri(tsOrVueLoc.uri) === fileName
                             ? diagnostic.file
-                            : ts.createSourceFile(tsOrVueRange.fileName, tsOrVueRange.textDocument.getText(), ts.ScriptTarget.JSON);
+                            : undefined;
+                        if (!file) {
+                            const doc = tsOrVueLoc.type === 'embedded-ts'
+                                ? tsOrVueLoc.sourceMap.sourceDocument
+                                : tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
+                            if (doc) {
+                                file = ts.createSourceFile(fsPathToUri(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.type === 'embedded-ts' ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest /* TODO */)
+                            }
+                        }
                         const newDiagnostic: T = {
                             ...diagnostic,
                             file,
-                            start: tsOrVueRange.range.start,
-                            length: tsOrVueRange.range.end - tsOrVueRange.range.start,
+                            start: tsOrVueLoc.range.start,
+                            length: tsOrVueLoc.range.end - tsOrVueLoc.range.start,
                         };
                         const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
                         if (relatedInformation) {

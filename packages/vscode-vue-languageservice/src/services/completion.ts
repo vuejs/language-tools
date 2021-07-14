@@ -338,7 +338,7 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 				});
 				const descriptor = sourceFile.getDescriptor();
 				if (descriptor.script || descriptor.scriptSetup) {
-					for (const [key, vueFile] of sourceFiles) {
+					for (const vueFile of sourceFiles.getAll()) {
 						let baseName = path.basename(vueFile.uri, '.vue');
 						if (baseName.toLowerCase() === 'index') {
 							baseName = path.basename(path.dirname(vueFile.uri));
@@ -354,7 +354,7 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 						}
 						tags.push({
 							name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
-							description: key,
+							description: vueFile.uri,
 							attributes: [],
 						});
 					}

@@ -1,9 +1,10 @@
 import type { Hover, LocationLink, Position } from 'vscode-languageserver/node';
 import { MarkupContent } from 'vscode-languageserver/node';
 import type { ApiLanguageServiceContext } from '../types';
+import { HtmlSourceMap } from '../utils/sourceMaps';
 import { register as registerFindDefinitions } from './definition';
 
-export function register({ mapper, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, htmlLs, pugLs, getCssLs, tsLs }: ApiLanguageServiceContext) {
 
 	const findDefinitions = registerFindDefinitions(arguments[0]);
 
@@ -33,18 +34,19 @@ export function register({ mapper, htmlLs, pugLs, getCssLs }: ApiLanguageService
 		let result: Hover | undefined;
 
 		// vue -> ts
-		for (const tsRange of mapper.ts.to(uri, position)) {
+		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
-			if (!tsRange.data.capabilities.basic) continue;
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
+				continue;
 
-			const tsHover = tsRange.languageService.doHover(
-				tsRange.textDocument.uri,
-				tsRange.range.start,
+			const tsHover = tsLs.doHover(
+				tsLoc.uri,
+				tsLoc.range.start,
 				isExtra,
 			);
 			if (!tsHover) continue;
 
-			if (!isExtra && tsRange.data.capabilities.extraHoverInfo) {
+			if (!isExtra && tsLoc.type === 'embedded-ts' && tsLoc.range.data.capabilities.extraHoverInfo) {
 				const definitions = findDefinitions.on(uri, position) as LocationLink[];
 				for (const definition of definitions) {
 					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, true);
@@ -61,7 +63,7 @@ export function register({ mapper, htmlLs, pugLs, getCssLs }: ApiLanguageService
 
 			if (tsHover.range) {
 				// ts -> vue
-				for (const vueRange of mapper.ts.from(tsRange.textDocument.uri, tsHover.range.start, tsHover.range.end)) {
+				for (const vueRange of sourceFiles.fromTsLocation(tsLoc.uri, tsHover.range.start, tsHover.range.end)) {
 					result = {
 						...tsHover,
 						range: vueRange.range,
@@ -79,30 +81,39 @@ export function register({ mapper, htmlLs, pugLs, getCssLs }: ApiLanguageService
 
 		let result: Hover | undefined;
 
+		const sourceFile = sourceFiles.get(uri);
+		if (!sourceFile)
+			return result;
+
 		// vue -> html
-		for (const htmlRange of mapper.html.to(uri, position)) {
-			const htmlHover = htmlRange.language === 'html'
-				? htmlLs.doHover(
-					htmlRange.textDocument,
-					htmlRange.range.start,
-					htmlRange.htmlDocument,
-				)
-				: pugLs.doHover(
-					htmlRange.pugDocument,
-					htmlRange.range.start,
-				)
-			if (!htmlHover)
-				continue;
-			if (!htmlHover.range) {
-				result = htmlHover;
-				continue;
-			}
-			// html -> vue
-			for (const vueRange of mapper.html.from(htmlRange.textDocument.uri, htmlHover.range.start, htmlHover.range.end)) {
-				result = {
-					...htmlHover,
-					range: vueRange.range,
-				};
+		for (const sourceMap of [
+			...sourceFile.getHtmlSourceMaps(),
+			...sourceFile.getPugSourceMaps(),
+		]) {
+			for (const htmlRange of sourceMap.getMappedRanges(position)) {
+				const htmlHover = sourceMap instanceof HtmlSourceMap
+					? htmlLs.doHover(
+						sourceMap.mappedDocument,
+						htmlRange.start,
+						sourceMap.htmlDocument,
+					)
+					: pugLs.doHover(
+						sourceMap.pugDocument,
+						htmlRange.start,
+					)
+				if (!htmlHover)
+					continue;
+				if (!htmlHover.range) {
+					result = htmlHover;
+					continue;
+				}
+				// html -> vue
+				for (const vueRange of sourceMap.getSourceRanges(htmlHover.range.start, htmlHover.range.end)) {
+					result = {
+						...htmlHover,
+						range: vueRange,
+					};
+				}
 			}
 		}
 
@@ -112,27 +123,39 @@ export function register({ mapper, htmlLs, pugLs, getCssLs }: ApiLanguageService
 
 		let result: Hover | undefined;
 
+		const sourceFile = sourceFiles.get(uri);
+		if (!sourceFile)
+			return result;
+
 		// vue -> css
-		for (const cssRange of mapper.css.to(uri, position)) {
-			const cssLs = getCssLs(cssRange.textDocument.languageId);
-			if (!cssLs) continue;
-			const cssHover = cssLs.doHover(
-				cssRange.textDocument,
-				cssRange.range.start,
-				cssRange.stylesheet,
-			);
-			if (!cssHover)
+		for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+			if (!sourceMap.stylesheet)
 				continue;
-			if (!cssHover.range) {
-				result = cssHover;
+
+			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+			if (!cssLs)
 				continue;
-			}
-			// css -> vue
-			for (const vueRange of mapper.css.from(cssRange.textDocument.uri, cssHover.range.start, cssHover.range.end)) {
-				result = {
-					...cssHover,
-					range: vueRange.range,
-				};
+
+			for (const cssRange of sourceMap.getMappedRanges(position)) {
+				const cssHover = cssLs.doHover(
+					sourceMap.mappedDocument,
+					cssRange.start,
+					sourceMap.stylesheet,
+				);
+				if (!cssHover)
+					continue;
+				if (!cssHover.range) {
+					result = cssHover;
+					continue;
+				}
+				// css -> vue
+				for (const vueRange of sourceMap.getSourceRanges(cssHover.range.start, cssHover.range.end)) {
+					result = {
+						...cssHover,
+						range: vueRange,
+					};
+				}
 			}
 		}
 

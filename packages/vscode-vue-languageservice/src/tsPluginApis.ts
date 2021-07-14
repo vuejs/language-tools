@@ -1,8 +1,8 @@
 import type { ApiLanguageServiceContext } from './types';
 import type * as ts from 'typescript';
-import { notEmpty } from '@volar/shared';
+import { fsPathToUri, notEmpty, uriToFsPath } from '@volar/shared';
 
-export function register({ mapper, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 
     return {
         getCompletionsAtPosition,
@@ -64,16 +64,19 @@ export function register({ mapper, tsLs }: ApiLanguageServiceContext) {
             symbols = symbols.concat(_symbols);
             for (const ref of _symbols) {
                 loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-                for (const teleRange of mapper.ts.teleports2(ref.fileName, ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-                    if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
-                        continue;
-                    if ((mode === 'references') && !teleRange.sideData.capabilities.references)
-                        continue;
-                    if ((mode === 'rename') && !teleRange.sideData.capabilities.rename)
-                        continue;
-                    if (loopChecker.has(ref.fileName + ':' + teleRange.start))
-                        continue;
-                    withTeleports(ref.fileName, teleRange.start);
+                const teleport = sourceFiles.getTsTeleports().get(fsPathToUri(ref.fileName));
+                if (teleport) {
+                    for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+                        if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
+                            continue;
+                        if ((mode === 'references') && !teleRange.sideData.capabilities.references)
+                            continue;
+                        if ((mode === 'rename') && !teleRange.sideData.capabilities.rename)
+                            continue;
+                        if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+                            continue;
+                        withTeleports(ref.fileName, teleRange.start);
+                    }
                 }
             }
         }
@@ -100,12 +103,15 @@ export function register({ mapper, tsLs }: ApiLanguageServiceContext) {
             symbols = symbols.concat(_symbols.definitions);
             for (const ref of _symbols.definitions) {
                 loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-                for (const teleRange of mapper.ts.teleports2(ref.fileName, ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-                    if (!teleRange.sideData.capabilities.definitions)
-                        continue;
-                    if (loopChecker.has(ref.fileName + ':' + teleRange.start))
-                        continue;
-                    withTeleports(ref.fileName, teleRange.start);
+                const teleport = sourceFiles.getTsTeleports().get(fsPathToUri(ref.fileName));
+                if (teleport) {
+                    for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+                        if (!teleRange.sideData.capabilities.definitions)
+                            continue;
+                        if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+                            continue;
+                        withTeleports(ref.fileName, teleRange.start);
+                    }
                 }
             }
         }
@@ -124,12 +130,15 @@ export function register({ mapper, tsLs }: ApiLanguageServiceContext) {
             for (const symbol of _symbols) {
                 for (const ref of symbol.references) {
                     loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-                    for (const teleRange of mapper.ts.teleports2(ref.fileName, ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-                        if (!teleRange.sideData.capabilities.references)
-                            continue;
-                        if (loopChecker.has(ref.fileName + ':' + teleRange.start))
-                            continue;
-                        withTeleports(ref.fileName, teleRange.start);
+                    const teleport = sourceFiles.getTsTeleports().get(fsPathToUri(ref.fileName));
+                    if (teleport) {
+                        for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+                            if (!teleRange.sideData.capabilities.references)
+                                continue;
+                            if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+                                continue;
+                            withTeleports(ref.fileName, teleRange.start);
+                        }
                     }
                 }
             }
@@ -176,12 +185,12 @@ export function register({ mapper, tsLs }: ApiLanguageServiceContext) {
     function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
         if (!fileName) return;
         if (!textSpan) return;
-        for (const vueRange of mapper.ts.from2(fileName, textSpan.start, textSpan.start + textSpan.length)) {
+        for (const vueLoc of sourceFiles.fromTsLocation2(fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
             return {
-                fileName: vueRange.fileName,
+                fileName: uriToFsPath(vueLoc.uri),
                 textSpan: {
-                    start: vueRange.range.start,
-                    length: vueRange.range.end - vueRange.range.start,
+                    start: vueLoc.range.start,
+                    length: vueLoc.range.end - vueLoc.range.start,
                 },
             }
         }

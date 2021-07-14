@@ -14,11 +14,10 @@ import * as sharedServices from '../utils/sharedLs';
 
 export function register(context: HtmlLanguageServiceContext) {
 	const { ts } = context;
-	let uriTsDocumentMap = new Map();
 	return (document: TextDocument, options: FormattingOptions) => {
 
 		const dummyTs = sharedServices.getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTs.ls, uriTsDocumentMap, context);
+		const sourceFile = createSourceFile(document, dummyTs.ls, context);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();

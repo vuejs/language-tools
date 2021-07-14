@@ -3,7 +3,7 @@ import type { Position } from 'vscode-languageserver/node';
 import type { Location } from 'vscode-languageserver/node';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceContext) {
 
 	return (uri: string, position: Position) => {
 
@@ -23,16 +23,16 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 		let vueResult: Location[] = [];
 
 		// vue -> ts
-		for (const tsRange of mapper.ts.to(uri, position)) {
+		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
-			if (!tsRange.data.capabilities.references)
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
 				continue;
 
-			withTeleports(tsRange.textDocument.uri, tsRange.range.start);
+			withTeleports(tsLoc.uri, tsLoc.range.start);
 
 			function withTeleports(uri: string, position: Position) {
 
-				const tsLocs = tsRange.languageService.findReferences(
+				const tsLocs = tsLs.findReferences(
 					uri,
 					position,
 				);
@@ -40,12 +40,15 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 
 				for (const tsLoc of tsLocs) {
 					loopChecker.add({ uri: tsLoc.uri, range: tsLoc.range });
-					for (const teleRange of mapper.ts.teleports(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
-						if (!teleRange.sideData.capabilities.references)
-							continue;
-						if (loopChecker.has({ uri: tsLoc.uri, range: teleRange }))
-							continue;
-						withTeleports(tsLoc.uri, teleRange.start);
+					const teleport = sourceFiles.getTsTeleports().get(tsLoc.uri);
+					if (teleport) {
+						for (const teleRange of teleport.findTeleports(tsLoc.range.start, tsLoc.range.end)) {
+							if (!teleRange.sideData.capabilities.references)
+								continue;
+							if (loopChecker.has({ uri: tsLoc.uri, range: teleRange }))
+								continue;
+							withTeleports(tsLoc.uri, teleRange.start);
+						}
 					}
 				}
 			}
@@ -53,10 +56,10 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 
 		// ts -> vue
 		for (const tsLoc of tsResult) {
-			for (const vueRange of mapper.ts.from(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
+			for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.uri, tsLoc.range.start, tsLoc.range.end)) {
 				vueResult.push({
-					uri: vueRange.textDocument.uri,
-					range: vueRange.range,
+					uri: vueLoc.uri,
+					range: vueLoc.range,
 				});
 			}
 		}
@@ -68,24 +71,41 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 		let cssResult: Location[] = [];
 		let vueResult: Location[] = [];
 
+		const sourceFile = sourceFiles.get(uri);
+		if (!sourceFile)
+			return vueResult;
+
 		// vue -> css
-		for (const cssRange of mapper.css.to(uri, position)) {
-			const cssLs = getCssLs(cssRange.textDocument.languageId);
-			if (!cssLs) continue;
-			const cssLocs = cssLs.findReferences(
-				cssRange.textDocument,
-				cssRange.range.start,
-				cssRange.stylesheet,
-			);
-			cssResult = cssResult.concat(cssLocs);
+		for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+			if (!sourceMap.stylesheet)
+				continue;
+
+			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+			if (!cssLs)
+				continue;
+
+			for (const cssRange of sourceMap.getMappedRanges(position)) {
+				const cssLocs = cssLs.findReferences(
+					sourceMap.mappedDocument,
+					cssRange.start,
+					sourceMap.stylesheet,
+				);
+				cssResult = cssResult.concat(cssLocs);
+			}
 		}
 
 		// css -> vue
 		for (const cssLoc of cssResult) {
-			for (const vueRange of mapper.css.from(cssLoc.uri, cssLoc.range.start, cssLoc.range.end)) {
+
+			const sourceMap = sourceFiles.getCssSourceMaps().get(cssLoc.uri);
+			if (!sourceMap)
+				continue;
+
+			for (const vueRange of sourceMap.getSourceRanges(cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
-					uri: vueRange.textDocument.uri,
-					range: vueRange.range,
+					uri: sourceMap.sourceDocument.uri,
+					range: vueRange,
 				});
 			}
 		}

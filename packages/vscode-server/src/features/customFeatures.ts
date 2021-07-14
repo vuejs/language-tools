@@ -49,11 +49,9 @@ export function register(
             for (const globalDoc of globalDocs) {
                 fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
             }
-            const sourceFiles = ls.__internal__.getAllSourceFiles();
-            for (const sourceFile of sourceFiles) {
-                for (const [uri, doc] of sourceFile.getTsDocuments()) {
-                    fs.writeFile(uriToFsPath(uri), doc.getText(), () => {});
-                }
+            const { sourceFiles } = ls.__internal__.getContext();
+            for (const [_, doc] of sourceFiles.getTsDocuments()) {
+                fs.writeFile(uriToFsPath(doc.uri), doc.getText(), () => { });
             }
         }
     });
@@ -67,10 +65,11 @@ export function register(
         for (const [_, service] of servicesManager.services) {
             const ls = service.getLanguageServiceDontCreate();
             if (!ls) continue;
-            const sourceFiles = ls.__internal__.getAllSourceFiles();
+            const { sourceFiles } = ls.__internal__.getContext();
+            const allFiles = sourceFiles.getAll();
             let i = 0;
-            for (const sourceFile of sourceFiles) {
-                progress.report(i++ / sourceFiles.length * 100, path.relative(ls.__internal__.rootPath, uriToFsPath(sourceFile.uri)));
+            for (const sourceFile of allFiles) {
+                progress.report(i++ / allFiles.length * 100, path.relative(ls.__internal__.rootPath, uriToFsPath(sourceFile.uri)));
                 if (progress.token.isCancellationRequested) {
                     continue;
                 }

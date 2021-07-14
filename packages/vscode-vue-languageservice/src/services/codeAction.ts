@@ -6,7 +6,7 @@ import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
 
-export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceContext) {
 
 	return (uri: string, range: Range, context: CodeActionContext) => {
 
@@ -23,24 +23,24 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 
 		let result: CodeAction[] = [];
 
-		for (const tsRange of mapper.ts.to(uri, range.start, range.end)) {
+		for (const tsLoc of sourceFiles.toTsLocations(uri, range.start, range.end)) {
 
 			const tsContext: CodeActionContext = {
 				diagnostics: transformLocations(
 					context.diagnostics,
-					vueRange => tsRange.sourceMap ? tsRange.sourceMap.getMappedRange(vueRange.start, vueRange.end) : vueRange,
+					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end) : vueRange,
 				),
 				only: context.only,
 			};
 
-			if (!tsRange.sourceMap?.capabilities.codeActions)
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.codeActions)
 				continue;
 
-			let tsCodeActions = tsRange.languageService.getCodeActions(tsRange.textDocument.uri, tsRange.range, tsContext);
+			let tsCodeActions = tsLs.getCodeActions(tsLoc.uri, tsLoc.range, tsContext);
 			if (!tsCodeActions)
 				continue;
 
-			if (tsRange.sourceMap && !tsRange.sourceMap.capabilities.organizeImports) {
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.organizeImports) {
 				tsCodeActions = tsCodeActions.filter(codeAction =>
 					codeAction.kind !== CodeActionKind.SourceOrganizeImports
 					&& codeAction.kind !== CodeActionKind.SourceFixAll
@@ -50,7 +50,7 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, mapper, () => true) : undefined;
+				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, sourceFiles, () => true) : undefined;
 				if (tsCodeAction.edit && !edit) continue;
 
 				result.push({
@@ -64,66 +64,78 @@ export function register({ mapper, getCssLs }: ApiLanguageServiceContext) {
 	}
 	function onCss(uri: string, range: Range, context: CodeActionContext) {
 
-		const result: CodeAction[] = [];
+		let result: CodeAction[] = [];
 
-		for (const cssRange of mapper.css.to(uri, range.start, range.end)) {
-			const cssLs = getCssLs(cssRange.textDocument.languageId);
-			if (!cssLs) continue;
-			const cssContext: CodeActionContext = {
-				diagnostics: transformLocations(
-					context.diagnostics,
-					vueRange => cssRange.sourceMap.getMappedRange(vueRange.start, vueRange.end),
-				),
-				only: context.only,
-			};
-			const cssCodeActions = cssLs.doCodeActions2(cssRange.textDocument, cssRange.range, cssContext, cssRange.stylesheet);
-			for (const cssCodeAction of cssCodeActions) {
+		const sourceFile = sourceFiles.get(uri);
+		if (!sourceFile)
+			return result;
 
-				// TODO
-				// cssCodeAction.edit?.changeAnnotations
-				// cssCodeAction.edit?.documentChanges...
+		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-				if (cssCodeAction.edit) {
-					const vueEdit: WorkspaceEdit = {};
-					for (const cssUri in cssCodeAction.edit.changes) {
-						if (cssUri === cssRange.textDocument.uri) {
-							if (!vueEdit.changes) {
-								vueEdit.changes = {};
-							}
-							vueEdit.changes[uri] = transformLocations(
-								vueEdit.changes[cssUri],
-								cssRange_2 => cssRange.sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
-							);
-						}
-					}
-					if (cssCodeAction.edit.documentChanges) {
-						for (const cssDocChange of cssCodeAction.edit.documentChanges) {
-							if (!vueEdit.documentChanges) {
-								vueEdit.documentChanges = [];
-							}
-							if (TextDocumentEdit.is(cssDocChange)) {
-								cssDocChange.textDocument = {
-									uri: uri,
-									version: cssRange.sourceMap.sourceDocument.version,
-								};
-								cssDocChange.edits = transformLocations(
-									cssDocChange.edits,
-									cssRange_2 => cssRange.sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+			if (!sourceMap.stylesheet)
+				continue;
+
+			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+			if (!cssLs)
+				continue;
+
+			for (const cssRange of sourceMap.getMappedRanges(range.start, range.end)) {
+				const cssContext: CodeActionContext = {
+					diagnostics: transformLocations(
+						context.diagnostics,
+						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end),
+					),
+					only: context.only,
+				};
+				const cssCodeActions = cssLs.doCodeActions2(sourceMap.mappedDocument, cssRange, cssContext, sourceMap.stylesheet);
+				for (const codeAction of cssCodeActions) {
+
+					// TODO
+					// cssCodeAction.edit?.changeAnnotations
+					// cssCodeAction.edit?.documentChanges...
+
+					if (codeAction.edit) {
+						const vueEdit: WorkspaceEdit = {};
+						for (const cssUri in codeAction.edit.changes) {
+							if (cssUri === sourceMap.mappedDocument.uri) {
+								if (!vueEdit.changes) {
+									vueEdit.changes = {};
+								}
+								vueEdit.changes[uri] = transformLocations(
+									vueEdit.changes[cssUri],
+									cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
 								);
-								vueEdit.documentChanges.push(cssDocChange);
 							}
 						}
+						if (codeAction.edit.documentChanges) {
+							for (const cssDocChange of codeAction.edit.documentChanges) {
+								if (!vueEdit.documentChanges) {
+									vueEdit.documentChanges = [];
+								}
+								if (TextDocumentEdit.is(cssDocChange)) {
+									cssDocChange.textDocument = {
+										uri: uri,
+										version: sourceMap.sourceDocument.version,
+									};
+									cssDocChange.edits = transformLocations(
+										cssDocChange.edits,
+										cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+									);
+									vueEdit.documentChanges.push(cssDocChange);
+								}
+							}
+						}
+						codeAction.edit = vueEdit;
 					}
-					cssCodeAction.edit = vueEdit;
-				}
-				if (cssCodeAction.diagnostics) {
-					cssCodeAction.diagnostics = transformLocations(
-						cssCodeAction.diagnostics,
-						cssRange_2 => cssRange.sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
-					);
-				}
+					if (codeAction.diagnostics) {
+						codeAction.diagnostics = transformLocations(
+							codeAction.diagnostics,
+							cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+						);
+					}
 
-				result.push(cssCodeAction);
+					result.push(codeAction);
+				}
 			}
 		}
 

@@ -7,7 +7,6 @@ import * as upath from 'upath';
 import type * as ts from 'typescript';
 import { DocumentContext, HTMLDocument } from 'vscode-html-languageservice';
 import { HtmlLanguageServiceContext, ApiLanguageServiceContext } from './types';
-import { createMapper } from './utils/mapper';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
 // vue services
@@ -48,6 +47,7 @@ import * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
+import { createSourceFiles } from './sourceFiles';
 
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
@@ -98,8 +98,7 @@ export function createLanguageService(
 	let tsProjectVersionWithoutTemplate = 0;
 	let lastCompletionUpdateVersion = -1;
 	const documents = new UriMap<TextDocument>();
-	const sourceFiles = new UriMap<SourceFile>();
-	const uriTsDocumentMap: Map<string, TextDocument> = new Map();
+	const sourceFiles = createSourceFiles();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
 
@@ -145,7 +144,6 @@ export function createLanguageService(
 		vueHost,
 		sourceFiles,
 		tsLs,
-		mapper: createMapper(sourceFiles, tsLs, getTextDocument),
 		documentContext,
 	};
 	const _callHierarchy = callHierarchy.register(context);
@@ -218,8 +216,8 @@ export function createLanguageService(
 		getEditsForFileRename: apiHook(renames.onRenameFile, false),
 		getSemanticTokens: apiHook(semanticTokens.register(context)),
 
-		doHover: apiHook(hover.register(context), getShouldUpdateTemplateScript),
-		doComplete: apiHook(completions.register(context), getShouldUpdateTemplateScript),
+		doHover: apiHook(hover.register(context), isPositionInTemplate),
+		doComplete: apiHook(completions.register(context), isPositionInTemplate),
 
 		getCodeActions: apiHook(codeActions.register(context), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(context), false),
@@ -249,8 +247,7 @@ export function createLanguageService(
 			}),
 			getTsService: () => tsLs,
 			getGlobalDocs: () => [globalDoc],
-			getSourceFile: apiHook(getSourceFile),
-			getAllSourceFiles: apiHook(getAllSourceFiles),
+			getContext: apiHook(() => context),
 			getD3: apiHook(d3.register(context)),
 			executeCommand: apiHook(executeCommand.register(context, references.register(context))),
 			detectTagNameCase: apiHook(tagNameCase.register(context)),
@@ -258,9 +255,14 @@ export function createLanguageService(
 		},
 	};
 
-	function getShouldUpdateTemplateScript(uri: string, pos: Position) {
+	function isPositionInTemplate(uri: string, pos: Position) {
 
-		if (!isInTemplate()) {
+		const sourceFile = sourceFiles.get(uri);
+		if (!sourceFile) {
+			return false;
+		}
+
+		if (!isInTemplate(sourceFile)) {
 			return false;
 		}
 
@@ -272,16 +274,18 @@ export function createLanguageService(
 
 		return false;
 
-		function isInTemplate() {
-			const tsRanges = context.mapper.ts.to(uri, pos);
-			for (const tsRange of tsRanges) {
-				if (tsRange.data.vueTag === 'template') {
-					return true;
+		function isInTemplate(sourceFile: SourceFile) {
+			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				for (const tsRange of sourceMap.getMappedRanges(pos)) {
+					if (tsRange.data.vueTag === 'template') {
+						return true;
+					}
 				}
 			}
-			const htmlRanges = context.mapper.html.to(uri, pos);
-			if (htmlRanges.length) {
-				return true;
+			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+				for (const _ of sourceMap.getMappedRanges(pos)) {
+					return true;
+				}
 			}
 			return false;
 		}
@@ -407,8 +411,8 @@ export function createLanguageService(
 			getScriptSnapshot,
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				const result = vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
-				for (const [_, sourceFile] of sourceFiles) {
-					const vuePath = uriToFsPath(sourceFile.uri);
+				for (const uri of sourceFiles.getUris()) {
+					const vuePath = uriToFsPath(uri);
 					const vuePath2 = upath.join(path, upath.basename(vuePath));
 					if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
 						continue;
@@ -462,7 +466,7 @@ export function createLanguageService(
 			if (uri === globalDoc.uri) {
 				return globalDoc.version.toString();
 			}
-			let doc = uriTsDocumentMap.get(uri)
+			let doc = sourceFiles.getTsDocuments().get(uri);
 			if (doc) {
 				return doc.version.toString();
 			}
@@ -481,14 +485,12 @@ export function createLanguageService(
 				scriptSnapshots.set(fileName, [version, snapshot]);
 				return snapshot;
 			}
-			for (const [_, sourceFile] of sourceFiles) {
-				const doc = sourceFile.getTsDocuments().get(uri);
-				if (doc) {
-					const text = doc.getText();
-					const snapshot = ts.ScriptSnapshot.fromString(text);
-					scriptSnapshots.set(fileName, [version, snapshot]);
-					return snapshot;
-				}
+			const doc = sourceFiles.getTsDocuments().get(uri);
+			if (doc) {
+				const text = doc.getText();
+				const snapshot = ts.ScriptSnapshot.fromString(text);
+				scriptSnapshots.set(fileName, [version, snapshot]);
+				return snapshot;
 			}
 			let tsScript = vueHost.getScriptSnapshot(fileName);
 			if (tsScript) {
@@ -513,12 +515,6 @@ export function createLanguageService(
 		}
 		return tsLs.__internal__.getTextDocument(uri);
 	}
-	function getSourceFile(uri: string) {
-		return sourceFiles.get(uri);
-	}
-	function getAllSourceFiles() {
-		return [...sourceFiles.values()];
-	}
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
 		let vueTemplateScriptUpdated = false;
@@ -536,7 +532,6 @@ export function createLanguageService(
 				sourceFiles.set(uri, createSourceFile(
 					doc,
 					tsLs,
-					uriTsDocumentMap,
 					context,
 				));
 				vueScriptsUpdated = true;
