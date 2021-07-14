@@ -161,13 +161,15 @@ export function register(
         return items?.length ? items : null;
     });
     connection.languages.callHierarchy.onIncomingCalls(handler => {
-        const { uri } = handler.item.data as { uri: string };
+        const data = handler.item.data as { uri?: string } | undefined;
+        const uri = data?.uri ?? handler.item.uri;
         return servicesManager
             .getMatchService(uri)
             ?.callHierarchy.getIncomingCalls(handler.item) ?? [];
     });
     connection.languages.callHierarchy.onOutgoingCalls(handler => {
-        const { uri } = handler.item.data as { uri: string };
+        const data = handler.item.data as { uri?: string } | undefined;
+        const uri = data?.uri ?? handler.item.uri;
         return servicesManager
             .getMatchService(uri)
             ?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
