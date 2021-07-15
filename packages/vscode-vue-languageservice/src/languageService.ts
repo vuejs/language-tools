@@ -398,9 +398,12 @@ export function createLanguageService(
 				? fileName => {
 					const fileNameTrim = upath.trimExt(fileName);
 					if (fileNameTrim.endsWith('.vue')) {
-						const isHostFile = vueHost.getScriptFileNames().includes(fileNameTrim);
+						const sourceFile = sourceFiles.get(fsPathToUri(fileNameTrim));
+						if (sourceFile) {
+							return sourceFiles.getTsDocuments(lsType).has(fsPathToUri(fileName));
+						}
 						const fileExists = !!vueHost.fileExists?.(fileNameTrim);
-						if (!isHostFile && fileExists) {
+						if (fileExists) {
 							vueProjectVersion += '-old'; // force update
 							update(false); // create virtual files
 						}
