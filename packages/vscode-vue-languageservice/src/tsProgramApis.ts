@@ -79,30 +79,34 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
                     if (!vueHost.fileExists?.(uriToFsPath(tsOrVueLoc.uri)))
                         continue;
 
-                    if (tsOrVueLoc.type === 'source-ts' || tsOrVueLoc.range.data.capabilities.diagnostic) {
-                        let file = uriToFsPath(tsOrVueLoc.uri) === fileName
-                            ? diagnostic.file
-                            : undefined;
-                        if (!file) {
-                            const doc = tsOrVueLoc.type === 'embedded-ts'
-                                ? tsOrVueLoc.sourceMap.sourceDocument
-                                : tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
-                            if (doc) {
-                                file = ts.createSourceFile(uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.type === 'embedded-ts' ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest /* TODO */)
-                            }
+                    if (tsOrVueLoc.type === 'embedded-ts' && !tsOrVueLoc.range.data.capabilities.diagnostic)
+                        continue;
+
+                    if (tsOrVueLoc.type === 'source-ts' && tsOrVueLoc.lsType === 'template')
+                        continue;
+
+                    let file = uriToFsPath(tsOrVueLoc.uri) === fileName
+                        ? diagnostic.file
+                        : undefined;
+                    if (!file) {
+                        const doc = tsOrVueLoc.type === 'embedded-ts'
+                            ? tsOrVueLoc.sourceMap.sourceDocument
+                            : tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
+                        if (doc) {
+                            file = ts.createSourceFile(uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.type === 'embedded-ts' ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest /* TODO */)
                         }
-                        const newDiagnostic: T = {
-                            ...diagnostic,
-                            file,
-                            start: tsOrVueLoc.range.start,
-                            length: tsOrVueLoc.range.end - tsOrVueLoc.range.start,
-                        };
-                        const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
-                        if (relatedInformation) {
-                            (newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(lsType, relatedInformation);
-                        }
-                        result.push(newDiagnostic);
                     }
+                    const newDiagnostic: T = {
+                        ...diagnostic,
+                        file,
+                        start: tsOrVueLoc.range.start,
+                        length: tsOrVueLoc.range.end - tsOrVueLoc.range.start,
+                    };
+                    const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
+                    if (relatedInformation) {
+                        (newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(lsType, relatedInformation);
+                    }
+                    result.push(newDiagnostic);
                 }
             }
             else if (
