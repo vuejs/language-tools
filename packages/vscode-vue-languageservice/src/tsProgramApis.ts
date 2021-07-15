@@ -1,10 +1,10 @@
 import type { ApiLanguageServiceContext } from './types';
 import * as ts from 'typescript';
-import { fsPathToUri, normalizeFileName } from '@volar/shared';
+import { fsPathToUri, normalizeFileName, uriToFsPath } from '@volar/shared';
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, vueHost }: ApiLanguageServiceContext) {
 
     return {
         getRootFileNames,
@@ -76,11 +76,11 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs }:
                     diagnostic.start + diagnostic.length,
                 )) {
 
-                    if (!tsLs.__internal__.host.fileExists?.(fsPathToUri(tsOrVueLoc.uri)))
+                    if (!vueHost.fileExists?.(uriToFsPath(tsOrVueLoc.uri)))
                         continue;
 
                     if (tsOrVueLoc.type === 'source-ts' || tsOrVueLoc.range.data.capabilities.diagnostic) {
-                        let file = fsPathToUri(tsOrVueLoc.uri) === fileName
+                        let file = uriToFsPath(tsOrVueLoc.uri) === fileName
                             ? diagnostic.file
                             : undefined;
                         if (!file) {
@@ -88,7 +88,7 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs }:
                                 ? tsOrVueLoc.sourceMap.sourceDocument
                                 : tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
                             if (doc) {
-                                file = ts.createSourceFile(fsPathToUri(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.type === 'embedded-ts' ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest /* TODO */)
+                                file = ts.createSourceFile(uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.type === 'embedded-ts' ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest /* TODO */)
                             }
                         }
                         const newDiagnostic: T = {
