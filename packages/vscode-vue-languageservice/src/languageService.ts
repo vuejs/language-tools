@@ -459,7 +459,6 @@ export function createLanguageService(
 				tsFileNames.push(uriToFsPath(tsUri)); // virtual .ts
 			}
 			for (const fileName of vueHost.getScriptFileNames()) {
-				const uri = fsPathToUri(fileName);
 				if (isTsPlugin) {
 					tsFileNames.push(fileName); // .vue + .ts
 				}

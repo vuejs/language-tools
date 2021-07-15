@@ -139,8 +139,7 @@ export function createSourceFile(
 		const docs = new Map<string, TextDocument>();
 
 		docs.set(templateLsMainScript.textDocument.value.uri, templateLsMainScript.textDocument.value);
-		if (templateLsScript.textDocument.value)
-			docs.set(templateLsScript.textDocument.value.uri, templateLsScript.textDocument.value);
+		docs.set(templateLsScript.textDocument.value.uri, templateLsScript.textDocument.value);
 		if (templateLsScript.textDocumentForSuggestion.value)
 			docs.set(templateLsScript.textDocumentForSuggestion.value.uri, templateLsScript.textDocumentForSuggestion.value);
 		if (templateLsTemplateScript.textDocument.value)
@@ -783,22 +782,21 @@ export function createSourceFile(
 		function useScriptExistValidation() {
 			const result = computed(() => {
 				const diags: Diagnostic[] = [];
-				if (
-					templateLsScript.textDocument.value
-					&& !templateTsLs.__internal__.getTextDocument(templateLsScript.textDocument.value.uri)
-				) {
+				if (!scriptTsLs.__internal__.getValidTextDocument(scriptLsScript.textDocument.value.uri)) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script || script.content === '') continue;
-						diags.push(Diagnostic.create(
+						const error = Diagnostic.create(
 							{
 								start: vueDoc.value.positionAt(script.loc.start),
 								end: vueDoc.value.positionAt(script.loc.end),
 							},
-							'services are not working for this script block because virtual file is not found in TS server, maybe try to add lang="ts" to <script> or add `"allowJs": true` to tsconfig.json',
-							DiagnosticSeverity.Warning,
+							'Virtual script not found, may missing lang="ts" or "allowJs": true.',
+							DiagnosticSeverity.Information,
 							undefined,
 							'volar',
-						))
+						);
+						error.tags = [DiagnosticTag.Unnecessary];
+						diags.push(error);
 					}
 				}
 				return diags;
@@ -873,7 +871,6 @@ export function createSourceFile(
 				const result: Diagnostic[] = [];
 				if (!templateLsTemplateScript.textDocument.value
 					|| !templateLsTemplateScript.teleportSourceMap.value
-					|| !templateLsScript.textDocument.value
 				) return result;
 				for (const diag of errors_1.value) {
 					const spanText = templateLsTemplateScript.textDocument.value.getText(diag.range);
