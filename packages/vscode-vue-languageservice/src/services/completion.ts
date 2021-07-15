@@ -280,7 +280,11 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 							const data: Data = prop.data;
 							const name = nameCases.attr === 'pascalCase' ? data.name : hyphenate(data.name);
 							if (hyphenate(name).startsWith('on-')) {
-								const propName = '@' + name.substr('on-'.length);
+								const propName = '@' +
+									(name.startsWith('on-')
+										? name.substr('on-'.length)
+										: (name['on'.length].toLowerCase() + name.substr('onX'.length))
+									);
 								const propKey = componentName + ':' + propName;
 								attributes.push({
 									name: propName,
