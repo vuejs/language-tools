@@ -8,7 +8,7 @@ import {
 import { uriToFsPath } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (uri: string, position: Position): SignatureHelp | undefined => {
 		const document = getTextDocument(uri);
 		if (!document) return;

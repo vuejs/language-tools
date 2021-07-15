@@ -11,7 +11,7 @@ import * as templateGen from '../generators/template_scriptSetup';
 
 export function useTemplateLsScript(
 	lsType: 'template' | 'script',
-	ts: typeof import('typescript'),
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDoc: Ref<TextDocument>,
 	script: Ref<IDescriptor['script']>,
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,

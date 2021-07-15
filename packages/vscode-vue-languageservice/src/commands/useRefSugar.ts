@@ -8,7 +8,7 @@ import { sleep } from '@volar/shared';
 import { parseRefSugarRanges } from '../parsers/scriptSetupRanges';
 
 export async function execute(
-    ts: typeof import('typescript'),
+    ts: typeof import('typescript/lib/tsserverlibrary'),
     document: TextDocument,
     sourceFile: SourceFile,
     connection: Connection,

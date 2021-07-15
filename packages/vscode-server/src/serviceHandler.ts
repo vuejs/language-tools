@@ -284,7 +284,7 @@ export function createServiceHandler(
 	}
 }
 
-function createParsedCommandLine(ts: typeof import('typescript'), tsConfig: string) {
+function createParsedCommandLine(ts: typeof import('typescript/lib/tsserverlibrary'), tsConfig: string) {
 	const parseConfigHost: ts.ParseConfigHost = {
 		...ts.sys,
 		readDirectory: (path, extensions, exclude, include, depth) => {

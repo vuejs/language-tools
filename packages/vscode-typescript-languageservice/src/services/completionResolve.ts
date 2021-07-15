@@ -5,7 +5,7 @@ import { entriesToLocations } from '../utils/transforms';
 import { handleKindModifiers } from './completion';
 import type { Data } from './completion';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (item: CompletionItem, newOffset?: number): CompletionItem => {
 		const data: Data = item.data;
 		const fileName = data.fileName;

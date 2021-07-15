@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (uri: string) => {
 		const document = getTextDocument(uri);
 		if (!document) return [];

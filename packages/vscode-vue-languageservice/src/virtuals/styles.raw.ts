@@ -7,7 +7,7 @@ import { uriToFsPath } from '@volar/shared';
 import * as upath from 'upath';
 
 export function useStylesRaw(
-	ts: typeof import('typescript'),
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
 	context: LanguageServiceContext,

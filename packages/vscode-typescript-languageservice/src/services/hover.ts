@@ -11,7 +11,7 @@ import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as Proto from '../protocol';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript')) {
+export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (uri: string, position: Position, documentOnly = false): Hover | undefined => {
 		const document = getTextDocument(uri);
 		if (!document) return;

@@ -3,7 +3,7 @@ import type { TextRange } from './types';
 
 export type ScriptSetupRanges = ReturnType<typeof parseScriptSetupRanges>;
 
-export function parseScriptSetupRanges(ts: typeof import('typescript'), content: string, lang: string) {
+export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), content: string, lang: string) {
     const labels: (TextRange & {
         binarys: {
             parent: TextRange,
@@ -201,7 +201,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript'), content:
     }
 }
 
-export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
+export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
     const bindings: TextRange[] = [];
     sourceFile.forEachChild(node => {
         if (ts.isVariableStatement(node)) {
@@ -246,7 +246,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: 
         return findBindingVars(ts, left, sourceFile);
     }
 }
-export function parseRefSugarRanges(ts: typeof import('typescript'), content: string, lang: string) {
+export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverlibrary'), content: string, lang: string) {
     const refCalls: (TextRange & {
         vars: TextRange[],
         left: TextRange,
@@ -298,7 +298,7 @@ export function parseRefSugarRanges(ts: typeof import('typescript'), content: st
     }
 }
 
-function findBindingVars(ts: typeof import('typescript'), left: ts.BindingName, sourceFile: ts.SourceFile) {
+function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrary'), left: ts.BindingName, sourceFile: ts.SourceFile) {
     const vars: TextRange[] = [];
     worker(left);
     return vars;
