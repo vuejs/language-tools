@@ -127,7 +127,11 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs }: ApiLanguageSer
 				} | undefined;
 
 				for (const maped of sourceMap) {
-					if (maped.data.capabilities.semanticTokens) {
+					if (
+						maped.data.capabilities.semanticTokens
+						&& maped.sourceRange.end > offsetRange.start
+						&& maped.sourceRange.start < offsetRange.end
+					) {
 						if (!searchRange) {
 							searchRange = {
 								start: maped.sourceRange.start,
@@ -136,7 +140,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs }: ApiLanguageSer
 						}
 						else {
 							searchRange.start = Math.min(maped.sourceRange.start, searchRange.start);
-							searchRange.end = Math.min(maped.sourceRange.end, searchRange.end);
+							searchRange.end = Math.max(maped.sourceRange.end, searchRange.end);
 						}
 					}
 				}
