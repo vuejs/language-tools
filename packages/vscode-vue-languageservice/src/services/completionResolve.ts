@@ -8,7 +8,7 @@ import { uriToFsPath } from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 
-export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServiceContext) {
 	return (item: CompletionItem, newOffset?: number) => {
 
 		const data: CompletionData | undefined = item.data;
@@ -30,18 +30,17 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 		return item;
 
 		function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				if (sourceMap.mappedDocument.uri !== data.docUri) continue;
-
-				let newTsOffset: number | undefined;
+			const sourceMap = sourceFiles.getTsSourceMaps(data.lsType).get(data.docUri);
+			if (sourceMap) {
+				let newOffset_2: number | undefined;
 				if (newOffset) {
 					for (const tsRange of sourceMap.getMappedRanges2(newOffset)) {
 						if (!tsRange.data.capabilities.completion) continue;
-						newTsOffset = tsRange.start;
+						newOffset_2 = tsRange.start;
 						break;
 					}
 				}
-				data.tsItem = tsLs.doCompletionResolve(data.tsItem, newTsOffset);
+				data.tsItem = getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newOffset_2);
 				const newVueItem = transformCompletionItem(
 					data.tsItem,
 					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
@@ -59,7 +58,7 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 			let tsItem: CompletionItem | undefined = data.tsItem;
 			if (!tsItem) return vueItem;
 
-			tsItem = tsLs.doCompletionResolve(tsItem);
+			tsItem = getTsLs('template').doCompletionResolve(tsItem);
 			vueItem.tags = [...vueItem.tags ?? [], ...tsItem.tags ?? []];
 
 			const details: string[] = [];
@@ -153,11 +152,9 @@ export function register({ sourceFiles, tsLs, ts, vueHost }: ApiLanguageServiceC
 
 			function planAInsertText() {
 
-				const scriptUrl = sourceFile.getVirtualScriptUri();
-				if (!scriptUrl) return;
-
+				const scriptUrl = sourceFile.getScriptTsDocument().uri;
 				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-				const tsDetail = tsLs.__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
+				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
 				if (tsDetail?.codeActions) {
 					for (const action of tsDetail.codeActions) {
 						for (const change of action.changes) {

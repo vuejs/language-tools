@@ -5,31 +5,31 @@ import type {
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string, positions: Position[]) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
-		const tsResult = getTsResult(sourceFile);
+		const tsResult = getTsResult();
 		const htmlResult = getHtmlResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
 		return [...cssResult, ...htmlResult, ...tsResult];
 
-		function getTsResult(sourceFile: SourceFile) {
+		function getTsResult() {
 			let result: SelectionRange[] = [];
 			for (const position of positions) {
-				for (const sourceMap of sourceFile.getTsSourceMaps()) {
-					for (const tsRange of sourceMap.getMappedRanges(position)) {
-						if (!tsRange.data.capabilities.basic) continue;
-						const selectRange = tsLs.getSelectionRange(sourceMap.mappedDocument.uri, tsRange.start);
-						if (selectRange) {
-							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
-							if (vueRange) {
-								result.push({
-									range: vueRange,
-									// TODO: parent
-								});
-							}
+				for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+
+					if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
+						continue;
+
+					const selectRange = getTsLs(tsLoc.lsType).getSelectionRange(tsLoc.uri, tsLoc.range.start);
+					if (selectRange) {
+						for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, selectRange.range.start, selectRange.range.end)) {
+							result.push({
+								range: vueLoc.range,
+								// TODO: parent
+							});
 						}
 					}
 				}

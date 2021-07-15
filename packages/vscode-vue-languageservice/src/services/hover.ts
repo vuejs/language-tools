@@ -4,7 +4,7 @@ import type { ApiLanguageServiceContext } from '../types';
 import { HtmlSourceMap } from '../utils/sourceMaps';
 import { register as registerFindDefinitions } from './definition';
 
-export function register({ sourceFiles, htmlLs, pugLs, getCssLs, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
 	const findDefinitions = registerFindDefinitions(arguments[0]);
 
@@ -39,6 +39,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, tsLs }: ApiLang
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
 				continue;
 
+			const tsLs = getTsLs(tsLoc.lsType);
 			const tsHover = tsLs.doHover(
 				tsLoc.uri,
 				tsLoc.range.start,
@@ -63,7 +64,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, tsLs }: ApiLang
 
 			if (tsHover.range) {
 				// ts -> vue
-				for (const vueRange of sourceFiles.fromTsLocation(tsLoc.uri, tsHover.range.start, tsHover.range.end)) {
+				for (const vueRange of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsHover.range.start, tsHover.range.end)) {
 					result = {
 						...tsHover,
 						range: vueRange.range,

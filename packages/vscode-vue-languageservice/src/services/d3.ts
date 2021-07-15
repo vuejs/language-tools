@@ -10,7 +10,7 @@ import * as definitions from './definition';
 import type * as ts from 'typescript';
 import { languageIdToSyntax } from '@volar/shared';
 
-export function register({ ts, sourceFiles, tsLs }: ApiLanguageServiceContext) {
+export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceContext) {
 
 	const findReferences = references.register(arguments[0]);
 	const findDefinition = definitions.register(arguments[0]);
@@ -39,7 +39,7 @@ export function register({ ts, sourceFiles, tsLs }: ApiLanguageServiceContext) {
 		}[] = [];
 
 		const sourceFile = sourceFiles.get(document.uri);
-		const tsDoc = tsLs.__internal__.getTextDocument(document.uri);
+		const tsDoc = templateTsLs.__internal__.getTextDocument(document.uri);
 
 		if (sourceFile) {
 

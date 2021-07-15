@@ -10,38 +10,38 @@ import type {
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
+export interface Data {
+	lsType: 'script' | 'template'
+}
+
+export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 	function doPrepare(uri: string, position: Position) {
 		let vueItems: CallHierarchyItem[] = [];
 
-		const sourceFile = sourceFiles.get(uri);
-		if (sourceFile) {
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsRange of sourceMap.getMappedRanges(position)) {
-					if (!tsRange.data.capabilities.references) continue;
-					const items = worker(sourceMap.mappedDocument.uri, tsRange.start);
-					vueItems = vueItems.concat(items);
-				}
-			}
-		}
-		else {
-			vueItems = worker(uri, position);
-		}
+		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
-		for (const vueItem of vueItems) {
-			vueItem.data = {
-				uri: uri,
-			};
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
+				continue;
+
+			const items = worker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start);
+			const data: Data = { lsType: tsLoc.lsType };
+			for (const item of items) {
+				item.data = data;
+			}
+			vueItems = vueItems.concat(items);
 		}
 
 		return dedupe.withLocations(vueItems);
 	}
 	function getIncomingCalls(item: CallHierarchyItem) {
+		const data: Data | undefined = item.data as any;
+		const lsType = data?.lsType ?? 'template';
+		const tsLs = getTsLs(lsType);
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLs.callHierarchy.getIncomingCalls).flat();
 		const vueIncomingItems: CallHierarchyIncomingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
-			const vueResult = toVueCallHierarchyItem(tsIncomingItem.from, tsIncomingItem.fromRanges);
+			const vueResult = toVueCallHierarchyItem(lsType, tsIncomingItem.from, tsIncomingItem.fromRanges);
 			if (!vueResult) continue;
 			const [vueItem, vueRanges] = vueResult;
 			vueIncomingItems.push({
@@ -52,11 +52,14 @@ export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 		return dedupe.withCallHierarchyIncomingCalls(vueIncomingItems);
 	}
 	function getOutgoingCalls(item: CallHierarchyItem) {
+		const data: Data | undefined = item.data as any;
+		const lsType = data?.lsType ?? 'template';
+		const tsLs = getTsLs(lsType);
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLs.callHierarchy.getOutgoingCalls).flat();
 		const vueIncomingItems: CallHierarchyOutgoingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
-			const vueResult = toVueCallHierarchyItem(tsIncomingItem.to, tsIncomingItem.fromRanges);
+			const vueResult = toVueCallHierarchyItem(lsType, tsIncomingItem.to, tsIncomingItem.fromRanges);
 			if (!vueResult) continue;
 			const [vueItem, vueRanges] = vueResult;
 			vueIncomingItems.push({
@@ -73,25 +76,30 @@ export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 		getOutgoingCalls,
 	}
 
-	function worker(tsDocUri: string, tsPos: Position) {
+	function worker(lsType: 'script' | 'template', tsDocUri: string, tsPos: Position) {
 		const vueOrTsItems: CallHierarchyItem[] = [];
+		const tsLs = getTsLs(lsType);
 		const tsItems = tsLs.callHierarchy.doPrepare(tsDocUri, tsPos);
 		for (const tsItem of tsItems) {
-			const result = toVueCallHierarchyItem(tsItem, []);
+			const result = toVueCallHierarchyItem(lsType, tsItem, []);
 			if (!result) continue;
 			const [vueItem] = result;
 			if (vueItem) {
 				vueOrTsItems.push(vueItem);
 			}
 		}
+		for (const item of vueOrTsItems) {
+			if (!item.data) item.data = {};
+			(item.data as any).uri = tsDocUri;
+		}
 		return vueOrTsItems;
 	}
-	function toVueCallHierarchyItem(tsItem: CallHierarchyItem, tsRanges: Range[]): [CallHierarchyItem, Range[]] | undefined {
-		if (!sourceFiles.getTsDocuments().get(tsItem.uri)) {
+	function toVueCallHierarchyItem(lsType: 'script' | 'template', tsItem: CallHierarchyItem, tsRanges: Range[]): [CallHierarchyItem, Range[]] | undefined {
+		if (!sourceFiles.getTsDocuments(lsType).get(tsItem.uri)) {
 			return [tsItem, tsRanges]; // not virtual file
 		}
 
-		const sourceMap = sourceFiles.getTsSourceMaps().get(tsItem.uri);
+		const sourceMap = sourceFiles.getTsSourceMaps(lsType).get(tsItem.uri);
 		if (!sourceMap)
 			return;
 
@@ -126,42 +134,22 @@ export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
 
 		const tsItems: CallHierarchyItem[] = [];
 
-		const sourceFile = sourceFiles.get(item.uri);
-		if (sourceFile) {
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsLocs = sourceMap.getMappedRanges(item.range.start, item.range.end);
-				const tsSelectionRanges = sourceMap.getMappedRanges(item.selectionRange.start, item.selectionRange.end);
-				if (tsLocs.length) {
-					for (const tsRange of tsLocs) {
-						if (!tsRange.data.capabilities.references) continue;
-						for (const tsSelectionRange of tsSelectionRanges) {
-							tsItems.push({
-								...item,
-								uri: sourceMap.mappedDocument.uri,
-								range: tsRange,
-								selectionRange: tsSelectionRange,
-							});
-						}
-					}
-				}
-				else {
-					for (const maped of sourceMap) {
-						if (maped.data.capabilities.references) {
-							for (const tsSelectionRange of tsSelectionRanges) {
-								tsItems.push({
-									...item,
-									uri: sourceMap.mappedDocument.uri,
-									range: {
-										start: sourceMap.mappedDocument.positionAt(0),
-										end: sourceMap.mappedDocument.positionAt(sourceMap.mappedDocument.getText().length),
-									},
-									selectionRange: tsSelectionRange,
-								});
-							}
-							break;
-						}
-					}
-				}
+		for (const tsLoc of sourceFiles.toTsLocations(item.uri, item.range.start, item.range.end)) {
+
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
+				continue;
+
+			for (const tsSelectionLoc of sourceFiles.toTsLocations(item.uri, item.selectionRange.start, item.selectionRange.end)) {
+
+				if (tsSelectionLoc.type === 'embedded-ts' && !tsSelectionLoc.range.data.capabilities.references)
+					continue;
+
+				tsItems.push({
+					...item,
+					uri: tsLoc.uri,
+					range: tsLoc.range,
+					selectionRange: tsSelectionLoc.range,
+				});
 			}
 		}
 

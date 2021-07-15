@@ -10,6 +10,7 @@ import type * as pug from 'vscode-pug-languageservice';
 import type { SourceFiles } from './sourceFiles';
 
 export interface TsCompletionData {
+	lsType: 'template' | 'script',
 	mode: 'ts',
 	uri: string,
 	docUri: string,
@@ -81,6 +82,8 @@ export type ApiLanguageServiceContext = LanguageServiceContextBase & {
 	sourceFiles: SourceFiles;
 	vueHost: LanguageServiceHost;
 	documentContext: DocumentContext;
-	tsLs: ts2.LanguageService;
+	scriptTsLs: ts2.LanguageService;
+	templateTsLs: ts2.LanguageService;
+	getTsLs: (lsType: 'template' | 'script') => ts2.LanguageService;
 }
 export type LanguageServiceContext = ApiLanguageServiceContext | HtmlLanguageServiceContext;

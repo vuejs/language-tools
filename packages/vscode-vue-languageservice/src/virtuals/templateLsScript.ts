@@ -9,7 +9,8 @@ import { generate as genScript } from '../generators/script';
 import { generate as genScriptSuggestion } from '../generators/script_suggestion';
 import * as templateGen from '../generators/template_scriptSetup';
 
-export function useScriptSetupGen(
+export function useTemplateLsScript(
+	lsType: 'template' | 'script',
 	ts: typeof import('typescript'),
 	vueDoc: Ref<TextDocument>,
 	script: Ref<IDescriptor['script']>,
@@ -32,6 +33,7 @@ export function useScriptSetupGen(
 	);
 	const codeGen = computed(() =>
 		genScript(
+			lsType,
 			uri,
 			script.value,
 			scriptSetup.value,
@@ -59,11 +61,8 @@ export function useScriptSetupGen(
 				getValidScriptSyntax('js')
 	});
 	const textDocument = computed(() => {
-		if (!codeGen.value)
-			return;
-
 		return TextDocument.create(
-			`${uri}.__VLS_script.${lang.value}`,
+			lsType === 'template' ? `${uri}.__VLS_script.${lang.value}` : `${uri}.${lang.value}`,
 			syntaxToLanguageId(lang.value),
 			version++,
 			codeGen.value.getText(),
@@ -96,14 +95,10 @@ export function useScriptSetupGen(
 		);
 	});
 	const sourceMap = computed(() => {
-		if (!codeGen.value)
-			return;
-		if (!textDocument.value)
-			return;
-
 		const sourceMap = new TsSourceMap(
 			vueDoc.value,
 			textDocument.value,
+			lsType,
 			false,
 			{
 				foldingRanges: false,
@@ -126,6 +121,7 @@ export function useScriptSetupGen(
 		const sourceMap = new TsSourceMap(
 			vueDoc.value,
 			textDocumentForSuggestion.value,
+			lsType,
 			false,
 			{
 				foldingRanges: false,
@@ -148,6 +144,7 @@ export function useScriptSetupGen(
 		const newSourceMap = new TsSourceMap(
 			sourceMap.value.sourceDocument,
 			textDocumentForTemplate.value,
+			lsType,
 			sourceMap.value.isInterpolation,
 			{
 				foldingRanges: false,
@@ -177,11 +174,6 @@ export function useScriptSetupGen(
 	});
 	const teleportSourceMap = computed(() => {
 		const doc = textDocumentForTemplate.value ?? textDocument.value;
-		if (!doc)
-			return;
-		if (!codeGen.value)
-			return;
-
 		const sourceMap = new TeleportSourceMap(doc);
 		for (const teleport of codeGen.value.teleports) {
 			sourceMap.add(teleport);

@@ -102,8 +102,10 @@ export function createLanguageService(
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
 
-	const tsLsHost = createTsLanguageServiceHost();
-	const tsLs = ts2.createLanguageService(tsLsHost, ts);
+	const templateTsLsHost = createTsLsHost('template');
+	const scriptTsLsHost = createTsLsHost('script');
+	const templateTsLs = ts2.createLanguageService(templateTsLsHost, ts);
+	const scriptTsLs = ts2.createLanguageService(scriptTsLsHost, ts);
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: DocumentContext = {
@@ -143,8 +145,10 @@ export function createLanguageService(
 		...createContext(ts, vueHost),
 		vueHost,
 		sourceFiles,
-		tsLs,
+		templateTsLs,
+		scriptTsLs,
 		documentContext,
+		getTsLs,
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findDefinition = definitions.register(context);
@@ -153,14 +157,14 @@ export function createLanguageService(
 	// ts plugin proxy
 	const _tsPluginApis = tsPluginApis.register(context);
 	const tsPlugin: Partial<ts.LanguageService> = {
-		getSemanticDiagnostics: apiHook(tsLs.__internal__.raw.getSemanticDiagnostics, false),
-		getEncodedSemanticClassifications: apiHook(tsLs.__internal__.raw.getEncodedSemanticClassifications, false),
+		getSemanticDiagnostics: apiHook(scriptTsLs.__internal__.raw.getSemanticDiagnostics, false),
+		getEncodedSemanticClassifications: apiHook(scriptTsLs.__internal__.raw.getEncodedSemanticClassifications, false),
 		getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-		getCompletionEntryDetails: apiHook(tsLs.__internal__.raw.getCompletionEntryDetails, false), // not sure
-		getCompletionEntrySymbol: apiHook(tsLs.__internal__.raw.getCompletionEntrySymbol, false), // not sure
-		getQuickInfoAtPosition: apiHook(tsLs.__internal__.raw.getQuickInfoAtPosition, false),
-		getSignatureHelpItems: apiHook(tsLs.__internal__.raw.getSignatureHelpItems, false),
-		getRenameInfo: apiHook(tsLs.__internal__.raw.getRenameInfo, false),
+		getCompletionEntryDetails: apiHook(scriptTsLs.__internal__.raw.getCompletionEntryDetails, false), // not sure
+		getCompletionEntrySymbol: apiHook(scriptTsLs.__internal__.raw.getCompletionEntrySymbol, false), // not sure
+		getQuickInfoAtPosition: apiHook(scriptTsLs.__internal__.raw.getQuickInfoAtPosition, false),
+		getSignatureHelpItems: apiHook(scriptTsLs.__internal__.raw.getSignatureHelpItems, false),
+		getRenameInfo: apiHook(scriptTsLs.__internal__.raw.getRenameInfo, false),
 		findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
 		getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
 		getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
@@ -184,7 +188,7 @@ export function createLanguageService(
 	};
 
 	// ts program proxy
-	const tsProgram = tsLs.__internal__.raw.getProgram();
+	const tsProgram = scriptTsLs.__internal__.raw.getProgram(); // TODO: handle template ls?
 	if (!tsProgram) throw '!tsProgram';
 
 	const tsProgramApis_2 = tsProgramApis.register(context);
@@ -231,21 +235,23 @@ export function createLanguageService(
 		findDocumentSymbols: apiHook(documentSymbol.register(context), false),
 		findDocumentLinks: apiHook(documentLink.register(context), false),
 		findDocumentColors: apiHook(documentColor.register(context), false),
-		dispose: tsLs.dispose,
+		dispose: () => {
+			scriptTsLs.dispose();
+			templateTsLs.dispose();
+		},
 
 		__internal__: {
 			rootPath: vueHost.getCurrentDirectory(),
 			tsPlugin,
 			tsProgramProxy,
+			getTsLs,
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
 			},
-			getTextDocument,
 			checkProject: apiHook(() => {
-				const vueImportErrors = tsLs.doValidation(globalDoc.uri, { semantic: true });
+				const vueImportErrors = scriptTsLs.doValidation(globalDoc.uri, { semantic: true });
 				return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
 			}),
-			getTsService: () => tsLs,
 			getGlobalDocs: () => [globalDoc],
 			getContext: apiHook(() => context),
 			getD3: apiHook(d3.register(context)),
@@ -255,6 +261,9 @@ export function createLanguageService(
 		},
 	};
 
+	function getTsLs(lsType: 'template' | 'script') {
+		return lsType === 'template' ? templateTsLs : scriptTsLs;
+	}
 	function isPositionInTemplate(uri: string, pos: Position) {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -276,6 +285,8 @@ export function createLanguageService(
 
 		function isInTemplate(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				if (sourceMap.lsType === 'script')
+					continue;
 				for (const tsRange of sourceMap.getMappedRanges(pos)) {
 					if (tsRange.data.vueTag === 'template') {
 						return true;
@@ -379,16 +390,16 @@ export function createLanguageService(
 			updateSourceFiles([], shouldUpdateTemplateScript)
 		}
 	}
-	function createTsLanguageServiceHost() {
+	function createTsLsHost(lsType: 'template' | 'script') {
 		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 		const tsHost: ts2.LanguageServiceHost = {
 			...vueHost,
 			fileExists: vueHost.fileExists
 				? fileName => {
-					if (fileName.endsWith('.vue.ts')) {
-						fileName = upath.trimExt(fileName);
-						const isHostFile = vueHost.getScriptFileNames().includes(fileName);
-						const fileExists = !!vueHost.fileExists?.(fileName);
+					const fileNameTrim = upath.trimExt(fileName);
+					if (fileNameTrim.endsWith('.vue')) {
+						const isHostFile = vueHost.getScriptFileNames().includes(fileNameTrim);
+						const fileExists = !!vueHost.fileExists?.(fileNameTrim);
 						if (!isHostFile && fileExists) {
 							vueProjectVersion += '-old'; // force update
 							update(false); // create virtual files
@@ -444,14 +455,11 @@ export function createLanguageService(
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
 			tsFileNames.push(uriToFsPath(globalDoc.uri));
+			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
+				tsFileNames.push(uriToFsPath(tsUri)); // virtual .ts
+			}
 			for (const fileName of vueHost.getScriptFileNames()) {
 				const uri = fsPathToUri(fileName);
-				const sourceFile = sourceFiles.get(uri);
-				if (sourceFile) {
-					for (const [uri] of sourceFile.getTsDocuments()) {
-						tsFileNames.push(uriToFsPath(uri)); // virtual .ts
-					}
-				}
 				if (isTsPlugin) {
 					tsFileNames.push(fileName); // .vue + .ts
 				}
@@ -466,7 +474,7 @@ export function createLanguageService(
 			if (uri === globalDoc.uri) {
 				return globalDoc.version.toString();
 			}
-			let doc = sourceFiles.getTsDocuments().get(uri);
+			let doc = sourceFiles.getTsDocuments(lsType).get(uri);
 			if (doc) {
 				return doc.version.toString();
 			}
@@ -485,7 +493,7 @@ export function createLanguageService(
 				scriptSnapshots.set(fileName, [version, snapshot]);
 				return snapshot;
 			}
-			const doc = sourceFiles.getTsDocuments().get(uri);
+			const doc = sourceFiles.getTsDocuments(lsType).get(uri);
 			if (doc) {
 				const text = doc.getText();
 				const snapshot = ts.ScriptSnapshot.fromString(text);
@@ -499,7 +507,7 @@ export function createLanguageService(
 			}
 		}
 	}
-	function getTextDocument(uri: string): TextDocument | undefined {
+	function getHostDocument(uri: string): TextDocument | undefined {
 		const fileName = uriToFsPath(uri);
 		const version = Number(vueHost.getScriptVersion(fileName));
 		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
@@ -513,7 +521,6 @@ export function createLanguageService(
 		if (documents.has(uri)) {
 			return documents.get(uri);
 		}
-		return tsLs.__internal__.getTextDocument(uri);
 	}
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
@@ -526,12 +533,13 @@ export function createLanguageService(
 		}
 		for (const uri of uris) {
 			const sourceFile = sourceFiles.get(uri);
-			const doc = getTextDocument(uri);
+			const doc = getHostDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
 				sourceFiles.set(uri, createSourceFile(
 					doc,
-					tsLs,
+					templateTsLs,
+					scriptTsLs,
 					context,
 				));
 				vueScriptsUpdated = true;

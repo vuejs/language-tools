@@ -17,7 +17,7 @@ export function register(context: HtmlLanguageServiceContext) {
 	return (document: TextDocument, options: FormattingOptions) => {
 
 		const dummyTs = sharedServices.getDummyTsLs(ts, document);
-		const sourceFile = createSourceFile(document, dummyTs.ls, context);
+		const sourceFile = createSourceFile(document, dummyTs.ls, dummyTs.ls, context);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits();
@@ -53,7 +53,7 @@ export function register(context: HtmlLanguageServiceContext) {
 
 		function patchInterpolationIndent() {
 			const indentTextEdits: TextEdit[] = [];
-			const tsSourceMap = sourceFile.getTemplateScriptFormat().sourceMap;
+			const tsSourceMap = sourceFile.getTemplateFormattingScript().sourceMap;
 			if (!tsSourceMap) return indentTextEdits;
 
 			for (const maped of tsSourceMap) {
@@ -172,9 +172,8 @@ export function register(context: HtmlLanguageServiceContext) {
 		function getTsFormattingEdits() {
 			const result: TextEdit[] = [];
 			const tsSourceMaps = [
-				...sourceFile.getTsSourceMaps(),
-				sourceFile.getTemplateScriptFormat().sourceMap,
-				...sourceFile.getScriptsRaw().sourceMaps,
+				sourceFile.getTemplateFormattingScript().sourceMap,
+				...sourceFile.docLsScripts().sourceMaps,
 			].filter(notEmpty);
 
 			for (const sourceMap of tsSourceMaps) {

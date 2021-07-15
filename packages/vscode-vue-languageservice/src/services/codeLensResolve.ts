@@ -1,18 +1,22 @@
 import type { ApiLanguageServiceContext } from '../types';
-import {
-	CodeLens,
-} from 'vscode-languageserver/node';
+import type { CodeLens } from 'vscode-languageserver/node';
+import type { TsCodeLensData } from './codeLens';
 import * as findReferences from './references';
 import { Commands } from '../commands';
 
-export function register({ sourceFiles, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 	const _findReferences = findReferences.register(arguments[0]);
 	return (codeLens: CodeLens) => {
 
-		const uri: string | undefined = codeLens.data.uri;
-		const offset: number | undefined = codeLens.data.offset;
-		const tsUri: string | undefined = codeLens.data.tsUri;
-		const tsOffset: number | undefined = codeLens.data.tsOffset;
+		const data = codeLens.data as TsCodeLensData;
+		const {
+			lsType,
+			uri,
+			offset,
+			tsUri,
+			tsOffset,
+		} = data;
+		const tsLs = getTsLs(lsType);
 		const doc = uri ? sourceFiles.get(uri)?.getTextDocument() ?? tsLs.__internal__.getTextDocument(uri) : undefined;
 		const tsDoc = tsUri ? tsLs.__internal__.getTextDocument(tsUri) : undefined;
 		const sourceFile = uri ? sourceFiles.get(uri) : undefined;

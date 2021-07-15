@@ -41,7 +41,7 @@ export function register(
         if (!document) return;
         return servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
     });
-    connection.onRequest(WriteVirtualFilesRequest.type, async () => {
+    connection.onRequest(WriteVirtualFilesRequest.type, async ({ lsType }) => {
         for (const [_, service] of servicesManager.services) {
             const ls = service.getLanguageServiceDontCreate();
             if (!ls) continue;
@@ -50,7 +50,7 @@ export function register(
                 fs.writeFile(uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
             }
             const { sourceFiles } = ls.__internal__.getContext();
-            for (const [_, doc] of sourceFiles.getTsDocuments()) {
+            for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
                 fs.writeFile(uriToFsPath(doc.uri), doc.getText(), () => { });
             }
         }

@@ -22,7 +22,7 @@ import {
 
 export function register(connection: Connection, enabledTsPlugin: boolean) {
     connection.client.register(ReferencesRequest.type, enabledTsPlugin ? vueFileReg : allFilesReg);
-    connection.client.register(DefinitionRequest.type, enabledTsPlugin ? vueFileReg : allFilesReg);
+    connection.client.register(DefinitionRequest.type, vueFileReg /* enabledTsPlugin ? vueFileReg : allFilesReg */);
     connection.client.register(CallHierarchyPrepareRequest.type, allFilesReg); // TODO: vueFileReg
     connection.client.register(TypeDefinitionRequest.type, vueFileReg);
     connection.client.register(HoverRequest.type, vueFileReg);

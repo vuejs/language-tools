@@ -43,7 +43,7 @@ export namespace VerifyAllScriptsRequest {
 	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.verifyAllScripts');
 }
 export namespace WriteVirtualFilesRequest {
-	export const type: RequestType<undefined, undefined, any> = new RequestType('volar.action.writeVirtualFiles');
+	export const type: RequestType<{ lsType: 'template' | 'script' }, undefined, any> = new RequestType('volar.action.writeVirtualFiles');
 }
 
 export namespace RestartServerNotification {

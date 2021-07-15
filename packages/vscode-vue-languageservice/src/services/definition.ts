@@ -3,7 +3,7 @@ import type { Location } from 'vscode-languageserver/node';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
 	return {
 		on: (uri: string, position: Position) => {
@@ -33,7 +33,6 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 	function onTs(uri: string, position: Position, mode: 'definition' | 'typeDefinition') {
 
 		const loopChecker = dedupe.createLocationSet();
-		let tsResult: (LocationLink & { originalUri: string, isOriginal: boolean })[] = [];
 		let vueResult: LocationLink[] = [];
 
 		// vue -> ts
@@ -42,7 +41,34 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.definitions)
 				continue;
 
+			const tsLs = getTsLs(tsLoc.lsType);
+			let tsResult: (LocationLink & { originalUri: string, isOriginal: boolean })[] = [];
 			withTeleports(tsLoc.uri, tsLoc.range.start, true);
+
+			// ts -> vue
+			let originSelectionRange: Range | undefined;
+			for (const tsLoc_2 of tsResult) {
+				if (tsLoc_2.isOriginal && tsLoc_2.originSelectionRange) {
+					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
+						originSelectionRange = vueLoc.range;
+						break;
+					}
+				}
+			}
+			for (const tsLoc_2 of tsResult) {
+				for (const targetSelectionRange of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
+					for (const targetRange of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
+						vueResult.push({
+							targetUri: targetSelectionRange.uri,
+							targetRange: targetRange.range,
+							targetSelectionRange: targetSelectionRange.range,
+							originSelectionRange,
+						});
+						break;
+					}
+					break;
+				}
+			}
 
 			function withTeleports(uri: string, position: Position, isOriginal: boolean) {
 
@@ -58,7 +84,7 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 
 				for (const location of tsLocs) {
 					loopChecker.add({ uri: location.targetUri, range: location.targetSelectionRange });
-					const teleport = sourceFiles.getTsTeleports().get(location.targetUri);
+					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType).get(location.targetUri);
 					if (teleport) {
 						for (const teleRange of teleport.findTeleports(location.targetSelectionRange.start, location.targetSelectionRange.end)) {
 							if (!teleRange.sideData.capabilities.definitions)
@@ -69,31 +95,6 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 						}
 					}
 				}
-			}
-		}
-
-		// ts -> vue
-		let originSelectionRange: Range | undefined;
-		for (const tsLoc of tsResult) {
-			if (tsLoc.isOriginal && tsLoc.originSelectionRange) {
-				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.originalUri, tsLoc.originSelectionRange.start, tsLoc.originSelectionRange.end)) {
-					originSelectionRange = vueLoc.range;
-					break;
-				}
-			}
-		}
-		for (const tsLoc of tsResult) {
-			for (const targetSelectionRange of sourceFiles.fromTsLocation(tsLoc.targetUri, tsLoc.targetSelectionRange.start, tsLoc.targetSelectionRange.end)) {
-				for (const targetRange of sourceFiles.fromTsLocation(tsLoc.targetUri, tsLoc.targetRange.start, tsLoc.targetRange.end)) {
-					vueResult.push({
-						targetUri: targetSelectionRange.uri,
-						targetRange: targetRange.range,
-						targetSelectionRange: targetSelectionRange.range,
-						originSelectionRange,
-					});
-					break;
-				}
-				break;
 			}
 		}
 

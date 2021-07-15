@@ -6,6 +6,7 @@ import { SearchTexts } from '../utils/string';
 import * as path from 'upath';
 
 export function generate(
+    lsType: 'template' | 'script',
     uri: string,
     script: null | {
         src?: string,
@@ -20,13 +21,23 @@ export function generate(
 
     const codeGen = createCodeGen<SourceMaps.TsMappingData>();
     const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
+    const shouldPatchExportDefault = lsType === 'script' && !!scriptSetup;
 
     writeScriptSrc();
     writeScript();
     writeScriptSetup();
-    writeExportComponent();
-    writeExportOptions();
-    writeConstNameOption();
+
+    if (lsType === 'template') {
+        codeGen.addText(`\n// @ts-ignore\n`);
+        codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
+    }
+    if (lsType === 'template' || shouldPatchExportDefault)
+        writeExportComponent();
+
+    if (lsType === 'template') {
+        writeExportOptions();
+        writeConstNameOption();
+    }
 
     return {
         ...codeGen,
@@ -51,15 +62,15 @@ export function generate(
             {
                 vueTag: 'scriptSrc',
                 capabilities: {
-                    basic: true,
+                    basic: lsType === 'script',
                     references: true,
-                    definitions: true,
+                    definitions: lsType === 'script',
                     rename: true,
-                    diagnostic: true,
-                    formatting: true,
-                    completion: true,
-                    semanticTokens: true,
-                    foldingRanges: true,
+                    diagnostic: lsType === 'script',
+                    formatting: lsType === 'script',
+                    completion: lsType === 'script',
+                    semanticTokens: lsType === 'script',
+                    foldingRanges: lsType === 'script',
                 },
             }
         );
@@ -71,6 +82,14 @@ export function generate(
             return;
 
         let addText = script.content;
+        if (shouldPatchExportDefault && scriptRanges?.exportDefault) {
+            const insteadOfExport = 'await ';
+            const newStart = scriptRanges.exportDefault.start + insteadOfExport.length;
+            addText = addText.substr(0, scriptRanges.exportDefault.start)
+                + insteadOfExport
+                + ' '.repeat(scriptRanges.exportDefault.expression.start - newStart)
+                + addText.substr(scriptRanges.exportDefault.expression.start);
+        }
         codeGen.addCode(
             addText,
             { start: 0, end: script.content.length },
@@ -78,15 +97,15 @@ export function generate(
             {
                 vueTag: 'script',
                 capabilities: {
-                    basic: true,
+                    basic: lsType === 'script',
                     references: true,
-                    definitions: true,
+                    definitions: lsType === 'script',
                     rename: true,
-                    diagnostic: true,
-                    formatting: true,
-                    completion: true,
-                    semanticTokens: true,
-                    foldingRanges: true,
+                    diagnostic: lsType === 'script',
+                    formatting: lsType === 'script',
+                    completion: lsType === 'script',
+                    semanticTokens: lsType === 'script',
+                    foldingRanges: lsType === 'script',
                 },
             }
         );
@@ -129,10 +148,10 @@ export function generate(
                     {
                         vueTag: 'scriptSetup',
                         capabilities: {
-                            completion: true,
-                            definitions: true,
+                            completion: lsType === 'script',
+                            definitions: lsType === 'script',
                             references: true,
-                            semanticTokens: true,
+                            semanticTokens: lsType === 'script',
                             rename: true,
                         },
                     },
@@ -166,7 +185,7 @@ export function generate(
                             {
                                 vueTag: 'scriptSetup',
                                 capabilities: {
-                                    diagnostic: true,
+                                    diagnostic: lsType === 'script',
                                 },
                             },
                         );
@@ -179,7 +198,7 @@ export function generate(
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
-                                diagnostic: true,
+                                diagnostic: lsType === 'script',
                             },
                         },
                     );
@@ -208,9 +227,9 @@ export function generate(
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
-                                basic: true, // hover
+                                basic: lsType === 'script', // hover
                                 references: true,
-                                diagnostic: true,
+                                diagnostic: lsType === 'script',
                             },
                         },
                     );
@@ -242,7 +261,7 @@ export function generate(
                         {
                             vueTag: 'scriptSetup',
                             capabilities: {
-                                diagnostic: true,
+                                diagnostic: lsType === 'script',
                             },
                         },
                     );
@@ -319,9 +338,6 @@ export function generate(
         }
         mapSubText(tsOffset, sourceCode.length);
 
-        codeGen.addText(`\n// @ts-ignore\n`);
-        codeGen.addText(`ref${SearchTexts.Ref}\n`); // for execute auto import
-
         function mapSubText(start: number, end: number) {
             codeGen.addCode(
                 sourceCode.substring(start, end),
@@ -333,13 +349,13 @@ export function generate(
                 {
                     vueTag: 'scriptSetup',
                     capabilities: {
-                        basic: true,
+                        basic: lsType === 'script',
                         references: true,
-                        definitions: true,
-                        diagnostic: true,
+                        definitions: lsType === 'script',
+                        diagnostic: lsType === 'script',
                         rename: true,
-                        completion: true,
-                        semanticTokens: true,
+                        completion: lsType === 'script',
+                        semanticTokens: lsType === 'script',
                     },
                 },
             );
@@ -347,7 +363,13 @@ export function generate(
     }
     function writeExportComponent() {
         codeGen.addText(`\n`);
-        codeGen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
+        const start = codeGen.getText().length;
+        if (shouldPatchExportDefault) {
+            codeGen.addText(`export default __VLS_defineComponent({\n`);
+        }
+        else {
+            codeGen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
+        }
         if (script && scriptRanges?.exportDefault?.args) {
             const args = scriptRanges.exportDefault.args;
             codeGen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
@@ -468,7 +490,27 @@ export function generate(
             codeGen.addText(`},\n`);
         }
 
-        codeGen.addText(`});\n`);
+        codeGen.addText(`});`);
+        const end = codeGen.getText().length;
+        codeGen.addText(`\n`);
+
+        if (scriptSetup) {
+            codeGen.addMapping2({
+                data: {
+                    vueTag: 'scriptSetup',
+                    capabilities: {},
+                },
+                mode: SourceMaps.Mode.Totally,
+                sourceRange: {
+                    start: 0,
+                    end: scriptSetup.content.length,
+                },
+                mappedRange: {
+                    start,
+                    end,
+                },
+            });
+        }
     }
     function writeExportOptions() {
         codeGen.addText(`\n`);

@@ -5,8 +5,9 @@ import { CodeActionKind, Range, TextDocumentEdit } from 'vscode-languageserver/n
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
+import type { Data } from './callHierarchy';
 
-export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
 	return (uri: string, range: Range, context: CodeActionContext) => {
 
@@ -25,6 +26,7 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 
 		for (const tsLoc of sourceFiles.toTsLocations(uri, range.start, range.end)) {
 
+			const tsLs = getTsLs(tsLoc.lsType);
 			const tsContext: CodeActionContext = {
 				diagnostics: transformLocations(
 					context.diagnostics,
@@ -47,14 +49,16 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 				);
 			}
 
+			const data: Data = { lsType: tsLoc.lsType };
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsCodeAction.edit, sourceFiles, () => true) : undefined;
+				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, tsCodeAction.edit, sourceFiles, () => true) : undefined;
 				if (tsCodeAction.edit && !edit) continue;
 
 				result.push({
 					...tsCodeAction,
+					data,
 					edit,
 				});
 			}

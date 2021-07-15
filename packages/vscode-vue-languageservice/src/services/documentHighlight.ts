@@ -2,7 +2,7 @@ import type { DocumentHighlight, Position } from 'vscode-languageserver/node';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string, position: Position) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -13,23 +13,23 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs }: ApiLang
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult.length) return cssResult;
 
-		const tsResult = getTsResult(sourceFile);
+		const tsResult = getTsResult();
 		if (tsResult.length) return tsResult;
 
-		function getTsResult(sourceFile: SourceFile) {
+		function getTsResult() {
 			const result: DocumentHighlight[] = [];
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const tsRange of sourceMap.getMappedRanges(position)) {
-					if (!tsRange.data.capabilities.basic) continue;
-					const highlights = tsLs.findDocumentHighlights(sourceMap.mappedDocument.uri, tsRange.start);
-					for (const highlight of highlights) {
-						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
-						if (vueRange) {
-							result.push({
-								...highlight,
-								range: vueRange,
-							});
-						}
+			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+
+				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
+					continue;
+
+				const highlights = getTsLs(tsLoc.lsType).findDocumentHighlights(tsLoc.uri, tsLoc.range.start);
+				for (const highlight of highlights) {
+					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, highlight.range.start, highlight.range.end)) {
+						result.push({
+							...highlight,
+							range: vueLoc.range,
+						});
 					}
 				}
 			}

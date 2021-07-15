@@ -40,11 +40,12 @@ export const transformContext: TransformContext = {
 };
 
 export function generate(
+	sourceLang: 'html' | 'pug',
 	html: string,
 	componentNames: string[] = [],
 	elementNames: string[] = [],
 	cssScopedClasses: string[] = [],
-	htmlToTemplate?: (htmlStart: number, htmlEnd: number) => number | undefined,
+	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
 ) {
 
 	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
@@ -366,13 +367,13 @@ export function generate(
 					start: prop.arg.loc.start.offset + start,
 					end: prop.arg.loc.start.offset + end,
 				};
-				if (htmlToTemplate) {
-					const newStart = htmlToTemplate(sourceRange.start, sourceRange.end);
-					if (newStart === undefined) continue;
-					const offset = newStart - sourceRange.start;
-					sourceRange.start += offset;
-					sourceRange.end += offset;
-				}
+
+				const newStart = htmlToTemplate(sourceRange.start, sourceRange.end);
+				if (newStart === undefined) continue;
+				const offset = newStart - sourceRange.start;
+				sourceRange.start += offset;
+				sourceRange.end += offset;
+
 				cssCodeGen.addText(`${node.tag} { `);
 				cssCodeGen.addCode(
 					content,
@@ -915,7 +916,7 @@ export function generate(
 				);
 				tsCodeGen.addText(`;\n`);
 			}
-			if (!node.isSelfClosing && !htmlToTemplate) { // end tag
+			if (!node.isSelfClosing && sourceLang === 'html') { // end tag
 				tsCodeGen.addText(`__VLS_components`);
 				writePropertyAccess(
 					componentName,
@@ -1319,32 +1320,31 @@ export function generate(
 	}
 	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<SourceMaps.TsMappingData>) {
 		const newMapping = { ...mapping };
-		if (htmlToTemplate) {
 
-			const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);
-			if (templateStart === undefined) return; // not found
-			const offset = templateStart - mapping.sourceRange.start;
-			newMapping.sourceRange = {
-				start: mapping.sourceRange.start + offset,
-				end: mapping.sourceRange.end + offset,
-			};
+		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);
+		if (templateStart === undefined) return; // not found
+		const offset = templateStart - mapping.sourceRange.start;
+		newMapping.sourceRange = {
+			start: mapping.sourceRange.start + offset,
+			end: mapping.sourceRange.end + offset,
+		};
 
-			if (mapping.additional) {
-				newMapping.additional = [];
-				for (const other of mapping.additional) {
-					let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end);
-					if (otherTemplateStart === undefined) continue;
-					const otherOffset = otherTemplateStart - other.sourceRange.start;
-					newMapping.additional.push({
-						...other,
-						sourceRange: {
-							start: other.sourceRange.start + otherOffset,
-							end: other.sourceRange.end + otherOffset,
-						},
-					})
-				}
+		if (mapping.additional) {
+			newMapping.additional = [];
+			for (const other of mapping.additional) {
+				let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end);
+				if (otherTemplateStart === undefined) continue;
+				const otherOffset = otherTemplateStart - other.sourceRange.start;
+				newMapping.additional.push({
+					...other,
+					sourceRange: {
+						start: other.sourceRange.start + otherOffset,
+						end: other.sourceRange.end + otherOffset,
+					},
+				})
 			}
 		}
+
 		gen.addMapping2(newMapping);
 	}
 };

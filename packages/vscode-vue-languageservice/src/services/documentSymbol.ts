@@ -8,7 +8,7 @@ import {
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLs, htmlLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -91,7 +91,7 @@ export function register({ sourceFiles, tsLs, htmlLs, getCssLs }: ApiLanguageSer
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
-				let symbols = tsLs.findWorkspaceSymbols(sourceMap.mappedDocument.uri);
+				let symbols = getTsLs(sourceMap.lsType).findWorkspaceSymbols(sourceMap.mappedDocument.uri);
 				for (const s of symbols) {
 					const vueRange = sourceMap.getSourceRange(s.location.range.start, s.location.range.end);
 					if (vueRange) {

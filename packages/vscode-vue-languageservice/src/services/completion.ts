@@ -91,7 +91,7 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost }: ApiLanguageServiceContext) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -119,7 +119,7 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 
 		if (context?.triggerKind === CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
 			if (cache.tsResult?.isIncomplete) {
-				cache.tsResult = getTsResult(sourceFile);
+				cache.tsResult = getTsResult();
 			}
 			if (cache.emmetResult?.isIncomplete) {
 				cache.emmetResult = await getEmmetResult(sourceFile);
@@ -148,7 +148,7 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 
 		const emmetResult = await getEmmetResult(sourceFile);
 
-		const tsResult = getTsResult(sourceFile);
+		const tsResult = getTsResult();
 		cache = { uri, tsResult, emmetResult };
 		if (tsResult) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
 
@@ -178,56 +178,61 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs, getCssLs, jsonLs, d
 				items: lists.map(list => list.items).flat(),
 			};
 		}
-		function getTsResult(sourceFile: SourceFile) {
-			let result: CompletionList | undefined = undefined;
+		function getTsResult() {
+			let result: CompletionList | undefined;
 			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
 				return result;
 			}
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsRanges = sourceMap.getMappedRanges(position);
-				for (const tsRange of tsRanges) {
-					if (!tsRange.data.capabilities.completion) continue;
-					if (!result) {
-						result = {
-							isIncomplete: false,
-							items: [],
-						};
-					}
-					const quotePreference = tsRange.data.vueTag === 'template' ? 'single' : 'auto';
-					let tsItems = tsLs.doComplete(sourceMap.mappedDocument.uri, tsRange.start, {
-						quotePreference,
-						includeCompletionsForModuleExports: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
-						includeCompletionsForImportStatements: ['script', 'scriptSetup'].includes(tsRange.data.vueTag ?? ''), // TODO: read ts config
-						triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
-					});
-					if (tsRange.data.vueTag === 'template') {
-						tsItems = tsItems.filter(tsItem => {
-							const sortText = Number(tsItem.sortText);
-							if (Number.isNaN(sortText))
-								return true;
-							if (sortText < 4)
-								return true;
-							if (isGloballyWhitelisted(tsItem.label))
-								return true;
-							return false;
-						});
-					}
-					const vueItems: CompletionItem[] = tsItems.map(tsItem => {
-						const vueItem = transformCompletionItem(
-							tsItem,
-							tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
-						);
-						const data: CompletionData = {
-							uri: uri,
-							docUri: sourceMap.mappedDocument.uri,
-							mode: 'ts',
-							tsItem: tsItem,
-						};
-						vueItem.data = data;
-						return vueItem;
-					});
-					result.items = result.items.concat(vueItems);
+			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+
+				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
+					continue;
+
+				if (!result) {
+					result = {
+						isIncomplete: false,
+						items: [],
+					};
 				}
+				const quotePreference = tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template' ? 'single' : 'auto';
+				let tsItems = getTsLs(tsLoc.lsType).doComplete(tsLoc.uri, tsLoc.range.start, {
+					quotePreference,
+					includeCompletionsForModuleExports: tsLoc.type === 'source-ts' || ['script', 'scriptSetup'].includes(tsLoc.range.data.vueTag), // TODO: read ts config
+					includeCompletionsForImportStatements: tsLoc.type === 'source-ts' || ['script', 'scriptSetup'].includes(tsLoc.range.data.vueTag), // TODO: read ts config
+					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
+				});
+				if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template') {
+					tsItems = tsItems.filter(tsItem => {
+						const sortText = Number(tsItem.sortText);
+						if (Number.isNaN(sortText))
+							return true;
+						if (sortText < 4)
+							return true;
+						if (isGloballyWhitelisted(tsItem.label))
+							return true;
+						return false;
+					});
+				}
+				const vueItems: CompletionItem[] = tsItems.map(tsItem => {
+					const vueItem = transformCompletionItem(
+						tsItem,
+						tsRange => {
+							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
+								return vueLoc.range;
+							}
+						},
+					);
+					const data: CompletionData = {
+						lsType: tsLoc.lsType,
+						uri: uri,
+						docUri: tsLoc.uri,
+						mode: 'ts',
+						tsItem: tsItem,
+					};
+					vueItem.data = data;
+					return vueItem;
+				});
+				result.items = result.items.concat(vueItems);
 			}
 			if (result) {
 				result.items = result.items.filter((result: CompletionItem) =>

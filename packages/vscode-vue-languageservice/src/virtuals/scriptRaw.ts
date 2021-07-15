@@ -3,7 +3,8 @@ import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-export function useScriptFormat(
+
+export function useScriptRaw(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
 ) {
@@ -19,7 +20,7 @@ export function useScriptFormat(
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
 			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, false, {
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, 'template', false, {
 				foldingRanges: true,
 				formatting: true,
 				documentSymbol: false,

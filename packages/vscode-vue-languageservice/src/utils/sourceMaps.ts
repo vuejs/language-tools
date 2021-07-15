@@ -48,6 +48,7 @@ export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
+		public lsType: 'template' | 'script',
 		public isInterpolation: boolean,
 		public capabilities: {
 			foldingRanges: boolean,

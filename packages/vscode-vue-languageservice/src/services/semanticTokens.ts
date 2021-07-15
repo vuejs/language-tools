@@ -29,7 +29,7 @@ export const semanticTokenLegend: SemanticTokensLegend = {
 	tokenModifiers: tsLegend.modifiers,
 };
 
-export function register({ sourceFiles, tsLs, htmlLs, pugLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs }: ApiLanguageServiceContext) {
 	return (uri: string, range?: Range, cancle?: CancellationToken, resultProgress?: ResultProgressReporter<SemanticTokensPartialResult>) => {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -130,7 +130,7 @@ export function register({ sourceFiles, tsLs, htmlLs, pugLs }: ApiLanguageServic
 						start: sourceMap.mappedDocument.positionAt(maped.mappedRange.start),
 						end: sourceMap.mappedDocument.positionAt(maped.mappedRange.end),
 					};
-					const tokens = tsLs.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
+					const tokens = getTsLs(sourceMap.lsType).getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
 					if (!tokens)
 						continue;
 					for (const token of tokens) {

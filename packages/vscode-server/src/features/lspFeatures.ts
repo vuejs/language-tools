@@ -158,18 +158,24 @@ export function register(
         const items = servicesManager
             .getMatchService(handler.textDocument.uri)
             ?.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
+        if (items) {
+            for (const item of items) {
+                if (typeof item.data !== 'object') item.data = {};
+                (item.data as any).__uri = handler.textDocument.uri;
+            }
+        }
         return items?.length ? items : null;
     });
     connection.languages.callHierarchy.onIncomingCalls(handler => {
-        const data = handler.item.data as { uri?: string } | undefined;
-        const uri = data?.uri ?? handler.item.uri;
+        const data = handler.item.data as { __uri?: string } | undefined;
+        const uri = data?.__uri ?? handler.item.uri;
         return servicesManager
             .getMatchService(uri)
             ?.callHierarchy.getIncomingCalls(handler.item) ?? [];
     });
     connection.languages.callHierarchy.onOutgoingCalls(handler => {
-        const data = handler.item.data as { uri?: string } | undefined;
-        const uri = data?.uri ?? handler.item.uri;
+        const data = handler.item.data as { __uri?: string } | undefined;
+        const uri = data?.__uri ?? handler.item.uri;
         return servicesManager
             .getMatchService(uri)
             ?.callHierarchy.getOutgoingCalls(handler.item) ?? [];

@@ -9,6 +9,14 @@ export const options = {
 	scriptSetupTool: true,
 };
 
+export interface TsCodeLensData {
+	lsType: 'template' | 'script',
+	uri: string,
+	offset: number,
+	tsUri: string,
+	tsOffset: number,
+}
+
 export function register({ sourceFiles }: ApiLanguageServiceContext) {
 	return (uri: string) => {
 
@@ -36,19 +44,20 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const maped of sourceMap) {
 					if (!maped.data.capabilities.referencesCodeLens) continue;
-					const codeLens: CodeLens = {
+					const data: TsCodeLensData = {
+						lsType: sourceMap.lsType,
+						uri: uri,
+						offset: maped.sourceRange.start,
+						tsUri: sourceMap.mappedDocument.uri,
+						tsOffset: maped.mappedRange.start,
+					};
+					result.push({
 						range: {
 							start: document.positionAt(maped.sourceRange.start),
 							end: document.positionAt(maped.sourceRange.end),
 						},
-						data: {
-							uri: uri,
-							offset: maped.sourceRange.start,
-							tsUri: sourceMap.mappedDocument.uri,
-							tsOffset: maped.mappedRange.start,
-						},
-					};
-					result.push(codeLens);
+						data,
+					});
 				}
 			}
 			return result;

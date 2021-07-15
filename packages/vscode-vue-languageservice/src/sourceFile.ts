@@ -18,12 +18,12 @@ import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from './type
 import * as dedupe from './utils/dedupe';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
-import { useScriptMain } from './virtuals/main';
-import { useScriptSetupGen } from './virtuals/script';
-import { useScriptFormat } from './virtuals/script.raw';
+import { useTemplateLsMainScript } from './virtuals/templateLsMainScript';
+import { useTemplateLsScript } from './virtuals/templateLsScript';
+import { useScriptRaw } from './virtuals/scriptRaw';
 import { useStylesRaw } from './virtuals/styles.raw';
 import { useJsonsRaw } from './virtuals/jsons.raw';
-import { useTemplateScript } from './virtuals/template';
+import { useTemplateLsTemplateScript } from './virtuals/templateLsTemplateScript';
 import { useTemplateRaw } from './virtuals/template.raw';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
 import { untrack } from './utils/untrack';
@@ -38,11 +38,13 @@ export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(
 	initialDocument: TextDocument,
-	tsLs: ts2.LanguageService,
+	templateTsLs: ts2.LanguageService,
+	scriptTsLs: ts2.LanguageService,
 	context: LanguageServiceContext,
 ) {
 	// sources
-	const tsProjectVersion = ref<string>();
+	const templateTsProjectVersion = ref<string>();
+	const scriptTsProjectVersion = ref<string>();
 	const vueDoc = ref(initialDocument);
 	const vueUri = vueDoc.value.uri;
 	const descriptor = reactive<IDescriptor>({
@@ -77,12 +79,14 @@ export function createSourceFile(
 	const virtualJsonBlocks = useJsonsRaw(untrack(() => vueDoc.value), computed(() => descriptor.customBlocks), context);
 	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), context);
 	const templateData = computed<undefined | {
-		html?: string,
-		htmlToTemplate?: (start: number, end: number) => number | undefined,
+		sourceLang: 'html' | 'pug',
+		html: string,
+		htmlToTemplate: (start: number, end: number) => number | undefined,
 	}>(() => {
 		if (virtualTemplateRaw.pugDocument.value) {
 			const pugDoc = virtualTemplateRaw.pugDocument.value;
 			return {
+				sourceLang: 'pug',
 				html: pugDoc.htmlCode,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
 					const pugRange = pugDoc.sourceMap.getSourceRange2(htmlStart, htmlEnd);
@@ -94,11 +98,13 @@ export function createSourceFile(
 		}
 		if (descriptor.template) {
 			return {
+				sourceLang: 'html',
 				html: descriptor.template.content,
+				htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
 			}
 		}
 	});
-	const virtualTemplateGen = useTemplateScript(
+	const templateLsTemplateScript = useTemplateLsTemplateScript(
 		untrack(() => vueDoc.value),
 		computed(() => descriptor.template),
 		templateScriptData,
@@ -107,42 +113,48 @@ export function createSourceFile(
 		templateData,
 		context,
 	);
-	const virtualStyles = {
-		textDocuments: computed(() => [virtualTemplateGen.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(notEmpty)),
-		sourceMaps: computed(() => [virtualTemplateGen.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
+	const cssLsStyles = {
+		textDocuments: computed(() => [templateLsTemplateScript.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(notEmpty)),
+		sourceMaps: computed(() => [templateLsTemplateScript.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
 	};
-	const virtualScriptGen = useScriptSetupGen(context.ts, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
-	const virtualScriptRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.script));
-	const virtualScriptSetupRaw = useScriptFormat(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
-	const virtualScriptMain = useScriptMain(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
+	const docLsScript = useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.script));
+	const docLsScriptSetup = useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
+	const templateLsScript = useTemplateLsScript('template', context.ts, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
+	const templateLsMainScript = useTemplateLsMainScript(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
+	const scriptLsScript = useTemplateLsScript('script', context.ts, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
 
 	// map / set
-	const tsSourceMaps = computed(() => {
+	const templatetTsSourceMaps = computed(() => {
 		const result = [
-			virtualScriptGen.sourceMap.value,
-			virtualScriptGen.sourceMapForSuggestion.value,
-			virtualScriptGen.sourceMapForTemplate.value,
-			virtualScriptMain.sourceMap.value,
-			virtualTemplateGen.sourceMap.value,
+			templateLsScript.sourceMap.value,
+			templateLsScript.sourceMapForSuggestion.value,
+			templateLsScript.sourceMapForTemplate.value,
+			templateLsTemplateScript.sourceMap.value,
+			templateLsMainScript.sourceMap.value,
+			// scriptLsScript.sourceMap.value,
 		].filter(notEmpty);
 		return result;
 	});
-	const tsDocuments = computed(() => {
+	const templateLsDocs = computed(() => {
 
 		const docs = new Map<string, TextDocument>();
 
-		docs.set(virtualScriptMain.textDocument.value.uri, virtualScriptMain.textDocument.value);
-		if (virtualScriptGen.textDocument.value)
-			docs.set(virtualScriptGen.textDocument.value.uri, virtualScriptGen.textDocument.value);
-		if (virtualScriptGen.textDocumentForSuggestion.value)
-			docs.set(virtualScriptGen.textDocumentForSuggestion.value.uri, virtualScriptGen.textDocumentForSuggestion.value);
-		if (virtualScriptGen.textDocumentForTemplate.value)
-			docs.set(virtualScriptGen.textDocumentForTemplate.value.uri, virtualScriptGen.textDocumentForTemplate.value);
-		if (virtualTemplateGen.textDocument.value)
-			docs.set(virtualTemplateGen.textDocument.value.uri, virtualTemplateGen.textDocument.value);
+		docs.set(templateLsMainScript.textDocument.value.uri, templateLsMainScript.textDocument.value);
+		if (templateLsScript.textDocument.value)
+			docs.set(templateLsScript.textDocument.value.uri, templateLsScript.textDocument.value);
+		if (templateLsScript.textDocumentForSuggestion.value)
+			docs.set(templateLsScript.textDocumentForSuggestion.value.uri, templateLsScript.textDocumentForSuggestion.value);
+		if (templateLsScript.textDocumentForTemplate.value)
+			docs.set(templateLsScript.textDocumentForTemplate.value.uri, templateLsScript.textDocumentForTemplate.value);
+		if (templateLsTemplateScript.textDocument.value)
+			docs.set(templateLsTemplateScript.textDocument.value.uri, templateLsTemplateScript.textDocument.value);
 
 		return docs;
 	});
+	const tsSourceMaps = computed(() => [
+		scriptLsScript.sourceMap.value,
+		...templatetTsSourceMaps.value,
+	]);
 
 	update(initialDocument);
 
@@ -152,53 +164,54 @@ export function createSourceFile(
 
 	return {
 		uri: vueUri,
-		getTemplateTagNames: untrack(() => virtualTemplateGen.templateCodeGens.value?.tagNames),
-		getTemplateAttrNames: untrack(() => virtualTemplateGen.templateCodeGens.value?.attrNames),
+		getTemplateTagNames: untrack(() => templateLsTemplateScript.templateCodeGens.value?.tagNames),
+		getTemplateAttrNames: untrack(() => templateLsTemplateScript.templateCodeGens.value?.attrNames),
 		getTextDocument: untrack(() => vueDoc.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
 		getComponentCompletionData: untrack(getComponentCompletionData),
 		getDiagnostics: untrack(getDiagnostics),
+		getScriptTsDocument: untrack(() => scriptLsScript.textDocument.value),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
-		getMainTsDoc: untrack(() => virtualScriptMain.textDocument.value),
-		getCssSourceMaps: untrack(() => virtualStyles.sourceMaps.value),
+		getCssSourceMaps: untrack(() => cssLsStyles.sourceMaps.value),
 		getJsonSourceMaps: untrack(() => virtualJsonBlocks.sourceMaps.value),
 		getHtmlSourceMaps: untrack(() => virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
 		getPugSourceMaps: untrack(() => virtualTemplateRaw.pugSourceMap.value ? [virtualTemplateRaw.pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getTeleports: untrack(() => [
-			virtualTemplateGen.teleportSourceMap.value,
-			virtualScriptGen.teleportSourceMap.value,
+			templateLsTemplateScript.teleportSourceMap.value,
+			templateLsScript.teleportSourceMap.value,
 		].filter(notEmpty)),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
-		getTsDocuments: untrack(() => tsDocuments.value),
+		getTemplateLsDocs: untrack(() => templateLsDocs.value),
 		getVirtualScript: untrack(() => ({
-			document: virtualScriptGen.textDocument.value,
-			sourceMap: virtualScriptGen.sourceMap.value,
+			document: templateLsScript.textDocument.value,
+			sourceMap: templateLsScript.sourceMap.value,
 		})),
-		getScriptSetupData: untrack(() => virtualScriptGen.scriptSetupRanges.value),
-		getScriptsRaw: untrack(() => ({
-			documents: [virtualScriptRaw.textDocument.value, virtualScriptSetupRaw.textDocument.value].filter(notEmpty),
-			sourceMaps: [virtualScriptRaw.sourceMap.value, virtualScriptSetupRaw.sourceMap.value].filter(notEmpty),
+		getScriptSetupData: untrack(() => templateLsScript.scriptSetupRanges.value),
+		docLsScripts: untrack(() => ({
+			documents: [docLsScript.textDocument.value, docLsScriptSetup.textDocument.value].filter(notEmpty),
+			sourceMaps: [docLsScript.sourceMap.value, docLsScriptSetup.sourceMap.value].filter(notEmpty),
 		})),
-		getTemplateScriptFormat: untrack(() => ({
-			document: virtualTemplateGen.textDocumentForFormatting.value,
-			sourceMap: virtualTemplateGen.sourceMapForFormatting.value,
+		getTemplateFormattingScript: untrack(() => ({
+			document: templateLsTemplateScript.textDocumentForFormatting.value,
+			sourceMap: templateLsTemplateScript.sourceMapForFormatting.value,
 		})),
 		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
-		getVirtualScriptUri: untrack(() => virtualScriptGen.textDocument.value?.uri),
 
 		refs: {
-			cssSourceMaps: virtualStyles.sourceMaps,
+			cssSourceMaps: cssLsStyles.sourceMaps,
 			htmlSourceMap: virtualTemplateRaw.htmlSourceMap,
-			tsSourceMaps: tsSourceMaps,
-			tsDocuments: tsDocuments,
-			mainTsDocument: virtualScriptMain.textDocument,
-			tsTeleports: computed(() => [
-				virtualTemplateGen.teleportSourceMap.value,
-				virtualScriptGen.teleportSourceMap.value,
+			templateTsSourceMaps: templatetTsSourceMaps,
+			templateTsDocuments: templateLsDocs,
+			templateMainTsDocument: templateLsMainScript.textDocument,
+			templaetTsTeleports: computed(() => [
+				templateLsTemplateScript.teleportSourceMap.value,
+				templateLsScript.teleportSourceMap.value,
 			].filter(notEmpty)),
+			scriptTsDocument: scriptLsScript.textDocument,
+			scriptTsSourceMap: scriptLsScript.sourceMap,
 		},
 	};
 
@@ -206,8 +219,8 @@ export function createSourceFile(
 		const parsedSfc = vueSfc.parse(newVueDocument.getText(), { sourceMap: false });
 		const newDescriptor = parsedSfc.descriptor;
 		const versionsBeforeUpdate = [
-			virtualScriptGen.textDocument.value?.version,
-			virtualTemplateGen.textDocument.value?.version,
+			templateLsScript.textDocument.value?.version,
+			templateLsTemplateScript.textDocument.value?.version,
 		];
 
 		updateSfcErrors();
@@ -216,15 +229,15 @@ export function createSourceFile(
 		updateScriptSetup(newDescriptor);
 		updateStyles(newDescriptor);
 		updateCustomBlocks(newDescriptor);
-		virtualTemplateGen.update(); // TODO
+		templateLsTemplateScript.update(); // TODO
 
 		if (newVueDocument.getText() !== vueDoc.value.getText()) {
 			vueDoc.value = newVueDocument;
 		}
 
 		const versionsAfterUpdate = [
-			virtualScriptGen.textDocument.value?.version,
-			virtualTemplateGen.textDocument.value?.version,
+			templateLsScript.textDocument.value?.version,
+			templateLsTemplateScript.textDocument.value?.version,
 		];
 
 		return {
@@ -379,18 +392,19 @@ export function createSourceFile(
 		}
 	}
 	function updateTemplateScript() {
-		if (templateScriptData.projectVersion === tsLs.__internal__.host.getProjectVersion?.()) {
+		const newVersion = templateTsLs.__internal__.host.getProjectVersion?.();
+		if (templateScriptData.projectVersion === newVersion) {
 			return false;
 		}
-		templateScriptData.projectVersion = tsLs.__internal__.host.getProjectVersion?.();
+		templateScriptData.projectVersion = newVersion;
 
-		const doc = virtualScriptMain.textDocument.value;
+		const doc = templateLsMainScript.textDocument.value;
 		const docText = doc.getText();
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
-		let components = docText.indexOf(SearchTexts.Components) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
-		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? tsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
+		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
+		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
 
 		components = components.filter(entry => {
 			const name = (entry.data as TsCompletionData).name;
@@ -419,24 +433,24 @@ export function createSourceFile(
 		templateScriptData.htmlElements = htmlElementNames;
 		templateScriptData.componentItems = components;
 		templateScriptData.htmlElementItems = globalEls;
-		virtualTemplateGen.update(); // TODO
+		templateLsTemplateScript.update(); // TODO
 		return true;
 	}
 	function shouldVerifyTsScript(tsUri: string, mode: 1 | 2 | 3 | 4): 'all' | 'none' | 'unused' {
-		if (tsUri.toLowerCase() === virtualScriptGen.textDocumentForSuggestion.value?.uri.toLowerCase()) {
+		if (tsUri.toLowerCase() === templateLsScript.textDocumentForSuggestion.value?.uri.toLowerCase()) {
 			if (mode === 3) {
 				return 'all';
 			}
 			if (mode === 1) {
-				const tsOptions = tsLs.__internal__.host.getCompilationSettings();
+				const tsOptions = templateTsLs.__internal__.host.getCompilationSettings();
 				const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 				return anyNoUnusedEnabled ? 'unused' : 'none';
 			}
 			return 'none';
 		}
-		if (tsUri.toLowerCase() === virtualScriptGen.textDocument.value?.uri.toLowerCase()) {
+		if (tsUri.toLowerCase() === templateLsScript.textDocument.value?.uri.toLowerCase()) {
 			if (mode === 3) {
-				return !virtualScriptGen.textDocumentForSuggestion.value ? 'all' : 'none';
+				return !templateLsScript.textDocumentForSuggestion.value ? 'all' : 'none';
 			}
 			return 'all';
 		}
@@ -444,14 +458,14 @@ export function createSourceFile(
 	}
 	function useDiagnostics() {
 
-		const tsOptions = tsLs.__internal__.host.getCompilationSettings();
+		const tsOptions = templateTsLs.__internal__.host.getCompilationSettings();
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 
 		const nonTs: [{
 			result: ComputedRef<Promise<Diagnostic[]> | Diagnostic[]>;
 			cache: ComputedRef<Promise<Diagnostic[]> | Diagnostic[]>;
 		}, number, Diagnostic[]][] = [
-				[useStylesValidation(computed(() => virtualStyles.textDocuments.value)), 0, []],
+				[useStylesValidation(computed(() => cssLsStyles.textDocuments.value)), 0, []],
 				[useJsonsValidation(computed(() => virtualJsonBlocks.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
 				[useScriptExistValidation(), 0, []],
@@ -468,15 +482,16 @@ export function createSourceFile(
 			result: ComputedRef<Diagnostic[]>;
 			cache: ComputedRef<Diagnostic[]>;
 		}, number, Diagnostic[]][] = [
-				[useScriptValidation(virtualScriptGen.textDocument, 1), 0, []],
-				[useScriptValidation(virtualScriptGen.textDocument, 2), 0, []],
-				[useScriptValidation(computed(() => virtualScriptGen.textDocumentForSuggestion.value ?? virtualScriptGen.textDocument.value), 3), 0, []],
+				[useScriptValidation(scriptLsScript.textDocument, 1), 0, []],
+				[useScriptValidation(scriptLsScript.textDocument, 2), 0, []],
+				[useScriptValidation(computed(() => scriptLsScript.textDocumentForSuggestion.value ?? scriptLsScript.textDocument.value), 3), 0, []],
 				// [useScriptValidation(virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
-				[useScriptValidation(computed(() => anyNoUnusedEnabled ? virtualScriptGen.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
+				[useScriptValidation(computed(() => anyNoUnusedEnabled ? scriptLsScript.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
 			];
 
 		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
-			tsProjectVersion.value = tsLs.__internal__.host.getProjectVersion?.();
+			templateTsProjectVersion.value = templateTsLs.__internal__.host.getProjectVersion?.();
+			scriptTsProjectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
 
 			// sort by cost
 			templateTs = templateTs.sort((a, b) => a[1] - b[1]);
@@ -717,7 +732,7 @@ export function createSourceFile(
 			const cacheWithSourceMap = computed(() => {
 				let result: css.Diagnostic[] = [];
 				for (const [uri, errs] of errors_cache.value) {
-					result = result.concat(toSourceDiags(errs, uri, virtualStyles.sourceMaps.value));
+					result = result.concat(toSourceDiags(errs, uri, cssLsStyles.sourceMaps.value));
 				}
 				return result as Diagnostic[];
 			});
@@ -771,8 +786,8 @@ export function createSourceFile(
 			const result = computed(() => {
 				const diags: Diagnostic[] = [];
 				if (
-					virtualScriptGen.textDocument.value
-					&& !tsLs.__internal__.getValidTextDocument(virtualScriptGen.textDocument.value.uri)
+					templateLsScript.textDocument.value
+					&& !templateTsLs.__internal__.getTextDocument(templateLsScript.textDocument.value.uri)
 				) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script || script.content === '') continue;
@@ -798,21 +813,21 @@ export function createSourceFile(
 		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
-					tsProjectVersion.value;
+					scriptTsProjectVersion.value;
 				}
 				const doc = document.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLs.doValidation(doc.uri, { semantic: true });
+					return scriptTsLs.doValidation(doc.uri, { semantic: true });
 				}
 				else if (mode === 2) {
-					return tsLs.doValidation(doc.uri, { syntactic: true });
+					return scriptTsLs.doValidation(doc.uri, { syntactic: true });
 				}
 				else if (mode === 3) {
-					return tsLs.doValidation(doc.uri, { suggestion: true });
+					return scriptTsLs.doValidation(doc.uri, { suggestion: true });
 				}
 				else if (mode === 4) {
-					return tsLs.doValidation(doc.uri, { declaration: true });
+					return scriptTsLs.doValidation(doc.uri, { declaration: true });
 				}
 				return [];
 			});
@@ -824,7 +839,7 @@ export function createSourceFile(
 			const cacheWithSourceMap = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				let result = toTsSourceDiags(errors_cache.value, doc.uri, tsSourceMaps.value);
+				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templatetTsSourceMaps.value);
 				if (onlyUnusedCheck) {
 					result = result.filter(error => error.tags?.includes(DiagnosticTag.Unnecessary));
 				}
@@ -838,39 +853,39 @@ export function createSourceFile(
 		function useTemplateScriptValidation(mode: 1 | 2 | 3 | 4) {
 			const errors_1 = computed(() => {
 				if (mode === 1) { // watching
-					tsProjectVersion.value;
+					templateTsProjectVersion.value;
 				}
-				const doc = virtualTemplateGen.textDocument.value;
+				const doc = templateLsTemplateScript.textDocument.value;
 				if (!doc) return [];
 				if (mode === 1) {
-					return tsLs.doValidation(doc.uri, { semantic: true });
+					return templateTsLs.doValidation(doc.uri, { semantic: true });
 				}
 				else if (mode === 2) {
-					return tsLs.doValidation(doc.uri, { syntactic: true });
+					return templateTsLs.doValidation(doc.uri, { syntactic: true });
 				}
 				else if (mode === 3) {
-					return tsLs.doValidation(doc.uri, { suggestion: true });
+					return templateTsLs.doValidation(doc.uri, { suggestion: true });
 				}
 				else if (mode === 4) {
-					return tsLs.doValidation(doc.uri, { declaration: true });
+					return templateTsLs.doValidation(doc.uri, { declaration: true });
 				}
 				return [];
 			});
 			const errors_2 = computed(() => {
 				const result: Diagnostic[] = [];
-				if (!virtualTemplateGen.textDocument.value
-					|| !virtualTemplateGen.teleportSourceMap.value
-					|| !virtualScriptGen.textDocument.value
+				if (!templateLsTemplateScript.textDocument.value
+					|| !templateLsTemplateScript.teleportSourceMap.value
+					|| !templateLsScript.textDocument.value
 				) return result;
 				for (const diag of errors_1.value) {
-					const spanText = virtualTemplateGen.textDocument.value.getText(diag.range);
+					const spanText = templateLsTemplateScript.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = virtualTemplateGen.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
+					const propRights = templateLsTemplateScript.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
 					for (const propRight of propRights) {
 						if (propRight.data.isAdditionalReference) continue;
-						const definitions = tsLs.findDefinition(virtualTemplateGen.textDocument.value.uri, propRight.start);
+						const definitions = templateTsLs.findDefinition(templateLsTemplateScript.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
-							if (definition.targetUri !== virtualScriptGen.textDocument.value.uri) continue;
+							if (definition.targetUri !== templateLsScript.textDocument.value.uri) continue;
 							result.push({
 								...diag,
 								range: definition.targetSelectionRange,
@@ -888,15 +903,17 @@ export function createSourceFile(
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap = computed(() => {
-				const result_1 = virtualTemplateGen.textDocument.value ? toTsSourceDiags(
+				const result_1 = templateLsTemplateScript.textDocument.value ? toTsSourceDiags(
+					'template',
 					errors_1_cache.value,
-					virtualTemplateGen.textDocument.value.uri,
-					tsSourceMaps.value,
+					templateLsTemplateScript.textDocument.value.uri,
+					templatetTsSourceMaps.value,
 				) : [];
-				const result_2 = virtualScriptGen.textDocument.value ? toTsSourceDiags(
+				const result_2 = templateLsScript.textDocument.value ? toTsSourceDiags(
+					'template',
 					errors_2_cache.value,
-					virtualScriptGen.textDocument.value.uri,
-					tsSourceMaps.value,
+					templateLsScript.textDocument.value.uri,
+					templatetTsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
@@ -924,7 +941,7 @@ export function createSourceFile(
 			}
 			return result;
 		}
-		function toTsSourceDiags(errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
+		function toTsSourceDiags(lsType: 'template' | 'script', errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
 			const result: Diagnostic[] = [];
 			for (const error of errors) {
 				const vueRange = findVueRange(virtualScriptUri, error.range);
@@ -983,7 +1000,7 @@ export function createSourceFile(
 					}
 				}
 				if ('sourceFiles' in context) {
-					for (const vueLoc of context.sourceFiles.fromTsLocation(virtualUri, virtualRange.start, virtualRange.end)) {
+					for (const vueLoc of context.sourceFiles.fromTsLocation(lsType, virtualUri, virtualRange.start, virtualRange.end)) {
 						if (vueLoc.type === 'source-ts' || vueLoc.range.data.capabilities.diagnostic) {
 							return {
 								uri: vueLoc.uri,
@@ -999,11 +1016,11 @@ export function createSourceFile(
 	function useComponentCompletionData() {
 		const result = computed(() => {
 			{ // watching
-				tsProjectVersion.value;
+				templateTsProjectVersion.value;
 			}
 			const data = new Map<string, { item: CompletionItem | undefined, bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
-			if (virtualTemplateGen.textDocument.value && virtualTemplateRaw.textDocument.value) {
-				const doc = virtualTemplateGen.textDocument.value;
+			if (templateLsTemplateScript.textDocument.value && virtualTemplateRaw.textDocument.value) {
+				const doc = templateLsTemplateScript.textDocument.value;
 				const text = doc.getText();
 				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
 					const tagName = (tag.data as TsCompletionData).name;
@@ -1015,7 +1032,7 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							bind = tsLs.doComplete(doc.uri, doc.positionAt(offset));
+							bind = templateTsLs.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -1023,7 +1040,7 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							on = tsLs.doComplete(doc.uri, doc.positionAt(offset));
+							on = templateTsLs.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -1031,18 +1048,18 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							slot = tsLs.doComplete(doc.uri, doc.positionAt(offset));
+							slot = templateTsLs.doComplete(doc.uri, doc.positionAt(offset));
 						}
 					}
 					data.set(tagName, { item: tag, bind, on, slot });
 				}
-				const globalBind = tsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
+				const globalBind = templateTsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
 				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });
 			}
 			return data;
 		});
 		return () => {
-			tsProjectVersion.value = tsLs.__internal__.host.getProjectVersion?.();
+			templateTsProjectVersion.value = templateTsLs.__internal__.host.getProjectVersion?.();
 			return result.value;
 		};
 	}

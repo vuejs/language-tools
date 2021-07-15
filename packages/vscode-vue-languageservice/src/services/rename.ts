@@ -7,7 +7,7 @@ import * as dedupe from '../utils/dedupe';
 import type { TsMappingData } from '../utils/sourceMaps';
 import { wordPatterns } from './completion';
 
-export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLanguageServiceContext) {
 
 	return {
 		prepareRename: (uri: string, position: Position): ResponseError | Range | undefined => {
@@ -49,6 +49,7 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 
 	function onTsPrepare(uri: string, position: Position) {
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+			const tsLs = getTsLs(tsLoc.lsType);
 			if (
 				tsLoc.type === 'source-ts'
 				|| tsLoc.range.data.capabilities.rename === true
@@ -64,7 +65,7 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 				if (tsPrepare instanceof ResponseError)
 					return tsPrepare;
 
-				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.uri, tsPrepare.start, tsPrepare.end))
+				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
 					return vueLoc.range;
 			}
 		}
@@ -73,17 +74,17 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 
 		const sourceFile = sourceFiles.get(oldUri);
 		const isVirtualFile = !!sourceFile;
-		const tsOldUri = sourceFile ? sourceFile.getMainTsDoc().uri : oldUri;
+		const tsOldUri = sourceFile ? sourceFile.getScriptTsDocument().uri : oldUri;
 		const tsNewUri = isVirtualFile ? newUri + '.ts' : newUri;
-		const tsResult = tsLs.getEditsForFileRename(tsOldUri, tsNewUri);
+		const tsResult = scriptTsLs.getEditsForFileRename(tsOldUri, tsNewUri);
 
 		if (tsResult) {
-			return tsEditToVueEdit(tsResult, sourceFiles, canRename);
+			return tsEditToVueEdit('script', tsResult, sourceFiles, canRename);
 		}
 	}
 	function doTsRename(uri: string, position: Position, newName: string) {
 
-		let tsResult: WorkspaceEdit | undefined;
+		let result: WorkspaceEdit | undefined;
 
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 			if (
@@ -96,22 +97,24 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 				if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
 					newName_2 = tsLoc.range.data.beforeRename(newName);
 
-				const tsResult_2 = doTsRenameWorker(tsLoc.uri, tsLoc.range.start, newName_2);
-				if (tsResult_2) {
-					if (!tsResult)
-						tsResult = tsResult_2;
-					else
-						margeWorkspaceEdits(tsResult, tsResult_2);
+				const tsResult = doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
+				if (tsResult) {
+					const vueResult = tsEditToVueEdit(tsLoc.lsType, tsResult, sourceFiles, canRename);
+					if (vueResult) {
+						if (!result)
+							result = vueResult;
+						else
+							margeWorkspaceEdits(result, vueResult);
+					}
 				}
 			}
 		}
 
-		if (tsResult) {
-			return tsEditToVueEdit(tsResult, sourceFiles, canRename);
-		}
+		return result;
 	}
-	function doTsRenameWorker(tsUri: string, position: Position, newName: string, loopChecker = dedupe.createLocationSet()) {
+	function doTsRenameWorker(lsType: 'script' | 'template', tsUri: string, position: Position, newName: string, loopChecker = dedupe.createLocationSet()) {
 
+		const tsLs = getTsLs(lsType);
 		const tsResult = tsLs.doRename(
 			tsUri,
 			position,
@@ -132,7 +135,7 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 					}
 					loopChecker.add({ uri: editUri, range: textEdit.range });
 
-					const teleport = sourceFiles.getTsTeleports().get(editUri);
+					const teleport = sourceFiles.getTsTeleports(lsType).get(editUri);
 					if (!teleport)
 						continue;
 
@@ -144,7 +147,7 @@ export function register({ sourceFiles, getCssLs, tsLs }: ApiLanguageServiceCont
 						const newName_2 = teleRange.sideData.editRenameText
 							? teleRange.sideData.editRenameText(newName)
 							: newName;
-						const tsResult_2 = doTsRenameWorker(editUri, teleRange.start, newName_2, loopChecker);
+						const tsResult_2 = doTsRenameWorker(lsType, editUri, teleRange.start, newName_2, loopChecker);
 						if (tsResult_2) {
 							margeWorkspaceEdits(tsResult, tsResult_2);
 						}
@@ -271,7 +274,7 @@ export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: Workspac
 		}
 	}
 }
-export function tsEditToVueEdit(tsResult: WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data?: TsMappingData) => boolean) {
+export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data?: TsMappingData) => boolean) {
 	const vueResult: WorkspaceEdit = {};
 	let hasResult = false;
 
@@ -281,13 +284,13 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, sourceFiles: SourceFile
 			vueResult.changeAnnotations = {};
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
-		const uri = sourceFiles.getVueUriByMainTsUri(tsUri) ?? tsUri;
+		const uri = sourceFiles.getSourceFileByTsUri(lsType, tsUri)?.uri ?? tsUri;
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of sourceFiles.fromTsLocation(tsUri, tsEdit.range.start, tsEdit.range.end)) {
+			for (const vueLoc of sourceFiles.fromTsLocation(lsType, tsUri, tsEdit.range.start, tsEdit.range.end)) {
 				if (
 					vueLoc.type === 'source-ts'
 					|| vueLoc.range.data.capabilities.rename === true
@@ -321,7 +324,7 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, sourceFiles: SourceFile
 			}
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (TextDocumentEdit.is(tsDocEdit)) {
-				const sourceMap = sourceFiles.getTsSourceMaps().get(tsDocEdit.textDocument.uri);
+				const sourceMap = sourceFiles.getTsSourceMaps(lsType).get(tsDocEdit.textDocument.uri);
 				if (sourceMap) {
 					vueDocEdit = TextDocumentEdit.create(
 						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
@@ -347,11 +350,11 @@ export function tsEditToVueEdit(tsResult: WorkspaceEdit, sourceFiles: SourceFile
 				vueDocEdit = tsDocEdit; // TODO: remove .ts?
 			}
 			else if (RenameFile.is(tsDocEdit)) {
-				const oldUri = sourceFiles.getVueUriByMainTsUri(tsDocEdit.oldUri) ?? tsDocEdit.oldUri;
+				const oldUri = sourceFiles.getSourceFileByTsUri(lsType, tsDocEdit.oldUri)?.uri ?? tsDocEdit.oldUri;
 				vueDocEdit = RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			else if (DeleteFile.is(tsDocEdit)) {
-				const uri = sourceFiles.getVueUriByMainTsUri(tsDocEdit.uri) ?? tsDocEdit.uri;
+				const uri = sourceFiles.getSourceFileByTsUri(lsType, tsDocEdit.uri)?.uri ?? tsDocEdit.uri;
 				vueDocEdit = DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			if (vueDocEdit) {

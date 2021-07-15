@@ -27,6 +27,7 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 		function getTsResult(sourceFile: SourceFile) {
 			let result: DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+				// TODO: capabilities
 				// TODO: move to vscode-typescript-languageservice
 				const scriptContent = sourceMap.mappedDocument.getText();
 				const root = jsonc.parseTree(scriptContent);

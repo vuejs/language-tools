@@ -2,7 +2,9 @@ import type { ApiLanguageServiceContext } from './types';
 import * as ts from 'typescript';
 import { fsPathToUri, normalizeFileName } from '@volar/shared';
 
-export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext) {
+const lsTypes = ['script', 'template'] as const;
+
+export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs }: ApiLanguageServiceContext) {
 
     return {
         getRootFileNames,
@@ -13,37 +15,43 @@ export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext) {
     };
 
     function getRootFileNames() {
-        return getProgram().getRootFileNames()
-            .filter(fileName => tsLs.__internal__.host.fileExists?.(fileName));
+        const set = new Set([
+            ...getProgram('script').getRootFileNames().filter(fileName => scriptTsLs.__internal__.host.fileExists?.(fileName)),
+            ...getProgram('template').getRootFileNames().filter(fileName => templateTsLs.__internal__.host.fileExists?.(fileName)),
+        ]);
+        return [...set.values()];
     }
     function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.DiagnosticWithLocation[] {
-        const result = getProgram().getSyntacticDiagnostics(sourceFile, cancellationToken);
-        return transformDiagnostics(result, 2);
+        return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSyntacticDiagnostics(sourceFile, cancellationToken), 2)).flat();
     }
     function getSemanticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-        const result = getProgram().getSemanticDiagnostics(sourceFile, cancellationToken);
-        return transformDiagnostics(result, 1);
+        return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSemanticDiagnostics(sourceFile, cancellationToken), 1)).flat();
     }
     function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-        const result = getProgram().getGlobalDiagnostics(cancellationToken);
-        return transformDiagnostics(result);
+        return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getGlobalDiagnostics(cancellationToken))).flat();
     }
     function emit(targetSourceFile?: ts.SourceFile, writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-        const result = getProgram().emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
+        const scriptResult = getProgram('script').emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
+        const templateResult = getProgram('template').emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
         return {
-            ...result,
-            diagnostics: transformDiagnostics(result.diagnostics),
+            emitSkipped: scriptResult.emitSkipped,
+            emittedFiles: scriptResult.emittedFiles,
+            diagnostics: [
+                ...transformDiagnostics('script', scriptResult.diagnostics),
+                ...transformDiagnostics('template', templateResult.diagnostics),
+            ],
         };
     }
-    function getProgram() {
-        const program = tsLs.__internal__.raw.getProgram();
+    function getProgram(lsType: 'script' | 'template') {
+        const program = (lsType === 'script' ? scriptTsLs : templateTsLs).__internal__.raw.getProgram();
         if (!program) throw '!program';
         return program;
     }
 
     // transform
-    function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(diagnostics: readonly T[], mode?: 1 | 2 | 3 | 4): T[] {
+    function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(lsType: 'script' | 'template', diagnostics: readonly T[], mode?: 1 | 2 | 3 | 4): T[] {
         const result: T[] = [];
+        const tsLs = getTsLs(lsType);
         for (const diagnostic of diagnostics) {
             if (
                 diagnostic.file !== undefined
@@ -54,7 +62,7 @@ export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext) {
                 let checkMode: 'all' | 'none' | 'unused' = 'all';
                 if (mode) {
                     const uri = fsPathToUri(fileName);
-                    const vueSourceFile = sourceFiles.getSourceFileByTsUri(uri);
+                    const vueSourceFile = sourceFiles.getSourceFileByTsUri(lsType, uri);
                     if (vueSourceFile) {
                         checkMode = vueSourceFile.shouldVerifyTsScript(uri, mode);
                     }
@@ -62,6 +70,7 @@ export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext) {
                 if (checkMode === 'none') continue;
                 if (checkMode === 'unused' && !(diagnostic as ts.Diagnostic).reportsUnnecessary) continue;
                 for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
+                    lsType,
                     fsPathToUri(fileName),
                     diagnostic.start,
                     diagnostic.start + diagnostic.length,
@@ -90,7 +99,7 @@ export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext) {
                         };
                         const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
                         if (relatedInformation) {
-                            (newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(relatedInformation);
+                            (newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(lsType, relatedInformation);
                         }
                         result.push(newDiagnostic);
                     }

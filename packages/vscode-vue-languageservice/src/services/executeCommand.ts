@@ -10,7 +10,7 @@ import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
 import { execute as executeUseRefSugar } from '../commands/useRefSugar';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext, findReferences: (uri: string, position: Position) => Location[]) {
+export function register({ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceContext, findReferences: (uri: string, position: Position) => Location[]) {
 
 	return async (uri: string, command: string, args: any[] | undefined, connection: Connection) => {
 
@@ -31,7 +31,7 @@ export function register({ sourceFiles, tsLs, ts }: ApiLanguageServiceContext, f
 				return;
 
 			if (scriptSetupData.labels.length) {
-				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, tsLs);
+				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, scriptTsLs);
 			}
 			else {
 				executeUseRefSugar(ts, document, sourceFile, connection, findReferences);

@@ -4,15 +4,18 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { Location } from 'vscode-languageserver/node';
 import { uriToFsPath } from '@volar/shared';
 
-export function register({ sourceFiles, ts, tsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext) {
 
 	return (document: TextDocument, position: Position): string | undefined | null => {
 
 		for (const tsLoc of sourceFiles.toTsLocations(document.uri, position)) {
 
+			// TODO: ignore templatet?
+
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
 				continue;
 
+			const tsLs = getTsLs(tsLoc.lsType);
 			const tsDoc = tsLs.__internal__.getTextDocument(tsLoc.uri);
 			if (!tsDoc)
 				continue;

@@ -10,7 +10,7 @@ import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from '../typ
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
-export function useTemplateScript(
+export function useTemplateLsTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
 	templateScriptData: ITemplateScriptData,
@@ -26,8 +26,9 @@ export function useTemplateScript(
 	}[]>,
 	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
 	templateData: Ref<{
-		html?: string,
-		htmlToTemplate?: (start: number, end: number) => number | undefined,
+		sourceLang: 'html' | 'pug',
+		html: string,
+		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
 	context: LanguageServiceContext,
 ) {
@@ -38,10 +39,11 @@ export function useTemplateScript(
 	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module), context));
 	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {
-		if (templateData.value?.html === undefined)
+		if (!templateData.value)
 			return;
 
 		return templateGen.generate(
+			templateData.value.sourceLang,
 			templateData.value.html,
 			templateScriptData.components,
 			templateScriptData.htmlElements,
@@ -233,6 +235,7 @@ export function useTemplateScript(
 			const sourceMap = new SourceMaps.TsSourceMap(
 				vueDoc,
 				textDoc.value,
+				'template',
 				true,
 				{
 					foldingRanges: false,
@@ -279,6 +282,7 @@ export function useTemplateScript(
 			const sourceMap = new SourceMaps.TsSourceMap(
 				vueDoc,
 				formatTextDoc.value,
+				'template',
 				true,
 				{
 					foldingRanges: false,

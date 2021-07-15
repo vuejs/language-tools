@@ -7,6 +7,7 @@ export type ScriptRanges = ReturnType<typeof parseScriptRanges>;
 export function parseScriptRanges(ts: typeof import('typescript'), content: string, lang: string, hasScriptSetup: boolean, withComponentOption = false, withNode = false) {
 
     let exportDefault: (TextRange & {
+        expression: TextRange,
         args: TextRange,
         argsNode: ts.ObjectLiteralExpression | undefined,
         componentsOption: TextRange | undefined,
@@ -41,6 +42,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), content: stri
                 }
                 exportDefault = {
                     ..._getStartEnd(node),
+                    expression: _getStartEnd(node.expression),
                     args: _getStartEnd(obj),
                     argsNode: withNode ? obj : undefined,
                     componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
