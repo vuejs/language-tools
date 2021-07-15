@@ -97,7 +97,7 @@
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": true,
-					"description": "[ref suager ☐] code lens."
+					"description": "[ref sugar ☐] code lens."
 				},
 				"volar.autoCompleteRefs": {
 					"type": "boolean",
