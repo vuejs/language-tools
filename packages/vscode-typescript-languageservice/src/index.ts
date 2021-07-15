@@ -27,7 +27,7 @@ import type { LanguageServiceHost } from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
 
-export function createLanguageService(_host: LanguageServiceHost, ts: typeof import('typescript/lib/tsserverlibrary')) {
+export function createLanguageService(ts: typeof import('typescript/lib/tsserverlibrary'), _host: LanguageServiceHost) {
 
 	// @ts-ignore
 	const importSuggestionsCache = ts.Completions?.createImportSuggestionsForFileCache?.();

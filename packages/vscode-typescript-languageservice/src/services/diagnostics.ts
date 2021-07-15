@@ -110,6 +110,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				case ts.DiagnosticCategory.Suggestion: return DiagnosticSeverity.Hint;
 				case ts.DiagnosticCategory.Message: return DiagnosticSeverity.Information;
 			}
+			return DiagnosticSeverity.Error;
 		}
 	};
 }

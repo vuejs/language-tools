@@ -104,8 +104,8 @@ export function createLanguageService(
 
 	const templateTsLsHost = createTsLsHost('template');
 	const scriptTsLsHost = createTsLsHost('script');
-	const templateTsLs = ts2.createLanguageService(templateTsLsHost, ts);
-	const scriptTsLs = ts2.createLanguageService(scriptTsLsHost, ts);
+	const templateTsLs = ts2.createLanguageService(ts, templateTsLsHost);
+	const scriptTsLs = ts2.createLanguageService(ts, scriptTsLsHost);
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: DocumentContext = {

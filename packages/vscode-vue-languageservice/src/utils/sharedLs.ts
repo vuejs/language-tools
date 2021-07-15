@@ -11,6 +11,7 @@ let dummyTsLs: ts2.LanguageService | undefined;
 export function getDummyTsLs(ts: typeof import('typescript/lib/tsserverlibrary'), doc: TextDocument) {
     if (!dummyTsLs) {
         dummyTsLs = ts2.createLanguageService(
+            ts,
             {
                 getCompilationSettings: () => ({}),
                 getScriptFileNames: () => [uriToFsPath(fsPathToUri(`dummy.${dummyTsScriptVersion}.ts`))],
@@ -20,7 +21,6 @@ export function getDummyTsLs(ts: typeof import('typescript/lib/tsserverlibrary')
                 getCurrentDirectory: () => '',
                 getDefaultLibFileName: () => '',
             },
-            ts,
         );
     }
     dummyTsScriptVersion++;
