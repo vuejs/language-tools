@@ -4,7 +4,7 @@
 	"displayName": "Volar",
 	"description": "Language support for Vue 3",
 	"icon": "images/icon.png",
-	"version": "0.25.28",
+	"version": "0.26.0",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"repository": {
