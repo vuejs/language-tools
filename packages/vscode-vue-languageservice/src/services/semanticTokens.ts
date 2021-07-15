@@ -119,25 +119,41 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs }: ApiLanguageSer
 		function getTsResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+
+				const tsLs = getTsLs(sourceMap.lsType);
+				let searchRange: {
+					start: number,
+					end: number,
+				} | undefined;
+
 				for (const maped of sourceMap) {
-					if (!maped.data.capabilities.semanticTokens)
-						continue;
-					if (offsetRange && maped.sourceRange.end < offsetRange.start)
-						continue;
-					if (offsetRange && maped.sourceRange.start > offsetRange.end)
-						continue;
+					if (maped.data.capabilities.semanticTokens) {
+						if (!searchRange) {
+							searchRange = {
+								start: maped.sourceRange.start,
+								end: maped.sourceRange.end,
+							};
+						}
+						else {
+							searchRange.start = Math.min(maped.sourceRange.start, searchRange.start);
+							searchRange.end = Math.min(maped.sourceRange.end, searchRange.end);
+						}
+					}
+				}
+
+				if (searchRange) {
 					const tsRange = {
-						start: sourceMap.mappedDocument.positionAt(maped.mappedRange.start),
-						end: sourceMap.mappedDocument.positionAt(maped.mappedRange.end),
+						start: sourceMap.mappedDocument.positionAt(searchRange.start),
+						end: sourceMap.mappedDocument.positionAt(searchRange.end),
 					};
-					const tokens = getTsLs(sourceMap.lsType).getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
+					const tokens = tsLs.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
 					if (!tokens)
 						continue;
 					for (const token of tokens) {
 						const tsStart = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] });
 						const tsEnd = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
 						const vueRange = sourceMap.getSourceRange2(tsStart, tsEnd);
-						if (!vueRange?.data.capabilities.semanticTokens)
+						if (!vueRange || !vueRange.data.capabilities.semanticTokens)
 							continue;
 						const vuePos = document.positionAt(vueRange.start);
 						result.push([vuePos.line, vuePos.character, vueRange.end - vueRange.start, token[3], token[4]]);
