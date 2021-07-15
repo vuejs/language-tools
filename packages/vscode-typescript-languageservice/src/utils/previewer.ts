@@ -177,8 +177,8 @@ export function tagsMarkdownPreview(
 }
 
 export function markdownDocumentation(
-	documentation: Proto.SymbolDisplayPart[] | string,
-	tags: Proto.JSDocTagInfo[],
+	documentation: Proto.SymbolDisplayPart[] | string | undefined,
+	tags: Proto.JSDocTagInfo[] | undefined,
 	filePathConverter: IFilePathToResourceConverter,
 ): string {
 	return addMarkdownDocumentation('', documentation, tags, filePathConverter);

@@ -4,6 +4,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 import { handleKindModifiers } from './completion';
 import type { Data } from './completion';
+import * as previewer from '../utils/previewer';
+import { fsPathToUri } from '@volar/shared';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (item: CompletionItem, newOffset?: number): CompletionItem => {
@@ -13,19 +15,23 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const name = data.name;
 		const source = data.source;
 		const options = data.options;
-		let detail: ts.CompletionEntryDetails | undefined;
+
+		let details: ts.CompletionEntryDetails | undefined;
 		try {
-			detail = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, data.tsData);
+			details = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, data.tsData);
 		}
 		catch (err) {
 			item.detail = `[TS Error] ${err}`;
 		}
-		const details: string[] = [];
 
-		if (detail?.codeActions) {
+		if (!details)
+			return item;
+
+		const detailTexts: string[] = [];
+		if (details.codeActions) {
 			if (!item.additionalTextEdits) item.additionalTextEdits = [];
-			for (const action of detail.codeActions) {
-				details.push(action.description);
+			for (const action of details.codeActions) {
+				detailTexts.push(action.description);
 				for (const changes of action.changes) {
 					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span }
@@ -37,17 +43,20 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				}
 			}
 		}
-
-		if (detail?.displayParts) {
-			details.push(ts.displayPartsToString(detail.displayParts));
+		if (details.displayParts) {
+			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: fsPathToUri }));
 		}
-		if (detail?.documentation) {
-			item.documentation = ts.displayPartsToString(detail.documentation);
+		if (detailTexts.length) {
+			item.detail = detailTexts.join('\n');
 		}
-		if (details.length) item.detail = details.join('\n');
 
-		if (detail) {
-			handleKindModifiers(item, detail);
+		item.documentation = {
+			kind: 'markdown',
+			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: fsPathToUri }),
+		};
+
+		if (details) {
+			handleKindModifiers(item, details);
 		}
 
 		return item;
