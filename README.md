@@ -28,7 +28,7 @@ If you like this extension, please consider becoming a [Sponsor](https://github.
 
 ## Quick Start
 
-- [vite/create-app](https://github.com/vitejs/vite/tree/main/packages/create-app/template-vue-ts)
+- [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
 - [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
