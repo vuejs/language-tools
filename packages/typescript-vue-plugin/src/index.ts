@@ -52,7 +52,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	let disposed = false;
 	let vueFiles = new Set(getVueFiles());
 	const fileWatchers = new Map<string, ts.FileWatcher>();
-	const scriptVersions = new Map<string, string>();
+	const scriptVersions = new Map<string, number>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: ts.LanguageServiceHost = {
 		getNewLine: () => ts.sys.newLine,
@@ -109,7 +109,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	}
 	function getScriptVersion(fileName: string) {
 		if (vueFiles.has(fileName)) {
-			return scriptVersions.get(fileName) ?? '';
+			return (scriptVersions.get(fileName) ?? -1).toString();
 		}
 		return info.project.getScriptVersion(fileName);
 	}
@@ -175,12 +175,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	function onFileChanged(fileName: string) {
 		fileName = path.resolve(fileName);
 		const oldVersion = scriptVersions.get(fileName);
-		const oldVersionNum = Number(oldVersion);
-		if (Number.isNaN(oldVersionNum)) {
-			scriptVersions.set(fileName, '0');
+		if (oldVersion === undefined) {
+			scriptVersions.set(fileName, 1);
 		}
 		else {
-			scriptVersions.set(fileName, (oldVersionNum + 1).toString());
+			scriptVersions.set(fileName, oldVersion + 1);
 		}
 		onProjectUpdated();
 	}
