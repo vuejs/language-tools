@@ -79,21 +79,6 @@ export function useTemplateLsScript(
 			suggestionCodeGen.value.getText(),
 		);
 	});
-	const textDocumentForTemplate = computed(() => {
-		if (!textDocument.value)
-			return;
-		if (textDocument.value.languageId !== 'javascript')
-			return;
-
-		const lang = 'ts';
-
-		return TextDocument.create(
-			`${uri}.__VLS_script.${lang}`,
-			syntaxToLanguageId(lang),
-			textDocument.value.version,
-			textDocument.value.getText(),
-		);
-	});
 	const sourceMap = computed(() => {
 		const sourceMap = new TsSourceMap(
 			vueDoc.value,
@@ -135,45 +120,8 @@ export function useTemplateLsScript(
 
 		return sourceMap;
 	});
-	const sourceMapForTemplate = computed(() => {
-		if (!textDocumentForTemplate.value)
-			return;
-		if (!sourceMap.value)
-			return;
-
-		const newSourceMap = new TsSourceMap(
-			sourceMap.value.sourceDocument,
-			textDocumentForTemplate.value,
-			lsType,
-			sourceMap.value.isInterpolation,
-			{
-				foldingRanges: false,
-				formatting: false,
-				documentSymbol: false,
-				codeActions: false,
-				organizeImports: false,
-			},
-		);
-
-		for (const maped of sourceMap.value) {
-			newSourceMap.add({
-				...maped,
-				data: {
-					...maped.data,
-					capabilities: {
-						references: maped.data.capabilities.references,
-						definitions: maped.data.capabilities.definitions,
-						rename: maped.data.capabilities.rename,
-						referencesCodeLens: maped.data.capabilities.referencesCodeLens,
-					},
-				},
-			})
-		}
-
-		return newSourceMap;
-	});
 	const teleportSourceMap = computed(() => {
-		const doc = textDocumentForTemplate.value ?? textDocument.value;
+		const doc = textDocument.value;
 		const sourceMap = new TeleportSourceMap(doc);
 		for (const teleport of codeGen.value.teleports) {
 			sourceMap.add(teleport);
@@ -186,10 +134,8 @@ export function useTemplateLsScript(
 		scriptSetupRanges,
 		textDocument,
 		textDocumentForSuggestion,
-		textDocumentForTemplate,
 		sourceMap,
 		sourceMapForSuggestion,
-		sourceMapForTemplate,
 		teleportSourceMap,
 	};
 

@@ -128,7 +128,6 @@ export function createSourceFile(
 		const result = [
 			templateLsScript.sourceMap.value,
 			templateLsScript.sourceMapForSuggestion.value,
-			templateLsScript.sourceMapForTemplate.value,
 			templateLsTemplateScript.sourceMap.value,
 			templateLsMainScript.sourceMap.value,
 			// scriptLsScript.sourceMap.value,
@@ -144,8 +143,6 @@ export function createSourceFile(
 			docs.set(templateLsScript.textDocument.value.uri, templateLsScript.textDocument.value);
 		if (templateLsScript.textDocumentForSuggestion.value)
 			docs.set(templateLsScript.textDocumentForSuggestion.value.uri, templateLsScript.textDocumentForSuggestion.value);
-		if (templateLsScript.textDocumentForTemplate.value)
-			docs.set(templateLsScript.textDocumentForTemplate.value.uri, templateLsScript.textDocumentForTemplate.value);
 		if (templateLsTemplateScript.textDocument.value)
 			docs.set(templateLsTemplateScript.textDocument.value.uri, templateLsTemplateScript.textDocument.value);
 
@@ -211,6 +208,7 @@ export function createSourceFile(
 				templateLsScript.teleportSourceMap.value,
 			].filter(notEmpty)),
 			scriptTsDocument: scriptLsScript.textDocument,
+			scriptTsTeleport: scriptLsScript.teleportSourceMap,
 			scriptTsSourceMap: scriptLsScript.sourceMap,
 		},
 	};

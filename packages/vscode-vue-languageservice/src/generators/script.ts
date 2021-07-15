@@ -372,22 +372,36 @@ export function generate(
         }
         if (script && scriptRanges?.exportDefault?.args) {
             const args = scriptRanges.exportDefault.args;
-            codeGen.addText(`...(${script.content.substring(args.start, args.end)}),\n`);
+            codeGen.addText(`...(`);
+            mapSubText('script', args.start, args.end);
+            codeGen.addText(`),\n`);
         }
         if (scriptSetup && scriptSetupRanges) {
             if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
                 codeGen.addText(`props: (`);
                 if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`__VLS_mergePropDefaults(`);
-                if (scriptSetupRanges.propsRuntimeArg) codeGen.addText(scriptSetup.content.substring(scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end));
-                else if (scriptSetupRanges.propsTypeArg) codeGen.addText(`{} as __VLS_DefinePropsToOptions<${scriptSetup.content.substring(scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end)}>`);
-                if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`, ${scriptSetup.content.substring(scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end)})`);
+                if (scriptSetupRanges.propsRuntimeArg) mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+                else if (scriptSetupRanges.propsTypeArg) {
+                    codeGen.addText(`{} as __VLS_DefinePropsToOptions<`);
+                    mapSubText('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+                    codeGen.addText(`>`);
+                }
+                if (scriptSetupRanges.withDefaultsArg) {
+                    codeGen.addText(`, `);
+                    mapSubText('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+                    codeGen.addText(`)`);
+                }
                 codeGen.addText(`),\n`);
             }
             if (scriptSetupRanges.emitsRuntimeArg) {
-                codeGen.addText(`emits: (${scriptSetup.content.substring(scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end)}),\n`);
+                codeGen.addText(`emits: (`);
+                mapSubText('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+                codeGen.addText(`),\n`);
             }
             else if (scriptSetupRanges.emitsTypeArg) {
-                codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<${scriptSetup.content.substring(scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end)}>),\n`);
+                codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
+                mapSubText('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+                codeGen.addText(`>),\n`);
             }
             const bindingsArr: {
                 bindings: { start: number, end: number }[],
@@ -510,6 +524,41 @@ export function generate(
                     end,
                 },
             });
+        }
+
+        function mapSubText(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+            for (const mapping of codeGen.getMappings()) {
+                if (mapping.data.vueTag === vueTag && start >= mapping.sourceRange.start && end <= mapping.mappedRange.end) {
+                    teleports.push({
+                        data: {
+                            toSource: {
+                                capabilities: {
+                                    references: true,
+                                    definitions: true,
+                                    rename: true,
+                                },
+                            },
+                            toTarget: {
+                                capabilities: {
+                                    references: true,
+                                    definitions: true,
+                                    rename: true,
+                                },
+                            },
+                        },
+                        sourceRange: {
+                            start,
+                            end,
+                        },
+                        mappedRange: {
+                            start: codeGen.getText().length,
+                            end: codeGen.getText().length + end - start,
+                        },
+                        mode: SourceMaps.Mode.Offset,
+                    });
+                }
+            }
+            codeGen.addText((vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end));
         }
     }
     function writeExportOptions() {

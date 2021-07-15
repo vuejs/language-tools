@@ -86,7 +86,15 @@ export function createSourceFiles() {
 				}
 				return map;
 			}),
-			teleports: computed(() => new Map<string, TeleportSourceMap>()),
+			teleports: computed(() => {
+				const map = new Map<string, TeleportSourceMap>();
+				for (const key in sourceFiles) {
+					const sourceFile = sourceFiles[key]!;
+					const sourceMap = sourceFile.refs.scriptTsTeleport.value;
+					map.set(sourceMap.mappedDocument.uri, sourceMap);
+				}
+				return map;
+			}),
 			sourceMaps: computed(() => {
 				const map = new Map<string, TsSourceMap>();
 				for (const key in sourceFiles) {
