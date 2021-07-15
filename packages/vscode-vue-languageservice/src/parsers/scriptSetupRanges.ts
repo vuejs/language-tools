@@ -222,9 +222,14 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
                 if (node.importClause.name) {
                     bindings.push(_getStartEnd(node.importClause.name));
                 }
-                if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
-                    for (const element of node.importClause.namedBindings.elements) {
-                        bindings.push(_getStartEnd(element.name));
+                if (node.importClause.namedBindings) {
+                    if (ts.isNamedImports(node.importClause.namedBindings)) {
+                        for (const element of node.importClause.namedBindings.elements) {
+                            bindings.push(_getStartEnd(element.name));
+                        }
+                    }
+                    else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
+                        bindings.push(_getStartEnd(node.importClause.namedBindings.name));
                     }
                 }
             }
