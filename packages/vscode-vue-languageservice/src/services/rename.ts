@@ -292,7 +292,7 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: Workspa
 		for (const tsEdit of tsEdits) {
 			for (const vueLoc of sourceFiles.fromTsLocation(lsType, tsUri, tsEdit.range.start, tsEdit.range.end)) {
 
-				if (vueLoc.type === 'embedded-ts' && vueLoc.range.data.capabilities.rename === false)
+				if (vueLoc.type === 'embedded-ts' && !vueLoc.range.data.capabilities.rename)
 					continue;
 
 				if (vueLoc.type === 'embedded-ts' && typeof vueLoc.range.data.capabilities.rename === 'object' && !vueLoc.range.data.capabilities.rename.out)
