@@ -34,6 +34,13 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			// ts -> vue
 			for (const tsLoc_2 of tsResult) {
 				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.uri, tsLoc_2.range.start, tsLoc_2.range.end)) {
+
+					if (vueLoc.type === 'embedded-ts' && !vueLoc.range.data.capabilities.references)
+						continue;
+
+					if (vueLoc.type === 'source-ts' && tsLoc.lsType === 'template')
+						continue;
+
 					vueResult.push({
 						uri: vueLoc.uri,
 						range: vueLoc.range,

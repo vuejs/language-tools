@@ -291,29 +291,33 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: Workspa
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
 			for (const vueLoc of sourceFiles.fromTsLocation(lsType, tsUri, tsEdit.range.start, tsEdit.range.end)) {
-				if (
-					vueLoc.type === 'source-ts'
-					|| vueLoc.range.data.capabilities.rename === true
-					|| (typeof vueLoc.range.data.capabilities.rename === 'object' && vueLoc.range.data.capabilities.rename.out)
-				) {
-					let newText_2 = tsEdit.newText;
-					if (vueLoc.type === 'embedded-ts' && vueLoc.range.data.doRename) {
-						const vueDoc = vueLoc.sourceMap.sourceDocument;
-						newText_2 = vueLoc.range.data.doRename(vueDoc.getText(vueLoc.range), tsEdit.newText);
-					}
 
-					if (!vueResult.changes) {
-						vueResult.changes = {};
-					}
-					if (!vueResult.changes[vueLoc.uri]) {
-						vueResult.changes[vueLoc.uri] = [];
-					}
-					vueResult.changes[vueLoc.uri].push({
-						newText: newText_2,
-						range: vueLoc.range,
-					});
-					hasResult = true;
+				if (vueLoc.type === 'embedded-ts' && vueLoc.range.data.capabilities.rename === false)
+					continue;
+
+				if (vueLoc.type === 'embedded-ts' && typeof vueLoc.range.data.capabilities.rename === 'object' && !vueLoc.range.data.capabilities.rename.out)
+					continue;
+
+				if (vueLoc.type === 'source-ts' && lsType === 'template')
+					continue;
+
+				let newText_2 = tsEdit.newText;
+				if (vueLoc.type === 'embedded-ts' && vueLoc.range.data.doRename) {
+					const vueDoc = vueLoc.sourceMap.sourceDocument;
+					newText_2 = vueLoc.range.data.doRename(vueDoc.getText(vueLoc.range), tsEdit.newText);
 				}
+
+				if (!vueResult.changes) {
+					vueResult.changes = {};
+				}
+				if (!vueResult.changes[vueLoc.uri]) {
+					vueResult.changes[vueLoc.uri] = [];
+				}
+				vueResult.changes[vueLoc.uri].push({
+					newText: newText_2,
+					range: vueLoc.range,
+				});
+				hasResult = true;
 			}
 		}
 	}
