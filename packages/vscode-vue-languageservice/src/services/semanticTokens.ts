@@ -134,13 +134,13 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs }: ApiLanguageSer
 					) {
 						if (!searchRange) {
 							searchRange = {
-								start: maped.sourceRange.start,
-								end: maped.sourceRange.end,
+								start: maped.mappedRange.start,
+								end: maped.mappedRange.end,
 							};
 						}
 						else {
-							searchRange.start = Math.min(maped.sourceRange.start, searchRange.start);
-							searchRange.end = Math.max(maped.sourceRange.end, searchRange.end);
+							searchRange.start = Math.min(maped.mappedRange.start, searchRange.start);
+							searchRange.end = Math.max(maped.mappedRange.end, searchRange.end);
 						}
 					}
 				}
