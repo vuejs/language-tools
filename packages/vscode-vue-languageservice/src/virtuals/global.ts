@@ -41,6 +41,7 @@ type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
 type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
 type CoreGlobalComponents = PickNotAny<PickNotAny<PickNotAny<CoreGlobalComponents_1, CoreGlobalComponents_2>, CoreGlobalComponents_3>, {}>;
 type AnyArray<T = any> = T[] | readonly T[];
+type NonUndefinedable<T> = T extends undefined ? never : T;
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
 
@@ -115,7 +116,7 @@ declare global {
 		NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 : unknown;
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
-	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: PropType<T[K]>, required: false } : { type: PropType<T[K]>, required: true } };
+	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: PropType<NonUndefinedable<T[K]>> } : { type: PropType<T[K]>, required: true } };
 	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent<infer _> ? K : never]:
 		T[K] extends never ? any : T[K] // fix https://github.com/johnsoncodehk/vue-tsc/issues/21
 	};
