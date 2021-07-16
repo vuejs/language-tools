@@ -82,14 +82,28 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			return vueItem;
 		}
 		function getAutoImportResult(sourceFile: SourceFile, vueItem: CompletionItem, data: AutoImportComponentCompletionData) {
+
+
 			const importFile = uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
+			const descriptor = sourceFile.getDescriptor();
+
 			let importPath = path.relative(path.dirname(data.uri), data.importUri);
 			if (!importPath.startsWith('.')) {
 				importPath = './' + importPath;
 			}
+
+			if (!descriptor.scriptSetup && !descriptor.script) {
+				vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
+				vueItem.documentation = {
+					kind: MarkupKind.Markdown,
+					value: '[Error] `<script>` / `<script setup>` block not found.',
+				};
+				return vueItem;
+			}
+
 			vueItem.labelDetails = { qualifier: rPath };
-			const descriptor = sourceFile.getDescriptor();
+
 			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content, descriptor.script.lang) : undefined;
 			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content, descriptor.scriptSetup.lang) : undefined;
 			const componentName = capitalize(camelize(vueItem.label));
@@ -151,7 +165,6 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			return vueItem;
 
 			function planAInsertText() {
-
 				const scriptUrl = sourceFile.getScriptTsDocument().uri;
 				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
