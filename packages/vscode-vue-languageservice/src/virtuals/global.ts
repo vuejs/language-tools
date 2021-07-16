@@ -14,6 +14,7 @@ import type { EmitsOptions as EmitsOptions_1 } from '@vue/runtime-dom';
 import type { DefineComponent as DefineComponent_1 } from '@vue/runtime-dom';
 import type { defineComponent as defineComponent_1 } from '@vue/runtime-dom';
 import type { GlobalComponents as CoreGlobalComponents_1 } from '@vue/runtime-dom';
+import type { SetupContext as SetupContext_1 } from '@vue/runtime-dom';
 
 import * as vue_2 from 'vue';
 import type { FunctionalComponent as FunctionalComponent_2 } from 'vue';
@@ -25,6 +26,7 @@ import type { EmitsOptions as EmitsOptions_2 } from 'vue';
 import type { DefineComponent as DefineComponent_2 } from 'vue';
 import type { defineComponent as defineComponent_2 } from 'vue';
 import type { GlobalComponents as CoreGlobalComponents_2 } from 'vue';
+import type { SetupContext as SetupContext_2 } from '@vue/runtime-dom';
 
 import type { HTMLAttributes as HTMLAttributes_3 } from "@vue/runtime-dom/types/jsx";
 import type { GlobalComponents as CoreGlobalComponents_3 } from '@vue/runtime-core';
@@ -32,7 +34,7 @@ import type { GlobalComponents as CoreGlobalComponents_3 } from '@vue/runtime-co
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 
-type FunctionalComponent<T> = PickNotAny<FunctionalComponent_1<T>, FunctionalComponent_2<T>>;
+type FunctionalComponent<P = {}, E extends EmitsOptions = {}> = PickNotAny<FunctionalComponent_1<P, E>, FunctionalComponent_2<P, E>>;
 type HTMLAttributes = PickNotAny<PickNotAny<HTMLAttributes_1, HTMLAttributes_2>, HTMLAttributes_3>;
 type VNodeProps = PickNotAny<VNodeProps_1, VNodeProps_2>;
 type AllowedComponentProps = PickNotAny<AllowedComponentProps_1, AllowedComponentProps_2>;
@@ -40,6 +42,7 @@ type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
 type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
 type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
 type CoreGlobalComponents = PickNotAny<PickNotAny<PickNotAny<CoreGlobalComponents_1, CoreGlobalComponents_2>, CoreGlobalComponents_3>, {}>;
+type SetupContext<T> = PickNotAny<SetupContext_1<T>, SetupContext_2<T>>;
 type AnyArray<T = any> = T[] | readonly T[];
 type NonUndefinedable<T> = T extends undefined ? never : T;
 
@@ -81,7 +84,10 @@ declare global {
 		: (props: __VLS_ExtractComponentProps<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_ExtractComponentProps<T[K]>> & Record<string, unknown>) => any
 	};
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
-	type __VLS_ExtractEmit2<T> = T extends new (...args: any) => { $emit: infer Emit } ? Emit : unknown;
+	type __VLS_ExtractEmit2<T> =
+		T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
+		: T extends new (...args: any) => { $emit: infer Emit } ? Emit
+		: unknown;
 	type __VLS_ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 	type __VLS_UnknownToAny<T> = T extends unknown ? any : T;
 	type __VLS_EmitEvent2<F, E> =
@@ -105,12 +111,14 @@ declare global {
 		} ? (...payload: __VLS_UnknownToAny<P>) => __VLS_UnknownToAny<R>
 		: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 	type __VLS_EmitEvent<T, E> =
-		T extends DefineComponent<infer _, infer E2> ? (
-			EmitsOptions extends E2 ? unknown
-			: E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
-			: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> // evnts: { 'event-1': () => true, 'event-2': () => true }
-			: unknown
-		) : __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
+		T extends DefineComponent<infer _, infer E2> ? __VLS_EmitEvent_3<E2, E>
+		: T extends FunctionalComponent<infer _, infer E2> ? __VLS_EmitEvent_3<E2, E>
+		: __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
+	type __VLS_EmitEvent_3<E2, E> =
+		EmitsOptions extends E2 ? unknown
+		: E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
+		: E extends keyof E2 ? __VLS_ReturnVoid<E2[E]> // emits: { 'event-1': () => true, 'event-2': () => true }
+		: unknown
 	type __VLS_FirstFunction<F0, F1> =
 		NonNullable<F0> extends (Function | AnyArray<Function>) ? F0 :
 		NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 : unknown;
