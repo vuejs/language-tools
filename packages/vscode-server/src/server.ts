@@ -5,6 +5,7 @@ import * as vscode from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
 import { createServicesManager, ServicesManager } from './servicesManager';
 import * as tsConfigs from './tsConfigs';
+import * as formatters from './formatters';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 const documents = new vscode.TextDocuments(TextDocument);
@@ -66,6 +67,7 @@ async function onInitialized() {
 			{ typescript: getTs().module },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
+			formatters,
 		);
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
 	}

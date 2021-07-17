@@ -64,6 +64,7 @@ export function getDocumentLanguageService(
 	{ typescript: ts }: Dependencies,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
+	formatters: Parameters<typeof formatting['register']>[3],
 ) {
 	const cache = new Map<string, [number, HTMLDocument]>();
 	const context: HtmlLanguageServiceContext = {
@@ -71,7 +72,7 @@ export function getDocumentLanguageService(
 		getHtmlDocument,
 	};
 	return {
-		doFormatting: formatting.register(context, getPreferences, getFormatOptions),
+		doFormatting: formatting.register(context, getPreferences, getFormatOptions, formatters),
 		getFoldingRanges: foldingRanges.register(context, getPreferences, getFormatOptions),
 		doTagComplete: autoClose.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
