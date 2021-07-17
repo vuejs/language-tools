@@ -288,8 +288,8 @@ export function createSourceFile(
 		function updateScript(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.script ? {
 				src: newDescriptor.script.src,
-				lang: newDescriptor.script.src ? 'ts' : newDescriptor.script.lang ?? defaultLanguages.script,
-				content: newDescriptor.script.src ? '' : newDescriptor.script.content,
+				lang: newDescriptor.script.lang ?? defaultLanguages.script,
+				content: newDescriptor.script.content,
 				loc: {
 					start: newDescriptor.script.loc.start.offset,
 					end: newDescriptor.script.loc.end.offset,
@@ -311,7 +311,7 @@ export function createSourceFile(
 		}
 		function updateScriptSetup(newDescriptor: vueSfc.SFCDescriptor) {
 			const newData = newDescriptor.scriptSetup ? {
-				lang: newDescriptor.scriptSetup.lang ?? 'js',
+				lang: newDescriptor.scriptSetup.lang ?? defaultLanguages.script,
 				content: newDescriptor.scriptSetup.content,
 				loc: {
 					start: newDescriptor.scriptSetup.loc.start.offset,

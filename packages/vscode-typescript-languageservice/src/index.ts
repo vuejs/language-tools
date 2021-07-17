@@ -23,10 +23,11 @@ import * as semanticTokens from './services/semanticTokens';
 import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath } from '@volar/shared';
+import { syntaxToLanguageId, uriToFsPath } from '@volar/shared';
 import type * as ts from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
+import * as path from 'path';
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getFormatOptions?(document: TextDocument, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
@@ -98,7 +99,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-				const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
+				const document = TextDocument.create(uri, syntaxToLanguageId(path.extname(uri).substr(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
 				documents.set(uri, [version, document]);
 			}
 		}
