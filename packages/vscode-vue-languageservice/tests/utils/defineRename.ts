@@ -1,8 +1,8 @@
-import type { Position, TextEdit } from "vscode-languageserver/node";
+import type * as vscode from 'vscode-languageserver/node';
 import * as path from 'upath';
-import { createTester } from "./createTester";
-import { TextDocument } from "vscode-languageserver-textdocument";
-import { fsPathToUri } from "@volar/shared";
+import { createTester } from './createTester';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { fsPathToUri } from '@volar/shared';
 
 const volarRoot = path.resolve(__dirname, '../../../..');
 const testRoot = path.resolve(__dirname, '../../testCases');
@@ -11,7 +11,7 @@ const tester = createTester(testRoot);
 export function defineRename(test: {
 	fileName: string,
 	actions: {
-		position: Position,
+		position: vscode.Position,
 		newName: string,
 		length: number,
 	}[],
@@ -44,34 +44,10 @@ export function defineRename(test: {
 					expect(!!textEdits).toEqual(true);
 					if (!textEdits) return;
 
-					const textResult = applyTextEdits(scriptText, textEdits);
+					const textResult = TextDocument.applyEdits(TextDocument.create('', '', 0, scriptText), textEdits);
 					expect(textResult).toEqual(test.result);
 				});
 			}
 		}
 	});
-}
-
-function applyTextEdits(originalText: string, textEdits: TextEdit[]) {
-
-	const document = TextDocument.create('', '', 0, originalText);
-	textEdits = textEdits.sort((a, b) => document.offsetAt(b.range.start) - document.offsetAt(a.range.start));
-
-	let newText = document.getText();
-	for (const textEdit of textEdits) {
-		newText = editText(
-			newText,
-			document.offsetAt(textEdit.range.start),
-			document.offsetAt(textEdit.range.end),
-			textEdit.newText
-		)
-	}
-
-	return newText;
-
-	function editText(sourceText: string, startOffset: number, endOffset: number, newText: string) {
-		return sourceText.substring(0, startOffset)
-			+ newText
-			+ sourceText.substring(endOffset, sourceText.length)
-	}
 }

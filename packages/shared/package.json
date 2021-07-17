@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"upath": "^2.0.1",
-		"vscode-languageserver": "^7.1.0-next.5"
+		"vscode-jsonrpc": "^7.0.0-next.1"
 	},
 	"devDependencies": {
 		"typescript": "latest"

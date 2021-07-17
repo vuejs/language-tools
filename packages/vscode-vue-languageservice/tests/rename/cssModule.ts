@@ -1,6 +1,6 @@
 import * as path from 'upath';
-import { Position } from "vscode-languageserver/node";
-import { defineRename } from "../utils/defineRename";
+import { Position } from 'vscode-languageserver/node';
+import { defineRename } from '../utils/defineRename';
 
 defineRename({
 	fileName: path.resolve(__dirname, '../../testCases/cssModule.vue'),

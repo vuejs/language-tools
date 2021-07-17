@@ -13,6 +13,7 @@ import { MapLike } from 'typescript';
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 export const sleep = promisify(setTimeout);
+
 export function syntaxToLanguageId(syntax: string) {
 	switch (syntax) {
 		case 'js': return 'javascript';
@@ -23,6 +24,7 @@ export function syntaxToLanguageId(syntax: string) {
 	}
 	return syntax;
 }
+
 export function languageIdToSyntax(languageId: string) {
 	switch (languageId) {
 		case 'javascript': return 'js';
@@ -33,15 +35,18 @@ export function languageIdToSyntax(languageId: string) {
 	}
 	return languageId;
 }
+
 export function getValidScriptSyntax(syntax: string) {
 	if (validScriptSyntaxs.has(syntax)) {
 		return syntax;
 	}
 	return 'js';
 }
+
 export function notEmpty<T>(value: T | null | undefined): value is T {
 	return value !== null && value !== undefined;
 }
+
 export function isInsideRange(parent: vscode.Range, child: vscode.Range) {
 	if (child.start.line < parent.start.line) return false;
 	if (child.end.line > parent.end.line) return false;
@@ -49,6 +54,7 @@ export function isInsideRange(parent: vscode.Range, child: vscode.Range) {
 	if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
 	return true;
 }
+
 export function getWordRange(wordPattern: RegExp, position: vscode.Position, document: TextDocument): vscode.Range | undefined {
 	const lineStart: vscode.Position = {
 		line: position.line,
@@ -74,28 +80,33 @@ export function getWordRange(wordPattern: RegExp, position: vscode.Position, doc
 	}
 	return undefined;
 }
+
 export function loadWorkspaceTypescript(root: string, tsdk: string): typeof import('typescript/lib/tsserverlibrary') | undefined {
 	const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, 'tsserver.js') : path.join(root, tsdk, 'tsserver.js');
 	if (fs.existsSync(tsPath)) {
 		return require(path.toUnix(tsPath));
 	}
 }
+
 export function loadWorkspaceTypescriptLocalized(root: string, tsdk: string, lang: string): MapLike<string> | undefined {
 	const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, lang, 'diagnosticMessages.generated.json') : path.join(root, tsdk, lang, 'diagnosticMessages.generated.json');
 	if (fs.existsSync(tsPath)) {
 		return require(path.toUnix(tsPath));
 	}
 }
+
 export function loadVscodeTypescript(appRoot: string): typeof import('typescript/lib/tsserverlibrary') {
 	const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript');
 	return require(path.toUnix(tsPath));
 }
+
 export function loadVscodeTypescriptLocalized(appRoot: string, lang: string): MapLike<string> | undefined {
 	const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript', 'lib', lang, 'diagnosticMessages.generated.json');
 	if (fs.existsSync(tsPath)) {
 		return require(path.toUnix(tsPath));
 	}
 }
+
 export function eqSet<T>(as: Set<T>, bs: Set<T>) {
 	if (as.size !== bs.size) return false;
 	for (const a of as) if (!bs.has(a)) return false;

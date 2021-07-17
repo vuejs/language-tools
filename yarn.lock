@@ -8757,7 +8757,7 @@ vscode-json-languageservice@^4.1.5:
     vscode-nls "^5.0.0"
     vscode-uri "^3.0.2"
 
-vscode-jsonrpc@7.0.0-next.1:
+vscode-jsonrpc@7.0.0-next.1, vscode-jsonrpc@^7.0.0-next.1:
   version "7.0.0-next.1"
   resolved "https://registry.yarnpkg.com/vscode-jsonrpc/-/vscode-jsonrpc-7.0.0-next.1.tgz#14bc13fe318a2885bc8ca0fc4f706a02be609825"
   integrity sha512-dEmliPZGbSyIcEeKRGzosCy7y7zsc8FXg1l5BBOGgMUbemlo3vUnsa2GFqpILJwJvlbvkRcF2QASNwIlKe9J7g==

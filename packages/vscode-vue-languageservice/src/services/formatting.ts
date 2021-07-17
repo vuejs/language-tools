@@ -24,25 +24,25 @@ export function register(
 		const pugEdits = getPugFormattingEdits();
 		const htmlEdits = getHtmlFormattingEdits();
 		if (pugEdits.length + htmlEdits.length > 0) {
-			newDocument = applyTextEdits(document, [
+			newDocument = TextDocument.create(newDocument.uri, newDocument.languageId, newDocument.version + 1, TextDocument.applyEdits(newDocument, [
 				...pugEdits,
 				...htmlEdits,
-			]);
+			]));
 			sourceFile.update(newDocument); // TODO: high cost
 		}
 
 		const tsEdits = await getTsFormattingEdits();
 		const cssEdits = getCssFormattingEdits();
 		if (tsEdits.length + cssEdits.length > 0) {
-			newDocument = applyTextEdits(newDocument, [
+			newDocument = TextDocument.create(newDocument.uri, newDocument.languageId, newDocument.version + 1, TextDocument.applyEdits(newDocument, [
 				...tsEdits,
 				...cssEdits,
-			]);
+			]));
 			sourceFile.update(newDocument); // TODO: high cost
 		}
 
 		const indentTextEdits = patchInterpolationIndent();
-		newDocument = applyTextEdits(newDocument, indentTextEdits);
+		newDocument = TextDocument.create(newDocument.uri, newDocument.languageId, newDocument.version + 1, TextDocument.applyEdits(newDocument, indentTextEdits));
 		if (newDocument.getText() === document.getText()) return;
 
 		const editRange = vscode.Range.create(
@@ -192,28 +192,6 @@ export function register(
 				}
 			}
 			return result;
-		}
-		function applyTextEdits(document: TextDocument, textEdits: vscode.TextEdit[]) {
-
-			textEdits = textEdits.sort((a, b) => document.offsetAt(b.range.start) - document.offsetAt(a.range.start));
-
-			let newDocumentText = document.getText();
-			for (const textEdit of textEdits) {
-				newDocumentText = editText(
-					newDocumentText,
-					document.offsetAt(textEdit.range.start),
-					document.offsetAt(textEdit.range.end),
-					textEdit.newText
-				)
-			}
-
-			return TextDocument.create(document.uri.toString(), document.languageId, document.version + 1, newDocumentText);
-
-			function editText(sourceText: string, startOffset: number, endOffset: number, newText: string) {
-				return sourceText.substring(0, startOffset)
-					+ newText
-					+ sourceText.substring(endOffset, sourceText.length)
-			}
 		}
 	};
 }
