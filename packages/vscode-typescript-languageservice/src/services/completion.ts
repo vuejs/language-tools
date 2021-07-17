@@ -57,7 +57,7 @@ export function register(
 				let item: vscode.CompletionItem = {
 					label: entry.name,
 					labelDetails: {
-						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(host.getCurrentDirectory(), entry.source) : entry.source,
+						description: entry.source && path.isAbsolute(entry.source) ? path.relative(host.getCurrentDirectory(), entry.source) : entry.source /* TS don't display source if source not a path */,
 					},
 					kind: convertKind(entry.kind),
 					sortText: entry.sortText,
@@ -65,7 +65,7 @@ export function register(
 					preselect: entry.isRecommended,
 					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
 					data,
-				}
+				};
 
 				handleKindModifiers(item, entry);
 				item = fuzzyCompletionItem(info, document, entry, item);

@@ -229,7 +229,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 			if (result) {
 				result.items = result.items.filter((result: vscode.CompletionItem) =>
 					result.label.indexOf('__VLS_') === -1
-					&& (!result.labelDetails?.qualifier || result.labelDetails.qualifier.indexOf('__VLS_') === -1)
+					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)
 				);
 			}
 			return result;
@@ -422,7 +422,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 							const filePath = shared.uriToFsPath(importFile.uri);
 							const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
 							vueItem.documentation = undefined;
-							vueItem.labelDetails = { qualifier: rPath };
+							vueItem.labelDetails = { description: rPath };
 							vueItem.filterText = vueItem.label + ' ' + rPath;
 							vueItem.detail = rPath;
 							vueItem.kind = vscode.CompletionItemKind.File;

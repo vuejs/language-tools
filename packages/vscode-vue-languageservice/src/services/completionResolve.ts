@@ -102,7 +102,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 				return vueItem;
 			}
 
-			vueItem.labelDetails = { qualifier: rPath };
+			vueItem.labelDetails = { description: rPath };
 
 			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content, descriptor.script.lang) : undefined;
 			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content, descriptor.scriptSetup.lang) : undefined;
