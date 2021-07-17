@@ -9,25 +9,36 @@ import {
 import { uriToFsPath, fsPathToUri } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'upath';
+import { renameInfoOptions } from './prepareRename';
+import type { LanguageServiceHost } from '../';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+export function register(
+	languageService: ts.LanguageService,
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	host: LanguageServiceHost
+) {
 
-	return (uri: string, position: Position, newName: string): WorkspaceEdit | undefined => {
+	return async (uri: string, position: Position, newName: string): Promise<WorkspaceEdit | undefined> => {
 		const document = getTextDocument(uri);
 		if (!document) return;
 
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
-		const renameInfo = languageService.getRenameInfo(fileName, offset, { allowRenameOfImportPath: true });
+		const renameInfo = languageService.getRenameInfo(fileName, offset, renameInfoOptions);
 		if (!renameInfo.canRename)
 			return;
 
 		if (renameInfo.fileToRename) {
-			return renameFile(renameInfo.fileToRename, newName);
+			const [formatOptions, preferences] = await Promise.all([
+				host.getFormatOptions?.(document) ?? {},
+				host.getPreferences?.(document) ?? {},
+			]);
+			return renameFile(renameInfo.fileToRename, newName, formatOptions, preferences);
 		}
 
-		const entries = languageService.findRenameLocations(fileName, offset, false, false, true);
+		const { providePrefixAndSuffixTextForRename } = await host.getPreferences?.(document) ?? { providePrefixAndSuffixTextForRename: true };
+		const entries = languageService.findRenameLocations(fileName, offset, false, false, providePrefixAndSuffixTextForRename);
 		if (!entries)
 			return;
 
@@ -38,6 +49,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	function renameFile(
 		fileToRename: string,
 		newName: string,
+		formatOptions: ts.FormatCodeSettings,
+		preferences: ts.UserPreferences,
 	): WorkspaceEdit | undefined {
 		// Make sure we preserve file extension if none provided
 		if (!path.extname(newName)) {
@@ -47,7 +60,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const dirname = path.dirname(fileToRename);
 		const newFilePath = path.join(dirname, newName);
 
-		const response = languageService.getEditsForFileRename(fileToRename, newFilePath, {}, { allowTextChangesInNewFiles: true });
+		const response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences);
 		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);
 		if (!edits.documentChanges) {
 			edits.documentChanges = [];

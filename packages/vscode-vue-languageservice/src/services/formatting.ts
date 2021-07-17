@@ -8,15 +8,20 @@ import {
 	Range,
 	TextEdit
 } from 'vscode-languageserver/node';
+import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import { createSourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 import * as sharedServices from '../utils/sharedLs';
 
-export function register(context: HtmlLanguageServiceContext) {
+export function register(
+	context: HtmlLanguageServiceContext,
+	getPreferences: LanguageServiceHost['getPreferences'],
+	getFormatOptions: LanguageServiceHost['getFormatOptions'],
+) {
 	const { ts } = context;
-	return (document: TextDocument, options: FormattingOptions) => {
+	return async (document: TextDocument, options: FormattingOptions) => {
 
-		const dummyTs = sharedServices.getDummyTsLs(ts, document);
+		const dummyTs = sharedServices.getDummyTsLs(ts, document, getPreferences, getFormatOptions);
 		const sourceFile = createSourceFile(document, dummyTs.ls, dummyTs.ls, context);
 		let newDocument = document;
 
@@ -30,7 +35,7 @@ export function register(context: HtmlLanguageServiceContext) {
 			sourceFile.update(newDocument); // TODO: high cost
 		}
 
-		const tsEdits = getTsFormattingEdits();
+		const tsEdits = await getTsFormattingEdits();
 		const cssEdits = getCssFormattingEdits();
 		if (tsEdits.length + cssEdits.length > 0) {
 			newDocument = applyTextEdits(newDocument, [
@@ -169,7 +174,7 @@ export function register(context: HtmlLanguageServiceContext) {
 			}
 			return result;
 		}
-		function getTsFormattingEdits() {
+		async function getTsFormattingEdits() {
 			const result: TextEdit[] = [];
 			const tsSourceMaps = [
 				sourceFile.getTemplateFormattingScript().sourceMap,
@@ -178,8 +183,8 @@ export function register(context: HtmlLanguageServiceContext) {
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
-				const dummyTs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument);
-				const textEdits = dummyTs.ls.doFormatting(dummyTs.uri, options);
+				const dummyTs = sharedServices.getDummyTsLs(ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const textEdits = await dummyTs.ls.doFormatting(dummyTs.uri, options);
 				for (const textEdit of textEdits) {
 					for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
 						if (!vueRange.data.capabilities.formatting) continue;

@@ -22,9 +22,9 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 				return cssResult;
 			}
 		},
-		doRename: (uri: string, position: Position, newName: string) => {
+		doRename: async (uri: string, position: Position, newName: string) => {
 
-			const tsResult = doTsRename(uri, position, newName);
+			const tsResult = await doTsRename(uri, position, newName);
 			if (tsResult) {
 				doDedupe(tsResult);
 				return tsResult;
@@ -70,19 +70,19 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 			}
 		}
 	}
-	function onTsFile(oldUri: string, newUri: string) {
+	async function onTsFile(oldUri: string, newUri: string) {
 
 		const sourceFile = sourceFiles.get(oldUri);
 		const isVirtualFile = !!sourceFile;
 		const tsOldUri = sourceFile ? sourceFile.getScriptTsDocument().uri : oldUri;
 		const tsNewUri = isVirtualFile ? newUri + '.ts' : newUri;
-		const tsResult = scriptTsLs.getEditsForFileRename(tsOldUri, tsNewUri);
+		const tsResult = await scriptTsLs.getEditsForFileRename(tsOldUri, tsNewUri);
 
 		if (tsResult) {
 			return tsEditToVueEdit('script', tsResult, sourceFiles, canRename);
 		}
 	}
-	function doTsRename(uri: string, position: Position, newName: string) {
+	async function doTsRename(uri: string, position: Position, newName: string) {
 
 		let result: WorkspaceEdit | undefined;
 
@@ -97,7 +97,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 				if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
 					newName_2 = tsLoc.range.data.beforeRename(newName);
 
-				const tsResult = doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
+				const tsResult = await doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
 				if (tsResult) {
 					const vueResult = tsEditToVueEdit(tsLoc.lsType, tsResult, sourceFiles, canRename);
 					if (vueResult) {
@@ -112,10 +112,10 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 		return result;
 	}
-	function doTsRenameWorker(lsType: 'script' | 'template', tsUri: string, position: Position, newName: string, loopChecker = dedupe.createLocationSet()) {
+	async function doTsRenameWorker(lsType: 'script' | 'template', tsUri: string, position: Position, newName: string, loopChecker = dedupe.createLocationSet()) {
 
 		const tsLs = getTsLs(lsType);
-		const tsResult = tsLs.doRename(
+		const tsResult = await tsLs.doRename(
 			tsUri,
 			position,
 			newName,
@@ -147,7 +147,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 						const newName_2 = teleRange.sideData.editRenameText
 							? teleRange.sideData.editRenameText(newName)
 							: newName;
-						const tsResult_2 = doTsRenameWorker(lsType, editUri, teleRange.start, newName_2, loopChecker);
+						const tsResult_2 = await doTsRenameWorker(lsType, editUri, teleRange.start, newName_2, loopChecker);
 						if (tsResult_2) {
 							margeWorkspaceEdits(tsResult, tsResult_2);
 						}

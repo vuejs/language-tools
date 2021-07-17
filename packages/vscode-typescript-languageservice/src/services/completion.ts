@@ -10,25 +10,31 @@ import {
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
 import * as path from 'upath';
+import type { LanguageServiceHost } from '../';
 
 export interface Data {
+	uri: string,
 	fileName: string,
 	offset: number,
 	source: string | undefined,
 	name: string,
-	options: ts.GetCompletionsAtPositionOptions | undefined,
 	tsData: any,
 }
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, rootDir: string) {
+export function register(
+	languageService: ts.LanguageService,
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	host: LanguageServiceHost
+) {
 	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
+
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const _options: ts.GetCompletionsAtPositionOptions = {
-			includeCompletionsWithInsertText: true,
+			includeCompletionsWithInsertText: true, // TODO: ?
 			...options,
 		};
 
@@ -47,17 +53,17 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const entries = info.entries
 			.map(entry => {
 				const data: Data = {
+					uri,
 					fileName,
 					offset,
 					source: entry.source,
 					name: entry.name,
-					options: _options,
 					tsData: entry.data,
 				};
 				let item: CompletionItem = {
 					label: entry.name,
 					labelDetails: {
-						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(rootDir, entry.source) : entry.source,
+						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(host.getCurrentDirectory(), entry.source) : entry.source,
 					},
 					kind: convertKind(entry.kind),
 					sortText: entry.sortText,

@@ -130,11 +130,11 @@ export async function execute(
     const script = sourceFile.getVirtualScript();
     if (!script.document || !script.sourceMap) return;
     const refOffset = script.document.getText().indexOf(SearchTexts.Ref);
-    const items = tsLanguageService.doComplete(script.document.uri, script.document.positionAt(refOffset), { includeCompletionsForModuleExports: true });
+    const items = await tsLanguageService.doComplete(script.document.uri, script.document.positionAt(refOffset), { includeCompletionsForModuleExports: true });
     for (let item of items) {
         if (item.label !== 'ref')
             continue;
-        item = tsLanguageService.doCompletionResolve(item);
+        item = await tsLanguageService.doCompletionResolve(item);
         if (!item.additionalTextEdits)
             continue;
         for (const edit of item.additionalTextEdits) {

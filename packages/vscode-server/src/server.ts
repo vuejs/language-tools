@@ -25,6 +25,7 @@ import {
 } from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
 import { createServicesManager, ServicesManager } from './servicesManager';
+import * as tsConfigs from './tsConfigs';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -82,7 +83,11 @@ async function onInitialized() {
 	let servicesManager: ServicesManager | undefined;
 
 	if (options.mode === 'html') {
-		const noStateLs = getDocumentLanguageService({ typescript: getTs().module });
+		const noStateLs = getDocumentLanguageService(
+			{ typescript: getTs().module },
+			(document) => tsConfigs.getPreferences(connection, document),
+			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
+		);
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
 	}
 	else if (options.mode === 'api') {

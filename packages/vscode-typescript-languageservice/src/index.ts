@@ -1,5 +1,7 @@
+import * as vscode from 'vscode-languageserver';
 import * as ShPlugin from 'typescript-vscode-sh-plugin';
 import * as completions from './services/completion';
+import * as completions2 from './services/completion2';
 import * as completionResolve from './services/completionResolve';
 import * as definitions from './services/definition';
 import * as typeDefinitions from './services/typeDefinition';
@@ -22,10 +24,14 @@ import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { uriToFsPath } from '@volar/shared';
-export type { LanguageServiceHost } from 'typescript';
-import type { LanguageServiceHost } from 'typescript';
+import type * as ts from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
+
+export type LanguageServiceHost = ts.LanguageServiceHost & {
+	getFormatOptions?(document: TextDocument, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
+	getPreferences?(document: TextDocument): Promise<ts.UserPreferences>;
+};
 
 export function createLanguageService(ts: typeof import('typescript/lib/tsserverlibrary'), _host: LanguageServiceHost) {
 
@@ -47,18 +53,18 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument),
 		findReferences: references.register(languageService, getValidTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
-		doRename: rename.register(languageService, getValidTextDocument),
-		getEditsForFileRename: fileRename.register(languageService, getValidTextDocument),
-		getCodeActions: codeActions.register(languageService, getValidTextDocument),
-		doCodeActionResolve: codeActionResolve.register(languageService, getValidTextDocument),
+		doRename: rename.register(languageService, getValidTextDocument, host),
+		getEditsForFileRename: fileRename.register(languageService, getValidTextDocument, host),
+		getCodeActions: codeActions.register(languageService, getValidTextDocument, host),
+		doCodeActionResolve: codeActionResolve.register(languageService, getValidTextDocument, host),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getValidTextDocument),
-		doComplete: completions.register(languageService, getValidTextDocument, host.getCurrentDirectory()),
-		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, ts),
+		doComplete: completions2.register(languageService, getValidTextDocument, host),
+		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, host),
 		doHover: hover.register(languageService, getValidTextDocument, ts),
-		doFormatting: formatting.register(languageService, getValidTextDocument),
+		doFormatting: formatting.register(languageService, getValidTextDocument, host),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),
 		getSelectionRange: selectionRanges.register(languageService, getValidTextDocument),
 		doValidation: diagnostics.register(languageService, getValidTextDocument, ts),
@@ -73,6 +79,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 			host,
 			getTextDocument,
 			getValidTextDocument,
+			doCompleteSync: completions.register(languageService, getValidTextDocument, host),
 		},
 	};
 

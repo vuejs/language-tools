@@ -397,11 +397,11 @@ export function createSourceFile(
 
 		const doc = templateLsMainScript.textDocument.value;
 		const docText = doc.getText();
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
-		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
-		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? templateTsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
+		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
+		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
 
 		components = components.filter(entry => {
 			const name = (entry.data as TsCompletionData).name;
@@ -1027,7 +1027,7 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							bind = templateTsLs.doComplete(doc.uri, doc.positionAt(offset));
+							bind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -1035,7 +1035,7 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							on = templateTsLs.doComplete(doc.uri, doc.positionAt(offset));
+							on = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
 						}
 					}
 					{
@@ -1043,12 +1043,12 @@ export function createSourceFile(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							slot = templateTsLs.doComplete(doc.uri, doc.positionAt(offset));
+							slot = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
 						}
 					}
 					data.set(tagName, { item: tag, bind, on, slot });
 				}
-				const globalBind = templateTsLs.doComplete(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
+				const globalBind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
 				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });
 			}
 			return data;

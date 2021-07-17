@@ -8,11 +8,18 @@ let dummyTsScriptVersion = 0;
 let dummyTsScriptKind = 3;
 let dummyTsScript: ts.IScriptSnapshot | undefined;
 let dummyTsLs: ts2.LanguageService | undefined;
-export function getDummyTsLs(ts: typeof import('typescript/lib/tsserverlibrary'), doc: TextDocument) {
+export function getDummyTsLs(
+    ts: typeof import('typescript/lib/tsserverlibrary'),
+    doc: TextDocument,
+    getPreferences: ts2.LanguageServiceHost['getPreferences'],
+    getFormatOptions: ts2.LanguageServiceHost['getFormatOptions'],
+) {
     if (!dummyTsLs) {
         dummyTsLs = ts2.createLanguageService(
             ts,
             {
+                getPreferences,
+                getFormatOptions,
                 getCompilationSettings: () => ({}),
                 getScriptFileNames: () => [uriToFsPath(fsPathToUri(`dummy.${dummyTsScriptVersion}.ts`))],
                 getScriptVersion: () => dummyTsScriptVersion.toString(),

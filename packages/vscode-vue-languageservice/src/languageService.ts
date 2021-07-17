@@ -51,8 +51,8 @@ import { createSourceFiles } from './sourceFiles';
 
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
-export type LanguageServiceHost = ts.LanguageServiceHost & {
-	getEmmetConfig?: (syntax: string) => Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
+export type LanguageServiceHost = ts2.LanguageServiceHost & {
+	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
 	schemaRequestService?: json.SchemaRequestService,
 };
 export type Dependencies = {
@@ -61,15 +61,19 @@ export type Dependencies = {
 	// TODO: vscode-css-languageservice
 };
 
-export function getDocumentLanguageService({ typescript: ts }: Dependencies) {
+export function getDocumentLanguageService(
+	{ typescript: ts }: Dependencies,
+	getPreferences: LanguageServiceHost['getPreferences'],
+	getFormatOptions: LanguageServiceHost['getFormatOptions'],
+) {
 	const cache = new Map<string, [number, HTMLDocument]>();
 	const context: HtmlLanguageServiceContext = {
 		...createContext(ts),
 		getHtmlDocument,
 	};
 	return {
-		doFormatting: formatting.register(context),
-		getFoldingRanges: foldingRanges.register(context),
+		doFormatting: formatting.register(context, getPreferences, getFormatOptions),
+		getFoldingRanges: foldingRanges.register(context, getPreferences, getFormatOptions),
 		doTagComplete: autoClose.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
 	}

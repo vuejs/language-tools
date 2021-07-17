@@ -6,19 +6,30 @@ import { handleKindModifiers } from './completion';
 import type { Data } from './completion';
 import * as previewer from '../utils/previewer';
 import { fsPathToUri } from '@volar/shared';
+import type { LanguageServiceHost } from '../';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
-	return (item: CompletionItem, newOffset?: number): CompletionItem => {
+export function register(
+	languageService: ts.LanguageService,
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	host: LanguageServiceHost
+) {
+	return async (item: CompletionItem, newOffset?: number): Promise<CompletionItem> => {
+
 		const data: Data = item.data;
 		const fileName = data.fileName;
 		const offset = newOffset ?? data.offset;
 		const name = data.name;
 		const source = data.source;
-		const options = data.options;
+
+		const document = getTextDocument(data.uri);
+		const [formatOptions, preferences] = document ? await Promise.all([
+			host.getFormatOptions?.(document) ?? {},
+			host.getPreferences?.(document) ?? {},
+		]) : [{}, {}];
 
 		let details: ts.CompletionEntryDetails | undefined;
 		try {
-			details = languageService.getCompletionEntryDetails(fileName, offset, name, {}, source, options, data.tsData);
+			details = languageService.getCompletionEntryDetails(fileName, offset, name, formatOptions, source, preferences, data.tsData);
 		}
 		catch (err) {
 			item.detail = `[TS Error] ${err}`;

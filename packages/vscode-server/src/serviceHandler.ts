@@ -7,6 +7,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Disposable, TextDocuments, WorkDoneProgressServerReporter, Connection } from 'vscode-languageserver/node';
 import { getEmmetConfiguration } from './configs';
 import { getSchemaRequestService } from './schemaRequestService';
+import * as tsConfigs from './tsConfigs';
 
 export type ServiceHandler = ReturnType<typeof createServiceHandler>;
 
@@ -178,6 +179,8 @@ export function createServiceHandler(
 			// vue
 			getEmmetConfig: getEmmetConfiguration,
 			schemaRequestService: getSchemaRequestService(connection),
+			getPreferences: (document) => tsConfigs.getPreferences(connection, document),
+			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			// ts
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,

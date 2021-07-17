@@ -7,12 +7,17 @@ import { createSourceFile } from '../sourceFile';
 import { getDummyTsLs } from '../utils/sharedLs';
 import { notEmpty } from '@volar/shared';
 import type { HtmlLanguageServiceContext } from '../types';
+import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 
-export function register(context: HtmlLanguageServiceContext) {
+export function register(
+	context: HtmlLanguageServiceContext,
+	getPreferences: LanguageServiceHost['getPreferences'],
+	getFormatOptions: LanguageServiceHost['getFormatOptions'],
+) {
 	const { ts, htmlLs, getCssLs } = context;
 	return (document: TextDocument) => {
 
-		const dummyTs = getDummyTsLs(ts, document);
+		const dummyTs = getDummyTsLs(ts, document, getPreferences, getFormatOptions);
 		const sourceFile = createSourceFile(document, dummyTs.ls, dummyTs.ls, context);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
@@ -51,7 +56,7 @@ export function register(context: HtmlLanguageServiceContext) {
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTs = getDummyTsLs(ts, sourceMap.mappedDocument);
+				const dummyTs = getDummyTsLs(ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const foldingRanges = dummyTs.ls.getFoldingRanges(dummyTs.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}

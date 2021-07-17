@@ -119,7 +119,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 
 		if (context?.triggerKind === CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
 			if (cache.tsResult?.isIncomplete) {
-				cache.tsResult = getTsResult();
+				cache.tsResult = await getTsResult();
 			}
 			if (cache.emmetResult?.isIncomplete) {
 				cache.emmetResult = await getEmmetResult(sourceFile);
@@ -148,7 +148,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 
 		const emmetResult = await getEmmetResult(sourceFile);
 
-		const tsResult = getTsResult();
+		const tsResult = await getTsResult();
 		cache = { uri, tsResult, emmetResult };
 		if (tsResult) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
 
@@ -178,7 +178,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 				items: lists.map(list => list.items).flat(),
 			};
 		}
-		function getTsResult() {
+		async function getTsResult() {
 			let result: CompletionList | undefined;
 			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
 				return result;
@@ -195,7 +195,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 					};
 				}
 				const quotePreference = tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template' ? 'single' : 'auto';
-				let tsItems = getTsLs(tsLoc.lsType).doComplete(tsLoc.uri, tsLoc.range.start, {
+				let tsItems = await getTsLs(tsLoc.lsType).doComplete(tsLoc.uri, tsLoc.range.start, {
 					quotePreference,
 					includeCompletionsForModuleExports: tsLoc.type === 'source-ts' || ['script', 'scriptSetup'].includes(tsLoc.range.data.vueTag), // TODO: read ts config
 					includeCompletionsForImportStatements: tsLoc.type === 'source-ts' || ['script', 'scriptSetup'].includes(tsLoc.range.data.vueTag), // TODO: read ts config

@@ -42,7 +42,7 @@ export function register(
     connection.onSignatureHelp(handler => {
         return servicesManager
             .getMatchService(handler.textDocument.uri)
-            ?.getSignatureHelp(handler.textDocument.uri, handler.position);
+            ?.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
     });
     connection.onSelectionRanges(handler => {
         return servicesManager
@@ -76,12 +76,12 @@ export function register(
             .getMatchService(uri)
             ?.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
     });
-    connection.onCodeAction(handler => {
+    connection.onCodeAction(async handler => {
         const uri = handler.textDocument.uri;
         const tsConfig = servicesManager.getMatchTsConfig(uri);
         const service = tsConfig ? servicesManager.services.get(tsConfig)?.getLanguageService() : undefined;
         if (service) {
-            const codeActions = service.getCodeActions(uri, handler.range, handler.context);
+            const codeActions = await service.getCodeActions(uri, handler.range, handler.context);
             for (const codeAction of codeActions) {
                 if (codeAction.data && typeof codeAction.data === 'object') {
                     (codeAction.data as any).tsConfig = tsConfig;
@@ -180,12 +180,11 @@ export function register(
             .getMatchService(uri)
             ?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
     });
-    connection.workspace.onWillRenameFiles(handler => {
-        const edits = handler.files
+    connection.workspace.onWillRenameFiles(async handler => {
+        const edits = (await Promise.all(handler.files
             .map(file => {
                 return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
-            })
-            .filter(notEmpty)
+            }))).filter(notEmpty);
         if (edits.length) {
             const result = edits[0];
             margeWorkspaceEdits(result, ...edits.slice(1));

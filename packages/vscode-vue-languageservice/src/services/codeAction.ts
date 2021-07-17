@@ -9,9 +9,9 @@ import type { Data } from './callHierarchy';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
-	return (uri: string, range: Range, context: CodeActionContext) => {
+	return async (uri: string, range: Range, context: CodeActionContext) => {
 
-		const tsResult = onTs(uri, range, context);
+		const tsResult = await onTs(uri, range, context);
 		const cssResult = onCss(uri, range, context);
 
 		return dedupe.withCodeAction([
@@ -20,7 +20,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		]);
 	}
 
-	function onTs(uri: string, range: Range, context: CodeActionContext) {
+	async function onTs(uri: string, range: Range, context: CodeActionContext) {
 
 		let result: CodeAction[] = [];
 
@@ -38,7 +38,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.codeActions)
 				continue;
 
-			let tsCodeActions = tsLs.getCodeActions(tsLoc.uri, tsLoc.range, tsContext);
+			let tsCodeActions = await tsLs.getCodeActions(tsLoc.uri, tsLoc.range, tsContext);
 			if (!tsCodeActions)
 				continue;
 

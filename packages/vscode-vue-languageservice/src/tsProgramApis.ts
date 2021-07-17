@@ -93,7 +93,7 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
                             ? tsOrVueLoc.sourceMap.sourceDocument
                             : tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
                         if (doc) {
-                            file = ts.createSourceFile(uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.type === 'embedded-ts' ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest /* TODO */)
+                            file = ts.createSourceFile(uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.uri.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
                         }
                     }
                     const newDiagnostic: T = {

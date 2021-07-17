@@ -9,27 +9,39 @@ import { uriToFsPath } from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import * as fixNames from '../utils/fixNames';
+import type { LanguageServiceHost } from '../';
 
 export interface FixAllData {
 	type: 'fixAll',
+	uri: string,
 	fileName: string,
 	fixIds: {}[],
 }
 export interface RefactorData {
 	type: 'refactor',
+	uri: string,
 	fileName: string,
 	refactorName: string,
 	actionName: string,
 	range: { pos: number, end: number },
 }
 
-export type Data = FixAllData | RefactorData | undefined;
+export type Data = FixAllData | RefactorData;
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string, range: Range, context: CodeActionContext) => {
+export function register(
+	languageService: ts.LanguageService,
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	host: LanguageServiceHost
+) {
+	return async (uri: string, range: Range, context: CodeActionContext) => {
 
 		const document = getTextDocument(uri);
 		if (!document) return;
+
+		const [formatOptions, preferences] = await Promise.all([
+			host.getFormatOptions?.(document) ?? {},
+			host.getPreferences?.(document) ?? {},
+		]);
 
 		const fileName = uriToFsPath(document.uri);
 		const start = document.offsetAt(range.start);
@@ -42,7 +54,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			|| context.only.includes(CodeActionKind.QuickFix)
 		) {
 			try {
-				const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, {} /* TODO */, {} /* TODO */);
+				const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
 				for (const codeFix of codeFixes) {
 					result = result.concat(transformCodeFix(codeFix));
 				}
@@ -56,7 +68,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			|| context.only?.includes(CodeActionKind.RefactorRewrite)
 		) {
 			try {
-				const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, {} /* TODO */);
+				const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined /* TODO */, undefined /* TODO */);
 				for (const refactor of refactors) {
 					result = result.concat(transformRefactor(refactor));
 				}
@@ -68,7 +80,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			|| context.only?.includes(CodeActionKind.SourceOrganizeImports)
 		) {
 			try {
-				const changes = languageService.organizeImports({ type: 'file', fileName: fileName }, {} /* TODO */, {} /* TODO */);
+				const changes = languageService.organizeImports({ type: 'file', fileName: fileName }, formatOptions, preferences);
 				const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
 				result.push(CodeAction.create(
 					'Organize Imports',
@@ -84,6 +96,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		) {
 			const action = CodeAction.create('Fix All', CodeActionKind.SourceFixAll);
 			const data: FixAllData = {
+				uri,
 				type: 'fixAll',
 				fileName,
 				fixIds: [
@@ -100,10 +113,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			{
 				const action = CodeAction.create('Remove all unused code', CodeActionKind.SourceFixAll);
 				const data: FixAllData = {
+					uri,
 					type: 'fixAll',
 					fileName,
 					fixIds: [
-						 // not working and throw
+						// not working and throw
 						fixNames.unusedIdentifier,
 						// TODO: remove patching
 						'unusedIdentifier_prefix',
@@ -118,10 +132,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			{
 				const action = CodeAction.create('Add all missing imports', CodeActionKind.SourceFixAll);
 				const data: FixAllData = {
+					uri,
 					type: 'fixAll',
 					fileName,
 					fixIds: [
-						 // not working and throw
+						// not working and throw
 						fixNames.fixImport,
 						// TODO: remove patching
 						'fixMissingImport',
@@ -153,6 +168,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					CodeActionKind.QuickFix,
 				);
 				const data: FixAllData = {
+					uri,
 					type: 'fixAll',
 					fileName,
 					fixIds: [codeFix.fixId],
@@ -170,6 +186,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					CodeActionKind.Refactor,
 				);
 				const data: RefactorData = {
+					uri,
 					type: 'refactor',
 					fileName,
 					range: { pos: start, end: end },

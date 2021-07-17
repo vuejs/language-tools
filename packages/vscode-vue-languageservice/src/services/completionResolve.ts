@@ -9,7 +9,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 
 export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServiceContext) {
-	return (item: CompletionItem, newOffset?: number) => {
+	return async (item: CompletionItem, newOffset?: number) => {
 
 		const data: CompletionData | undefined = item.data;
 		if (!data) return item;
@@ -18,10 +18,10 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 		if (!sourceFile) return item;
 
 		if (data.mode === 'ts') {
-			return getTsResult(sourceFile, item, data);
+			return await getTsResult(sourceFile, item, data);
 		}
 		if (data.mode === 'html') {
-			return getHtmlResult(sourceFile, item, data);
+			return await getHtmlResult(sourceFile, item, data);
 		}
 		if (data.mode === 'autoImport') {
 			return getAutoImportResult(sourceFile, item, data);
@@ -29,7 +29,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 
 		return item;
 
-		function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
+		async function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
 			const sourceMap = sourceFiles.getTsSourceMaps(data.lsType).get(data.docUri);
 			if (sourceMap) {
 				let newOffset_2: number | undefined;
@@ -40,7 +40,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 						break;
 					}
 				}
-				data.tsItem = getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newOffset_2);
+				data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newOffset_2);
 				const newVueItem = transformCompletionItem(
 					data.tsItem,
 					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
@@ -54,11 +54,11 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			}
 			return vueItem;
 		}
-		function getHtmlResult(sourceFile: SourceFile, vueItem: CompletionItem, data: HtmlCompletionData) {
+		async function getHtmlResult(sourceFile: SourceFile, vueItem: CompletionItem, data: HtmlCompletionData) {
 			let tsItem: CompletionItem | undefined = data.tsItem;
 			if (!tsItem) return vueItem;
 
-			tsItem = getTsLs('template').doCompletionResolve(tsItem);
+			tsItem = await getTsLs('template').doCompletionResolve(tsItem);
 			vueItem.tags = [...vueItem.tags ?? [], ...tsItem.tags ?? []];
 
 			const details: string[] = [];
