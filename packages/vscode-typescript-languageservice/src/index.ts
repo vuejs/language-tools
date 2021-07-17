@@ -23,7 +23,7 @@ import * as semanticTokens from './services/semanticTokens';
 import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { syntaxToLanguageId, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type * as ts from 'typescript';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
@@ -85,21 +85,21 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 	};
 
 	function getValidTextDocument(uri: string) {
-		const fileName = uriToFsPath(uri);
+		const fileName = shared.uriToFsPath(uri);
 		if (!languageService.getProgram()?.getSourceFile(fileName)) {
 			return;
 		}
 		return getTextDocument(uri);
 	}
 	function getTextDocument(uri: string) {
-		const fileName = uriToFsPath(uri);
+		const fileName = shared.uriToFsPath(uri);
 		const version = host.getScriptVersion(fileName);
 		const oldDoc = documents.get(uri);
 		if (!oldDoc || oldDoc[0] !== version) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-				const document = TextDocument.create(uri, syntaxToLanguageId(path.extname(uri).substr(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
+				const document = TextDocument.create(uri, shared.syntaxToLanguageId(path.extname(uri).substr(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
 				documents.set(uri, [version, document]);
 			}
 		}

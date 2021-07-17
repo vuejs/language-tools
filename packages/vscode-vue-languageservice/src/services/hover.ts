@@ -1,5 +1,4 @@
-import type { Hover, LocationLink, Position } from 'vscode-languageserver/node';
-import { MarkupContent } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import { HtmlSourceMap } from '../utils/sourceMaps';
 import { register as registerFindDefinitions } from './definition';
@@ -8,7 +7,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 
 	const findDefinitions = registerFindDefinitions(arguments[0]);
 
-	return (uri: string, position: Position) => {
+	return (uri: string, position: vscode.Position) => {
 
 		const tsResult = onTs(uri, position);
 		const htmlResult = onHtml(uri, position);
@@ -21,7 +20,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 			...getHoverTexts(htmlResult),
 			...getHoverTexts(cssResult),
 		];
-		const result: Hover = {
+		const result: vscode.Hover = {
 			contents: texts,
 			range: cssResult?.range ?? htmlResult?.range ?? tsResult?.range,
 		};
@@ -29,9 +28,9 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 		return result;
 	}
 
-	function onTs(uri: string, position: Position, isExtra = false) {
+	function onTs(uri: string, position: vscode.Position, isExtra = false) {
 
-		let result: Hover | undefined;
+		let result: vscode.Hover | undefined;
 
 		// vue -> ts
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
@@ -48,14 +47,14 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 			if (!tsHover) continue;
 
 			if (!isExtra && tsLoc.type === 'embedded-ts' && tsLoc.range.data.capabilities.extraHoverInfo) {
-				const definitions = findDefinitions.on(uri, position) as LocationLink[];
+				const definitions = findDefinitions.on(uri, position) as vscode.LocationLink[];
 				for (const definition of definitions) {
 					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, true);
 					if (!extraHover) continue;
-					if (!MarkupContent.is(extraHover.contents)) continue;
+					if (!vscode.MarkupContent.is(extraHover.contents)) continue;
 					const extraText = extraHover.contents.value;
 					for (const extraTextPart of extraText.split('\n\n')) {
-						if (MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraTextPart)) {
+						if (vscode.MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraTextPart)) {
 							tsHover.contents.value += `\n\n` + extraTextPart;
 						}
 					}
@@ -78,9 +77,9 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 
 		return result;
 	}
-	function onHtml(uri: string, position: Position) {
+	function onHtml(uri: string, position: vscode.Position) {
 
-		let result: Hover | undefined;
+		let result: vscode.Hover | undefined;
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)
@@ -120,9 +119,9 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 
 		return result;
 	}
-	function onCss(uri: string, position: Position) {
+	function onCss(uri: string, position: vscode.Position) {
 
-		let result: Hover | undefined;
+		let result: vscode.Hover | undefined;
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)
@@ -164,14 +163,14 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 	}
 }
 
-function getHoverTexts(hover?: Hover) {
+function getHoverTexts(hover?: vscode.Hover) {
 	if (!hover) {
 		return [];
 	}
 	if (typeof hover.contents === 'string') {
 		return [hover.contents];
 	}
-	if (MarkupContent.is(hover.contents)) {
+	if (vscode.MarkupContent.is(hover.contents)) {
 		return [hover.contents.value];
 	}
 	if (Array.isArray(hover.contents)) {

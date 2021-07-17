@@ -1,10 +1,10 @@
-import { codeLensOptions } from 'vscode-vue-languageservice';
+import * as vue from 'vscode-vue-languageservice';
 import type * as emmet from 'vscode-emmet-helper';
-import { Connection } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 
 let emmetConfig: any = {};
 
-export function updateConfigs(connection: Connection) {
+export function updateConfigs(connection: vscode.Connection) {
 
 	updateCodeLensConfig();
 	updateEmmetConfig();
@@ -19,9 +19,9 @@ export function updateConfigs(connection: Connection) {
 			connection.workspace.getConfiguration('volar.codeLens.pugTools'),
 			connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
 		]);
-		codeLensOptions.references = codeLensReferences;
-		codeLensOptions.pugTool = codeLensPugTool;
-		codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
+		vue.codeLensOptions.references = codeLensReferences;
+		vue.codeLensOptions.pugTool = codeLensPugTool;
+		vue.codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
 	}
 	async function updateEmmetConfig() {
 		emmetConfig = await connection.workspace.getConfiguration('emmet');

@@ -1,12 +1,11 @@
 import type { ApiLanguageServiceContext } from '../types';
-import type { Position } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { Location } from 'vscode-languageserver/node';
-import { uriToFsPath } from '@volar/shared';
+import * as vscode from 'vscode-languageserver';
+import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext) {
 
-	return (document: TextDocument, position: Position): string | undefined | null => {
+	return (document: TextDocument, position: vscode.Position): string | undefined | null => {
 
 		for (const tsLoc of sourceFiles.toTsLocations(document.uri, position)) {
 
@@ -21,14 +20,14 @@ export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext
 				continue;
 
 			// TODO: use computed
-			const sourceFile = ts.createSourceFile(uriToFsPath(tsLoc.uri), tsDoc.getText(), ts.ScriptTarget.Latest);
+			const sourceFile = ts.createSourceFile(shared.uriToFsPath(tsLoc.uri), tsDoc.getText(), ts.ScriptTarget.Latest);
 			if (isBlacklistNode(sourceFile, tsDoc.offsetAt(tsLoc.range.start)))
 				continue;
 
 			const typeDefs = tsLs.findTypeDefinition(tsLoc.uri, tsLoc.range.start);
 			for (const typeDefine of typeDefs) {
-				const uri = Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
-				const range = Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
+				const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
+				const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
 				const defineDoc = tsLs.__internal__.getTextDocument(uri);
 				if (!defineDoc)
 					continue;

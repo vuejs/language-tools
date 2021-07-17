@@ -1,15 +1,15 @@
 import { transformCompletionItem } from '@volar/transforms';
-import { CompletionItem, MarkupKind, TextEdit, Range } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 
 export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServiceContext) {
-	return async (item: CompletionItem, newOffset?: number) => {
+	return async (item: vscode.CompletionItem, newOffset?: number) => {
 
 		const data: CompletionData | undefined = item.data;
 		if (!data) return item;
@@ -29,7 +29,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 
 		return item;
 
-		async function getTsResult(sourceFile: SourceFile, vueItem: CompletionItem, data: TsCompletionData) {
+		async function getTsResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: TsCompletionData) {
 			const sourceMap = sourceFiles.getTsSourceMaps(data.lsType).get(data.docUri);
 			if (sourceMap) {
 				let newOffset_2: number | undefined;
@@ -54,8 +54,8 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			}
 			return vueItem;
 		}
-		async function getHtmlResult(sourceFile: SourceFile, vueItem: CompletionItem, data: HtmlCompletionData) {
-			let tsItem: CompletionItem | undefined = data.tsItem;
+		async function getHtmlResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: HtmlCompletionData) {
+			let tsItem: vscode.CompletionItem | undefined = data.tsItem;
 			if (!tsItem) return vueItem;
 
 			tsItem = await getTsLs('template').doCompletionResolve(tsItem);
@@ -74,17 +74,17 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
 			if (documentations.length) {
 				vueItem.documentation = {
-					kind: MarkupKind.Markdown,
+					kind: vscode.MarkupKind.Markdown,
 					value: documentations.join('\n\n'),
 				};
 			}
 
 			return vueItem;
 		}
-		function getAutoImportResult(sourceFile: SourceFile, vueItem: CompletionItem, data: AutoImportComponentCompletionData) {
+		function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
 
 
-			const importFile = uriToFsPath(data.importUri);
+			const importFile = shared.uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
 			const descriptor = sourceFile.getDescriptor();
 
@@ -96,7 +96,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			if (!descriptor.scriptSetup && !descriptor.script) {
 				vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
 				vueItem.documentation = {
-					kind: MarkupKind.Markdown,
+					kind: vscode.MarkupKind.Markdown,
 					value: '[Error] `<script>` / `<script setup>` block not found.',
 				};
 				return vueItem;
@@ -120,7 +120,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			}
 			if (descriptor.scriptSetup) {
 				vueItem.additionalTextEdits = [
-					TextEdit.insert(
+					vscode.TextEdit.insert(
 						textDoc.positionAt(descriptor.scriptSetup.loc.start + (scriptSetupImport ? scriptSetupImport.end : 0)),
 						'\n' + insertText,
 					),
@@ -128,7 +128,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			}
 			else if (descriptor.script) {
 				vueItem.additionalTextEdits = [
-					TextEdit.insert(
+					vscode.TextEdit.insert(
 						textDoc.positionAt(descriptor.script.loc.start + (scriptImport ? scriptImport.end : 0)),
 						'\n' + insertText,
 					),
@@ -141,8 +141,8 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
 						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
 						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptRanges.sourceFile);
-						vueItem.additionalTextEdits.push(TextEdit.replace(
-							Range.create(
+						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
+							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.start),
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.end),
 							),
@@ -152,8 +152,8 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 					else if (exportDefault.args && exportDefault.argsNode) {
 						(exportDefault.argsNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`));
 						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptRanges.sourceFile);
-						vueItem.additionalTextEdits.push(TextEdit.replace(
-							Range.create(
+						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
+							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.start),
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.end),
 							),
@@ -167,7 +167,7 @@ export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServi
 			function planAInsertText() {
 				const scriptUrl = sourceFile.getScriptTsDocument().uri;
 				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
+				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
 				if (tsDetail?.codeActions) {
 					for (const action of tsDetail.codeActions) {
 						for (const change of action.changes) {

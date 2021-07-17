@@ -1,10 +1,10 @@
 import { transformHover } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
-import type { Position } from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
-	return (docDoc: PugDocument, pos: Position) => {
+	return (docDoc: PugDocument, pos: vscode.Position) => {
 
 		const htmlRange = docDoc.sourceMap.getMappedRange(pos);
 		if (!htmlRange) return;

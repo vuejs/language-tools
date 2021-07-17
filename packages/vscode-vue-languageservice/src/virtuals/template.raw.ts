@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { syntaxToLanguageId } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
@@ -13,7 +13,7 @@ export function useTemplateRaw(
 	const textDocument = computed(() => {
 		if (template.value) {
 			const vueDoc = getUnreactiveDoc();
-			const langId = syntaxToLanguageId(template.value.lang);
+			const langId = shared.syntaxToLanguageId(template.value.lang);
 			const uri = vueDoc.uri + '.' + template.value.lang;
 			const content = template.value.content;
 			const document = TextDocument.create(uri, langId, version++, content);

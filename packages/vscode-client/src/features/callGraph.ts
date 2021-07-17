@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { D3Request } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type { LanguageClient } from 'vscode-languageclient/node';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
@@ -8,7 +8,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const document = vscode.window.activeTextEditor?.document;
 		if (!document) return;
 		let param = languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
-		const d3 = await languageClient.sendRequest(D3Request.type, param);
+		const d3 = await languageClient.sendRequest(shared.D3Request.type, param);
 
 		const panel = vscode.window.createWebviewPanel(
 			'vueCallGraph',

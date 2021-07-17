@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { GetClientAttrNameCaseRequest, GetServerNameCasesRequest, PingRequest, sleep, UriMap } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
 
 	await languageClient.onReady();
 
-	while (await languageClient.sendRequest(PingRequest.type) !== 'pong') {
-		await sleep(100);
+	while (await languageClient.sendRequest(shared.PingRequest.type) !== 'pong') {
+		await shared.sleep(100);
 	}
 
-	languageClient.onRequest(GetClientAttrNameCaseRequest.type, async handler => {
+	languageClient.onRequest(shared.GetClientAttrNameCaseRequest.type, async handler => {
 		let attrCase = attrCases.get(handler.uri);
 		if (handler.uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
 			updateStatusBarText(attrCase);
@@ -19,7 +19,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		return attrCase ?? 'kebabCase';
 	});
 
-	const attrCases = new UriMap<'kebabCase' | 'pascalCase'>();
+	const attrCases = new shared.UriMap<'kebabCase' | 'pascalCase'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.attrNameCase';
 
@@ -56,7 +56,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('pascalCase');
 		}
 		if (select === 6) {
-			const detects = await languageClient.sendRequest(GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
 				attrCases.set(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
 				updateStatusBarText(getValidAttrCase(detects.attr));
@@ -76,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					attrCase = 'pascalCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
 					if (templateCases) {
 						attrCase = getValidAttrCase(templateCases.attr);
 						if (templateCases.attr === 'both') {

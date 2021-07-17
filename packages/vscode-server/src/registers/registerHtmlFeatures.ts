@@ -1,15 +1,10 @@
-import {
-	Connection,
-	DocumentFormattingRequest,
-	FoldingRangeRequest,
-	LinkedEditingRangeRequest
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import {
 	vueDocReg
 } from '../features/shared';
 
-export function register(connection: Connection) {
-	connection.client.register(FoldingRangeRequest.type, vueDocReg);
-	connection.client.register(LinkedEditingRangeRequest.type, vueDocReg);
-	connection.client.register(DocumentFormattingRequest.type, vueDocReg);
+export function register(connection: vscode.Connection) {
+	connection.client.register(vscode.FoldingRangeRequest.type, vueDocReg);
+	connection.client.register(vscode.LinkedEditingRangeRequest.type, vueDocReg);
+	connection.client.register(vscode.DocumentFormattingRequest.type, vueDocReg);
 }

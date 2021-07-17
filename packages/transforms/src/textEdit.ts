@@ -1,7 +1,7 @@
-import { InsertReplaceEdit, Range, TextEdit } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 
-export function transform<T extends TextEdit | InsertReplaceEdit>(textEdit: T, getOtherRange: (range: Range) => Range | undefined): T | undefined {
-	if (TextEdit.is(textEdit)) {
+export function transform<T extends vscode.TextEdit | vscode.InsertReplaceEdit>(textEdit: T, getOtherRange: (range: vscode.Range) => vscode.Range | undefined): T | undefined {
+	if (vscode.TextEdit.is(textEdit)) {
 
 		const range = getOtherRange(textEdit.range);
 		if (!range) return;
@@ -11,7 +11,7 @@ export function transform<T extends TextEdit | InsertReplaceEdit>(textEdit: T, g
 			range,
 		};
 	}
-	else if (InsertReplaceEdit.is(textEdit)) {
+	else if (vscode.InsertReplaceEdit.is(textEdit)) {
 
 		const insert = getOtherRange(textEdit.insert);
 		if (!insert) return;

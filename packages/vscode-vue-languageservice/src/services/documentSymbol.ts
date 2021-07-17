@@ -1,10 +1,5 @@
-import { notEmpty } from '@volar/shared';
-import {
-	Location,
-	Range,
-	SymbolInformation,
-	SymbolKind
-} from 'vscode-languageserver/node';
+import * as shared from '@volar/shared';
+import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
@@ -29,14 +24,14 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 
 		function getVueResult(sourceFile: SourceFile) {
 
-			const result: SymbolInformation[] = [];
+			const result: vscode.SymbolInformation[] = [];
 			const desc = sourceFile.getDescriptor();
 
 			if (desc.template) {
 				result.push({
 					name: '<template>',
-					kind: SymbolKind.Module,
-					location: Location.create(uri, Range.create(
+					kind: vscode.SymbolKind.Module,
+					location: vscode.Location.create(uri, vscode.Range.create(
 						document.positionAt(desc.template.loc.start),
 						document.positionAt(desc.template.loc.end),
 					)),
@@ -45,8 +40,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			if (desc.script) {
 				result.push({
 					name: '<script>',
-					kind: SymbolKind.Module,
-					location: Location.create(uri, Range.create(
+					kind: vscode.SymbolKind.Module,
+					location: vscode.Location.create(uri, vscode.Range.create(
 						document.positionAt(desc.script.loc.start),
 						document.positionAt(desc.script.loc.end),
 					)),
@@ -55,8 +50,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			if (desc.scriptSetup) {
 				result.push({
 					name: '<script setup>',
-					kind: SymbolKind.Module,
-					location: Location.create(uri, Range.create(
+					kind: vscode.SymbolKind.Module,
+					location: vscode.Location.create(uri, vscode.Range.create(
 						document.positionAt(desc.scriptSetup.loc.start),
 						document.positionAt(desc.scriptSetup.loc.end),
 					)),
@@ -64,9 +59,9 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			}
 			for (const style of desc.styles) {
 				result.push({
-					name: `<${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(notEmpty).join(' ')}>`,
-					kind: SymbolKind.Module,
-					location: Location.create(uri, Range.create(
+					name: `<${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}>`,
+					kind: vscode.SymbolKind.Module,
+					location: vscode.Location.create(uri, vscode.Range.create(
 						document.positionAt(style.loc.start),
 						document.positionAt(style.loc.end),
 					)),
@@ -75,8 +70,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			for (const customBlock of desc.customBlocks) {
 				result.push({
 					name: `<${customBlock.type}>`,
-					kind: SymbolKind.Module,
-					location: Location.create(uri, Range.create(
+					kind: vscode.SymbolKind.Module,
+					location: vscode.Location.create(uri, vscode.Range.create(
 						document.positionAt(customBlock.loc.start),
 						document.positionAt(customBlock.loc.end),
 					)),
@@ -86,8 +81,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			return result;
 		}
 		function getTsResult(sourceFile: SourceFile) {
-			const result: SymbolInformation[] = [];
-			const map = new Map<string, SymbolInformation>();
+			const result: vscode.SymbolInformation[] = [];
+			const map = new Map<string, vscode.SymbolInformation>();
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
@@ -97,7 +92,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 					if (vueRange) {
 						map.set(`${sourceMap.mappedDocument.offsetAt(s.location.range.start)}:${sourceMap.mappedDocument.offsetAt(s.location.range.end)}:${s.kind}:${s.name}`, {
 							...s,
-							location: Location.create(uri, vueRange),
+							location: vscode.Location.create(uri, vueRange),
 						});
 					}
 				}
@@ -110,7 +105,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: SymbolInformation[] = [];
+			const result: vscode.SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				let symbols = htmlLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument);
@@ -120,7 +115,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 					if (vueRange) {
 						result.push({
 							...s,
-							location: Location.create(uri, vueRange),
+							location: vscode.Location.create(uri, vueRange),
 						});
 					}
 				}
@@ -128,7 +123,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			const result: SymbolInformation[] = [];
+			const result: vscode.SymbolInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
@@ -140,7 +135,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, getCssLs }: ApiLanguage
 					if (vueRange) {
 						result.push({
 							...s,
-							location: Location.create(uri, vueRange),
+							location: vscode.Location.create(uri, vueRange),
 						});
 					}
 				}

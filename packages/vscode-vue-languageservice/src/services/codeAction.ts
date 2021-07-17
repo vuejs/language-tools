@@ -1,7 +1,5 @@
 import { transformLocations } from '@volar/transforms';
-import { WorkspaceEdit } from 'vscode-languageserver-types';
-import type { CodeAction, CodeActionContext } from 'vscode-languageserver/node';
-import { CodeActionKind, Range, TextDocumentEdit } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
@@ -9,7 +7,7 @@ import type { Data } from './callHierarchy';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
-	return async (uri: string, range: Range, context: CodeActionContext) => {
+	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
 
 		const tsResult = await onTs(uri, range, context);
 		const cssResult = onCss(uri, range, context);
@@ -20,14 +18,14 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		]);
 	}
 
-	async function onTs(uri: string, range: Range, context: CodeActionContext) {
+	async function onTs(uri: string, range: vscode.Range, context: vscode.CodeActionContext) {
 
-		let result: CodeAction[] = [];
+		let result: vscode.CodeAction[] = [];
 
 		for (const tsLoc of sourceFiles.toTsLocations(uri, range.start, range.end)) {
 
 			const tsLs = getTsLs(tsLoc.lsType);
-			const tsContext: CodeActionContext = {
+			const tsContext: vscode.CodeActionContext = {
 				diagnostics: transformLocations(
 					context.diagnostics,
 					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end) : vueRange,
@@ -44,8 +42,8 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.organizeImports) {
 				tsCodeActions = tsCodeActions.filter(codeAction =>
-					codeAction.kind !== CodeActionKind.SourceOrganizeImports
-					&& codeAction.kind !== CodeActionKind.SourceFixAll
+					codeAction.kind !== vscode.CodeActionKind.SourceOrganizeImports
+					&& codeAction.kind !== vscode.CodeActionKind.SourceFixAll
 				);
 			}
 
@@ -66,9 +64,9 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 		return result;
 	}
-	function onCss(uri: string, range: Range, context: CodeActionContext) {
+	function onCss(uri: string, range: vscode.Range, context: vscode.CodeActionContext) {
 
-		let result: CodeAction[] = [];
+		let result: vscode.CodeAction[] = [];
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)
@@ -84,7 +82,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				continue;
 
 			for (const cssRange of sourceMap.getMappedRanges(range.start, range.end)) {
-				const cssContext: CodeActionContext = {
+				const cssContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
 						context.diagnostics,
 						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end),
@@ -99,7 +97,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					// cssCodeAction.edit?.documentChanges...
 
 					if (codeAction.edit) {
-						const vueEdit: WorkspaceEdit = {};
+						const vueEdit: vscode.WorkspaceEdit = {};
 						for (const cssUri in codeAction.edit.changes) {
 							if (cssUri === sourceMap.mappedDocument.uri) {
 								if (!vueEdit.changes) {
@@ -116,7 +114,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 								if (!vueEdit.documentChanges) {
 									vueEdit.documentChanges = [];
 								}
-								if (TextDocumentEdit.is(cssDocChange)) {
+								if (vscode.TextDocumentEdit.is(cssDocChange)) {
 									cssDocChange.textDocument = {
 										uri: uri,
 										version: sourceMap.sourceDocument.version,

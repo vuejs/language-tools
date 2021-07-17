@@ -1,5 +1,5 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Position } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 
 export interface Range {
 	start: number,
@@ -68,8 +68,8 @@ export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
 
 	cache = new Map<string, {
 		data: Data;
-		start: Position;
-		end: Position;
+		start: vscode.Position;
+		end: vscode.Position;
 	}[]>();
 	cache2 = new Map<string, {
 		data: Data;
@@ -78,27 +78,27 @@ export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
 	}[]>();
 
 	// Range
-	public isSourceRange(start: Position, end?: Position) {
+	public isSourceRange(start: vscode.Position, end?: vscode.Position) {
 		return this.getRanges(start, end ?? start, true, true).length > 0;
 	}
-	public isMappedRange(start: Position, end?: Position) {
+	public isMappedRange(start: vscode.Position, end?: vscode.Position) {
 		return this.getRanges(start, end ?? start, false, true).length > 0;
 	}
-	public getSourceRange(start: Position, end?: Position) {
+	public getSourceRange(start: vscode.Position, end?: vscode.Position) {
 		const result = this.getRanges(start, end ?? start, false, true);
 		if (result.length) return result[0];
 	}
-	public getMappedRange(start: Position, end?: Position) {
+	public getMappedRange(start: vscode.Position, end?: vscode.Position) {
 		const result = this.getRanges(start, end ?? start, true, true);
 		if (result.length) return result[0];
 	}
-	public getSourceRanges(start: Position, end?: Position) {
+	public getSourceRanges(start: vscode.Position, end?: vscode.Position) {
 		return this.getRanges(start, end ?? start, false);
 	}
-	public getMappedRanges(start: Position, end?: Position) {
+	public getMappedRanges(start: vscode.Position, end?: vscode.Position) {
 		return this.getRanges(start, end ?? start, true);
 	}
-	private getRanges(start: Position, end: Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
+	private getRanges(start: vscode.Position, end: vscode.Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
 		const key = start.line + ':' + start.character + ':' + end.line + ':' + end.character + ':' + sourceToTarget + ':' + returnFirstResult;
 		if (this.cache.has(key)) return this.cache.get(key)!;
 

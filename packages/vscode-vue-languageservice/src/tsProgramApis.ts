@@ -1,6 +1,6 @@
 import type { ApiLanguageServiceContext } from './types';
 import * as ts from 'typescript';
-import { fsPathToUri, normalizeFileName, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 const lsTypes = ['script', 'template'] as const;
 
@@ -58,10 +58,10 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 				&& diagnostic.start !== undefined
 				&& diagnostic.length !== undefined
 			) {
-				const fileName = normalizeFileName(tsLs.__internal__.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
+				const fileName = shared.normalizeFileName(tsLs.__internal__.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
 				let checkMode: 'all' | 'none' | 'unused' = 'all';
 				if (mode) {
-					const uri = fsPathToUri(fileName);
+					const uri = shared.fsPathToUri(fileName);
 					const vueSourceFile = sourceFiles.getSourceFileByTsUri(lsType, uri);
 					if (vueSourceFile) {
 						checkMode = vueSourceFile.shouldVerifyTsScript(uri, mode);
@@ -71,12 +71,12 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 				if (checkMode === 'unused' && !(diagnostic as ts.Diagnostic).reportsUnnecessary) continue;
 				for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
 					lsType,
-					fsPathToUri(fileName),
+					shared.fsPathToUri(fileName),
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
 				)) {
 
-					if (!vueHost.fileExists?.(uriToFsPath(tsOrVueLoc.uri)))
+					if (!vueHost.fileExists?.(shared.uriToFsPath(tsOrVueLoc.uri)))
 						continue;
 
 					if (tsOrVueLoc.type === 'embedded-ts' && !tsOrVueLoc.range.data.capabilities.diagnostic)
@@ -85,7 +85,7 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 					if (tsOrVueLoc.type === 'source-ts' && tsOrVueLoc.lsType === 'template')
 						continue;
 
-					let file = uriToFsPath(tsOrVueLoc.uri) === fileName
+					let file = shared.uriToFsPath(tsOrVueLoc.uri) === fileName
 						? diagnostic.file
 						: undefined;
 					if (!file) {
@@ -93,7 +93,7 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 							? tsOrVueLoc.sourceMap.sourceDocument
 							: tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
 						if (doc) {
-							file = ts.createSourceFile(uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.uri.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
+							file = ts.createSourceFile(shared.uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.uri.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
 						}
 					}
 					const newDiagnostic: T = {

@@ -1,8 +1,8 @@
-import type { Position, SignatureHelpContext } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
-	return (uri: string, position: Position, context?: SignatureHelpContext) => {
+	return (uri: string, position: vscode.Position, context?: vscode.SignatureHelpContext) => {
 
 		const tsResult = getTsResult();
 		if (tsResult) return tsResult;

@@ -1,6 +1,5 @@
 import type { Position } from 'vscode-languageserver-textdocument';
-import { Location } from 'vscode-languageserver-types';
-import type { Connection } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { Commands } from '../commands';
 import { execute as executeConvertTagNameCase } from '../commands/convertTagNameCase';
 import { execute as executeHtmlToPug } from '../commands/htmlToPug';
@@ -10,9 +9,9 @@ import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
 import { execute as executeUseRefSugar } from '../commands/useRefSugar';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceContext, findReferences: (uri: string, position: Position) => Location[]) {
+export function register({ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceContext, findReferences: (uri: string, position: Position) => vscode.Location[]) {
 
-	return async (uri: string, command: string, args: any[] | undefined, connection: Connection) => {
+	return async (uri: string, command: string, args: any[] | undefined, connection: vscode.Connection) => {
 
 		if (command === Commands.SHOW_REFERENCES && args) {
 			executeShowReferences(args[0], args[1], args[2], connection);

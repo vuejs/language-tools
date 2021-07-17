@@ -1,12 +1,7 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
-import { Range, CancellationToken, /* SemanticTokensBuilder */ } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { TokenEncodingConsts, TokenType, TokenModifier } from 'typescript-vscode-sh-plugin/lib/constants';
 
 export function getSemanticTokenLegend() {
@@ -20,12 +15,12 @@ export function getSemanticTokenLegend() {
 }
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string, range: Range, cancle?: CancellationToken) => {
+	return (uri: string, range: vscode.Range, cancle?: vscode.CancellationToken) => {
 
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const file = uriToFsPath(uri);
+		const file = shared.uriToFsPath(uri);
 		const start = document.offsetAt(range.start);
 		const length = document.offsetAt(range.end) - start;
 
@@ -36,7 +31,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const tokenSpan = [...response1.spans, ...response2.spans];
 
-		// const builder = new SemanticTokensBuilder();
+		// const builder = new vscode.SemanticTokensBuilder();
 		const tokens: [number, number, number, number, number][] = [];
 		let i = 0;
 		while (i < tokenSpan.length) {

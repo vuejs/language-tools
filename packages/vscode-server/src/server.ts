@@ -1,36 +1,15 @@
-import {
-	DocumentVersionRequest,
-	loadWorkspaceTypescript,
-	loadWorkspaceTypescriptLocalized,
-	loadVscodeTypescript,
-	loadVscodeTypescriptLocalized,
-	SemanticTokensChangedNotification,
-	ServerInitializationOptions,
-	uriToFsPath,
-	TsVersionChanged,
-	UseWorkspaceTsdkChanged
-} from '@volar/shared';
-import {
-	getDocumentLanguageService
-} from 'vscode-vue-languageservice';
+import * as shared from '@volar/shared';
+import * as vue from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import {
-	createConnection,
-	DidChangeConfigurationNotification,
-	InitializeParams,
-	InitializeResult,
-	ProposedFeatures,
-	TextDocuments,
-	TextDocumentSyncKind
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
 import { createServicesManager, ServicesManager } from './servicesManager';
 import * as tsConfigs from './tsConfigs';
 
-const connection = createConnection(ProposedFeatures.all);
-const documents = new TextDocuments(TextDocument);
+const connection = vscode.createConnection(vscode.ProposedFeatures.all);
+const documents = new vscode.TextDocuments(TextDocument);
 
-let options: ServerInitializationOptions;
+let options: shared.ServerInitializationOptions;
 let folders: string[] = [];
 let updateTsdk: Function | undefined;
 
@@ -43,19 +22,19 @@ connection.onDidChangeConfiguration(() => {
 connection.listen();
 documents.listen(connection);
 
-function onInitialize(params: InitializeParams) {
+function onInitialize(params: vscode.InitializeParams) {
 
 	options = params.initializationOptions;
 	folders = params.workspaceFolders
 		? params.workspaceFolders
 			.map(folder => folder.uri)
 			.filter(uri => uri.startsWith('file:/'))
-			.map(uri => uriToFsPath(uri))
+			.map(uri => shared.uriToFsPath(uri))
 		: [];
 
-	const result: InitializeResult = {
+	const result: vscode.InitializeResult = {
 		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Incremental,
+			textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
 		}
 	};
 
@@ -83,7 +62,7 @@ async function onInitialized() {
 	let servicesManager: ServicesManager | undefined;
 
 	if (options.mode === 'html') {
-		const noStateLs = getDocumentLanguageService(
+		const noStateLs = vue.getDocumentLanguageService(
 			{ typescript: getTs().module },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
@@ -106,8 +85,8 @@ async function onInitialized() {
 			connection,
 			documents,
 			folders,
-			async (uri: string) => await connection.sendRequest(DocumentVersionRequest.type, { uri }),
-			async () => await connection.sendNotification(SemanticTokensChangedNotification.type),
+			async (uri: string) => await connection.sendRequest(shared.DocumentVersionRequest.type, { uri }),
+			async () => await connection.sendNotification(shared.SemanticTokensChangedNotification.type),
 		);
 	}
 
@@ -121,8 +100,8 @@ async function onInitialized() {
 		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection); break;
 		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
 	}
-	connection.client.register(DidChangeConfigurationNotification.type, undefined);
-	connection.onNotification(UseWorkspaceTsdkChanged.type, useWorkspaceTsdk => {
+	connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
+	connection.onNotification(shared.UseWorkspaceTsdkChanged.type, useWorkspaceTsdk => {
 		if (useWorkspaceTsdk !== options.useWorkspaceTsdk) {
 			options.useWorkspaceTsdk = useWorkspaceTsdk;
 			servicesManager?.restartAll();
@@ -142,18 +121,18 @@ async function onInitialized() {
 
 function getTs() {
 	const result = getTsWorker();
-	connection.sendNotification(TsVersionChanged.type, result.module.version);
+	connection.sendNotification(shared.TsVersionChanged.type, result.module.version);
 	return result;
 }
 function getTsWorker() {
 	if (options.useWorkspaceTsdk) {
 		if (options.tsdk) {
 			for (const folder of folders) {
-				const ts = loadWorkspaceTypescript(folder, options.tsdk);
+				const ts = shared.loadWorkspaceTypescript(folder, options.tsdk);
 				if (ts) {
 					return {
 						module: ts,
-						localized: loadWorkspaceTypescriptLocalized(folder, options.tsdk, options.language),
+						localized: shared.loadWorkspaceTypescriptLocalized(folder, options.tsdk, options.language),
 					};
 				}
 				else if (options.mode === 'api') {
@@ -166,7 +145,7 @@ function getTsWorker() {
 		}
 	}
 	return {
-		module: loadVscodeTypescript(options.appRoot),
-		localized: loadVscodeTypescriptLocalized(options.appRoot, options.language),
+		module: shared.loadVscodeTypescript(options.appRoot),
+		localized: shared.loadVscodeTypescriptLocalized(options.appRoot, options.language),
 	}
 }

@@ -1,4 +1,4 @@
-import type { CodeLens, Range } from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver';
 import { Commands } from '../commands';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
@@ -24,7 +24,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		if (!sourceFile) return;
 
 		const document = sourceFile.getTextDocument();
-		let result: CodeLens[] = [];
+		let result: vscode.CodeLens[] = [];
 
 		if (options.references) {
 			result = result.concat(getTsResult(sourceFile));
@@ -40,7 +40,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		return result;
 
 		function getTsResult(sourceFile: SourceFile) {
-			const result: CodeLens[] = [];
+			const result: vscode.CodeLens[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const maped of sourceMap) {
 					if (!maped.data.capabilities.referencesCodeLens) continue;
@@ -63,7 +63,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			return result;
 		}
 		function getScriptSetupResult(sourceFile: SourceFile) {
-			const result: CodeLens[] = [];
+			const result: vscode.CodeLens[] = [];
 			const descriptor = sourceFile.getDescriptor();
 			const data = sourceFile.getScriptSetupData();
 			if (descriptor.scriptSetup && data) {
@@ -111,8 +111,8 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			}
 			return [];
 		}
-		function getPugHtmlConvertCodeLens(current: 'html' | 'pug', range: Range) {
-			const result: CodeLens[] = [];
+		function getPugHtmlConvertCodeLens(current: 'html' | 'pug', range: vscode.Range) {
+			const result: vscode.CodeLens[] = [];
 			result.push({
 				range,
 				command: {

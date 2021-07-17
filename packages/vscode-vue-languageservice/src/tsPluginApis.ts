@@ -1,6 +1,6 @@
 import type { ApiLanguageServiceContext } from './types';
 import type * as ts from 'typescript';
-import { fsPathToUri, notEmpty, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServiceContext) {
 
@@ -56,7 +56,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 			const loopChecker = new Set<string>();
 			let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
 			withTeleports(fileName, position);
-			return symbols.map(s => transformDocumentSpanLike(lsType, s)).filter(notEmpty);
+			return symbols.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty);
 
 			function withTeleports(fileName: string, position: number) {
 				const _symbols = mode === 'definition' ? tsLs.__internal__.raw.getDefinitionAtPosition(fileName, position)
@@ -69,7 +69,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				symbols = symbols.concat(_symbols);
 				for (const ref of _symbols) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-					const teleport = sourceFiles.getTsTeleports(lsType).get(fsPathToUri(ref.fileName));
+					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 					if (teleport) {
 						for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
 							if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
@@ -101,7 +101,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 			if (!textSpan) return;
 			return {
 				textSpan: textSpan,
-				definitions: symbols?.map(s => transformDocumentSpanLike(lsType, s)).filter(notEmpty),
+				definitions: symbols?.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty),
 			};
 
 			function withTeleports(fileName: string, position: number) {
@@ -114,7 +114,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				symbols = symbols.concat(_symbols.definitions);
 				for (const ref of _symbols.definitions) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-					const teleport = sourceFiles.getTsTeleports(lsType).get(fsPathToUri(ref.fileName));
+					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 					if (teleport) {
 						for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
 							if (!teleRange.sideData.capabilities.definitions)
@@ -143,7 +143,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 			const loopChecker = new Set<string>();
 			let symbols: ts.ReferencedSymbol[] = [];
 			withTeleports(fileName, position);
-			return symbols.map(s => transformReferencedSymbol(lsType, s)).filter(notEmpty);
+			return symbols.map(s => transformReferencedSymbol(lsType, s)).filter(shared.notEmpty);
 
 			function withTeleports(fileName: string, position: number) {
 				const _symbols = tsLs.__internal__.raw.findReferences(fileName, position);
@@ -152,7 +152,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				for (const symbol of _symbols) {
 					for (const ref of symbol.references) {
 						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-						const teleport = sourceFiles.getTsTeleports(lsType).get(fsPathToUri(ref.fileName));
+						const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 						if (teleport) {
 							for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
 								if (!teleRange.sideData.capabilities.references)
@@ -171,7 +171,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 	// transforms
 	function transformReferencedSymbol(lsType: 'script' | 'template', symbol: ts.ReferencedSymbol): ts.ReferencedSymbol | undefined {
 		const definition = transformDocumentSpanLike(lsType, symbol.definition);
-		const references = symbol.references.map(r => transformDocumentSpanLike(lsType, r)).filter(notEmpty);
+		const references = symbol.references.map(r => transformDocumentSpanLike(lsType, r)).filter(shared.notEmpty);
 		if (definition) {
 			return {
 				definition,
@@ -208,9 +208,9 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 	function transformSpan(lsType: 'script' | 'template', fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of sourceFiles.fromTsLocation2(lsType, fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of sourceFiles.fromTsLocation2(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
 			return {
-				fileName: uriToFsPath(vueLoc.uri),
+				fileName: shared.uriToFsPath(vueLoc.uri),
 				textSpan: {
 					start: vueLoc.range.start,
 					length: vueLoc.range.end - vueLoc.range.start,

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { ref, computed } from '@vue/reactivity';
-import { notEmpty, sleep } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const blocksSet: SFCBlock[][] = [];
 
 		if (descriptor.scriptSetup || descriptor.script) {
-			blocksSet.push([descriptor.scriptSetup, descriptor.script].filter(notEmpty));
+			blocksSet.push([descriptor.scriptSetup, descriptor.script].filter(shared.notEmpty));
 		}
 		if (descriptor.template) {
 			blocksSet.push([descriptor.template]);
@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
 				title: `On split editing mode...`,
 			}, async (progress, token) => {
 				while (!token.isCancellationRequested && splits.length) {
-					await sleep(100);
+					await shared.sleep(100);
 				}
 				splits.length = 0;
 			});
@@ -120,7 +120,7 @@ export function activate(context: vscode.ExtensionContext) {
 				descriptor.template,
 				...descriptor.styles,
 				...descriptor.customBlocks,
-			].filter(notEmpty);
+			].filter(shared.notEmpty);
 			const selection = selections[selections.length - 1];
 			const start = editor.document.offsetAt(selection.start);
 			const end = editor.document.offsetAt(selection.end);

@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
@@ -12,9 +12,9 @@ export function useScriptRaw(
 	const textDocument = computed(() => {
 		if (script.value) {
 			const vueDoc = getUnreactiveDoc();
-			const lang = getValidScriptSyntax(script.value.lang);
+			const lang = shared.getValidScriptSyntax(script.value.lang);
 			const uri = `${vueDoc.uri}.${lang}`;
-			return TextDocument.create(uri, syntaxToLanguageId(lang), version++, script.value.content);
+			return TextDocument.create(uri, shared.syntaxToLanguageId(lang), version++, script.value.content);
 		}
 	});
 	const sourceMap = computed(() => {

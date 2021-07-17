@@ -1,11 +1,8 @@
-import type { Connection } from 'vscode-languageserver/node';
-import type { Position } from 'vscode-languageserver/node';
-import type { Location } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import type { LanguageService as TsLanguageService } from 'vscode-typescript-languageservice';
-import { TextEdit } from 'vscode-languageserver/node';
-import { sleep } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { SearchTexts } from '../utils/string';
 import { parseRefSugarRanges } from '../parsers/scriptSetupRanges';
 
@@ -13,8 +10,8 @@ export async function execute(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	document: TextDocument,
 	sourceFile: SourceFile,
-	connection: Connection,
-	_findReferences: (uri: string, position: Position) => Location[],
+	connection: vscode.Connection,
+	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 	tsLanguageService: TsLanguageService,
 ) {
 	const desc = sourceFile.getDescriptor();
@@ -28,7 +25,7 @@ export async function execute(
 
 	const genData2 = parseRefSugarRanges(ts, descriptor.scriptSetup.content, descriptor.scriptSetup.lang);
 
-	let edits: TextEdit[] = [];
+	let edits: vscode.TextEdit[] = [];
 	let varsNum = 0;
 	let varsCur = 0;
 	for (const label of genData.labels) {
@@ -39,21 +36,21 @@ export async function execute(
 	const progress = await connection.window.createWorkDoneProgress();
 	progress.begin('Unuse Ref Sugar', 0, '', true);
 	for (const label of genData.labels) {
-		edits.push(TextEdit.replace({
+		edits.push(vscode.TextEdit.replace({
 			start: document.positionAt(desc.scriptSetup.loc.start + label.label.start),
 			end: document.positionAt(desc.scriptSetup.loc.start + label.label.end + 1),
 		}, 'const'));
 		for (const binary of label.binarys) {
-			edits.push(TextEdit.del({
+			edits.push(vscode.TextEdit.del({
 				start: document.positionAt(desc.scriptSetup.loc.start + binary.parent.start),
 				end: document.positionAt(desc.scriptSetup.loc.start + binary.left.start),
 			}));
-			edits.push(TextEdit.del({
+			edits.push(vscode.TextEdit.del({
 				start: document.positionAt(desc.scriptSetup.loc.start + binary.parent.end),
 				end: document.positionAt(desc.scriptSetup.loc.start + (binary.right ?? binary.left).end),
 			}));
 			if (!binary.right) {
-				edits.push(TextEdit.insert(
+				edits.push(vscode.TextEdit.insert(
 					document.positionAt(desc.scriptSetup.loc.start + binary.left.end),
 					' = ref()'
 				));
@@ -68,16 +65,16 @@ export async function execute(
 						desc.scriptSetup.loc.start + binary.right.as.start,
 						desc.scriptSetup.loc.start + binary.right.as.end,
 					)}>`;
-					edits.push(TextEdit.del({
+					edits.push(vscode.TextEdit.del({
 						start: document.positionAt(desc.scriptSetup.loc.start + binary.right.withoutAs.end),
 						end: document.positionAt(desc.scriptSetup.loc.start + binary.right.as.end),
 					}));
 				}
-				edits.push(TextEdit.insert(
+				edits.push(vscode.TextEdit.insert(
 					document.positionAt(desc.scriptSetup.loc.start + binary.right.start),
 					`ref${rightType}(`
 				));
-				edits.push(TextEdit.insert(
+				edits.push(vscode.TextEdit.insert(
 					document.positionAt(desc.scriptSetup.loc.start + binary.right.end),
 					')'
 				));
@@ -92,7 +89,7 @@ export async function execute(
 				};
 				const varText = document.getText(varRange);
 				progress.report(++varsCur / varsNum * 100, varText);
-				await sleep(0);
+				await shared.sleep(0);
 				const references = _findReferences(document.uri, varRange.start) ?? [];
 				for (const reference of references) {
 					if (reference.uri !== document.uri)
@@ -117,10 +114,10 @@ export async function execute(
 							}
 						}
 						if (isRaw) {
-							edits.push(TextEdit.replace(reference.range, isShorthand ? `$${varText}: ${varText}` : varText));
+							edits.push(vscode.TextEdit.replace(reference.range, isShorthand ? `$${varText}: ${varText}` : varText));
 						}
 						else {
-							edits.push(TextEdit.replace(reference.range, isShorthand ? `${varText}: ${varText}.value` : `${varText}.value`));
+							edits.push(vscode.TextEdit.replace(reference.range, isShorthand ? `${varText}: ${varText}.value` : `${varText}.value`));
 						}
 					}
 				}

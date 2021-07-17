@@ -1,12 +1,12 @@
-import { ActiveSelectionRequest, GetClientTarNameCaseRequest, GetClientAttrNameCaseRequest, notEmpty } from '@volar/shared';
-import { margeWorkspaceEdits } from 'vscode-vue-languageservice';
-import { TextDocument } from 'vscode-css-languageservice';
-import { Connection, Location, LocationLink, TextDocuments } from 'vscode-languageserver/node';
+import * as shared from '@volar/shared';
+import * as vue from 'vscode-vue-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as vscode from 'vscode-languageserver';
 import type { ServicesManager } from '../servicesManager';
 
 export function register(
-	connection: Connection,
-	documents: TextDocuments<TextDocument>,
+	connection: vscode.Connection,
+	documents: vscode.TextDocuments<TextDocument>,
 	servicesManager: ServicesManager,
 	enabledTsPlugin: boolean,
 ) {
@@ -18,10 +18,10 @@ export function register(
 				handler.position,
 				handler.context,
 				{
-					tag: () => connection.sendRequest(GetClientTarNameCaseRequest.type, {
+					tag: () => connection.sendRequest(shared.GetClientTarNameCaseRequest.type, {
 						uri: handler.textDocument.uri
 					}),
-					attr: () => connection.sendRequest(GetClientAttrNameCaseRequest.type, {
+					attr: () => connection.sendRequest(shared.GetClientAttrNameCaseRequest.type, {
 						uri: handler.textDocument.uri
 					}),
 				},
@@ -30,7 +30,7 @@ export function register(
 	connection.onCompletionResolve(async item => {
 		const uri: string | undefined = item.data?.uri;
 		if (!uri) return item;
-		const activeSel = await connection.sendRequest(ActiveSelectionRequest.type);
+		const activeSel = await connection.sendRequest(shared.ActiveSelectionRequest.type);
 		const newOffset = activeSel?.uri.toLowerCase() === uri.toLowerCase() ? activeSel?.offset : undefined;
 		return servicesManager.getMatchService(uri)?.doCompletionResolve(item, newOffset) ?? item;
 	});
@@ -115,12 +115,12 @@ export function register(
 			.getMatchService(handler.textDocument.uri)
 			?.findDefinition(handler.textDocument.uri, handler.position);
 		if (result && !enabledTsPlugin && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
-			return (result as (Location | LocationLink)[]).filter(loc => {
-				if (Location.is(loc))
+			return (result as (vscode.Location | vscode.LocationLink)[]).filter(loc => {
+				if (vscode.Location.is(loc))
 					return loc.uri.endsWith('.vue');
 				else
 					return loc.targetUri.endsWith('.vue');
-			}) as Location[] | LocationLink[];
+			}) as vscode.Location[] | vscode.LocationLink[];
 		}
 		return result;
 	});
@@ -184,10 +184,10 @@ export function register(
 		const edits = (await Promise.all(handler.files
 			.map(file => {
 				return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
-			}))).filter(notEmpty);
+			}))).filter(shared.notEmpty);
 		if (edits.length) {
 			const result = edits[0];
-			margeWorkspaceEdits(result, ...edits.slice(1));
+			vue.margeWorkspaceEdits(result, ...edits.slice(1));
 			return result;
 		}
 		return null;

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { TsVersionChanged, UseWorkspaceTsdkChanged } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 
 export async function activate(context: vscode.ExtensionContext, clients: LanguageClient[]) {
@@ -8,7 +8,7 @@ export async function activate(context: vscode.ExtensionContext, clients: Langua
 	for (const client of clients) {
 		(async () => {
 			await client.onReady();
-			client.onNotification(TsVersionChanged.type, (newVersion) => {
+			client.onNotification(shared.TsVersionChanged.type, (newVersion) => {
 				tsVersion = newVersion;
 				updateStatusBar();
 			});
@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext, clients: Langua
 		if (select !== useWorkspaceTsdk) {
 			setUseWorkspaceTsdk(context, select);
 			for (const client of clients) {
-				client.sendNotification(UseWorkspaceTsdkChanged.type, select);
+				client.sendNotification(shared.UseWorkspaceTsdkChanged.type, select);
 			}
 		}
 	}));

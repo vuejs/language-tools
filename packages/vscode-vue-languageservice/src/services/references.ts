@@ -1,11 +1,10 @@
 import type { ApiLanguageServiceContext } from '../types';
-import type { Position } from 'vscode-languageserver/node';
-import type { Location } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import * as dedupe from '../utils/dedupe';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
-	return (uri: string, position: Position) => {
+	return (uri: string, position: vscode.Position) => {
 
 		const tsResult = onTs(uri, position)
 		const cssResult = onCss(uri, position);
@@ -16,10 +15,10 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		]);
 	}
 
-	function onTs(uri: string, position: Position) {
+	function onTs(uri: string, position: vscode.Position) {
 
 		const loopChecker = dedupe.createLocationSet();
-		let vueResult: Location[] = [];
+		let vueResult: vscode.Location[] = [];
 
 		// vue -> ts
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
@@ -28,7 +27,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				continue;
 
 			const tsLs = getTsLs(tsLoc.lsType);
-			let tsResult: Location[] = [];
+			let tsResult: vscode.Location[] = [];
 			withTeleports(tsLoc.uri, tsLoc.range.start);
 
 			// ts -> vue
@@ -48,7 +47,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				}
 			}
 
-			function withTeleports(uri: string, position: Position) {
+			function withTeleports(uri: string, position: vscode.Position) {
 
 				const tsLocs = tsLs.findReferences(
 					uri,
@@ -74,10 +73,10 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 		return vueResult;
 	}
-	function onCss(uri: string, position: Position) {
+	function onCss(uri: string, position: vscode.Position) {
 
-		let cssResult: Location[] = [];
-		let vueResult: Location[] = [];
+		let cssResult: vscode.Location[] = [];
+		let vueResult: vscode.Location[] = [];
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)

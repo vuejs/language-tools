@@ -1,19 +1,12 @@
 import * as prettyhtml from '@starptech/prettyhtml';
-import { eqSet, notEmpty, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref, Ref } from '@vue/reactivity';
 import * as css from 'vscode-css-languageservice';
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import {
-	CompletionItem,
-	Diagnostic,
-	DiagnosticSeverity,
-	DiagnosticTag,
-	Range,
-	DiagnosticRelatedInformation
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from './types';
 import * as dedupe from './utils/dedupe';
 import { SourceMap, TsSourceMap } from './utils/sourceMaps';
@@ -72,7 +65,7 @@ export function createSourceFile(
 	const vueHtmlDocument = computed(() => {
 		return context.htmlLs.parseHTMLDocument(vueDoc.value);
 	});
-	const sfcErrors = ref<Diagnostic[]>([]);
+	const sfcErrors = ref<vscode.Diagnostic[]>([]);
 
 	// virtual scripts
 	const _virtualStyles = useStylesRaw(context.ts, untrack(() => vueDoc.value), computed(() => descriptor.styles), context);
@@ -114,8 +107,8 @@ export function createSourceFile(
 		context,
 	);
 	const cssLsStyles = {
-		textDocuments: computed(() => [templateLsTemplateScript.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(notEmpty)),
-		sourceMaps: computed(() => [templateLsTemplateScript.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(notEmpty)),
+		textDocuments: computed(() => [templateLsTemplateScript.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(shared.notEmpty)),
+		sourceMaps: computed(() => [templateLsTemplateScript.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(shared.notEmpty)),
 	};
 	const docLsScript = useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.script));
 	const docLsScriptSetup = useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
@@ -131,7 +124,7 @@ export function createSourceFile(
 			templateLsTemplateScript.sourceMap.value,
 			templateLsMainScript.sourceMap.value,
 			// scriptLsScript.sourceMap.value,
-		].filter(notEmpty);
+		].filter(shared.notEmpty);
 		return result;
 	});
 	const templateLsDocs = computed(() => {
@@ -177,7 +170,7 @@ export function createSourceFile(
 		getTeleports: untrack(() => [
 			templateLsTemplateScript.teleportSourceMap.value,
 			templateLsScript.teleportSourceMap.value,
-		].filter(notEmpty)),
+		].filter(shared.notEmpty)),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getTemplateLsDocs: untrack(() => templateLsDocs.value),
@@ -187,8 +180,8 @@ export function createSourceFile(
 		})),
 		getScriptSetupData: untrack(() => templateLsScript.scriptSetupRanges.value),
 		docLsScripts: untrack(() => ({
-			documents: [docLsScript.textDocument.value, docLsScriptSetup.textDocument.value].filter(notEmpty),
-			sourceMaps: [docLsScript.sourceMap.value, docLsScriptSetup.sourceMap.value].filter(notEmpty),
+			documents: [docLsScript.textDocument.value, docLsScriptSetup.textDocument.value].filter(shared.notEmpty),
+			sourceMaps: [docLsScript.sourceMap.value, docLsScriptSetup.sourceMap.value].filter(shared.notEmpty),
 		})),
 		getTemplateFormattingScript: untrack(() => ({
 			document: templateLsTemplateScript.textDocumentForFormatting.value,
@@ -205,7 +198,7 @@ export function createSourceFile(
 			templaetTsTeleports: computed(() => [
 				templateLsTemplateScript.teleportSourceMap.value,
 				templateLsScript.teleportSourceMap.value,
-			].filter(notEmpty)),
+			].filter(shared.notEmpty)),
 			scriptTsDocument: scriptLsScript.textDocument,
 			scriptTsTeleport: scriptLsScript.teleportSourceMap,
 			scriptTsSourceMap: scriptLsScript.sourceMap,
@@ -243,18 +236,18 @@ export function createSourceFile(
 		};
 
 		function updateSfcErrors() {
-			const errors: Diagnostic[] = [];
+			const errors: vscode.Diagnostic[] = [];
 			for (const error of parsedSfc.errors) {
 				if ('code' in error && error.loc) {
-					const diag = Diagnostic.create(
-						Range.create(
+					const diag = vscode.Diagnostic.create(
+						vscode.Range.create(
 							error.loc.start.line - 1,
 							error.loc.start.column - 1,
 							error.loc.end.line - 1,
 							error.loc.end.column - 1,
 						),
 						error.message,
-						DiagnosticSeverity.Error,
+						vscode.DiagnosticSeverity.Error,
 						error.code,
 						'vue',
 					);
@@ -414,11 +407,11 @@ export function createSourceFile(
 		const setupReturnNames = setupReturns.map(entry => (entry.data as TsCompletionData).name);
 		const htmlElementNames = globalEls.map(entry => (entry.data as TsCompletionData).name);
 
-		if (eqSet(new Set(contextNames), new Set(templateScriptData.context))
-			&& eqSet(new Set(componentNames), new Set(templateScriptData.components))
-			&& eqSet(new Set(propNames), new Set(templateScriptData.props))
-			&& eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
-			&& eqSet(new Set(htmlElementNames), new Set(templateScriptData.htmlElements))
+		if (shared.eqSet(new Set(contextNames), new Set(templateScriptData.context))
+			&& shared.eqSet(new Set(componentNames), new Set(templateScriptData.components))
+			&& shared.eqSet(new Set(propNames), new Set(templateScriptData.props))
+			&& shared.eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
+			&& shared.eqSet(new Set(htmlElementNames), new Set(templateScriptData.htmlElements))
 		) {
 			return false;
 		}
@@ -459,26 +452,26 @@ export function createSourceFile(
 		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 
 		const nonTs: [{
-			result: ComputedRef<Promise<Diagnostic[]> | Diagnostic[]>;
-			cache: ComputedRef<Promise<Diagnostic[]> | Diagnostic[]>;
-		}, number, Diagnostic[]][] = [
+			result: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
+			cache: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
+		}, number, vscode.Diagnostic[]][] = [
 				[useStylesValidation(computed(() => cssLsStyles.textDocuments.value)), 0, []],
 				[useJsonsValidation(computed(() => virtualJsonBlocks.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
 				[useScriptExistValidation(), 0, []],
 			];
 		let templateTs: [{
-			result: ComputedRef<Diagnostic[]>;
-			cache: ComputedRef<Diagnostic[]>;
-		}, number, Diagnostic[]][] = [
+			result: ComputedRef<vscode.Diagnostic[]>;
+			cache: ComputedRef<vscode.Diagnostic[]>;
+		}, number, vscode.Diagnostic[]][] = [
 				[useTemplateScriptValidation(1), 0, []],
 				[useTemplateScriptValidation(2), 0, []],
 				[useTemplateScriptValidation(3), 0, []],
 			];
 		let scriptTs: [{
-			result: ComputedRef<Diagnostic[]>;
-			cache: ComputedRef<Diagnostic[]>;
-		}, number, Diagnostic[]][] = [
+			result: ComputedRef<vscode.Diagnostic[]>;
+			cache: ComputedRef<vscode.Diagnostic[]>;
+		}, number, vscode.Diagnostic[]][] = [
 				[useScriptValidation(scriptLsScript.textDocument, 1), 0, []],
 				[useScriptValidation(scriptLsScript.textDocument, 2), 0, []],
 				[useScriptValidation(computed(() => scriptLsScript.textDocumentForSuggestion.value ?? scriptLsScript.textDocument.value), 3), 0, []],
@@ -486,7 +479,7 @@ export function createSourceFile(
 				[useScriptValidation(computed(() => anyNoUnusedEnabled ? scriptLsScript.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
 			];
 
-		return async (response: (diags: Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+		return async (response: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 			templateTsProjectVersion.value = templateTsLs.__internal__.host.getProjectVersion?.();
 			scriptTsProjectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
 
@@ -548,10 +541,10 @@ export function createSourceFile(
 				}
 			}
 
-			function isErrorsDirty(oldErrors: Diagnostic[], newErrors: Diagnostic[]) {
-				return !eqSet(errorsToKeys(oldErrors), errorsToKeys(newErrors));
+			function isErrorsDirty(oldErrors: vscode.Diagnostic[], newErrors: vscode.Diagnostic[]) {
+				return !shared.eqSet(errorsToKeys(oldErrors), errorsToKeys(newErrors));
 			}
-			function errorsToKeys(errors: Diagnostic[]) {
+			function errorsToKeys(errors: vscode.Diagnostic[]) {
 				return new Set(errors.map(error =>
 					error.source
 					+ ':' + error.code
@@ -568,7 +561,7 @@ export function createSourceFile(
 				return [];
 			});
 			const pugErrors = computed(() => {
-				const result: Diagnostic[] = [];
+				const result: vscode.Diagnostic[] = [];
 				if (virtualTemplateRaw.textDocument.value && virtualTemplateRaw.pugDocument.value) {
 					const pugDoc = virtualTemplateRaw.pugDocument.value;
 					const astError = pugDoc.error;
@@ -586,7 +579,7 @@ export function createSourceFile(
 						const htmlDoc = pugDoc.sourceMap.mappedDocument;
 						const vueCompileErrors = getVueCompileErrors(htmlDoc);
 						for (const vueCompileError of vueCompileErrors) {
-							let pugRange: Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end);
+							let pugRange: vscode.Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end);
 							if (!pugRange) {
 								const pugStart = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.start)?.start;
 								const pugEnd = pugDoc.sourceMap.getSourceRange(vueCompileError.range.end, vueCompileError.range.end)?.end;
@@ -632,8 +625,8 @@ export function createSourceFile(
 				}
 				return result;
 			});
-			const htmlErrors_cache = ref<Diagnostic[]>([]);
-			const pugErrors_cache = ref<Diagnostic[]>([]);
+			const htmlErrors_cache = ref<vscode.Diagnostic[]>([]);
+			const pugErrors_cache = ref<vscode.Diagnostic[]>([]);
 			const result = computed(() => {
 				htmlErrors_cache.value = htmlErrors.value;
 				pugErrors_cache.value = pugErrors.value;
@@ -652,22 +645,22 @@ export function createSourceFile(
 			};
 
 			function getVueCompileErrors(doc: TextDocument) {
-				const result: Diagnostic[] = [];
+				const result: vscode.Diagnostic[] = [];
 				try {
 					const templateResult = vueSfc.compileTemplate({
 						source: doc.getText(),
-						filename: uriToFsPath(vueUri),
-						id: uriToFsPath(vueUri),
+						filename: shared.uriToFsPath(vueUri),
+						id: shared.uriToFsPath(vueUri),
 						compilerOptions: {
 							onError: err => {
 								if (!err.loc) return;
 
-								const diagnostic: Diagnostic = {
+								const diagnostic: vscode.Diagnostic = {
 									range: {
 										start: doc.positionAt(err.loc.start.offset),
 										end: doc.positionAt(err.loc.end.offset),
 									},
-									severity: DiagnosticSeverity.Error,
+									severity: vscode.DiagnosticSeverity.Error,
 									code: err.code,
 									source: 'vue',
 									message: err.message,
@@ -681,12 +674,12 @@ export function createSourceFile(
 						if (typeof err !== 'object' || !err.loc)
 							continue;
 
-						const diagnostic: Diagnostic = {
+						const diagnostic: vscode.Diagnostic = {
 							range: {
 								start: doc.positionAt(err.loc.start.offset),
 								end: doc.positionAt(err.loc.end.offset),
 							},
-							severity: DiagnosticSeverity.Error,
+							severity: vscode.DiagnosticSeverity.Error,
 							source: 'vue',
 							code: err.code,
 							message: err.message,
@@ -695,12 +688,12 @@ export function createSourceFile(
 					}
 				}
 				catch (err) {
-					const diagnostic: Diagnostic = {
+					const diagnostic: vscode.Diagnostic = {
 						range: {
 							start: doc.positionAt(0),
 							end: doc.positionAt(doc.getText().length),
 						},
-						severity: DiagnosticSeverity.Error,
+						severity: vscode.DiagnosticSeverity.Error,
 						code: err.code,
 						source: 'vue',
 						message: err.message,
@@ -731,7 +724,7 @@ export function createSourceFile(
 				for (const [uri, errs] of errors_cache.value) {
 					result = result.concat(toSourceDiags(errs, uri, cssLsStyles.sourceMaps.value));
 				}
-				return result as Diagnostic[];
+				return result as vscode.Diagnostic[];
 			});
 			return {
 				result,
@@ -772,7 +765,7 @@ export function createSourceFile(
 						result = result.concat(toSourceDiags(errs, uri, virtualJsonBlocks.sourceMaps.value));
 					}
 				}
-				return result as Diagnostic[];
+				return result as vscode.Diagnostic[];
 			});
 			return {
 				result,
@@ -781,21 +774,21 @@ export function createSourceFile(
 		}
 		function useScriptExistValidation() {
 			const result = computed(() => {
-				const diags: Diagnostic[] = [];
+				const diags: vscode.Diagnostic[] = [];
 				if (!scriptTsLs.__internal__.getValidTextDocument(scriptLsScript.textDocument.value.uri)) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script || script.content === '') continue;
-						const error = Diagnostic.create(
+						const error = vscode.Diagnostic.create(
 							{
 								start: vueDoc.value.positionAt(script.loc.start),
 								end: vueDoc.value.positionAt(script.loc.end),
 							},
 							'Virtual script not found, may missing lang="ts" or "allowJs": true.',
-							DiagnosticSeverity.Information,
+							vscode.DiagnosticSeverity.Information,
 							undefined,
 							'volar',
 						);
-						error.tags = [DiagnosticTag.Unnecessary];
+						error.tags = [vscode.DiagnosticTag.Unnecessary];
 						diags.push(error);
 					}
 				}
@@ -827,7 +820,7 @@ export function createSourceFile(
 				}
 				return [];
 			});
-			const errors_cache = ref<Diagnostic[]>([]);
+			const errors_cache = ref<vscode.Diagnostic[]>([]);
 			const result = computed(() => {
 				errors_cache.value = errors.value;
 				return cacheWithSourceMap.value;
@@ -837,7 +830,7 @@ export function createSourceFile(
 				if (!doc) return [];
 				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templatetTsSourceMaps.value);
 				if (onlyUnusedCheck) {
-					result = result.filter(error => error.tags?.includes(DiagnosticTag.Unnecessary));
+					result = result.filter(error => error.tags?.includes(vscode.DiagnosticTag.Unnecessary));
 				}
 				return result;
 			});
@@ -868,7 +861,7 @@ export function createSourceFile(
 				return [];
 			});
 			const errors_2 = computed(() => {
-				const result: Diagnostic[] = [];
+				const result: vscode.Diagnostic[] = [];
 				if (!templateLsTemplateScript.textDocument.value
 					|| !templateLsTemplateScript.teleportSourceMap.value
 				) return result;
@@ -890,8 +883,8 @@ export function createSourceFile(
 				}
 				return result;
 			});
-			const errors_1_cache = ref<Diagnostic[]>([]);
-			const errors_2_cache = ref<Diagnostic[]>([]);
+			const errors_1_cache = ref<vscode.Diagnostic[]>([]);
+			const errors_2_cache = ref<vscode.Diagnostic[]>([]);
 			const result = computed(() => {
 				errors_1_cache.value = errors_1.value;
 				errors_2_cache.value = errors_2.value;
@@ -917,10 +910,10 @@ export function createSourceFile(
 				cache: cacheWithSourceMap,
 			};
 		}
-		function toSourceDiags<T = Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+		function toSourceDiags<T = vscode.Diagnostic | css.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
 			const result: T[] = [];
 			for (const error of errors) {
-				if (css.Diagnostic.is(error) || Diagnostic.is(error)) {
+				if (css.Diagnostic.is(error) || vscode.Diagnostic.is(error)) {
 					for (const sourceMap of sourceMaps) {
 						if (sourceMap.mappedDocument.uri !== virtualScriptUri)
 							continue;
@@ -936,17 +929,17 @@ export function createSourceFile(
 			}
 			return result;
 		}
-		function toTsSourceDiags(lsType: 'template' | 'script', errors: Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
-			const result: Diagnostic[] = [];
+		function toTsSourceDiags(lsType: 'template' | 'script', errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
+			const result: vscode.Diagnostic[] = [];
 			for (const error of errors) {
 				const vueRange = findVueRange(virtualScriptUri, error.range);
 				if (vueRange) {
-					const vueError: Diagnostic = {
+					const vueError: vscode.Diagnostic = {
 						...error,
 						range: vueRange,
 					};
 					if (vueError.relatedInformation) {
-						const vueInfos: DiagnosticRelatedInformation[] = [];
+						const vueInfos: vscode.DiagnosticRelatedInformation[] = [];
 						for (const info of vueError.relatedInformation) {
 							const vueInfoRange = findVueRange(info.location.uri, info.location.range);
 							if (vueInfoRange) {
@@ -966,7 +959,7 @@ export function createSourceFile(
 			}
 			return result;
 
-			function findVueRange(virtualUri: string, virtualRange: Range) {
+			function findVueRange(virtualUri: string, virtualRange: vscode.Range) {
 				for (const sourceMap of sourceMaps) {
 					if (sourceMap.mappedDocument.uri === virtualUri) {
 
@@ -1013,15 +1006,15 @@ export function createSourceFile(
 			{ // watching
 				templateTsProjectVersion.value;
 			}
-			const data = new Map<string, { item: CompletionItem | undefined, bind: CompletionItem[], on: CompletionItem[], slot: CompletionItem[] }>();
+			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[], slot: vscode.CompletionItem[] }>();
 			if (templateLsTemplateScript.textDocument.value && virtualTemplateRaw.textDocument.value) {
 				const doc = templateLsTemplateScript.textDocument.value;
 				const text = doc.getText();
 				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
 					const tagName = (tag.data as TsCompletionData).name;
-					let bind: CompletionItem[] = [];
-					let on: CompletionItem[] = [];
-					let slot: CompletionItem[] = [];
+					let bind: vscode.CompletionItem[] = [];
+					let on: vscode.CompletionItem[] = [];
+					let slot: vscode.CompletionItem[] = [];
 					{
 						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
 						let offset = text.indexOf(searchText);

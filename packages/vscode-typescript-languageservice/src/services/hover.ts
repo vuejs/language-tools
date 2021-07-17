@@ -1,22 +1,16 @@
 import type * as ts from 'typescript';
-import {
-	Hover,
-	MarkupContent,
-	MarkupKind,
-	Range,
-	Position,
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import * as previewer from '../utils/previewer';
-import { uriToFsPath, fsPathToUri } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as Proto from '../protocol';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
-	return (uri: string, position: Position, documentOnly = false): Hover | undefined => {
+	return (uri: string, position: vscode.Position, documentOnly = false): vscode.Hover | undefined => {
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const info = languageService.getQuickInfoAtPosition(fileName, offset);
 		if (!info) return;
@@ -34,7 +28,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 							textSpan: { start: number, length: number },
 						} = (part as any).target;
 						if (target && 'fileName' in target) {
-							const fileDoc = getTextDocument(uriToFsPath(target.fileName))!;
+							const fileDoc = getTextDocument(shared.uriToFsPath(target.fileName))!;
 							const start = fileDoc.positionAt(target.textSpan.start);
 							const end = fileDoc.positionAt(target.textSpan.start + target.textSpan.length);
 							target = {
@@ -59,7 +53,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			}
 			return tag;
 		}) ?? [];
-		const documentation = previewer.markdownDocumentation(info.documentation ?? [], mapedTags, { toResource: fsPathToUri });
+		const documentation = previewer.markdownDocumentation(info.documentation ?? [], mapedTags, { toResource: shared.fsPathToUri });
 
 		if (displayString && !documentOnly) {
 			parts.push(['```typescript', displayString, '```'].join('\n'));
@@ -68,14 +62,14 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			parts.push(documentation);
 		}
 
-		const markdown: MarkupContent = {
-			kind: MarkupKind.Markdown,
+		const markdown: vscode.MarkupContent = {
+			kind: vscode.MarkupKind.Markdown,
 			value: parts.join('\n\n'),
 		};
 
 		return {
 			contents: markdown,
-			range: Range.create(
+			range: vscode.Range.create(
 				document.positionAt(info.textSpan.start),
 				document.positionAt(info.textSpan.start + info.textSpan.length),
 			),

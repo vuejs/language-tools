@@ -1,4 +1,4 @@
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import * as SourceMap from '@volar/source-map';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
@@ -12,7 +12,7 @@ export type PugDocument = ReturnType<typeof parsePugDocument>;
 
 export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.LanguageService) {
 
-	const fsPath = uriToFsPath(pugTextDoc.uri);
+	const fsPath = shared.uriToFsPath(pugTextDoc.uri);
 	const fileName = path.basename(fsPath);
 	const pugCode = pugTextDoc.getText();
 	const codeGen = createCodeGen<undefined>();

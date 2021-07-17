@@ -1,4 +1,4 @@
-import type { ColorInformation } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
@@ -11,7 +11,7 @@ export function register({ sourceFiles, getCssLs }: ApiLanguageServiceContext) {
 		return cssResult;
 
 		function getCssResult(sourceFile: SourceFile) {
-			const result: ColorInformation[] = [];
+			const result: vscode.ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);

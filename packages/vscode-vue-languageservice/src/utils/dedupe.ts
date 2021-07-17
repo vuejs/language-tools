@@ -1,11 +1,4 @@
-import type { CodeAction } from 'vscode-languageserver-types';
-import type { Range } from 'vscode-languageserver/node';
-import type { Location } from 'vscode-languageserver/node';
-import type { LocationLink } from 'vscode-languageserver/node';
-import type { CallHierarchyIncomingCall } from 'vscode-languageserver/node';
-import type { CallHierarchyOutgoingCall } from 'vscode-languageserver/node';
-import type { Diagnostic } from 'vscode-languageserver/node';
-import type { TextEdit } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 
 export function createLocationSet() {
 	const set = new Set<string>();
@@ -15,17 +8,17 @@ export function createLocationSet() {
 		has,
 	};
 
-	function add(item: Location) {
+	function add(item: vscode.Location) {
 		if (has(item)) {
 			return false;
 		}
 		set.add(getKey(item));
 		return true;
 	}
-	function has(item: Location) {
+	function has(item: vscode.Location) {
 		return set.has(getKey(item));
 	}
-	function getKey(item: Location) {
+	function getKey(item: vscode.Location) {
 		return [
 			item.uri,
 			item.range.start.line,
@@ -36,12 +29,12 @@ export function createLocationSet() {
 	}
 }
 
-export function withCodeAction<T extends CodeAction>(items: T[]): T[] {
+export function withCodeAction<T extends vscode.CodeAction>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.title
 	].join(':'));
 }
-export function withTextEdits<T extends TextEdit>(items: T[]): T[] {
+export function withTextEdits<T extends vscode.TextEdit>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.range.start.line,
 		item.range.start.character,
@@ -50,7 +43,7 @@ export function withTextEdits<T extends TextEdit>(items: T[]): T[] {
 		item.newText,
 	].join(':'));
 }
-export function withDiagnostics<T extends Diagnostic>(items: T[]): T[] {
+export function withDiagnostics<T extends vscode.Diagnostic>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.range.start.line,
 		item.range.start.character,
@@ -62,7 +55,7 @@ export function withDiagnostics<T extends Diagnostic>(items: T[]): T[] {
 		item.message,
 	].join(':'));
 }
-export function withLocations<T extends Location>(items: T[]): T[] {
+export function withLocations<T extends vscode.Location>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.uri,
 		item.range.start.line,
@@ -71,7 +64,7 @@ export function withLocations<T extends Location>(items: T[]): T[] {
 		item.range.end.character,
 	].join(':'));
 }
-export function withLocationLinks<T extends LocationLink>(items: T[]): T[] {
+export function withLocationLinks<T extends vscode.LocationLink>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.targetUri,
 		item.targetSelectionRange.start.line,
@@ -84,7 +77,7 @@ export function withLocationLinks<T extends LocationLink>(items: T[]): T[] {
 		item.targetRange.end.character,
 	].join(':'));
 }
-export function withCallHierarchyIncomingCalls<T extends CallHierarchyIncomingCall>(items: T[]): T[] {
+export function withCallHierarchyIncomingCalls<T extends vscode.CallHierarchyIncomingCall>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.from.uri,
 		item.from.range.start.line,
@@ -93,7 +86,7 @@ export function withCallHierarchyIncomingCalls<T extends CallHierarchyIncomingCa
 		item.from.range.end.character,
 	].join(':'));
 }
-export function withCallHierarchyOutgoingCalls<T extends CallHierarchyOutgoingCall>(items: T[]): T[] {
+export function withCallHierarchyOutgoingCalls<T extends vscode.CallHierarchyOutgoingCall>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.to.uri,
 		item.to.range.start.line,
@@ -102,7 +95,7 @@ export function withCallHierarchyOutgoingCalls<T extends CallHierarchyOutgoingCa
 		item.to.range.end.character,
 	].join(':'));
 }
-export function withRanges<T extends Range>(items: T[]): T[] {
+export function withRanges<T extends vscode.Range>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.start.line,
 		item.start.character,

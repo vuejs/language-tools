@@ -1,8 +1,6 @@
-import type { Connection } from 'vscode-languageserver/node';
-import type { Position } from 'vscode-languageserver/node';
-import type { Location } from 'vscode-languageserver/node';
-import { ShowReferencesNotification } from '@volar/shared';
+import type * as vscode from 'vscode-languageserver';
+import * as shared from '@volar/shared';
 
-export function execute(uri: string, position: Position, references: Location[], connection: Connection) {
-	connection.sendNotification(ShowReferencesNotification.type, { uri, position, references });
+export function execute(uri: string, position: vscode.Position, references: vscode.Location[], connection: vscode.Connection) {
+	connection.sendNotification(shared.ShowReferencesNotification.type, { uri, position, references });
 }

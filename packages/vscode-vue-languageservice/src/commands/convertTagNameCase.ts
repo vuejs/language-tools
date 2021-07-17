@@ -1,14 +1,13 @@
 import { hyphenate } from '@vue/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection, Location, Position } from 'vscode-languageserver/node';
-import { TextEdit } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 
 export async function execute(
 	document: TextDocument,
 	sourceFile: SourceFile,
-	connection: Connection,
-	_findReferences: (uri: string, position: Position) => Location[],
+	connection: vscode.Connection,
+	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 	mode: 'kebab' | 'pascal',
 ) {
 
@@ -20,7 +19,7 @@ export async function execute(
 	const virtualDoc = sourceFile.getTemplateLsDocs().get(sourceFile.uri + '.__VLS_template.ts');
 	if (!virtualDoc) return;
 
-	const edits: TextEdit[] = [];
+	const edits: vscode.TextEdit[] = [];
 	const components = new Set(sourceFile.getTemplateScriptData().components);
 	for (const tagName of components) {
 		const searchText = `__VLS_componentPropsBase['${tagName}'`;
@@ -38,10 +37,10 @@ export async function execute(
 					for (const component of components) {
 						if (component === referenceText || hyphenate(component) === referenceText) {
 							if (mode === 'kebab' && referenceText !== hyphenate(component)) {
-								edits.push(TextEdit.replace(reference.range, hyphenate(component)));
+								edits.push(vscode.TextEdit.replace(reference.range, hyphenate(component)));
 							}
 							if (mode === 'pascal' && referenceText !== component) {
-								edits.push(TextEdit.replace(reference.range, component));
+								edits.push(vscode.TextEdit.replace(reference.range, component));
 							}
 						}
 					}

@@ -1,12 +1,12 @@
 import type { ApiLanguageServiceContext } from '../types';
-import type { CodeLens } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { TsCodeLensData } from './codeLens';
 import * as findReferences from './references';
 import { Commands } from '../commands';
 
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 	const _findReferences = findReferences.register(arguments[0]);
-	return (codeLens: CodeLens) => {
+	return (codeLens: vscode.CodeLens) => {
 
 		const data = codeLens.data as TsCodeLensData;
 		const {

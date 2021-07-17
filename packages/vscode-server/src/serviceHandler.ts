@@ -1,10 +1,9 @@
-import { fsPathToUri, normalizeFileName, uriToFsPath } from '@volar/shared';
-import { createLanguageService, LanguageService, LanguageServiceHost } from 'vscode-vue-languageservice';
-import { FsPathSet, FsPathMap } from '@volar/shared';
+import * as shared from '@volar/shared';
+import * as vue from 'vscode-vue-languageservice';
 import type * as ts from 'typescript';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Disposable, TextDocuments, WorkDoneProgressServerReporter, Connection } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import { getEmmetConfiguration } from './configs';
 import { getSchemaRequestService } from './schemaRequestService';
 import * as tsConfigs from './tsConfigs';
@@ -16,32 +15,32 @@ export function createServiceHandler(
 	tsConfig: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	documents: TextDocuments<TextDocument>,
+	documents: vscode.TextDocuments<TextDocument>,
 	fileUpdatedCb: (fileName: string) => any,
 	_onProjectFilesUpdate: (() => void) | undefined,
-	workDoneProgress: WorkDoneProgressServerReporter,
-	connection: Connection,
+	workDoneProgress: vscode.WorkDoneProgressServerReporter,
+	connection: vscode.Connection,
 ) {
 
 	let projectVersion = 0;
 	let parsedCommandLine: ts.ParsedCommandLine;
-	let vueLs: LanguageService | undefined;
-	const snapshots = new FsPathMap<{
+	let vueLs: vue.LanguageService | undefined;
+	const snapshots = new shared.FsPathMap<{
 		version: string,
 		snapshot: ts.IScriptSnapshot,
 	}>();
-	const scripts = new FsPathMap<{
+	const scripts = new shared.FsPathMap<{
 		version: number,
 		fileName: string,
 		fileWatcher: ts.FileWatcher,
 	}>();
-	const extraScripts = new FsPathMap<{
+	const extraScripts = new shared.FsPathMap<{
 		version: number,
 		fileName: string,
 		fileWatcher: ts.FileWatcher,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
-	const disposables: Disposable[] = [];
+	const disposables: vscode.Disposable[] = [];
 
 	update();
 
@@ -57,7 +56,7 @@ export function createServiceHandler(
 
 	function getLanguageService() {
 		if (!vueLs) {
-			vueLs = createLanguageService({ typescript: ts }, languageServiceHost);
+			vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
 			vueLs.__internal__.onInitProgress(p => {
 				if (p === 0) {
 					if (mode === 'api') {
@@ -81,7 +80,7 @@ export function createServiceHandler(
 
 		parsedCommandLine = createParsedCommandLine(ts, tsConfig);
 
-		const fileNames = new FsPathSet(parsedCommandLine.fileNames);
+		const fileNames = new shared.FsPathSet(parsedCommandLine.fileNames);
 		let changed = false;
 
 		for (const [_, { fileWatcher }] of extraScripts) {
@@ -116,7 +115,7 @@ export function createServiceHandler(
 		}
 	}
 	function onDocumentUpdated(document: TextDocument) {
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const snapshot = snapshots.get(fileName);
 		if (snapshot) {
 			const snapshotLength = snapshot.snapshot.getLength();
@@ -151,8 +150,8 @@ export function createServiceHandler(
 			return;
 		}
 
-		fileName = normalizeFileName(fileName);
-		const uri = fsPathToUri(fileName);
+		fileName = shared.normalizeFileName(fileName);
+		const uri = shared.fsPathToUri(fileName);
 
 		if (documents.get(uri)) {
 			// this file handle by vscode event
@@ -175,7 +174,7 @@ export function createServiceHandler(
 	}
 	function createLanguageServiceHost() {
 
-		const host: LanguageServiceHost = {
+		const host: vue.LanguageServiceHost = {
 			// vue
 			getEmmetConfig: getEmmetConfiguration,
 			schemaRequestService: getSchemaRequestService(connection),
@@ -211,7 +210,7 @@ export function createServiceHandler(
 		return host;
 
 		function fileExists(fileName: string) {
-			fileName = normalizeFileName(ts.sys.realpath?.(fileName) ?? fileName);
+			fileName = shared.normalizeFileName(ts.sys.realpath?.(fileName) ?? fileName);
 			const fileExists = !!ts.sys.fileExists?.(fileName);
 			if (
 				fileExists
@@ -262,7 +261,7 @@ export function createServiceHandler(
 			}
 		}
 		function getScriptText(fileName: string) {
-			const doc = documents.get(fsPathToUri(fileName));
+			const doc = documents.get(shared.fsPathToUri(fileName));
 			if (doc) {
 				return doc.getText();
 			}
@@ -298,6 +297,6 @@ function createParsedCommandLine(ts: typeof import('typescript/lib/tsserverlibra
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
 	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
-	content.fileNames = content.fileNames.map(normalizeFileName);
+	content.fileNames = content.fileNames.map(shared.normalizeFileName);
 	return content;
 }

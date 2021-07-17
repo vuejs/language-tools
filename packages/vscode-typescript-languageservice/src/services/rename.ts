@@ -1,12 +1,6 @@
 import type * as ts from 'typescript';
-import {
-	WorkspaceEdit,
-	Position,
-	CreateFile,
-	RenameFile,
-	TextDocumentEdit,
-} from 'vscode-languageserver/node';
-import { uriToFsPath, fsPathToUri } from '@volar/shared';
+import * as vscode from 'vscode-languageserver';
+import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'upath';
 import { renameInfoOptions } from './prepareRename';
@@ -18,11 +12,11 @@ export function register(
 	host: LanguageServiceHost
 ) {
 
-	return async (uri: string, position: Position, newName: string): Promise<WorkspaceEdit | undefined> => {
+	return async (uri: string, position: vscode.Position, newName: string): Promise<vscode.WorkspaceEdit | undefined> => {
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		const renameInfo = languageService.getRenameInfo(fileName, offset, renameInfoOptions);
@@ -51,7 +45,7 @@ export function register(
 		newName: string,
 		formatOptions: ts.FormatCodeSettings,
 		preferences: ts.UserPreferences,
-	): WorkspaceEdit | undefined {
+	): vscode.WorkspaceEdit | undefined {
 		// Make sure we preserve file extension if none provided
 		if (!path.extname(newName)) {
 			newName += path.extname(fileToRename);
@@ -66,9 +60,9 @@ export function register(
 			edits.documentChanges = [];
 		}
 
-		edits.documentChanges.push(RenameFile.create(
-			fsPathToUri(fileToRename),
-			fsPathToUri(newFilePath),
+		edits.documentChanges.push(vscode.RenameFile.create(
+			shared.fsPathToUri(fileToRename),
+			shared.fsPathToUri(newFilePath),
 		));
 
 		return edits;
@@ -76,7 +70,7 @@ export function register(
 }
 
 export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChanges[], getTextDocument: (uri: string) => TextDocument | undefined) {
-	const workspaceEdit: WorkspaceEdit = {};
+	const workspaceEdit: vscode.WorkspaceEdit = {};
 
 	for (const change of changes) {
 
@@ -84,16 +78,16 @@ export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChan
 			workspaceEdit.documentChanges = [];
 		}
 
-		const uri = fsPathToUri(change.fileName);
+		const uri = shared.fsPathToUri(change.fileName);
 		if (change.isNewFile) {
-			workspaceEdit.documentChanges.push(CreateFile.create(uri));
+			workspaceEdit.documentChanges.push(vscode.CreateFile.create(uri));
 		}
 
 		const doc = getTextDocument(uri);
 		if (!doc)
 			continue;
 
-		const docEdit = TextDocumentEdit.create(
+		const docEdit = vscode.TextDocumentEdit.create(
 			{ uri: uri, version: doc.version },
 			[],
 		);
@@ -113,7 +107,7 @@ export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChan
 	return workspaceEdit;
 }
 function locationsToWorkspaceEdit(newText: string, locations: readonly ts.RenameLocation[], getTextDocument: (uri: string) => TextDocument | undefined) {
-	const workspaceEdit: WorkspaceEdit = {};
+	const workspaceEdit: vscode.WorkspaceEdit = {};
 
 	for (const location of locations) {
 
@@ -121,7 +115,7 @@ function locationsToWorkspaceEdit(newText: string, locations: readonly ts.Rename
 			workspaceEdit.changes = {};
 		}
 
-		const uri = fsPathToUri(location.fileName);
+		const uri = shared.fsPathToUri(location.fileName);
 		const doc = getTextDocument(uri);
 		if (!doc) continue;
 

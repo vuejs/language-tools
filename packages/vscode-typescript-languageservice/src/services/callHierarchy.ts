@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { fsPathToUri, uriToFsPath } from '@volar/shared';
-import * as vscode from 'vscode-languageserver/node';
+import * as shared from '@volar/shared';
+import * as vscode from 'vscode-languageserver';
 import type * as ts from 'typescript';
 import * as path from 'path';
 import * as PConst from '../protocol.const';
@@ -13,7 +13,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const calls = languageService.prepareCallHierarchy(fileName, offset);
 		if (!calls) return [];
@@ -24,7 +24,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	function getIncomingCalls(item: vscode.CallHierarchyItem) {
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
-		const fileName = uriToFsPath(item.uri);
+		const fileName = shared.uriToFsPath(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
 		const calls = languageService.provideCallHierarchyIncomingCalls(fileName, offset);
 		if (!calls) return [];
@@ -35,7 +35,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	function getOutgoingCalls(item: vscode.CallHierarchyItem) {
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
-		const fileName = uriToFsPath(item.uri);
+		const fileName = shared.uriToFsPath(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
 		const calls = languageService.provideCallHierarchyOutgoingCalls(fileName, offset);
 
@@ -57,7 +57,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 	function fromProtocolCallHierarchyItem(item: ts.CallHierarchyItem): vscode.CallHierarchyItem {
 		const rootPath = languageService.getProgram()?.getCompilerOptions().rootDir ?? '';
-		const document = getTextDocument(fsPathToUri(item.file))!; // TODO
+		const document = getTextDocument(shared.fsPathToUri(item.file))!; // TODO
 		const useFileName = isSourceFileItem(item);
 		const name = useFileName ? path.basename(item.file) : item.name;
 		const detail = useFileName ? upath.relative(rootPath, path.dirname(item.file)) : item.containerName ?? '';
@@ -65,7 +65,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			kind: typeConverters.SymbolKind.fromProtocolScriptElementKind(item.kind),
 			name,
 			detail,
-			uri: fsPathToUri(item.file),
+			uri: shared.fsPathToUri(item.file),
 			range: {
 				start: document.positionAt(item.span.start),
 				end: document.positionAt(item.span.start + item.span.length),
@@ -84,7 +84,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	}
 
 	function fromProtocolCallHierchyIncomingCall(item: ts.CallHierarchyIncomingCall): vscode.CallHierarchyIncomingCall {
-		const document = getTextDocument(fsPathToUri(item.from.file))!;
+		const document = getTextDocument(shared.fsPathToUri(item.from.file))!;
 		return {
 			from: fromProtocolCallHierarchyItem(item.from),
 			fromRanges: item.fromSpans.map(fromSpan => ({

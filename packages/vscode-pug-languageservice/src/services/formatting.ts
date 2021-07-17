@@ -1,10 +1,10 @@
-import { FormattingOptions, Range, TextEdit } from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
 
 const pugBeautify = require('pug-beautify');
 
 export function register() {
-	return (pugDoc: PugDocument, options: FormattingOptions) => {
+	return (pugDoc: PugDocument, options: vscode.FormattingOptions) => {
 
 		if (pugDoc.pugCode.trim() === '') {
 			return []; // fix https://github.com/johnsoncodehk/volar/issues/304
@@ -18,8 +18,8 @@ export function register() {
 			tab_size: options.tabSize,
 			fill_tab: !options.insertSpaces,
 		});
-		const replaceEdit = TextEdit.replace(
-			Range.create(
+		const replaceEdit = vscode.TextEdit.replace(
+			vscode.Range.create(
 				pugDoc.pugTextDocument.positionAt(0),
 				pugDoc.pugTextDocument.positionAt(pugDoc.pugCode.length),
 			),

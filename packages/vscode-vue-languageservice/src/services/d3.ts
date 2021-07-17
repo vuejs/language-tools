@@ -1,14 +1,10 @@
 import type { ApiLanguageServiceContext } from '../types';
-import {
-	Range,
-	Location,
-	LocationLink,
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as references from './references';
 import * as definitions from './definition';
 import type * as ts from 'typescript';
-import { languageIdToSyntax } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceContext) {
 
@@ -22,20 +18,20 @@ export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceCo
 		const refs: {
 			type: 'ref',
 			name: string,
-			range: Range,
-			blockRange: Range,
-			references: Location[], // refCalls
+			range: vscode.Range,
+			blockRange: vscode.Range,
+			references: vscode.Location[], // refCalls
 		}[] = [];
 		const funcs: {
 			type: 'func',
 			name: string,
-			range: Range,
-			blockRange: Range,
+			range: vscode.Range,
+			blockRange: vscode.Range,
 		}[] = [];
 		const funcCalls: {
 			name: string,
-			range: Range,
-			definitions: (Location | LocationLink)[],
+			range: vscode.Range,
+			definitions: (vscode.Location | vscode.LocationLink)[],
 		}[] = [];
 
 		const sourceFile = sourceFiles.get(document.uri);
@@ -61,7 +57,7 @@ export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceCo
 
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				const virtualCode = sourceMap.mappedDocument.getText();
-				const scriptAst = ts.createSourceFile('foo.' + languageIdToSyntax(sourceMap.mappedDocument.languageId), virtualCode, ts.ScriptTarget.Latest);
+				const scriptAst = ts.createSourceFile('foo.' + shared.languageIdToSyntax(sourceMap.mappedDocument.languageId), virtualCode, ts.ScriptTarget.Latest);
 
 				nodeWalker(scriptAst);
 
@@ -206,7 +202,7 @@ export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceCo
 		else if (tsDoc) {
 			// TODO: extract to function
 			const virtualCode = tsDoc.getText();
-			const scriptAst = ts.createSourceFile('foo.' + languageIdToSyntax(tsDoc.languageId), virtualCode, ts.ScriptTarget.Latest);
+			const scriptAst = ts.createSourceFile('foo.' + shared.languageIdToSyntax(tsDoc.languageId), virtualCode, ts.ScriptTarget.Latest);
 
 			nodeWalker(scriptAst, tsDoc);
 
@@ -380,8 +376,8 @@ export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceCo
 		}
 		for (const funcCall of funcCalls) {
 			for (const definition of funcCall.definitions) {
-				const uri = Location.is(definition) ? definition.uri : definition.targetUri;
-				const range = Location.is(definition) ? definition.range : definition.targetSelectionRange;
+				const uri = vscode.Location.is(definition) ? definition.uri : definition.targetUri;
+				const range = vscode.Location.is(definition) ? definition.range : definition.targetSelectionRange;
 				if (uri === document.uri) {
 					const definitionFunc = funcs.find(func =>
 						range.start.line === func.range.start.line
@@ -471,7 +467,7 @@ export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceCo
 			usedNames.add(newName);
 			return newName;
 		}
-		function getNodeName(range: Range) {
+		function getNodeName(range: vscode.Range) {
 			const offset = document.offsetAt(range.start);
 			if (usedNamesMap.has(offset)) {
 				return usedNamesMap.get(offset)!;
@@ -480,7 +476,7 @@ export function register({ ts, sourceFiles, templateTsLs }: ApiLanguageServiceCo
 			usedNamesMap.set(offset, name);
 			return name;
 		}
-		function findBestMatchBlock(range: Range) {
+		function findBestMatchBlock(range: vscode.Range) {
 			const _refs = refs.filter(ref =>
 				document.offsetAt(range.start) >= document.offsetAt(ref.blockRange.start)
 				&& document.offsetAt(range.end) <= document.offsetAt(ref.blockRange.end)

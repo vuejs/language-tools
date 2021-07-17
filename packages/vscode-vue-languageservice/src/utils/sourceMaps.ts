@@ -1,4 +1,4 @@
-import type { Position } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { Stylesheet } from 'vscode-css-languageservice';
@@ -121,12 +121,12 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 	) {
 		super(document, document);
 	}
-	findTeleports(start: Position, end?: Position) {
+	findTeleports(start: vscode.Position, end?: vscode.Position) {
 		const result: {
 			data: TeleportMappingData;
 			sideData: TeleportSideData;
-			start: Position,
-			end: Position,
+			start: vscode.Position,
+			end: vscode.Position,
 		}[] = [];
 		for (const teleRange of this.getMappedRanges(start, end)) {
 			result.push({

@@ -1,21 +1,13 @@
-import { getWordRange, languageIdToSyntax, notEmpty, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
 import { hyphenate, capitalize, camelize, isGloballyWhitelisted } from '@vue/shared';
 import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
 import type * as ts from 'typescript';
 import * as path from 'upath';
 import * as emmet from 'vscode-emmet-helper';
-import type { TextDocument } from 'vscode-html-languageservice';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as html from 'vscode-html-languageservice';
-import {
-	CompletionItem,
-	CompletionItemKind,
-	CompletionList,
-	Position,
-	Range,
-	TextEdit
-} from 'vscode-languageserver';
-import { CompletionContext, CompletionTriggerKind } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 import { CompletionData } from '../types';
@@ -96,18 +88,18 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
 		uri: string,
-		tsResult?: CompletionList,
-		emmetResult?: CompletionList,
-		cssResult?: CompletionList,
-		jsonResult?: CompletionList,
-		htmlResult?: CompletionList,
-		vueResult?: CompletionList,
+		tsResult?: vscode.CompletionList,
+		emmetResult?: vscode.CompletionList,
+		cssResult?: vscode.CompletionList,
+		jsonResult?: vscode.CompletionList,
+		htmlResult?: vscode.CompletionList,
+		vueResult?: vscode.CompletionList,
 	} | undefined = undefined;
 
 	return async (
 		uri: string,
-		position: Position,
-		context?: CompletionContext,
+		position: vscode.Position,
+		context?: vscode.CompletionContext,
 		/** internal */
 		getNameCase?: {
 			tag: () => Promise<'both' | 'kebabCase' | 'pascalCase'>,
@@ -117,7 +109,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
-		if (context?.triggerKind === CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
+		if (context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
 			if (cache.tsResult?.isIncomplete) {
 				cache.tsResult = await getTsResult();
 			}
@@ -143,7 +135,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 				cache.htmlResult,
 				cache.vueResult,
 			];
-			return combineResults(...lists.filter(notEmpty));
+			return combineResults(...lists.filter(shared.notEmpty));
 		}
 
 		const emmetResult = await getEmmetResult(sourceFile);
@@ -172,14 +164,14 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 		cache = { uri, emmetResult };
 		return emmetResult;
 
-		function combineResults(...lists: CompletionList[]) {
+		function combineResults(...lists: vscode.CompletionList[]) {
 			return {
 				isIncomplete: lists.some(list => list.isIncomplete),
 				items: lists.map(list => list.items).flat(),
 			};
 		}
 		async function getTsResult() {
-			let result: CompletionList | undefined;
+			let result: vscode.CompletionList | undefined;
 			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
 				return result;
 			}
@@ -213,7 +205,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 						return false;
 					});
 				}
-				const vueItems: CompletionItem[] = tsItems.map(tsItem => {
+				const vueItems: vscode.CompletionItem[] = tsItems.map(tsItem => {
 					const vueItem = transformCompletionItem(
 						tsItem,
 						tsRange => {
@@ -235,7 +227,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 				result.items = result.items.concat(vueItems);
 			}
 			if (result) {
-				result.items = result.items.filter((result: CompletionItem) =>
+				result.items = result.items.filter((result: vscode.CompletionItem) =>
 					result.label.indexOf('__VLS_') === -1
 					&& (!result.labelDetails?.qualifier || result.labelDetails.qualifier.indexOf('__VLS_') === -1)
 				);
@@ -243,7 +235,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 			return result;
 		}
 		async function getHtmlResult(sourceFile: SourceFile) {
-			let result: CompletionList | undefined = undefined;
+			let result: vscode.CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return;
 			}
@@ -259,7 +251,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = sourceFile.getComponentCompletionData();
 				const tags: html.ITagData[] = [];
-				const tsItems = new Map<string, CompletionItem>();
+				const tsItems = new Map<string, vscode.CompletionItem>();
 				const globalAttributes: html.IAttributeData[] = [
 					{ name: 'v-if' },
 					{ name: 'v-else-if' },
@@ -408,7 +400,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 										range: replacement.textEdit.range,
 										newText: textWithoutModifier + '.' + modifier,
 									},
-									kind: CompletionItemKind.EnumMember,
+									kind: vscode.CompletionItemKind.EnumMember,
 								};
 								htmlResult.items.push(newItem);
 							}
@@ -427,13 +419,13 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
 						const importFile = documentation ? sourceFiles.get(documentation) : undefined;
 						if (importFile) {
-							const filePath = uriToFsPath(importFile.uri);
+							const filePath = shared.uriToFsPath(importFile.uri);
 							const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
 							vueItem.documentation = undefined;
 							vueItem.labelDetails = { qualifier: rPath };
 							vueItem.filterText = vueItem.label + ' ' + rPath;
 							vueItem.detail = rPath;
-							vueItem.kind = CompletionItemKind.File;
+							vueItem.kind = vscode.CompletionItemKind.File;
 							vueItem.sortText = '\u0003' + vueItem.sortText;
 							const data: CompletionData = {
 								mode: 'autoImport',
@@ -453,11 +445,11 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 							) {
 								vueItem.sortText = '\u0000' + vueItem.sortText;
 								if (tsItem) {
-									vueItem.kind = CompletionItemKind.Field;
+									vueItem.kind = vscode.CompletionItemKind.Field;
 								}
 							}
 							else if (vueItem.label.startsWith('v-')) {
-								vueItem.kind = CompletionItemKind.Method;
+								vueItem.kind = vscode.CompletionItemKind.Method;
 								vueItem.sortText = '\u0002' + vueItem.sortText;
 							}
 							else {
@@ -473,7 +465,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 						}
 					}
 					{ // filter HTMLAttributes
-						const temp = new Map<string, CompletionItem>();
+						const temp = new Map<string, vscode.CompletionItem>();
 						for (const item of vueItems) {
 							if (!temp.get(item.label)?.documentation) {
 								temp.set(item.label, item);
@@ -489,7 +481,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 			return result;
 		}
 		async function getCssResult(sourceFile: SourceFile) {
-			let result: CompletionList | undefined = undefined;
+			let result: vscode.CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.css.includes(context.triggerCharacter)) {
 				return;
 			}
@@ -505,8 +497,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 					if (!cssLs || !sourceMap.stylesheet) continue;
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
-					const wordStart = getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
-					const wordRange: Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
+					const wordStart = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
+					const wordRange: vscode.Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
 					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -516,9 +508,9 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 						docUri: sourceMap.mappedDocument.uri,
 						mode: 'css',
 					};
-					const vueItems: CompletionItem[] = cssResult.items.map(cssItem => {
+					const vueItems: vscode.CompletionItem[] = cssResult.items.map(cssItem => {
 						const newText = cssItem.textEdit?.newText || cssItem.insertText || cssItem.label;
-						cssItem.textEdit = TextEdit.replace(wordRange, newText);
+						cssItem.textEdit = vscode.TextEdit.replace(wordRange, newText);
 						const vueItem = transformCompletionItem(
 							cssItem,
 							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end),
@@ -532,7 +524,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 			return result;
 		}
 		async function getJsonResult(sourceFile: SourceFile) {
-			let result: CompletionList | undefined = undefined;
+			let result: vscode.CompletionList | undefined = undefined;
 			if (context?.triggerCharacter && !triggerCharacter.json.includes(context.triggerCharacter)) {
 				return;
 			}
@@ -550,7 +542,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 					if (jsonResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
-					const vueItems: CompletionItem[] = jsonResult.items.map(jsonItem => {
+					const vueItems: vscode.CompletionItem[] = jsonResult.items.map(jsonItem => {
 						const vueItem = transformCompletionItem(
 							jsonItem,
 							jsonRange => sourceMap.getSourceRange(jsonRange.start, jsonRange.end),
@@ -565,7 +557,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 		async function getVueResult(sourceFile: SourceFile) {
 			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
 			if (embededDoc) {
-				let syntax = languageIdToSyntax(embededDoc.language);
+				let syntax = shared.languageIdToSyntax(embededDoc.language);
 				if (syntax === 'vue') {
 					const dataProvider = html.newHTMLDataProvider(uri, {
 						version: 1.1,

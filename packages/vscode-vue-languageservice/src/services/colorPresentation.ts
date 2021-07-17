@@ -1,14 +1,9 @@
-import {
-	Color,
-	ColorPresentation,
-	Range,
-	TextEdit
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register({ sourceFiles, getCssLs }: ApiLanguageServiceContext) {
-	return (uri: string, color: Color, range: Range) => {
+	return (uri: string, color: vscode.Color, range: vscode.Range) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
@@ -16,7 +11,7 @@ export function register({ sourceFiles, getCssLs }: ApiLanguageServiceContext) {
 		return cssResult;
 
 		function getCssResult(sourceFile: SourceFile) {
-			let result: ColorPresentation[] = [];
+			let result: vscode.ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;
@@ -25,7 +20,7 @@ export function register({ sourceFiles, getCssLs }: ApiLanguageServiceContext) {
 					const _result = cssLs.getColorPresentations(sourceMap.mappedDocument, sourceMap.stylesheet, color, cssRange);
 					for (const item of _result) {
 						if (item.textEdit) {
-							if (TextEdit.is(item.textEdit)) {
+							if (vscode.TextEdit.is(item.textEdit)) {
 								const vueRange = sourceMap.getSourceRange(item.textEdit.range.start, item.textEdit.range.end);
 								if (vueRange) {
 									item.textEdit.range = vueRange;

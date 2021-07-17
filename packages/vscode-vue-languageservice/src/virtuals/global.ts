@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { fsPathToUri } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { join } from 'upath';
 
 export function getGlobalDoc(root: string) {
@@ -134,7 +134,7 @@ declare global {
 }
 `;
 
-	return TextDocument.create(fsPathToUri(join(root, '__VLS_globals.ts')), 'typescript', 0, code);
+	return TextDocument.create(shared.fsPathToUri(join(root, '__VLS_globals.ts')), 'typescript', 0, code);
 }
 
 // TODO: not working for overloads > n (n = 8)

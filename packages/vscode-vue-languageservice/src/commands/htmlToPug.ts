@@ -1,11 +1,9 @@
-import type { Connection } from 'vscode-languageserver/node';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import { TextEdit } from 'vscode-languageserver/node';
-import { Range } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { htmlToPug } from '@volar/html2pug';
 
-export function execute(document: TextDocument, sourceFile: SourceFile, connection: Connection) {
+export function execute(document: TextDocument, sourceFile: SourceFile, connection: vscode.Connection) {
 	const desc = sourceFile.getDescriptor();
 	if (!desc.template) return;
 	const lang = desc.template.lang;
@@ -18,7 +16,7 @@ export function execute(document: TextDocument, sourceFile: SourceFile, connecti
 	const end = desc.template.loc.end;
 	const startMatch = '<template';
 
-	while (!document.getText(Range.create(
+	while (!document.getText(vscode.Range.create(
 		document.positionAt(start),
 		document.positionAt(start + startMatch.length),
 	)).startsWith(startMatch)) {
@@ -28,10 +26,10 @@ export function execute(document: TextDocument, sourceFile: SourceFile, connecti
 		}
 	}
 
-	const range = Range.create(
+	const range = vscode.Range.create(
 		document.positionAt(start),
 		document.positionAt(end),
 	);
-	const textEdit = TextEdit.replace(range, newTemplate);
+	const textEdit = vscode.TextEdit.replace(range, newTemplate);
 	connection.workspace.applyEdit({ changes: { [document.uri]: [textEdit] } });
 }

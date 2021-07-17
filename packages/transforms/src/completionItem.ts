@@ -1,8 +1,8 @@
-import type { CompletionItem, Range } from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver';
 import { transform as transformLocations } from './locationsLike';
 import { transform as transformTextEdit } from './textEdit';
 
-export function transform(item: CompletionItem, getOtherRange: (range: Range) => Range | undefined): CompletionItem {
+export function transform(item: vscode.CompletionItem, getOtherRange: (range: vscode.Range) => vscode.Range | undefined): vscode.CompletionItem {
 	return {
 		...item,
 		additionalTextEdits: item.additionalTextEdits

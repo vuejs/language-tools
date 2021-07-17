@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TagCloseRequest, RefCloseRequest } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type { LanguageClient } from 'vscode-languageclient/node';
 import { window, workspace, Disposable, TextDocumentContentChangeEvent, TextDocument, Position, SnippetString } from 'vscode';
 
@@ -8,7 +8,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
 	context.subscriptions.push(activateTagClosing(
 		(document, position) => {
 			let param = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return htmlClient.sendRequest(TagCloseRequest.type, param);
+			return htmlClient.sendRequest(shared.TagCloseRequest.type, param);
 		},
 		{ vue: true },
 		'html.autoClosingTags',
@@ -17,7 +17,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
 	context.subscriptions.push(activateTagClosing(
 		(document, position) => {
 			let param = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return tsClient.sendRequest(RefCloseRequest.type, param);
+			return tsClient.sendRequest(shared.RefCloseRequest.type, param);
 		},
 		{
 			vue: true,

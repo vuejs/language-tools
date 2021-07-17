@@ -1,7 +1,5 @@
 import type * as ts from 'typescript';
-import {
-	CodeAction,
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import { Data } from './codeAction';
@@ -12,7 +10,7 @@ export function register(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	host: LanguageServiceHost
 ) {
-	return async (codeAction: CodeAction) => {
+	return async (codeAction: vscode.CodeAction) => {
 
 		const data = codeAction.data as Data;
 

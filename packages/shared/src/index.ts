@@ -5,7 +5,8 @@ export * from './uriMap';
 
 import * as path from 'upath';
 import * as fs from 'fs';
-import type { Position, Range, TextDocument } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { promisify } from 'util';
 import { MapLike } from 'typescript';
 
@@ -41,19 +42,19 @@ export function getValidScriptSyntax(syntax: string) {
 export function notEmpty<T>(value: T | null | undefined): value is T {
 	return value !== null && value !== undefined;
 }
-export function isInsideRange(parent: Range, child: Range) {
+export function isInsideRange(parent: vscode.Range, child: vscode.Range) {
 	if (child.start.line < parent.start.line) return false;
 	if (child.end.line > parent.end.line) return false;
 	if (child.start.line === parent.start.line && child.start.character < parent.start.character) return false;
 	if (child.end.line === parent.end.line && child.end.character > parent.end.character) return false;
 	return true;
 }
-export function getWordRange(wordPattern: RegExp, position: Position, document: TextDocument): Range | undefined {
-	const lineStart: Position = {
+export function getWordRange(wordPattern: RegExp, position: vscode.Position, document: TextDocument): vscode.Range | undefined {
+	const lineStart: vscode.Position = {
 		line: position.line,
 		character: 0,
 	};
-	const lineEnd: Position = {
+	const lineEnd: vscode.Position = {
 		line: position.line + 1,
 		character: 0,
 	};

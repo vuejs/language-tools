@@ -1,18 +1,15 @@
-import type { Connection } from 'vscode-languageserver/node';
-import type { Position } from 'vscode-languageserver/node';
-import type { Location } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import { TextEdit } from 'vscode-languageserver/node';
-import { sleep } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { parseRefSugarRanges } from '../parsers/scriptSetupRanges';
 
 export async function execute(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	document: TextDocument,
 	sourceFile: SourceFile,
-	connection: Connection,
-	_findReferences: (uri: string, position: Position) => Location[],
+	connection: vscode.Connection,
+	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 ) {
 
 	const desc = sourceFile.getDescriptor();
@@ -26,7 +23,7 @@ export async function execute(
 
 	const genData2 = parseRefSugarRanges(ts, descriptor.scriptSetup.content, descriptor.scriptSetup.lang);
 
-	let edits: TextEdit[] = [];
+	let edits: vscode.TextEdit[] = [];
 	let varsNum = 0;
 	let varsCur = 0;
 	for (const label of genData2.refCalls) {
@@ -64,13 +61,13 @@ export async function execute(
 		}
 
 		if (left.trim().startsWith('{')) {
-			edits.push(TextEdit.replace({
+			edits.push(vscode.TextEdit.replace({
 				start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
 				end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
 			}, `ref: (${left}${right})`));
 		}
 		else {
-			edits.push(TextEdit.replace({
+			edits.push(vscode.TextEdit.replace({
 				start: document.positionAt(desc.scriptSetup.loc.start + refCall.start),
 				end: document.positionAt(desc.scriptSetup.loc.start + refCall.end),
 			}, `ref: ${left}${right}`));
@@ -85,7 +82,7 @@ export async function execute(
 			};
 			const varText = document.getText(varRange);
 			progress.report(++varsCur / varsNum * 100, varText);
-			await sleep(0);
+			await shared.sleep(0);
 			const references = _findReferences(document.uri, varRange.start) ?? [];
 			for (const reference of references) {
 				if (reference.uri !== document.uri)
@@ -99,13 +96,13 @@ export async function execute(
 				if (refernceRange.start >= desc.scriptSetup.loc.start && refernceRange.end <= desc.scriptSetup.loc.end) {
 					const withDotValue = document.getText().substr(refernceRange.end, '.value'.length) === '.value';
 					if (withDotValue) {
-						edits.push(TextEdit.replace({
+						edits.push(vscode.TextEdit.replace({
 							start: reference.range.start,
 							end: document.positionAt(refernceRange.end + '.value'.length),
 						}, varText));
 					}
 					else {
-						edits.push(TextEdit.replace(reference.range, '$' + varText));
+						edits.push(vscode.TextEdit.replace(reference.range, '$' + varText));
 					}
 				}
 			}

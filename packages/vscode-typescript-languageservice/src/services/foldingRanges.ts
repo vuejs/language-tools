@@ -1,22 +1,22 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
-import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver/node';
-import { uriToFsPath } from '@volar/shared';
+import * as vscode from 'vscode-languageserver';
+import * as shared from '@volar/shared';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (uri: string) => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const outliningSpans = languageService.getOutliningSpans(fileName);
-		const foldingRanges: FoldingRange[] = [];
+		const foldingRanges: vscode.FoldingRange[] = [];
 
 		for (const outliningSpan of outliningSpans) {
 			outliningSpan.kind
 			const start = document.positionAt(outliningSpan.textSpan.start);
 			const end = document.positionAt(outliningSpan.textSpan.start + outliningSpan.textSpan.length);
-			const foldingRange = FoldingRange.create(
+			const foldingRange = vscode.FoldingRange.create(
 				start.line,
 				end.line,
 				start.character,
@@ -31,9 +31,9 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 	function transformFoldingRangeKind(tsKind: ts.OutliningSpanKind) {
 		switch (tsKind) {
-			case ts.OutliningSpanKind.Comment: return FoldingRangeKind.Comment;
-			case ts.OutliningSpanKind.Imports: return FoldingRangeKind.Imports;
-			case ts.OutliningSpanKind.Region: return FoldingRangeKind.Region;
+			case ts.OutliningSpanKind.Comment: return vscode.FoldingRangeKind.Comment;
+			case ts.OutliningSpanKind.Imports: return vscode.FoldingRangeKind.Imports;
+			case ts.OutliningSpanKind.Region: return vscode.FoldingRangeKind.Region;
 		}
 	}
 }

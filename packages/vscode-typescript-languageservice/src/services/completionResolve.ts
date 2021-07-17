@@ -1,11 +1,11 @@
 import type * as ts from 'typescript';
-import { CompletionItem, TextEdit } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 import { handleKindModifiers } from './completion';
 import type { Data } from './completion';
 import * as previewer from '../utils/previewer';
-import { fsPathToUri } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type { LanguageServiceHost } from '../';
 
 export function register(
@@ -13,7 +13,7 @@ export function register(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	host: LanguageServiceHost
 ) {
-	return async (item: CompletionItem, newOffset?: number): Promise<CompletionItem> => {
+	return async (item: vscode.CompletionItem, newOffset?: number): Promise<vscode.CompletionItem> => {
 
 		const data: Data = item.data;
 		const fileName = data.fileName;
@@ -49,13 +49,13 @@ export function register(
 					});
 					const locs = entriesToLocations(entries, getTextDocument);
 					locs.forEach((loc, index) => {
-						item.additionalTextEdits?.push(TextEdit.replace(loc.range, changes.textChanges[index].newText))
+						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText))
 					});
 				}
 			}
 		}
 		if (details.displayParts) {
-			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: fsPathToUri }));
+			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: shared.fsPathToUri }));
 		}
 		if (detailTexts.length) {
 			item.detail = detailTexts.join('\n');
@@ -63,7 +63,7 @@ export function register(
 
 		item.documentation = {
 			kind: 'markdown',
-			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: fsPathToUri }),
+			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: shared.fsPathToUri }),
 		};
 
 		if (details) {

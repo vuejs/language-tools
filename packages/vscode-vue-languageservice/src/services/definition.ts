@@ -1,12 +1,11 @@
-import type { LocationLink, Position, Range } from 'vscode-languageserver/node';
-import type { Location } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
 	return {
-		on: (uri: string, position: Position) => {
+		on: (uri: string, position: vscode.Position) => {
 
 			const tsResult = onTs(uri, position, 'definition');
 			if (tsResult.length) {
@@ -20,7 +19,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				...cssResult,
 			]);
 		},
-		onType: (uri: string, position: Position) => {
+		onType: (uri: string, position: vscode.Position) => {
 
 			const tsResult = onTs(uri, position, 'typeDefinition');
 
@@ -30,10 +29,10 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		},
 	};
 
-	function onTs(uri: string, position: Position, mode: 'definition' | 'typeDefinition') {
+	function onTs(uri: string, position: vscode.Position, mode: 'definition' | 'typeDefinition') {
 
 		const loopChecker = dedupe.createLocationSet();
-		let vueResult: LocationLink[] = [];
+		let vueResult: vscode.LocationLink[] = [];
 
 		// vue -> ts
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
@@ -42,11 +41,11 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				continue;
 
 			const tsLs = getTsLs(tsLoc.lsType);
-			let tsResult: (LocationLink & { originalUri: string, isOriginal: boolean })[] = [];
+			let tsResult: (vscode.LocationLink & { originalUri: string, isOriginal: boolean })[] = [];
 			withTeleports(tsLoc.uri, tsLoc.range.start, true);
 
 			// ts -> vue
-			let originSelectionRange: Range | undefined;
+			let originSelectionRange: vscode.Range | undefined;
 			for (const tsLoc_2 of tsResult) {
 				if (tsLoc_2.isOriginal && tsLoc_2.originSelectionRange) {
 					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
@@ -70,7 +69,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				}
 			}
 
-			function withTeleports(uri: string, position: Position, isOriginal: boolean) {
+			function withTeleports(uri: string, position: vscode.Position, isOriginal: boolean) {
 
 				const tsLocs = mode === 'typeDefinition'
 					? tsLs.findTypeDefinition(uri, position)
@@ -100,10 +99,10 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 		return vueResult;
 	}
-	function onCss(uri: string, position: Position) {
+	function onCss(uri: string, position: vscode.Position) {
 
-		let cssResult: Location[] = [];
-		let vueResult: Location[] = [];
+		let cssResult: vscode.Location[] = [];
+		let vueResult: vscode.Location[] = [];
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)

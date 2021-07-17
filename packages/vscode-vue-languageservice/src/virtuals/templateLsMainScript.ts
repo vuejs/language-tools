@@ -4,7 +4,7 @@ import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 export function useTemplateLsMainScript(
 	getUnreactiveDoc: () => TextDocument,
@@ -16,7 +16,7 @@ export function useTemplateLsMainScript(
 	const textDocument = computed(() => {
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
-		const vueFileName = upath.basename(uriToFsPath(vueDoc.uri));
+		const vueFileName = upath.basename(shared.uriToFsPath(vueDoc.uri));
 		let content = '';
 		if (scriptSetup.value || script.value) {
 			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;

@@ -1,4 +1,4 @@
-import type { CompletionItem } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { TextDocument, DocumentContext } from 'vscode-css-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
@@ -14,13 +14,13 @@ export interface TsCompletionData {
 	mode: 'ts',
 	uri: string,
 	docUri: string,
-	tsItem: CompletionItem,
+	tsItem: vscode.CompletionItem,
 }
 export interface HtmlCompletionData {
 	mode: 'html',
 	uri: string,
 	docUri: string,
-	tsItem: CompletionItem | undefined,
+	tsItem: vscode.CompletionItem | undefined,
 }
 export interface CssCompletionData {
 	uri: string,
@@ -60,11 +60,11 @@ export interface IDescriptor {
 export interface ITemplateScriptData {
 	projectVersion: string | undefined;
 	context: string[];
-	componentItems: CompletionItem[];
+	componentItems: vscode.CompletionItem[];
 	components: string[];
 	props: string[];
 	setupReturns: string[];
-	htmlElementItems: CompletionItem[];
+	htmlElementItems: vscode.CompletionItem[];
 	htmlElements: string[];
 }
 

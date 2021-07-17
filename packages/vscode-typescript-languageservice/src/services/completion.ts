@@ -1,14 +1,8 @@
 import type * as ts from 'typescript';
 import * as PConst from '../protocol.const';
-import {
-	Position,
-	CompletionItem,
-	CompletionItemKind,
-	Range,
-	TextEdit,
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import * as path from 'upath';
 import type { LanguageServiceHost } from '../';
 
@@ -26,12 +20,12 @@ export function register(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	host: LanguageServiceHost
 ) {
-	return (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions): CompletionItem[] => {
+	return (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): vscode.CompletionItem[] => {
 
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 		const _options: ts.GetCompletionsAtPositionOptions = {
 			includeCompletionsWithInsertText: true, // TODO: ?
@@ -45,7 +39,7 @@ export function register(
 			start: info.optionalReplacementSpan.start,
 			end: info.optionalReplacementSpan.start + info.optionalReplacementSpan.length,
 		} : undefined;
-		const wordRange = wordRange2 ? Range.create(
+		const wordRange = wordRange2 ? vscode.Range.create(
 			document.positionAt(wordRange2.start),
 			document.positionAt(wordRange2.end),
 		) : undefined;
@@ -60,7 +54,7 @@ export function register(
 					name: entry.name,
 					tsData: entry.data,
 				};
-				let item: CompletionItem = {
+				let item: vscode.CompletionItem = {
 					label: entry.name,
 					labelDetails: {
 						qualifier: entry.source && path.isAbsolute(entry.source) ? path.relative(host.getCurrentDirectory(), entry.source) : entry.source,
@@ -81,13 +75,13 @@ export function register(
 		return entries;
 
 		// from vscode typescript
-		function fuzzyCompletionItem(info: ts.CompletionInfo, document: TextDocument, entry: ts.CompletionEntry, item: CompletionItem) {
+		function fuzzyCompletionItem(info: ts.CompletionInfo, document: TextDocument, entry: ts.CompletionEntry, item: vscode.CompletionItem) {
 			if (info.isNewIdentifierLocation && entry.replacementSpan) {
-				const replaceRange = Range.create(
+				const replaceRange = vscode.Range.create(
 					document.positionAt(entry.replacementSpan.start),
 					document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
 				);
-				item.textEdit = TextEdit.replace(replaceRange, item.insertText ?? item.label);
+				item.textEdit = vscode.TextEdit.replace(replaceRange, item.insertText ?? item.label);
 			}
 			else {
 				if (entry.replacementSpan) {
@@ -98,20 +92,20 @@ export function register(
 					 * foo. + ['a/b/c'] => foo['a/b/c']
 					 */
 					const replaceRange = !wordRange2
-						? Range.create(
+						? vscode.Range.create(
 							document.positionAt(entry.replacementSpan.start),
 							document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
 						)
 						: entry.replacementSpan.start <= wordRange2.start
-							? Range.create(
+							? vscode.Range.create(
 								document.positionAt(entry.replacementSpan.start),
 								document.positionAt(Math.min(entry.replacementSpan.start + entry.replacementSpan.length, wordRange2.start)),
 							)
-							: Range.create(
+							: vscode.Range.create(
 								document.positionAt(Math.max(entry.replacementSpan.start, wordRange2.end)),
 								document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
 							);
-					item.additionalTextEdits = [TextEdit.del(replaceRange)];
+					item.additionalTextEdits = [vscode.TextEdit.del(replaceRange)];
 				}
 				if (wordRange) {
 					/**
@@ -120,17 +114,17 @@ export function register(
 					 * @after
 					 * $f + $foo => $foo
 					 */
-					item.textEdit = TextEdit.replace(wordRange, item.insertText ?? item.label);
+					item.textEdit = vscode.TextEdit.replace(wordRange, item.insertText ?? item.label);
 				}
 			}
 
 			return item;
 		}
-		function convertKind(kind: string): CompletionItemKind {
+		function convertKind(kind: string): vscode.CompletionItemKind {
 			switch (kind) {
 				case PConst.Kind.primitiveType:
 				case PConst.Kind.keyword:
-					return CompletionItemKind.Keyword;
+					return vscode.CompletionItemKind.Keyword;
 
 				case PConst.Kind.const:
 				case PConst.Kind.let:
@@ -138,54 +132,54 @@ export function register(
 				case PConst.Kind.localVariable:
 				case PConst.Kind.alias:
 				case PConst.Kind.parameter:
-					return CompletionItemKind.Variable;
+					return vscode.CompletionItemKind.Variable;
 
 				case PConst.Kind.memberVariable:
 				case PConst.Kind.memberGetAccessor:
 				case PConst.Kind.memberSetAccessor:
-					return CompletionItemKind.Field;
+					return vscode.CompletionItemKind.Field;
 
 				case PConst.Kind.function:
 				case PConst.Kind.localFunction:
-					return CompletionItemKind.Function;
+					return vscode.CompletionItemKind.Function;
 
 				case PConst.Kind.method:
 				case PConst.Kind.constructSignature:
 				case PConst.Kind.callSignature:
 				case PConst.Kind.indexSignature:
-					return CompletionItemKind.Method;
+					return vscode.CompletionItemKind.Method;
 
 				case PConst.Kind.enum:
-					return CompletionItemKind.Enum;
+					return vscode.CompletionItemKind.Enum;
 
 				case PConst.Kind.enumMember:
-					return CompletionItemKind.EnumMember;
+					return vscode.CompletionItemKind.EnumMember;
 
 				case PConst.Kind.module:
 				case PConst.Kind.externalModuleName:
-					return CompletionItemKind.Module;
+					return vscode.CompletionItemKind.Module;
 
 				case PConst.Kind.class:
 				case PConst.Kind.type:
-					return CompletionItemKind.Class;
+					return vscode.CompletionItemKind.Class;
 
 				case PConst.Kind.interface:
-					return CompletionItemKind.Interface;
+					return vscode.CompletionItemKind.Interface;
 
 				case PConst.Kind.warning:
-					return CompletionItemKind.Text;
+					return vscode.CompletionItemKind.Text;
 
 				case PConst.Kind.script:
-					return CompletionItemKind.File;
+					return vscode.CompletionItemKind.File;
 
 				case PConst.Kind.directory:
-					return CompletionItemKind.Folder;
+					return vscode.CompletionItemKind.Folder;
 
 				case PConst.Kind.string:
-					return CompletionItemKind.Constant;
+					return vscode.CompletionItemKind.Constant;
 
 				default:
-					return CompletionItemKind.Property;
+					return vscode.CompletionItemKind.Property;
 			}
 		}
 		function getCommitCharacters(entry: ts.CompletionEntry, isNewIdentifierLocation: boolean): string[] | undefined {
@@ -228,7 +222,7 @@ export function register(
 	}
 }
 
-export function handleKindModifiers(item: CompletionItem, entry: ts.CompletionEntry | ts.CompletionEntryDetails) {
+export function handleKindModifiers(item: vscode.CompletionItem, entry: ts.CompletionEntry | ts.CompletionEntryDetails) {
 	if (entry.kindModifiers) {
 		const kindModifiers = entry.kindModifiers.split(/,|\s+/g);
 		if (kindModifiers.includes(PConst.KindModifiers.optional)) {
@@ -243,7 +237,7 @@ export function handleKindModifiers(item: CompletionItem, entry: ts.CompletionEn
 		}
 
 		if (kindModifiers.includes(PConst.KindModifiers.color)) {
-			item.kind = CompletionItemKind.Color;
+			item.kind = vscode.CompletionItemKind.Color;
 		}
 
 		if (entry.kind === PConst.Kind.script) {

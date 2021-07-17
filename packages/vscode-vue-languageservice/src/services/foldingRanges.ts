@@ -2,10 +2,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
-import { FoldingRange } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { createSourceFile } from '../sourceFile';
 import { getDummyTsLs } from '../utils/sharedLs';
-import { notEmpty } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type { HtmlLanguageServiceContext } from '../types';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 
@@ -34,7 +34,7 @@ export function register(
 		function getVueResult(sourceFile: SourceFile) {
 			let docTextWithoutBlocks = document.getText();
 			const desc = sourceFile.getDescriptor();
-			const blocks = [desc.script, desc.scriptSetup, ...desc.styles, ...desc.customBlocks].filter(notEmpty);
+			const blocks = [desc.script, desc.scriptSetup, ...desc.styles, ...desc.customBlocks].filter(shared.notEmpty);
 			if (desc.template && desc.template.lang !== 'html') {
 				blocks.push(desc.template);
 			}
@@ -50,9 +50,9 @@ export function register(
 			const tsSourceMaps = [
 				sourceFile.getTemplateFormattingScript().sourceMap,
 				...sourceFile.docLsScripts().sourceMaps,
-			].filter(notEmpty);
+			].filter(shared.notEmpty);
 
-			let result: FoldingRange[] = [];
+			let result: vscode.FoldingRange[] = [];
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
@@ -63,7 +63,7 @@ export function register(
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			let result: FoldingRange[] = [];
+			let result: vscode.FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.foldingRanges) continue;
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
@@ -74,13 +74,13 @@ export function register(
 			return result;
 		}
 		function getPugResult(sourceFile: SourceFile) {
-			let result: FoldingRange[] = [];
+			let result: vscode.FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				const text = sourceMap.mappedDocument.getText();
 				const lines = text.split('\n');
 				const lineOffsets = getLineOffsets(lines);
 				const lineIndents = getLineIndents(lines);
-				const foldingRanges: FoldingRange[] = [];
+				const foldingRanges: vscode.FoldingRange[] = [];
 
 				for (let i = 0; i < lines.length; i++) {
 					const line = lines[i];
@@ -97,7 +97,7 @@ export function register(
 						if (indent_2 === undefined) continue;
 						if (indent_2.length <= indent.length) {
 							const endPos = sourceMap.mappedDocument.positionAt(offset_2);
-							const foldingRange = FoldingRange.create(
+							const foldingRange = vscode.FoldingRange.create(
 								startPos.line,
 								endPos.line - 1,
 								undefined,
@@ -113,7 +113,7 @@ export function register(
 					if (!found) {
 						const offset_2 = text.length;
 						const endPos = sourceMap.mappedDocument.positionAt(offset_2);
-						const foldingRange = FoldingRange.create(
+						const foldingRange = vscode.FoldingRange.create(
 							startPos.line,
 							endPos.line - 1,
 							undefined,
@@ -161,8 +161,8 @@ export function register(
 	}
 }
 
-function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: SourceMap) {
-	const result: FoldingRange[] = [];
+function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: SourceMap) {
+	const result: vscode.FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
 		const vueRange = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
@@ -180,8 +180,8 @@ function toVueFoldingRanges(virtualFoldingRanges: FoldingRange[], sourceMap: Sou
 	}
 	return result;
 }
-function toVueFoldingRangesTs(virtualFoldingRanges: FoldingRange[], sourceMap: TsSourceMap) {
-	const result: FoldingRange[] = [];
+function toVueFoldingRangesTs(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: TsSourceMap) {
+	const result: vscode.FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
 		const vueLoc = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },

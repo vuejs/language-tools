@@ -1,15 +1,15 @@
-import { notEmpty } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { transformLocations } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
-import type { Position, SelectionRange } from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
-	return (pugDoc: PugDocument, posArr: Position[]): SelectionRange[] => {
+	return (pugDoc: PugDocument, posArr: vscode.Position[]): vscode.SelectionRange[] => {
 
 		const htmlPosArr = posArr
 			.map(position => pugDoc.sourceMap.getMappedRange(position)?.start)
-			.filter(notEmpty);
+			.filter(shared.notEmpty);
 
 		const htmlResult = htmlLs.getSelectionRanges(
 			pugDoc.sourceMap.mappedDocument,

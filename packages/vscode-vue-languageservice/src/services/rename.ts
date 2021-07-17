@@ -1,6 +1,5 @@
-import { getWordRange } from '@volar/shared';
-import type { Position, Range, WorkspaceEdit } from 'vscode-languageserver/node';
-import { AnnotatedTextEdit, CreateFile, DeleteFile, RenameFile, ResponseError, TextDocumentEdit } from 'vscode-languageserver/node';
+import * as shared from '@volar/shared';
+import * as vscode from 'vscode-languageserver';
 import type { SourceFiles } from '../sourceFiles';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
@@ -10,7 +9,7 @@ import { wordPatterns } from './completion';
 export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLanguageServiceContext) {
 
 	return {
-		prepareRename: (uri: string, position: Position): ResponseError | Range | undefined => {
+		prepareRename: (uri: string, position: vscode.Position): vscode.ResponseError | vscode.Range | undefined => {
 
 			const tsResult = onTsPrepare(uri, position);
 			if (tsResult) {
@@ -22,7 +21,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 				return cssResult;
 			}
 		},
-		doRename: async (uri: string, position: Position, newName: string) => {
+		doRename: async (uri: string, position: vscode.Position, newName: string) => {
 
 			const tsResult = await doTsRename(uri, position, newName);
 			if (tsResult) {
@@ -36,7 +35,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 				return cssResult;
 			}
 
-			function doDedupe(workspaceEdit: WorkspaceEdit) {
+			function doDedupe(workspaceEdit: vscode.WorkspaceEdit) {
 				if (workspaceEdit.changes) {
 					for (const uri in workspaceEdit.changes) {
 						workspaceEdit.changes[uri] = dedupe.withTextEdits(workspaceEdit.changes[uri]);
@@ -47,7 +46,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 		onRenameFile: onTsFile,
 	}
 
-	function onTsPrepare(uri: string, position: Position) {
+	function onTsPrepare(uri: string, position: vscode.Position) {
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 			const tsLs = getTsLs(tsLoc.lsType);
 			if (
@@ -62,7 +61,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 				if (!tsPrepare)
 					continue;
 
-				if (tsPrepare instanceof ResponseError)
+				if (tsPrepare instanceof vscode.ResponseError)
 					return tsPrepare;
 
 				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
@@ -82,9 +81,9 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 			return tsEditToVueEdit('script', tsResult, sourceFiles, canRename);
 		}
 	}
-	async function doTsRename(uri: string, position: Position, newName: string) {
+	async function doTsRename(uri: string, position: vscode.Position, newName: string) {
 
-		let result: WorkspaceEdit | undefined;
+		let result: vscode.WorkspaceEdit | undefined;
 
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 			if (
@@ -112,7 +111,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 		return result;
 	}
-	async function doTsRenameWorker(lsType: 'script' | 'template', tsUri: string, position: Position, newName: string, loopChecker = dedupe.createLocationSet()) {
+	async function doTsRenameWorker(lsType: 'script' | 'template', tsUri: string, position: vscode.Position, newName: string, loopChecker = dedupe.createLocationSet()) {
 
 		const tsLs = getTsLs(lsType);
 		const tsResult = await tsLs.doRename(
@@ -158,7 +157,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 		return tsResult;
 	}
-	function onCssPrepare(uri: string, position: Position) {
+	function onCssPrepare(uri: string, position: vscode.Position) {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)
@@ -167,23 +166,23 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 			for (const cssRange of sourceMap.getMappedRanges(position)) {
 				const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
-				const wordRange = getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument);
+				const wordRange = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument);
 				if (wordRange) {
 					for (const vueRange of sourceMap.getSourceRanges(wordRange.start, wordRange.end)) {
-						return vueRange as Range;
+						return vueRange as vscode.Range;
 					}
 				}
 			}
 		}
 	}
-	function onCss(uri: string, position: Position, newName: string) {
+	function onCss(uri: string, position: vscode.Position, newName: string) {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile)
 			return;
 
-		const cssResult: WorkspaceEdit = { changes: {} };
-		const vueResult: WorkspaceEdit = { changes: {} };
+		const cssResult: vscode.WorkspaceEdit = { changes: {} };
+		const vueResult: vscode.WorkspaceEdit = { changes: {} };
 		let hasResult = false;
 
 		// vue -> css
@@ -246,7 +245,7 @@ function canRename(data?: TsMappingData) {
 		|| data.capabilities.rename === true
 		|| (typeof data.capabilities.rename === 'object' && data.capabilities.rename.out)
 }
-export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: WorkspaceEdit[]) {
+export function margeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: vscode.WorkspaceEdit[]) {
 	for (const other of others) {
 		for (const uri in other.changeAnnotations) {
 			if (!original.changeAnnotations) {
@@ -274,8 +273,8 @@ export function margeWorkspaceEdits(original: WorkspaceEdit, ...others: Workspac
 		}
 	}
 }
-export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data?: TsMappingData) => boolean) {
-	const vueResult: WorkspaceEdit = {};
+export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: vscode.WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data?: TsMappingData) => boolean) {
+	const vueResult: vscode.WorkspaceEdit = {};
 	let hasResult = false;
 
 	for (const tsUri in tsResult.changeAnnotations) {
@@ -327,10 +326,10 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: Workspa
 				vueResult.documentChanges = [];
 			}
 			let vueDocEdit: typeof tsDocEdit | undefined;
-			if (TextDocumentEdit.is(tsDocEdit)) {
+			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
 				const sourceMap = sourceFiles.getTsSourceMaps(lsType).get(tsDocEdit.textDocument.uri);
 				if (sourceMap) {
-					vueDocEdit = TextDocumentEdit.create(
+					vueDocEdit = vscode.TextDocumentEdit.create(
 						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
 						[],
 					);
@@ -338,7 +337,7 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: Workspa
 						for (const vueRange of sourceMap.getSourceRanges(tsEdit.range.start, tsEdit.range.end)) {
 							if (isValidRange(vueRange.data)) {
 								vueDocEdit.edits.push({
-									annotationId: AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
+									annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
 									newText: tsEdit.newText,
 									range: vueRange,
 								});
@@ -350,16 +349,16 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: Workspa
 					vueDocEdit = tsDocEdit;
 				}
 			}
-			else if (CreateFile.is(tsDocEdit)) {
+			else if (vscode.CreateFile.is(tsDocEdit)) {
 				vueDocEdit = tsDocEdit; // TODO: remove .ts?
 			}
-			else if (RenameFile.is(tsDocEdit)) {
+			else if (vscode.RenameFile.is(tsDocEdit)) {
 				const oldUri = sourceFiles.getSourceFileByTsUri(lsType, tsDocEdit.oldUri)?.uri ?? tsDocEdit.oldUri;
-				vueDocEdit = RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
+				vueDocEdit = vscode.RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 			}
-			else if (DeleteFile.is(tsDocEdit)) {
+			else if (vscode.DeleteFile.is(tsDocEdit)) {
 				const uri = sourceFiles.getSourceFileByTsUri(lsType, tsDocEdit.uri)?.uri ?? tsDocEdit.uri;
-				vueDocEdit = DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
+				vueDocEdit = vscode.DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			if (vueDocEdit) {
 				vueResult.documentChanges.push(vueDocEdit);

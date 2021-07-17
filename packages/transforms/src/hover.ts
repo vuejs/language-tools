@@ -1,6 +1,6 @@
-import type { Hover, Range } from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver';
 
-export function transform(hover: Hover, getOtherRange: (range: Range) => Range | undefined): Hover | undefined {
+export function transform(hover: vscode.Hover, getOtherRange: (range: vscode.Range) => vscode.Range | undefined): vscode.Hover | undefined {
 
 	if (!hover?.range) {
 		return hover;

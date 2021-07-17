@@ -1,5 +1,5 @@
 import { CodeGen, createCodeGen, margeCodeGen } from '@volar/code-gen';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
 import * as css from 'vscode-css-languageservice';
@@ -35,7 +35,7 @@ export function useTemplateLsTemplateScript(
 	let version = 0;
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
-	const vueFileName = upath.basename(uriToFsPath(_vueDoc.uri));
+	const vueFileName = upath.basename(shared.uriToFsPath(_vueDoc.uri));
 	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module), context));
 	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {

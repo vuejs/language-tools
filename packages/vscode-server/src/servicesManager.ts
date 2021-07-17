@@ -1,8 +1,8 @@
-import { sleep, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type * as ts from 'typescript';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Connection, TextDocuments } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import { createServiceHandler, ServiceHandler } from './serviceHandler';
 
 export type ServicesManager = ReturnType<typeof createServicesManager>;
@@ -13,8 +13,8 @@ export function createServicesManager(
 		module: typeof import('typescript/lib/tsserverlibrary'),
 		localized: ts.MapLike<string> | undefined,
 	},
-	connection: Connection,
-	documents: TextDocuments<TextDocument>,
+	connection: vscode.Connection,
+	documents: vscode.TextDocuments<TextDocument>,
 	rootPaths: string[],
 	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
 	_onProjectFilesUpdate?: () => void,
@@ -41,7 +41,7 @@ export function createServicesManager(
 			else {
 				// *.vue, *.ts ... changed
 				filesUpdateTrigger = true;
-				await sleep(0);
+				await shared.sleep(0);
 				if (filesUpdateTrigger) {
 					filesUpdateTrigger = false;
 					for (const [_, service] of services) {
@@ -74,7 +74,7 @@ export function createServicesManager(
 		if (!getDocVersionForDiag) return;
 
 		const otherDocs: TextDocument[] = [];
-		const changedFileName = uriToFsPath(changeDoc.uri);
+		const changedFileName = shared.uriToFsPath(changeDoc.uri);
 		const isCancel = getIsCancel(changeDoc.uri, changeDoc.version);
 
 		for (const document of documents.all()) {
@@ -207,7 +207,7 @@ export function createServicesManager(
 	}
 	function getMatchTsConfigs(uri: string) {
 
-		const fileName = uriToFsPath(uri);
+		const fileName = shared.uriToFsPath(uri);
 		let firstMatchTsConfigs: string[] = [];
 		let secondMatchTsConfigs: string[] = [];
 

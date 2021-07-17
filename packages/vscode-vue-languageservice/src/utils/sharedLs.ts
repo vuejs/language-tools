@@ -1,6 +1,6 @@
-import { fsPathToUri, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type * as ts from 'typescript';
-import type { TextDocument } from 'vscode-css-languageservice';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts2 from 'vscode-typescript-languageservice';
 
 // Fast dummy TS language service, only has one script.
@@ -21,7 +21,7 @@ export function getDummyTsLs(
 				getPreferences,
 				getFormatOptions,
 				getCompilationSettings: () => ({}),
-				getScriptFileNames: () => [uriToFsPath(fsPathToUri(`dummy.${dummyTsScriptVersion}.ts`))],
+				getScriptFileNames: () => [shared.normalizeFileName(`dummy.${dummyTsScriptVersion}.ts`)],
 				getScriptVersion: () => dummyTsScriptVersion.toString(),
 				getScriptSnapshot: () => dummyTsScript,
 				getScriptKind: () => dummyTsScriptKind,
@@ -41,6 +41,6 @@ export function getDummyTsLs(
 	dummyTsScript = ts.ScriptSnapshot.fromString(doc.getText());
 	return {
 		ls: dummyTsLs,
-		uri: fsPathToUri(`dummy.${dummyTsScriptVersion}.ts`),
+		uri: shared.fsPathToUri(`dummy.${dummyTsScriptVersion}.ts`),
 	};
 }

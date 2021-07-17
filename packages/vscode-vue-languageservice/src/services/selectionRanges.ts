@@ -1,12 +1,9 @@
-import type {
-	Position,
-	SelectionRange
-} from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
-	return (uri: string, positions: Position[]) => {
+	return (uri: string, positions: vscode.Position[]) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
@@ -16,7 +13,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 		return [...cssResult, ...htmlResult, ...tsResult];
 
 		function getTsResult() {
-			let result: SelectionRange[] = [];
+			let result: vscode.SelectionRange[] = [];
 			for (const position of positions) {
 				for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
@@ -37,7 +34,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			let result: SelectionRange[] = [];
+			let result: vscode.SelectionRange[] = [];
 			for (const position of positions) {
 				for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 					for (const htmlRange of sourceMap.getMappedRanges(position)) {
@@ -59,7 +56,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			let result: SelectionRange[] = [];
+			let result: vscode.SelectionRange[] = [];
 			for (const position of positions) {
 				for (const sourceMap of sourceFile.getCssSourceMaps()) {
 					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);

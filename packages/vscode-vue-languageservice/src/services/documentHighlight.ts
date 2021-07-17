@@ -1,9 +1,9 @@
-import type { DocumentHighlight, Position } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
-	return (uri: string, position: Position) => {
+	return (uri: string, position: vscode.Position) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
 
@@ -17,7 +17,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 		if (tsResult.length) return tsResult;
 
 		function getTsResult() {
-			const result: DocumentHighlight[] = [];
+			const result: vscode.DocumentHighlight[] = [];
 			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
 				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
@@ -36,7 +36,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: DocumentHighlight[] = [];
+			const result: vscode.DocumentHighlight[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				for (const htmlRange of sourceMap.getMappedRanges(position)) {
 
@@ -59,7 +59,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
-			const result: DocumentHighlight[] = [];
+			const result: vscode.DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;

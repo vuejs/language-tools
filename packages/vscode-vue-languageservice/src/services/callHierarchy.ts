@@ -1,12 +1,6 @@
-import { notEmpty, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import * as upath from 'upath';
-import type {
-	CallHierarchyIncomingCall,
-	CallHierarchyItem,
-	CallHierarchyOutgoingCall,
-	Position,
-	Range
-} from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
@@ -15,8 +9,8 @@ export interface Data {
 }
 
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
-	function doPrepare(uri: string, position: Position) {
-		let vueItems: CallHierarchyItem[] = [];
+	function doPrepare(uri: string, position: vscode.Position) {
+		let vueItems: vscode.CallHierarchyItem[] = [];
 
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
@@ -33,13 +27,13 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 		return dedupe.withLocations(vueItems);
 	}
-	function getIncomingCalls(item: CallHierarchyItem) {
+	function getIncomingCalls(item: vscode.CallHierarchyItem) {
 		const data: Data | undefined = item.data as any;
 		const lsType = data?.lsType ?? 'template';
 		const tsLs = getTsLs(lsType);
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLs.callHierarchy.getIncomingCalls).flat();
-		const vueIncomingItems: CallHierarchyIncomingCall[] = [];
+		const vueIncomingItems: vscode.CallHierarchyIncomingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
 			const vueResult = toVueCallHierarchyItem(lsType, tsIncomingItem.from, tsIncomingItem.fromRanges);
 			if (!vueResult) continue;
@@ -51,13 +45,13 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		}
 		return dedupe.withCallHierarchyIncomingCalls(vueIncomingItems);
 	}
-	function getOutgoingCalls(item: CallHierarchyItem) {
+	function getOutgoingCalls(item: vscode.CallHierarchyItem) {
 		const data: Data | undefined = item.data as any;
 		const lsType = data?.lsType ?? 'template';
 		const tsLs = getTsLs(lsType);
 		const tsItems = tsTsCallHierarchyItem(item);
 		const tsIncomingItems = tsItems.map(tsLs.callHierarchy.getOutgoingCalls).flat();
-		const vueIncomingItems: CallHierarchyOutgoingCall[] = [];
+		const vueIncomingItems: vscode.CallHierarchyOutgoingCall[] = [];
 		for (const tsIncomingItem of tsIncomingItems) {
 			const vueResult = toVueCallHierarchyItem(lsType, tsIncomingItem.to, tsIncomingItem.fromRanges);
 			if (!vueResult) continue;
@@ -76,8 +70,8 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		getOutgoingCalls,
 	}
 
-	function worker(lsType: 'script' | 'template', tsDocUri: string, tsPos: Position) {
-		const vueOrTsItems: CallHierarchyItem[] = [];
+	function worker(lsType: 'script' | 'template', tsDocUri: string, tsPos: vscode.Position) {
+		const vueOrTsItems: vscode.CallHierarchyItem[] = [];
 		const tsLs = getTsLs(lsType);
 		const tsItems = tsLs.callHierarchy.doPrepare(tsDocUri, tsPos);
 		for (const tsItem of tsItems) {
@@ -94,7 +88,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		}
 		return vueOrTsItems;
 	}
-	function toVueCallHierarchyItem(lsType: 'script' | 'template', tsItem: CallHierarchyItem, tsRanges: Range[]): [CallHierarchyItem, Range[]] | undefined {
+	function toVueCallHierarchyItem(lsType: 'script' | 'template', tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
 		if (!sourceFiles.getTsDocuments(lsType).get(tsItem.uri)) {
 			return [tsItem, tsRanges]; // not virtual file
 		}
@@ -103,7 +97,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		if (!sourceMap)
 			return;
 
-		let vueRange: Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end);
+		let vueRange: vscode.Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end);
 		if (!vueRange) {
 			// TODO: <script> range
 			vueRange = {
@@ -116,10 +110,10 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		if (!vueSelectionRange)
 			return;
 
-		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)).filter(notEmpty);
-		const vueItem: CallHierarchyItem = {
+		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)).filter(shared.notEmpty);
+		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
-			name: tsItem.name === upath.basename(uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
+			name: tsItem.name === upath.basename(shared.uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(shared.uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
 			uri: sourceMap.sourceDocument.uri,
 			range: vueRange,
 			selectionRange: vueSelectionRange,
@@ -127,12 +121,12 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 		return [vueItem, vueRanges];
 	}
-	function tsTsCallHierarchyItem(item: CallHierarchyItem) {
+	function tsTsCallHierarchyItem(item: vscode.CallHierarchyItem) {
 		if (upath.extname(item.uri) !== '.vue') {
 			return [item];
 		}
 
-		const tsItems: CallHierarchyItem[] = [];
+		const tsItems: vscode.CallHierarchyItem[] = [];
 
 		for (const tsLoc of sourceFiles.toTsLocations(item.uri, item.range.start, item.range.end)) {
 

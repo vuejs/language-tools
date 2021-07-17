@@ -1,9 +1,9 @@
-import { notEmpty } from '@volar/shared';
-import type { Range } from 'vscode-languageserver';
+import * as shared from '@volar/shared';
+import type * as vscode from 'vscode-languageserver';
 import { transform as transformLocation } from './locationLike';
 
-export function transform<T extends { range: Range }>(locations: T[], getOtherRange: (range: Range) => Range | undefined): T[] {
+export function transform<T extends { range: vscode.Range }>(locations: T[], getOtherRange: (range: vscode.Range) => vscode.Range | undefined): T[] {
 	return locations
 		.map(location => transformLocation(location, getOtherRange))
-		.filter(notEmpty);
+		.filter(shared.notEmpty);
 }

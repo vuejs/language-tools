@@ -1,16 +1,16 @@
-import { TextDocumentRegistrationOptions } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 
-export const vueDocReg: TextDocumentRegistrationOptions = {
+export const vueDocReg: vscode.TextDocumentRegistrationOptions = {
 	documentSelector: [
 		{ language: 'vue' },
 	],
 };
-export const vueFileReg: TextDocumentRegistrationOptions = {
+export const vueFileReg: vscode.TextDocumentRegistrationOptions = {
 	documentSelector: [
 		{ scheme: 'file', language: 'vue' },
 	],
 };
-export const allFilesReg: TextDocumentRegistrationOptions = {
+export const allFilesReg: vscode.TextDocumentRegistrationOptions = {
 	documentSelector: [
 		{ scheme: 'file', language: 'vue' },
 		{ scheme: 'file', language: 'javascript' },

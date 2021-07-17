@@ -1,5 +1,5 @@
 import { computed, shallowReactive } from '@vue/reactivity';
-import type { Position } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
 import type { CssSourceMap, HtmlSourceMap, TeleportSourceMap, TsSourceMap } from './utils/sourceMaps';
@@ -136,7 +136,7 @@ export function createSourceFiles() {
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
 		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
 
-		toTsLocations: untrack(function* (uri: string, start: Position, end?: Position) {
+		toTsLocations: untrack(function* (uri: string, start: vscode.Position, end?: vscode.Position) {
 
 			if (end === undefined)
 				end = start;
@@ -169,7 +169,7 @@ export function createSourceFiles() {
 				}
 			}
 		}),
-		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: Position, end?: Position) {
+		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: vscode.Position, end?: vscode.Position) {
 
 			if (end === undefined)
 				end = start;

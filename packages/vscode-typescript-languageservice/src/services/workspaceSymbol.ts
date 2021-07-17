@@ -1,40 +1,36 @@
 import type * as ts from 'typescript';
 import * as PConst from '../protocol.const';
-import {
-	Range,
-	SymbolInformation,
-	SymbolKind,
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import { parseKindModifier } from '../utils/modifiers';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-function getSymbolKind(item: ts.NavigationBarItem): SymbolKind {
+function getSymbolKind(item: ts.NavigationBarItem): vscode.SymbolKind {
 	switch (item.kind) {
-		case PConst.Kind.module: return SymbolKind.Module;
-		case PConst.Kind.method: return SymbolKind.Method;
-		case PConst.Kind.enum: return SymbolKind.Enum;
-		case PConst.Kind.enumMember: return SymbolKind.EnumMember;
-		case PConst.Kind.function: return SymbolKind.Function;
-		case PConst.Kind.class: return SymbolKind.Class;
-		case PConst.Kind.interface: return SymbolKind.Interface;
-		case PConst.Kind.type: return SymbolKind.Class;
-		case PConst.Kind.memberVariable: return SymbolKind.Field;
-		case PConst.Kind.memberGetAccessor: return SymbolKind.Field;
-		case PConst.Kind.memberSetAccessor: return SymbolKind.Field;
-		case PConst.Kind.variable: return SymbolKind.Variable;
-		default: return SymbolKind.Variable;
+		case PConst.Kind.module: return vscode.SymbolKind.Module;
+		case PConst.Kind.method: return vscode.SymbolKind.Method;
+		case PConst.Kind.enum: return vscode.SymbolKind.Enum;
+		case PConst.Kind.enumMember: return vscode.SymbolKind.EnumMember;
+		case PConst.Kind.function: return vscode.SymbolKind.Function;
+		case PConst.Kind.class: return vscode.SymbolKind.Class;
+		case PConst.Kind.interface: return vscode.SymbolKind.Interface;
+		case PConst.Kind.type: return vscode.SymbolKind.Class;
+		case PConst.Kind.memberVariable: return vscode.SymbolKind.Field;
+		case PConst.Kind.memberGetAccessor: return vscode.SymbolKind.Field;
+		case PConst.Kind.memberSetAccessor: return vscode.SymbolKind.Field;
+		case PConst.Kind.variable: return vscode.SymbolKind.Variable;
+		default: return vscode.SymbolKind.Variable;
 	}
 }
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string): SymbolInformation[] => {
+	return (uri: string): vscode.SymbolInformation[] => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = uriToFsPath(document.uri);
+		const fileName = shared.uriToFsPath(document.uri);
 		const barItems = languageService.getNavigationBarItems(fileName);
-		const output: SymbolInformation[] = [];
+		const output: vscode.SymbolInformation[] = [];
 		barItemsWorker(document, barItems);
 
 		return output;
@@ -53,10 +49,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		}
 		function toSymbolInformation(document: TextDocument, item: ts.NavigationBarItem, span: ts.TextSpan, containerName?: string) {
 			const label = getLabel(item);
-			const info = SymbolInformation.create(
+			const info = vscode.SymbolInformation.create(
 				label,
 				getSymbolKind(item),
-				Range.create(document.positionAt(span.start), document.positionAt(span.start + span.length)),
+				vscode.Range.create(document.positionAt(span.start), document.positionAt(span.start + span.length)),
 				document.uri,
 				containerName,
 			);

@@ -1,5 +1,5 @@
 import { TextDocument, Position } from 'vscode-languageserver-textdocument';
-import { uriToFsPath, fsPathToUri } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
 import { getGlobalDoc } from './virtuals/global';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
@@ -38,7 +38,6 @@ import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
-import { UriMap } from '@volar/shared';
 import type * as emmet from 'vscode-emmet-helper';
 // context
 import * as fs from 'fs';
@@ -101,7 +100,7 @@ export function createLanguageService(
 	let tsProjectVersion = 0;
 	let tsProjectVersionWithoutTemplate = 0;
 	let lastCompletionUpdateVersion = -1;
-	const documents = new UriMap<TextDocument>();
+	const documents = new shared.UriMap<TextDocument>();
 	const sourceFiles = createSourceFiles();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
@@ -131,12 +130,12 @@ export function createLanguageService(
 				else {
 					path = upath.trimExt(path);
 				}
-				if (ts.sys.fileExists(path) || ts.sys.fileExists(uriToFsPath(path))) {
+				if (ts.sys.fileExists(path) || ts.sys.fileExists(shared.uriToFsPath(path))) {
 					return path;
 				}
 			}
 			for (const dir of dirs) {
-				if (ts.sys.directoryExists(dir) || ts.sys.directoryExists(uriToFsPath(dir))) {
+				if (ts.sys.directoryExists(dir) || ts.sys.directoryExists(shared.uriToFsPath(dir))) {
 					return dir;
 				}
 			}
@@ -384,10 +383,10 @@ export function createLanguageService(
 			const finalUpdates = adds.concat(updates);
 
 			if (removes.length) {
-				unsetSourceFiles(removes.map(fsPathToUri));
+				unsetSourceFiles(removes.map(shared.fsPathToUri));
 			}
 			if (finalUpdates.length) {
-				updateSourceFiles(finalUpdates.map(fsPathToUri), shouldUpdateTemplateScript)
+				updateSourceFiles(finalUpdates.map(shared.fsPathToUri), shouldUpdateTemplateScript)
 			}
 		}
 		else if (shouldUpdateTemplateScript && templateScriptUpdateUris.size) {
@@ -402,9 +401,9 @@ export function createLanguageService(
 				? fileName => {
 					const fileNameTrim = upath.trimExt(fileName);
 					if (fileNameTrim.endsWith('.vue')) {
-						const sourceFile = sourceFiles.get(fsPathToUri(fileNameTrim));
+						const sourceFile = sourceFiles.get(shared.fsPathToUri(fileNameTrim));
 						if (sourceFile) {
-							return sourceFiles.getTsDocuments(lsType).has(fsPathToUri(fileName));
+							return sourceFiles.getTsDocuments(lsType).has(shared.fsPathToUri(fileName));
 						}
 						const fileExists = !!vueHost.fileExists?.(fileNameTrim);
 						if (fileExists) {
@@ -430,7 +429,7 @@ export function createLanguageService(
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				const result = vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
 				for (const uri of sourceFiles.getUris()) {
-					const vuePath = uriToFsPath(uri);
+					const vuePath = shared.uriToFsPath(uri);
 					const vuePath2 = upath.join(path, upath.basename(vuePath));
 					if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
 						continue;
@@ -461,9 +460,9 @@ export function createLanguageService(
 
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
-			tsFileNames.push(uriToFsPath(globalDoc.uri));
+			tsFileNames.push(shared.uriToFsPath(globalDoc.uri));
 			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
-				tsFileNames.push(uriToFsPath(tsUri)); // virtual .ts
+				tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts
 			}
 			for (const fileName of vueHost.getScriptFileNames()) {
 				if (isTsPlugin) {
@@ -476,7 +475,7 @@ export function createLanguageService(
 			return tsFileNames;
 		}
 		function getScriptVersion(fileName: string) {
-			const uri = fsPathToUri(fileName);
+			const uri = shared.fsPathToUri(fileName);
 			if (uri === globalDoc.uri) {
 				return globalDoc.version.toString();
 			}
@@ -492,7 +491,7 @@ export function createLanguageService(
 			if (cache && cache[0] === version) {
 				return cache[1];
 			}
-			const uri = fsPathToUri(fileName);
+			const uri = shared.fsPathToUri(fileName);
 			if (uri === globalDoc.uri) {
 				const text = globalDoc.getText();
 				const snapshot = ts.ScriptSnapshot.fromString(text);
@@ -514,7 +513,7 @@ export function createLanguageService(
 		}
 	}
 	function getHostDocument(uri: string): TextDocument | undefined {
-		const fileName = uriToFsPath(uri);
+		const fileName = shared.uriToFsPath(uri);
 		const version = Number(vueHost.getScriptVersion(fileName));
 		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
 			const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
@@ -609,7 +608,7 @@ function createContext(
 	const fileSystemProvider: html.FileSystemProvider = {
 		stat: (uri) => {
 			return new Promise<html.FileStat>((resolve, reject) => {
-				fs.stat(uriToFsPath(uri), (err, stats) => {
+				fs.stat(shared.uriToFsPath(uri), (err, stats) => {
 					if (stats) {
 						resolve({
 							type: stats.isFile() ? html.FileType.File
@@ -629,7 +628,7 @@ function createContext(
 		},
 		readDirectory: (uri) => {
 			return new Promise<[string, html.FileType][]>((resolve, reject) => {
-				fs.readdir(uriToFsPath(uri), (err, files) => {
+				fs.readdir(shared.uriToFsPath(uri), (err, files) => {
 					if (files) {
 						resolve(files.map(file => [file, html.FileType.File]));
 					}

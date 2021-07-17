@@ -1,8 +1,8 @@
-import { fsPathToUri, notEmpty, uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import * as jsonc from 'jsonc-parser';
 import * as upath from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { DocumentLink, Range } from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
@@ -25,7 +25,7 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 		];
 
 		function getTsResult(sourceFile: SourceFile) {
-			let result: DocumentLink[] = [];
+			let result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				// TODO: capabilities
 				// TODO: move to vscode-typescript-languageservice
@@ -38,27 +38,27 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 					getExtendsLink(scriptDoc, root),
 					...getFilesLinks(scriptDoc, root),
 					...getReferencesLinks(scriptDoc, root)
-				].filter(notEmpty));
+				].filter(shared.notEmpty));
 			}
 			return result;
 
-			function getExtendsLink(document: TextDocument, root: jsonc.Node): DocumentLink | undefined {
+			function getExtendsLink(document: TextDocument, root: jsonc.Node): vscode.DocumentLink | undefined {
 				const extendsNode = jsonc.findNodeAtLocation(root, ['extends']);
 				if (!isPathValue(extendsNode)) {
 					return undefined;
 				}
 
 				if (extendsNode.value.startsWith('.')) {
-					return DocumentLink.create(
+					return vscode.DocumentLink.create(
 						getRange(document, extendsNode),
-						fsPathToUri(upath.join(upath.dirname(uriToFsPath(document.uri)), extendsNode.value + (extendsNode.value.endsWith('.json') ? '' : '.json')))
+						shared.fsPathToUri(upath.join(upath.dirname(shared.uriToFsPath(document.uri)), extendsNode.value + (extendsNode.value.endsWith('.json') ? '' : '.json')))
 					);
 				}
 
 				const workspaceFolderPath = vueHost.getCurrentDirectory();
-				return DocumentLink.create(
+				return vscode.DocumentLink.create(
 					getRange(document, extendsNode),
-					fsPathToUri(upath.join(workspaceFolderPath, 'node_modules', extendsNode.value + (extendsNode.value.endsWith('.json') ? '' : '.json')))
+					shared.fsPathToUri(upath.join(workspaceFolderPath, 'node_modules', extendsNode.value + (extendsNode.value.endsWith('.json') ? '' : '.json')))
 				);
 			}
 			function getFilesLinks(document: TextDocument, root: jsonc.Node) {
@@ -75,7 +75,7 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 							return undefined;
 						}
 
-						return DocumentLink.create(getRange(document, pathNode),
+						return vscode.DocumentLink.create(getRange(document, pathNode),
 							upath.basename(pathNode.value).endsWith('.json')
 								? getFileTarget(document, pathNode)
 								: getFolderTarget(document, pathNode));
@@ -84,9 +84,9 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 			function pathNodeToLink(
 				document: TextDocument,
 				node: jsonc.Node | undefined
-			): DocumentLink | undefined {
+			): vscode.DocumentLink | undefined {
 				return isPathValue(node)
-					? DocumentLink.create(getRange(document, node), getFileTarget(document, node))
+					? vscode.DocumentLink.create(getRange(document, node), getFileTarget(document, node))
 					: undefined;
 			}
 			function isPathValue(extendsNode: jsonc.Node | undefined): extendsNode is jsonc.Node {
@@ -96,16 +96,16 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 					&& !(extendsNode.value as string).includes('*'); // don't treat globs as links.
 			}
 			function getFileTarget(document: TextDocument, node: jsonc.Node): string {
-				return fsPathToUri(upath.join(upath.dirname(uriToFsPath(document.uri)), node!.value));
+				return shared.fsPathToUri(upath.join(upath.dirname(shared.uriToFsPath(document.uri)), node!.value));
 			}
 			function getFolderTarget(document: TextDocument, node: jsonc.Node): string {
-				return fsPathToUri(upath.join(upath.dirname(uriToFsPath(document.uri)), node!.value, 'tsconfig.json'));
+				return shared.fsPathToUri(upath.join(upath.dirname(shared.uriToFsPath(document.uri)), node!.value, 'tsconfig.json'));
 			}
 			function getRange(document: TextDocument, node: jsonc.Node) {
 				const offset = node!.offset;
 				const start = document.positionAt(offset + 1);
 				const end = document.positionAt(offset + (node!.length - 1));
-				return Range.create(start, end);
+				return vscode.Range.create(start, end);
 			}
 			function mapChildren<R>(node: jsonc.Node | undefined, f: (x: jsonc.Node) => R): R[] {
 				return node && node.type === 'array' && node.children
@@ -114,7 +114,7 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 			}
 		}
 		function getTsResult2(sourceFile: SourceFile) {
-			const result: DocumentLink[] = [];
+			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				for (const maped of sourceMap) {
 					if (!maped.data.capabilities.displayWithLink) {
@@ -132,7 +132,7 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: DocumentLink[] = [];
+			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const links = sourceMap.language === 'html'
 					? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
@@ -151,7 +151,7 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 		}
 		async function getCssResult(sourceFile: SourceFile) {
 			const sourceMaps = sourceFile.getCssSourceMaps();
-			const result: DocumentLink[] = [];
+			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;

@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { Position } from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from '..';
 import * as completion from './completion';
@@ -10,7 +10,7 @@ export function register(
 	host: LanguageServiceHost
 ) {
 	const worker = completion.register(languageService, getTextDocument, host);
-	return async (uri: string, position: Position, options?: ts.GetCompletionsAtPositionOptions) => {
+	return async (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions) => {
 
 		const document = getTextDocument(uri);
 		if (!document) return [];

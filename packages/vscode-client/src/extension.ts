@@ -1,4 +1,4 @@
-import { ServerInitializationOptions } from '@volar/shared';
+import type * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
@@ -67,7 +67,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			options: debugOptions
 		},
 	};
-	const serverInitOptions: ServerInitializationOptions = {
+	const serverInitOptions: shared.ServerInitializationOptions = {
 		mode: mode,
 		appRoot: vscode.env.appRoot,
 		language: vscode.env.language,

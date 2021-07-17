@@ -1,5 +1,5 @@
-import { createLanguageService } from 'vscode-vue-languageservice'
-import { sleep } from '@volar/shared';
+import * as vue from 'vscode-vue-languageservice'
+import * as shared from '@volar/shared';
 import * as path from 'upath';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
@@ -22,7 +22,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 
 			const proxyHost = createProxyHost(ts, info);
-			const vueLs = createLanguageService(modules, proxyHost.host, true);
+			const vueLs = vue.createLanguageService(modules, proxyHost.host, true);
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
@@ -94,7 +94,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 
 	async function onFileChangedOrConfigUpdated() {
 		anyFilesChanged = true;
-		await sleep(0);
+		await shared.sleep(0);
 		if (anyFilesChanged && !disposed) {
 			anyFilesChanged = false;
 			vueFiles = new Set(getVueFiles());

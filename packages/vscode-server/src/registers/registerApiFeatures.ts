@@ -1,58 +1,43 @@
-import {
-	Commands,
-	triggerCharacter
-} from 'vscode-vue-languageservice';
-import {
-	CallHierarchyPrepareRequest,
-	CompletionRequest,
-	Connection,
-	DefinitionRequest,
-	ExecuteCommandRequest,
-	HoverRequest,
-	ReferencesRequest,
-	RenameRequest,
-	SelectionRangeRequest,
-	SignatureHelpRequest,
-	TypeDefinitionRequest
-} from 'vscode-languageserver/node';
+import * as vue from 'vscode-vue-languageservice';
+import * as vscode from 'vscode-languageserver';
 import {
 	allFilesReg,
 	vueFileReg
 } from '../features/shared';
 
-export function register(connection: Connection, enabledTsPlugin: boolean) {
-	connection.client.register(ReferencesRequest.type, enabledTsPlugin ? vueFileReg : allFilesReg);
-	connection.client.register(DefinitionRequest.type, vueFileReg /* enabledTsPlugin ? vueFileReg : allFilesReg */);
-	connection.client.register(CallHierarchyPrepareRequest.type, allFilesReg); // TODO: vueFileReg
-	connection.client.register(TypeDefinitionRequest.type, vueFileReg);
-	connection.client.register(HoverRequest.type, vueFileReg);
-	connection.client.register(RenameRequest.type, {
+export function register(connection: vscode.Connection, enabledTsPlugin: boolean) {
+	connection.client.register(vscode.ReferencesRequest.type, enabledTsPlugin ? vueFileReg : allFilesReg);
+	connection.client.register(vscode.DefinitionRequest.type, vueFileReg /* enabledTsPlugin ? vueFileReg : allFilesReg */);
+	connection.client.register(vscode.CallHierarchyPrepareRequest.type, allFilesReg); // TODO: vueFileReg
+	connection.client.register(vscode.TypeDefinitionRequest.type, vueFileReg);
+	connection.client.register(vscode.HoverRequest.type, vueFileReg);
+	connection.client.register(vscode.RenameRequest.type, {
 		documentSelector: vueFileReg.documentSelector,
 		prepareProvider: true,
 	});
-	connection.client.register(SelectionRangeRequest.type, vueFileReg);
-	connection.client.register(SignatureHelpRequest.type, {
+	connection.client.register(vscode.SelectionRangeRequest.type, vueFileReg);
+	connection.client.register(vscode.SignatureHelpRequest.type, {
 		documentSelector: vueFileReg.documentSelector,
 		triggerCharacters: ['(', ',', '<'],
 		retriggerCharacters: [')'],
 	});
-	connection.client.register(ExecuteCommandRequest.type, {
+	connection.client.register(vscode.ExecuteCommandRequest.type, {
 		commands: [
-			Commands.HTML_TO_PUG,
-			Commands.PUG_TO_HTML,
-			Commands.SWITCH_REF_SUGAR,
-			Commands.SHOW_REFERENCES,
-			Commands.CONVERT_TO_KEBAB_CASE,
-			Commands.CONVERT_TO_PASCAL_CASE,
+			vue.Commands.HTML_TO_PUG,
+			vue.Commands.PUG_TO_HTML,
+			vue.Commands.SWITCH_REF_SUGAR,
+			vue.Commands.SHOW_REFERENCES,
+			vue.Commands.CONVERT_TO_KEBAB_CASE,
+			vue.Commands.CONVERT_TO_PASCAL_CASE,
 		]
 	});
-	connection.client.register(CompletionRequest.type, {
+	connection.client.register(vscode.CompletionRequest.type, {
 		documentSelector: vueFileReg.documentSelector,
 		triggerCharacters: [
-			...triggerCharacter.typescript,
-			...triggerCharacter.html,
-			...triggerCharacter.css,
-			...triggerCharacter.json,
+			...vue.triggerCharacter.typescript,
+			...vue.triggerCharacter.html,
+			...vue.triggerCharacter.css,
+			...vue.triggerCharacter.json,
 		],
 		resolveProvider: true,
 	});

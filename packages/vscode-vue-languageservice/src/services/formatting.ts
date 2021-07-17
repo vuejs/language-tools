@@ -1,13 +1,9 @@
 import * as prettyhtml from '@starptech/prettyhtml';
-import { notEmpty } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { transformTextEdit } from '@volar/transforms';
 import * as prettier from 'prettier';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import {
-	FormattingOptions,
-	Range,
-	TextEdit
-} from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import { createSourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
@@ -19,7 +15,7 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 	const { ts } = context;
-	return async (document: TextDocument, options: FormattingOptions) => {
+	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
 		const dummyTs = sharedServices.getDummyTsLs(ts, document, getPreferences, getFormatOptions);
 		const sourceFile = createSourceFile(document, dummyTs.ls, dummyTs.ls, context);
@@ -49,15 +45,15 @@ export function register(
 		newDocument = applyTextEdits(newDocument, indentTextEdits);
 		if (newDocument.getText() === document.getText()) return;
 
-		const editRange = Range.create(
+		const editRange = vscode.Range.create(
 			document.positionAt(0),
 			document.positionAt(document.getText().length),
 		);
-		const textEdit = TextEdit.replace(editRange, newDocument.getText());
+		const textEdit = vscode.TextEdit.replace(editRange, newDocument.getText());
 		return [textEdit];
 
 		function patchInterpolationIndent() {
-			const indentTextEdits: TextEdit[] = [];
+			const indentTextEdits: vscode.TextEdit[] = [];
 			const tsSourceMap = sourceFile.getTemplateFormattingScript().sourceMap;
 			if (!tsSourceMap) return indentTextEdits;
 
@@ -102,7 +98,7 @@ export function register(
 			return indentTextEdits;
 		}
 		function getCssFormattingEdits() {
-			const textEdits: TextEdit[] = [];
+			const textEdits: vscode.TextEdit[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				if (!sourceMap.capabilities.formatting) continue;
 				for (const maped of sourceMap) {
@@ -125,7 +121,7 @@ export function register(
 						start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
 						end: sourceMap.sourceDocument.positionAt(maped.sourceRange.end),
 					};
-					const textEdit = TextEdit.replace(
+					const textEdit = vscode.TextEdit.replace(
 						vueRange,
 						'\n' + newStyleText
 					);
@@ -135,7 +131,7 @@ export function register(
 			return textEdits;
 		}
 		function getHtmlFormattingEdits() {
-			const result: TextEdit[] = [];
+			const result: vscode.TextEdit[] = [];
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
 				for (const maped of sourceMap) {
 
@@ -154,14 +150,14 @@ export function register(
 						start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
 						end: sourceMap.sourceDocument.positionAt(maped.sourceRange.end),
 					};
-					const textEdit = TextEdit.replace(vueRange, newHtml);
+					const textEdit = vscode.TextEdit.replace(vueRange, newHtml);
 					result.push(textEdit);
 				}
 			}
 			return result;
 		}
 		function getPugFormattingEdits() {
-			let result: TextEdit[] = [];
+			let result: vscode.TextEdit[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
 				const pugEdits = context.pugLs.format(sourceMap.pugDocument, options);
 				const vueEdits = pugEdits
@@ -169,17 +165,17 @@ export function register(
 						pugEdit,
 						pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end),
 					))
-					.filter(notEmpty);
+					.filter(shared.notEmpty);
 				result = result.concat(vueEdits);
 			}
 			return result;
 		}
 		async function getTsFormattingEdits() {
-			const result: TextEdit[] = [];
+			const result: vscode.TextEdit[] = [];
 			const tsSourceMaps = [
 				sourceFile.getTemplateFormattingScript().sourceMap,
 				...sourceFile.docLsScripts().sourceMaps,
-			].filter(notEmpty);
+			].filter(shared.notEmpty);
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.formatting) continue;
@@ -197,7 +193,7 @@ export function register(
 			}
 			return result;
 		}
-		function applyTextEdits(document: TextDocument, textEdits: TextEdit[]) {
+		function applyTextEdits(document: TextDocument, textEdits: vscode.TextEdit[]) {
 
 			textEdits = textEdits.sort((a, b) => document.offsetAt(b.range.start) - document.offsetAt(a.range.start));
 

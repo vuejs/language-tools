@@ -1,10 +1,9 @@
 import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript';
-import { Connection } from 'vscode-languageserver/node';
 
 export async function getFormatOptions(
-	connection: Connection,
+	connection: vscode.Connection,
 	document: TextDocument,
 	options?: vscode.FormattingOptions
 ): Promise<ts.FormatCodeSettings> {
@@ -40,7 +39,7 @@ export async function getFormatOptions(
 }
 
 export async function getPreferences(
-	connection: Connection,
+	connection: vscode.Connection,
 	document: TextDocument
 ): Promise<ts.UserPreferences> {
 	const [config, preferencesConfig] = await connection.workspace.getConfiguration([

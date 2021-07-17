@@ -1,6 +1,6 @@
 import type { IDescriptor } from '../types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { syntaxToLanguageId, getValidScriptSyntax } from '@volar/shared';
+import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -56,14 +56,14 @@ export function useTemplateLsScript(
 		)
 	);
 	const lang = computed(() => {
-		return scriptSetup.value && scriptSetup.value.lang !== 'js' ? getValidScriptSyntax(scriptSetup.value.lang) :
-			script.value && script.value.lang !== 'js' ? getValidScriptSyntax(script.value.lang) :
-				getValidScriptSyntax('js')
+		return scriptSetup.value && scriptSetup.value.lang !== 'js' ? shared.getValidScriptSyntax(scriptSetup.value.lang) :
+			script.value && script.value.lang !== 'js' ? shared.getValidScriptSyntax(script.value.lang) :
+				shared.getValidScriptSyntax('js')
 	});
 	const textDocument = computed(() => {
 		return TextDocument.create(
 			lsType === 'template' ? `${uri}.__VLS_script.${lang.value}` : `${uri}.${lang.value}`,
-			syntaxToLanguageId(lang.value),
+			shared.syntaxToLanguageId(lang.value),
 			version++,
 			codeGen.value.getText(),
 		);
@@ -74,7 +74,7 @@ export function useTemplateLsScript(
 
 		return TextDocument.create(
 			`${uri}.__VLS_script.suggestion.${lang.value}`,
-			syntaxToLanguageId(lang.value),
+			shared.syntaxToLanguageId(lang.value),
 			version++,
 			suggestionCodeGen.value.getText(),
 		);

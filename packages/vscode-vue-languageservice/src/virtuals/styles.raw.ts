@@ -3,7 +3,7 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import * as css from 'vscode-css-languageservice';
-import { uriToFsPath } from '@volar/shared';
+import * as shared from '@volar/shared';
 import * as upath from 'upath';
 
 export function useStylesRaw(
@@ -54,10 +54,10 @@ export function useStylesRaw(
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
-					if (!ts.sys.fileExists(uriToFsPath(link.target))) continue;
+					if (!ts.sys.fileExists(shared.uriToFsPath(link.target))) continue;
 					if (linkStyles.find(l => l.textDocument.uri === link.target)) continue; // Loop
 
-					const text = ts.sys.readFile(uriToFsPath(link.target));
+					const text = ts.sys.readFile(shared.uriToFsPath(link.target));
 					if (text === undefined) continue;
 
 					const lang = upath.extname(link.target).substr(1);
