@@ -45,27 +45,39 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			withTeleports(tsLoc.uri, tsLoc.range.start, true);
 
 			// ts -> vue
-			let originSelectionRange: vscode.Range | undefined;
 			for (const tsLoc_2 of tsResult) {
-				if (tsLoc_2.isOriginal && tsLoc_2.originSelectionRange) {
+
+				let targetUri: string | undefined;
+				let targetRange: vscode.Range | undefined;
+				let targetSelectionRange: vscode.Range | undefined;
+				let originSelectionRange: vscode.Range | undefined;
+
+				if (tsLoc_2.originSelectionRange) {
 					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
 						originSelectionRange = vueLoc.range;
 						break;
 					}
 				}
-			}
-			for (const tsLoc_2 of tsResult) {
-				for (const targetSelectionRange of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
-					for (const targetRange of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
-						vueResult.push({
-							targetUri: targetSelectionRange.uri,
-							targetRange: targetRange.range,
-							targetSelectionRange: targetSelectionRange.range,
-							originSelectionRange,
-						});
-						break;
-					}
+
+				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
+					targetUri = vueLoc.uri;
+					targetRange = vueLoc.range;
 					break;
+				}
+
+				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
+					targetUri = vueLoc.uri;
+					targetSelectionRange = vueLoc.range;
+					break;
+				}
+
+				if (targetUri && (targetRange || targetSelectionRange)) {
+					vueResult.push({
+						targetUri,
+						targetRange: (targetRange ?? targetSelectionRange)!,
+						targetSelectionRange: (targetSelectionRange ?? targetRange)!,
+						originSelectionRange,
+					});
 				}
 			}
 
