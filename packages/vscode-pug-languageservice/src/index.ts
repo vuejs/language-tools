@@ -11,11 +11,11 @@ import { register as registerSelectRanges } from './services/selectRanges';
 
 // fix TS2742
 export type {
-    HTMLDocument,
-    DocumentContext,
-    CompletionConfiguration,
-    TokenType,
-    ScannerState,
+	HTMLDocument,
+	DocumentContext,
+	CompletionConfiguration,
+	TokenType,
+	ScannerState,
 } from 'vscode-html-languageservice';
 
 export { PugDocument } from './pugDocument';
@@ -23,14 +23,14 @@ export { PugDocument } from './pugDocument';
 export type LanguageService = ReturnType<typeof getLanguageService>;
 
 export function getLanguageService(htmlLs: html.LanguageService) {
-    return {
-        parsePugDocument: (doc: TextDocument) => parsePugDocument(doc, htmlLs),
-        doComplete: registerCompletion(htmlLs),
-        findDocumentHighlights: registerDocumentHighlight(htmlLs),
-        findDocumentLinks: registerDocumentLinks(htmlLs),
-        format: registerFormatting(),
-        doHover: registerHover(htmlLs),
-        createScanner: registerScanner(htmlLs),
-        getSelectionRanges: registerSelectRanges(htmlLs),
-    };
+	return {
+		parsePugDocument: (doc: TextDocument) => parsePugDocument(doc, htmlLs),
+		doComplete: registerCompletion(htmlLs),
+		findDocumentHighlights: registerDocumentHighlight(htmlLs),
+		findDocumentLinks: registerDocumentLinks(htmlLs),
+		format: registerFormatting(),
+		doHover: registerHover(htmlLs),
+		createScanner: registerScanner(htmlLs),
+		getSelectionRanges: registerSelectRanges(htmlLs),
+	};
 }

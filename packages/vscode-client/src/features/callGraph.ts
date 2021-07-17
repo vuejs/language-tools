@@ -3,22 +3,22 @@ import { D3Request } from '@volar/shared';
 import type { LanguageClient } from 'vscode-languageclient/node';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
-    await languageClient.onReady();
-    context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
-        const document = vscode.window.activeTextEditor?.document;
-        if (!document) return;
-        let param = languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
-        const d3 = await languageClient.sendRequest(D3Request.type, param);
+	await languageClient.onReady();
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
+		const document = vscode.window.activeTextEditor?.document;
+		if (!document) return;
+		let param = languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
+		const d3 = await languageClient.sendRequest(D3Request.type, param);
 
-        const panel = vscode.window.createWebviewPanel(
-            'vueCallGraph',
-            'Vue Call Graph',
-            vscode.ViewColumn.One,
-            {
-                enableScripts: true
-            }
-        );
-        panel.webview.html = `
+		const panel = vscode.window.createWebviewPanel(
+			'vueCallGraph',
+			'Vue Call Graph',
+			vscode.ViewColumn.One,
+			{
+				enableScripts: true
+			}
+		);
+		panel.webview.html = `
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="https://unpkg.com/viz.js@1.8.1/viz.js" type="javascript/worker"></script>
 <script src="https://unpkg.com/d3-graphviz@2.1.0/build/d3-graphviz.min.js"></script>
@@ -38,5 +38,5 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
 </script>
 `
-    }));
+	}));
 }
