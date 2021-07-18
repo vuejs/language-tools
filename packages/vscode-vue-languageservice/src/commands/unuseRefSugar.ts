@@ -1,31 +1,58 @@
 import * as vscode from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import type { LanguageService as TsLanguageService } from 'vscode-typescript-languageservice';
 import * as shared from '@volar/shared';
 import { SearchTexts } from '../utils/string';
 import { parseRefSugarRanges } from '../parsers/scriptSetupRanges';
-import { isRefType } from '../services/refAutoClose';
+import type { ApiLanguageServiceContext } from '../types';
 
 export async function execute(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	document: TextDocument,
-	sourceFile: SourceFile,
 	connection: vscode.Connection,
+	context: ApiLanguageServiceContext,
+	uri: string,
 	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
-	_findTypeDefinition: (uri: string, position: vscode.Position) => vscode.LocationLink[],
-	tsLs: TsLanguageService,
 ) {
-	const desc = sourceFile.getDescriptor();
-	if (!desc.scriptSetup) return;
 
-	const genData = sourceFile.getScriptSetupData();
-	if (!genData) return;
+	const progress = await connection.window.createWorkDoneProgress();
+	progress.begin('Unuse Ref Sugar', 0, '', true);
+
+	const edits = await getUnRefSugarEdits(context, uri, _findReferences, progress);
+
+	if (!progress.token.isCancellationRequested && edits.length) {
+		await connection.workspace.applyEdit({ changes: { [uri]: edits } });
+	}
+
+	progress.done();
+}
+
+export function register(
+	context: ApiLanguageServiceContext,
+	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
+) {
+	return (
+		uri: string,
+		progress?: vscode.WorkDoneProgressServerReporter,
+	) => getUnRefSugarEdits(context, uri, _findReferences, progress);
+}
+
+async function getUnRefSugarEdits(
+	{ sourceFiles, ts, scriptTsLs }: ApiLanguageServiceContext,
+	uri: string,
+	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
+	progress?: vscode.WorkDoneProgressServerReporter,
+) {
+
+	const sourceFile = sourceFiles.get(uri);
+	if (!sourceFile) return [];
 
 	const descriptor = sourceFile.getDescriptor();
-	if (!descriptor.scriptSetup) return;
+	if (!descriptor.scriptSetup) return [];
 
-	const genData2 = parseRefSugarRanges(ts, descriptor.scriptSetup.content, descriptor.scriptSetup.lang);
+	const genData = sourceFile.getScriptSetupData();
+	if (!genData) return [];
+
+	const document = sourceFile.getTextDocument();
+	const scriptSetup = descriptor.scriptSetup;
+	const genData2 = parseRefSugarRanges(ts, scriptSetup.content, scriptSetup.lang);
+
 	let varsNum = 0;
 	let varsCur = 0;
 	for (const label of genData.labels) {
@@ -33,12 +60,8 @@ export async function execute(
 			varsNum += binary.vars.length;
 		}
 	}
-	const progress = await connection.window.createWorkDoneProgress();
-	progress.begin('Unuse Ref Sugar', 0, '', true);
 
-	const scriptSetup = descriptor.scriptSetup;
 	const edits: vscode.TextEdit[] = [];
-	const dotValueOffsets_1: number[] = [];
 	let hasNewRefCall = false;
 
 	for (const label of genData.labels) {
@@ -87,11 +110,11 @@ export async function execute(
 
 			for (const _var of binary.vars) {
 
-				if (progress.token.isCancellationRequested)
-					return;
+				if (progress?.token.isCancellationRequested)
+					return edits;
 
 				const varText = scriptSetup.content.substring(_var.start, _var.end);
-				progress.report(++varsCur / varsNum * 100, varText);
+				progress?.report(++varsCur / varsNum * 100, varText);
 				await shared.sleep(0);
 
 				const references = findReferences(_var.start);
@@ -120,7 +143,6 @@ export async function execute(
 					}
 					else {
 						addReplace(refernceRange.start, refernceRange.end, isShorthand ? `${varText}: ${varText}` : varText);
-						dotValueOffsets_1.push(refernceRange.end);
 						addReplace(refernceRange.end, refernceRange.end, `.value`);
 					}
 				}
@@ -136,14 +158,14 @@ export async function execute(
 		if (scriptDoc && scriptSourceMap) {
 
 			const refOffset = scriptDoc.getText().indexOf(SearchTexts.Ref);
-			const items = await tsLs.doComplete(scriptDoc.uri, scriptDoc.positionAt(refOffset), { includeCompletionsForModuleExports: true });
+			const items = await scriptTsLs.doComplete(scriptDoc.uri, scriptDoc.positionAt(refOffset), { includeCompletionsForModuleExports: true });
 
 			for (let item of items) {
 
 				if (item.label !== 'ref')
 					continue;
 
-				item = await tsLs.doCompletionResolve(item);
+				item = await scriptTsLs.doCompletionResolve(item);
 
 				if (!item.additionalTextEdits)
 					continue;
@@ -161,56 +183,7 @@ export async function execute(
 		}
 	}
 
-	const dotValueOffsets_2 = dotValueOffsets_1.map(offset => {
-		let newOffset = offset;
-		for (const replace of edits) {
-			const end = document.offsetAt(replace.range.end);
-			if (scriptSetup.loc.start + offset >= end) {
-				const start = document.offsetAt(replace.range.start);
-				const oldLength = end - start;
-				const newLength = replace.newText.length;
-				newOffset += newLength - oldLength;
-			}
-		}
-		return newOffset;
-	});
-
-	if (edits.length) {
-
-		const lastProjectVersion = tsLs.__internal__.host.getProjectVersion!();
-		const newDocumentText = TextDocument.applyEdits(document, edits);
-		await connection.workspace.applyEdit({ changes: { [document.uri]: edits } });
-		document = TextDocument.create(document.uri, document.languageId, document.version, newDocumentText);
-
-		while (true) {
-
-			await shared.sleep(100);
-
-			if (progress.token.isCancellationRequested)
-				return;
-
-			if (tsLs.__internal__.host.getProjectVersion!() !== lastProjectVersion)
-				break;
-		}
-
-		edits.length = 0;
-
-		for (const offset of dotValueOffsets_2) {
-
-			if (progress.token.isCancellationRequested)
-				return;
-
-			if (!isRef(offset - '.value'.length)) {
-				addReplace(offset - '.value'.length, offset, '');
-			}
-		}
-
-		if (edits.length) {
-			await connection.workspace.applyEdit({ changes: { [document.uri]: edits } });
-		}
-	}
-
-	progress.done();
+	return edits;
 
 	function addReplace(start: number, end: number, text: string) {
 
@@ -227,9 +200,5 @@ export async function execute(
 	}
 	function findReferences(offset: number) {
 		return _findReferences(document.uri, document.positionAt(scriptSetup.loc.start + offset));
-	}
-	function isRef(offset: number) {
-		const typeDefs = _findTypeDefinition(document.uri, document.positionAt(scriptSetup.loc.start + offset));
-		return isRefType(typeDefs, tsLs);
 	}
 }

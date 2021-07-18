@@ -239,6 +239,11 @@
 				"category": "Volar"
 			},
 			{
+				"command": "volar.action.removeRefSugars",
+				"title": "Remove All Ref Sugar in Project",
+				"category": "Volar"
+			},
+			{
 				"command": "volar.action.writeTemplateLsVirtualFiles",
 				"title": "Write Template LS Virtual Files",
 				"category": "Volar (Debug)"

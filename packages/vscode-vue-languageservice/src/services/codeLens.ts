@@ -74,7 +74,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 					},
 					command: {
 						title: 'ref sugar ' + (data.labels.length ? '☑' : '☐'),
-						command: Commands.SWITCH_REF_SUGAR,
+						command: data.labels.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
 						arguments: [uri],
 					},
 				});

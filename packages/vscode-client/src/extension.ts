@@ -19,6 +19,7 @@ import * as tsPlugin from './features/tsPlugin';
 import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
+import * as removeRefSugars from './features/removeRefSugars';
 
 let apiClient: lsp.LanguageClient;
 let docClient: lsp.LanguageClient;
@@ -35,6 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	tagNameCase.activate(context, apiClient);
 	attrNameCase.activate(context, apiClient);
 	callGraph.activate(context, apiClient);
+	removeRefSugars.activate(context, apiClient);
 	showReferences.activate(context, apiClient);
 	documentVersion.activate(context, docClient);
 	documentContent.activate(context, apiClient);

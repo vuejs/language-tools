@@ -25,7 +25,8 @@ export function register(connection: vscode.Connection, enabledTsPlugin: boolean
 		commands: [
 			vue.Commands.HTML_TO_PUG,
 			vue.Commands.PUG_TO_HTML,
-			vue.Commands.SWITCH_REF_SUGAR,
+			vue.Commands.USE_REF_SUGAR,
+			vue.Commands.UNUSE_REF_SUGAR,
 			vue.Commands.SHOW_REFERENCES,
 			vue.Commands.CONVERT_TO_KEBAB_CASE,
 			vue.Commands.CONVERT_TO_PASCAL_CASE,

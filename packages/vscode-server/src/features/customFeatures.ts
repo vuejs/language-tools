@@ -11,6 +11,43 @@ export function register(
 	documents: vscode.TextDocuments<TextDocument>,
 	servicesManager: ServicesManager,
 ) {
+	connection.onNotification(shared.RemoveAllRefSugars.type, async () => {
+
+		for (const [_, handler] of servicesManager.services) {
+
+			const ls = handler.getLanguageServiceDontCreate();
+			if (!ls) continue;
+
+			const progress = await connection.window.createWorkDoneProgress();
+			progress.begin('Remove Ref Sugars', 0, '', true);
+
+			const progress_2 = await connection.window.createWorkDoneProgress();
+			progress_2.begin('Find Ref Sugar References', 0, '', true);
+
+			const { sourceFiles } = ls.__internal__.getContext();
+			const sourceFiles_2 = sourceFiles.getAll();
+			const workspaceEdit: vscode.WorkspaceEdit = { changes: {} };
+
+			for (let i = 0; i < sourceFiles_2.length; i++) {
+
+				if (progress.token.isCancellationRequested)
+					break;
+
+				const sourceFile = sourceFiles_2[i];
+				progress.report(i / sourceFiles_2.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(sourceFile.uri)));
+				const edits = await ls.__internal__.getUnrefSugarEdits(sourceFile.uri, progress_2);
+
+				if (edits.length) {
+					workspaceEdit.changes![sourceFile.uri] = edits;
+				}
+			}
+
+			connection.workspace.applyEdit(workspaceEdit)
+
+			progress_2.done();
+			progress.done();
+		}
+	});
 	connection.onNotification(shared.RestartServerNotification.type, async () => {
 		servicesManager.restartAll();
 	});

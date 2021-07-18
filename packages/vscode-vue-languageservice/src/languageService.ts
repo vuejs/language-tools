@@ -38,6 +38,7 @@ import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
+import * as unrefSugar from './commands/unuseRefSugar';
 import type * as emmet from 'vscode-emmet-helper';
 // context
 import * as fs from 'fs';
@@ -259,9 +260,10 @@ export function createLanguageService(
 			getGlobalDocs: () => [globalDoc],
 			getContext: apiHook(() => context),
 			getD3: apiHook(d3.register(context)),
-			executeCommand: apiHook(executeCommand.register(context, references.register(context), definitions.register(context).onType)),
+			executeCommand: apiHook(executeCommand.register(context, references.register(context))),
 			detectTagNameCase: apiHook(tagNameCase.register(context)),
 			doRefAutoClose: apiHook(refAutoClose.register(context), false),
+			getUnrefSugarEdits: apiHook(unrefSugar.register(context, references.register(context)), false),
 		},
 	};
 

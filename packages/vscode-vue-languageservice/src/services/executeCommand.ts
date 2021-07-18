@@ -9,15 +9,16 @@ import { execute as executeUseRefSugar } from '../commands/useRefSugar';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register(
-	{ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceContext,
+	context: ApiLanguageServiceContext,
 	findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
-	findTypeDefinition: (uri: string, position: vscode.Position) => vscode.LocationLink[],
 ) {
+
+	const { sourceFiles, ts } = context;
 
 	return async (uri: string, command: string, args: any[] | undefined, connection: vscode.Connection) => {
 
 		if (command === Commands.SHOW_REFERENCES && args) {
-			executeShowReferences(args[0], args[1], args[2], connection);
+			await executeShowReferences(args[0], args[1], args[2], connection);
 		}
 
 		const sourceFile = sourceFiles.get(uri);
@@ -26,30 +27,23 @@ export function register(
 
 		const document = sourceFile.getTextDocument();
 
-		if (command === Commands.SWITCH_REF_SUGAR) {
-
-			const scriptSetupData = sourceFile.getScriptSetupData();
-			if (!scriptSetupData)
-				return;
-
-			if (scriptSetupData.labels.length) {
-				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, findTypeDefinition, scriptTsLs);
-			}
-			else {
-				executeUseRefSugar(ts, document, sourceFile, connection, findReferences);
-			}
+		if (command === Commands.USE_REF_SUGAR) {
+			await executeUseRefSugar(ts, document, sourceFile, connection, findReferences);
+		}
+		if (command === Commands.UNUSE_REF_SUGAR) {
+			await executeUnuseRefSugar(connection, context, uri, findReferences);
 		}
 		if (command === Commands.HTML_TO_PUG) {
-			executeHtmlToPug(document, sourceFile, connection);
+			await executeHtmlToPug(document, sourceFile, connection);
 		}
 		if (command === Commands.PUG_TO_HTML) {
-			executePugToHtml(document, sourceFile, connection);
+			await executePugToHtml(document, sourceFile, connection);
 		}
 		if (command === Commands.CONVERT_TO_KEBAB_CASE) {
-			executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'kebab');
+			await executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'kebab');
 		}
 		if (command === Commands.CONVERT_TO_PASCAL_CASE) {
-			executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'pascal');
+			await executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'pascal');
 		}
 	}
 }

@@ -72,3 +72,6 @@ export namespace TsVersionChanged {
 export namespace UseWorkspaceTsdkChanged {
 	export const type: vscode.NotificationType<boolean> = new rpc.NotificationType('volar.useWorkspaceTsdkChanged');
 }
+export namespace RemoveAllRefSugars {
+	export const type: vscode.NotificationType<undefined> = new rpc.NotificationType('volar/removeAllRefSugars');
+}
