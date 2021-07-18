@@ -45,19 +45,22 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			withTeleports(tsLoc.uri, tsLoc.range.start, true);
 
 			// ts -> vue
+			let originSelectionRange: vscode.Range | undefined;
 			for (const tsLoc_2 of tsResult) {
-
-				let targetUri: string | undefined;
-				let targetRange: vscode.Range | undefined;
-				let targetSelectionRange: vscode.Range | undefined;
-				let originSelectionRange: vscode.Range | undefined;
-
 				if (tsLoc_2.originSelectionRange) {
 					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
 						originSelectionRange = vueLoc.range;
 						break;
 					}
 				}
+				if (originSelectionRange)
+					break;
+			}
+			for (const tsLoc_2 of tsResult) {
+
+				let targetUri: string | undefined;
+				let targetRange: vscode.Range | undefined;
+				let targetSelectionRange: vscode.Range | undefined;
 
 				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
 					targetUri = vueLoc.uri;
