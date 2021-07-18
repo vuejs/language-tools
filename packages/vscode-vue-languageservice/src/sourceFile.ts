@@ -120,27 +120,42 @@ export function createSourceFile(
 	const templatetTsSourceMaps = computed(() => {
 		const result = [
 			templateLsScript.sourceMap.value,
-			templateLsScript.sourceMapForSuggestion.value,
 			templateLsTemplateScript.sourceMap.value,
 			templateLsMainScript.sourceMap.value,
-			// scriptLsScript.sourceMap.value,
 		].filter(shared.notEmpty);
 		return result;
 	});
-	const templateLsDocs = computed(() => {
+	const scriptTsSourceMaps = computed(() => {
+		const result = [
+			scriptLsScript.sourceMap.value,
+			scriptLsScript.sourceMapForSuggestion.value,
+		].filter(shared.notEmpty);
+		return result;
+	});
+	const templateLsDocuments = computed(() => {
 
 		const docs = new Map<string, TextDocument>();
 
 		docs.set(templateLsMainScript.textDocument.value.uri, templateLsMainScript.textDocument.value);
 		docs.set(templateLsScript.textDocument.value.uri, templateLsScript.textDocument.value);
-		if (templateLsScript.textDocumentForSuggestion.value)
-			docs.set(templateLsScript.textDocumentForSuggestion.value.uri, templateLsScript.textDocumentForSuggestion.value);
+
 		if (templateLsTemplateScript.textDocument.value)
 			docs.set(templateLsTemplateScript.textDocument.value.uri, templateLsTemplateScript.textDocument.value);
 
 		return docs;
 	});
-	const tsSourceMaps = computed(() => [
+	const scriptLsDocuments = computed(() => {
+
+		const docs = new Map<string, TextDocument>();
+
+		docs.set(scriptLsScript.textDocument.value.uri, scriptLsScript.textDocument.value);
+
+		if (scriptLsScript.textDocumentForSuggestion.value)
+			docs.set(scriptLsScript.textDocumentForSuggestion.value.uri, scriptLsScript.textDocumentForSuggestion.value);
+
+		return docs;
+	});
+	const allTsSourceMaps = computed(() => [
 		scriptLsScript.sourceMap.value,
 		...templatetTsSourceMaps.value,
 	]);
@@ -162,7 +177,7 @@ export function createSourceFile(
 		getDiagnostics: untrack(getDiagnostics),
 		getScriptTsDocument: untrack(() => scriptLsScript.textDocument.value),
 		getScriptTsSourceMap: untrack(() => scriptLsScript.sourceMap.value),
-		getTsSourceMaps: untrack(() => tsSourceMaps.value),
+		getTsSourceMaps: untrack(() => allTsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssLsStyles.sourceMaps.value),
 		getJsonSourceMaps: untrack(() => virtualJsonBlocks.sourceMaps.value),
 		getHtmlSourceMaps: untrack(() => virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
@@ -174,7 +189,6 @@ export function createSourceFile(
 		].filter(shared.notEmpty)),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
-		getTemplateLsDocs: untrack(() => templateLsDocs.value),
 		getVirtualScript: untrack(() => ({
 			document: templateLsScript.textDocument.value,
 			sourceMap: templateLsScript.sourceMap.value,
@@ -194,15 +208,17 @@ export function createSourceFile(
 			cssSourceMaps: cssLsStyles.sourceMaps,
 			htmlSourceMap: virtualTemplateRaw.htmlSourceMap,
 			templateTsSourceMaps: templatetTsSourceMaps,
-			templateTsDocuments: templateLsDocs,
-			templateMainTsDocument: templateLsMainScript.textDocument,
+			templateTsDocuments: templateLsDocuments,
+			scriptTsDocuments: scriptLsDocuments,
+			scriptTsTeleport: scriptLsScript.teleportSourceMap,
+			scriptTsSourceMaps: scriptTsSourceMaps,
 			templaetTsTeleports: computed(() => [
 				templateLsTemplateScript.teleportSourceMap.value,
 				templateLsScript.teleportSourceMap.value,
 			].filter(shared.notEmpty)),
-			scriptTsDocument: scriptLsScript.textDocument,
-			scriptTsTeleport: scriptLsScript.teleportSourceMap,
-			scriptTsSourceMap: scriptLsScript.sourceMap,
+			scriptTsTeleports: computed(() => [
+				scriptLsScript.teleportSourceMap.value,
+			].filter(shared.notEmpty)),
 		},
 	};
 

@@ -61,9 +61,15 @@ export function useTemplateLsScript(
 				shared.getValidScriptSyntax('js')
 	});
 	const textDocument = computed(() => {
+		let _lang = lang.value;
+		if (lsType === 'template') {
+			// force use TS to support template type-checking with <script lang="js">
+			if (_lang === 'js') _lang = 'ts';
+			if (_lang === 'jsx') _lang = 'tsx';
+		}
 		return TextDocument.create(
-			lsType === 'template' ? `${uri}.__VLS_script.${lang.value}` : `${uri}.${lang.value}`,
-			shared.syntaxToLanguageId(lang.value),
+			lsType === 'template' ? `${uri}.__VLS_script.${_lang}` : `${uri}.${_lang}`,
+			shared.syntaxToLanguageId(_lang),
 			version++,
 			codeGen.value.getText(),
 		);

@@ -1,22 +1,24 @@
 import { hyphenate } from '@vue/shared';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import type { SourceFile } from '../sourceFile';
+import type { ApiLanguageServiceContext } from '../types';
 
 export async function execute(
-	document: TextDocument,
-	sourceFile: SourceFile,
 	connection: vscode.Connection,
+	{ sourceFiles }: ApiLanguageServiceContext,
+	uri: string,
 	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 	mode: 'kebab' | 'pascal',
 ) {
+
+	const sourceFile = sourceFiles.get(uri);
 
 	const desc = sourceFile.getDescriptor();
 	if (!desc.template) return;
 
 	const template = desc.template;
+	const document = sourceFile.getTextDocument();
 
-	const virtualDoc = sourceFile.getTemplateLsDocs().get(sourceFile.uri + '.__VLS_template.ts');
+	const virtualDoc = sourceFiles.getTsDocuments('template').get(sourceFile.uri + '.__VLS_template.ts');
 	if (!virtualDoc) return;
 
 	const edits: vscode.TextEdit[] = [];

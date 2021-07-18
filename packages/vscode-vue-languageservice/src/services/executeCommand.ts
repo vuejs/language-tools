@@ -40,10 +40,10 @@ export function register(
 			await executePugToHtml(document, sourceFile, connection);
 		}
 		if (command === Commands.CONVERT_TO_KEBAB_CASE) {
-			await executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'kebab');
+			await executeConvertTagNameCase(connection, context, uri, findReferences, 'kebab');
 		}
 		if (command === Commands.CONVERT_TO_PASCAL_CASE) {
-			await executeConvertTagNameCase(document, sourceFile, connection, findReferences, 'pascal');
+			await executeConvertTagNameCase(connection, context, uri, findReferences, 'pascal');
 		}
 	}
 }

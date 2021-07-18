@@ -81,8 +81,9 @@ export function createSourceFiles() {
 				const map = new Map<string, TextDocument>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					const tsDoc = sourceFile.refs.scriptTsDocument.value;
-					map.set(tsDoc.uri, tsDoc);
+					for (const [_, tsDoc] of sourceFile.refs.scriptTsDocuments.value) {
+						map.set(tsDoc.uri, tsDoc);
+					}
 				}
 				return map;
 			}),
@@ -99,8 +100,9 @@ export function createSourceFiles() {
 				const map = new Map<string, TsSourceMap>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					const sourceMap = sourceFile.refs.scriptTsSourceMap.value;
-					map.set(sourceMap.mappedDocument.uri, sourceMap);
+					for (const sourceMap of sourceFile.refs.scriptTsSourceMaps.value) {
+						map.set(sourceMap.mappedDocument.uri, sourceMap);
+					}
 				}
 				return map;
 			}),
@@ -108,8 +110,9 @@ export function createSourceFiles() {
 				const map = new Map<string, SourceFile>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					const tsDoc = sourceFile.refs.scriptTsDocument.value;
-					map.set(tsDoc.uri, sourceFile);
+					for (const [_, tsDoc] of sourceFile.refs.scriptTsDocuments.value) {
+						map.set(tsDoc.uri, sourceFile);
+					}
 				}
 				return map;
 			}),
@@ -144,7 +147,7 @@ export function createSourceFiles() {
 			for (const lsType of ['script', 'template'] as const) {
 				const sourceFile = sourceFiles[uri.toLowerCase()];
 				if (sourceFile) {
-					for (const sourceMap of lsType === 'script' ? [sourceFile.refs.scriptTsSourceMap.value] : sourceFile.refs.templateTsSourceMaps.value) {
+					for (const sourceMap of lsType === 'script' ? sourceFile.refs.scriptTsSourceMaps.value : sourceFile.refs.templateTsSourceMaps.value) {
 						for (const tsRange of sourceMap.getMappedRanges(start, end)) {
 							yield {
 								lsType,
