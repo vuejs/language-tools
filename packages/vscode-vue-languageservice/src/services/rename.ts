@@ -113,6 +113,10 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 	}
 	async function doTsRenameWorker(lsType: 'script' | 'template', tsUri: string, position: vscode.Position, newName: string, loopChecker = dedupe.createLocationSet()) {
 
+		if (loopChecker.has({ uri: tsUri, range: { start: position, end: position } }))
+			return;
+		loopChecker.add({ uri: tsUri, range: { start: position, end: position } });
+
 		const tsLs = getTsLs(lsType);
 		const tsResult = await tsLs.doRename(
 			tsUri,

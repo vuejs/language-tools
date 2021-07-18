@@ -49,6 +49,10 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 			function withTeleports(uri: string, position: vscode.Position) {
 
+				if (loopChecker.has({ uri: uri, range: { start: position, end: position } }))
+					return;
+				loopChecker.add({ uri: uri, range: { start: position, end: position } });
+
 				const tsLocs = tsLs.findReferences(
 					uri,
 					position,

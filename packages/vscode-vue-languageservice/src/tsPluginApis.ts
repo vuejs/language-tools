@@ -59,6 +59,9 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 			return symbols.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty);
 
 			function withTeleports(fileName: string, position: number) {
+				if (loopChecker.has(fileName + ':' + position))
+					return;
+				loopChecker.add(fileName + ':' + position);
 				const _symbols = mode === 'definition' ? tsLs.__internal__.raw.getDefinitionAtPosition(fileName, position)
 					: mode === 'typeDefinition' ? tsLs.__internal__.raw.getTypeDefinitionAtPosition(fileName, position)
 						: mode === 'references' ? tsLs.__internal__.raw.getReferencesAtPosition(fileName, position)
@@ -105,6 +108,9 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 			};
 
 			function withTeleports(fileName: string, position: number) {
+				if (loopChecker.has(fileName + ':' + position))
+					return;
+				loopChecker.add(fileName + ':' + position);
 				const _symbols = tsLs.__internal__.raw.getDefinitionAndBoundSpan(fileName, position);
 				if (!_symbols) return;
 				if (!textSpan) {
@@ -146,6 +152,9 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 			return symbols.map(s => transformReferencedSymbol(lsType, s)).filter(shared.notEmpty);
 
 			function withTeleports(fileName: string, position: number) {
+				if (loopChecker.has(fileName + ':' + position))
+					return;
+				loopChecker.add(fileName + ':' + position);
 				const _symbols = tsLs.__internal__.raw.findReferences(fileName, position);
 				if (!_symbols) return;
 				symbols = symbols.concat(_symbols);
