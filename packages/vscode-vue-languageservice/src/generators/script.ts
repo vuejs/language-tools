@@ -27,10 +27,10 @@ export function generate(
 	writeScript();
 	writeScriptSetup();
 
-	if (lsType === 'template') {
-		codeGen.addText(`\n// @ts-ignore\n`);
-		codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
-	}
+	// TODO: remove in future
+	codeGen.addText(`\n// @ts-ignore\n`);
+	codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
+
 	if (lsType === 'template' || shouldPatchExportDefault)
 		writeExportComponent();
 

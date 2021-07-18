@@ -161,6 +161,7 @@ export function createSourceFile(
 		getComponentCompletionData: untrack(getComponentCompletionData),
 		getDiagnostics: untrack(getDiagnostics),
 		getScriptTsDocument: untrack(() => scriptLsScript.textDocument.value),
+		getScriptTsSourceMap: untrack(() => scriptLsScript.sourceMap.value),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssLsStyles.sourceMaps.value),
 		getJsonSourceMaps: untrack(() => virtualJsonBlocks.sourceMaps.value),

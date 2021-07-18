@@ -1,4 +1,3 @@
-import type { Position } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { Commands } from '../commands';
 import { execute as executeConvertTagNameCase } from '../commands/convertTagNameCase';
@@ -9,7 +8,11 @@ import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
 import { execute as executeUseRefSugar } from '../commands/useRefSugar';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceContext, findReferences: (uri: string, position: Position) => vscode.Location[]) {
+export function register(
+	{ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceContext,
+	findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
+	findTypeDefinition: (uri: string, position: vscode.Position) => vscode.LocationLink[],
+) {
 
 	return async (uri: string, command: string, args: any[] | undefined, connection: vscode.Connection) => {
 
@@ -30,7 +33,7 @@ export function register({ sourceFiles, scriptTsLs, ts }: ApiLanguageServiceCont
 				return;
 
 			if (scriptSetupData.labels.length) {
-				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, scriptTsLs);
+				executeUnuseRefSugar(ts, document, sourceFile, connection, findReferences, findTypeDefinition, scriptTsLs);
 			}
 			else {
 				executeUseRefSugar(ts, document, sourceFile, connection, findReferences);

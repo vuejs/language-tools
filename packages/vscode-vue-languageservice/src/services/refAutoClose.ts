@@ -2,6 +2,7 @@ import type { ApiLanguageServiceContext } from '../types';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import * as shared from '@volar/shared';
+import type * as ts2 from 'vscode-typescript-languageservice';
 
 export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext) {
 
@@ -25,21 +26,8 @@ export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext
 				continue;
 
 			const typeDefs = tsLs.findTypeDefinition(tsLoc.uri, tsLoc.range.start);
-			for (const typeDefine of typeDefs) {
-				const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
-				const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-				const defineDoc = tsLs.__internal__.getTextDocument(uri);
-				if (!defineDoc)
-					continue;
-				const typeName = defineDoc.getText(range);
-				if (uri.endsWith('reactivity.d.ts')) {
-					switch (typeName) {
-						case 'Ref':
-						case 'ComputedRef':
-						case 'WritableComputedRef':
-							return '${1:.value}';
-					}
-				}
+			if (isRefType(typeDefs, tsLs)) {
+				return '${1:.value}';
 			}
 		}
 	}
@@ -67,4 +55,24 @@ export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext
 			return _isBlacklistNode;
 		}
 	}
+}
+
+export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageService) {
+	for (const typeDefine of typeDefs) {
+		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
+		const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
+		if (uri.endsWith('reactivity.d.ts')) {
+			const defineDoc = tsLs.__internal__.getTextDocument(uri);
+			if (!defineDoc)
+				continue;
+			const typeName = defineDoc.getText(range);
+			switch (typeName) {
+				case 'Ref':
+				case 'ComputedRef':
+				case 'WritableComputedRef':
+					return true;
+			}
+		}
+	}
+	return false;
 }
