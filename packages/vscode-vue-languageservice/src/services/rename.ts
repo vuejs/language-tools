@@ -139,8 +139,14 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 					loopChecker.add({ uri: editUri, range: textEdit.range });
 
 					const teleport = sourceFiles.getTsTeleports(lsType).get(editUri);
+
 					if (!teleport)
 						continue;
+
+					if (
+						!teleport.allowCrossFile
+						&& sourceFiles.getSourceFileByTsUri(lsType, editUri) !== sourceFiles.getSourceFileByTsUri(lsType, tsUri)
+					) continue;
 
 					for (const teleRange of teleport.findTeleports(textEdit.range.start, textEdit.range.end)) {
 						if (!teleRange.sideData.capabilities.rename)

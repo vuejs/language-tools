@@ -62,14 +62,21 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				for (const tsLoc_2 of tsLocs) {
 					loopChecker.add({ uri: tsLoc_2.uri, range: tsLoc_2.range });
 					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType).get(tsLoc_2.uri);
-					if (teleport) {
-						for (const teleRange of teleport.findTeleports(tsLoc_2.range.start, tsLoc_2.range.end)) {
-							if (!teleRange.sideData.capabilities.references)
-								continue;
-							if (loopChecker.has({ uri: tsLoc_2.uri, range: teleRange }))
-								continue;
-							withTeleports(tsLoc_2.uri, teleRange.start);
-						}
+
+					if (!teleport)
+						continue;
+
+					if (
+						!teleport.allowCrossFile
+						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.uri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
+					) continue;
+
+					for (const teleRange of teleport.findTeleports(tsLoc_2.range.start, tsLoc_2.range.end)) {
+						if (!teleRange.sideData.capabilities.references)
+							continue;
+						if (loopChecker.has({ uri: tsLoc_2.uri, range: teleRange }))
+							continue;
+						withTeleports(tsLoc_2.uri, teleRange.start);
 					}
 				}
 			}

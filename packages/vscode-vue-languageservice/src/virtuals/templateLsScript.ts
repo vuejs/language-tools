@@ -122,7 +122,7 @@ export function useTemplateLsScript(
 	});
 	const teleportSourceMap = computed(() => {
 		const doc = textDocument.value;
-		const sourceMap = new TeleportSourceMap(doc);
+		const sourceMap = new TeleportSourceMap(doc, false);
 		for (const teleport of codeGen.value.teleports) {
 			sourceMap.add(teleport);
 		}

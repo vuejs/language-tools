@@ -355,7 +355,7 @@ export function useTemplateLsTemplateScript(
 				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.getText());
 				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, templateCodeGens.value.formatCodeGen.getText());
 
-				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value);
+				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {
 					sourceMap.add(maped);
 				}

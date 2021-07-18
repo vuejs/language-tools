@@ -118,6 +118,7 @@ export class PugSourceMap extends SourceMaps.SourceMap<undefined> {
 export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData> {
 	constructor(
 		public document: TextDocument,
+		public allowCrossFile: boolean,
 	) {
 		super(document, document);
 	}

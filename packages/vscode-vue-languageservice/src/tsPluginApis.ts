@@ -73,18 +73,25 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				for (const ref of _symbols) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
-					if (teleport) {
-						for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-							if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
-								continue;
-							if ((mode === 'references') && !teleRange.sideData.capabilities.references)
-								continue;
-							if ((mode === 'rename') && !teleRange.sideData.capabilities.rename)
-								continue;
-							if (loopChecker.has(ref.fileName + ':' + teleRange.start))
-								continue;
-							withTeleports(ref.fileName, teleRange.start);
-						}
+
+					if (!teleport)
+						continue;
+
+					if (
+						!teleport.allowCrossFile
+						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
+					) continue;
+
+					for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
+							continue;
+						if ((mode === 'references') && !teleRange.sideData.capabilities.references)
+							continue;
+						if ((mode === 'rename') && !teleRange.sideData.capabilities.rename)
+							continue;
+						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+							continue;
+						withTeleports(ref.fileName, teleRange.start);
 					}
 				}
 			}
@@ -121,14 +128,21 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				for (const ref of _symbols.definitions) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
-					if (teleport) {
-						for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-							if (!teleRange.sideData.capabilities.definitions)
-								continue;
-							if (loopChecker.has(ref.fileName + ':' + teleRange.start))
-								continue;
-							withTeleports(ref.fileName, teleRange.start);
-						}
+
+					if (!teleport)
+						continue;
+
+					if (
+						!teleport.allowCrossFile
+						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
+					) continue;
+
+					for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+						if (!teleRange.sideData.capabilities.definitions)
+							continue;
+						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+							continue;
+						withTeleports(ref.fileName, teleRange.start);
 					}
 				}
 			}
@@ -162,14 +176,21 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 					for (const ref of symbol.references) {
 						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 						const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
-						if (teleport) {
-							for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-								if (!teleRange.sideData.capabilities.references)
-									continue;
-								if (loopChecker.has(ref.fileName + ':' + teleRange.start))
-									continue;
-								withTeleports(ref.fileName, teleRange.start);
-							}
+
+						if (!teleport)
+							continue;
+
+						if (
+							!teleport.allowCrossFile
+							&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
+						) continue;
+
+						for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
+							if (!teleRange.sideData.capabilities.references)
+								continue;
+							if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+								continue;
+							withTeleports(ref.fileName, teleRange.start);
 						}
 					}
 				}
