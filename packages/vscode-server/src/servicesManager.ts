@@ -28,15 +28,24 @@ export function createServicesManager(
 	const tsConfigSet = new Set(rootPaths.map(rootPath => originalTs.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
 	const tsConfigs = [...tsConfigSet].filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)));
 	const checkedProject = new Set<string>();
+	const progressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
 
-	for (const tsConfig of tsConfigs) {
-		onTsConfigChanged(tsConfig);
-	}
+	(async () => {
+		const progress = await getTsconfigProgress(tsConfigs);
+		clearDiagnostics();
+		for (const tsConfig of tsConfigs) {
+			updateLsHandler(tsConfig, progress[tsConfig]);
+		}
+		updateAllOpenedDocumentsDiagnostics();
+	})();
 	for (const rootPath of rootPaths) {
 		originalTs.sys.watchDirectory!(rootPath, async fileName => {
 			if (tsConfigNames.includes(upath.basename(fileName))) {
 				// tsconfig.json changed
-				onTsConfigChanged(fileName);
+				const progress = await getTsconfigProgress([fileName]);
+				clearDiagnostics();
+				updateLsHandler(fileName, progress[fileName]);
+				updateAllOpenedDocumentsDiagnostics();
 			}
 			else {
 				// *.vue, *.ts ... changed
@@ -69,6 +78,21 @@ export function createServicesManager(
 		restartAll,
 	};
 
+	async function getTsconfigProgress(tsconfigs: string[]) {
+		for (const tsconfig of tsconfigs) {
+			if (!progressMap.has(tsconfig)) {
+				progressMap.set(tsconfig, connection.window.createWorkDoneProgress());
+			}
+		}
+		const result: Record<string, vscode.WorkDoneProgressServerReporter> = {};
+		for (const tsconfig of tsconfigs) {
+			const progress = progressMap.get(tsconfig);
+			if (progress) {
+				result[tsconfig] = await progress;
+			}
+		}
+		return result;
+	}
 	async function onDocumentUpdated(changeDoc: TextDocument) {
 
 		if (!getDocVersionForDiag) return;
@@ -91,7 +115,7 @@ export function createServicesManager(
 			await sendDocumentDiagnostics(doc.uri, changedFileName, isCancel);
 		}
 	}
-	async function onFileUpdated(fileName?: string) {
+	async function updateAllOpenedDocumentsDiagnostics(changedFileName?: string) {
 
 		if (!getDocVersionForDiag) return;
 
@@ -104,7 +128,7 @@ export function createServicesManager(
 		}
 
 		for (const doc of openedDocs) {
-			await sendDocumentDiagnostics(doc.uri, fileName);
+			await sendDocumentDiagnostics(doc.uri, changedFileName);
 		}
 	}
 	function getIsCancel(uri: string, version: number) {
@@ -149,20 +173,15 @@ export function createServicesManager(
 			}
 		}
 	}
-	async function onTsConfigChanged(tsConfig: string) {
-		const _ts = getTs();
-		const ts = _ts.module;
-		const tsLocalized = _ts.localized;
-		for (const doc of documents.all()) {
-			if (doc.languageId === 'vue') {
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
-			}
-		}
+	function updateLsHandler(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
 		if (services.has(tsConfig)) {
 			services.get(tsConfig)?.dispose();
 			tsConfigWatchers.get(tsConfig)?.close();
 			services.delete(tsConfig);
 		}
+		const _ts = getTs();
+		const ts = _ts.module;
+		const tsLocalized = _ts.localized;
 		if (ts.sys.fileExists(tsConfig)) {
 			services.set(tsConfig, createServiceHandler(
 				mode,
@@ -170,29 +189,41 @@ export function createServicesManager(
 				ts,
 				tsLocalized,
 				documents,
-				onFileUpdated,
+				updateAllOpenedDocumentsDiagnostics,
 				_onProjectFilesUpdate,
-				await connection.window.createWorkDoneProgress(),
+				progress,
 				connection,
 			));
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
-					onTsConfigChanged(tsConfig);
+					clearDiagnostics();
+					updateLsHandler(tsConfig, progress);
+					updateAllOpenedDocumentsDiagnostics();
 				}
 			}));
 		}
-		onFileUpdated();
 	}
-	function restartAll() {
+	function clearDiagnostics() {
 		for (const doc of documents.all()) {
 			if (doc.languageId === 'vue') {
 				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 			}
 		}
-		for (const tsConfig of [...services.keys()]) {
-			onTsConfigChanged(tsConfig);
+	}
+	async function restartAll() {
+		for (const doc of documents.all()) {
+			if (doc.languageId === 'vue') {
+				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+			}
 		}
-		onFileUpdated();
+		const tsConfigs = [...services.keys()];
+		progressMap.clear();
+		const progress = await getTsconfigProgress(tsConfigs);
+		clearDiagnostics();
+		for (const tsConfig of tsConfigs) {
+			updateLsHandler(tsConfig, progress[tsConfig]);
+		}
+		updateAllOpenedDocumentsDiagnostics();
 	}
 	function getMatchService(uri: string) {
 		const tsConfig = getMatchTsConfig(uri);
