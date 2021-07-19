@@ -7,10 +7,12 @@ export async function getFormatOptions(
 	document: TextDocument,
 	options?: vscode.FormattingOptions
 ): Promise<ts.FormatCodeSettings> {
-	const config = await connection.workspace.getConfiguration({
+	let config = await connection.workspace.getConfiguration({
 		section: isTypeScriptDocument(document) ? 'typescript.format' : 'javascript.format',
 		scopeUri: document.uri
 	});
+
+	config = config ?? {};
 
 	return {
 		tabSize: options?.tabSize,
@@ -42,7 +44,7 @@ export async function getPreferences(
 	connection: vscode.Connection,
 	document: TextDocument
 ): Promise<ts.UserPreferences> {
-	const [config, preferencesConfig] = await connection.workspace.getConfiguration([
+	let [config, preferencesConfig] = await connection.workspace.getConfiguration([
 		{
 			section: isTypeScriptDocument(document) ? 'typescript' : 'javascript',
 			scopeUri: document.uri
@@ -52,6 +54,9 @@ export async function getPreferences(
 			scopeUri: document.uri
 		}
 	]);
+
+	config = config ?? {};
+	preferencesConfig = preferencesConfig ?? {};
 
 	const preferences: ts.UserPreferences & { displayPartsForJSDoc: true } = {
 		quotePreference: getQuoteStylePreference(preferencesConfig),
