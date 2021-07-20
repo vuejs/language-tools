@@ -137,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 function useDocDescriptor() {
 
 	const splitDocText = ref('');
-	const splitDocDescriptor = computed(() => parse(splitDocText.value, { sourceMap: false }).descriptor);
+	const splitDocDescriptor = computed(() => parse(splitDocText.value, { sourceMap: false, ignoreEmpty: false }).descriptor);
 
 	return getDescriptor;
 

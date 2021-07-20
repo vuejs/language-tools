@@ -222,7 +222,7 @@ export function createSourceFile(
 	};
 
 	function update(newVueDocument: TextDocument) {
-		const parsedSfc = vueSfc.parse(newVueDocument.getText(), { sourceMap: false });
+		const parsedSfc = vueSfc.parse(newVueDocument.getText(), { sourceMap: false, ignoreEmpty: false });
 		const newDescriptor = parsedSfc.descriptor;
 		const versionsBeforeUpdate = [
 			templateLsScript.textDocument.value?.version,

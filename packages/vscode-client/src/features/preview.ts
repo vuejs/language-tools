@@ -54,7 +54,7 @@ function updatePanel(_panel: vscode.WebviewPanel) {
 					range: [number, number],
 				};
 				const doc = await vscode.workspace.openTextDocument(data.fileName);
-				const sfc = parse(doc.getText(), { sourceMap: false });
+				const sfc = parse(doc.getText(), { sourceMap: false, ignoreEmpty: false });
 				const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 				const start = doc.positionAt(data.range[0] + offset);
 				const end = doc.positionAt(data.range[1] + offset);
