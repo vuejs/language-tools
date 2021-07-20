@@ -2,7 +2,7 @@ import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
-import { getGlobalDoc } from './virtuals/global';
+import { createGlobalDefineDocument } from './utils/globalDoc';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
@@ -121,7 +121,7 @@ export function createLanguageService(
 	const scriptTsLsRaw = vueHost.createTsLanguageService(scriptTsHost);
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
-	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
+	const globalDoc = createGlobalDefineDocument(vueHost.getCurrentDirectory());
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {

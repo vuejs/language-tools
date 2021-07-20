@@ -602,15 +602,21 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 		return getter();
 	}
 	function useComponentCompletionData(sourceFile: SourceFile) {
-		const { templateLsTemplateScript, virtualTemplateRaw, templateScriptData } = sourceFile.refs;
+
+		const {
+			sfcTemplateScript,
+			sfcTemplate,
+			templateScriptData,
+		} = sourceFile.refs;
+
 		const templateTsProjectVersion = ref<string>();
 		const result = computed(() => {
 			{ // watching
 				templateTsProjectVersion.value;
 			}
 			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[], slot: vscode.CompletionItem[] }>();
-			if (templateLsTemplateScript.textDocument.value && virtualTemplateRaw.textDocument.value) {
-				const doc = templateLsTemplateScript.textDocument.value;
+			if (sfcTemplateScript.textDocument.value && sfcTemplate.textDocument.value) {
+				const doc = sfcTemplateScript.textDocument.value;
 				const text = doc.getText();
 				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
 					const tagName = (tag.data as TsCompletionData).name;

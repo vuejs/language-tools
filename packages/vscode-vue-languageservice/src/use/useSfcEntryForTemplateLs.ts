@@ -6,7 +6,7 @@ import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
 import * as shared from '@volar/shared';
 
-export function useTemplateLsMainScript(
+export function useSfcEntryForTemplateLs(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,

@@ -4,7 +4,7 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
-export function useTemplateRaw(
+export function useSfcTemplate(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
 	context: LanguageServiceContext,

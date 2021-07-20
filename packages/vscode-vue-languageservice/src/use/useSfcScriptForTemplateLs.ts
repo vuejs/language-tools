@@ -9,7 +9,7 @@ import { generate as genScript } from '../generators/script';
 import { generate as genScriptSuggestion } from '../generators/script_suggestion';
 import * as templateGen from '../generators/template_scriptSetup';
 
-export function useTemplateLsScript(
+export function useSfcScriptForTemplateLs(
 	lsType: 'template' | 'script',
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDoc: Ref<TextDocument>,

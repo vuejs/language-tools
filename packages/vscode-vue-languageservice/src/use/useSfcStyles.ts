@@ -6,7 +6,7 @@ import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
 
-export function useStylesRaw(
+export function useSfcStyles(
 	context: LanguageServiceContext,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,

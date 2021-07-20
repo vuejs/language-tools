@@ -4,7 +4,7 @@ import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
-export function useScriptRaw(
+export function useSfcScript(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
 ) {

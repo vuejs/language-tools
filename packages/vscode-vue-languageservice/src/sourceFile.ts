@@ -8,13 +8,13 @@ import type { Data as TsCompletionData } from 'vscode-typescript-languageservice
 import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from './types';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import { useJsonsRaw } from './virtuals/jsons.raw';
-import { useScriptRaw } from './virtuals/scriptRaw';
-import { useStylesRaw } from './virtuals/styles.raw';
-import { useTemplateRaw } from './virtuals/template.raw';
-import { useTemplateLsMainScript } from './virtuals/templateLsMainScript';
-import { useTemplateLsScript } from './virtuals/templateLsScript';
-import { useTemplateLsTemplateScript } from './virtuals/templateLsTemplateScript';
+import { useSfcJsons } from './use/useSfcJsons';
+import { useSfcScript } from './use/useSfcScript';
+import { useSfcStyles } from './use/useSfcStyles';
+import { useSfcTemplate } from './use/useSfcTemplate';
+import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
+import { useSfcScriptForTemplateLs } from './use/useSfcScriptForTemplateLs';
+import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 
 export const defaultLanguages = {
 	template: 'html',
@@ -25,11 +25,12 @@ export const defaultLanguages = {
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(
-	document: TextDocument,
+	_document: TextDocument,
 	context: LanguageServiceContext,
 ) {
-	// sources
-	const vueDoc = ref(document);
+
+	// refs
+	const document = ref(_document);
 	const descriptor = reactive<IDescriptor>({
 		template: null,
 		script: null,
@@ -37,7 +38,7 @@ export function createSourceFile(
 		styles: [],
 		customBlocks: [],
 	});
-	const lastUpdateChanged = {
+	const lastUpdated = {
 		template: false,
 		script: false,
 		scriptSetup: false,
@@ -53,21 +54,21 @@ export function createSourceFile(
 		htmlElementItems: [],
 	});
 	const vueHtmlDocument = computed(() => {
-		return context.htmlLs.parseHTMLDocument(vueDoc.value);
+		return context.htmlLs.parseHTMLDocument(document.value);
 	});
 	const sfcErrors = ref<vscode.Diagnostic[]>([]);
 
-	// virtual scripts
-	const _virtualStyles = useStylesRaw(context, untrack(() => vueDoc.value), computed(() => descriptor.styles));
-	const virtualJsonBlocks = useJsonsRaw(untrack(() => vueDoc.value), computed(() => descriptor.customBlocks), context);
-	const virtualTemplateRaw = useTemplateRaw(untrack(() => vueDoc.value), computed(() => descriptor.template), context);
-	const templateData = computed<undefined | {
+	// use
+	const sfcStyles = useSfcStyles(context, untrack(() => document.value), computed(() => descriptor.styles));
+	const sfcJsons = useSfcJsons(untrack(() => document.value), computed(() => descriptor.customBlocks), context);
+	const sfcTemplate = useSfcTemplate(untrack(() => document.value), computed(() => descriptor.template), context);
+	const sfcTemplateData = computed<undefined | {
 		sourceLang: 'html' | 'pug',
 		html: string,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	}>(() => {
-		if (virtualTemplateRaw.pugDocument.value) {
-			const pugDoc = virtualTemplateRaw.pugDocument.value;
+		if (sfcTemplate.pugDocument.value) {
+			const pugDoc = sfcTemplate.pugDocument.value;
 			return {
 				sourceLang: 'pug',
 				html: pugDoc.htmlCode,
@@ -87,137 +88,115 @@ export function createSourceFile(
 			}
 		}
 	});
-	const templateLsTemplateScript = useTemplateLsTemplateScript(
-		untrack(() => vueDoc.value),
+	const sfcTemplateScript = useSfcTemplateScript(
+		untrack(() => document.value),
 		computed(() => descriptor.template),
 		templateScriptData,
-		_virtualStyles.textDocuments,
-		_virtualStyles.sourceMaps,
-		templateData,
+		sfcStyles.textDocuments,
+		sfcStyles.sourceMaps,
+		sfcTemplateData,
 		context,
 	);
-	const cssLsStyles = {
-		textDocuments: computed(() => [templateLsTemplateScript.cssTextDocument.value, ..._virtualStyles.textDocuments.value].filter(shared.notEmpty)),
-		sourceMaps: computed(() => [templateLsTemplateScript.cssSourceMap.value, ..._virtualStyles.sourceMaps.value].filter(shared.notEmpty)),
-	};
-	const docLsScript = useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.script));
-	const docLsScriptSetup = useScriptRaw(untrack(() => vueDoc.value), computed(() => descriptor.scriptSetup));
-	const templateLsScript = useTemplateLsScript('template', context.modules.typescript, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
-	const templateLsMainScript = useTemplateLsMainScript(untrack(() => vueDoc.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
-	const scriptLsScript = useTemplateLsScript('script', context.modules.typescript, vueDoc, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => templateData.value?.html));
+	const sfcScript = useSfcScript(untrack(() => document.value), computed(() => descriptor.script));
+	const sfcScriptSetup = useSfcScript(untrack(() => document.value), computed(() => descriptor.scriptSetup));
+	const sfcScriptForTemplateLs = useSfcScriptForTemplateLs('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
+	const sfcScriptForScriptLs = useSfcScriptForTemplateLs('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
+	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(untrack(() => document.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
-	// map / set
-	const templatetTsSourceMaps = computed(() => {
-		const result = [
-			templateLsScript.sourceMap.value,
-			templateLsTemplateScript.sourceMap.value,
-			templateLsMainScript.sourceMap.value,
-		].filter(shared.notEmpty);
-		return result;
-	});
-	const scriptTsSourceMaps = computed(() => {
-		const result = [
-			scriptLsScript.sourceMap.value,
-			scriptLsScript.sourceMapForSuggestion.value,
-		].filter(shared.notEmpty);
-		return result;
-	});
-	const templateLsDocuments = computed(() => {
-
-		const docs = new Map<string, TextDocument>();
-
-		docs.set(templateLsMainScript.textDocument.value.uri, templateLsMainScript.textDocument.value);
-		docs.set(templateLsScript.textDocument.value.uri, templateLsScript.textDocument.value);
-
-		if (templateLsTemplateScript.textDocument.value)
-			docs.set(templateLsTemplateScript.textDocument.value.uri, templateLsTemplateScript.textDocument.value);
-
-		return docs;
-	});
-	const scriptLsDocuments = computed(() => {
-
-		const docs = new Map<string, TextDocument>();
-
-		docs.set(scriptLsScript.textDocument.value.uri, scriptLsScript.textDocument.value);
-
-		if (scriptLsScript.textDocumentForSuggestion.value)
-			docs.set(scriptLsScript.textDocumentForSuggestion.value.uri, scriptLsScript.textDocumentForSuggestion.value);
-
-		return docs;
-	});
-	const allTsSourceMaps = computed(() => [
-		scriptLsScript.sourceMap.value,
-		...templatetTsSourceMaps.value,
+	// getters
+	const cssLsDocuments = computed(() => [
+		sfcTemplateScript.cssTextDocument.value,
+		...sfcStyles.textDocuments.value,
+	].filter(shared.notEmpty));
+	const cssLsSourceMaps = computed(() => [
+		sfcTemplateScript.cssSourceMap.value,
+		...sfcStyles.sourceMaps.value,
+	].filter(shared.notEmpty));
+	const templateLsSourceMaps = computed(() => [
+		sfcScriptForTemplateLs.sourceMap.value,
+		sfcTemplateScript.sourceMap.value,
+		sfcEntryForTemplateLs.sourceMap.value,
+	].filter(shared.notEmpty));
+	const scriptLsSourceMaps = computed(() => [
+		sfcScriptForScriptLs.sourceMap.value,
+		sfcScriptForScriptLs.sourceMapForSuggestion.value,
+	].filter(shared.notEmpty));
+	const templateLsDocuments = computed(() => [
+		sfcEntryForTemplateLs.textDocument.value,
+		sfcScriptForTemplateLs.textDocument.value,
+		sfcTemplateScript.textDocument.value,
+	].filter(shared.notEmpty));
+	const scriptLsDocuments = computed(() => [
+		sfcScriptForScriptLs.textDocument.value,
+		sfcScriptForScriptLs.textDocumentForSuggestion.value,
+	].filter(shared.notEmpty));
+	const tsSourceMaps = computed(() => [
+		sfcScriptForScriptLs.sourceMap.value,
+		...templateLsSourceMaps.value,
 	]);
+	const templateLsTeleports = computed(() => [
+		sfcTemplateScript.teleportSourceMap.value,
+		sfcScriptForTemplateLs.teleportSourceMap.value,
+	].filter(shared.notEmpty));
 
-	update(document);
+	update(_document);
 
 	return {
-		uri: document.uri,
-		getTemplateTagNames: untrack(() => templateLsTemplateScript.templateCodeGens.value?.tagNames),
-		getTemplateAttrNames: untrack(() => templateLsTemplateScript.templateCodeGens.value?.attrNames),
-		getTextDocument: untrack(() => vueDoc.value),
+		uri: _document.uri,
+		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
+		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
+		getTextDocument: untrack(() => document.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
-		getScriptTsDocument: untrack(() => scriptLsScript.textDocument.value),
-		getScriptTsSourceMap: untrack(() => scriptLsScript.sourceMap.value),
-		getTsSourceMaps: untrack(() => allTsSourceMaps.value),
-		getCssSourceMaps: untrack(() => cssLsStyles.sourceMaps.value),
-		getJsonSourceMaps: untrack(() => virtualJsonBlocks.sourceMaps.value),
-		getHtmlSourceMaps: untrack(() => virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
-		getPugSourceMaps: untrack(() => virtualTemplateRaw.pugSourceMap.value ? [virtualTemplateRaw.pugSourceMap.value] : []),
+		getScriptTsDocument: untrack(() => sfcScriptForScriptLs.textDocument.value),
+		getScriptTsSourceMap: untrack(() => sfcScriptForScriptLs.sourceMap.value),
+		getTsSourceMaps: untrack(() => tsSourceMaps.value),
+		getCssSourceMaps: untrack(() => cssLsSourceMaps.value),
+		getJsonSourceMaps: untrack(() => sfcJsons.sourceMaps.value),
+		getHtmlSourceMaps: untrack(() => sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
+		getPugSourceMaps: untrack(() => sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getTeleports: untrack(() => [
-			templateLsTemplateScript.teleportSourceMap.value,
-			templateLsScript.teleportSourceMap.value,
+			sfcTemplateScript.teleportSourceMap.value,
+			sfcScriptForTemplateLs.teleportSourceMap.value,
 		].filter(shared.notEmpty)),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getVirtualScript: untrack(() => ({
-			document: templateLsScript.textDocument.value,
-			sourceMap: templateLsScript.sourceMap.value,
+			document: sfcScriptForTemplateLs.textDocument.value,
+			sourceMap: sfcScriptForTemplateLs.sourceMap.value,
 		})),
-		getScriptSetupData: untrack(() => templateLsScript.scriptSetupRanges.value),
+		getScriptSetupData: untrack(() => sfcScriptForTemplateLs.scriptSetupRanges.value),
 		docLsScripts: untrack(() => ({
-			documents: [docLsScript.textDocument.value, docLsScriptSetup.textDocument.value].filter(shared.notEmpty),
-			sourceMaps: [docLsScript.sourceMap.value, docLsScriptSetup.sourceMap.value].filter(shared.notEmpty),
+			documents: [sfcScript.textDocument.value, sfcScriptSetup.textDocument.value].filter(shared.notEmpty),
+			sourceMaps: [sfcScript.sourceMap.value, sfcScriptSetup.sourceMap.value].filter(shared.notEmpty),
 		})),
 		getTemplateFormattingScript: untrack(() => ({
-			document: templateLsTemplateScript.textDocumentForFormatting.value,
-			sourceMap: templateLsTemplateScript.sourceMapForFormatting.value,
+			document: sfcTemplateScript.textDocumentForFormatting.value,
+			sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
 		})),
 		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
 
 		refs: {
-			// diagnostics / completioins
-			cssLsStyles,
-			virtualJsonBlocks,
-			scriptLsScript,
-			lastUpdateChanged,
-			sfcErrors,
-			virtualTemplateRaw,
+			vueDoc: document,
 			descriptor,
-			vueDoc,
-			templateLsTemplateScript,
-			templateScriptData,
-			templateLsScript,
-			templatetTsSourceMaps,
+			lastUpdated,
+			sfcErrors,
 
-			// source files
-			cssSourceMaps: cssLsStyles.sourceMaps,
-			htmlSourceMap: virtualTemplateRaw.htmlSourceMap,
-			templateTsSourceMaps: templatetTsSourceMaps,
-			templateTsDocuments: templateLsDocuments,
-			scriptTsDocuments: scriptLsDocuments,
-			scriptTsTeleport: scriptLsScript.teleportSourceMap,
-			scriptTsSourceMaps: scriptTsSourceMaps,
-			templaetTsTeleports: computed(() => [
-				templateLsTemplateScript.teleportSourceMap.value,
-				templateLsScript.teleportSourceMap.value,
-			].filter(shared.notEmpty)),
-			scriptTsTeleports: computed(() => [
-				scriptLsScript.teleportSourceMap.value,
-			].filter(shared.notEmpty)),
+			sfcJsons,
+			sfcTemplate,
+			sfcTemplateScript,
+			sfcScriptForScriptLs,
+			sfcScriptForTemplateLs,
+			templateScriptData,
+
+			cssLsDocuments,
+			cssLsSourceMaps,
+			scriptLsDocuments,
+			scriptLsSourceMaps,
+			templateLsDocuments,
+			templateLsSourceMaps,
+			templateLsTeleports,
 		},
 	};
 
@@ -225,8 +204,8 @@ export function createSourceFile(
 		const parsedSfc = vueSfc.parse(newDocument.getText(), { sourceMap: false, ignoreEmpty: false });
 		const newDescriptor = parsedSfc.descriptor;
 		const versionsBeforeUpdate = [
-			templateLsScript.textDocument.value?.version,
-			templateLsTemplateScript.textDocument.value?.version,
+			sfcScriptForTemplateLs.textDocument.value?.version,
+			sfcTemplateScript.textDocument.value?.version,
 		];
 
 		updateSfcErrors();
@@ -235,15 +214,15 @@ export function createSourceFile(
 		updateScriptSetup(newDescriptor);
 		updateStyles(newDescriptor);
 		updateCustomBlocks(newDescriptor);
-		templateLsTemplateScript.update(); // TODO
+		sfcTemplateScript.update(); // TODO
 
-		if (newDocument.getText() !== vueDoc.value.getText()) {
-			vueDoc.value = newDocument;
+		if (newDocument.getText() !== document.value.getText()) {
+			document.value = newDocument;
 		}
 
 		const versionsAfterUpdate = [
-			templateLsScript.textDocument.value?.version,
-			templateLsTemplateScript.textDocument.value?.version,
+			sfcScriptForTemplateLs.textDocument.value?.version,
+			sfcTemplateScript.textDocument.value?.version,
 		];
 
 		return {
@@ -282,7 +261,7 @@ export function createSourceFile(
 				},
 			} : null;
 
-			lastUpdateChanged.template = descriptor.template?.content !== newData?.content;
+			lastUpdated.template = descriptor.template?.content !== newData?.content;
 
 			if (descriptor.template && newData) {
 				descriptor.template.lang = newData.lang;
@@ -305,7 +284,7 @@ export function createSourceFile(
 				},
 			} : null;
 
-			lastUpdateChanged.script = descriptor.script?.content !== newData?.content;
+			lastUpdated.script = descriptor.script?.content !== newData?.content;
 
 			if (descriptor.script && newData) {
 				descriptor.script.src = newData.src;
@@ -328,7 +307,7 @@ export function createSourceFile(
 				},
 			} : null;
 
-			lastUpdateChanged.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
+			lastUpdated.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
 
 			if (descriptor.scriptSetup && newData) {
 				descriptor.scriptSetup.lang = newData.lang;
@@ -404,7 +383,7 @@ export function createSourceFile(
 		}
 		templateScriptData.projectVersion = newVersion;
 
-		const doc = templateLsMainScript.textDocument.value;
+		const doc = sfcEntryForTemplateLs.textDocument.value;
 		const docText = doc.getText();
 		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context))) : [];
 		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
@@ -439,11 +418,11 @@ export function createSourceFile(
 		templateScriptData.htmlElements = htmlElementNames;
 		templateScriptData.componentItems = components;
 		templateScriptData.htmlElementItems = globalEls;
-		templateLsTemplateScript.update(); // TODO
+		sfcTemplateScript.update(); // TODO
 		return true;
 	}
 	function shouldVerifyTsScript(templateTsHost: ts.LanguageServiceHost, tsUri: string, mode: 1 | 2 | 3 | 4): 'all' | 'none' | 'unused' {
-		if (tsUri.toLowerCase() === templateLsScript.textDocumentForSuggestion.value?.uri.toLowerCase()) {
+		if (tsUri.toLowerCase() === sfcScriptForTemplateLs.textDocumentForSuggestion.value?.uri.toLowerCase()) {
 			if (mode === 3) {
 				return 'all';
 			}
@@ -454,9 +433,9 @@ export function createSourceFile(
 			}
 			return 'none';
 		}
-		if (tsUri.toLowerCase() === templateLsScript.textDocument.value?.uri.toLowerCase()) {
+		if (tsUri.toLowerCase() === sfcScriptForTemplateLs.textDocument.value?.uri.toLowerCase()) {
 			if (mode === 3) {
-				return !templateLsScript.textDocumentForSuggestion.value ? 'all' : 'none';
+				return !sfcScriptForTemplateLs.textDocumentForSuggestion.value ? 'all' : 'none';
 			}
 			return 'all';
 		}

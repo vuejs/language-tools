@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { join } from 'upath';
 
-export function getGlobalDoc(root: string) {
+export function createGlobalDefineDocument(root: string) {
 	let code = `
 import * as vue_1 from '@vue/runtime-dom';
 import type { FunctionalComponent as FunctionalComponent_1 } from '@vue/runtime-dom';

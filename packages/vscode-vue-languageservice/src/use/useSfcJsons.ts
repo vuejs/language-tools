@@ -4,7 +4,7 @@ import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import type * as json from 'vscode-json-languageservice';
 
-export function useJsonsRaw(
+export function useSfcJsons(
 	getUnreactiveDoc: () => TextDocument,
 	customBlocks: Ref<IDescriptor['customBlocks']>,
 	context: LanguageServiceContext,

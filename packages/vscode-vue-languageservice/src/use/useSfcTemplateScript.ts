@@ -10,7 +10,7 @@ import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from '../typ
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
-export function useTemplateLsTemplateScript(
+export function useSfcTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
 	templateScriptData: ITemplateScriptData,

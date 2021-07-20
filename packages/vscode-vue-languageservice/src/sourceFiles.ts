@@ -16,7 +16,7 @@ export function createSourceFiles() {
 		const map = new Map<string, CssSourceMap>();
 		for (const key in sourceFiles) {
 			const sourceFile = sourceFiles[key]!;
-			for (const sourceMap of sourceFile.refs.cssSourceMaps.value) {
+			for (const sourceMap of sourceFile.refs.cssLsSourceMaps.value) {
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
 			}
 		}
@@ -26,8 +26,8 @@ export function createSourceFiles() {
 		const map = new Map<string, HtmlSourceMap>();
 		for (const key in sourceFiles) {
 			const sourceFile = sourceFiles[key]!;
-			if (sourceFile.refs.htmlSourceMap.value) {
-				const sourceMap = sourceFile.refs.htmlSourceMap.value;
+			if (sourceFile.refs.sfcTemplate.htmlSourceMap.value) {
+				const sourceMap = sourceFile.refs.sfcTemplate.htmlSourceMap.value;
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
 			}
 		}
@@ -39,7 +39,7 @@ export function createSourceFiles() {
 				const map = new Map<string, TextDocument>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const [_, tsDoc] of sourceFile.refs.templateTsDocuments.value) {
+					for (const tsDoc of sourceFile.refs.templateLsDocuments.value) {
 						map.set(tsDoc.uri, tsDoc);
 					}
 				}
@@ -49,7 +49,7 @@ export function createSourceFiles() {
 				const map = new Map<string, TeleportSourceMap>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const sourceMap of sourceFile.refs.templaetTsTeleports.value) {
+					for (const sourceMap of sourceFile.refs.templateLsTeleports.value) {
 						map.set(sourceMap.mappedDocument.uri, sourceMap);
 					}
 				}
@@ -59,7 +59,7 @@ export function createSourceFiles() {
 				const map = new Map<string, TsSourceMap>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const sourceMap of sourceFile.refs.templateTsSourceMaps.value) {
+					for (const sourceMap of sourceFile.refs.templateLsSourceMaps.value) {
 						map.set(sourceMap.mappedDocument.uri, sourceMap);
 					}
 				}
@@ -69,7 +69,7 @@ export function createSourceFiles() {
 				const map = new Map<string, SourceFile>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const [_, tsDoc] of sourceFile.refs.templateTsDocuments.value) {
+					for (const tsDoc of sourceFile.refs.templateLsDocuments.value) {
 						map.set(tsDoc.uri, sourceFile);
 					}
 				}
@@ -81,7 +81,7 @@ export function createSourceFiles() {
 				const map = new Map<string, TextDocument>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const [_, tsDoc] of sourceFile.refs.scriptTsDocuments.value) {
+					for (const tsDoc of sourceFile.refs.scriptLsDocuments.value) {
 						map.set(tsDoc.uri, tsDoc);
 					}
 				}
@@ -91,7 +91,7 @@ export function createSourceFiles() {
 				const map = new Map<string, TeleportSourceMap>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					const sourceMap = sourceFile.refs.scriptTsTeleport.value;
+					const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
 					map.set(sourceMap.mappedDocument.uri, sourceMap);
 				}
 				return map;
@@ -100,7 +100,7 @@ export function createSourceFiles() {
 				const map = new Map<string, TsSourceMap>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const sourceMap of sourceFile.refs.scriptTsSourceMaps.value) {
+					for (const sourceMap of sourceFile.refs.scriptLsSourceMaps.value) {
 						map.set(sourceMap.mappedDocument.uri, sourceMap);
 					}
 				}
@@ -110,7 +110,7 @@ export function createSourceFiles() {
 				const map = new Map<string, SourceFile>();
 				for (const key in sourceFiles) {
 					const sourceFile = sourceFiles[key]!;
-					for (const [_, tsDoc] of sourceFile.refs.scriptTsDocuments.value) {
+					for (const tsDoc of sourceFile.refs.scriptLsDocuments.value) {
 						map.set(tsDoc.uri, sourceFile);
 					}
 				}
@@ -147,7 +147,7 @@ export function createSourceFiles() {
 			for (const lsType of ['script', 'template'] as const) {
 				const sourceFile = sourceFiles[uri.toLowerCase()];
 				if (sourceFile) {
-					for (const sourceMap of lsType === 'script' ? sourceFile.refs.scriptTsSourceMaps.value : sourceFile.refs.templateTsSourceMaps.value) {
+					for (const sourceMap of lsType === 'script' ? sourceFile.refs.scriptLsSourceMaps.value : sourceFile.refs.templateLsSourceMaps.value) {
 						for (const tsRange of sourceMap.getMappedRanges(start, end)) {
 							yield {
 								lsType,

@@ -28,18 +28,19 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 	function useDiagnostics(sourceFile: SourceFile) {
 
 		const {
-			cssLsStyles,
-			virtualJsonBlocks,
-			scriptLsScript,
-			lastUpdateChanged,
+			cssLsDocuments,
+			cssLsSourceMaps,
+			sfcJsons,
+			sfcScriptForScriptLs,
+			lastUpdated: lastUpdateChanged,
 			sfcErrors,
-			virtualTemplateRaw,
+			sfcTemplate,
 			descriptor,
 			vueDoc,
-			templateLsTemplateScript,
+			sfcTemplateScript,
 			templateScriptData,
-			templateLsScript,
-			templatetTsSourceMaps,
+			sfcScriptForTemplateLs,
+			templateLsSourceMaps: templateTsSourceMaps,
 		} = sourceFile.refs;
 
 		const templateTsProjectVersion = ref<string>();
@@ -52,8 +53,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			result: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
 			cache: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
 		}, number, vscode.Diagnostic[]][] = [
-				[useStylesValidation(computed(() => cssLsStyles.textDocuments.value)), 0, []],
-				[useJsonsValidation(computed(() => virtualJsonBlocks.textDocuments.value)), 0, []],
+				[useStylesValidation(computed(() => cssLsDocuments.value)), 0, []],
+				[useJsonsValidation(computed(() => sfcJsons.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
 				[useScriptExistValidation(), 0, []],
 			];
@@ -69,11 +70,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			result: ComputedRef<vscode.Diagnostic[]>;
 			cache: ComputedRef<vscode.Diagnostic[]>;
 		}, number, vscode.Diagnostic[]][] = [
-				[useScriptValidation(scriptLsScript.textDocument, 1), 0, []],
-				[useScriptValidation(scriptLsScript.textDocument, 2), 0, []],
-				[useScriptValidation(computed(() => scriptLsScript.textDocumentForSuggestion.value ?? scriptLsScript.textDocument.value), 3), 0, []],
+				[useScriptValidation(sfcScriptForScriptLs.textDocument, 1), 0, []],
+				[useScriptValidation(sfcScriptForScriptLs.textDocument, 2), 0, []],
+				[useScriptValidation(computed(() => sfcScriptForScriptLs.textDocumentForSuggestion.value ?? sfcScriptForScriptLs.textDocument.value), 3), 0, []],
 				// [useScriptValidation(virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
-				[useScriptValidation(computed(() => anyNoUnusedEnabled ? scriptLsScript.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
+				[useScriptValidation(computed(() => anyNoUnusedEnabled ? sfcScriptForScriptLs.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
 			];
 
 		return async (response: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
@@ -153,15 +154,15 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
-				if (virtualTemplateRaw.textDocument.value && virtualTemplateRaw.htmlDocument.value) {
-					return getVueCompileErrors(virtualTemplateRaw.textDocument.value);
+				if (sfcTemplate.textDocument.value && sfcTemplate.htmlDocument.value) {
+					return getVueCompileErrors(sfcTemplate.textDocument.value);
 				}
 				return [];
 			});
 			const pugErrors = computed(() => {
 				const result: vscode.Diagnostic[] = [];
-				if (virtualTemplateRaw.textDocument.value && virtualTemplateRaw.pugDocument.value) {
-					const pugDoc = virtualTemplateRaw.pugDocument.value;
+				if (sfcTemplate.textDocument.value && sfcTemplate.pugDocument.value) {
+					const pugDoc = sfcTemplate.pugDocument.value;
 					const astError = pugDoc.error;
 					if (astError) {
 						result.push({
@@ -213,8 +214,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 								}
 								vueCompileError.message += errorText;
 								vueCompileError.range = {
-									start: virtualTemplateRaw.textDocument.value.positionAt(0),
-									end: virtualTemplateRaw.textDocument.value.positionAt(virtualTemplateRaw.textDocument.value.getText().length),
+									start: sfcTemplate.textDocument.value.positionAt(0),
+									end: sfcTemplate.textDocument.value.positionAt(sfcTemplate.textDocument.value.getText().length),
 								};
 								result.push(vueCompileError);
 							}
@@ -231,10 +232,10 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap = computed(() => {
-				if (!virtualTemplateRaw.textDocument.value) return [];
+				if (!sfcTemplate.textDocument.value) return [];
 				return [
-					...toSourceDiags(htmlErrors.value, virtualTemplateRaw.textDocument.value.uri, virtualTemplateRaw.htmlSourceMap.value ? [virtualTemplateRaw.htmlSourceMap.value] : []),
-					...toSourceDiags(pugErrors.value, virtualTemplateRaw.textDocument.value.uri, virtualTemplateRaw.pugSourceMap.value ? [virtualTemplateRaw.pugSourceMap.value] : []),
+					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
+					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
 				];
 			});
 			return {
@@ -320,7 +321,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				let result: vscode.Diagnostic[] = [];
 				for (const [uri, errs] of errors_cache.value) {
-					result = result.concat(toSourceDiags(errs, uri, cssLsStyles.sourceMaps.value));
+					result = result.concat(toSourceDiags(errs, uri, cssLsSourceMaps.value));
 				}
 				return result as vscode.Diagnostic[];
 			});
@@ -360,7 +361,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				let result: vscode.Diagnostic[] = [];
 				if (errors_cache.value) {
 					for (const [uri, errs] of await errors_cache.value) {
-						result = result.concat(toSourceDiags(errs, uri, virtualJsonBlocks.sourceMaps.value));
+						result = result.concat(toSourceDiags(errs, uri, sfcJsons.sourceMaps.value));
 					}
 				}
 				return result as vscode.Diagnostic[];
@@ -373,7 +374,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		function useScriptExistValidation() {
 			const result = computed(() => {
 				const diags: vscode.Diagnostic[] = [];
-				if (!scriptTsLs.__internal__.getValidTextDocument(scriptLsScript.textDocument.value.uri)) {
+				if (!scriptTsLs.__internal__.getValidTextDocument(sfcScriptForScriptLs.textDocument.value.uri)) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
 						if (!script || script.content === '') continue;
 						const error = vscode.Diagnostic.create(
@@ -426,7 +427,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templatetTsSourceMaps.value);
+				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templateTsSourceMaps.value);
 				if (onlyUnusedCheck) {
 					result = result.filter(error => error.tags?.includes(vscode.DiagnosticTag.Unnecessary));
 				}
@@ -442,7 +443,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				if (mode === 1) { // watching
 					templateTsProjectVersion.value;
 				}
-				const doc = templateLsTemplateScript.textDocument.value;
+				const doc = sfcTemplateScript.textDocument.value;
 				if (!doc) return [];
 				if (mode === 1) {
 					return templateTsLs.doValidation(doc.uri, { semantic: true });
@@ -460,18 +461,18 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			});
 			const errors_2 = computed(() => {
 				const result: vscode.Diagnostic[] = [];
-				if (!templateLsTemplateScript.textDocument.value
-					|| !templateLsTemplateScript.teleportSourceMap.value
+				if (!sfcTemplateScript.textDocument.value
+					|| !sfcTemplateScript.teleportSourceMap.value
 				) return result;
 				for (const diag of errors_1.value) {
-					const spanText = templateLsTemplateScript.textDocument.value.getText(diag.range);
+					const spanText = sfcTemplateScript.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = templateLsTemplateScript.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
+					const propRights = sfcTemplateScript.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
 					for (const propRight of propRights) {
 						if (propRight.data.isAdditionalReference) continue;
-						const definitions = templateTsLs.findDefinition(templateLsTemplateScript.textDocument.value.uri, propRight.start);
+						const definitions = templateTsLs.findDefinition(sfcTemplateScript.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
-							if (definition.targetUri !== templateLsScript.textDocument.value.uri) continue;
+							if (definition.targetUri !== sfcScriptForTemplateLs.textDocument.value.uri) continue;
 							result.push({
 								...diag,
 								range: definition.targetSelectionRange,
@@ -489,17 +490,17 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap = computed(() => {
-				const result_1 = templateLsTemplateScript.textDocument.value ? toTsSourceDiags(
+				const result_1 = sfcTemplateScript.textDocument.value ? toTsSourceDiags(
 					'template',
 					errors_1_cache.value,
-					templateLsTemplateScript.textDocument.value.uri,
-					templatetTsSourceMaps.value,
+					sfcTemplateScript.textDocument.value.uri,
+					templateTsSourceMaps.value,
 				) : [];
-				const result_2 = templateLsScript.textDocument.value ? toTsSourceDiags(
+				const result_2 = sfcScriptForTemplateLs.textDocument.value ? toTsSourceDiags(
 					'template',
 					errors_2_cache.value,
-					templateLsScript.textDocument.value.uri,
-					templatetTsSourceMaps.value,
+					sfcScriptForTemplateLs.textDocument.value.uri,
+					templateTsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
