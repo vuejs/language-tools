@@ -1,4 +1,3 @@
-import * as prettyhtml from '@starptech/prettyhtml';
 import * as shared from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import * as vueSfc from '@vue/compiler-sfc';
@@ -625,7 +624,7 @@ export function createSourceFile(
 								let htmlText = htmlDoc.getText(vueCompileError.range);
 								let errorText = '';
 								try {
-									errorText += '\n```html\n' + prettyhtml(htmlText).contents.trim() + '\n```'; // may thorw
+									errorText += '\n```html\n' + htmlText.trim() + '\n```'; // may thorw
 								} catch (error) {
 									errorText += '\n```html\n' + htmlText.trim() + '\n```'; // may thorw
 									errorText += '\n```json\n' + JSON.stringify(error, null, 2) + '\n```';
