@@ -1,16 +1,18 @@
 import * as shared from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
-import { hyphenate, capitalize, camelize, isGloballyWhitelisted } from '@vue/shared';
-import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
+import { computed, ref } from '@vue/reactivity';
+import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
 import * as path from 'upath';
-import * as emmet from 'vscode-emmet-helper';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as html from 'vscode-html-languageservice';
+import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
 import { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 import { CompletionData } from '../types';
+import { SearchTexts } from '../utils/string';
+import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
 
 export const triggerCharacter = {
@@ -83,7 +85,7 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost }: ApiLanguageServiceContext) {
+export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs }: ApiLanguageServiceContext) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -95,6 +97,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 		htmlResult?: vscode.CompletionList,
 		vueResult?: vscode.CompletionList,
 	} | undefined = undefined;
+	const componentCompletionDataGetters = new WeakMap<SourceFile, ReturnType<typeof useComponentCompletionData>>();
 
 	return async (
 		uri: string,
@@ -249,7 +252,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 				nameCases.attr = clientCases[1];
 			}
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-				const componentCompletion = sourceFile.getComponentCompletionData();
+				const componentCompletion = getComponentCompletionData(sourceFile);
 				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, vscode.CompletionItem>();
 				const globalAttributes: html.IAttributeData[] = [
@@ -588,6 +591,67 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs
 				}
 			}
 		}
+	}
+
+	function getComponentCompletionData(sourceFile: SourceFile) {
+		let getter = componentCompletionDataGetters.get(sourceFile);
+		if (!getter) {
+			getter = untrack(useComponentCompletionData(sourceFile));
+			componentCompletionDataGetters.set(sourceFile, getter);
+		}
+		return getter();
+	}
+	function useComponentCompletionData(sourceFile: SourceFile) {
+		const { templateLsTemplateScript, virtualTemplateRaw, templateScriptData } = sourceFile.refs;
+		const templateTsProjectVersion = ref<string>();
+		const result = computed(() => {
+			{ // watching
+				templateTsProjectVersion.value;
+			}
+			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[], slot: vscode.CompletionItem[] }>();
+			if (templateLsTemplateScript.textDocument.value && virtualTemplateRaw.textDocument.value) {
+				const doc = templateLsTemplateScript.textDocument.value;
+				const text = doc.getText();
+				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
+					const tagName = (tag.data as TsCompletionData).name;
+					let bind: vscode.CompletionItem[] = [];
+					let on: vscode.CompletionItem[] = [];
+					let slot: vscode.CompletionItem[] = [];
+					{
+						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
+						let offset = text.indexOf(searchText);
+						if (offset >= 0) {
+							offset += searchText.length;
+							bind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
+						}
+					}
+					{
+						const searchText = `__VLS_componentEmits['${tagName}']('`;
+						let offset = text.indexOf(searchText);
+						if (offset >= 0) {
+							offset += searchText.length;
+							on = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
+						}
+					}
+					{
+						const searchText = `__VLS_components_0['${tagName}'].__VLS_slots['`;
+						let offset = text.indexOf(searchText);
+						if (offset >= 0) {
+							offset += searchText.length;
+							slot = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
+						}
+					}
+					data.set(tagName, { item: tag, bind, on, slot });
+				}
+				const globalBind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
+				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });
+			}
+			return data;
+		});
+		return () => {
+			templateTsProjectVersion.value = templateTsLs.__internal__.host.getProjectVersion?.();
+			return result.value;
+		};
 	}
 }
 

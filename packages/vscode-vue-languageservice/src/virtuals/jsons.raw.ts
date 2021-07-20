@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as json from 'vscode-json-languageservice';
+import type * as json from 'vscode-json-languageservice';
 
 export function useJsonsRaw(
 	getUnreactiveDoc: () => TextDocument,

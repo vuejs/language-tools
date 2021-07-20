@@ -13,7 +13,7 @@ export function register(
 	findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 ) {
 
-	const { sourceFiles, ts } = context;
+	const { modules: { typescript: ts }, sourceFiles } = context;
 
 	return async (uri: string, command: string, args: any[] | undefined, connection: vscode.Connection) => {
 

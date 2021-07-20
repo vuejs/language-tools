@@ -34,7 +34,7 @@ export function register(
 }
 
 async function getUnRefSugarEdits(
-	{ sourceFiles, ts, scriptTsLs }: ApiLanguageServiceContext,
+	{ modules: { typescript: ts }, sourceFiles, scriptTsLs }: ApiLanguageServiceContext,
 	uri: string,
 	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 	progress?: vscode.WorkDoneProgressServerReporter,

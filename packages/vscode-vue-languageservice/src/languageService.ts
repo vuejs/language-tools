@@ -1,12 +1,12 @@
-import { TextDocument, Position } from 'vscode-languageserver-textdocument';
+import type * as vscode from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
 import { getGlobalDoc } from './virtuals/global';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
-import { DocumentContext, HTMLDocument } from 'vscode-html-languageservice';
-import { HtmlLanguageServiceContext, ApiLanguageServiceContext } from './types';
+import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules } from './types';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
 // vue services
@@ -39,37 +39,42 @@ import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
 import * as unrefSugar from './commands/unuseRefSugar';
-import type * as emmet from 'vscode-emmet-helper';
 // context
 import * as fs from 'fs';
+import * as emmet from 'vscode-emmet-helper';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
-import * as pug from 'vscode-pug-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
+import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
 
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
+	createTsLanguageService(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
 	schemaRequestService?: json.SchemaRequestService,
 };
-export type Dependencies = {
-	typescript: typeof import('typescript/lib/tsserverlibrary'),
-	// TODO: vscode-html-languageservice
-	// TODO: vscode-css-languageservice
-};
 
 export function getDocumentLanguageService(
-	{ typescript: ts }: Dependencies,
+	modules: { typescript: Modules['typescript'] },
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	formatters: Parameters<typeof formatting['register']>[3],
 ) {
-	const cache = new Map<string, [number, HTMLDocument]>();
+	const cache = new Map<string, [number, html.HTMLDocument]>();
 	const context: HtmlLanguageServiceContext = {
-		...createContext(ts),
+		modules: {
+			typescript: modules.typescript,
+			emmet,
+			css,
+			html,
+			json,
+			ts: ts2,
+			pug
+		},
+		...createContext(modules.typescript),
 		getHtmlDocument,
 	};
 	return {
@@ -91,11 +96,14 @@ export function getDocumentLanguageService(
 		return htmlDoc;
 	}
 }
+
 export function createLanguageService(
-	{ typescript: ts }: Dependencies,
+	modules: { typescript: Modules['typescript'] },
 	vueHost: LanguageServiceHost,
 	isTsPlugin = false,
 ) {
+
+	const { typescript: ts } = modules;
 
 	let vueProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
@@ -107,13 +115,15 @@ export function createLanguageService(
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
 
-	const templateTsLsHost = createTsLsHost('template');
-	const scriptTsLsHost = createTsLsHost('script');
-	const templateTsLs = ts2.createLanguageService(ts, templateTsLsHost);
-	const scriptTsLs = ts2.createLanguageService(ts, scriptTsLsHost);
+	const templateTsHost = createTsLsHost('template');
+	const scriptTsHost = createTsLsHost('script');
+	const templateTsLsRaw = vueHost.createTsLanguageService(templateTsHost);
+	const scriptTsLsRaw = vueHost.createTsLanguageService(scriptTsHost);
+	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
+	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
 	const globalDoc = getGlobalDoc(vueHost.getCurrentDirectory());
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
-	const documentContext: DocumentContext = {
+	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
 
 			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
@@ -147,13 +157,26 @@ export function createLanguageService(
 	}
 
 	const context: ApiLanguageServiceContext = {
-		...createContext(ts, vueHost),
+		modules: {
+			typescript: modules.typescript,
+			emmet,
+			css,
+			html,
+			json,
+			ts: ts2,
+			pug
+		},
+		...createContext(modules.typescript, vueHost),
 		vueHost,
 		sourceFiles,
+		templateTsHost,
+		scriptTsHost,
+		templateTsLsRaw,
+		scriptTsLsRaw,
 		templateTsLs,
 		scriptTsLs,
 		documentContext,
-		getTsLs,
+		getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs : scriptTsLs,
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findDefinition = definitions.register(context);
@@ -162,14 +185,15 @@ export function createLanguageService(
 	// ts plugin proxy
 	const _tsPluginApis = tsPluginApis.register(context);
 	const tsPlugin: Partial<ts.LanguageService> = {
-		getSemanticDiagnostics: apiHook(scriptTsLs.__internal__.raw.getSemanticDiagnostics, false),
-		getEncodedSemanticClassifications: apiHook(scriptTsLs.__internal__.raw.getEncodedSemanticClassifications, false),
+		getSemanticDiagnostics: apiHook(scriptTsLsRaw.getSemanticDiagnostics, false),
+		getEncodedSemanticClassifications: apiHook(scriptTsLsRaw.getEncodedSemanticClassifications, false),
 		getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-		getCompletionEntryDetails: apiHook(scriptTsLs.__internal__.raw.getCompletionEntryDetails, false), // not sure
-		getCompletionEntrySymbol: apiHook(scriptTsLs.__internal__.raw.getCompletionEntrySymbol, false), // not sure
-		getQuickInfoAtPosition: apiHook(scriptTsLs.__internal__.raw.getQuickInfoAtPosition, false),
-		getSignatureHelpItems: apiHook(scriptTsLs.__internal__.raw.getSignatureHelpItems, false),
-		getRenameInfo: apiHook(scriptTsLs.__internal__.raw.getRenameInfo, false),
+		getCompletionEntryDetails: apiHook(scriptTsLsRaw.getCompletionEntryDetails, false), // not sure
+		getCompletionEntrySymbol: apiHook(scriptTsLsRaw.getCompletionEntrySymbol, false), // not sure
+		getQuickInfoAtPosition: apiHook(scriptTsLsRaw.getQuickInfoAtPosition, false),
+		getSignatureHelpItems: apiHook(scriptTsLsRaw.getSignatureHelpItems, false),
+		getRenameInfo: apiHook(scriptTsLsRaw.getRenameInfo, false),
+
 		findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
 		getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
 		getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
@@ -193,7 +217,7 @@ export function createLanguageService(
 	};
 
 	// ts program proxy
-	const tsProgram = scriptTsLs.__internal__.raw.getProgram(); // TODO: handle template ls?
+	const tsProgram = scriptTsLsRaw.getProgram(); // TODO: handle template ls?
 	if (!tsProgram) throw '!tsProgram';
 
 	const tsProgramApis_2 = tsProgramApis.register(context);
@@ -249,7 +273,7 @@ export function createLanguageService(
 			rootPath: vueHost.getCurrentDirectory(),
 			tsPlugin,
 			tsProgramProxy,
-			getTsLs,
+			context,
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
 			},
@@ -267,10 +291,7 @@ export function createLanguageService(
 		},
 	};
 
-	function getTsLs(lsType: 'template' | 'script') {
-		return lsType === 'template' ? templateTsLs : scriptTsLs;
-	}
-	function isPositionInTemplate(uri: string, pos: Position) {
+	function isPositionInTemplate(uri: string, pos: vscode.Position) {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) {
@@ -544,12 +565,7 @@ export function createLanguageService(
 			const doc = getHostDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(
-					doc,
-					templateTsLs,
-					scriptTsLs,
-					context,
-				));
+				sourceFiles.set(uri, createSourceFile(doc, context));
 				vueScriptsUpdated = true;
 			}
 			else {
@@ -569,7 +585,7 @@ export function createLanguageService(
 		if (shouldUpdateTemplateScript) {
 			let currentNums = 0;
 			for (const uri of templateScriptUpdateUris) {
-				if (sourceFiles.get(uri)?.updateTemplateScript()) {
+				if (sourceFiles.get(uri)?.updateTemplateScript(templateTsLs)) {
 					vueTemplateScriptUpdated = true;
 				}
 				for (const cb of initProgressCallback) {
@@ -605,7 +621,7 @@ export function createLanguageService(
 	}
 }
 function createContext(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: Modules['typescript'],
 	vueHost?: LanguageServiceHost,
 ) {
 	const fileSystemProvider: html.FileSystemProvider = {

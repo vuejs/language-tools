@@ -22,8 +22,7 @@ export function register(
 ) {
 	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
-		const dummyTs = sharedServices.getDummyTsLs(context.ts, document, getPreferences, getFormatOptions);
-		const sourceFile = createSourceFile(document, dummyTs.ls, dummyTs.ls, context);
+		const sourceFile = createSourceFile(document, context);
 		let newDocument = document;
 
 		const pugEdits = getPugFormattingEdits(sourceFile, options);
@@ -167,7 +166,7 @@ export function register(
 
 		for (const sourceMap of tsSourceMaps) {
 			if (!sourceMap.capabilities.formatting) continue;
-			const dummyTs = sharedServices.getDummyTsLs(context.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+			const dummyTs = sharedServices.getDummyTsLs(context.modules.typescript, context.modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 			const textEdits = await dummyTs.ls.doFormatting(dummyTs.uri, options);
 			for (const textEdit of textEdits) {
 				for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {

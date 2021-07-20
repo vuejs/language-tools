@@ -2,7 +2,7 @@ import { CodeGen, createCodeGen, margeCodeGen } from '@volar/code-gen';
 import * as shared from '@volar/shared';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
-import * as css from 'vscode-css-languageservice';
+import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
@@ -36,8 +36,8 @@ export function useTemplateLsTemplateScript(
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = upath.basename(shared.uriToFsPath(_vueDoc.uri));
-	const cssModuleClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.module), context));
-	const cssScopedClasses = computed(() => cssClasses.parse(styleDocuments.value.filter(style => style.scoped), context));
+	const cssModuleClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.module), context));
+	const cssScopedClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {
 		if (!templateData.value)
 			return;

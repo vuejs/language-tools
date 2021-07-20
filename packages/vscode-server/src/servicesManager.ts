@@ -184,9 +184,9 @@ export function createServicesManager(
 		const tsLocalized = _ts.localized;
 		if (ts.sys.fileExists(tsConfig)) {
 			services.set(tsConfig, createServiceHandler(
+				ts,
 				mode,
 				tsConfig,
-				ts,
 				tsLocalized,
 				documents,
 				updateAllOpenedDocumentsDiagnostics,
@@ -248,7 +248,7 @@ export function createServicesManager(
 			const hasVueFile = parsedCommandLine.fileNames.some(fileName => upath.extname(fileName) === '.vue');
 			if (!hasVueFile) continue;
 			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.getTsLs('script').__internal__.getTextDocument(uri)) {
+			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.context.scriptTsLs.__internal__.getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
 				if (!upath.relative(tsConfigDir, fileName).startsWith('..')) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);

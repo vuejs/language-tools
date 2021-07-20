@@ -2,16 +2,16 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { IDescriptor, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import * as css from 'vscode-css-languageservice';
+import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
 
 export function useStylesRaw(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	context: LanguageServiceContext,
 	getUnreactiveDoc: () => TextDocument,
 	styles: Ref<IDescriptor['styles']>,
-	context: LanguageServiceContext,
 ) {
+	const { modules: { typescript: ts } } = context;
 	let version = 0;
 	const textDocuments = computed(() => {
 		const vueDoc = getUnreactiveDoc();

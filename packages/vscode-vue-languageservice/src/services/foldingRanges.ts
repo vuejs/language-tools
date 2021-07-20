@@ -14,11 +14,10 @@ export function register(
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
-	const { ts, htmlLs, getCssLs } = context;
+	const { htmlLs, getCssLs, modules } = context;
 	return (document: TextDocument) => {
 
-		const dummyTs = getDummyTsLs(ts, document, getPreferences, getFormatOptions);
-		const sourceFile = createSourceFile(document, dummyTs.ls, dummyTs.ls, context);
+		const sourceFile = createSourceFile(document, context);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
@@ -56,7 +55,7 @@ export function register(
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTs = getDummyTsLs(ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const foldingRanges = dummyTs.ls.getFoldingRanges(dummyTs.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}

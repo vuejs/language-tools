@@ -8,7 +8,7 @@ import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 
-export function register({ sourceFiles, getTsLs, ts, vueHost }: ApiLanguageServiceContext) {
+export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost }: ApiLanguageServiceContext) {
 	return async (item: vscode.CompletionItem, newOffset?: number) => {
 
 		const data: CompletionData | undefined = item.data;

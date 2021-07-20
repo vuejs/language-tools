@@ -4,7 +4,7 @@ import * as vscode from 'vscode-languageserver';
 import * as shared from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
 
-export function register({ sourceFiles, ts, getTsLs }: ApiLanguageServiceContext) {
+export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 	return (document: TextDocument, position: vscode.Position): string | undefined | null => {
 

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode-languageserver';
-import * as ShPlugin from 'typescript-vscode-sh-plugin';
 import * as completions from './services/completion';
 import * as completions2 from './services/completion2';
 import * as completionResolve from './services/completionResolve';
@@ -34,20 +33,9 @@ export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getPreferences?(document: TextDocument): Promise<ts.UserPreferences>;
 };
 
-export function createLanguageService(ts: typeof import('typescript/lib/tsserverlibrary'), _host: LanguageServiceHost) {
+export function createLanguageService(ts: typeof import('typescript/lib/tsserverlibrary'), host: LanguageServiceHost, languageService: ts.LanguageService) {
 
-	// @ts-ignore
-	const importSuggestionsCache = ts.Completions?.createImportSuggestionsForFileCache?.();
-	const host = {
-		..._host,
-		// @ts-ignore
-		// TODO: crash on 'addListener' from 'node:process', reuse because TS has same problem
-		getImportSuggestionsCache: () => importSuggestionsCache,
-	};
 	const documents = new Map<string, [string, TextDocument]>();
-	const shPlugin = ShPlugin({ typescript: ts });
-	let languageService = ts.createLanguageService(host);
-	languageService = shPlugin.decorate(languageService);
 
 	return {
 		findDefinition: definitions.register(languageService, getValidTextDocument),
@@ -76,8 +64,8 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		dispose,
 
 		__internal__: {
-			raw: languageService,
 			host,
+			raw: languageService,
 			getTextDocument,
 			getValidTextDocument,
 			doCompleteSync: completions.register(languageService, getValidTextDocument, host),

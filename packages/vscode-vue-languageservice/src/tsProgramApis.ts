@@ -1,10 +1,10 @@
 import type { ApiLanguageServiceContext } from './types';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import * as shared from '@volar/shared';
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, vueHost }: ApiLanguageServiceContext) {
+export function register({ modules: { typescript: ts }, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: ApiLanguageServiceContext) {
 
 	return {
 		getRootFileNames,
@@ -16,8 +16,8 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 
 	function getRootFileNames() {
 		const set = new Set([
-			...getProgram('script').getRootFileNames().filter(fileName => scriptTsLs.__internal__.host.fileExists?.(fileName)),
-			...getProgram('template').getRootFileNames().filter(fileName => templateTsLs.__internal__.host.fileExists?.(fileName)),
+			...getProgram('script').getRootFileNames().filter(fileName => scriptTsHost.fileExists?.(fileName)),
+			...getProgram('template').getRootFileNames().filter(fileName => templateTsHost.fileExists?.(fileName)),
 		]);
 		return [...set.values()];
 	}
@@ -43,7 +43,7 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 		};
 	}
 	function getProgram(lsType: 'script' | 'template') {
-		const program = (lsType === 'script' ? scriptTsLs : templateTsLs).__internal__.raw.getProgram();
+		const program = (lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw).getProgram();
 		if (!program) throw '!program';
 		return program;
 	}
@@ -51,20 +51,20 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 	// transform
 	function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(lsType: 'script' | 'template', diagnostics: readonly T[], mode?: 1 | 2 | 3 | 4): T[] {
 		const result: T[] = [];
-		const tsLs = getTsLs(lsType);
+		const tsLsHost = lsType === 'script' ? scriptTsHost : templateTsHost;
 		for (const diagnostic of diagnostics) {
 			if (
 				diagnostic.file !== undefined
 				&& diagnostic.start !== undefined
 				&& diagnostic.length !== undefined
 			) {
-				const fileName = shared.normalizeFileName(tsLs.__internal__.host.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
+				const fileName = shared.normalizeFileName(tsLsHost.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
 				let checkMode: 'all' | 'none' | 'unused' = 'all';
 				if (mode) {
 					const uri = shared.fsPathToUri(fileName);
 					const vueSourceFile = sourceFiles.getSourceFileByTsUri(lsType, uri);
 					if (vueSourceFile) {
-						checkMode = vueSourceFile.shouldVerifyTsScript(uri, mode);
+						checkMode = vueSourceFile.shouldVerifyTsScript(templateTsHost, uri, mode);
 					}
 				}
 				if (checkMode === 'none') continue;
@@ -89,11 +89,18 @@ export function register({ sourceFiles, ts, getTsLs, templateTsLs, scriptTsLs, v
 						? diagnostic.file
 						: undefined;
 					if (!file) {
-						const doc = tsOrVueLoc.type === 'embedded-ts'
-							? tsOrVueLoc.sourceMap.sourceDocument
-							: tsLs.__internal__.getTextDocument(tsOrVueLoc.uri);
-						if (doc) {
-							file = ts.createSourceFile(shared.uriToFsPath(tsOrVueLoc.uri), doc.getText(), tsOrVueLoc.uri.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
+
+						let docText = tsOrVueLoc.sourceMap?.sourceDocument.getText();
+
+						if (docText === undefined) {
+							const snapshot = vueHost.getScriptSnapshot(shared.uriToFsPath(tsOrVueLoc.uri));
+							if (snapshot) {
+								docText = snapshot.getText(0, snapshot.getLength());
+							}
+						}
+
+						if (docText !== undefined) {
+							file = ts.createSourceFile(shared.uriToFsPath(tsOrVueLoc.uri), docText, tsOrVueLoc.uri.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
 						}
 					}
 					const newDiagnostic: T = {

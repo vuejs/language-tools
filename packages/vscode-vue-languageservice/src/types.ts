@@ -68,8 +68,18 @@ export interface ITemplateScriptData {
 	htmlElements: string[];
 }
 
+export type Modules = {
+	typescript: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('vscode-typescript-languageservice'),
+	css: typeof import('vscode-css-languageservice'),
+	html: typeof import('vscode-html-languageservice'),
+	json: typeof import('vscode-json-languageservice'),
+	pug: typeof import('vscode-pug-languageservice'),
+	emmet: typeof import('vscode-emmet-helper'),
+};
+
 export type LanguageServiceContextBase = {
-	ts: typeof import('typescript/lib/tsserverlibrary');
+	modules: Modules,
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,
 	jsonLs: json.LanguageService,
@@ -82,6 +92,10 @@ export type ApiLanguageServiceContext = LanguageServiceContextBase & {
 	sourceFiles: SourceFiles;
 	vueHost: LanguageServiceHost;
 	documentContext: DocumentContext;
+	scriptTsHost: ts.LanguageServiceHost;
+	templateTsHost: ts.LanguageServiceHost;
+	scriptTsLsRaw: ts.LanguageService;
+	templateTsLsRaw: ts.LanguageService;
 	scriptTsLs: ts2.LanguageService;
 	templateTsLs: ts2.LanguageService;
 	getTsLs: (lsType: 'template' | 'script') => ts2.LanguageService;

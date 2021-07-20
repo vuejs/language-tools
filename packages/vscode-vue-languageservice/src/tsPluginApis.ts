@@ -2,7 +2,7 @@ import type { ApiLanguageServiceContext } from './types';
 import type * as ts from 'typescript';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLanguageServiceContext) {
 
 	return {
 		getCompletionsAtPosition,
@@ -17,7 +17,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 
 	// apis
 	function getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ReturnType<ts.LanguageService['getCompletionsAtPosition']> {
-		const finalResult = scriptTsLs.__internal__.raw.getCompletionsAtPosition(fileName, position, options);
+		const finalResult = scriptTsLsRaw.getCompletionsAtPosition(fileName, position, options);
 		if (finalResult) {
 			finalResult.entries = finalResult.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
 		}
@@ -52,7 +52,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 
 		function worker(lsType: 'script' | 'template') {
 
-			const tsLs = getTsLs(lsType);
+			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
 			const loopChecker = new Set<string>();
 			let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
 			withTeleports(fileName, position);
@@ -62,11 +62,11 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				if (loopChecker.has(fileName + ':' + position))
 					return;
 				loopChecker.add(fileName + ':' + position);
-				const _symbols = mode === 'definition' ? tsLs.__internal__.raw.getDefinitionAtPosition(fileName, position)
-					: mode === 'typeDefinition' ? tsLs.__internal__.raw.getTypeDefinitionAtPosition(fileName, position)
-						: mode === 'references' ? tsLs.__internal__.raw.getReferencesAtPosition(fileName, position)
-							: mode === 'implementation' ? tsLs.__internal__.raw.getImplementationAtPosition(fileName, position)
-								: mode === 'rename' ? tsLs.__internal__.raw.findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename)
+				const _symbols = mode === 'definition' ? tsLs.getDefinitionAtPosition(fileName, position)
+					: mode === 'typeDefinition' ? tsLs.getTypeDefinitionAtPosition(fileName, position)
+						: mode === 'references' ? tsLs.getReferencesAtPosition(fileName, position)
+							: mode === 'implementation' ? tsLs.getImplementationAtPosition(fileName, position)
+								: mode === 'rename' ? tsLs.findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename)
 									: undefined;
 				if (!_symbols) return;
 				symbols = symbols.concat(_symbols);
@@ -103,7 +103,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 
 		function worker(lsType: 'script' | 'template') {
 
-			const tsLs = getTsLs(lsType);
+			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
 			const loopChecker = new Set<string>();
 			let textSpan: ts.TextSpan | undefined;
 			let symbols: ts.DefinitionInfo[] = [];
@@ -118,7 +118,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				if (loopChecker.has(fileName + ':' + position))
 					return;
 				loopChecker.add(fileName + ':' + position);
-				const _symbols = tsLs.__internal__.raw.getDefinitionAndBoundSpan(fileName, position);
+				const _symbols = tsLs.getDefinitionAndBoundSpan(fileName, position);
 				if (!_symbols) return;
 				if (!textSpan) {
 					textSpan = _symbols.textSpan;
@@ -159,7 +159,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 
 		function worker(lsType: 'script' | 'template') {
 
-			const tsLs = getTsLs(lsType);
+			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
 			const loopChecker = new Set<string>();
 			let symbols: ts.ReferencedSymbol[] = [];
 			withTeleports(fileName, position);
@@ -169,7 +169,7 @@ export function register({ sourceFiles, getTsLs, scriptTsLs }: ApiLanguageServic
 				if (loopChecker.has(fileName + ':' + position))
 					return;
 				loopChecker.add(fileName + ':' + position);
-				const _symbols = tsLs.__internal__.raw.findReferences(fileName, position);
+				const _symbols = tsLs.findReferences(fileName, position);
 				if (!_symbols) return;
 				symbols = symbols.concat(_symbols);
 				for (const symbol of _symbols) {

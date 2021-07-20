@@ -7,13 +7,14 @@ import type * as vscode from 'vscode-languageserver';
 import { getEmmetConfiguration } from './configs';
 import { getSchemaRequestService } from './schemaRequestService';
 import * as tsConfigs from './tsConfigs';
+import * as ShPlugin from 'typescript-vscode-sh-plugin';
 
 export type ServiceHandler = ReturnType<typeof createServiceHandler>;
 
 export function createServiceHandler(
+	ts: vue.Modules['typescript'],
 	mode: 'api' | 'doc',
 	tsConfig: string,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	fileUpdatedCb: (fileName: string) => any,
@@ -176,6 +177,9 @@ export function createServiceHandler(
 
 		const host: vue.LanguageServiceHost = {
 			// vue
+			createTsLanguageService(host) {
+				return shared.createTsLanguageService(ts, ShPlugin, host);
+			},
 			getEmmetConfig: getEmmetConfiguration,
 			schemaRequestService: getSchemaRequestService(connection),
 			getPreferences: (document) => tsConfigs.getPreferences(connection, document),

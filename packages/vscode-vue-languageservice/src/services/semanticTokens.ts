@@ -1,28 +1,33 @@
-import * as ts2 from 'vscode-typescript-languageservice';
 import { hyphenate } from '@vue/shared';
-import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
 type TokenData = [number, number, number, number, number | undefined];
 
-const tsLegend = ts2.getSemanticTokenLegend();
-const tokenTypesLegend = [
-	...tsLegend.types,
-	'componentTag',
-	'refLabel',
-	'refVariable',
-	'refVariableRaw',
-];
-const tokenTypes = new Map(tokenTypesLegend.map((t, i) => [t, i]));
+export function getSemanticTokenLegend(ts2: typeof import('vscode-typescript-languageservice')) {
 
-export const semanticTokenLegend: vscode.SemanticTokensLegend = {
-	tokenTypes: tokenTypesLegend,
-	tokenModifiers: tsLegend.modifiers,
-};
+	const tsLegend = ts2.getSemanticTokenLegend();
+	const tokenTypesLegend = [
+		...tsLegend.types,
+		'componentTag',
+		'refLabel',
+		'refVariable',
+		'refVariableRaw',
+	];
+	const semanticTokenLegend: vscode.SemanticTokensLegend = {
+		tokenTypes: tokenTypesLegend,
+		tokenModifiers: tsLegend.modifiers,
+	};
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs }: ApiLanguageServiceContext) {
+	return semanticTokenLegend;
+}
+
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html, ts: ts2 } }: ApiLanguageServiceContext) {
+
+	const semanticTokensLegend = getSemanticTokenLegend(ts2);
+	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
+
 	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
 
 		const sourceFile = sourceFiles.get(uri);

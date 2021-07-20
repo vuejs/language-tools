@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import * as SourceMap from '@volar/source-map';
 import * as path from 'upath';
-import * as html from 'vscode-html-languageservice';
+import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createCodeGen } from '@volar/code-gen';
 
