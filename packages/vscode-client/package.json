@@ -17,8 +17,8 @@
 	},
 	"dependencies": {
 		"@volar/shared": "^0.26.5",
-		"@vue/compiler-sfc": "^3.2.0-beta.2",
-		"@vue/reactivity": "^3.2.0-beta.2",
+		"@vue/compiler-sfc": "^3.2.0-beta.3",
+		"@vue/reactivity": "^3.2.0-beta.3",
 		"upath": "^2.0.1",
 		"vscode-languageclient": "^8.0.0-next.1",
 		"vscode-nls": "5.0.0"
