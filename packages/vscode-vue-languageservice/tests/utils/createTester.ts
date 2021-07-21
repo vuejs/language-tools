@@ -19,9 +19,6 @@ export function createTester(root: string) {
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: LanguageServiceHost = {
-		createTsLanguageService(host) {
-			return ts.createLanguageService(host);
-		},
 		// ts
 		getNewLine: () => ts.sys.newLine,
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,

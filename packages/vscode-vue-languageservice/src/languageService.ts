@@ -52,7 +52,7 @@ import { createSourceFiles } from './sourceFiles';
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
-	createTsLanguageService(host: ts.LanguageServiceHost): ts.LanguageService,
+	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
 	schemaRequestService?: json.SchemaRequestService,
 };
@@ -117,8 +117,8 @@ export function createLanguageService(
 
 	const templateTsHost = createTsLsHost('template');
 	const scriptTsHost = createTsLsHost('script');
-	const templateTsLsRaw = vueHost.createTsLanguageService(templateTsHost);
-	const scriptTsLsRaw = vueHost.createTsLanguageService(scriptTsHost);
+	const templateTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(templateTsHost) : ts.createLanguageService(templateTsHost);
+	const scriptTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(scriptTsHost) : ts.createLanguageService(scriptTsHost);
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
 	const globalDoc = createGlobalDefineDocument(vueHost.getCurrentDirectory());
