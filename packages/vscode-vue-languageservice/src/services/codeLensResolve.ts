@@ -23,9 +23,8 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 		if (uri && doc && tsDoc && offset !== undefined && tsOffset !== undefined) {
 			const pos = doc.positionAt(offset);
-			const tsPos = tsDoc.positionAt(tsOffset);
-			const references0 = _findReferences(tsDoc.uri, tsPos);
-			let references = references0;
+			const vueReferences = _findReferences(uri, pos);
+			let references = vueReferences;
 			if (sourceFile) {
 				let isCssLocation = false;
 				for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
@@ -34,7 +33,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 					}
 				}
 				if (isCssLocation) {
-					references = references0?.filter(ref => {
+					references = vueReferences?.filter(ref => {
 						if (ref.uri === uri) {
 							for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
 								if (cssSourceMap.isSourceRange(ref.range.start, ref.range.end)) {
@@ -46,7 +45,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 					});
 				}
 				else {
-					references = references0?.filter(ref => {
+					references = vueReferences?.filter(ref => {
 						if (ref.uri === uri) {
 							return false;
 						}
@@ -55,7 +54,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 				}
 			}
 			else {
-				references = references0?.filter(ref => {
+				references = vueReferences?.filter(ref => {
 					if (ref.uri === uri) {
 						return false;
 					}
@@ -66,7 +65,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 			codeLens.command = {
 				title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
 				command: Commands.SHOW_REFERENCES,
-				arguments: [uri, codeLens.range.start, references0],
+				arguments: [uri, codeLens.range.start, vueReferences],
 			};
 		}
 
