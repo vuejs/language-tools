@@ -36,7 +36,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			sfcErrors,
 			sfcTemplate,
 			descriptor,
-			vueDoc,
+			document,
 			sfcTemplateScript,
 			templateScriptData,
 			sfcScriptForTemplateLs,
@@ -379,8 +379,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						if (!script || script.content === '') continue;
 						const error = vscode.Diagnostic.create(
 							{
-								start: vueDoc.value.positionAt(script.loc.start),
-								end: vueDoc.value.positionAt(script.loc.end),
+								start: document.value.positionAt(script.loc.start),
+								end: document.value.positionAt(script.loc.end),
 							},
 							'Virtual script not found, may missing lang="ts" or "allowJs": true.',
 							vscode.DiagnosticSeverity.Information,

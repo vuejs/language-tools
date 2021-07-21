@@ -13,7 +13,7 @@ import { useSfcScript } from './use/useSfcScript';
 import { useSfcStyles } from './use/useSfcStyles';
 import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
-import { useSfcScriptForTemplateLs } from './use/useSfcScriptForTemplateLs';
+import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 
 export const defaultLanguages = {
@@ -99,8 +99,8 @@ export function createSourceFile(
 	);
 	const sfcScript = useSfcScript(untrack(() => document.value), computed(() => descriptor.script));
 	const sfcScriptSetup = useSfcScript(untrack(() => document.value), computed(() => descriptor.scriptSetup));
-	const sfcScriptForTemplateLs = useSfcScriptForTemplateLs('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
-	const sfcScriptForScriptLs = useSfcScriptForTemplateLs('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
+	const sfcScriptForTemplateLs = useSfcScriptGen('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
+	const sfcScriptForScriptLs = useSfcScriptGen('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(untrack(() => document.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
 	// getters
@@ -146,6 +146,7 @@ export function createSourceFile(
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
 		getTextDocument: untrack(() => document.value),
+		getTemplateScriptDocument: untrack(() => sfcTemplateScript.textDocument.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
 		getScriptTsDocument: untrack(() => sfcScriptForScriptLs.textDocument.value),
@@ -156,16 +157,8 @@ export function createSourceFile(
 		getHtmlSourceMaps: untrack(() => sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
 		getPugSourceMaps: untrack(() => sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getTeleports: untrack(() => [
-			sfcTemplateScript.teleportSourceMap.value,
-			sfcScriptForTemplateLs.teleportSourceMap.value,
-		].filter(shared.notEmpty)),
 		getDescriptor: untrack(() => descriptor),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
-		getVirtualScript: untrack(() => ({
-			document: sfcScriptForTemplateLs.textDocument.value,
-			sourceMap: sfcScriptForTemplateLs.sourceMap.value,
-		})),
 		getScriptSetupData: untrack(() => sfcScriptForTemplateLs.scriptSetupRanges.value),
 		docLsScripts: untrack(() => ({
 			documents: [sfcScript.textDocument.value, sfcScriptSetup.textDocument.value].filter(shared.notEmpty),
@@ -178,7 +171,7 @@ export function createSourceFile(
 		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
 
 		refs: {
-			vueDoc: document,
+			document,
 			descriptor,
 			lastUpdated,
 			sfcErrors,
@@ -214,11 +207,12 @@ export function createSourceFile(
 		updateScriptSetup(newDescriptor);
 		updateStyles(newDescriptor);
 		updateCustomBlocks(newDescriptor);
-		sfcTemplateScript.update(); // TODO
 
 		if (newDocument.getText() !== document.value.getText()) {
 			document.value = newDocument;
 		}
+
+		sfcTemplateScript.update(sfcScriptForScriptLs.lang.value); // TODO
 
 		const versionsAfterUpdate = [
 			sfcScriptForTemplateLs.textDocument.value?.version,
@@ -418,7 +412,7 @@ export function createSourceFile(
 		templateScriptData.htmlElements = htmlElementNames;
 		templateScriptData.componentItems = components;
 		templateScriptData.htmlElementItems = globalEls;
-		sfcTemplateScript.update(); // TODO
+		sfcTemplateScript.update(sfcScriptForScriptLs.lang.value); // TODO
 		return true;
 	}
 	function shouldVerifyTsScript(templateTsHost: ts.LanguageServiceHost, tsUri: string, mode: 1 | 2 | 3 | 4): 'all' | 'none' | 'unused' {

@@ -348,12 +348,12 @@ export function useSfcTemplateScript(
 			end: range.end + templateOffset,
 		};
 	}
-	function update() {
+	function update(lang: string) {
 		if (data.value?.getText() !== textDoc.value?.getText()) {
 			if (data.value && templateCodeGens.value) {
 				const _version = version++;
-				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.ts', 'typescript', _version, data.value.getText());
-				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', 'typescript', _version, templateCodeGens.value.formatCodeGen.getText());
+				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + lang, shared.syntaxToLanguageId(lang), _version, data.value.getText());
+				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.' + lang, shared.syntaxToLanguageId(lang), _version, templateCodeGens.value.formatCodeGen.getText());
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {

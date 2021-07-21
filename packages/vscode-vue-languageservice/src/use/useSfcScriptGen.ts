@@ -9,7 +9,7 @@ import { generate as genScript } from '../generators/script';
 import { generate as genScriptSuggestion } from '../generators/script_suggestion';
 import * as templateGen from '../generators/template_scriptSetup';
 
-export function useSfcScriptForTemplateLs(
+export function useSfcScriptGen(
 	lsType: 'template' | 'script',
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDoc: Ref<TextDocument>,
@@ -61,15 +61,9 @@ export function useSfcScriptForTemplateLs(
 				shared.getValidScriptSyntax('js')
 	});
 	const textDocument = computed(() => {
-		let _lang = lang.value;
-		if (lsType === 'template') {
-			// force use TS to support template type-checking with <script lang="js">
-			if (_lang === 'js') _lang = 'ts';
-			if (_lang === 'jsx') _lang = 'tsx';
-		}
 		return TextDocument.create(
-			lsType === 'template' ? `${uri}.__VLS_script.${_lang}` : `${uri}.${_lang}`,
-			shared.syntaxToLanguageId(_lang),
+			lsType === 'template' ? `${uri}.__VLS_script.${lang.value}` : `${uri}.${lang.value}`,
+			shared.syntaxToLanguageId(lang.value),
 			version++,
 			codeGen.value.getText(),
 		);
@@ -137,6 +131,7 @@ export function useSfcScriptForTemplateLs(
 	});
 
 	return {
+		lang,
 		scriptSetupRanges,
 		textDocument,
 		textDocumentForSuggestion,
@@ -147,9 +142,7 @@ export function useSfcScriptForTemplateLs(
 
 	function parseMappingSourceRange(data: TsMappingData, sourceRange: Range) {
 		if (data.vueTag === 'scriptSrc' && script.value?.src) {
-			const vueStart = script.value.content.length
-				? vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src)
-				: (vueDoc.value.getText().substring(script.value.loc.start).indexOf(script.value.src) + script.value.loc.start); // TODO: don't use indexOf()
+			const vueStart = vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src);
 			const vueEnd = vueStart + script.value.src.length;
 			return {
 				start: vueStart - 1,

@@ -18,7 +18,7 @@ export async function execute(
 	const template = desc.template;
 	const document = sourceFile.getTextDocument();
 
-	const virtualDoc = sourceFiles.getTsDocuments('template').get(sourceFile.uri + '.__VLS_template.ts');
+	const virtualDoc = sourceFile.getTemplateScriptDocument();
 	if (!virtualDoc) return;
 
 	const edits: vscode.TextEdit[] = [];
