@@ -11,6 +11,7 @@ import type { LanguageServiceHost } from '../';
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
+	getTextDocument2: (uri: string) => TextDocument | undefined,
 	host: LanguageServiceHost
 ) {
 	return async (item: vscode.CompletionItem, newOffset?: number): Promise<vscode.CompletionItem> => {
@@ -63,7 +64,7 @@ export function register(
 
 		item.documentation = {
 			kind: 'markdown',
-			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: shared.fsPathToUri }),
+			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: shared.fsPathToUri }, getTextDocument2),
 		};
 
 		if (details) {

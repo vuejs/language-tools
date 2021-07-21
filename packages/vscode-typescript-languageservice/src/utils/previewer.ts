@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as Proto from '../protocol';
+import * as shared from '@volar/shared';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export interface IFilePathToResourceConverter {
 	/**
@@ -170,32 +172,79 @@ function convertLinkTags(
 }
 
 export function tagsMarkdownPreview(
-	tags: readonly Proto.JSDocTagInfo[],
+	tags: readonly ts.JSDocTagInfo[],
 	filePathConverter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
+
+	// fix https://github.com/johnsoncodehk/volar/issues/289
+	tags = tags.map(tag => {
+		if (tag.text) {
+			return {
+				...tag,
+				text: tag.text.map(part => {
+					const target: undefined | {} | {
+						fileName: string,
+						textSpan: { start: number, length: number },
+					} = (part as any).target;
+					if (target && 'fileName' in target) {
+						const fileDoc = getTextDocument(shared.uriToFsPath(target.fileName));
+						if (fileDoc) {
+							const start = fileDoc.positionAt(target.textSpan.start);
+							const end = fileDoc.positionAt(target.textSpan.start + target.textSpan.length);
+							const newTarget: Proto.FileSpan = {
+								file: target.fileName,
+								start: {
+									line: start.line + 1,
+									offset: start.character + 1,
+								},
+								end: {
+									line: end.line + 1,
+									offset: end.character + 1,
+								},
+							};
+							return {
+								...part,
+								target: newTarget,
+							};
+						}
+						return {
+							...part,
+							target: undefined,
+						}
+					}
+					return part;
+				}),
+			}
+		}
+		return tag;
+	});
+
 	return tags.map(tag => getTagDocumentation(tag, filePathConverter)).join('  \n\n');
 }
 
 export function markdownDocumentation(
 	documentation: Proto.SymbolDisplayPart[] | string | undefined,
-	tags: Proto.JSDocTagInfo[] | undefined,
+	tags: ts.JSDocTagInfo[] | undefined,
 	filePathConverter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
-	return addMarkdownDocumentation('', documentation, tags, filePathConverter);
+	return addMarkdownDocumentation('', documentation, tags, filePathConverter, getTextDocument);
 }
 
 export function addMarkdownDocumentation(
 	out: string,
 	documentation: Proto.SymbolDisplayPart[] | string | undefined,
-	tags: Proto.JSDocTagInfo[] | undefined,
+	tags: ts.JSDocTagInfo[] | undefined,
 	converter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
 	if (documentation) {
 		out += plainWithLinks(documentation, converter);
 	}
 
 	if (tags) {
-		const tagsPreview = tagsMarkdownPreview(tags, converter);
+		const tagsPreview = tagsMarkdownPreview(tags, converter, getTextDocument);
 		if (tagsPreview) {
 			out += '\n\n' + tagsPreview;
 		}
