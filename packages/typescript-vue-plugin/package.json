@@ -1,6 +1,6 @@
 {
 	"name": "typescript-vue-plugin",
-	"version": "0.26.5",
+	"version": "0.26.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,8 +16,8 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.26.5",
+		"@volar/shared": "^0.26.6",
 		"typescript-vscode-sh-plugin": "^0.6.14",
-		"vscode-vue-languageservice": "^0.26.5"
+		"vscode-vue-languageservice": "^0.26.6"
 	}
 }
