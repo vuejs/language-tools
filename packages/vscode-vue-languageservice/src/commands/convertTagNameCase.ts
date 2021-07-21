@@ -11,15 +11,19 @@ export async function execute(
 ) {
 
 	const sourceFile = sourceFiles.get(uri);
+	if (!sourceFile)
+		return;
 
 	const desc = sourceFile.getDescriptor();
-	if (!desc.template) return;
+	if (!desc.template)
+		return;
 
 	const template = desc.template;
 	const document = sourceFile.getTextDocument();
 
 	const virtualDoc = sourceFile.getTemplateScriptDocument();
-	if (!virtualDoc) return;
+	if (!virtualDoc)
+		return;
 
 	const edits: vscode.TextEdit[] = [];
 	const components = new Set(sourceFile.getTemplateScriptData().components);

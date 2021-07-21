@@ -16,7 +16,12 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 	const workers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 
 	return async (uri: string, response: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+
 		const sourceFile = sourceFiles.get(uri);
+
+		if (!sourceFile)
+			return;
+
 		let worker = workers.get(sourceFile);
 		if (!worker) {
 			worker = untrack(useDiagnostics(sourceFile));

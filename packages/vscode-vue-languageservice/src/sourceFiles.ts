@@ -122,7 +122,7 @@ export function createSourceFiles() {
 	return {
 		getUris: untrack(() => uris.value),
 		getAll: untrack(() => all.value),
-		get: untrack((uri: string) => sourceFiles[uri.toLowerCase()]),
+		get: untrack((uri: string): SourceFile | undefined => sourceFiles[uri.toLowerCase()]),
 		set: untrack((uri: string, sourceFile: SourceFile) => sourceFiles[uri.toLowerCase()] = sourceFile),
 		delete: untrack((uri: string) => {
 			if (sourceFiles[uri.toLowerCase()]) {
