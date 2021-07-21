@@ -235,10 +235,10 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 					if (!vueResult.changes) {
 						vueResult.changes = {};
 					}
-					if (!vueResult.changes[sourceMap.mappedDocument.uri]) {
-						vueResult.changes[sourceMap.mappedDocument.uri] = [];
+					if (!vueResult.changes[sourceMap.sourceDocument.uri]) {
+						vueResult.changes[sourceMap.sourceDocument.uri] = [];
 					}
-					vueResult.changes[sourceMap.mappedDocument.uri].push({
+					vueResult.changes[sourceMap.sourceDocument.uri].push({
 						newText: cssEdit.newText,
 						range: vueRange,
 					});

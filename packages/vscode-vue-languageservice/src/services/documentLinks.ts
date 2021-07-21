@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 	return async (uri: string) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -116,10 +116,17 @@ export function register({ documentContext, sourceFiles, vueHost, htmlLs, pugLs,
 		function getTsResult2(sourceFile: SourceFile) {
 			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+
+				const tsLs = getTsLs(sourceMap.lsType);
+
+				if (!tsLs.__internal__.getValidTextDocument(sourceMap.mappedDocument.uri))
+					continue;
+
 				for (const maped of sourceMap) {
-					if (!maped.data.capabilities.displayWithLink) {
+
+					if (!maped.data.capabilities.displayWithLink)
 						continue;
-					}
+
 					result.push({
 						range: {
 							start: document.positionAt(maped.sourceRange.start),

@@ -32,7 +32,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			cssLsSourceMaps,
 			sfcJsons,
 			sfcScriptForScriptLs,
-			lastUpdated: lastUpdateChanged,
+			lastUpdated,
 			sfcErrors,
 			sfcTemplate,
 			descriptor,
@@ -40,7 +40,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			sfcTemplateScript,
 			templateScriptData,
 			sfcScriptForTemplateLs,
-			templateLsSourceMaps: templateTsSourceMaps,
+			templateLsSourceMaps,
 		} = sourceFile.refs;
 
 		const templateTsProjectVersion = ref<string>();
@@ -90,7 +90,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			let mainTsErrorStart = all.length - 1;
 			let mainTsErrorEnd = -1;
 
-			const isScriptChanged = lastUpdateChanged.script || lastUpdateChanged.scriptSetup;
+			const isScriptChanged = lastUpdated.script || lastUpdated.scriptSetup;
 			if (isScriptChanged) {
 				all = all.concat(scriptTs);
 				mainTsErrorEnd = all.length - 1;
@@ -372,7 +372,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			};
 		}
 		function useScriptExistValidation() {
-			const result = computed(() => {
+			const scriptErrors = computed(() => {
 				const diags: vscode.Diagnostic[] = [];
 				if (!scriptTsLs.__internal__.getValidTextDocument(sfcScriptForScriptLs.textDocument.value.uri)) {
 					for (const script of [descriptor.script, descriptor.scriptSetup]) {
@@ -382,7 +382,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 								start: document.value.positionAt(script.loc.start),
 								end: document.value.positionAt(script.loc.end),
 							},
-							'Virtual script not found, may missing lang="ts" or "allowJs": true.',
+							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
 							vscode.DiagnosticSeverity.Information,
 							undefined,
 							'volar',
@@ -393,9 +393,38 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				}
 				return diags;
 			});
+			const templateErrors = computed(() => {
+				const diags: vscode.Diagnostic[] = [];
+				if (
+					sfcTemplateScript.textDocument.value
+					&& sfcTemplateScript.textDocumentForFormatting.value
+					&& sfcTemplateScript.sourceMapForFormatting.value
+					&& !templateTsLs.__internal__.getValidTextDocument(sfcTemplateScript.textDocument.value.uri)
+				) {
+					for (const maped of sfcTemplateScript.sourceMapForFormatting.value) {
+						const error = vscode.Diagnostic.create(
+							{
+								start: document.value.positionAt(maped.sourceRange.start),
+								end: document.value.positionAt(maped.sourceRange.end),
+							},
+							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+							vscode.DiagnosticSeverity.Information,
+							undefined,
+							'volar',
+						);
+						error.tags = [vscode.DiagnosticTag.Unnecessary];
+						diags.push(error);
+					}
+				}
+				return diags;
+			});
+			const errors = computed(() => [
+				...scriptErrors.value,
+				...templateErrors.value,
+			]);
 			return {
-				result,
-				cache: result,
+				result: errors,
+				cache: errors,
 			};
 		}
 		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
@@ -427,7 +456,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templateTsSourceMaps.value);
+				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templateLsSourceMaps.value);
 				if (onlyUnusedCheck) {
 					result = result.filter(error => error.tags?.includes(vscode.DiagnosticTag.Unnecessary));
 				}
@@ -494,13 +523,13 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					'template',
 					errors_1_cache.value,
 					sfcTemplateScript.textDocument.value.uri,
-					templateTsSourceMaps.value,
+					templateLsSourceMaps.value,
 				) : [];
 				const result_2 = sfcScriptForTemplateLs.textDocument.value ? toTsSourceDiags(
 					'template',
 					errors_2_cache.value,
 					sfcScriptForTemplateLs.textDocument.value.uri,
-					templateTsSourceMaps.value,
+					templateLsSourceMaps.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
