@@ -79,6 +79,18 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 					},
 				});
 			}
+			if (descriptor.scriptSetup && data?.labels.length) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.loc.start),
+						end: document.positionAt(descriptor.scriptSetup.loc.end),
+					},
+					command: {
+						title: '* label syntax dropped in vue 3.2 and volar 0.27, please use "Volar: Remove All Ref Sugars" command to convert all SFC',
+						command: '',
+					},
+				});
+			}
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {

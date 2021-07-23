@@ -240,7 +240,7 @@
 			},
 			{
 				"command": "volar.action.removeRefSugars",
-				"title": "Remove All Ref Sugar in Project",
+				"title": "Remove All Ref Sugars in Project",
 				"category": "Volar"
 			},
 			{
