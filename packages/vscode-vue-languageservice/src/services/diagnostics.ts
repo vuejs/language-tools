@@ -11,7 +11,7 @@ import * as dedupe from '../utils/dedupe';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const workers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 
@@ -94,14 +94,17 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			let all = [...nonTs];
 			let mainTsErrorStart = all.length - 1;
 			let mainTsErrorEnd = -1;
+			let templateCheckStart = -1;
 
 			const isScriptChanged = lastUpdated.script || lastUpdated.scriptSetup;
 			if (isScriptChanged) {
 				all = all.concat(scriptTs);
 				mainTsErrorEnd = all.length - 1;
+				templateCheckStart = all.length - 1;
 				all = all.concat(templateTs);
 			}
 			else {
+				templateCheckStart = all.length - 1;
 				all = all.concat(templateTs);
 				mainTsErrorEnd = all.length - 1;
 				all = all.concat(scriptTs);
@@ -132,6 +135,9 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					.flat();;
 				const isLast = i === all.length - 1
 				if (await isCancel?.()) return;
+				if (i === templateCheckStart) {
+					updateTemplateScripts();
+				}
 				if (
 					isLast
 					|| (isDirty && (

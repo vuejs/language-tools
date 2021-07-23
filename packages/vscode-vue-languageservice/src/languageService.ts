@@ -1,9 +1,8 @@
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import { createSourceFile, SourceFile } from './sourceFile';
+import { createSourceFile } from './sourceFile';
 import { createGlobalDefineDocument } from './utils/globalDoc';
-import { pauseTracking, resetTracking } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
 import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules } from './types';
@@ -107,9 +106,9 @@ export function createLanguageService(
 
 	let vueProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
-	let tsProjectVersion = 0;
-	let tsProjectVersionWithoutTemplate = 0;
-	let lastCompletionUpdateVersion = -1;
+	let scriptProjectVersion = 0;
+	let templateProjectVersion = 0;
+	let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
 	const documents = new shared.UriMap<TextDocument>();
 	const sourceFiles = createSourceFiles();
 	const templateScriptUpdateUris = new Set<string>();
@@ -235,7 +234,7 @@ export function createLanguageService(
 	});
 
 	return {
-		doValidation: apiHook(diagnostics.register(context)),
+		doValidation: apiHook(diagnostics.register(context, () => update(true)), false),
 		findDefinition: apiHook(findDefinition.on),
 		findReferences: apiHook(references.register(context)),
 		findTypeDefinition: apiHook(findDefinition.onType),
@@ -249,8 +248,8 @@ export function createLanguageService(
 		getEditsForFileRename: apiHook(renames.onRenameFile, false),
 		getSemanticTokens: apiHook(semanticTokens.register(context)),
 
-		doHover: apiHook(hover.register(context), isPositionInTemplate),
-		doComplete: apiHook(completions.register(context), isPositionInTemplate),
+		doHover: apiHook(hover.register(context), isTemplateScriptPosition),
+		doComplete: apiHook(completions.register(context), isTemplateScriptPosition),
 
 		getCodeActions: apiHook(codeActions.register(context), false),
 		doCodeActionResolve: apiHook(codeActionResolve.register(context), false),
@@ -291,42 +290,30 @@ export function createLanguageService(
 		},
 	};
 
-	function isPositionInTemplate(uri: string, pos: vscode.Position) {
+	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) {
 			return false;
 		}
 
-		if (!isInTemplate(sourceFile)) {
-			return false;
-		}
-
-		update(false); // update tsProjectVersionWithoutTemplate
-		if (lastCompletionUpdateVersion !== tsProjectVersionWithoutTemplate) {
-			lastCompletionUpdateVersion = tsProjectVersionWithoutTemplate;
-			return true;
-		}
-
-		return false;
-
-		function isInTemplate(sourceFile: SourceFile) {
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				if (sourceMap.lsType === 'script')
-					continue;
-				for (const tsRange of sourceMap.getMappedRanges(pos)) {
-					if (tsRange.data.vueTag === 'template') {
-						return true;
-					}
-				}
-			}
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const _ of sourceMap.getMappedRanges(pos)) {
+		for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			if (sourceMap.lsType === 'script')
+				continue;
+			for (const tsRange of sourceMap.getMappedRanges(pos)) {
+				if (tsRange.data.vueTag === 'template') {
 					return true;
 				}
 			}
-			return false;
 		}
+
+		for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+			for (const _ of sourceMap.getMappedRanges(pos)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 	function apiHook<T extends (...args: any) => any>(api: T, shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true) {
 		const handler = {
@@ -393,7 +380,8 @@ export function createLanguageService(
 			}
 
 			if (tsFileChanged) {
-				updateTsProject(false);
+				scriptProjectVersion++;
+				templateProjectVersion++;
 				updates.length = 0;
 				for (const fileName of oldFiles) {
 					if (newFiles.has(fileName)) {
@@ -442,10 +430,7 @@ export function createLanguageService(
 				}
 				: undefined,
 			getProjectVersion: () => {
-				pauseTracking();
-				const version = vueHost.getProjectVersion?.() + ':' + tsProjectVersion.toString();
-				resetTracking();
-				return version;
+				return vueHost.getProjectVersion?.() + ':' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion);
 			},
 			getScriptFileNames,
 			getScriptVersion,
@@ -553,7 +538,7 @@ export function createLanguageService(
 	}
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 		let vueScriptsUpdated = false;
-		let vueTemplateScriptUpdated = false;
+		let templateScriptUpdated = false;
 
 		if (shouldUpdateTemplateScript) {
 			for (const cb of initProgressCallback) {
@@ -574,19 +559,21 @@ export function createLanguageService(
 					vueScriptsUpdated = true;
 				}
 				if (updates.templateScriptUpdated) {
-					vueTemplateScriptUpdated = true;
+					templateScriptUpdated = true;
 				}
 			}
 			templateScriptUpdateUris.add(uri);
 		}
 		if (vueScriptsUpdated) {
-			updateTsProject(false);
+			scriptProjectVersion++;
+			templateProjectVersion++;
 		}
-		if (shouldUpdateTemplateScript) {
+		if (shouldUpdateTemplateScript && lastScriptProjectVersionWhenTemplateProjectVersionUpdate !== scriptProjectVersion) {
+			lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptProjectVersion;
 			let currentNums = 0;
 			for (const uri of templateScriptUpdateUris) {
 				if (sourceFiles.get(uri)?.updateTemplateScript(templateTsLs)) {
-					vueTemplateScriptUpdated = true;
+					templateScriptUpdated = true;
 				}
 				for (const cb of initProgressCallback) {
 					cb(++currentNums / templateScriptUpdateUris.size);
@@ -598,8 +585,8 @@ export function createLanguageService(
 			}
 			initProgressCallback.length = 0;
 		}
-		if (vueTemplateScriptUpdated) {
-			updateTsProject(true);
+		if (templateScriptUpdated) {
+			templateProjectVersion++;
 		}
 	}
 	function unsetSourceFiles(uris: string[]) {
@@ -610,13 +597,8 @@ export function createLanguageService(
 			}
 		}
 		if (updated) {
-			updateTsProject(false);
-		}
-	}
-	function updateTsProject(isTemplateUpdate: boolean) {
-		tsProjectVersion++;
-		if (!isTemplateUpdate) {
-			tsProjectVersionWithoutTemplate++;
+			scriptProjectVersion++;
+			templateProjectVersion++;
 		}
 	}
 }
