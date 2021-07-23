@@ -93,26 +93,30 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 			let all = [...nonTs];
 			let mainTsErrorStart = all.length - 1;
-			let mainTsErrorEnd = -1;
+			let lastMainError = -1;
 			let templateCheckStart = -1;
 
 			const isScriptChanged = lastUpdated.script || lastUpdated.scriptSetup;
 			if (isScriptChanged) {
 				all = all.concat(scriptTs);
-				mainTsErrorEnd = all.length - 1;
-				templateCheckStart = all.length - 1;
+				lastMainError = all.length - 1;
+				templateCheckStart = all.length;
 				all = all.concat(templateTs);
 			}
 			else {
-				templateCheckStart = all.length - 1;
+				templateCheckStart = all.length;
 				all = all.concat(templateTs);
-				mainTsErrorEnd = all.length - 1;
+				lastMainError = all.length - 1;
 				all = all.concat(scriptTs);
 			}
 
 			let isDirty = false;
 
 			for (let i = 0; i < all.length; i++) {
+				if (await isCancel?.()) return;
+				if (i === templateCheckStart) {
+					updateTemplateScripts();
+				}
 				if (await isCancel?.()) return;
 				const startTime = Date.now();
 				const diag = all[i];
@@ -135,14 +139,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					.flat();;
 				const isLast = i === all.length - 1
 				if (await isCancel?.()) return;
-				if (i === templateCheckStart) {
-					updateTemplateScripts();
-				}
 				if (
 					isLast
 					|| (isDirty && (
 						i < mainTsErrorStart
-						|| i === mainTsErrorEnd
+						|| i === lastMainError
 						|| oldErrors.length === 0
 					))
 				) {
