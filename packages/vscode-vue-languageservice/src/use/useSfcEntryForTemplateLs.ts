@@ -69,13 +69,13 @@ export function useSfcEntryForTemplateLs(
 			});
 			sourceMap.add({
 				data: {
-					vueTag: 'script',
+					vueTag: 'sfc',
 					capabilities: {},
 				},
-				mode: SourceMaps.Mode.Expand,
+				mode: SourceMaps.Mode.Overlap,
 				sourceRange: {
-					start: (script.value ?? scriptSetup.value)?.loc.start ?? 0,
-					end: (script.value ?? scriptSetup.value)?.loc.start ?? 0,
+					start: 0,
+					end: 0,
 				},
 				mappedRange: {
 					start: 0,

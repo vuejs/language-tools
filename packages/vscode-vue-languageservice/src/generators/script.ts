@@ -21,9 +21,15 @@ export function generate(
 
 	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
-	const shouldPatchExportDefault = lsType === 'script' && !!scriptSetup;
+	const shouldPatchExportDefault = lsType === 'script' && (!script || !!scriptSetup);
 
+	const overlapMapRange_1 = {
+		start: codeGen.getText().length,
+		end: codeGen.getText().length,
+	};
 	writeScriptSrc();
+	overlapMapRange_1.end = codeGen.getText().length;
+
 	writeScript();
 	writeScriptSetup();
 
@@ -31,12 +37,39 @@ export function generate(
 	codeGen.addText(`\n// @ts-ignore\n`);
 	codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
 
+	const overlapMapRange_2 = {
+		start: codeGen.getText().length,
+		end: codeGen.getText().length,
+	};
 	if (lsType === 'template' || shouldPatchExportDefault)
 		writeExportComponent();
 
 	if (lsType === 'template') {
 		writeExportOptions();
 		writeConstNameOption();
+	}
+	overlapMapRange_2.end = codeGen.getText().length;
+
+	/**
+	 * support find definition for <script> block less with:
+	 * import Foo from './foo.vue'
+	 *        ^^^      ^^^^^^^^^^^
+	 */
+	for (const overlapMapRange of [overlapMapRange_1, overlapMapRange_2]) {
+		if (overlapMapRange.start !== overlapMapRange.end) {
+			codeGen.addMapping2({
+				data: {
+					vueTag: 'sfc',
+					capabilities: {},
+				},
+				mode: SourceMaps.Mode.Overlap,
+				sourceRange: {
+					start: 0,
+					end: 0,
+				},
+				mappedRange: overlapMapRange,
+			});
+		}
 	}
 
 	return {
@@ -363,7 +396,6 @@ export function generate(
 	}
 	function writeExportComponent() {
 		codeGen.addText(`\n`);
-		const start = codeGen.getText().length;
 		if (shouldPatchExportDefault) {
 			codeGen.addText(`export default __VLS_defineComponent({\n`);
 		}
@@ -505,26 +537,7 @@ export function generate(
 		}
 
 		codeGen.addText(`});`);
-		const end = codeGen.getText().length;
 		codeGen.addText(`\n`);
-
-		if (scriptSetup) {
-			codeGen.addMapping2({
-				data: {
-					vueTag: 'scriptSetup',
-					capabilities: {},
-				},
-				mode: SourceMaps.Mode.Totally,
-				sourceRange: {
-					start: 0,
-					end: scriptSetup.content.length,
-				},
-				mappedRange: {
-					start,
-					end,
-				},
-			});
-		}
 
 		function mapSubText(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
 			for (const mapping of codeGen.getMappings()) {

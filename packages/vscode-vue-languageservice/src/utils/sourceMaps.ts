@@ -7,7 +7,7 @@ import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
 
 export interface TsMappingData {
-	vueTag: 'template' | 'script' | 'scriptSetup' | 'style' | 'scriptSrc',
+	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'style' | 'scriptSrc',
 	beforeRename?: (newName: string) => string,
 	doRename?: (oldName: string, newName: string) => string,
 	capabilities: {

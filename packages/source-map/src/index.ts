@@ -43,6 +43,18 @@ export enum Mode {
 	 *   ^^      ^    ^
 	 */
 	Expand,
+	/**
+	 * @case1
+	 * 123456 -> abcdef
+	 * ^     ^   ^    ^
+	 * @case2
+	 * 123456 -> abcdef
+	 *      ^^   ^    ^
+	 * @case3
+	 * 123456 -> abcdef
+	 *       ^^  NOT_MATCH
+	 */
+	Overlap,
 }
 
 export type MappingBase = {
@@ -196,6 +208,17 @@ export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
 		}
 		else if (mode === Mode.Expand) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
+				const _start = mapedToRange.start;
+				const _end = mapedToRange.end;
+				return {
+					data: data,
+					start: Math.min(_start, _end),
+					end: Math.max(_start, _end),
+				};
+			}
+		}
+		else if (mode === Mode.Overlap) {
+			if ((start >= mapedFromRange.start && start <= mapedFromRange.end) || (end >= mapedFromRange.start && end <= mapedFromRange.end)) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
 				return {
