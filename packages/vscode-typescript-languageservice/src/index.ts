@@ -38,9 +38,9 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 	const documents = new Map<string, [string, TextDocument]>();
 
 	return {
-		findDefinition: definitions.register(languageService, getValidTextDocument),
-		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument),
-		findReferences: references.register(languageService, getValidTextDocument),
+		findDefinition: definitions.register(languageService, getValidTextDocument, getTextDocument),
+		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument, getTextDocument),
+		findReferences: references.register(languageService, getValidTextDocument, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
 		doRename: rename.register(languageService, getValidTextDocument, host),
 		getEditsForFileRename: fileRename.register(languageService, getValidTextDocument, host),

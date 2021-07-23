@@ -25,18 +25,8 @@ export function generate(
 	const overlapMapRanges: SourceMaps.Range[] = [];
 
 	writeScriptSrc();
-
-	overlapMapRanges.push({
-		start: 0,
-		end: codeGen.getText().length
-	});
-
 	writeScript();
 	writeScriptSetup();
-
-	// TODO: remove in future
-	codeGen.addText(`\n// @ts-ignore\n`);
-	codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
 
 	if (lsType === 'template' || shouldPatchExportDefault)
 		writeExportComponent();
@@ -52,20 +42,18 @@ export function generate(
 	 *        ^^^      ^^^^^^^^^^^
 	 */
 	for (const overlapMapRange of overlapMapRanges) {
-		if (overlapMapRange.start !== overlapMapRange.end) {
-			codeGen.addMapping2({
-				data: {
-					vueTag: 'sfc',
-					capabilities: {},
-				},
-				mode: SourceMaps.Mode.Overlap,
-				sourceRange: {
-					start: 0,
-					end: 0,
-				},
-				mappedRange: overlapMapRange,
-			});
-		}
+		codeGen.addMapping2({
+			data: {
+				vueTag: 'sfc',
+				capabilities: {},
+			},
+			mode: SourceMaps.Mode.Overlap,
+			sourceRange: {
+				start: 0,
+				end: 0,
+			},
+			mappedRange: overlapMapRange,
+		});
 	}
 
 	return {
@@ -105,6 +93,12 @@ export function generate(
 		);
 		codeGen.addText(`;\n`);
 		codeGen.addText(`export { default } from '${src}';\n`);
+
+		overlapMapRanges.push({
+			start: 0,
+			end: codeGen.getText().length
+		});
+
 	}
 	function writeScript() {
 		if (!script)
@@ -367,6 +361,10 @@ export function generate(
 		}
 		mapSubText(tsOffset, sourceCode.length);
 
+		// TODO: remove in future
+		codeGen.addText(`\n// @ts-ignore\n`);
+		codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
+
 		function mapSubText(start: number, end: number) {
 			codeGen.addCode(
 				sourceCode.substring(start, end),
@@ -391,9 +389,9 @@ export function generate(
 		}
 	}
 	function writeExportComponent() {
-		codeGen.addText(`\n`);
 		if (shouldPatchExportDefault) {
 			const start = codeGen.getText().length;
+			codeGen.addText(`\n`);
 			codeGen.addText(`export default __VLS_defineComponent({\n`);
 			overlapMapRanges.push({
 				start,
@@ -401,6 +399,7 @@ export function generate(
 			});
 		}
 		else {
+			codeGen.addText(`\n`);
 			codeGen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
