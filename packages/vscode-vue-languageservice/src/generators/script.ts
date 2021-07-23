@@ -460,16 +460,8 @@ export function generate(
 				for (const expose of bindings) {
 					const varName = content.substring(expose.start, expose.end);
 					const templateSideRange = codeGen.addText(varName);
-					codeGen.addText(': ');
-					const scriptSideRange = codeGen.addCode(
-						varName,
-						expose,
-						SourceMaps.Mode.Offset,
-						{
-							vueTag,
-							capabilities: { diagnostic: true },
-						},
-					);
+					codeGen.addText(`: `);
+					const scriptSideRange = codeGen.addText(varName);
 					codeGen.addText(',\n');
 
 					teleports.push({
