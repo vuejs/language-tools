@@ -264,8 +264,9 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.noFormatting,
+						capabilities: capabilitiesSet.all,
 					},
+					formatBrackets.round,
 				);
 				tsCodeGen.addText(`);\n`);
 				tsCodeGen.addText(`for (var ${forOfItemName} of ${sourceVarName}) { }\n`);
@@ -294,8 +295,9 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.noFormatting,
+						capabilities: capabilitiesSet.all,
 					},
+					formatBrackets.empty,
 				);
 				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName}, ${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
 
@@ -311,8 +313,9 @@ export function generate(
 						SourceMaps.Mode.Offset,
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.noFormatting,
+							capabilities: capabilitiesSet.all,
 						},
+						formatBrackets.empty,
 					);
 					tsCodeGen.addText(` = __VLS_getVforKeyType(${sourceVarName});\n`);
 				}
@@ -328,8 +331,9 @@ export function generate(
 						SourceMaps.Mode.Offset,
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.noFormatting,
+							capabilities: capabilitiesSet.all,
 						},
+						formatBrackets.empty,
 					);
 					tsCodeGen.addText(` = __VLS_getVforIndexType(${sourceVarName});\n`);
 				}
