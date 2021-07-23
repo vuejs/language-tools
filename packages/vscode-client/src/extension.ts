@@ -10,7 +10,6 @@ import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as restart from './features/restart';
-import * as semanticTokens from './features/semanticTokens';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
 import * as tagClosing from './features/tagClosing';
@@ -44,7 +43,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	activeSelection.activate(context, apiClient);
 	verifyAll.activate(context, docClient);
 	virtualFiles.activate(context, docClient);
-	semanticTokens.activate(context, docClient);
 	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
 	tsPlugin.activate(context);

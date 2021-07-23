@@ -235,18 +235,18 @@ export function createLanguageService(
 
 	return {
 		doValidation: apiHook(diagnostics.register(context, () => update(true)), false),
-		findDefinition: apiHook(findDefinition.on),
-		findReferences: apiHook(references.register(context)),
-		findTypeDefinition: apiHook(findDefinition.onType),
+		findDefinition: apiHook(findDefinition.on, isTemplateScriptPosition),
+		findReferences: apiHook(references.register(context), true),
+		findTypeDefinition: apiHook(findDefinition.onType, isTemplateScriptPosition),
 		callHierarchy: {
-			doPrepare: apiHook(_callHierarchy.doPrepare),
-			getIncomingCalls: apiHook(_callHierarchy.getIncomingCalls),
-			getOutgoingCalls: apiHook(_callHierarchy.getOutgoingCalls),
+			doPrepare: apiHook(_callHierarchy.doPrepare, isTemplateScriptPosition),
+			getIncomingCalls: apiHook(_callHierarchy.getIncomingCalls, true),
+			getOutgoingCalls: apiHook(_callHierarchy.getOutgoingCalls, true),
 		},
-		prepareRename: apiHook(renames.prepareRename),
-		doRename: apiHook(renames.doRename),
+		prepareRename: apiHook(renames.prepareRename, isTemplateScriptPosition),
+		doRename: apiHook(renames.doRename, true),
 		getEditsForFileRename: apiHook(renames.onRenameFile, false),
-		getSemanticTokens: apiHook(semanticTokens.register(context)),
+		getSemanticTokens: apiHook(semanticTokens.register(context, () => update(true)), false),
 
 		doHover: apiHook(hover.register(context), isTemplateScriptPosition),
 		doComplete: apiHook(completions.register(context), isTemplateScriptPosition),
@@ -279,7 +279,7 @@ export function createLanguageService(
 			checkProject: apiHook(() => {
 				const vueImportErrors = scriptTsLs.doValidation(globalDoc.uri, { semantic: true });
 				return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
-			}),
+			}, false),
 			getGlobalDocs: () => [globalDoc],
 			getContext: apiHook(() => context),
 			getD3: apiHook(d3.register(context)),

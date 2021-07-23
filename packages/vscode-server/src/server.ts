@@ -87,8 +87,8 @@ async function onInitialized() {
 			connection,
 			documents,
 			folders,
-			async (uri: string) => await connection.sendRequest(shared.DocumentVersionRequest.type, { uri }),
-			async () => await connection.sendNotification(shared.SemanticTokensChangedNotification.type),
+			(uri: string) => connection.sendRequest(shared.DocumentVersionRequest.type, { uri }),
+			() => connection.languages.semanticTokens.refresh(),
 		);
 	}
 
@@ -99,7 +99,7 @@ async function onInitialized() {
 
 	switch (options.mode) {
 		case 'api': (await import('./registers/registerApiFeatures')).register(connection, options.tsPlugin); break;
-		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection); break;
+		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection, vue.getSemanticTokenLegend()); break;
 		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
 	}
 	connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);

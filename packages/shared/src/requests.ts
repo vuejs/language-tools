@@ -52,20 +52,6 @@ export namespace GetClientAttrNameCaseRequest {
 export namespace GetClientTarNameCaseRequest {
 	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, 'both' | 'kebabCase' | 'pascalCase', any> = new rpc.RequestType('volar/getTagNameCaseClient');
 }
-
-// semantic tokens
-export namespace RangeSemanticTokensRequest {
-	export const type: vscode.RequestType<{
-		textDocument: vscode.TextDocumentIdentifier;
-		range: vscode.Range;
-	}, vscode.SemanticTokens | undefined, any> = new rpc.RequestType('vue.semanticTokens');
-}
-export namespace SemanticTokenLegendRequest {
-	export const type: vscode.RequestType0<vscode.SemanticTokensLegend, any> = new rpc.RequestType0('vue.semanticTokenLegend');
-}
-export namespace SemanticTokensChangedNotification {
-	export const type: vscode.NotificationType0 = new rpc.NotificationType0('vue.semanticTokensChanged');
-}
 export namespace TsVersionChanged {
 	export const type: vscode.NotificationType<string> = new rpc.NotificationType('volar.tsVersionChanged');
 }

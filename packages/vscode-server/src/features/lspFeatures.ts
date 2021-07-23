@@ -180,6 +180,24 @@ export function register(
 			.getMatchService(uri)
 			?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
+	connection.languages.semanticTokens.on((handler, token, _, resultProgress) => {
+		const result = servicesManager
+			.getMatchService(handler.textDocument.uri)
+			?.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
+		return {
+			resultId: result?.resultId,
+			data: result?.data ?? [],
+		};
+	});
+	connection.languages.semanticTokens.onRange((handler, token, _, resultProgress) => {
+		const result = servicesManager
+			.getMatchService(handler.textDocument.uri)
+			?.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
+		return {
+			resultId: result?.resultId,
+			data: result?.data ?? [],
+		};
+	});
 	connection.workspace.onWillRenameFiles(async handler => {
 		const edits = (await Promise.all(handler.files
 			.map(file => {

@@ -4,7 +4,7 @@ import {
 	vueFileReg
 } from '../features/shared';
 
-export function register(connection: vscode.Connection) {
+export function register(connection: vscode.Connection, legend: vscode.SemanticTokensLegend) {
 	connection.client.register(vscode.DocumentHighlightRequest.type, vueFileReg);
 	connection.client.register(vscode.DocumentSymbolRequest.type, vueFileReg);
 	connection.client.register(vscode.DocumentLinkRequest.type, vueFileReg);
@@ -12,6 +12,12 @@ export function register(connection: vscode.Connection) {
 	connection.client.register(vscode.CodeLensRequest.type, {
 		documentSelector: allFilesReg.documentSelector,
 		resolveProvider: true,
+	});
+	connection.client.register(vscode.SemanticTokensRegistrationType.type, {
+		documentSelector: vueFileReg.documentSelector,
+		range: true,
+		full: false,
+		legend,
 	});
 	connection.client.register(vscode.CodeActionRequest.type, {
 		documentSelector: vueFileReg.documentSelector,

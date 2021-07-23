@@ -2,10 +2,11 @@ import { hyphenate } from '@vue/shared';
 import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
+import * as ts2 from 'vscode-typescript-languageservice'; // TODO: remove it
 
 type TokenData = [number, number, number, number, number | undefined];
 
-export function getSemanticTokenLegend(ts2: typeof import('vscode-typescript-languageservice')) {
+export function getSemanticTokenLegend() {
 
 	const tsLegend = ts2.getSemanticTokenLegend();
 	const tokenTypesLegend = [
@@ -23,9 +24,9 @@ export function getSemanticTokenLegend(ts2: typeof import('vscode-typescript-lan
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html, ts: ts2 } }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html } }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
-	const semanticTokensLegend = getSemanticTokenLegend(ts2);
+	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
 
 	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
@@ -42,32 +43,19 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html,
 				start: 0,
 				end: document.getText().length,
 			};
-		const templateScriptData = sourceFile.getTemplateScriptData();
-		const htmlElementsSet = new Set(templateScriptData.htmlElements);
-		const components = new Set([
-			...templateScriptData.components,
-			...templateScriptData.components.map(hyphenate),
-		].filter(name => !htmlElementsSet.has(name)));
 
 		let tokens: TokenData[] = [];
 
 		if (cancle?.isCancellationRequested) return;
-		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult.length) {
-			tokens = tokens.concat(htmlResult);
-			resultProgress?.report(buildTokens(tokens));
-		}
-
-		if (cancle?.isCancellationRequested) return;
 		const scriptSetupResult = getScriptSetupResult(sourceFile);
-		if (scriptSetupResult.length) {
+		if (!cancle?.isCancellationRequested && scriptSetupResult.length) {
 			tokens = tokens.concat(scriptSetupResult);
 			resultProgress?.report(buildTokens(tokens));
 		}
 
 		if (cancle?.isCancellationRequested) return;
-		let tsResult = getTsResult(sourceFile);
-		tsResult = tsResult.filter(tsToken => {
+		let scriptResult = getTsResult(sourceFile, 'script');
+		scriptResult = scriptResult.filter(tsToken => {
 			for (const setupToken of scriptSetupResult) {
 				if (setupToken[0] === tsToken[0]
 					&& setupToken[1] >= tsToken[1]
@@ -77,10 +65,30 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html,
 			}
 			return true;
 		});
-		if (tsResult.length) {
-			tokens = tokens.concat(tsResult);
+		if (!cancle?.isCancellationRequested && scriptResult.length) {
+			tokens = tokens.concat(scriptResult);
+			resultProgress?.report(buildTokens(tokens));
 		}
 
+		if (sourceFile.getHtmlSourceMaps().length) {
+			updateTemplateScripts()
+		}
+
+		if (cancle?.isCancellationRequested) return;
+		const templateResult = getTsResult(sourceFile, 'template');
+		if (!cancle?.isCancellationRequested && templateResult.length) {
+			tokens = tokens.concat(templateResult);
+			resultProgress?.report(buildTokens(tokens));
+		}
+
+		if (cancle?.isCancellationRequested) return;
+		const htmlResult = getHtmlResult(sourceFile);
+		if (!cancle?.isCancellationRequested && htmlResult.length) {
+			tokens = tokens.concat(htmlResult);
+			resultProgress?.report(buildTokens(tokens));
+		}
+
+		if (cancle?.isCancellationRequested) return;
 		return buildTokens(tokens);
 
 		function buildTokens(tokens: TokenData[]) {
@@ -100,29 +108,18 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html,
 				for (const label of genData.labels) {
 					const labelPos = document.positionAt(scriptSetup.loc.start + label.label.start);
 					result.push([labelPos.line, labelPos.character, label.label.end - label.label.start + 1, tokenTypes.get('refLabel') ?? -1, undefined]);
-					// for (const binary of label.binarys) {
-					// 	for (const _var of binary.vars) {
-					// 		const varPos = document.positionAt(scriptSetup.loc.start + _var.start);
-					// 		result.push([varPos.line, varPos.character, _var.end - _var.start, tokenTypes.get('refVariable') ?? -1, undefined]);
-					// 		for (const reference of _var.references) {
-					// 			const referencePos = document.positionAt(scriptSetup.loc.start + reference.start);
-					// 			result.push([referencePos.line, referencePos.character, reference.end - reference.start, tokenTypes.get('refVariable') ?? -1, undefined]);
-					// 		}
-					// 	}
-					// }
 				}
 			}
 			return result;
 		}
-		function getTsResult(sourceFile: SourceFile) {
+		function getTsResult(sourceFile: SourceFile, lsType: 'script' | 'template') {
 			const result: TokenData[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 
+				if (sourceMap.lsType !== lsType)
+					continue;
+
 				const tsLs = getTsLs(sourceMap.lsType);
-				let searchRange: {
-					start: number,
-					end: number,
-				} | undefined;
 
 				for (const maped of sourceMap) {
 					if (
@@ -130,35 +127,24 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html,
 						&& maped.sourceRange.end > offsetRange.start
 						&& maped.sourceRange.start < offsetRange.end
 					) {
-						if (!searchRange) {
-							searchRange = {
-								start: maped.mappedRange.start,
-								end: maped.mappedRange.end,
-							};
-						}
-						else {
-							searchRange.start = Math.min(maped.mappedRange.start, searchRange.start);
-							searchRange.end = Math.max(maped.mappedRange.end, searchRange.end);
-						}
-					}
-				}
-
-				if (searchRange) {
-					const tsRange = {
-						start: sourceMap.mappedDocument.positionAt(searchRange.start),
-						end: sourceMap.mappedDocument.positionAt(searchRange.end),
-					};
-					const tokens = tsLs.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
-					if (!tokens)
-						continue;
-					for (const token of tokens) {
-						const tsStart = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] });
-						const tsEnd = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
-						const vueRange = sourceMap.getSourceRange2(tsStart, tsEnd);
-						if (!vueRange || !vueRange.data.capabilities.semanticTokens)
+						if (cancle?.isCancellationRequested)
+							return result;
+						const tsRange = {
+							start: sourceMap.mappedDocument.positionAt(maped.mappedRange.start),
+							end: sourceMap.mappedDocument.positionAt(maped.mappedRange.end),
+						};
+						const tokens = tsLs.getDocumentSemanticTokens(sourceMap.mappedDocument.uri, tsRange, cancle);
+						if (!tokens)
 							continue;
-						const vuePos = document.positionAt(vueRange.start);
-						result.push([vuePos.line, vuePos.character, vueRange.end - vueRange.start, token[3], token[4]]);
+						for (const token of tokens) {
+							const tsStart = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] });
+							const tsEnd = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
+							const vueRange = sourceMap.getSourceRange2(tsStart, tsEnd);
+							if (!vueRange || !vueRange.data.capabilities.semanticTokens)
+								continue;
+							const vuePos = document.positionAt(vueRange.start);
+							result.push([vuePos.line, vuePos.character, vueRange.end - vueRange.start, token[3], token[4]]);
+						}
 					}
 				}
 			}
@@ -166,6 +152,13 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html,
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: TokenData[] = [];
+
+			const templateScriptData = sourceFile.getTemplateScriptData();
+			const htmlElementsSet = new Set(templateScriptData.htmlElements);
+			const components = new Set([
+				...templateScriptData.components,
+				...templateScriptData.components.map(hyphenate),
+			].filter(name => !htmlElementsSet.has(name)));
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 

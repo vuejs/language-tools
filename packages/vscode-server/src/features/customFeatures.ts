@@ -3,9 +3,7 @@ import * as fs from 'fs';
 import * as path from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import * as vue from 'vscode-vue-languageservice';
 import type { ServicesManager } from '../servicesManager';
-import * as ts2 from 'vscode-typescript-languageservice';
 
 export function register(
 	connection: vscode.Connection,
@@ -108,12 +106,6 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-	connection.onRequest(shared.RangeSemanticTokensRequest.type, async handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getSemanticTokens(handler.textDocument.uri, handler.range);
-	});
-	connection.onRequest(shared.SemanticTokenLegendRequest.type, () => vue.getSemanticTokenLegend(ts2));
 	connection.onRequest(shared.GetServerNameCasesRequest.type, handler => {
 		return servicesManager.getMatchService(handler.uri)?.__internal__.detectTagNameCase(handler.uri);
 	});
