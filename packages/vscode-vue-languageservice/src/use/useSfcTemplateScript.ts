@@ -349,7 +349,7 @@ export function useSfcTemplateScript(
 		};
 	}
 	function update(lang: string) {
-		if (data.value?.getText() !== textDoc.value?.getText()) {
+		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== shared.syntaxToLanguageId(lang))) {
 			if (data.value && templateCodeGens.value) {
 				const _version = version++;
 				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + lang, shared.syntaxToLanguageId(lang), _version, data.value.getText());
