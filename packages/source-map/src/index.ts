@@ -218,7 +218,12 @@ export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
 			}
 		}
 		else if (mode === Mode.Overlap) {
-			if ((start >= mapedFromRange.start && start <= mapedFromRange.end) || (end >= mapedFromRange.start && end <= mapedFromRange.end)) {
+			if (
+				(start >= mapedFromRange.start && start <= mapedFromRange.end)
+				|| (end >= mapedFromRange.start && end <= mapedFromRange.end)
+				|| (mapedFromRange.start >= start && mapedFromRange.start <= end)
+				|| (mapedFromRange.end >= start && mapedFromRange.end <= end)
+			) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
 				return {
