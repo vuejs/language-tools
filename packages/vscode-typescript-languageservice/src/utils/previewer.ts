@@ -35,6 +35,7 @@ function processInlineTags(text: string): string {
 function getTagBodyText(
 	tag: Proto.JSDocTagInfo,
 	filePathConverter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string | undefined {
 	if (!tag.text) {
 		return undefined;
@@ -48,7 +49,7 @@ function getTagBodyText(
 		return '```\n' + text + '\n```';
 	}
 
-	const text = convertLinkTags(tag.text, filePathConverter);
+	const text = convertLinkTags(tag.text, filePathConverter, getTextDocument);
 	switch (tag.name) {
 		case 'example':
 			// check for caption tags, fix for #79704
@@ -77,13 +78,14 @@ function getTagBodyText(
 function getTagDocumentation(
 	tag: Proto.JSDocTagInfo,
 	filePathConverter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string | undefined {
 	switch (tag.name) {
 		case 'augments':
 		case 'extends':
 		case 'param':
 		case 'template':
-			const body = (convertLinkTags(tag.text, filePathConverter)).split(/^(\S+)\s*-?\s*/);
+			const body = (convertLinkTags(tag.text, filePathConverter, getTextDocument)).split(/^(\S+)\s*-?\s*/);
 			if (body?.length === 3) {
 				const param = body[1];
 				const doc = body[2];
@@ -97,7 +99,7 @@ function getTagDocumentation(
 
 	// Generic tag
 	const label = `*@${tag.name}*`;
-	const text = getTagBodyText(tag, filePathConverter);
+	const text = getTagBodyText(tag, filePathConverter, getTextDocument);
 	if (!text) {
 		return label;
 	}
@@ -107,8 +109,9 @@ function getTagDocumentation(
 export function plainWithLinks(
 	parts: readonly Proto.SymbolDisplayPart[] | string,
 	filePathConverter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
-	return processInlineTags(convertLinkTags(parts, filePathConverter));
+	return processInlineTags(convertLinkTags(parts, filePathConverter, getTextDocument));
 }
 
 /**
@@ -117,6 +120,7 @@ export function plainWithLinks(
 function convertLinkTags(
 	parts: readonly Proto.SymbolDisplayPart[] | string | undefined,
 	filePathConverter: IFilePathToResourceConverter,
+	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
 	if (!parts) {
 		return '';
@@ -134,8 +138,36 @@ function convertLinkTags(
 			case 'link':
 				if (currentLink) {
 					const text = currentLink.text ?? currentLink.name;
-					if (currentLink.target) {
-						const link = filePathConverter.toResource(currentLink.target.file) + '#' + `L${currentLink.target.start.line},${currentLink.target.start.offset}`
+					let target = currentLink.target;
+
+					if (typeof currentLink.target === 'object' && 'fileName' in currentLink.target) {
+						const _target = currentLink.target as any as {
+							fileName: string,
+							textSpan: { start: number, length: number },
+						};
+						const fileDoc = getTextDocument(shared.uriToFsPath(_target.fileName));
+						if (fileDoc) {
+							const start = fileDoc.positionAt(_target.textSpan.start);
+							const end = fileDoc.positionAt(_target.textSpan.start + _target.textSpan.length);
+							target = {
+								file: _target.fileName,
+								start: {
+									line: start.line + 1,
+									offset: start.character + 1,
+								},
+								end: {
+									line: end.line + 1,
+									offset: end.character + 1,
+								},
+							};
+						}
+						else {
+							target = undefined;
+						}
+					}
+
+					if (target) {
+						const link = filePathConverter.toResource(target.file) + '#' + `L${target.start.line},${target.start.offset}`
 
 						out.push(`[${text}](${link})`);
 					} else {
@@ -176,51 +208,7 @@ export function tagsMarkdownPreview(
 	filePathConverter: IFilePathToResourceConverter,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
-
-	// fix https://github.com/johnsoncodehk/volar/issues/289
-	tags = tags.map(tag => {
-		if (tag.text) {
-			return {
-				...tag,
-				text: tag.text.map(part => {
-					const target: undefined | {} | {
-						fileName: string,
-						textSpan: { start: number, length: number },
-					} = (part as any).target;
-					if (target && 'fileName' in target) {
-						const fileDoc = getTextDocument(shared.uriToFsPath(target.fileName));
-						if (fileDoc) {
-							const start = fileDoc.positionAt(target.textSpan.start);
-							const end = fileDoc.positionAt(target.textSpan.start + target.textSpan.length);
-							const newTarget: Proto.FileSpan = {
-								file: target.fileName,
-								start: {
-									line: start.line + 1,
-									offset: start.character + 1,
-								},
-								end: {
-									line: end.line + 1,
-									offset: end.character + 1,
-								},
-							};
-							return {
-								...part,
-								target: newTarget,
-							};
-						}
-						return {
-							...part,
-							target: undefined,
-						}
-					}
-					return part;
-				}),
-			}
-		}
-		return tag;
-	});
-
-	return tags.map(tag => getTagDocumentation(tag, filePathConverter)).join('  \n\n');
+	return tags.map(tag => getTagDocumentation(tag, filePathConverter, getTextDocument)).join('  \n\n');
 }
 
 export function markdownDocumentation(
@@ -240,7 +228,7 @@ export function addMarkdownDocumentation(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 ): string {
 	if (documentation) {
-		out += plainWithLinks(documentation, converter);
+		out += plainWithLinks(documentation, converter, getTextDocument);
 	}
 
 	if (tags) {

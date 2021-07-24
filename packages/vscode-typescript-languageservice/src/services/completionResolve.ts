@@ -56,7 +56,7 @@ export function register(
 			}
 		}
 		if (details.displayParts) {
-			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: shared.fsPathToUri }));
+			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: shared.fsPathToUri }, getTextDocument2));
 		}
 		if (detailTexts.length) {
 			item.detail = detailTexts.join('\n');
