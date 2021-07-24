@@ -429,8 +429,7 @@ export function generate(
 						end: prop.loc.start.offset + prop.loc.source.split('=')[0].length,
 					};
 				if (isStatic) {
-					tsCodeGen.addText(`[`);
-					writeCodeWithQuotes(
+					writePropertyAccess(
 						slotName,
 						argRange,
 						{
@@ -438,7 +437,6 @@ export function generate(
 							capabilities: capabilitiesSet.slotName,
 						},
 					);
-					tsCodeGen.addText(`]`);
 				}
 				else {
 					tsCodeGen.addText(`[`);
