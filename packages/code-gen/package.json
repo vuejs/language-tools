@@ -1,6 +1,6 @@
 {
 	"name": "@volar/code-gen",
-	"version": "0.26.7",
+	"version": "0.26.8",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "packages/code-gen"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.26.7",
-		"@volar/source-map": "^0.26.7"
+		"@volar/shared": "^0.26.8",
+		"@volar/source-map": "^0.26.8"
 	}
 }
