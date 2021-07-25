@@ -9,8 +9,6 @@ let previewPanel: vscode.WebviewPanel | undefined;
 let lastPreviewFile: string | undefined;
 let lastPreviewQuery: string | undefined;
 
-const previewPort = 3333;
-
 export async function activate(context: vscode.ExtensionContext) {
 
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
@@ -82,15 +80,19 @@ export async function activate(context: vscode.ExtensionContext) {
 	async function startFinderPanel(_panel: vscode.WebviewPanel) {
 
 		vscode.commands.executeCommand('setContext', 'volar.showSelectElement', true);
-		const messageDisposable = _panel.webview.onDidReceiveMessage(webViewEventHandler);
+		const disposable_1 = _panel.webview.onDidReceiveMessage(webViewEventHandler);
+		const disposable_2 = vscode.workspace.onDidChangeConfiguration(() => {
+			_panel.webview.html = getWebviewContent(`http://localhost:${port}`);
+		});
 
 		_panel.onDidDispose(() => {
 			vscode.commands.executeCommand('setContext', 'volar.showSelectElement', false);
-			messageDisposable.dispose();
+			disposable_1.dispose();
+			disposable_2.dispose();
 			terminal.dispose();
 		});
 
-		const port = await portfinder.getPortPromise({ port: previewPort });
+		const port = await portfinder.getPortPromise({ port: vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333 });
 		const terminal = vscode.window.createTerminal('volar-finder');
 		terminal.sendText(`npx vite --port=${port} --mode=volar`);
 
@@ -115,20 +117,26 @@ export async function activate(context: vscode.ExtensionContext) {
 			if (e.document.fileName === lastPreviewFile) {
 				const newQuery = createQuery(e.document.getText());
 				if (newQuery !== lastPreviewQuery) {
-					updatePreviewPanel(e.document.fileName, newQuery, port);
+					updatePreviewPanel(lastPreviewFile, newQuery, port);
 				}
 			}
 		});
 		const disposable_3 = _panel.webview.onDidReceiveMessage(webViewEventHandler);
+		const disposable_4 = vscode.workspace.onDidChangeConfiguration(() => {
+			if (lastPreviewFile !== undefined && lastPreviewQuery !== undefined) {
+				updatePreviewPanel(lastPreviewFile, lastPreviewQuery, port);
+			}
+		});
 
 		_panel.onDidDispose(() => {
 			disposable_1.dispose();
 			disposable_2.dispose();
 			disposable_3.dispose();
+			disposable_4.dispose();
 			terminal.dispose();
 		});
 
-		const port = await portfinder.getPortPromise({ port: previewPort });
+		const port = await portfinder.getPortPromise({ port: vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333 });
 		const terminal = vscode.window.createTerminal('volar-previewer');
 		terminal.sendText(`npx vite --port=${port}`);
 
@@ -213,11 +221,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	function getWebviewContent(url: string, state: any = {}, bg?: string) {
+		const configs = vscode.workspace.getConfiguration('volar');
 		return `
 			<style>
 			body {
 				padding: 0;
-				${bg ? `background-image: url(${bg});` : 'background-color: #fff;'}
+				background-color: ${configs.get('preview.backgroundColor')};
+				${bg && configs.get('preview.transparentGrid') ? `background-image: url(${bg});` : ''}
 			}
 			</style>
 

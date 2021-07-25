@@ -167,6 +167,21 @@
 					],
 					"default": "auto-kebab",
 					"description": "Preferred attr name case."
+				},
+				"volar.preview.port": {
+					"type": "number",
+					"default": 3333,
+					"description": "Default port for component preview server."
+				},
+				"volar.preview.backgroundColor": {
+					"type": "string",
+					"default": "#fff",
+					"description": "Component preview background color."
+				},
+				"volar.preview.transparentGrid": {
+					"type": "boolean",
+					"default": true,
+					"description": "Component preview background style."
 				}
 			}
 		},
