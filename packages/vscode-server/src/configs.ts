@@ -24,7 +24,7 @@ export function updateConfigs(connection: vscode.Connection) {
 		vue.codeLensOptions.scriptSetupTool = codeLensRefScriptSetupTool;
 	}
 	async function updateEmmetConfig() {
-		emmetConfig = await connection.workspace.getConfiguration('emmet');
+		emmetConfig = (await connection.workspace.getConfiguration('emmet')) ?? {};
 	}
 }
 export function getEmmetConfiguration(syntax: string): emmet.VSCodeEmmetConfig {
