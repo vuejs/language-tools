@@ -1,6 +1,6 @@
 # @volar/experimental
 
-## Experimental Preview Feature
+## Experimental Code Finder and Component Preview Features
 
 Currently only support for Vue 3 + Vite.
 
@@ -26,8 +26,8 @@ Example: https://github.com/johnsoncodehk/volar-starter
 
     export default defineConfig({
         // ...
-        plugins: [vue(volar.vitePluginOptions)]
+        plugins: [vue(volar.getVuePluginOptionsForVite())]
     });
     ```
-4. Start Vite DEV server.
-5. Run `Volar (Experimental): Preview` command in VSCode.
+4. Open a Vue file in VSCode from a Vite project.
+5. Run `Volar (Experimental): Open Code Finder` / `Volar (Experimental): Open Component Preview` command.
