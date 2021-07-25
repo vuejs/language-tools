@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { parse } from '@vue/compiler-sfc';
+import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'path';
 import { sleep } from '@volar/shared';
 import * as portfinder from 'portfinder';
@@ -108,7 +109,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function startPreviewPanel(_panel: vscode.WebviewPanel) {
 
-
 		const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
 			if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
 				_panel.dispose();
@@ -206,14 +206,37 @@ export async function activate(context: vscode.ExtensionContext) {
 		const sfc = parse(vueCode, { sourceMap: false, ignoreEmpty: false });
 		for (const customBlock of sfc.descriptor.customBlocks) {
 			if (customBlock.type === 'preview') {
-				const keys = Object.keys(customBlock.attrs);
+				const previewTagStart = vueCode.substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
+				const previewTag = vueCode.substring(previewTagStart, customBlock.loc.start.offset);
+				const previewGen = compile(previewTag + '</preview>').ast;
+				const props: Record<string, string> = {};
+				for (const previewNode of previewGen.children) {
+					if (previewNode.type === NodeTypes.ELEMENT) {
+						for (const prop of previewNode.props) {
+							if (prop.type === NodeTypes.ATTRIBUTE) {
+								if (prop.value) {
+									props[prop.name] = JSON.stringify(prop.value.content);
+								}
+								else {
+									props[prop.name] = JSON.stringify(true);
+								}
+							}
+							else if (prop.type === NodeTypes.DIRECTIVE) {
+								if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.exp?.type == NodeTypes.SIMPLE_EXPRESSION) {
+									props[prop.arg.content] = prop.exp.content;
+								}
+							}
+						}
+					}
+				}
+				const keys = Object.keys(props);
 				for (let i = 0; i < keys.length; i++) {
 					query += i === 0 ? '?' : '&';
 					const key = keys[i];
-					const value = customBlock.attrs[key];
+					const value = props[key];
 					query += key;
 					query += '=';
-					query += encodeURIComponent(JSON.stringify(value));
+					query += encodeURIComponent(value);
 				}
 				break;
 			}
