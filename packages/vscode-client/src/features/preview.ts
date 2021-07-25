@@ -123,18 +123,18 @@ export async function activate(context: vscode.ExtensionContext) {
 	async function startPreviewPanel(_panel: vscode.WebviewPanel, fileName: string) {
 
 		const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
-			if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
-				_panel.dispose();
-				vscode.commands.executeCommand('volar.action.preview');
+			// if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
+			// 	_panel.dispose();
+			// 	vscode.commands.executeCommand('volar.action.preview');
 
-				// TODO: not working
-				// const newQuery = createQuery(e.document.getText());
-				// const url = `http://localhost:${port}/__preview${newQuery}#${e.document.fileName}`;
-				// previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
+			// 	// TODO: not working
+			// 	// const newQuery = createQuery(e.document.getText());
+			// 	// const url = `http://localhost:${port}/__preview${newQuery}#${e.document.fileName}`;
+			// 	// previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
 
-				// lastPreviewFile = e.document.fileName;
-				// lastPreviewQuery = newQuery;
-			}
+			// 	// lastPreviewFile = e.document.fileName;
+			// 	// lastPreviewQuery = newQuery;
+			// }
 		});
 		const disposable_2 = vscode.workspace.onDidChangeTextDocument(e => {
 			if (e.document.fileName === lastPreviewFile) {
