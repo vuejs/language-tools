@@ -105,6 +105,7 @@ function installPreview(app: App) {
 				return () => h(target.value, props.value);
 			},
 		});
+		// TODO: fix preview not working is preview component is root component
 		(app._component as any).setup = preview.setup;
 
 		app.config.warnHandler = (msg) => {

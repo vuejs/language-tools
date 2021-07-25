@@ -343,6 +343,12 @@
 				"icon": "$(search)"
 			},
 			{
+				"command": "workbench.action.webview.reloadWebviewAction",
+				"title": "Refresh",
+				"category": "Volar",
+				"icon": "$(refresh)"
+			},
+			{
 				"command": "volar.selectTypeScriptVersion",
 				"title": "Select TypeScript Version...",
 				"category": "Volar"
@@ -368,6 +374,11 @@
 				{
 					"command": "volar.action.selectElement",
 					"when": "activeEditor == WebviewEditor && volar.showSelectElement",
+					"group": "navigation"
+				},
+				{
+					"command": "workbench.action.webview.reloadWebviewAction",
+					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				}
 			]
