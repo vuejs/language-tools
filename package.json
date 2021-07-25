@@ -102,7 +102,7 @@
 				"volar.icon.finder": {
 					"type": "boolean",
 					"default": false,
-					"description": "(Experimental) Show element code finder icon in title area of editor."
+					"description": "(Experimental) Show code finder icon in title area of editor."
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
@@ -281,7 +281,7 @@
 			},
 			{
 				"command": "volar.action.finder",
-				"title": "Open Element Code Finder (WebView)",
+				"title": "Open Code Finder (WebView)",
 				"category": "Volar (Experimental)",
 				"icon": "$(search)"
 			},

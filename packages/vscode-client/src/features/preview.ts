@@ -4,7 +4,6 @@ import * as path from 'path';
 import { sleep } from '@volar/shared';
 import * as portfinder from 'portfinder';
 
-let defaultServerUrl = 'http://localhost:3000/';
 let finderPanel: vscode.WebviewPanel | undefined;
 let previewPanel: vscode.WebviewPanel | undefined;
 let lastPreviewFile: string | undefined;
@@ -15,23 +14,22 @@ const previewPort = 3333;
 export async function activate(context: vscode.ExtensionContext) {
 
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
-		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: { title: string, url: string }) {
-			startFinderPanel(panel);
-			updateFinderPanel(panel, state.title, state.url);
+		async deserializeWebviewPanel(panel: vscode.WebviewPanel) {
+			const port = await startFinderPanel(panel);
+			panel.webview.html = getWebviewContent(`http://localhost:${port}`)
 		}
 	}
 
 	class PreviewPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: { fileName: string, query: string }) {
-			const port = await portfinder.getPortPromise({ port: previewPort });
-			await startPreviewPanel(panel, port);
+			const port = await startPreviewPanel(panel);
 			updatePreviewPanel(state.fileName, state.query, port);
 		}
 	}
 
 	// kill preview terminals on reload vscode
 	for (const terminal of vscode.window.terminals) {
-		if (terminal.name === 'volar-preview') {
+		if (terminal.name === 'volar-previewer' || terminal.name === 'volar-finder') {
 			terminal.dispose();
 		}
 	}
@@ -42,21 +40,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.finder', async () => {
 
-		const serverUrl = await createInputBox(defaultServerUrl, 'Preview Server URL...');
-		if (!serverUrl) return;
-
-		defaultServerUrl = serverUrl;
 		finderPanel = vscode.window.createWebviewPanel(
 			'finder',
-			'Volar WebView',
+			'Code Finder',
 			vscode.ViewColumn.Beside,
 			{
 				enableScripts: true,
 			},
 		);
 
-		startFinderPanel(finderPanel);
-		updateFinderPanel(finderPanel, 'Volar WebView', serverUrl);
+		const port = await startFinderPanel(finderPanel);
+		finderPanel.webview.html = getWebviewContent(`http://localhost:${port}`);
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.preview', async () => {
@@ -78,34 +72,39 @@ export async function activate(context: vscode.ExtensionContext) {
 			},
 		);
 
-		const port = await portfinder.getPortPromise({ port: previewPort });
-		await startPreviewPanel(previewPanel, port);
+		const port = await startPreviewPanel(previewPanel);
 		updatePreviewPanel(editor.document.fileName, createQuery(editor.document.getText()), port);
 	}));
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('finder', new FinderPanelSerializer()));
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('preview', new PreviewPanelSerializer()));
 
-	function startFinderPanel(_panel: vscode.WebviewPanel) {
+	async function startFinderPanel(_panel: vscode.WebviewPanel) {
+
 		vscode.commands.executeCommand('setContext', 'volar.showSelectElement', true);
 		const messageDisposable = _panel.webview.onDidReceiveMessage(webViewEventHandler);
 
 		_panel.onDidDispose(() => {
 			vscode.commands.executeCommand('setContext', 'volar.showSelectElement', false);
 			messageDisposable.dispose();
+			terminal.dispose();
 		});
 
-		finderPanel = _panel;
-	}
+		const port = await portfinder.getPortPromise({ port: previewPort });
+		const terminal = vscode.window.createTerminal('volar-finder');
+		terminal.sendText(`npx vite --port=${port} --mode=volar`);
 
-	async function startPreviewPanel(_panel: vscode.WebviewPanel, port: number) {
-
-		const terminal = vscode.window.createTerminal('volar-preview');
-		terminal.sendText(`npx vite --port=${port}`);
-
-		while (await portfinder.getPortPromise({ port: port }) === port) {
+		const start = Date.now();
+		while (Date.now() - start < 10000 && await portfinder.getPortPromise({ port: port }) === port) {
 			await sleep(10);
 		}
+
+		finderPanel = _panel;
+
+		return port;
+	}
+
+	async function startPreviewPanel(_panel: vscode.WebviewPanel) {
 
 		const disposable_1 = vscode.window.onDidChangeActiveTextEditor(e => {
 			if (e && e.document.languageId === 'vue') {
@@ -129,7 +128,18 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.dispose();
 		});
 
+		const port = await portfinder.getPortPromise({ port: previewPort });
+		const terminal = vscode.window.createTerminal('volar-previewer');
+		terminal.sendText(`npx vite --port=${port}`);
+
+		const start = Date.now();
+		while (Date.now() - start < 10000 && await portfinder.getPortPromise({ port: port }) === port) {
+			await sleep(10);
+		}
+
 		previewPanel = _panel;
+
+		return port;
 	}
 
 	async function webViewEventHandler(message: any) {
@@ -202,23 +212,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	function updateFinderPanel(panel: vscode.WebviewPanel, title: string, src: string) {
-		panel.title = title;
-		panel.webview.html = getWebviewContent(src, { title, src });
-	}
-
-	function createInputBox(defaultValue: string, placeholder: string) {
-		return new Promise<string | undefined>(resolve => {
-			const serverUrl = vscode.window.createInputBox();
-			serverUrl.placeholder = placeholder;
-			serverUrl.value = defaultValue;
-			serverUrl.onDidAccept(() => resolve(serverUrl.value));
-			serverUrl.onDidHide(() => resolve(undefined))
-			serverUrl.show();
-		});
-	}
-
-	function getWebviewContent(url: string, state: any, bg?: string) {
+	function getWebviewContent(url: string, state: any = {}, bg?: string) {
 		return `
 			<style>
 			body {

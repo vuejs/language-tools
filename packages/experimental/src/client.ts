@@ -2,11 +2,11 @@ import type { Plugin, App } from '@vue/runtime-core';
 import { defineComponent, defineAsyncComponent, h } from 'vue';
 
 export const vuePlugin: Plugin = app => {
-	installWebview(app);
+	installFinder(app);
 	installPreview(app);
 };
 
-function installWebview(app: App) {
+function installFinder(app: App) {
 
 	window.addEventListener('scroll', updateOverlay);
 	window.addEventListener('message', event => {
@@ -14,12 +14,15 @@ function installWebview(app: App) {
 			enabled = true;
 		}
 	});
-	window.addEventListener('click', () => {
-		enabled = false;
-		unHighlight();
-		if (lastGotoData) {
-			parent.postMessage(lastGotoData, '*');
-			lastGotoData = undefined;
+	window.addEventListener('click', (ev) => {
+		if (enabled) {
+			ev.preventDefault(); // TODO: not working
+			enabled = false;
+			unHighlight();
+			if (lastGotoData) {
+				parent.postMessage(lastGotoData, '*');
+				lastGotoData = undefined;
+			}
 		}
 	});
 
