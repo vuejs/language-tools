@@ -5,9 +5,7 @@
 	"license": "MIT",
 	"files": [
 		"*.js",
-		"*.d.ts",
-		"out/**/*.js",
-		"out/**/*.d.ts"
+		"*.d.ts"
 	],
 	"repository": {
 		"type": "git",
