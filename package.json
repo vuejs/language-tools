@@ -94,6 +94,16 @@
 					"default": true,
 					"description": "Show split editor icon in title area of editor."
 				},
+				"volar.icon.preview": {
+					"type": "boolean",
+					"default": false,
+					"description": "(Experimental) Show preview component icon in title area of editor."
+				},
+				"volar.icon.finder": {
+					"type": "boolean",
+					"default": false,
+					"description": "(Experimental) Show element code finder icon in title area of editor."
+				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": true,
@@ -270,8 +280,14 @@
 				"category": "Volar (Experimental)"
 			},
 			{
+				"command": "volar.action.finder",
+				"title": "Open Element Code Finder (WebView)",
+				"category": "Volar (Experimental)",
+				"icon": "$(search)"
+			},
+			{
 				"command": "volar.action.preview",
-				"title": "Open WebView / Preview",
+				"title": "Open Component Preview",
 				"category": "Volar (Experimental)",
 				"icon": "$(open-preview)"
 			},
@@ -326,12 +342,17 @@
 				},
 				{
 					"command": "volar.action.preview",
-					"when": "editorLangId == vue && false",
+					"when": "editorLangId == vue && config.volar.icon.preview",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.finder",
+					"when": "editorLangId == vue && config.volar.icon.finder",
 					"group": "navigation"
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor",
+					"when": "activeEditor == WebviewEditor && volar.showSelectElement",
 					"group": "navigation"
 				}
 			]

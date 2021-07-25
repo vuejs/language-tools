@@ -2,8 +2,8 @@
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"target": "es5",
-		"module": "es2015",
-		"outDir": "out",
+		"module": "esnext",
+		"outDir": ".",
 		"rootDir": "src",
 	},
 	"include": [
