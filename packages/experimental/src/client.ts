@@ -18,7 +18,8 @@ function installFinder(app: App) {
 		if (enabled) {
 			ev.preventDefault(); // TODO: not working
 			enabled = false;
-			unHighlight();
+			highlightNodes = [];
+			updateOverlay();
 			if (lastGotoData) {
 				parent.postMessage(lastGotoData, '*');
 				lastGotoData = undefined;
@@ -27,12 +28,11 @@ function installFinder(app: App) {
 	});
 
 	const overlay = createOverlay();
-	let highlightNode: HTMLElement | undefined;
+	let highlightNodes: [HTMLElement, string, string][] = [];
 	let enabled = false;
 	let lastGotoData: any | undefined;
 
 	app.config.globalProperties.$volar = {
-		goToTemplate,
 		highlight,
 		unHighlight,
 	};
@@ -48,17 +48,14 @@ function installFinder(app: App) {
 		};
 		parent.postMessage(lastGotoData, '*');
 	}
-	function highlight(node: HTMLElement) {
+	function highlight(node: HTMLElement, fileName: string, range: string) {
 		if (!enabled) return;
-		highlightNode = node;
-		document.body.appendChild(overlay);
+		highlightNodes.push([node, fileName, range]);
 		updateOverlay();
 	}
-	function unHighlight() {
-		highlightNode = undefined;
-		if (overlay.parentNode) {
-			overlay.parentNode.removeChild(overlay)
-		}
+	function unHighlight(node: HTMLElement) {
+		highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
+		updateOverlay();
 	}
 	function createOverlay() {
 		const overlay = document.createElement('div');
@@ -73,12 +70,20 @@ function installFinder(app: App) {
 		return overlay;
 	}
 	function updateOverlay() {
-		if (!highlightNode) return;
-		const rect = highlightNode.getBoundingClientRect();
-		overlay.style.width = ~~rect.width + 'px';
-		overlay.style.height = ~~rect.height + 'px';
-		overlay.style.top = ~~rect.top + 'px';
-		overlay.style.left = ~~rect.left + 'px';
+		if (highlightNodes.length) {
+			document.body.appendChild(overlay);
+			const highlight = highlightNodes[highlightNodes.length - 1];
+			const highlightNode = highlight[0];
+			const rect = highlightNode.getBoundingClientRect();
+			overlay.style.width = ~~rect.width + 'px';
+			overlay.style.height = ~~rect.height + 'px';
+			overlay.style.top = ~~rect.top + 'px';
+			overlay.style.left = ~~rect.left + 'px';
+			goToTemplate(highlight[1], highlight[2]);
+		}
+		else if (overlay.parentNode) {
+			overlay.parentNode.removeChild(overlay)
+		}
 	}
 }
 

@@ -10,6 +10,7 @@ let finderPanel: vscode.WebviewPanel | undefined;
 let previewPanel: vscode.WebviewPanel | undefined;
 let lastPreviewFile: string | undefined;
 let lastPreviewQuery: string | undefined;
+let goToTemplateReq = 0;
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -217,16 +218,25 @@ export async function activate(context: vscode.ExtensionContext) {
 				break;
 			}
 			case 'goToTemplate': {
+				const req = ++goToTemplateReq;
 				const data = message.data as {
 					fileName: string,
 					range: [number, number],
 				};
 				const doc = await vscode.workspace.openTextDocument(data.fileName);
+
+				if (req !== goToTemplateReq)
+					return;
+
 				const sfc = parse(doc.getText(), { sourceMap: false, ignoreEmpty: false });
 				const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 				const start = doc.positionAt(data.range[0] + offset);
 				const end = doc.positionAt(data.range[1] + offset);
 				await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+
+				if (req !== goToTemplateReq)
+					return;
+
 				const editor = vscode.window.activeTextEditor;
 				if (editor) {
 					editor.selection = new vscode.Selection(start, end);

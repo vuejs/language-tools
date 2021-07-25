@@ -29,7 +29,7 @@ const vuePluginOptions: NonNullable<Parameters<typeof VitePlugin>[0]> = {
 								name: 'on',
 								exp: {
 									type: 4,
-									content: '$volar.goToTemplate($.type.__file, $event.target.dataset.loc); $volar.highlight($event.target);',
+									content: '$volar.highlight($event.target, $.type.__file, $event.target.dataset.loc);',
 									isStatic: false,
 									constType: 0,
 									loc: node.loc,
@@ -49,7 +49,7 @@ const vuePluginOptions: NonNullable<Parameters<typeof VitePlugin>[0]> = {
 								name: 'on',
 								exp: {
 									type: 4,
-									content: '$volar.unHighlight()',
+									content: '$volar.unHighlight($event.target)',
 									isStatic: false,
 									constType: 0,
 									loc: node.loc,
