@@ -2,12 +2,12 @@ import type VitePlugin from '@vitejs/plugin-vue';
 
 export function getVuePluginOptionsForVite() {
 	if ((process.argv as string[]).includes('--mode=volar')) {
-		return vitePluginOptions;
+		return vuePluginOptions;
 	}
 	return {};
 }
 
-export const vitePluginOptions: NonNullable<Parameters<typeof VitePlugin>[0]> = {
+const vuePluginOptions: NonNullable<Parameters<typeof VitePlugin>[0]> = {
 	template: {
 		compilerOptions: {
 			nodeTransforms: [
