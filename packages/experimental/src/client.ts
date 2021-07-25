@@ -1,5 +1,5 @@
 import type { Plugin, App } from '@vue/runtime-core';
-import { defineComponent, defineAsyncComponent, h } from 'vue';
+import { defineComponent, defineAsyncComponent, h, ref, computed } from 'vue';
 
 export const vuePlugin: Plugin = app => {
 	installFinder(app);
@@ -86,14 +86,23 @@ function installPreview(app: App) {
 	if (location.pathname === '/__preview') {
 		const preview = defineComponent({
 			setup() {
-				const url = new URL(location.href);
-				const file = url.hash.substr(1);
-				const target = defineAsyncComponent(() => import(file));
-				const props: Record<string, any> = {};
-				url.searchParams.forEach((value, key) => {
-					props[key] = JSON.parse(value);
+				window.addEventListener('message', event => {
+					if (event.data?.command === 'updateUrl') {
+						url.value = new URL(event.data.data);
+						file.value = url.value.hash.substr(1);
+					}
 				});
-				return () => h(target, props);
+				const url = ref(new URL(location.href));
+				const file = ref(url.value.hash.substr(1));
+				const target = computed(() => defineAsyncComponent(() => import(file.value))); // TODO: responsive not working
+				const props = computed(() => {
+					const _props: Record<string, any> = {};
+					url.value.searchParams.forEach((value, key) => {
+						_props[key] = JSON.parse(value);
+					});
+					return _props;
+				});
+				return () => h(target.value, props.value);
 			},
 		});
 		(app._component as any).setup = preview.setup;

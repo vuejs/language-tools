@@ -108,16 +108,29 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function startPreviewPanel(_panel: vscode.WebviewPanel) {
 
-		const disposable_1 = vscode.window.onDidChangeActiveTextEditor(e => {
-			if (e && e.document.languageId === 'vue') {
-				updatePreviewPanel(e.document.fileName, createQuery(e.document.getText()), port);
+
+		const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
+			if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
+				_panel.dispose();
+				vscode.commands.executeCommand('volar.action.preview');
+
+				// TODO: not working
+				// const newQuery = createQuery(e.document.getText());
+				// const url = `http://localhost:${port}/__preview${newQuery}#${e.document.fileName}`;
+				// previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
+
+				// lastPreviewFile = e.document.fileName;
+				// lastPreviewQuery = newQuery;
 			}
 		});
 		const disposable_2 = vscode.workspace.onDidChangeTextDocument(e => {
 			if (e.document.fileName === lastPreviewFile) {
 				const newQuery = createQuery(e.document.getText());
 				if (newQuery !== lastPreviewQuery) {
-					updatePreviewPanel(lastPreviewFile, newQuery, port);
+					const url = `http://localhost:${port}/__preview${newQuery}#${lastPreviewFile}`;
+					previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
+
+					lastPreviewQuery = newQuery;
 				}
 			}
 		});
