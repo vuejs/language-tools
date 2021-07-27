@@ -36,6 +36,9 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 		if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 			return true;
 		}
+		else if (ts.isFunctionDeclaration(node) && node.name && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+			return true;
+		}
 		else if (ts.isShorthandPropertyAssignment(node)) {
 			return true;
 		}
