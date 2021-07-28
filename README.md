@@ -8,11 +8,35 @@ Volar is a Language Support plugin built specifically for Vue 3. It's based on [
 
 🛠️ This project is still in refactoring to make contributing easier.
 
-[[Roadmap](https://github.com/johnsoncodehk/volar/issues/28)] [[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
+[[Tips](https://github.com/johnsoncodehk/volar/issues/53)] [[Discord](https://discord.gg/5bnSSSSBbK)]
 
-Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
+## Sponsors
 
-If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/guide/snippet.html#customizable-scaffold-snippets), recommend use [Snippet Generator](https://marketplace.visualstudio.com/items?itemName=wenfangdu.snippet-generator) convert to VSCode Snippets.
+This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
+
+<table>
+  <tr>
+    <td>
+      <a href="https://github.com/Leniolabs">
+        <img itemprop="image" src="https://github.com/Leniolabs.png" width="100" height="100">
+      </a>
+    </td>
+    <td>
+      <h3>Leniolabs_</h3>
+      <p>Scale your Front-end development with our unique approach</p>
+      <p>
+        URL: <a href="https://www.leniolabs.com/">https://www.leniolabs.com/</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;Twitter: <a href="https://twitter.com/Leniolabs_">@Leniolabs_</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;email: <a href="mailto:info@leniolabs.com">info@leniolabs.com</a>
+      </p>
+    </td>
+  </tr>
+</table>
+
+## Quick Start
+
+- [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
+- [Vitesse](https://github.com/antfu/vitesse)
 
 ## By-product
 
@@ -21,15 +45,6 @@ If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/
 - [vscode-vue-languageservice](https://www.npmjs.com/package/vscode-vue-languageservice) : Generic language server module for Vue
 - [vscode-pug-languageservice](https://www.npmjs.com/package/vscode-pug-languageservice): Generic language server module for Pug
 - [vscode-typescript-languageservice](https://www.npmjs.com/package/vscode-typescript-languageservice): Generic language server module for TypeScript
-
-## Sponsors
-
-If you like this extension, please consider becoming a [Sponsor](https://github.com/sponsors/johnsoncodehk). Thank you.
-
-## Quick Start
-
-- [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
-- [Vitesse](https://github.com/antfu/vitesse)
 
 ## Using
 
@@ -125,4 +140,8 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 >
 > Also required `"strict": true` and `"moduleResolution": "node"`.
 
-> `__VLS_slots` will change in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
+> `__VLS_slots` is planed to remove in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
+
+> Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
+
+> If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/guide/snippet.html#customizable-scaffold-snippets), recommend use [Snippet Generator](https://marketplace.visualstudio.com/items?itemName=wenfangdu.snippet-generator) convert to VSCode Snippets.
