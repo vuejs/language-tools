@@ -411,18 +411,20 @@ export function createLanguageService(
 			...vueHost,
 			fileExists: vueHost.fileExists
 				? fileName => {
+					// .vue.js -> .vue
+					// .vue.ts -> .vue
+					// .vue.d.ts (never)
 					const fileNameTrim = upath.trimExt(fileName);
 					if (fileNameTrim.endsWith('.vue')) {
-						const sourceFile = sourceFiles.get(shared.fsPathToUri(fileNameTrim));
-						if (sourceFile) {
-							return sourceFiles.getTsDocuments(lsType).has(shared.fsPathToUri(fileName));
+						let sourceFile = sourceFiles.get(shared.fsPathToUri(fileNameTrim));
+						if (!sourceFile) {
+							const fileExists = !!vueHost.fileExists?.(fileNameTrim);
+							if (fileExists) {
+								vueProjectVersion += '-old'; // force update
+								update(false); // create virtual files
+							}
 						}
-						const fileExists = !!vueHost.fileExists?.(fileNameTrim);
-						if (fileExists) {
-							vueProjectVersion += '-old'; // force update
-							update(false); // create virtual files
-						}
-						return fileExists;
+						return sourceFiles.getTsDocuments(lsType).has(shared.fsPathToUri(fileName));
 					}
 					else {
 						return !!vueHost.fileExists?.(fileName);
