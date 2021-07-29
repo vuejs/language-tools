@@ -25,9 +25,9 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
       <h3>Leniolabs_</h3>
       <p>Scale your Front-end development with our unique approach</p>
       <p>
-        URL: <a href="https://www.leniolabs.com/">https://www.leniolabs.com/</a>
-        &nbsp;&nbsp;&nbsp;&nbsp;Twitter: <a href="https://twitter.com/Leniolabs_">@Leniolabs_</a>
-        &nbsp;&nbsp;&nbsp;&nbsp;email: <a href="mailto:info@leniolabs.com">info@leniolabs.com</a>
+        <a href="https://www.leniolabs.com/">https://www.leniolabs.com/</a>
+        ・<a href="https://twitter.com/Leniolabs_">@Leniolabs_</a>
+        ・<a href="mailto:info@leniolabs.com">info@leniolabs.com</a>
       </p>
     </td>
   </tr>
