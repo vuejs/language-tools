@@ -146,17 +146,19 @@ function useDocDescriptor() {
 		return splitDocDescriptor.value;
 	}
 }
-export function userPick<K>(options: Map<K, string>, placeholder?: string) {
-	return new Promise<K | undefined>(resolve => {
+export function userPick(options: Record<string, vscode.QuickPickItem>, placeholder?: string) {
+	return new Promise<string | undefined>(resolve => {
 		const quickPick = vscode.window.createQuickPick();
-		quickPick.items = [...options.values()].map(option => ({ label: option }));
+		quickPick.items = Object.values(options);
 		quickPick.placeholder = placeholder;
 		quickPick.onDidChangeSelection(selection => {
 			if (selection[0]) {
-				for (const [key, label] of options) {
-					if (selection[0].label === label) {
+				for (let key in options) {
+					const option = options[key];
+					if (selection[0] === option) {
 						resolve(key);
 						quickPick.hide();
+						break;
 					}
 				}
 			}

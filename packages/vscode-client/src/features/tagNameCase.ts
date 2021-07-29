@@ -42,45 +42,44 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const crtDoc = vscode.window.activeTextEditor?.document;
 		if (!crtDoc) return;
 
-		const options = new Map<number, string>();
-
-		// tag
 		const tagCase = tagCases.get(crtDoc.uri.toString());
-		options.set(0, (tagCase === 'both' ? '• ' : '') + 'Component Using kebab-case and PascalCase (Both)');
-		options.set(1, (tagCase === 'kebabCase' ? '• ' : '') + 'Component Using kebab-case');
-		options.set(2, (tagCase === 'pascalCase' ? '• ' : '') + 'Component Using PascalCase');
-		options.set(3, 'Detect Component name from Content');
-		// Converts
-		options.set(7, 'Convert Component name to kebab-case');
-		options.set(8, 'Convert Component name to PascalCase');
+
+		const options: Record<string, vscode.QuickPickItem> = {};
+
+		options[0] = { label: (tagCase === 'both' ? '• ' : '') + 'Component Using kebab-case and PascalCase (Both)' };
+		options[1] = { label: (tagCase === 'kebabCase' ? '• ' : '') + 'Component Using kebab-case' };
+		options[2] = { label: (tagCase === 'pascalCase' ? '• ' : '') + 'Component Using PascalCase' };
+		options[3] = { label: 'Detect Component name from Content' };
+		options[7] = { label: 'Convert Component name to kebab-case' };
+		options[8] = { label: 'Convert Component name to PascalCase' };
 
 		const select = await userPick(options);
-		if (select === undefined) return; // cancle
+		if (select === undefined)
+			return; // cancle
 
-		// tag
-		if (select === 0) {
+		if (select === '0') {
 			tagCases.set(crtDoc.uri.toString(), 'both');
 			updateStatusBarText('both');
 		}
-		if (select === 1) {
+		if (select === '1') {
 			tagCases.set(crtDoc.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
-		if (select === 2) {
+		if (select === '2') {
 			tagCases.set(crtDoc.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}
-		if (select === 3) {
+		if (select === '3') {
 			const detects = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
 				tagCases.set(crtDoc.uri.toString(), detects.tag);
 				updateStatusBarText(detects.tag);
 			}
 		}
-		if (select === 7) {
+		if (select === '7') {
 			vscode.commands.executeCommand('volar.action.tagNameCase.convertToKebabCase');
 		}
-		if (select === 8) {
+		if (select === '8') {
 			vscode.commands.executeCommand('volar.action.tagNameCase.convertToPascalCase');
 		}
 	}));

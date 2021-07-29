@@ -35,27 +35,26 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const crtDoc = vscode.window.activeTextEditor?.document;
 		if (!crtDoc) return;
 
-		const options = new Map<number, string>();
-
-		// attr
 		const attrCase = attrCases.get(crtDoc.uri.toString());
-		options.set(4, (attrCase === 'kebabCase' ? '• ' : '') + 'Prop Using kebab-case');
-		options.set(5, (attrCase === 'pascalCase' ? '• ' : '') + 'Prop Using pascalCase');
-		options.set(6, 'Detect Prop name from Content');
+		const options: Record<string, vscode.QuickPickItem> = {};
+
+		options[4] = { label: (attrCase === 'kebabCase' ? '• ' : '') + 'Prop Using kebab-case' };
+		options[5] = { label: (attrCase === 'pascalCase' ? '• ' : '') + 'Prop Using pascalCase' };
+		options[6] = { label: 'Detect Prop name from Content' };
 
 		const select = await userPick(options);
-		if (select === undefined) return; // cancle
+		if (select === undefined)
+			return; // cancle
 
-		// attr
-		if (select === 4) {
+		if (select === '4') {
 			attrCases.set(crtDoc.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
-		if (select === 5) {
+		if (select === '5') {
 			attrCases.set(crtDoc.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}
-		if (select === 6) {
+		if (select === '6') {
 			const detects = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
 				attrCases.set(crtDoc.uri.toString(), getValidAttrCase(detects.attr));

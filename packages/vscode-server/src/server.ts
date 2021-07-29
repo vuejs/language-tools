@@ -12,12 +12,10 @@ const documents = new vscode.TextDocuments(TextDocument);
 
 let options: shared.ServerInitializationOptions;
 let folders: string[] = [];
-let updateTsdk: Function | undefined;
 
 connection.onInitialize(onInitialize);
 connection.onInitialized(onInitialized);
 connection.onDidChangeConfiguration(() => {
-	updateTsdk?.();
 	updateConfigs(connection);
 });
 connection.listen();
@@ -64,7 +62,7 @@ async function onInitialized() {
 
 	if (options.mode === 'html') {
 		const noStateLs = vue.getDocumentLanguageService(
-			{ typescript: getTs().module },
+			{ typescript: loadTs().server },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			formatters,
@@ -74,7 +72,7 @@ async function onInitialized() {
 	else if (options.mode === 'api') {
 		servicesManager = createServicesManager(
 			'api',
-			getTs,
+			loadTs,
 			connection,
 			documents,
 			folders,
@@ -83,7 +81,7 @@ async function onInitialized() {
 	else if (options.mode === 'doc') {
 		servicesManager = createServicesManager(
 			'doc',
-			getTs,
+			loadTs,
 			connection,
 			documents,
 			folders,
@@ -94,60 +92,28 @@ async function onInitialized() {
 
 	if (servicesManager) {
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(connection, documents, servicesManager, options.tsPlugin);
+		(await import('./features/lspFeatures')).register(connection, documents, servicesManager, !!options.enableFindReferencesInTsScript);
 	}
 
 	switch (options.mode) {
-		case 'api': (await import('./registers/registerApiFeatures')).register(connection, options.tsPlugin); break;
+		case 'api': (await import('./registers/registerApiFeatures')).register(connection, !!options.enableFindReferencesInTsScript); break;
 		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection, vue.getSemanticTokenLegend()); break;
 		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
 	}
 	connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
-	connection.onNotification(shared.UseWorkspaceTsdkChanged.type, useWorkspaceTsdk => {
-		if (useWorkspaceTsdk !== options.useWorkspaceTsdk) {
-			options.useWorkspaceTsdk = useWorkspaceTsdk;
-			servicesManager?.restartAll();
+	connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {
+		if (newTsOptions) {
+			options.typescript.serverPath = newTsOptions.serverPath;
+			options.typescript.localizedPath = newTsOptions.localizedPath;
 		}
+		servicesManager?.restartAll();
 	});
-	updateTsdk = async () => {
-		const newTsdk: string | undefined = await connection.workspace.getConfiguration('typescript.tsdk') ?? undefined;
-		if (newTsdk !== options.tsdk) {
-			options.tsdk = newTsdk;
-			if (options.useWorkspaceTsdk) {
-				servicesManager?.restartAll();
-			}
-		}
-	};
 	updateConfigs(connection);
 }
 
-function getTs() {
-	const result = getTsWorker();
-	connection.sendNotification(shared.TsVersionChanged.type, result.module.version);
-	return result;
-}
-function getTsWorker() {
-	if (options.useWorkspaceTsdk) {
-		if (options.tsdk) {
-			for (const folder of folders) {
-				const ts = shared.loadWorkspaceTypescript(folder, options.tsdk);
-				if (ts) {
-					return {
-						module: ts,
-						localized: shared.loadWorkspaceTypescriptLocalized(folder, options.tsdk, options.language),
-					};
-				}
-				else if (options.mode === 'api') {
-					connection.window.showWarningMessage(`Load Workspace TS failed. TS module not found from '${options.tsdk}'.`);
-				}
-			}
-		}
-		else if (options.mode === 'api') {
-			connection.window.showWarningMessage(`Load Workspace TS failed. 'typescript.tsdk' missing.`);
-		}
-	}
+function loadTs() {
 	return {
-		module: shared.loadVscodeTypescript(options.appRoot),
-		localized: shared.loadVscodeTypescriptLocalized(options.appRoot, options.language),
+		server: shared.loadTypescript(options.typescript.serverPath),
+		localized: options.typescript.localizedPath ? shared.loadTypescriptLocalized(options.typescript.localizedPath) : undefined,
 	}
 }

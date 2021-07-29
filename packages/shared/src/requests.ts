@@ -1,5 +1,5 @@
-import type * as vscode from 'vscode-languageserver';
 import * as rpc from 'vscode-jsonrpc';
+import type * as vscode from 'vscode-languageserver';
 
 export namespace PingRequest {
 	export const type: vscode.RequestType0<'pong' | null | undefined, any> = new rpc.RequestType0('volar/ping');
@@ -35,7 +35,10 @@ export namespace WriteVirtualFilesRequest {
 }
 
 export namespace RestartServerNotification {
-	export const type: vscode.NotificationType<undefined> = new rpc.NotificationType('volar.action.restartServer');
+	export const type: vscode.NotificationType<{
+		serverPath: string,
+		localizedPath: string | undefined,
+	} | undefined> = new rpc.NotificationType('volar.action.restartServer');
 }
 export namespace ShowReferencesNotification {
 	export const type: vscode.NotificationType<{ uri: vscode.DocumentUri, position: vscode.Position, references: vscode.Location[] }> = new rpc.NotificationType('vue.findReferences');
@@ -51,12 +54,6 @@ export namespace GetClientAttrNameCaseRequest {
 }
 export namespace GetClientTarNameCaseRequest {
 	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, 'both' | 'kebabCase' | 'pascalCase', any> = new rpc.RequestType('volar/getTagNameCaseClient');
-}
-export namespace TsVersionChanged {
-	export const type: vscode.NotificationType<string> = new rpc.NotificationType('volar.tsVersionChanged');
-}
-export namespace UseWorkspaceTsdkChanged {
-	export const type: vscode.NotificationType<boolean> = new rpc.NotificationType('volar.useWorkspaceTsdkChanged');
 }
 export namespace RemoveAllRefSugars {
 	export const type: vscode.NotificationType<undefined> = new rpc.NotificationType('volar/removeAllRefSugars');

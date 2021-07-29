@@ -10,7 +10,7 @@ export type ServicesManager = ReturnType<typeof createServicesManager>;
 export function createServicesManager(
 	mode: 'api' | 'doc',
 	getTs: () => {
-		module: typeof import('typescript/lib/tsserverlibrary'),
+		server: typeof import('typescript/lib/tsserverlibrary'),
 		localized: ts.MapLike<string> | undefined,
 	},
 	connection: vscode.Connection,
@@ -21,7 +21,7 @@ export function createServicesManager(
 ) {
 
 	let filesUpdateTrigger = false;
-	const originalTs = getTs().module;
+	const originalTs = getTs().server;
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const services = new Map<string, ServiceHandler>();
@@ -180,7 +180,7 @@ export function createServicesManager(
 			services.delete(tsConfig);
 		}
 		const _ts = getTs();
-		const ts = _ts.module;
+		const ts = _ts.server;
 		const tsLocalized = _ts.localized;
 		if (ts.sys.fileExists(tsConfig)) {
 			services.set(tsConfig, createServiceHandler(

@@ -5,8 +5,8 @@ import {
 	vueFileReg
 } from '../features/shared';
 
-export function register(connection: vscode.Connection, enabledTsPlugin: boolean) {
-	connection.client.register(vscode.ReferencesRequest.type, enabledTsPlugin ? vueFileReg : allFilesReg);
+export function register(connection: vscode.Connection, enableFindReferencesInTsScript: boolean) {
+	connection.client.register(vscode.ReferencesRequest.type, enableFindReferencesInTsScript ? allFilesReg : vueFileReg);
 	connection.client.register(vscode.DefinitionRequest.type, vueFileReg /* enabledTsPlugin ? vueFileReg : allFilesReg */);
 	connection.client.register(vscode.CallHierarchyPrepareRequest.type, allFilesReg); // TODO: vueFileReg
 	connection.client.register(vscode.TypeDefinitionRequest.type, vueFileReg);

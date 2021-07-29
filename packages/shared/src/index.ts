@@ -4,12 +4,9 @@ export * from './types';
 export * from './uriMap';
 export * from './ts';
 
-import * as path from 'upath';
-import * as fs from 'fs';
 import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { promisify } from 'util';
-import { MapLike } from 'typescript';
 
 const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
@@ -80,32 +77,6 @@ export function getWordRange(wordPattern: RegExp, position: vscode.Position, doc
 		}
 	}
 	return undefined;
-}
-
-export function loadWorkspaceTypescript(root: string, tsdk: string): typeof import('typescript/lib/tsserverlibrary') | undefined {
-	const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, 'tsserverlibrary.js') : path.join(root, tsdk, 'tsserverlibrary.js');
-	if (fs.existsSync(tsPath)) {
-		return require(path.toUnix(tsPath));
-	}
-}
-
-export function loadWorkspaceTypescriptLocalized(root: string, tsdk: string, lang: string): MapLike<string> | undefined {
-	const tsPath = path.isAbsolute(tsdk) ? path.join(tsdk, lang, 'diagnosticMessages.generated.json') : path.join(root, tsdk, lang, 'diagnosticMessages.generated.json');
-	if (fs.existsSync(tsPath)) {
-		return require(path.toUnix(tsPath));
-	}
-}
-
-export function loadVscodeTypescript(appRoot: string): typeof import('typescript/lib/tsserverlibrary') {
-	const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript');
-	return require(path.toUnix(tsPath));
-}
-
-export function loadVscodeTypescriptLocalized(appRoot: string, lang: string): MapLike<string> | undefined {
-	const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript', 'lib', lang, 'diagnosticMessages.generated.json');
-	if (fs.existsSync(tsPath)) {
-		return require(path.toUnix(tsPath));
-	}
 }
 
 export function eqSet<T>(as: Set<T>, bs: Set<T>) {
