@@ -45,6 +45,9 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 		else if (ts.isImportDeclaration(node)) {
 			return true;
 		}
+		else if (ts.isLiteralTypeNode(node)) {
+			return true;
+		}
 		else {
 			let _isBlacklistNode = false;
 			node.forEachChild(node => {
