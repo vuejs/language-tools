@@ -6,7 +6,7 @@
 			"path": "./packages/vscode-client/tsconfig.build.json"
 		},
 		{
-			"path": "./packages/vscode-server/tsconfig.build.json"
+			"path": "./packages/server/tsconfig.build.json"
 		},
 		{
 			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"

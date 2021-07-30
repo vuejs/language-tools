@@ -28,7 +28,7 @@
 			"outFiles": [
 				"${workspaceRoot}/packages/pug/out/**/*.js",
 				"${workspaceRoot}/packages/shared/out/**/*.js",
-				"${workspaceRoot}/packages/vscode-server/out/**/*.js",
+				"${workspaceRoot}/packages/server/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-typescript-languageservice/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-vue-languageservice/out/**/*.js"
 			]
@@ -42,7 +42,7 @@
 			"outFiles": [
 				"${workspaceRoot}/packages/pug/out/**/*.js",
 				"${workspaceRoot}/packages/shared/out/**/*.js",
-				"${workspaceRoot}/packages/vscode-server/out/**/*.js",
+				"${workspaceRoot}/packages/server/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-typescript-languageservice/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-vue-languageservice/out/**/*.js"
 			]
@@ -56,7 +56,7 @@
 			"outFiles": [
 				"${workspaceRoot}/packages/pug/out/**/*.js",
 				"${workspaceRoot}/packages/shared/out/**/*.js",
-				"${workspaceRoot}/packages/vscode-server/out/**/*.js",
+				"${workspaceRoot}/packages/server/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-typescript-languageservice/out/**/*.js",
 				"${workspaceRoot}/packages/vscode-vue-languageservice/out/**/*.js"
 			]

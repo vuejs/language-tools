@@ -65,7 +65,7 @@ export function deactivate(): Thenable<void> | undefined {
 
 function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, scheme: string | undefined) {
 
-	const serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'vscode-server', 'out', 'server.js'));
+	const serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'server', 'out', 'index.js'));
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 	const serverOptions: lsp.ServerOptions = {
 		run: { module: serverModule, transport: lsp.TransportKind.ipc },
