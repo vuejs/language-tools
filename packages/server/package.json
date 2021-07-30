@@ -1,5 +1,4 @@
 {
-	"private": true,
 	"name": "@volar/server",
 	"version": "0.26.9",
 	"license": "MIT",
