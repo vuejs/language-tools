@@ -13,7 +13,7 @@ export type ServiceHandler = ReturnType<typeof createServiceHandler>;
 
 export function createServiceHandler(
 	ts: vue.Modules['typescript'],
-	mode: 'api' | 'doc',
+	options: shared.ServerInitializationOptions,
 	tsConfig: string,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
@@ -57,15 +57,18 @@ export function createServiceHandler(
 
 	function getLanguageService() {
 		if (!vueLs) {
+			let numOfFeatures = 0;
+			if (options.features) {
+				for (let feature in options.features) {
+					if (!!options.features[feature as keyof typeof options.features]) {
+						numOfFeatures++;
+					}
+				}
+			}
 			vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
 			vueLs.__internal__.onInitProgress(p => {
 				if (p === 0) {
-					if (mode === 'api') {
-						workDoneProgress.begin('Initializing Vue language features (API)');
-					}
-					else {
-						workDoneProgress.begin('Initializing Vue language features (Document)');
-					}
+					workDoneProgress.begin(`Initializing Vue language features (${numOfFeatures} features)`);
 				}
 				if (p < 1) {
 					workDoneProgress.report(p * 100);

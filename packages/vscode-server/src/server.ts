@@ -3,7 +3,7 @@ import * as vue from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
-import { createServicesManager, ServicesManager } from './servicesManager';
+import { createServicesManager } from './servicesManager';
 import * as tsConfigs from './tsConfigs';
 import * as formatters from './formatters';
 
@@ -37,7 +37,7 @@ function onInitialize(params: vscode.InitializeParams) {
 		}
 	};
 
-	if (options.mode === 'api') {
+	if (options.features?.renameFileRefactoring) {
 		result.capabilities.workspace = {
 			fileOperations: {
 				willRename: {
@@ -58,57 +58,43 @@ function onInitialize(params: vscode.InitializeParams) {
 }
 async function onInitialized() {
 
-	let servicesManager: ServicesManager | undefined;
+	if (options.features) {
+		const servicesManager = createServicesManager(
+			options,
+			loadTs,
+			connection,
+			documents,
+			folders,
+			options.features.diagnostics ? (uri: string) => connection.sendRequest(shared.DocumentVersionRequest.type, { uri }) : undefined,
+			options.features.semanticTokens ? () => connection.languages.semanticTokens.refresh() : undefined,
+		);
 
-	if (options.mode === 'html') {
+		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
+		(await import('./features/lspFeatures')).register(connection, documents, servicesManager);
+		(await import('./registers/registerVueFeatures')).register(connection, options.features, vue.getSemanticTokenLegend());
+
+		connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {
+			if (newTsOptions) {
+				options.typescript.serverPath = newTsOptions.serverPath;
+				options.typescript.localizedPath = newTsOptions.localizedPath;
+			}
+			servicesManager.restartAll();
+		});
+		connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
+		updateConfigs(connection);
+	}
+
+	if (options.htmlFeatures) {
 		const noStateLs = vue.getDocumentLanguageService(
 			{ typescript: loadTs().server },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			formatters,
 		);
+
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
+		(await import('./registers/registerHtmlFeatures')).register(connection, options.htmlFeatures);
 	}
-	else if (options.mode === 'api') {
-		servicesManager = createServicesManager(
-			'api',
-			loadTs,
-			connection,
-			documents,
-			folders,
-		);
-	}
-	else if (options.mode === 'doc') {
-		servicesManager = createServicesManager(
-			'doc',
-			loadTs,
-			connection,
-			documents,
-			folders,
-			(uri: string) => connection.sendRequest(shared.DocumentVersionRequest.type, { uri }),
-			() => connection.languages.semanticTokens.refresh(),
-		);
-	}
-
-	if (servicesManager) {
-		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(connection, documents, servicesManager, !!options.enableFindReferencesInTsScript);
-	}
-
-	switch (options.mode) {
-		case 'api': (await import('./registers/registerApiFeatures')).register(connection, !!options.enableFindReferencesInTsScript); break;
-		case 'doc': (await import('./registers/registerDocumentFeatures')).register(connection, vue.getSemanticTokenLegend()); break;
-		case 'html': (await import('./registers/registerHtmlFeatures')).register(connection); break;
-	}
-	connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
-	connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {
-		if (newTsOptions) {
-			options.typescript.serverPath = newTsOptions.serverPath;
-			options.typescript.localizedPath = newTsOptions.localizedPath;
-		}
-		servicesManager?.restartAll();
-	});
-	updateConfigs(connection);
 }
 
 function loadTs() {

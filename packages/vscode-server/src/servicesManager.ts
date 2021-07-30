@@ -8,7 +8,7 @@ import { createServiceHandler, ServiceHandler } from './serviceHandler';
 export type ServicesManager = ReturnType<typeof createServicesManager>;
 
 export function createServicesManager(
-	mode: 'api' | 'doc',
+	options: shared.ServerInitializationOptions,
 	getTs: () => {
 		server: typeof import('typescript/lib/tsserverlibrary'),
 		localized: ts.MapLike<string> | undefined,
@@ -185,7 +185,7 @@ export function createServicesManager(
 		if (ts.sys.fileExists(tsConfig)) {
 			services.set(tsConfig, createServiceHandler(
 				ts,
-				mode,
+				options,
 				tsConfig,
 				tsLocalized,
 				documents,

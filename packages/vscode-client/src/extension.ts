@@ -25,9 +25,9 @@ let docClient: lsp.LanguageClient;
 let htmlClient: lsp.LanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
-	apiClient = createLanguageService(context, 'api', 'volar-api', 'Volar - API', 6009, true);
-	docClient = createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, true);
-	htmlClient = createLanguageService(context, 'html', 'volar-html', 'Volar - HTML', 6011, false);
+	apiClient = createLanguageService(context, 'api', 'volar-api', 'Volar - API', 6009, 'file');
+	docClient = createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, 'file');
+	htmlClient = createLanguageService(context, 'html', 'volar-html', 'Volar - HTML', 6011, undefined);
 
 	splitEditors.activate(context);
 	preview.activate(context);
@@ -55,7 +55,7 @@ export function deactivate(): Thenable<void> | undefined {
 	return apiClient?.stop() && docClient?.stop() && htmlClient?.stop();
 }
 
-function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, fileOnly: boolean) {
+function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, scheme: string | undefined) {
 
 	const serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'vscode-server', 'out', 'server.js'));
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
@@ -68,25 +68,42 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		},
 	};
 	const serverInitOptions: shared.ServerInitializationOptions = {
-		mode: mode,
 		typescript: tsVersion.getCurrentTsPaths(context),
-		enableFindReferencesInTsScript: !tsPlugin.isTsPluginEnabled(),
+		features: mode === 'api' ? {
+			references: { enabledInTsScript: !tsPlugin.isTsPluginEnabled() },
+			definition: true,
+			typeDefinition: true,
+			callHierarchy: { enabledInTsScript: true /** TODO: wait for ts plugin support call hierarchy */ },
+			hover: true,
+			rename: true,
+			renameFileRefactoring: true,
+			selectionRange: true,
+			signatureHelp: true,
+			completion: true,
+		} : mode === 'doc' ? {
+			documentHighlight: true,
+			documentSymbol: true,
+			documentLink: true,
+			documentColor: true,
+			codeLens: true,
+			semanticTokens: true,
+			codeAction: true,
+			diagnostics: true,
+		} : undefined,
+		htmlFeatures: mode === 'html' ? {
+			foldingRange: true,
+			linkedEditingRange: true,
+			documentFormatting: true,
+		} : undefined,
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
-		documentSelector: fileOnly ?
-			[
-				{ scheme: 'file', language: 'vue' },
-				{ scheme: 'file', language: 'javascript' },
-				{ scheme: 'file', language: 'typescript' },
-				{ scheme: 'file', language: 'javascriptreact' },
-				{ scheme: 'file', language: 'typescriptreact' },
-			] : [
-				{ language: 'vue' },
-				{ language: 'javascript' },
-				{ language: 'typescript' },
-				{ language: 'javascriptreact' },
-				{ language: 'typescriptreact' },
-			],
+		documentSelector: [
+			{ scheme, language: 'vue' },
+			{ scheme, language: 'javascript' },
+			{ scheme, language: 'typescript' },
+			{ scheme, language: 'javascriptreact' },
+			{ scheme, language: 'typescriptreact' },
+		],
 		initializationOptions: serverInitOptions,
 	};
 	const client = new lsp.LanguageClient(
