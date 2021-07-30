@@ -17,7 +17,6 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 	function onTs(uri: string, position: vscode.Position) {
 
-		const loopChecker = dedupe.createLocationSet();
 		let vueResult: vscode.Location[] = [];
 
 		// vue -> ts
@@ -26,6 +25,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
 				continue;
 
+			const loopChecker = dedupe.createLocationSet();
 			const tsLs = getTsLs(tsLoc.lsType);
 			let tsResult: vscode.Location[] = [];
 			withTeleports(tsLoc.uri, tsLoc.range.start);
