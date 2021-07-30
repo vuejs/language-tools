@@ -52,7 +52,7 @@ export namespace GetServerNameCasesRequest {
 export namespace GetClientAttrNameCaseRequest {
 	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, 'kebabCase' | 'pascalCase', any> = new rpc.RequestType('volar/getAttrNameCaseClient');
 }
-export namespace GetClientTarNameCaseRequest {
+export namespace GetClientTagNameCaseRequest {
 	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, 'both' | 'kebabCase' | 'pascalCase', any> = new rpc.RequestType('volar/getTagNameCaseClient');
 }
 export namespace RemoveAllRefSugars {

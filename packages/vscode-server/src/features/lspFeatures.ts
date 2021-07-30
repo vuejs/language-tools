@@ -18,7 +18,7 @@ export function register(
 				handler.position,
 				handler.context,
 				{
-					tag: () => connection.sendRequest(shared.GetClientTarNameCaseRequest.type, {
+					tag: () => connection.sendRequest(shared.GetClientTagNameCaseRequest.type, {
 						uri: handler.textDocument.uri
 					}),
 					attr: () => connection.sendRequest(shared.GetClientAttrNameCaseRequest.type, {
