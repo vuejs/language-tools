@@ -51,6 +51,12 @@ export function register(
 			],
 			resolveProvider: true,
 		});
+		connection.client.register(vscode.ExecuteCommandRequest.type, {
+			commands: [
+				vue.Commands.CONVERT_TO_KEBAB_CASE,
+				vue.Commands.CONVERT_TO_PASCAL_CASE,
+			]
+		});
 	}
 	if (features.documentHighlight) {
 		connection.client.register(vscode.DocumentHighlightRequest.type, vueFileReg);
@@ -76,9 +82,6 @@ export function register(
 				vue.Commands.USE_REF_SUGAR,
 				vue.Commands.UNUSE_REF_SUGAR,
 				vue.Commands.SHOW_REFERENCES,
-				// TODO
-				vue.Commands.CONVERT_TO_KEBAB_CASE,
-				vue.Commands.CONVERT_TO_PASCAL_CASE,
 			]
 		});
 	}

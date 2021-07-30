@@ -4,7 +4,7 @@ import type { LanguageClient } from 'vscode-languageclient/node';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
 	await languageClient.onReady();
-	context.subscriptions.push(languageClient.onRequest(shared.ActiveSelectionRequest.type, () => {
+	context.subscriptions.push(languageClient.onRequest(shared.GetDocumentSelectionRequest.type, () => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
 			return {

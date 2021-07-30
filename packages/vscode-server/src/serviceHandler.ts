@@ -18,7 +18,7 @@ export function createServiceHandler(
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	fileUpdatedCb: (fileName: string) => any,
-	_onProjectFilesUpdate: (() => void) | undefined,
+	_onProjectFilesUpdate: () => void,
 	workDoneProgress: vscode.WorkDoneProgressServerReporter,
 	connection: vscode.Connection,
 ) {
@@ -184,7 +184,7 @@ export function createServiceHandler(
 				return shared.createTsLanguageService(ts, ShPlugin, host);
 			},
 			getEmmetConfig: getEmmetConfiguration,
-			schemaRequestService: getSchemaRequestService(connection),
+			schemaRequestService: options.features?.schemaRequestService ? getSchemaRequestService(connection, options.features.schemaRequestService) : undefined,
 			getPreferences: (document) => tsConfigs.getPreferences(connection, document),
 			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			// ts

@@ -51,7 +51,7 @@ export function register(
 		servicesManager.restartAll();
 	});
 	connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
-	connection.onRequest(shared.RefCloseRequest.type, handler => {
+	connection.onRequest(shared.GetRefCompleteEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return servicesManager.getMatchService(document.uri)?.__internal__.doRefAutoClose(document, handler.position);
@@ -106,7 +106,7 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-	connection.onRequest(shared.GetServerNameCasesRequest.type, handler => {
+	connection.onRequest(shared.DetectDocumentNameCasesRequest.type, handler => {
 		return servicesManager.getMatchService(handler.uri)?.__internal__.detectTagNameCase(handler.uri);
 	});
 }

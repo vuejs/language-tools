@@ -8,6 +8,7 @@ export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	servicesManager: ServicesManager,
+	features: NonNullable<shared.ServerInitializationOptions['features']>,
 ) {
 	connection.onCompletion(async handler => {
 		return servicesManager
@@ -16,20 +17,23 @@ export function register(
 				handler.textDocument.uri,
 				handler.position,
 				handler.context,
-				{
-					tag: () => connection.sendRequest(shared.GetClientTagNameCaseRequest.type, {
-						uri: handler.textDocument.uri
-					}),
-					attr: () => connection.sendRequest(shared.GetClientAttrNameCaseRequest.type, {
-						uri: handler.textDocument.uri
-					}),
+				async (uri) => {
+					if (features.completion?.getDocumentNameCasesRequest) {
+						return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
+					}
+					return {
+						tagNameCase: features.completion!.defaultTagNameCase,
+						attrNameCase: features.completion!.defaultAttrNameCase,
+					};
 				},
 			);
 	});
 	connection.onCompletionResolve(async item => {
 		const uri: string | undefined = item.data?.uri;
 		if (!uri) return item;
-		const activeSel = await connection.sendRequest(shared.ActiveSelectionRequest.type);
+		const activeSel = features.completion?.getDocumentSelectionRequest
+			? await connection.sendRequest(shared.GetDocumentSelectionRequest.type)
+			: undefined;
 		const newOffset = activeSel?.uri.toLowerCase() === uri.toLowerCase() ? activeSel?.offset : undefined;
 		return servicesManager.getMatchService(uri)?.doCompletionResolve(item, newOffset) ?? item;
 	});
@@ -67,7 +71,7 @@ export function register(
 		const uri = codeLens.data?.uri;
 		return servicesManager
 			.getMatchService(uri)
-			?.doCodeLensResolve(codeLens) ?? codeLens;
+			?.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];

@@ -6,7 +6,7 @@ import { Commands } from '../commands';
 
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 	const _findReferences = findReferences.register(arguments[0]);
-	return (codeLens: vscode.CodeLens) => {
+	return (codeLens: vscode.CodeLens, canShowReferences?: boolean) => {
 
 		const data = codeLens.data as TsCodeLensData;
 		const {

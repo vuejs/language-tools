@@ -65,12 +65,10 @@ async function onInitialized() {
 			connection,
 			documents,
 			folders,
-			options.features.diagnostics ? (uri: string) => connection.sendRequest(shared.DocumentVersionRequest.type, { uri }) : undefined,
-			options.features.semanticTokens ? () => connection.languages.semanticTokens.refresh() : undefined,
 		);
 
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(connection, documents, servicesManager);
+		(await import('./features/lspFeatures')).register(connection, documents, servicesManager, options.features);
 		(await import('./registers/registerVueFeatures')).register(connection, options.features, vue.getSemanticTokenLegend());
 
 		connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {

@@ -11,21 +11,6 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		await shared.sleep(100);
 	}
 
-	languageClient.onRequest(shared.GetClientTagNameCaseRequest.type, async handler => {
-		let tagCase = tagCases.get(handler.uri);
-		if (tagCase === 'unsure') {
-			const templateCases = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, handler);
-			if (templateCases) {
-				tagCase = templateCases.tag;
-				tagCases.set(handler.uri, tagCase);
-			}
-		}
-		if (handler.uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
-			updateStatusBarText(tagCase);
-		}
-		return !tagCase || tagCase === 'unsure' ? 'both' : tagCase;
-	});
-
 	const tagCases = new shared.UriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.tagNameCase';
@@ -70,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('pascalCase');
 		}
 		if (select === '3') {
-			const detects = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
 				tagCases.set(crtDoc.uri.toString(), detects.tag);
 				updateStatusBarText(detects.tag);
@@ -98,6 +83,14 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		}
 	}));
 
+	return (uri: string) => {
+		let tagCase = tagCases.get(uri);
+		if (uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
+			updateStatusBarText(tagCase);
+		}
+		return !tagCase || tagCase === 'unsure' ? 'both' : tagCase;
+	};
+
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
 		if (newDoc?.languageId === 'vue') {
 			let tagCase = tagCases.get(newDoc.uri.toString());
@@ -113,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					tagCase = 'pascalCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
 					tagCase = templateCases?.tag;
 				}
 			}

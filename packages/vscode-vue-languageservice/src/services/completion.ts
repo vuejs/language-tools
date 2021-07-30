@@ -104,10 +104,10 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 		position: vscode.Position,
 		context?: vscode.CompletionContext,
 		/** internal */
-		getNameCase?: {
-			tag: () => Promise<'both' | 'kebabCase' | 'pascalCase'>,
-			attr: () => Promise<'kebabCase' | 'pascalCase'>,
-		},
+		getNameCases?: (uri: string) => Promise<{
+			tagNameCase: 'both' | 'kebabCase' | 'pascalCase',
+			attrNameCase: 'kebabCase' | 'pascalCase',
+		}>,
 	) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -243,13 +243,10 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 				return;
 			}
 			let nameCases = { tag: 'both', attr: 'kebabCase' };
-			if (getNameCase) {
-				const clientCases = await Promise.all([
-					getNameCase.tag(),
-					getNameCase.attr(),
-				]);
-				nameCases.tag = clientCases[0];
-				nameCases.attr = clientCases[1];
+			if (getNameCases) {
+				const clientCases = await getNameCases(uri);
+				nameCases.tag = clientCases.tagNameCase;
+				nameCases.attr = clientCases.attrNameCase;
 			}
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 				const componentCompletion = getComponentCompletionData(sourceFile);

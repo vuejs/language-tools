@@ -33,7 +33,11 @@ function getFileRequestService(): json.SchemaRequestService {
 const http = getHTTPRequestService();
 const file = getFileRequestService();
 
-export function getSchemaRequestService(connection: vscode.Connection, handledSchemas: string[] = ['https', 'http', 'file']) {
+export function getSchemaRequestService(
+	connection: vscode.Connection,
+	options: NonNullable<NonNullable<shared.ServerInitializationOptions['features']>['schemaRequestService']>,
+	handledSchemas: string[] = ['https', 'http', 'file'],
+) {
 	const builtInHandlers: { [protocol: string]: json.SchemaRequestService | undefined } = {};
 	for (let protocol of handledSchemas) {
 		if (protocol === 'file') {
@@ -50,10 +54,15 @@ export function getSchemaRequestService(connection: vscode.Connection, handledSc
 			return builtInHandler(uri);
 		}
 
-		return connection.sendRequest(shared.VSCodeContentRequest.type, uri).then(responseText => {
-			return responseText;
-		}, error => {
-			return Promise.reject(error.message);
-		});
+		if (typeof options === 'object' && options.getDocumentContentRequest) {
+			return connection.sendRequest(shared.GetDocumentContentRequest.type, uri).then(responseText => {
+				return responseText;
+			}, error => {
+				return Promise.reject(error.message);
+			});
+		}
+		else {
+			return Promise.reject('clientHandledGetDocumentContentRequest is false');
+		}
 	};
 }

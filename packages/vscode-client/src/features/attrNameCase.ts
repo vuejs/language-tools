@@ -11,14 +11,6 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		await shared.sleep(100);
 	}
 
-	languageClient.onRequest(shared.GetClientAttrNameCaseRequest.type, async handler => {
-		let attrCase = attrCases.get(handler.uri);
-		if (handler.uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
-			updateStatusBarText(attrCase);
-		}
-		return attrCase ?? 'kebabCase';
-	});
-
 	const attrCases = new shared.UriMap<'kebabCase' | 'pascalCase'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.attrNameCase';
@@ -55,13 +47,21 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('pascalCase');
 		}
 		if (select === '6') {
-			const detects = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
 				attrCases.set(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
 				updateStatusBarText(getValidAttrCase(detects.attr));
 			}
 		}
 	}));
+
+	return (uri: string) => {
+		let attrCase = attrCases.get(uri);
+		if (uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
+			updateStatusBarText(attrCase);
+		}
+		return attrCase ?? 'kebabCase';
+	};
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
 		if (newDoc?.languageId === 'vue') {
@@ -75,7 +75,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					attrCase = 'pascalCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
 					if (templateCases) {
 						attrCase = getValidAttrCase(templateCases.attr);
 						if (templateCases.attr === 'both') {

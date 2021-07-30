@@ -1,5 +1,16 @@
+import type {
+	GetDocumentNameCasesRequest,
+	GetDocumentSelectionRequest,
+	ShowReferencesNotification,
+	GetDocumentVersionRequest,
+	GetDocumentContentRequest,
+} from './requests';
+
 export interface ServerInitializationOptions {
 	typescript: {
+		/**
+		 * Path of tsserverlibrary.js / tsserver.js / typescript.js
+		 */
 		serverPath: string
 		localizedPath: string | undefined
 	}
@@ -16,15 +27,43 @@ export interface ServerInitializationOptions {
 		renameFileRefactoring?: boolean
 		selectionRange?: boolean
 		signatureHelp?: boolean
-		completion?: boolean
+		completion?: {
+			defaultTagNameCase: 'both' | 'kebabCase' | 'pascalCase',
+			defaultAttrNameCase: 'kebabCase' | 'pascalCase',
+			/**
+			 * {@link GetDocumentNameCasesRequest}
+			 */
+			getDocumentNameCasesRequest?: boolean,
+			/**
+			 * {@link GetDocumentSelectionRequest}
+			 * */
+			getDocumentSelectionRequest?: boolean,
+		}
 		documentHighlight?: boolean
 		documentSymbol?: boolean
 		documentLink?: boolean
 		documentColor?: boolean
-		codeLens?: boolean
+		codeLens?: boolean | {
+			/**
+			 * {@link ShowReferencesNotification}
+			 * */
+			showReferencesNotification?: boolean,
+		}
 		semanticTokens?: boolean
 		codeAction?: boolean
-		diagnostics?: boolean
+		diagnostics?: boolean | {
+			/**
+			 * {@link GetDocumentVersionRequest}
+			 * */
+			getDocumentVersionRequest: boolean,
+		}
+		schemaRequestService?: boolean | {
+			/**
+			 * Duce to performance only allow true
+			 * {@link GetDocumentContentRequest}
+			 * */
+			getDocumentContentRequest?: boolean,
+		}
 	}
 	/**
 	 * html language service will be create in server if this option is not null

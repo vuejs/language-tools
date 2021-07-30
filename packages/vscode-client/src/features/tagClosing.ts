@@ -7,7 +7,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
 	context.subscriptions.push(activateTagClosing(
 		(document, position) => {
 			let param = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return htmlClient.sendRequest(shared.TagCloseRequest.type, param);
+			return htmlClient.sendRequest(shared.GetTagCloseEditsRequest.type, param);
 		},
 		{ vue: true },
 		'html.autoClosingTags',
@@ -16,7 +16,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Lan
 	context.subscriptions.push(activateTagClosing(
 		(document, position) => {
 			let param = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return tsClient.sendRequest(shared.RefCloseRequest.type, param);
+			return tsClient.sendRequest(shared.GetRefCompleteEditsRequest.type, param);
 		},
 		{
 			vue: true,

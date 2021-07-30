@@ -16,8 +16,6 @@ export function createServicesManager(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	rootPaths: string[],
-	getDocVersionForDiag?: (uri: string) => Promise<number | undefined>,
-	_onProjectFilesUpdate?: () => void,
 ) {
 
 	let filesUpdateTrigger = false;
@@ -65,7 +63,7 @@ export function createServicesManager(
 		for (const [_, service] of services) {
 			service.onDocumentUpdated(change.document);
 		}
-		onDocumentUpdated(change.document);
+		updateDocumentDiagnostics(change.document);
 		// preload
 		getMatchService(change.document.uri);
 	});
@@ -93,9 +91,10 @@ export function createServicesManager(
 		}
 		return result;
 	}
-	async function onDocumentUpdated(changeDoc: TextDocument) {
+	async function updateDocumentDiagnostics(changeDoc: TextDocument) {
 
-		if (!getDocVersionForDiag) return;
+		if (!options.features?.diagnostics)
+			return;
 
 		const otherDocs: TextDocument[] = [];
 		const changedFileName = shared.uriToFsPath(changeDoc.uri);
@@ -117,7 +116,8 @@ export function createServicesManager(
 	}
 	async function updateAllOpenedDocumentsDiagnostics(changedFileName?: string) {
 
-		if (!getDocVersionForDiag) return;
+		if (!options.features?.diagnostics)
+			return;
 
 		const openedDocs: TextDocument[] = [];
 
@@ -137,8 +137,8 @@ export function createServicesManager(
 			if (_isCancel) {
 				return true;
 			}
-			if (getDocVersionForDiag) {
-				const clientDocVersion = await getDocVersionForDiag(uri);
+			if (typeof options.features?.diagnostics === 'object' && options.features.diagnostics.getDocumentVersionRequest) {
+				const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
 				if (clientDocVersion !== undefined && version !== clientDocVersion) {
 					_isCancel = true;
 				}
@@ -190,7 +190,11 @@ export function createServicesManager(
 				tsLocalized,
 				documents,
 				updateAllOpenedDocumentsDiagnostics,
-				_onProjectFilesUpdate,
+				() => {
+					if (options.features?.semanticTokens) {
+						connection.languages.semanticTokens.refresh();
+					}
+				},
 				progress,
 				connection,
 			));

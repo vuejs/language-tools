@@ -1,4 +1,4 @@
-import type * as shared from '@volar/shared';
+import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
@@ -32,11 +32,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	splitEditors.activate(context);
 	preview.activate(context);
 	createWorkspaceSnippets.activate(context);
-	tagNameCase.activate(context, apiClient);
-	attrNameCase.activate(context, apiClient);
 	callGraph.activate(context, apiClient);
 	removeRefSugars.activate(context, apiClient);
-	showReferences.activate(context, apiClient);
+	showReferences.activate(context, docClient);
 	documentVersion.activate(context, docClient);
 	documentContent.activate(context, apiClient);
 	documentContent.activate(context, docClient);
@@ -47,6 +45,16 @@ export async function activate(context: vscode.ExtensionContext) {
 	restart.activate(context, [apiClient, docClient]);
 	tsPlugin.activate(context);
 	tsVersion.activate(context, [apiClient, docClient]);
+
+	(async () => {
+		const getTagNameCase = await tagNameCase.activate(context, apiClient);
+		const getAttrNameCase = await attrNameCase.activate(context, apiClient);
+
+		apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
+			tagNameCase: getTagNameCase(handler.uri),
+			attrNameCase: getAttrNameCase(handler.uri),
+		}));
+	})();
 
 	startEmbeddedLanguageServices();
 }
@@ -79,16 +87,23 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			renameFileRefactoring: true,
 			selectionRange: true,
 			signatureHelp: true,
-			completion: true,
+			completion: {
+				defaultTagNameCase: 'both',
+				defaultAttrNameCase: 'kebabCase',
+				getDocumentNameCasesRequest: true,
+				getDocumentSelectionRequest: true,
+			},
+			schemaRequestService: { getDocumentContentRequest: true },
 		} : mode === 'doc' ? {
 			documentHighlight: true,
 			documentSymbol: true,
 			documentLink: true,
 			documentColor: true,
-			codeLens: true,
+			codeLens: { showReferencesNotification: true },
 			semanticTokens: true,
 			codeAction: true,
-			diagnostics: true,
+			diagnostics: { getDocumentVersionRequest: true },
+			schemaRequestService: { getDocumentContentRequest: true },
 		} : undefined,
 		htmlFeatures: mode === 'html' ? {
 			foldingRange: true,
