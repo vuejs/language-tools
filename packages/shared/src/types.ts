@@ -59,7 +59,6 @@ export interface ServerInitializationOptions {
 		}
 		schemaRequestService?: boolean | {
 			/**
-			 * Duce to performance only allow true
 			 * {@link GetDocumentContentRequest}
 			 * */
 			getDocumentContentRequest?: boolean,
