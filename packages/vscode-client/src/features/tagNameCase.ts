@@ -11,7 +11,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		await shared.sleep(100);
 	}
 
-	languageClient.onRequest(shared.GetClientTarNameCaseRequest.type, async handler => {
+	languageClient.onRequest(shared.GetClientTagNameCaseRequest.type, async handler => {
 		let tagCase = tagCases.get(handler.uri);
 		if (tagCase === 'unsure') {
 			const templateCases = await languageClient.sendRequest(shared.GetServerNameCasesRequest.type, handler);
