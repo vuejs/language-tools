@@ -99,20 +99,13 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 
 	return client;
 }
-async function startEmbeddedLanguageServices() {
+function startEmbeddedLanguageServices() {
 
+	// track https://github.com/microsoft/vscode/issues/125748
 	const ts = vscode.extensions.getExtension('vscode.typescript-language-features');
-	const css = vscode.extensions.getExtension('vscode.css-language-features');
-	const html = vscode.extensions.getExtension('vscode.html-language-features');
 
 	if (ts && !ts.isActive) {
-		await ts.activate();
-	}
-	if (css && !css.isActive) {
-		await css.activate();
-	}
-	if (html && !html.isActive) {
-		await html.activate();
+		ts.activate();
 	}
 
 	/* from html-language-features */
