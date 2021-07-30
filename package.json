@@ -26,7 +26,7 @@
 		"onLanguage:vue",
 		"onWebviewPanel:preview"
 	],
-	"main": "./node_modules/@volar/vscode-client/out/extension",
+	"main": "./node_modules/@volar/client/out/extension",
 	"contributes": {
 		"languages": [
 			{

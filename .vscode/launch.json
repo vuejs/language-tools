@@ -12,7 +12,7 @@
 			],
 			"outFiles": [
 				"${workspaceRoot}/packages/shared/out/**/*.js",
-				"${workspaceRoot}/packages/vscode-client/out/**/*.js"
+				"${workspaceRoot}/packages/client/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",

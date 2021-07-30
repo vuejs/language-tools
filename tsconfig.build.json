@@ -3,7 +3,7 @@
 	"include": [],
 	"references": [
 		{
-			"path": "./packages/vscode-client/tsconfig.build.json"
+			"path": "./packages/client/tsconfig.build.json"
 		},
 		{
 			"path": "./packages/server/tsconfig.build.json"
