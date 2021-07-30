@@ -5,7 +5,6 @@ import * as vscode from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
 import { createServicesManager } from './servicesManager';
 import * as tsConfigs from './tsConfigs';
-import * as formatters from './formatters';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 const documents = new vscode.TextDocuments(TextDocument);
@@ -83,6 +82,7 @@ async function onInitialized() {
 	}
 
 	if (options.htmlFeatures) {
+		const formatters = await import('./formatters');
 		const noStateLs = vue.getDocumentLanguageService(
 			{ typescript: loadTs().server },
 			(document) => tsConfigs.getPreferences(connection, document),
