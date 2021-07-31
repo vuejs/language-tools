@@ -18,7 +18,7 @@ export async function activate(context: vscode.ExtensionContext, clients: Langua
 		const vscodeTsPaths = getVscodeTsPaths();
 		const vscodeTsVersion = shared.getTypeScriptVersion(vscodeTsPaths.serverPath);
 		const tsdk = getTsdk();
-		const defaultTsServer = shared.getWorkspaceTypescriptPath(defaultTsdk, vscode.workspace.workspaceFolders);
+		const defaultTsServer = shared.getWorkspaceTypescriptPath(defaultTsdk, (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath));
 		const defaultTsVersion = defaultTsServer ? shared.getTypeScriptVersion(defaultTsServer) : undefined;
 
 		const options: Record<string, vscode.QuickPickItem> = {};
@@ -108,11 +108,12 @@ function getWorkspaceTsPaths(useDefault = false) {
 		tsdk = defaultTsdk;
 	}
 	if (tsdk) {
-		const tsPath = shared.getWorkspaceTypescriptPath(tsdk, vscode.workspace.workspaceFolders);
+		const fsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
+		const tsPath = shared.getWorkspaceTypescriptPath(tsdk, fsPaths);
 		if (tsPath) {
 			return {
 				serverPath: tsPath,
-				localizedPath: shared.getWorkspaceTypescriptLocalizedPath(tsdk, vscode.env.language, vscode.workspace.workspaceFolders),
+				localizedPath: shared.getWorkspaceTypescriptLocalizedPath(tsdk, vscode.env.language, fsPaths),
 			};
 		}
 	}

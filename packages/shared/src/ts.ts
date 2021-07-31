@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import type * as ts from 'typescript';
 import type { MapLike } from 'typescript';
 import * as path from 'upath';
-import type * as vscode from 'vscode';
 
 export function createTsLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -23,37 +22,63 @@ export function createTsLanguageService(
 	return languageService;
 }
 
-export function getWorkspaceTypescriptPath(tsdk: string, workspaceFolders: readonly vscode.WorkspaceFolder[] | undefined) {
+export function getWorkspaceTypescriptPath(tsdk: string, workspaceFolderFsPaths: string[]) {
 	if (path.isAbsolute(tsdk)) {
-		const tsPath = path.join(tsdk, 'tsserverlibrary.js');
-		if (fs.existsSync(tsPath)) {
+		const tsPath = findTypescriptModulePathInLib(tsdk);
+		if (tsPath) {
 			return tsPath;
 		}
 	}
-	else if (workspaceFolders) {
-		for (const folder of workspaceFolders) {
-			const tsPath = path.join(folder.uri.fsPath, tsdk, 'tsserverlibrary.js');
-			if (fs.existsSync(tsPath)) {
+	else {
+		for (const folder of workspaceFolderFsPaths) {
+			const tsPath = findTypescriptModulePathInLib(path.join(folder, tsdk));
+			if (tsPath) {
 				return tsPath;
 			}
 		}
 	}
 }
 
-export function getWorkspaceTypescriptLocalizedPath(tsdk: string, lang: string, workspaceFolders: readonly vscode.WorkspaceFolder[] | undefined) {
+export function getWorkspaceTypescriptLocalizedPath(tsdk: string, lang: string, workspaceFolderFsPaths: string[]) {
 	if (path.isAbsolute(tsdk)) {
-		const tsPath = path.join(tsdk, lang, 'diagnosticMessages.generated.json');
-		if (fs.existsSync(tsPath)) {
+		const tsPath = findTypescriptLocalizedPathInLib(tsdk, lang);
+		if (tsPath) {
 			return tsPath;
 		}
 	}
-	else if (workspaceFolders) {
-		for (const folder of workspaceFolders) {
-			const tsPath = path.join(folder.uri.fsPath, tsdk, lang, 'diagnosticMessages.generated.json');
-			if (fs.existsSync(tsPath)) {
+	else {
+		for (const folder of workspaceFolderFsPaths) {
+			const tsPath = findTypescriptLocalizedPathInLib(path.join(folder, tsdk), lang);
+			if (tsPath) {
 				return tsPath;
 			}
 		}
+	}
+}
+
+export function findTypescriptModulePathInLib(lib: string) {
+
+	const tsserverlibrary = path.join(lib, 'tsserverlibrary.js');
+	const typescript = path.join(lib, 'typescript.js');
+	const tsserver = path.join(lib, 'tsserver.js');
+
+	if (fs.existsSync(tsserverlibrary)) {
+		return tsserverlibrary;
+	}
+	if (fs.existsSync(typescript)) {
+		return typescript;
+	}
+	if (fs.existsSync(tsserver)) {
+		return tsserver;
+	}
+}
+
+export function findTypescriptLocalizedPathInLib(lib: string, lang: string) {
+
+	const localized = path.join(lib, lang, 'diagnosticMessages.generated.json');
+
+	if (fs.existsSync(localized)) {
+		return localized;
 	}
 }
 
