@@ -38,8 +38,13 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 - [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
 - [Vitesse](https://github.com/antfu/vitesse)
 
+## Community's Language Client Implements
+
+- coc.nvim: https://github.com/yaegassy/coc-volar
+
 ## By-product
 
+- [@volar/server](https://www.npmjs.com/package/@volar/server): Bridging module for LSP <-> vscode-vue-languageservice.
 - [vue-tsc](https://github.com/johnsoncodehk/vue-tsc): Type-Checking on command line
 - [typescript-vue-plugin](https://www.npmjs.com/package/typescript-vue-plugin): See [#169](https://github.com/johnsoncodehk/volar/issues/169#issuecomment-832377254).
 - [vscode-vue-languageservice](https://www.npmjs.com/package/vscode-vue-languageservice) : Generic language server module for Vue
