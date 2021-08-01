@@ -61,7 +61,7 @@ export function register(
 		if (!document) return;
 		return servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
 	});
-	connection.onRequest(shared.WriteVirtualFilesRequest.type, async ({ lsType }) => {
+	connection.onNotification(shared.WriteVirtualFilesNotification.type, async ({ lsType }) => {
 		for (const [_, service] of servicesManager.services) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
@@ -75,7 +75,7 @@ export function register(
 			}
 		}
 	});
-	connection.onRequest(shared.VerifyAllScriptsRequest.type, async () => {
+	connection.onNotification(shared.VerifyAllScriptsNotification.type, async () => {
 
 		let errors = 0;
 		let warnings = 0;

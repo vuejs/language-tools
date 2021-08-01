@@ -5,32 +5,43 @@ import type * as vscode from 'vscode-languageserver';
  * Client Requests
  */
 
- export namespace GetDocumentContentRequest {
-	export const type: vscode.RequestType<string, string, any> = new rpc.RequestType('vscode/content');
+export namespace GetDocumentContentRequest {
+	export type ParamsType = string;
+	export type ResponseType = string;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vscode/content');
 }
 
+
 export namespace GetDocumentVersionRequest {
-	export const type: vscode.RequestType<{
-		uri: string,
-	}, number | undefined, any> = new rpc.RequestType('vue/docUpdated');
+	export type ParamsType = { uri: string };
+	export type ResponseType = number | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vue/docUpdated');
 }
 
 export namespace ShowReferencesNotification {
-	export const type: vscode.NotificationType<{ uri: vscode.DocumentUri, position: vscode.Position, references: vscode.Location[] }> = new rpc.NotificationType('vue.findReferences');
+	export type ParamsType = { uri: vscode.DocumentUri, position: vscode.Position, references: vscode.Location[] };
+	export const type = new rpc.NotificationType<ParamsType>('vue.findReferences');
 }
 
 export namespace GetDocumentNameCasesRequest {
-	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, {
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = {
 		tagNameCase: 'both' | 'kebabCase' | 'pascalCase',
 		attrNameCase: 'kebabCase' | 'pascalCase',
-	}, any> = new rpc.RequestType('volar/getAttrNameCaseClient');
+	};
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getAttrNameCaseClient');
 }
 
 export namespace GetDocumentSelectionRequest {
-	export const type: vscode.RequestType0<{
+	export type ResponseType = {
 		uri: string,
 		offset: number,
-	} | undefined, any> = new rpc.RequestType0('vue/activeSelection');
+	} | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType0<ResponseType, ErrorType>('vue/activeSelection');
 }
 
 /**
@@ -38,43 +49,59 @@ export namespace GetDocumentSelectionRequest {
  */
 
 export namespace PingRequest {
-	export const type: vscode.RequestType0<'pong' | null | undefined, any> = new rpc.RequestType0('volar/ping');
+	export type ResponseType = 'pong' | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/ping');
 }
 
 export namespace D3Request {
-	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, string | null | undefined, any> = new rpc.RequestType('volar/d3');
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = string | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/d3');
 }
 
 export namespace GetTagCloseEditsRequest {
-	export const type: vscode.RequestType<vscode.TextDocumentPositionParams, string | null | undefined, any> = new rpc.RequestType('html/tag');
+	export type ParamsType = vscode.TextDocumentPositionParams;
+	export type ResponseType = string | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/tag');
 }
 
 export namespace GetRefCompleteEditsRequest {
-	export const type: vscode.RequestType<vscode.TextDocumentPositionParams, string | null | undefined, any> = new rpc.RequestType('volar/ref');
+	export type ParamsType = vscode.TextDocumentPositionParams;
+	export type ResponseType = string | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/ref');
 }
 
-export namespace VerifyAllScriptsRequest {
-	export const type: vscode.RequestType<undefined, undefined, any> = new rpc.RequestType('volar.action.verifyAllScripts');
+export namespace VerifyAllScriptsNotification {
+	export const type = new rpc.NotificationType0('volar.action.verifyAllScripts');
 }
 
-export namespace WriteVirtualFilesRequest {
-	export const type: vscode.RequestType<{ lsType: 'template' | 'script' }, undefined, any> = new rpc.RequestType('volar.action.writeVirtualFiles');
+export namespace WriteVirtualFilesNotification {
+	export type ParamsType = { lsType: 'template' | 'script' };
+	export const type = new rpc.NotificationType<ParamsType>('volar.action.writeVirtualFiles');
 }
 
 export namespace RestartServerNotification {
-	export const type: vscode.NotificationType<{
+	export type ParamsType = {
 		serverPath: string,
 		localizedPath: string | undefined,
-	} | undefined> = new rpc.NotificationType('volar.action.restartServer');
+	} | undefined;
+	export const type = new rpc.NotificationType<ParamsType>('volar.action.restartServer');
 }
 
 export namespace DetectDocumentNameCasesRequest {
-	export const type: vscode.RequestType<vscode.TextDocumentIdentifier, {
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
-	} | null | undefined, any> = new rpc.RequestType('volar/getTagNameCaseServer');
+	} | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getTagNameCaseServer');
 }
 
 export namespace RemoveAllRefSugars {
-	export const type: vscode.NotificationType<undefined> = new rpc.NotificationType('volar/removeAllRefSugars');
+	export const type = new rpc.NotificationType0('volar/removeAllRefSugars');
 }

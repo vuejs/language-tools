@@ -5,9 +5,9 @@ import type { LanguageClient } from 'vscode-languageclient/node';
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
 	await languageClient.onReady();
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeTemplateLsVirtualFiles', () => {
-		languageClient.sendRequest(shared.WriteVirtualFilesRequest.type, { lsType: 'template' });
+		languageClient.sendNotification(shared.WriteVirtualFilesNotification.type, { lsType: 'template' });
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeScriptLsVirtualFiles', () => {
-		languageClient.sendRequest(shared.WriteVirtualFilesRequest.type, { lsType: 'script' });
+		languageClient.sendNotification(shared.WriteVirtualFilesNotification.type, { lsType: 'script' });
 	}));
 }
