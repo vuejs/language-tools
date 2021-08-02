@@ -94,11 +94,19 @@ function installPreview(app: App) {
 				window.addEventListener('message', event => {
 					if (event.data?.command === 'updateUrl') {
 						url.value = new URL(event.data.data);
-						file.value = url.value.hash.substr(1);
+						_file.value = url.value.hash.substr(1);
 					}
 				});
 				const url = ref(new URL(location.href));
-				const file = ref(url.value.hash.substr(1));
+				const _file = ref(url.value.hash.substr(1));
+				const file = computed(() => {
+					// fix windows path for vite
+					let path = _file.value.replace(/\\/g, '/');
+					if (path.indexOf(':') >= 0) {
+						path = path.split(':')[1];
+					}
+					return path;
+				});
 				const target = computed(() => defineAsyncComponent(() => import(file.value))); // TODO: responsive not working
 				const props = computed(() => {
 					const _props: Record<string, any> = {};

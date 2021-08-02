@@ -396,7 +396,8 @@
 		},
 		"typescriptServerPlugins-off": [
 			{
-				"name": "typescript-vue-plugin"
+				"name": "typescript-vue-plugin",
+				"enableForWorkspaceTypeScriptVersions": true
 			}
 		]
 	},
