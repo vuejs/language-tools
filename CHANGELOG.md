@@ -1,5 +1,100 @@
 # Changelog
 
+## Not release yet
+
+- feat: support for workspace trust
+- fix: component preview not working on windows
+
+## 0.26.10
+
+- chore: refactor `@volar/server` API and released `@volar/server`
+- perf: remove `vscode.css-language-features` and `vscode.html-language-features` rely ([vscode#98621](https://github.com/microsoft/vscode/issues/98621))
+
+- fix: `.value` should not append in function declaration name and literal type
+- fix: update extra virtual files before check virtual file exist ([#326](https://github.com/johnsoncodehk/volar/issues/326))
+- fix: convert tag name case command not working
+
+## 0.26.9
+
+- feat: improve for slot name type-check
+- feat: experimental component preview
+- feat: improve template code finder ([#208](https://github.com/johnsoncodehk/volar/issues/208))
+- feat: add refresh webview button
+- fix: hover request failed with jsdoc `@link`
+- fix: prevent null emmet configs ([#247](https://github.com/johnsoncodehk/volar/issues/247))
+
+## 0.26.8
+
+- feat: remove import type checking for `<script setup>` ([#325](https://github.com/johnsoncodehk/volar/issues/325))
+- feat: add ref sugar deprecated message
+- fix: goto definition not working for `lang="js"` target without allowJs
+
+## 0.26.7
+
+- feat: support formatting in v-for expressions
+- feat: change interpolation braces syntax token
+- fix: fixed a few problems when goto definition to import file path
+- fix: `<script lang="x">` change should update template verification
+- perf: faster diagnostics
+
+## 0.26.6
+
+- feat: support component auto-import with empty script block ([#232](https://github.com/johnsoncodehk/volar/issues/232))
+- feat: disable template type-checking with `<script lang="js">` ([#46](https://github.com/johnsoncodehk/volar/issues/46))
+- fix: remove missing deps ([vue-tsc#45#issuecomment-882319471](https://github.com/johnsoncodehk/vue-tsc/issues/45#issuecomment-882319471))
+- fix: change TS library file rely from tsserver.js to tsserverlibrary.js
+- fix: css references codeLens broken
+- fix: TS completion resolve failed with jsdoc link
+- fix: convert tag name case failed edge case
+
+## 0.26.5
+
+- feat: add remove all ref sugar command
+- feat: improve ref sugar remove tool
+- fix: fixed find references never finish edge cases
+- fix: template type-checking not working with `<script lang="js">` ([#319](https://github.com/johnsoncodehk/volar/issues/319))
+- fix: definition selection range incorrect
+- fix: fixed monorepo project alway pop warning
+- fix: preset empty object if can't get TS settings ([#316](https://github.com/johnsoncodehk/volar/issues/316))
+
+## 0.26.4
+
+- feat: update supports for vscode 1.58
+- refactor: remove formatters deps for `vue-tsc`
+- fix: script block virtual script language incorrect (should not force to `ts`)
+- fix: goto definition broken with ref sugar
+
+## 0.26.3
+
+- feat: support FunctionalComponent events type-check
+- feat: support for TS setttings (for TS preferences, formatOptions)
+- fix: withDefaults props type incorrect in template
+- fix: downgrade `@vue/compiler-sfc` to fix template range for formatting, codeLens
+- fix: handle SFC parse failed for component auto-import
+- fix: semanticTokens search range incorrect
+
+
+## 0.26.2
+
+- fix: fixed a few TS semanticTokens problems
+- fix: namespace imports should expose to template ([#311](https://github.com/johnsoncodehk/volar/issues/311))
+- fix: events auto-complete names incorrect with `attr: pascalCase` config ([#312](https://github.com/johnsoncodehk/volar/issues/312))
+- fix: validation for "virtual script exist" not working
+- fix: TS completion documentation incomplete
+- perf: fix can't reuse old TS program if `<script lang="js">` exist since 0.26.0
+
+## 0.26.1
+
+- fix: fixed a few TS renaming, find referenecs problems
+- fix: first time *.vue file change can't effect *.ts diagnostics
+
+## 0.26.0
+
+- feat: split TS language service to script TS language service and template TS language service ([#94](https://github.com/johnsoncodehk/volar/issues/94)) ([#253](https://github.com/johnsoncodehk/volar/issues/253))
+- fix: optional props type incorrect in `<script setup>` ([#302](https://github.com/johnsoncodehk/volar/issues/302))
+- fix: formatting make double spacing in empty pug template block ([#304](https://github.com/johnsoncodehk/volar/issues/304))
+- fix: fixed callHierarchy request failed if skip prepare request
+
 ## 0.25.28
 
 - feat: improve `volar.autoCompleteRefs` and make it out of experimental ([#201](https://github.com/johnsoncodehk/volar/issues/201))
