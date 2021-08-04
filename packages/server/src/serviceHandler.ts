@@ -10,6 +10,8 @@ import * as tsConfigs from './tsConfigs';
 import * as ShPlugin from 'typescript-vscode-sh-plugin';
 
 export type ServiceHandler = ReturnType<typeof createServiceHandler>;
+export const fileRenamings = new Set<Promise<void>>();
+export const renameFileContentCache = new Map<string, string>();
 
 export function createServiceHandler(
 	ts: vue.Modules['typescript'],
@@ -78,7 +80,9 @@ export function createServiceHandler(
 		}
 		return vueLs;
 	}
-	function update() {
+	async function update() {
+
+		await Promise.all([...fileRenamings]);
 
 		parsedCommandLine = createParsedCommandLine(ts, tsConfig);
 
@@ -116,7 +120,10 @@ export function createServiceHandler(
 			onProjectFilesUpdate(undefined);
 		}
 	}
-	function onDocumentUpdated(document: TextDocument) {
+	async function onDocumentUpdated(document: TextDocument) {
+
+		await Promise.all([...fileRenamings]);
+
 		const fileName = shared.uriToFsPath(document.uri);
 		const snapshot = snapshots.get(fileName);
 		if (snapshot) {
@@ -141,11 +148,13 @@ export function createServiceHandler(
 			onProjectFilesUpdate(fileName);
 		}
 	}
-	function onDriveFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
+	async function onDriveFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
 
 		if (eventKind !== ts.FileWatcherEventKind.Changed) {
 			return;
 		}
+
+		await Promise.all([...fileRenamings]);
 
 		fileName = shared.normalizeFileName(fileName);
 		const uri = shared.fsPathToUri(fileName);
@@ -246,7 +255,7 @@ export function createServiceHandler(
 			if (cache && cache.version === version) {
 				return cache.snapshot;
 			}
-			const text = getScriptText(fileName);
+			const text = getScriptText(ts, documents, fileName);
 			if (text !== undefined) {
 				const snapshot = ts.ScriptSnapshot.fromString(text);
 				snapshots.set(fileName, {
@@ -254,15 +263,6 @@ export function createServiceHandler(
 					snapshot,
 				});
 				return snapshot;
-			}
-		}
-		function getScriptText(fileName: string) {
-			const doc = documents.get(shared.fsPathToUri(fileName));
-			if (doc) {
-				return doc.getText();
-			}
-			if (ts.sys.fileExists(fileName)) {
-				return ts.sys.readFile(fileName, 'utf8');
 			}
 		}
 	}
@@ -295,4 +295,19 @@ function createParsedCommandLine(ts: typeof import('typescript/lib/tsserverlibra
 	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 	content.fileNames = content.fileNames.map(shared.normalizeFileName);
 	return content;
+}
+
+export function getScriptText(
+	ts: vue.Modules['typescript'],
+	documents: vscode.TextDocuments<TextDocument>,
+	fileName: string,
+) {
+	const doc = documents.get(shared.fsPathToUri(fileName));
+	if (doc) {
+		return doc.getText();
+	}
+	if (ts.sys.fileExists(fileName)) {
+		return ts.sys.readFile(fileName, 'utf8');
+	}
+	return renameFileContentCache.get(shared.fsPathToUri(fileName));
 }

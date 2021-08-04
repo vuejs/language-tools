@@ -69,7 +69,7 @@ async function onInitialized() {
 		);
 
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(connection, documents, servicesManager, options.features);
+		(await import('./features/lspFeatures')).register(loadTs().server, connection, documents, servicesManager, options.features);
 		(await import('./registers/registerVueFeatures')).register(connection, options.features, vue.getSemanticTokenLegend());
 
 		connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {

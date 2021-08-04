@@ -3,8 +3,10 @@ import * as vue from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { ServicesManager } from '../servicesManager';
+import { fileRenamings, renameFileContentCache, getScriptText } from '../serviceHandler';
 
 export function register(
+	ts: vue.Modules['typescript'],
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	servicesManager: ServicesManager,
@@ -207,22 +209,38 @@ export function register(
 		const config: 'prompt' | 'always' | 'never' | null | undefined = await connection.workspace.getConfiguration(hasTsFile ? 'typescript.updateImportsOnFileMove.enabled' : 'javascript.updateImportsOnFileMove.enabled');
 
 		if (config === 'always') {
-			const edit = await worker();
-			if (edit) {
-				if (edit.documentChanges) {
-					for (const change of edit.documentChanges) {
-						if (vscode.TextDocumentEdit.is(change)) {
-							for (const file of handler.files) {
-								if (change.textDocument.uri === file.oldUri) {
-									change.textDocument.uri = file.newUri;
-									change.textDocument.version = documents.get(file.newUri)?.version ?? change.textDocument.version;
+			const renaming = new Promise<void>(async resolve => {
+				for (const file of handler.files) {
+					const renameFileContent = getScriptText(ts, documents, shared.uriToFsPath(file.oldUri));
+					if (renameFileContent) {
+						renameFileContentCache.set(file.oldUri, renameFileContent);
+					}
+				}
+				await shared.sleep(0);
+				const edit = await worker();
+				if (edit) {
+					if (edit.documentChanges) {
+						for (const change of edit.documentChanges) {
+							if (vscode.TextDocumentEdit.is(change)) {
+								for (const file of handler.files) {
+									if (change.textDocument.uri === file.oldUri) {
+										change.textDocument.uri = file.newUri;
+										change.textDocument.version = documents.get(file.newUri)?.version ?? change.textDocument.version;
+									}
 								}
 							}
 						}
 					}
+					connection.workspace.applyEdit(edit);
 				}
-				connection.workspace.applyEdit(edit);
-			}
+				resolve();
+			});
+			fileRenamings.add(renaming);
+			(async () => {
+				await renaming;
+				fileRenamings.delete(renaming);
+				renameFileContentCache.clear();
+			})();
 		}
 
 		if (config === 'prompt')
