@@ -106,7 +106,7 @@ export function createServiceHandler(
 				const fileWatcher = ts.sys.watchFile!(fileName, onDriveFileUpdated);
 				scripts.set(fileName, {
 					fileName,
-					version: 0,
+					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
 					fileWatcher,
 				});
 				changed = true;
@@ -132,10 +132,10 @@ export function createServiceHandler(
 		const script = scripts.get(fileName);
 		const extraScript = extraScripts.get(fileName);
 		if (script) {
-			script.version++;
+			script.version = document.version;
 		}
 		if (extraScript) {
-			extraScript.version++;
+			extraScript.version = document.version;
 		}
 		if (!!script || !!extraScript) {
 			onProjectFilesUpdate(fileName);
@@ -229,7 +229,7 @@ export function createServiceHandler(
 				});
 				extraScripts.set(fileName, {
 					fileName: fileName,
-					version: 0,
+					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
 					fileWatcher: fileWatcher,
 				});
 			}

@@ -354,6 +354,9 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: vscode.
 							}
 						}
 					}
+					if (!vueDocEdit.edits.length) {
+						vueDocEdit = undefined;
+					}
 				}
 				else {
 					vueDocEdit = tsDocEdit;

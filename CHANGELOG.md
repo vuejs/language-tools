@@ -4,6 +4,7 @@
 
 - feat: support for workspace trust
 - feat: support config for HTML formatting print width by `volar.formatting.printWidth` option ([#321](https://github.com/johnsoncodehk/volar/issues/321))
+- feat: support for typescript `updateImportsOnFileMove` setting to disable prompt ([#332](https://github.com/johnsoncodehk/volar/issues/321))
 - fix: component preview not working on windows
 - fix: delete file can't trigger related scripts diagnostics update
 

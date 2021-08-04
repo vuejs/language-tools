@@ -202,15 +202,33 @@ export function register(
 		};
 	});
 	connection.workspace.onWillRenameFiles(async handler => {
-		const edits = (await Promise.all(handler.files
-			.map(file => {
-				return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
-			}))).filter(shared.notEmpty);
-		if (edits.length) {
-			const result = edits[0];
-			vue.margeWorkspaceEdits(result, ...edits.slice(1));
-			return result;
+
+		const hasTsFile = handler.files.some(file => file.newUri.endsWith('.vue') || file.newUri.endsWith('.ts') || file.newUri.endsWith('.tsx'));
+		const config: 'prompt' | 'always' | 'never' | null | undefined = await connection.workspace.getConfiguration(hasTsFile ? 'typescript.updateImportsOnFileMove.enabled' : 'javascript.updateImportsOnFileMove.enabled');
+
+		if (config === 'always') {
+			const edit = await worker();
+			if (edit) {
+				connection.workspace.applyEdit(edit);
+			}
 		}
+
+		if (config === 'prompt')
+			return await worker();
+
 		return null;
+
+		async function worker() {
+			const edits = (await Promise.all(handler.files
+				.map(file => {
+					return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
+				}))).filter(shared.notEmpty);
+			if (edits.length) {
+				const result = edits[0];
+				vue.margeWorkspaceEdits(result, ...edits.slice(1));
+				return result;
+			}
+			return null;
+		}
 	});
 }
