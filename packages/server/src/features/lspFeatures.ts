@@ -209,6 +209,18 @@ export function register(
 		if (config === 'always') {
 			const edit = await worker();
 			if (edit) {
+				if (edit.documentChanges) {
+					for (const change of edit.documentChanges) {
+						if (vscode.TextDocumentEdit.is(change)) {
+							for (const file of handler.files) {
+								if (change.textDocument.uri === file.oldUri) {
+									change.textDocument.uri = file.newUri;
+									change.textDocument.version = documents.get(file.newUri)?.version ?? change.textDocument.version;
+								}
+							}
+						}
+					}
+				}
 				connection.workspace.applyEdit(edit);
 			}
 		}
