@@ -11,6 +11,7 @@ let previewPanel: vscode.WebviewPanel | undefined;
 let lastPreviewFile: string | undefined;
 let lastPreviewQuery: string | undefined;
 let goToTemplateReq = 0;
+let lastPreviewPort = -1;
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -37,6 +38,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
 		finderPanel?.webview.postMessage({ sender: 'volar', command: 'selectElement' });
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showInBrowser', () => {
+		vscode.env.openExternal(vscode.Uri.parse(`http://localhost:${lastPreviewPort}/__preview${lastPreviewQuery}#${lastPreviewFile}`));
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.finder', async () => {
@@ -170,6 +175,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.sendText(`cd ${viteDir}`);
 		}
 		terminal.sendText(`npx vite --port=${port}`);
+
+		lastPreviewPort = port;
 
 		const start = Date.now();
 		while (Date.now() - start < 10000 && await portfinder.getPortPromise({ port: port }) === port) {

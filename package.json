@@ -359,6 +359,12 @@
 				"icon": "$(search)"
 			},
 			{
+				"command": "volar.action.showInBrowser",
+				"title": "Show in Browser",
+				"category": "Volar",
+				"icon": "$(browser)"
+			},
+			{
 				"command": "workbench.action.webview.reloadWebviewAction",
 				"title": "Refresh",
 				"category": "Volar",
@@ -390,6 +396,11 @@
 				{
 					"command": "volar.action.selectElement",
 					"when": "activeEditor == WebviewEditor && volar.showSelectElement",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.showInBrowser",
+					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				},
 				{
