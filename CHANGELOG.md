@@ -1,12 +1,13 @@
 # Changelog
 
-## Not release yet
+## 0.26.11
 
 - feat: support for workspace trust
 - feat: support config for HTML formatting print width by `volar.formatting.printWidth` option ([#321](https://github.com/johnsoncodehk/volar/issues/321))
-- feat: support for typescript `updateImportsOnFileMove` setting to disable prompt ([#332](https://github.com/johnsoncodehk/volar/issues/321))
+- feat: support for typescript `updateImportsOnFileMove` setting to disable prompt ([#332](https://github.com/johnsoncodehk/volar/issues/332))
 - fix: component preview not working on windows
 - fix: delete file can't trigger related scripts diagnostics update
+- fix: disable component tag type-checking to avoid some unable fix edge cases ([#333](https://github.com/johnsoncodehk/volar/issues/333))
 
 ## 0.26.10
 
