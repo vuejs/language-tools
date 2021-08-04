@@ -36,18 +36,17 @@ export async function activate(context: vscode.ExtensionContext) {
 		documentContent.activate(context, client);
 		documentPrintWidth.activate(context, client);
 		activeSelection.activate(context, apiClient);
-
-		const _client = client;
-		(async () => {
-			const getTagNameCase = await tagNameCase.activate(context, _client);
-			const getAttrNameCase = await attrNameCase.activate(context, _client);
-
-			_client.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
-				tagNameCase: getTagNameCase(handler.uri),
-				attrNameCase: getAttrNameCase(handler.uri),
-			}));
-		})();
 	}
+
+	(async () => {
+		const getTagNameCase = await tagNameCase.activate(context, apiClient);
+		const getAttrNameCase = await attrNameCase.activate(context, apiClient);
+
+		apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
+			tagNameCase: getTagNameCase(handler.uri),
+			attrNameCase: getAttrNameCase(handler.uri),
+		}));
+	})();
 
 	splitEditors.activate(context);
 	preview.activate(context);
