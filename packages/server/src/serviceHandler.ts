@@ -17,8 +17,7 @@ export function createServiceHandler(
 	tsConfig: string,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
-	fileUpdatedCb: (fileName: string) => any,
-	_onProjectFilesUpdate: () => void,
+	onFileUpdated: (changedFileName: string | undefined) => any,
 	workDoneProgress: vscode.WorkDoneProgressServerReporter,
 	connection: vscode.Connection,
 ) {
@@ -48,7 +47,6 @@ export function createServiceHandler(
 	return {
 		update,
 		onDocumentUpdated,
-		isRelatedFile,
 		getLanguageService,
 		getLanguageServiceDontCreate: () => vueLs,
 		getParsedCommandLine: () => parsedCommandLine,
@@ -115,7 +113,7 @@ export function createServiceHandler(
 			}
 		}
 		if (changed) {
-			onProjectFilesUpdate();
+			onProjectFilesUpdate(undefined);
 		}
 	}
 	function onDocumentUpdated(document: TextDocument) {
@@ -139,14 +137,9 @@ export function createServiceHandler(
 		if (extraScript) {
 			extraScript.version++;
 		}
-		if (script || extraScript) {
-			onProjectFilesUpdate();
+		if (!!script || !!extraScript) {
+			onProjectFilesUpdate(fileName);
 		}
-	}
-	function isRelatedFile(fileName: string) {
-		const script = scripts.get(fileName);
-		const extraScript = extraScripts.get(fileName);
-		return !!script || !!extraScript;
 	}
 	function onDriveFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
 
@@ -166,15 +159,11 @@ export function createServiceHandler(
 		if (script) {
 			script.version++;
 		}
-		onProjectFilesUpdate();
-
-		fileUpdatedCb(fileName);
+		onProjectFilesUpdate(fileName);
 	}
-	async function onProjectFilesUpdate() {
+	async function onProjectFilesUpdate(changedFileName: string | undefined) {
 		projectVersion++;
-		if (_onProjectFilesUpdate) {
-			_onProjectFilesUpdate();
-		}
+		onFileUpdated(changedFileName);
 	}
 	function createLanguageServiceHost() {
 
@@ -236,7 +225,7 @@ export function createServiceHandler(
 						extraScripts.delete(fileName);
 						snapshots.delete(fileName);
 					}
-					onProjectFilesUpdate();
+					onProjectFilesUpdate(fileName);
 				});
 				extraScripts.set(fileName, {
 					fileName: fileName,

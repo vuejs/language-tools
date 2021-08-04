@@ -5,12 +5,12 @@
 - feat: support for workspace trust
 - feat: support config for HTML formatting print width by `volar.formatting.printWidth` option ([#321](https://github.com/johnsoncodehk/volar/issues/321))
 - fix: component preview not working on windows
+- fix: delete file can't trigger related scripts diagnostics update
 
 ## 0.26.10
 
 - chore: refactor `@volar/server` API and released `@volar/server`
 - perf: remove `vscode.css-language-features` and `vscode.html-language-features` rely ([vscode#98621](https://github.com/microsoft/vscode/issues/98621))
-
 - fix: `.value` should not append in function declaration name and literal type
 - fix: update extra virtual files before check virtual file exist ([#326](https://github.com/johnsoncodehk/volar/issues/326))
 - fix: convert tag name case command not working

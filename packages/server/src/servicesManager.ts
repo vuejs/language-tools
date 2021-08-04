@@ -34,7 +34,7 @@ export function createServicesManager(
 		for (const tsConfig of tsConfigs) {
 			updateLsHandler(tsConfig, progress[tsConfig]);
 		}
-		updateAllOpenedDocumentsDiagnostics();
+		updateDocumentDiagnostics(undefined);
 	})();
 	for (const rootPath of rootPaths) {
 		originalTs.sys.watchDirectory!(rootPath, async fileName => {
@@ -43,7 +43,7 @@ export function createServicesManager(
 				const progress = await getTsconfigProgress([fileName]);
 				clearDiagnostics();
 				updateLsHandler(fileName, progress[fileName]);
-				updateAllOpenedDocumentsDiagnostics();
+				updateDocumentDiagnostics(undefined);
 			}
 			else {
 				// *.vue, *.ts ... changed
@@ -63,7 +63,6 @@ export function createServicesManager(
 		for (const [_, service] of services) {
 			service.onDocumentUpdated(change.document);
 		}
-		updateDocumentDiagnostics(change.document);
 		// preload
 		getMatchService(change.document.uri);
 	});
@@ -91,44 +90,29 @@ export function createServicesManager(
 		}
 		return result;
 	}
-	async function updateDocumentDiagnostics(changeDoc: TextDocument) {
+	async function updateDocumentDiagnostics(changedFileName?: string) {
 
 		if (!options.features?.diagnostics)
 			return;
 
 		const otherDocs: TextDocument[] = [];
-		const changedFileName = shared.uriToFsPath(changeDoc.uri);
-		const isCancel = getIsCancel(changeDoc.uri, changeDoc.version);
+		const changeDoc = changedFileName ? documents.get(shared.fsPathToUri(changedFileName)) : undefined;
+		const isCancel = changeDoc ? getIsCancel(changeDoc.uri, changeDoc.version) : async () => false;
 
 		for (const document of documents.all()) {
-			if (document.languageId === 'vue' && document.uri !== changeDoc.uri) {
+			if (document.languageId === 'vue' && document.uri !== changeDoc?.uri) {
 				otherDocs.push(document);
 			}
 		}
 
-		if (await isCancel()) return;
-		await sendDocumentDiagnostics(changeDoc.uri, changedFileName, isCancel);
+		if (changeDoc) {
+			if (await isCancel()) return;
+			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
+		}
 
 		for (const doc of otherDocs) {
 			if (await isCancel()) break;
-			await sendDocumentDiagnostics(doc.uri, changedFileName, isCancel);
-		}
-	}
-	async function updateAllOpenedDocumentsDiagnostics(changedFileName?: string) {
-
-		if (!options.features?.diagnostics)
-			return;
-
-		const openedDocs: TextDocument[] = [];
-
-		for (const document of documents.all()) {
-			if (document.languageId === 'vue') {
-				openedDocs.push(document);
-			}
-		}
-
-		for (const doc of openedDocs) {
-			await sendDocumentDiagnostics(doc.uri, changedFileName);
+			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}
 	}
 	function getIsCancel(uri: string, version: number) {
@@ -139,21 +123,20 @@ export function createServicesManager(
 			}
 			if (typeof options.features?.diagnostics === 'object' && options.features.diagnostics.getDocumentVersionRequest) {
 				const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
-				if (clientDocVersion !== undefined && version !== clientDocVersion) {
+				if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
 					_isCancel = true;
 				}
 			}
 			return _isCancel;
 		};
 	}
-	async function sendDocumentDiagnostics(uri: string, changedFileName?: string, isCancel?: () => Promise<boolean>) {
+	async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
 
 		const matchTsConfig = getMatchTsConfig(uri);
 		if (!matchTsConfig) return;
 
 		const matchService = services.get(matchTsConfig);
 		if (!matchService) return;
-		if (changedFileName && !matchService.isRelatedFile(changedFileName)) return;
 
 		const matchLs = matchService.getLanguageService();
 
@@ -189,8 +172,8 @@ export function createServicesManager(
 				tsConfig,
 				tsLocalized,
 				documents,
-				updateAllOpenedDocumentsDiagnostics,
-				() => {
+				changedFileName => {
+					updateDocumentDiagnostics(changedFileName);
 					if (options.features?.semanticTokens) {
 						connection.languages.semanticTokens.refresh();
 					}
@@ -202,7 +185,7 @@ export function createServicesManager(
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
 					clearDiagnostics();
 					updateLsHandler(tsConfig, progress);
-					updateAllOpenedDocumentsDiagnostics();
+					updateDocumentDiagnostics(undefined);
 				}
 			}));
 		}
@@ -227,7 +210,7 @@ export function createServicesManager(
 		for (const tsConfig of tsConfigs) {
 			updateLsHandler(tsConfig, progress[tsConfig]);
 		}
-		updateAllOpenedDocumentsDiagnostics();
+		updateDocumentDiagnostics(undefined);
 	}
 	function getMatchService(uri: string) {
 		const tsConfig = getMatchTsConfig(uri);
