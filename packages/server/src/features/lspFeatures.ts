@@ -32,10 +32,10 @@ export function register(
 		const uri: string | undefined = item.data?.uri;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
-			? await connection.sendRequest(shared.GetDocumentSelectionRequest.type)
+			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
 			: undefined;
-		const newOffset = activeSel?.uri.toLowerCase() === uri.toLowerCase() ? activeSel?.offset : undefined;
-		return servicesManager.getMatchService(uri)?.doCompletionResolve(item, newOffset) ?? item;
+		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
+		return servicesManager.getMatchService(uri)?.doCompletionResolve(item, newPosition) ?? item;
 	});
 	connection.onHover(handler => {
 		return servicesManager

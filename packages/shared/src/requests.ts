@@ -6,22 +6,21 @@ import type * as vscode from 'vscode-languageserver';
  */
 
 export namespace GetDocumentContentRequest {
-	export type ParamsType = string;
+	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = string;
 	export type ErrorType = never;
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vscode/content');
 }
 
-
 export namespace GetDocumentVersionRequest {
-	export type ParamsType = { uri: string };
+	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = number | undefined;
 	export type ErrorType = never;
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vue/docUpdated');
 }
 
 export namespace ShowReferencesNotification {
-	export type ParamsType = { uri: vscode.DocumentUri, position: vscode.Position, references: vscode.Location[] };
+	export type ParamsType = vscode.TextDocumentPositionParams & { references: vscode.Location[] };
 	export const type = new rpc.NotificationType<ParamsType>('vue.findReferences');
 }
 
@@ -35,11 +34,15 @@ export namespace GetDocumentNameCasesRequest {
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getAttrNameCaseClient');
 }
 
-export namespace GetDocumentSelectionRequest {
-	export type ResponseType = {
-		uri: string,
-		offset: number,
-	} | undefined;
+export namespace GetDocumentPrintWidthRequest {
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = number | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vue/getDocumentWordWrapColumn');
+}
+
+export namespace GetEditorSelectionRequest {
+	export type ResponseType = vscode.TextDocumentPositionParams | undefined;
 	export type ErrorType = never;
 	export const type = new rpc.RequestType0<ResponseType, ErrorType>('vue/activeSelection');
 }

@@ -55,7 +55,7 @@ export function getSchemaRequestService(
 		}
 
 		if (typeof options === 'object' && options.getDocumentContentRequest) {
-			return connection.sendRequest(shared.GetDocumentContentRequest.type, uri).then(responseText => {
+			return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
 				return responseText;
 			}, error => {
 				return Promise.reject(error.message);

@@ -57,6 +57,8 @@ function onInitialize(params: vscode.InitializeParams) {
 }
 async function onInitialized() {
 
+	connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
+
 	if (options.features) {
 		const servicesManager = createServicesManager(
 			options,
@@ -87,7 +89,15 @@ async function onInitialized() {
 			{ typescript: loadTs().server },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
-			formatters,
+			formatters.getFormatters(async (uri) => {
+				if (options.htmlFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
+					const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
+					if (response !== undefined) {
+						return response;
+					}
+				}
+				return options.htmlFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
+			}),
 		);
 
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);

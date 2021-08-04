@@ -11,8 +11,8 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	await languageClient.onReady();
 	const schemaDocuments: { [uri: string]: boolean } = {};
 
-	context.subscriptions.push(languageClient.onRequest(shared.GetDocumentContentRequest.type, uriPath => {
-		const uri = vscode.Uri.parse(uriPath);
+	context.subscriptions.push(languageClient.onRequest(shared.GetDocumentContentRequest.type, handle => {
+		const uri = vscode.Uri.parse(handle.uri);
 		if (uri.scheme === 'untitled') {
 			return Promise.reject(new ResponseError(3, localize('untitled.schema', 'Unable to load {0}', uri.toString())));
 		}

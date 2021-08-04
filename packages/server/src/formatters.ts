@@ -5,7 +5,18 @@ import * as vscode from 'vscode-languageserver/node';
 
 const pugBeautify = require('pug-beautify');
 
-export function html(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+export function getFormatters(getPrintWidth: (uri: string) => number | Promise<number>) {
+	return {
+		html: (document: TextDocument, options: vscode.FormattingOptions) => html(document, options, getPrintWidth),
+		pug,
+		css,
+		less,
+		scss,
+		postcss,
+	}
+}
+
+async function html(document: TextDocument, options: vscode.FormattingOptions, getPrintWidth: (uri: string) => number | Promise<number>) {
 
 	const prefixes = '<template>';
 	const suffixes = '</template>';
@@ -13,7 +24,7 @@ export function html(document: TextDocument, options: vscode.FormattingOptions):
 	let newHtml = prettyhtml(prefixes + document.getText() + suffixes, {
 		tabWidth: options.tabSize,
 		useTabs: !options.insertSpaces,
-		printWidth: 100,
+		printWidth: await getPrintWidth(document.uri),
 	}).contents;
 	newHtml = newHtml.trim();
 	newHtml = newHtml.substring(prefixes.length, newHtml.length - suffixes.length);
@@ -29,7 +40,7 @@ export function html(document: TextDocument, options: vscode.FormattingOptions):
 	return [htmlEdit];
 }
 
-export function pug(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+function pug(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
 
 	const pugCode = document.getText();
 	if (pugCode.trim() === '') {
@@ -55,19 +66,19 @@ export function pug(document: TextDocument, options: vscode.FormattingOptions): 
 	return [pugEdit];
 }
 
-export function css(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+function css(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
 	return _css(document, options, 'css');
 }
 
-export function less(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+function less(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
 	return _css(document, options, 'less');
 }
 
-export function scss(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+function scss(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
 	return _css(document, options, 'scss');
 }
 
-export function postcss(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+function postcss(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
 	return _css(document, options, 'postcss');
 }
 

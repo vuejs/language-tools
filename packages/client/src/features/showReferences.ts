@@ -5,7 +5,7 @@ import type { LanguageClient } from 'vscode-languageclient/node';
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
 	await languageClient.onReady();
 	context.subscriptions.push(languageClient.onNotification(shared.ShowReferencesNotification.type, handler => {
-		const uri = handler.uri;
+		const uri = handler.textDocument.uri;
 		const pos = handler.position;
 		const refs = handler.references;
 		vscode.commands.executeCommand(

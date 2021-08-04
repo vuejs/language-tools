@@ -9,7 +9,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 
 export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost }: ApiLanguageServiceContext) {
-	return async (item: vscode.CompletionItem, newOffset?: number) => {
+	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
 		const data: CompletionData | undefined = item.data;
 		if (!data) return item;
@@ -32,15 +32,15 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 		async function getTsResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: TsCompletionData) {
 			const sourceMap = sourceFiles.getTsSourceMaps(data.lsType).get(data.docUri);
 			if (sourceMap) {
-				let newOffset_2: number | undefined;
-				if (newOffset) {
-					for (const tsRange of sourceMap.getMappedRanges2(newOffset)) {
+				let newPosition_2: vscode.Position | undefined;
+				if (newPosition) {
+					for (const tsRange of sourceMap.getMappedRanges(newPosition)) {
 						if (!tsRange.data.capabilities.completion) continue;
-						newOffset_2 = tsRange.start;
+						newPosition_2 = tsRange.start;
 						break;
 					}
 				}
-				data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newOffset_2);
+				data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
 				const newVueItem = transformCompletionItem(
 					data.tsItem,
 					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),

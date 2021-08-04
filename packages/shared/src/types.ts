@@ -1,10 +1,6 @@
-import type {
-	GetDocumentNameCasesRequest,
-	GetDocumentSelectionRequest,
-	ShowReferencesNotification,
-	GetDocumentVersionRequest,
-	GetDocumentContentRequest,
-} from './requests';
+import type * as Requests from './requests';
+
+export declare let __requests: typeof Requests; // keep this code for jsdoc link
 
 export interface ServerInitializationOptions {
 	typescript: {
@@ -31,11 +27,11 @@ export interface ServerInitializationOptions {
 			defaultTagNameCase: 'both' | 'kebabCase' | 'pascalCase',
 			defaultAttrNameCase: 'kebabCase' | 'pascalCase',
 			/**
-			 * {@link GetDocumentNameCasesRequest}
+			 * {@link __requests.GetDocumentNameCasesRequest}
 			 */
 			getDocumentNameCasesRequest?: boolean,
 			/**
-			 * {@link GetDocumentSelectionRequest}
+			 * {@link __requests.GetDocumentSelectionRequest}
 			 * */
 			getDocumentSelectionRequest?: boolean,
 		}
@@ -45,7 +41,7 @@ export interface ServerInitializationOptions {
 		documentColor?: boolean
 		codeLens?: boolean | {
 			/**
-			 * {@link ShowReferencesNotification}
+			 * {@link __requests.ShowReferencesNotification}
 			 * */
 			showReferencesNotification?: boolean,
 		}
@@ -53,13 +49,13 @@ export interface ServerInitializationOptions {
 		codeAction?: boolean
 		diagnostics?: boolean | {
 			/**
-			 * {@link GetDocumentVersionRequest}
+			 * {@link __requests.GetDocumentVersionRequest}
 			 * */
 			getDocumentVersionRequest: boolean,
 		}
 		schemaRequestService?: boolean | {
 			/**
-			 * {@link GetDocumentContentRequest}
+			 * {@link __requests.GetDocumentContentRequest}
 			 * */
 			getDocumentContentRequest?: boolean,
 		}
@@ -70,6 +66,12 @@ export interface ServerInitializationOptions {
 	htmlFeatures?: {
 		foldingRange?: boolean
 		linkedEditingRange?: boolean
-		documentFormatting?: boolean
+		documentFormatting?: {
+			defaultPrintWidth: number,
+			/**
+			 * {@link __requests.GetDocumentPrintWidthRequest}
+			 * */
+			getDocumentPrintWidthRequest?: boolean,
+		},
 	}
 }

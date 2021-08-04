@@ -8,6 +8,7 @@ import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
+import * as documentPrintWidth from './features/documentPrintWidth';
 import * as preview from './features/preview';
 import * as restart from './features/restart';
 import * as showReferences from './features/showReferences';
@@ -29,32 +30,36 @@ export async function activate(context: vscode.ExtensionContext) {
 	docClient = createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, 'file');
 	htmlClient = createLanguageService(context, 'html', 'volar-html', 'Volar - HTML', 6011, undefined);
 
+	for (const client of [apiClient, docClient, htmlClient]) {
+		showReferences.activate(context, client);
+		documentVersion.activate(context, client);
+		documentContent.activate(context, client);
+		documentPrintWidth.activate(context, client);
+		activeSelection.activate(context, apiClient);
+
+		const _client = client;
+		(async () => {
+			const getTagNameCase = await tagNameCase.activate(context, _client);
+			const getAttrNameCase = await attrNameCase.activate(context, _client);
+
+			_client.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
+				tagNameCase: getTagNameCase(handler.uri),
+				attrNameCase: getAttrNameCase(handler.uri),
+			}));
+		})();
+	}
+
 	splitEditors.activate(context);
 	preview.activate(context);
 	createWorkspaceSnippets.activate(context);
 	callGraph.activate(context, apiClient);
 	removeRefSugars.activate(context, apiClient);
-	showReferences.activate(context, docClient);
-	documentVersion.activate(context, docClient);
-	documentContent.activate(context, apiClient);
-	documentContent.activate(context, docClient);
-	activeSelection.activate(context, apiClient);
 	verifyAll.activate(context, docClient);
 	virtualFiles.activate(context, docClient);
 	tagClosing.activate(context, htmlClient, apiClient);
 	restart.activate(context, [apiClient, docClient]);
 	tsPlugin.activate(context);
 	tsVersion.activate(context, [apiClient, docClient]);
-
-	(async () => {
-		const getTagNameCase = await tagNameCase.activate(context, apiClient);
-		const getAttrNameCase = await attrNameCase.activate(context, apiClient);
-
-		apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
-			tagNameCase: getTagNameCase(handler.uri),
-			attrNameCase: getAttrNameCase(handler.uri),
-		}));
-	})();
 
 	startEmbeddedLanguageServices();
 }
@@ -108,7 +113,10 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		htmlFeatures: mode === 'html' ? {
 			foldingRange: true,
 			linkedEditingRange: true,
-			documentFormatting: true,
+			documentFormatting: {
+				defaultPrintWidth: 100,
+				getDocumentPrintWidthRequest: true,
+			},
 		} : undefined,
 	};
 	const clientOptions: lsp.LanguageClientOptions = {

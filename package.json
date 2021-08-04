@@ -100,6 +100,11 @@
 					"default": true,
 					"description": "[pug ☐] code lens."
 				},
+				"volar.formatting.printWidth": {
+					"type": "number",
+					"default": 100,
+					"description": "HTML formatting print width."
+				},
 				"volar.icon.splitEditors": {
 					"type": "boolean",
 					"default": true,

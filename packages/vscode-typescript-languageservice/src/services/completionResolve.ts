@@ -14,15 +14,19 @@ export function register(
 	getTextDocument2: (uri: string) => TextDocument | undefined,
 	host: LanguageServiceHost
 ) {
-	return async (item: vscode.CompletionItem, newOffset?: number): Promise<vscode.CompletionItem> => {
+	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
 		const data: Data = item.data;
 		const fileName = data.fileName;
-		const offset = newOffset ?? data.offset;
 		const name = data.name;
 		const source = data.source;
-
+		let offset = data.offset;
 		const document = getTextDocument(data.uri);
+
+		if (newPosition && document) {
+			offset = document.offsetAt(newPosition);
+		}
+
 		const [formatOptions, preferences] = document ? await Promise.all([
 			host.getFormatOptions?.(document) ?? {},
 			host.getPreferences?.(document) ?? {},

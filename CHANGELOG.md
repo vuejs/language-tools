@@ -3,6 +3,7 @@
 ## Not release yet
 
 - feat: support for workspace trust
+- feat: support config for HTML formatting print width by `volar.formatting.printWidth` option ([#321](https://github.com/johnsoncodehk/volar/issues/321))
 - fix: component preview not working on windows
 
 ## 0.26.10
