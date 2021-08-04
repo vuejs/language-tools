@@ -55,9 +55,7 @@ declare global {
 		| 'KeepAlive'
 		| 'Suspense'
 		| 'Teleport'
-	> {
-		Component: <T>(props: { is: T } & __VLS_ExtractComponentProps<T extends string ? JSX.IntrinsicElements[T] : T>) => any
-	}
+		> { }
 	interface __VLS_GlobalComponents extends CoreGlobalComponents { }
 	var __VLS_defineComponent: PickNotAny<typeof defineComponent_1, typeof defineComponent_2>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
