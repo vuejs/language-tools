@@ -1,10 +1,8 @@
 import * as SourceMaps from '../utils/sourceMaps';
 import { createCodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag } from '@vue/shared';
-import * as vueDom from '@vue/compiler-dom';
-import { NodeTypes, transformOn } from '@vue/compiler-dom';
-import type { TemplateChildNode, ElementNode, TransformContext } from '@vue/compiler-dom';
-import { processFor } from '@vue/compiler-core';
+import * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerCore from '@vue/compiler-dom';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -25,7 +23,7 @@ const formatBrackets = {
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
-export const transformContext: TransformContext = {
+export const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
 	helperString: str => str.toString(),
 	replaceNode: node => { },
@@ -74,7 +72,7 @@ export function generate(
 	let elementIndex = 0;
 
 	try {
-		const templateAst = vueDom.compile(html, { onError: () => { } }).ast;
+		const templateAst = CompilerDOM.compile(html, { onError: () => { } }).ast;
 
 		for (const childNode of templateAst.children) {
 			tsCodeGen.addText(`{\n`);
@@ -115,19 +113,19 @@ export function generate(
 	function getComponentName(tagName: string) {
 		return componentsMap.get(tagName) ?? tagName;
 	}
-	function visitNode(node: TemplateChildNode, parentEl: vueDom.ElementNode | undefined): void {
-		if (node.type === NodeTypes.ELEMENT) {
+	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
+		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 
 			// TODO: track https://github.com/vuejs/vue-next/issues/3498
 			const forDirective = node.props.find(
-				(prop): prop is vueDom.DirectiveNode =>
-					prop.type === NodeTypes.DIRECTIVE
+				(prop): prop is CompilerDOM.DirectiveNode =>
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 					&& prop.name === 'for'
 			);
 			if (forDirective) {
 				node.props = node.props.filter(prop => prop !== forDirective);
-				let forNode: vueDom.ForNode | undefined;
-				processFor(node, forDirective, transformContext, _forNode => {
+				let forNode: CompilerDOM.ForNode | undefined;
+				CompilerCore.processFor(node, forDirective, transformContext, _forNode => {
 					forNode = _forNode;
 					return undefined;
 				});
@@ -164,19 +162,19 @@ export function generate(
 			}
 			tsCodeGen.addText('}\n');
 		}
-		else if (node.type === NodeTypes.TEXT_CALL) {
+		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
 			visitNode(node.content, parentEl);
 		}
-		else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
+		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					visitNode(childNode as TemplateChildNode, parentEl);
+					visitNode(childNode as CompilerDOM.TemplateChildNode, parentEl);
 				}
 			}
 		}
-		else if (node.type === NodeTypes.INTERPOLATION) {
+		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 			// {{ ... }}
 			const context = node.loc.source.substring(2, node.loc.source.length - 2);
 			let start = node.loc.start.offset + 2;
@@ -197,7 +195,7 @@ export function generate(
 			);
 			tsCodeGen.addText(`};\n`);
 		}
-		else if (node.type === NodeTypes.IF) {
+		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
 			for (let i = 0; i < node.branches.length; i++) {
 
@@ -210,7 +208,7 @@ export function generate(
 				else
 					tsCodeGen.addText('else');
 
-				if (branch.condition?.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(` (`);
 					writeCode(
 						branch.condition.content,
@@ -234,7 +232,7 @@ export function generate(
 				tsCodeGen.addText('}\n');
 			}
 		}
-		else if (node.type === NodeTypes.FOR) {
+		else if (node.type === CompilerDOM.NodeTypes.FOR) {
 			// v-for
 			const source = node.parseResult.source;
 			const value = node.parseResult.value;
@@ -242,8 +240,8 @@ export function generate(
 			const index = node.parseResult.index;
 
 			if (value
-				&& source.type === NodeTypes.SIMPLE_EXPRESSION
-				&& value.type === NodeTypes.SIMPLE_EXPRESSION) {
+				&& source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
 				let start_value = value.loc.start.offset;
 				let start_source = source.loc.start.offset;
@@ -299,7 +297,7 @@ export function generate(
 				);
 				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName}, ${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
 
-				if (key && key.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (key && key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
 					tsCodeGen.addText(`const `);
 					writeCode(
@@ -317,7 +315,7 @@ export function generate(
 					);
 					tsCodeGen.addText(` = __VLS_getVforKeyType(${sourceVarName});\n`);
 				}
-				if (index && index.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (index && index.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
 					tsCodeGen.addText(`const `);
 					writeCode(
@@ -341,25 +339,25 @@ export function generate(
 				tsCodeGen.addText('}\n');
 			}
 		}
-		else if (node.type === NodeTypes.TEXT) {
+		else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 			// not needed progress
 		}
-		else if (node.type === NodeTypes.COMMENT) {
+		else if (node.type === CompilerDOM.NodeTypes.COMMENT) {
 			// not needed progress
 		}
 		else {
 			tsCodeGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
-	function writeInlineCss(node: ElementNode) {
+	function writeInlineCss(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'bind'
-				&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
-				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.content === 'style'
-				&& prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY
+				&& prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 			) {
 				const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]; // " | '
 				const start = prop.arg.loc.source.indexOf(endCrt) + 1;
@@ -387,13 +385,13 @@ export function generate(
 			}
 		}
 	}
-	function writeImportSlots(node: ElementNode, parentEl: vueDom.ElementNode) {
+	function writeImportSlots(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'slot'
 			) {
-				if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(`const `);
 					writeCode(
 						prop.exp.content,
@@ -412,7 +410,7 @@ export function generate(
 				}
 				let slotName = 'default';
 				let isStatic = true;
-				if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
 					isStatic = prop.arg.isStatic;
 					slotName = prop.arg.content;
 				}
@@ -469,16 +467,16 @@ export function generate(
 			}
 		}
 	}
-	function writeOptionReferences(node: ElementNode) {
+	function writeOptionReferences(node: CompilerDOM.ElementNode) {
 		// fix find references not work if prop has default value
 		// fix emits references not work
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.arg
-				&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
-				&& prop.arg.type === NodeTypes.SIMPLE_EXPRESSION
-				&& !(prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
+				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& !(prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
 			) {
 				if (prop.name === 'bind' || prop.name === 'model') {
 					write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
@@ -488,13 +486,13 @@ export function generate(
 				}
 			}
 			else if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'model'
 			) {
 				write('props', 'modelValue', prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
 			}
 			else if (
-				prop.type === NodeTypes.ATTRIBUTE
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			) {
 				write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
 			}
@@ -559,15 +557,15 @@ export function generate(
 			}
 		}
 	}
-	function writeDirectives(node: ElementNode) {
+	function writeDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name !== 'slot'
 				&& prop.name !== 'model'
 				&& prop.name !== 'bind'
 				&& !prop.arg
-				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				tsCodeGen.addText(`(`);
 				writeCode(
@@ -587,10 +585,10 @@ export function generate(
 			}
 		}
 	}
-	function writeElReferences(node: ElementNode) {
+	function writeElReferences(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.ATTRIBUTE
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name === 'ref'
 				&& prop.value
 			) {
@@ -612,7 +610,7 @@ export function generate(
 			}
 		}
 	}
-	function writeProps(node: ElementNode, forDirectiveClassOrStyle: boolean) {
+	function writeProps(node: CompilerDOM.ElementNode, forDirectiveClassOrStyle: boolean) {
 
 		let startDiag: number | undefined;
 		let endDiag: number | undefined;
@@ -626,23 +624,23 @@ export function generate(
 
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& (prop.name === 'bind' || prop.name === 'model')
-				&& (prop.name === 'model' || prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION)
-				&& (!prop.exp || prop.exp.type === NodeTypes.SIMPLE_EXPRESSION)
+				&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 			) {
 
-				const propName_1 = prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : 'modelValue';
+				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : 'modelValue';
 				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 				const propValue = prop.exp?.content ?? 'undefined';
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
-				const isDirective = !prop.exp || prop.exp.constType !== vueDom.ConstantTypes.CAN_STRINGIFY;
+				const isDirective = !prop.exp || prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY;
 
 				if ((isClassOrStyleAttr && isDirective) !== forDirectiveClassOrStyle) {
 					continue;
 				}
 
-				if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					attrNames.add(prop.arg.content);
 				}
 
@@ -662,7 +660,7 @@ export function generate(
 						},
 					);
 				}
-				else if (prop.exp?.constType === vueDom.ConstantTypes.CAN_STRINGIFY) {
+				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					writeObjectProperty(
 						propName_2,
 						{
@@ -691,7 +689,7 @@ export function generate(
 					);
 				}
 				tsCodeGen.addText(`: (`);
-				if (prop.exp && !(prop.exp.constType === vueDom.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 					writeCode(
 						propValue,
 						{
@@ -744,7 +742,7 @@ export function generate(
 				}
 			}
 			else if (
-				prop.type === NodeTypes.ATTRIBUTE
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			) {
 				if (forDirectiveClassOrStyle) {
 					continue;
@@ -813,10 +811,10 @@ export function generate(
 				}
 			}
 			else if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'bind'
 				&& !prop.arg
-				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				if (forDirectiveClassOrStyle) {
 					continue;
@@ -873,7 +871,7 @@ export function generate(
 			);
 		}
 
-		function writeAttrValue(attrNode: vueDom.TextNode | undefined, componentName: string, propName: string) {
+		function writeAttrValue(attrNode: CompilerDOM.TextNode | undefined, componentName: string, propName: string) {
 			if (attrNode) {
 				tsCodeGen.addText('"');
 				let start = attrNode.loc.start.offset;
@@ -945,10 +943,10 @@ export function generate(
 			return diagEnd;
 		}
 	}
-	function writeClassScopeds(node: ElementNode) {
+	function writeClassScopeds(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.ATTRIBUTE
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name === 'class'
 				&& prop.value
 			) {
@@ -988,11 +986,11 @@ export function generate(
 			}
 		}
 	}
-	function writeEvents(node: ElementNode) {
+	function writeEvents(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
-				&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.name === 'on'
 			) {
 				const var_on = `__VLS_${elementIndex++}`;
@@ -1028,7 +1026,7 @@ export function generate(
 				);
 				tsCodeGen.addText(`]>>\n};\n`);
 
-				const transformResult = transformOn(prop, node, transformContext);
+				const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
 				for (const prop_2 of transformResult.props) {
 					const value = prop_2.value;
 					tsCodeGen.addText(`${var_on} = {\n`);
@@ -1047,12 +1045,12 @@ export function generate(
 					appendExpressionNode(prop);
 					tsCodeGen.addText(`\n};\n`);
 
-					function appendExpressionNode(prop: vueDom.DirectiveNode) {
-						if (prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
-							if (value.type === NodeTypes.SIMPLE_EXPRESSION) {
+					function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
+						if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							if (value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 								appendSimpleExpressionNode(value, prop.exp);
 							}
-							else if (value.type === NodeTypes.COMPOUND_EXPRESSION) {
+							else if (value.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 								appendCompoundExpressionNode(value, prop.exp);
 							}
 						}
@@ -1060,7 +1058,7 @@ export function generate(
 							tsCodeGen.addText(`undefined`);
 						}
 					}
-					function appendCompoundExpressionNode(node: vueDom.CompoundExpressionNode, exp: vueDom.SimpleExpressionNode) {
+					function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
 						for (const child of node.children) {
 							if (typeof child === 'string') {
 								tsCodeGen.addText(child);
@@ -1068,12 +1066,12 @@ export function generate(
 							else if (typeof child === 'symbol') {
 								// ignore
 							}
-							else if (child.type === NodeTypes.SIMPLE_EXPRESSION) {
+							else if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 								appendSimpleExpressionNode(child, exp);
 							}
 						}
 					}
-					function appendSimpleExpressionNode(node: vueDom.SimpleExpressionNode, exp: vueDom.SimpleExpressionNode) {
+					function appendSimpleExpressionNode(node: CompilerDOM.SimpleExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
 						if (node.content === exp.content) {
 							writeCode(
 								node.content,
@@ -1097,7 +1095,7 @@ export function generate(
 			}
 		}
 	}
-	function writeSlots(node: ElementNode) {
+	function writeSlots(node: CompilerDOM.ElementNode) {
 		if (node.tag !== 'slot') return;
 		const varDefaultBind = `__VLS_${elementIndex++}`;
 		const varBinds = `__VLS_${elementIndex++}`;
@@ -1108,9 +1106,9 @@ export function generate(
 
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& !prop.arg
-				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				hasDefaultBind = true;
 				tsCodeGen.addText(`const ${varDefaultBind} = (`);
@@ -1135,9 +1133,9 @@ export function generate(
 		tsCodeGen.addText(`const ${varBinds} = {\n`);
 		for (const prop of node.props) {
 			if (
-				prop.type === NodeTypes.DIRECTIVE
-				&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
-				&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.content !== 'name'
 			) {
 				writeObjectProperty(
@@ -1169,7 +1167,7 @@ export function generate(
 				tsCodeGen.addText(`),\n`);
 			}
 			else if (
-				prop.type === NodeTypes.ATTRIBUTE
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name !== 'name' // slot name
 			) {
 				const propValue = prop.value !== undefined ? `"${toUnicode(prop.value.content)}"` : 'true';
@@ -1224,7 +1222,7 @@ export function generate(
 
 		function getSlotName() {
 			for (const prop2 of node.props) {
-				if (prop2.name === 'name' && prop2.type === NodeTypes.ATTRIBUTE && prop2.value) {
+				if (prop2.name === 'name' && prop2.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop2.value) {
 					if (prop2.value.content) {
 						return prop2.value.content;
 					}
@@ -1234,8 +1232,8 @@ export function generate(
 		}
 		function getSlotNameExp() {
 			for (const prop2 of node.props) {
-				if (prop2.type === NodeTypes.DIRECTIVE && prop2.name === 'bind' && prop2.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop2.arg.content === 'name') {
-					if (prop2.exp?.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (prop2.type === CompilerDOM.NodeTypes.DIRECTIVE && prop2.name === 'bind' && prop2.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop2.arg.content === 'name') {
+					if (prop2.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						return prop2.exp.content;
 					}
 					else {

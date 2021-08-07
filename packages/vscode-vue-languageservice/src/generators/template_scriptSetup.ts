@@ -1,17 +1,16 @@
-import * as vueDom from '@vue/compiler-dom';
-import { NodeTypes } from '@vue/compiler-dom';
-import type { TemplateChildNode } from '@vue/compiler-dom';
-import { processFor } from '@vue/compiler-core';
+import * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerCore from '@vue/compiler-dom';
 import { transformContext } from './template';
+
 
 export function generate(html: string) {
 
-	let node: vueDom.RootNode;
+	let node: CompilerDOM.RootNode;
 	let text = '';
 	const tags = new Set<string>();
 
 	try {
-		node = vueDom.compile(html, { onError: () => { } }).ast;
+		node = CompilerDOM.compile(html, { onError: () => { } }).ast;
 		for (const child of node.children) {
 			visitNode(child);
 		}
@@ -22,19 +21,19 @@ export function generate(html: string) {
 		tags,
 	};
 
-	function visitNode(node: TemplateChildNode): void {
-		if (node.type === NodeTypes.ELEMENT) {
+	function visitNode(node: CompilerDOM.TemplateChildNode): void {
+		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 
 			// TODO: track https://github.com/vuejs/vue-next/issues/3498
 			const forDirective = node.props.find(
-				(prop): prop is vueDom.DirectiveNode =>
-					prop.type === NodeTypes.DIRECTIVE
+				(prop): prop is CompilerDOM.DirectiveNode =>
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 					&& prop.name === 'for'
 			);
 			if (forDirective) {
 				node.props = node.props.filter(prop => prop !== forDirective);
-				let forNode: vueDom.ForNode | undefined;
-				processFor(node, forDirective, transformContext, _forNode => {
+				let forNode: CompilerDOM.ForNode | undefined;
+				CompilerCore.processFor(node, forDirective, transformContext, _forNode => {
 					forNode = _forNode;
 					return undefined;
 				});
@@ -49,8 +48,8 @@ export function generate(html: string) {
 			text += `{\n`;
 			for (const prop of node.props) {
 				if (
-					prop.type === NodeTypes.DIRECTIVE
-					&& prop.exp?.type === NodeTypes.SIMPLE_EXPRESSION
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				) {
 					if (prop.name === 'slot') {
 						text += `let ${prop.exp.content} = {} as any;\n`;
@@ -63,14 +62,14 @@ export function generate(html: string) {
 					}
 				}
 				else if (
-					prop.type === NodeTypes.DIRECTIVE
-					&& prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					&& prop.arg.content !== ''
 				) {
 					text += `(${prop.arg.content});\n`;
 				}
 				else if (
-					prop.type === NodeTypes.ATTRIBUTE
+					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 					&& prop.name === 'ref'
 					&& prop.value
 				) {
@@ -83,24 +82,24 @@ export function generate(html: string) {
 			}
 			text += '}\n';
 		}
-		else if (node.type === NodeTypes.TEXT_CALL) {
+		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
 			visitNode(node.content);
 		}
-		else if (node.type === NodeTypes.COMPOUND_EXPRESSION) {
+		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					visitNode(childNode as TemplateChildNode);
+					visitNode(childNode as CompilerDOM.TemplateChildNode);
 				}
 			}
 		}
-		else if (node.type === NodeTypes.INTERPOLATION) {
+		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 			// {{ ... }}
 			const context = node.loc.source.substring(2, node.loc.source.length - 2);
 			text += `{ ${context} };\n`;
 		}
-		else if (node.type === NodeTypes.IF) {
+		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
 			for (let i = 0; i < node.branches.length; i++) {
 
@@ -113,7 +112,7 @@ export function generate(html: string) {
 				else
 					text += 'else';
 
-				if (branch.condition?.type === NodeTypes.SIMPLE_EXPRESSION) {
+				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					text += ` (${branch.condition.content})`;
 				}
 				text += ` {\n`;
@@ -123,7 +122,7 @@ export function generate(html: string) {
 				text += '}\n';
 			}
 		}
-		else if (node.type === NodeTypes.FOR) {
+		else if (node.type === CompilerDOM.NodeTypes.FOR) {
 			// v-for
 			const source = node.parseResult.source;
 			const value = node.parseResult.value;
@@ -131,13 +130,13 @@ export function generate(html: string) {
 			const index = node.parseResult.index;
 
 			if (
-				source.type === NodeTypes.SIMPLE_EXPRESSION
-				&& value?.type === NodeTypes.SIMPLE_EXPRESSION
+				source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& value?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				text += `for (let ${value.content} of ${source.content}) {\n`
-				if (key?.type === NodeTypes.SIMPLE_EXPRESSION)
+				if (key?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 					text += `let ${key.content} = {} as any;`;
-				if (index?.type === NodeTypes.SIMPLE_EXPRESSION)
+				if (index?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 					text += `let ${index.content} = {} as any;`;
 				for (const childNode of node.children) {
 					visitNode(childNode);
