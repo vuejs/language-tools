@@ -3,8 +3,7 @@ import { parse } from '@vue/compiler-sfc';
 import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'path';
 import * as fs from 'fs';
-import { sleep } from '@volar/shared';
-import * as portfinder from 'portfinder';
+import * as shared from '@volar/shared';
 
 let finderPanel: vscode.WebviewPanel | undefined;
 let previewPanel: vscode.WebviewPanel | undefined;
@@ -108,7 +107,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.dispose();
 		});
 
-		const port = await portfinder.getPortPromise({ port: vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333 });
+		const port = await shared.getAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-finder');
 		const viteDir = getViteDir(fileName);
 		if (viteDir) {
@@ -117,8 +116,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		terminal.sendText(`npx vite --port=${port} --mode=volar`);
 
 		const start = Date.now();
-		while (Date.now() - start < 10000 && await portfinder.getPortPromise({ port: port }) === port) {
-			await sleep(10);
+		while (Date.now() - start < 10000 && await shared.isAvailablePort(port)) {
+			await shared.sleep(10);
 		}
 
 		finderPanel = _panel;
@@ -168,7 +167,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.dispose();
 		});
 
-		const port = await portfinder.getPortPromise({ port: vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333 });
+		const port = await shared.getAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-previewer');
 		const viteDir = getViteDir(fileName);
 		if (viteDir) {
@@ -179,8 +178,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		lastPreviewPort = port;
 
 		const start = Date.now();
-		while (Date.now() - start < 10000 && await portfinder.getPortPromise({ port: port }) === port) {
-			await sleep(10);
+		while (Date.now() - start < 10000 && await shared.isAvailablePort(port)) {
+			await shared.sleep(10);
 		}
 
 		previewPanel = _panel;

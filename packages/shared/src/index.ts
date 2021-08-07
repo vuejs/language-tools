@@ -3,6 +3,7 @@ export * from './requests';
 export * from './types';
 export * from './uriMap';
 export * from './ts';
+export * from './http';
 
 import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
