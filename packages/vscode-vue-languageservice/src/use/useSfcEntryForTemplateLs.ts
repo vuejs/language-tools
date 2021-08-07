@@ -47,7 +47,6 @@ export function useSfcEntryForTemplateLs(
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
 		content += `__VLS_options.setup().${SearchTexts.SetupReturns};\n`;
 		content += `__VLS_options.props.${SearchTexts.Props};\n`;
-		content += `({} as JSX.IntrinsicElements).${SearchTexts.HtmlElements};\n`;
 		content += `\n`;
 		content += `export default {} as typeof __VLS_component & {\n`;
 		content += `__VLS_raw: typeof __VLS_component\n`;

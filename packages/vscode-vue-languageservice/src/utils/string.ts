@@ -3,7 +3,6 @@ export enum SearchTexts {
 	Components = '/* __VLS_.SearchTexts.Components */',
 	Props = '/* __VLS_.SearchTexts.Props */',
 	SetupReturns = '/* __VLS_.SearchTexts.SetupReturns */',
-	HtmlElements = '/* __VLS_.SearchTexts.HtmlElements */',
 	GlobalAttrs = '/* __VLS_.SearchTexts.GlobalAttrs */',
 	Ref = '/* __VLS_.SearchTexts.ref */',
 }

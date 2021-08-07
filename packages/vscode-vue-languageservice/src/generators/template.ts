@@ -1,6 +1,6 @@
 import * as SourceMaps from '../utils/sourceMaps';
 import { createCodeGen } from '@volar/code-gen';
-import { camelize, hyphenate } from '@vue/shared';
+import { camelize, hyphenate, isHTMLTag } from '@vue/shared';
 import * as vueDom from '@vue/compiler-dom';
 import { NodeTypes, transformOn } from '@vue/compiler-dom';
 import type { TemplateChildNode, ElementNode, TransformContext } from '@vue/compiler-dom';
@@ -43,7 +43,6 @@ export function generate(
 	sourceLang: 'html' | 'pug',
 	html: string,
 	componentNames: string[] = [],
-	elementNames: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
 ) {
@@ -63,12 +62,11 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const componentsMap = new Map<string, string>();
-	const elementNamesSet = new Set(elementNames);
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 
 	for (const componentName of componentNames) {
 		const variantName = hyphenate(componentName);
-		if (!elementNamesSet.has(variantName)) {
+		if (!isHTMLTag(variantName)) {
 			componentsMap.set(variantName, componentName);
 		}
 	}

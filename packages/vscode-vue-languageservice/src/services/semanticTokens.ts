@@ -1,4 +1,4 @@
-import { hyphenate } from '@vue/shared';
+import { hyphenate, isHTMLTag } from '@vue/shared';
 import * as vscode from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
@@ -154,11 +154,10 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html 
 			const result: TokenData[] = [];
 
 			const templateScriptData = sourceFile.getTemplateScriptData();
-			const htmlElementsSet = new Set(templateScriptData.htmlElements);
 			const components = new Set([
 				...templateScriptData.components,
-				...templateScriptData.components.map(hyphenate),
-			].filter(name => !htmlElementsSet.has(name)));
+				...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
+			]);
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 

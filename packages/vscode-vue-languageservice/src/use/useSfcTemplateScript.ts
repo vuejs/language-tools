@@ -46,7 +46,6 @@ export function useSfcTemplateScript(
 			templateData.value.sourceLang,
 			templateData.value.html,
 			templateScriptData.components,
-			templateScriptData.htmlElements,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 		);

@@ -64,8 +64,6 @@ export interface ITemplateScriptData {
 	components: string[];
 	props: string[];
 	setupReturns: string[];
-	htmlElementItems: vscode.CompletionItem[];
-	htmlElements: string[];
 }
 
 export type Modules = {

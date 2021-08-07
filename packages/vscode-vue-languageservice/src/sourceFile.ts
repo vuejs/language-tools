@@ -49,9 +49,7 @@ export function createSourceFile(
 		components: [],
 		props: [],
 		setupReturns: [],
-		htmlElements: [],
 		componentItems: [],
-		htmlElementItems: [],
 	});
 	const vueHtmlDocument = computed(() => {
 		return context.htmlLs.parseHTMLDocument(document.value);
@@ -383,7 +381,6 @@ export function createSourceFile(
 		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components))) : [];
 		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props))) : [];
 		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns))) : [];
-		const globalEls = docText.indexOf(SearchTexts.HtmlElements) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.HtmlElements))) : [];
 
 		components = components.filter(entry => {
 			const name = (entry.data as TsCompletionData).name;
@@ -394,13 +391,11 @@ export function createSourceFile(
 		const componentNames = components.map(entry => (entry.data as TsCompletionData).name);
 		const propNames = props.map(entry => (entry.data as TsCompletionData).name);
 		const setupReturnNames = setupReturns.map(entry => (entry.data as TsCompletionData).name);
-		const htmlElementNames = globalEls.map(entry => (entry.data as TsCompletionData).name);
 
 		if (shared.eqSet(new Set(contextNames), new Set(templateScriptData.context))
 			&& shared.eqSet(new Set(componentNames), new Set(templateScriptData.components))
 			&& shared.eqSet(new Set(propNames), new Set(templateScriptData.props))
 			&& shared.eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
-			&& shared.eqSet(new Set(htmlElementNames), new Set(templateScriptData.htmlElements))
 		) {
 			return false;
 		}
@@ -409,9 +404,7 @@ export function createSourceFile(
 		templateScriptData.components = componentNames;
 		templateScriptData.props = propNames;
 		templateScriptData.setupReturns = setupReturnNames;
-		templateScriptData.htmlElements = htmlElementNames;
 		templateScriptData.componentItems = components;
-		templateScriptData.htmlElementItems = globalEls;
 		sfcTemplateScript.update(sfcScriptForScriptLs.lang.value); // TODO
 		return true;
 	}

@@ -615,7 +615,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 			if (sfcTemplateScript.textDocument.value && sfcTemplate.textDocument.value) {
 				const doc = sfcTemplateScript.textDocument.value;
 				const text = doc.getText();
-				for (const tag of [...templateScriptData.componentItems, ...templateScriptData.htmlElementItems]) {
+				for (const tag of templateScriptData.componentItems) {
 					const tagName = (tag.data as TsCompletionData).name;
 					let bind: vscode.CompletionItem[] = [];
 					let on: vscode.CompletionItem[] = [];
