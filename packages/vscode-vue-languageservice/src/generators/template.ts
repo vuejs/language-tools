@@ -484,7 +484,7 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'model'
 			) {
-				write('props', 'modelValue', prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
+				write('props', getModelValuePropName(node.tag), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -625,7 +625,7 @@ export function generate(
 				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 			) {
 
-				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : 'modelValue';
+				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node.tag);
 				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 				const propValue = prop.exp?.content ?? 'undefined';
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
@@ -1359,4 +1359,14 @@ function keepHyphenateName(oldName: string, newName: string) {
 		return hyphenate(newName);
 	}
 	return newName
+}
+// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
+function getModelValuePropName(tag: string) {
+	if (
+		tag === 'input' ||
+		tag === 'textarea' ||
+		tag === 'select'
+	) return 'value';
+
+	return 'modelValue';
 }
