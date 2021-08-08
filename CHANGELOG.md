@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.26.13
+
+- fix: republish to replace incorrect script name: `vue2templateCompiler.js` -> `vue2TemplateCompiler.js` ([#352](https://github.com/johnsoncodehk/volar/issues/352))
+
 ## 0.26.12
 
 - 🎉 feat: support for vue 2 template ([#351](https://github.com/johnsoncodehk/volar/issues/351))
