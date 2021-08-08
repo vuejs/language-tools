@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.12
+
+- 🎉 feat: support for vue 2 template ([#351](https://github.com/johnsoncodehk/volar/issues/351))
+- fix: support for `"noPropertyAccessFromIndexSignature": true` ([#350](https://github.com/johnsoncodehk/volar/issues/350))
+- fix: `.value` should not append in function parameter name
+- fix: `.value` should not append in object property assignment name
+- perf: reuse template compile result
+
 ## 0.26.11
 
 - feat: support for workspace trust
