@@ -844,7 +844,7 @@ export function generate(
 		}
 
 		if (forDirectiveClassOrStyle) {
-			tsCodeGen.addText(`});\;`)
+			tsCodeGen.addText(`});\n`);
 		}
 		else {
 			endDiag = addEndWrap();
@@ -898,7 +898,7 @@ export function generate(
 		function addStartWrap() {
 			const componentName = getComponentName(node.tag);
 			{ // start tag
-				tsCodeGen.addText(`__VLS_components`);
+				tsCodeGen.addText(`// @ts-ignore start tag\n__VLS_components`);
 				writePropertyAccess(
 					componentName,
 					{
@@ -915,7 +915,7 @@ export function generate(
 				tsCodeGen.addText(`;\n`);
 			}
 			if (!node.isSelfClosing && sourceLang === 'html') { // end tag
-				tsCodeGen.addText(`__VLS_components`);
+				tsCodeGen.addText(`// @ts-ignore end tag\n__VLS_components`);
 				writePropertyAccess(
 					componentName,
 					{
