@@ -1,21 +1,46 @@
+import * as CompilerDom from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 
-export function vue2Compile(
+export function compile(
 	template: string,
-	options: CompilerCore.CompilerOptions = {}
-): CompilerCore.CodegenResult {
+	options: CompilerDom.CompilerOptions = {}
+): CompilerDom.CodegenResult {
 
 	// force to vue 2
 	options.compatConfig = { MODE: 2 }
 
-	const onError = ((error: CompilerCore.CompilerError) => {
+	const onError = options.onError;
+	options.onError = (error) => {
 		if (error.code === CompilerCore.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT)
 			return // :key binding allow in v-for template child in vue 2
-		if (options.onError)
-			options.onError(error)
+		if (onError)
+			onError(error)
 		else
 			throw error
-	})
+	}
+
+	return baseCompile(
+		template,
+		Object.assign({}, CompilerDom.parserOptions, options, {
+			nodeTransforms: [
+				...CompilerDom.DOMNodeTransforms,
+				...(options.nodeTransforms || [])
+			],
+			directiveTransforms: Object.assign(
+				{},
+				CompilerDom.DOMDirectiveTransforms,
+				options.directiveTransforms || {}
+			),
+		})
+	)
+}
+
+export function baseCompile(
+	template: string,
+	options: CompilerCore.CompilerOptions = {}
+): CompilerCore.CodegenResult {
+
+	const onError = options.onError || ((error) => { throw error })
 	const isModuleMode = options.mode === 'module'
 
 	const prefixIdentifiers = options.prefixIdentifiers === true || isModuleMode

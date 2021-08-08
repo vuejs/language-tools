@@ -15,6 +15,7 @@ import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
+import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 
 export const defaultLanguages = {
 	template: 'html',
@@ -63,6 +64,7 @@ export function createSourceFile(
 	const sfcTemplateData = computed<undefined | {
 		sourceLang: 'html' | 'pug',
 		html: string,
+		htmlTextDocument: TextDocument,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	}>(() => {
 		if (sfcTemplate.pugDocument.value) {
@@ -70,22 +72,25 @@ export function createSourceFile(
 			return {
 				sourceLang: 'pug',
 				html: pugDoc.htmlCode,
+				htmlTextDocument: pugDoc.htmlTextDocument,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
 					const pugRange = pugDoc.sourceMap.getSourceRange2(htmlStart, htmlEnd);
 					if (pugRange) {
 						return pugRange.start;
 					}
 				},
-			}
+			};
 		}
-		if (descriptor.template) {
+		if (descriptor.template && sfcTemplate.textDocument.value) {
 			return {
 				sourceLang: 'html',
 				html: descriptor.template.content,
+				htmlTextDocument: sfcTemplate.textDocument.value,
 				htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
-			}
+			};
 		}
 	});
+	const sfcTemplateCompileResult = useSfcTemplateCompileResult(computed(() => sfcTemplateData.value?.htmlTextDocument));
 	const sfcTemplateScript = useSfcTemplateScript(
 		untrack(() => document.value),
 		computed(() => descriptor.template),
@@ -93,12 +98,13 @@ export function createSourceFile(
 		sfcStyles.textDocuments,
 		sfcStyles.sourceMaps,
 		sfcTemplateData,
+		sfcTemplateCompileResult,
 		context,
 	);
 	const sfcScript = useSfcScript(untrack(() => document.value), computed(() => descriptor.script));
 	const sfcScriptSetup = useSfcScript(untrack(() => document.value), computed(() => descriptor.scriptSetup));
-	const sfcScriptForTemplateLs = useSfcScriptGen('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
-	const sfcScriptForScriptLs = useSfcScriptGen('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => sfcTemplateData.value?.html));
+	const sfcScriptForTemplateLs = useSfcScriptGen('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
+	const sfcScriptForScriptLs = useSfcScriptGen('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(untrack(() => document.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
 	// getters
@@ -176,6 +182,8 @@ export function createSourceFile(
 
 			sfcJsons,
 			sfcTemplate,
+			sfcTemplateData,
+			sfcTemplateCompileResult,
 			sfcTemplateScript,
 			sfcScriptForScriptLs,
 			sfcScriptForTemplateLs,

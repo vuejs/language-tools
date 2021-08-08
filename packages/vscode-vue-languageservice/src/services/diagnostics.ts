@@ -1,5 +1,4 @@
 import * as shared from '@volar/shared';
-import * as vueSfc from '@vue/compiler-sfc';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
 import type * as css from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
@@ -43,6 +42,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			descriptor,
 			document,
 			sfcTemplateScript,
+			sfcTemplateData,
+			sfcTemplateCompileResult,
 			templateScriptData,
 			sfcScriptForTemplateLs,
 			templateLsSourceMaps,
@@ -166,14 +167,14 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
-				if (sfcTemplate.textDocument.value && sfcTemplate.htmlDocument.value) {
-					return getVueCompileErrors(sfcTemplate.textDocument.value);
+				if (sfcTemplateData.value?.sourceLang === 'html' && sfcTemplateCompileResult.value) {
+					return sfcTemplateCompileResult.value.errors;
 				}
 				return [];
 			});
 			const pugErrors = computed(() => {
 				const result: vscode.Diagnostic[] = [];
-				if (sfcTemplate.textDocument.value && sfcTemplate.pugDocument.value) {
+				if (sfcTemplateData.value?.sourceLang === 'pug' && sfcTemplate.pugDocument.value) {
 					const pugDoc = sfcTemplate.pugDocument.value;
 					const astError = pugDoc.error;
 					if (astError) {
@@ -186,9 +187,9 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 							},
 						});
 					}
-					else {
+					else if (sfcTemplateCompileResult.value) {
 						const htmlDoc = pugDoc.sourceMap.mappedDocument;
-						const vueCompileErrors = getVueCompileErrors(htmlDoc);
+						const vueCompileErrors = sfcTemplateCompileResult.value.errors;
 						for (const vueCompileError of vueCompileErrors) {
 							let pugRange: vscode.Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end);
 							if (!pugRange) {
@@ -215,7 +216,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 								vueCompileError.range = pugRange;
 								result.push(vueCompileError);
 							}
-							else {
+							else if (sfcTemplate.textDocument.value) {
 								let htmlText = htmlDoc.getText(vueCompileError.range);
 								let errorText = '';
 								try {
@@ -254,65 +255,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				result,
 				cache: cacheWithSourceMap,
 			};
-
-			function getVueCompileErrors(doc: TextDocument) {
-				const result: vscode.Diagnostic[] = [];
-				try {
-					const templateResult = vueSfc.compileTemplate({
-						source: doc.getText(),
-						filename: shared.uriToFsPath(sourceFile.uri),
-						id: shared.uriToFsPath(sourceFile.uri),
-						compilerOptions: {
-							onError: err => {
-								if (!err.loc) return;
-
-								const diagnostic: vscode.Diagnostic = {
-									range: {
-										start: doc.positionAt(err.loc.start.offset),
-										end: doc.positionAt(err.loc.end.offset),
-									},
-									severity: vscode.DiagnosticSeverity.Error,
-									code: err.code,
-									source: 'vue',
-									message: err.message,
-								};
-								result.push(diagnostic);
-							},
-						}
-					});
-
-					for (const err of templateResult.errors) {
-						if (typeof err !== 'object' || !err.loc)
-							continue;
-
-						const diagnostic: vscode.Diagnostic = {
-							range: {
-								start: doc.positionAt(err.loc.start.offset),
-								end: doc.positionAt(err.loc.end.offset),
-							},
-							severity: vscode.DiagnosticSeverity.Error,
-							source: 'vue',
-							code: err.code,
-							message: err.message,
-						};
-						result.push(diagnostic);
-					}
-				}
-				catch (err) {
-					const diagnostic: vscode.Diagnostic = {
-						range: {
-							start: doc.positionAt(0),
-							end: doc.positionAt(doc.getText().length),
-						},
-						severity: vscode.DiagnosticSeverity.Error,
-						code: err.code,
-						source: 'vue',
-						message: err.message,
-					};
-					result.push(diagnostic);
-				}
-				return result;
-			}
 		}
 		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
 			const errors = computed(() => {
