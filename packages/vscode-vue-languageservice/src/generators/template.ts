@@ -2,7 +2,7 @@ import * as SourceMaps from '../utils/sourceMaps';
 import { createCodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerCore from '@vue/compiler-dom';
+import * as CompilerCore from '@vue/compiler-core';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -39,7 +39,7 @@ export const transformContext: CompilerDOM.TransformContext = {
 
 export function generate(
 	sourceLang: 'html' | 'pug',
-	html: string,
+	templateAst: CompilerDOM.RootNode,
 	componentNames: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
@@ -71,35 +71,30 @@ export function generate(
 
 	let elementIndex = 0;
 
-	try {
-		const templateAst = CompilerDOM.compile(html, { onError: () => { } }).ast;
-
-		for (const childNode of templateAst.children) {
-			tsCodeGen.addText(`{\n`);
-			visitNode(childNode, undefined);
-			tsCodeGen.addText(`}\n`);
-		}
-
-		tsCodeGen.addText(`declare const __VLS_slots:\n`);
-		for (const [exp, slot] of slotExps) {
-			tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
-		}
+	for (const childNode of templateAst.children) {
 		tsCodeGen.addText(`{\n`);
-		for (const [name, slot] of slots) {
-			writeObjectProperty(
-				name,
-				slot.loc,
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.slotNameExport,
-				},
-			);
-			tsCodeGen.addText(`: typeof ${slot.varName},\n`);
-		}
-		tsCodeGen.addText(`};\n`);
-		tsCodeGen.addText(`export default __VLS_slots;\n`);
+		visitNode(childNode, undefined);
+		tsCodeGen.addText(`}\n`);
 	}
-	catch { }
+
+	tsCodeGen.addText(`declare const __VLS_slots:\n`);
+	for (const [exp, slot] of slotExps) {
+		tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
+	}
+	tsCodeGen.addText(`{\n`);
+	for (const [name, slot] of slots) {
+		writeObjectProperty(
+			name,
+			slot.loc,
+			{
+				vueTag: 'template',
+				capabilities: capabilitiesSet.slotNameExport,
+			},
+		);
+		tsCodeGen.addText(`: typeof ${slot.varName},\n`);
+	}
+	tsCodeGen.addText(`};\n`);
+	tsCodeGen.addText(`export default __VLS_slots;\n`);
 
 	return {
 		codeGen: tsCodeGen,

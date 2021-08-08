@@ -30,6 +30,7 @@ export function useSfcTemplateScript(
 		html: string,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
+	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
@@ -39,12 +40,15 @@ export function useSfcTemplateScript(
 	const cssModuleClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.module), context));
 	const cssScopedClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {
+
 		if (!templateData.value)
+			return;
+		if (!sfcTemplateCompileResult.value?.ast)
 			return;
 
 		return templateGen.generate(
 			templateData.value.sourceLang,
-			templateData.value.html,
+			sfcTemplateCompileResult.value.ast,
 			templateScriptData.components,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,

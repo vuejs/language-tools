@@ -3,18 +3,14 @@ import * as CompilerCore from '@vue/compiler-dom';
 import { transformContext } from './template';
 
 
-export function generate(html: string) {
+export function generate(node: CompilerDOM.RootNode) {
 
-	let node: CompilerDOM.RootNode;
 	let text = '';
 	const tags = new Set<string>();
 
-	try {
-		node = CompilerDOM.compile(html, { onError: () => { } }).ast;
-		for (const child of node.children) {
-			visitNode(child);
-		}
-	} catch { }
+	for (const child of node.children) {
+		visitNode(child);
+	}
 
 	return {
 		text,

@@ -15,7 +15,7 @@ export function useSfcScriptGen(
 	vueDoc: Ref<TextDocument>,
 	script: Ref<IDescriptor['script']>,
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,
-	html: Ref<string | undefined>,
+	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 ) {
 
 	let version = 0;
@@ -42,8 +42,8 @@ export function useSfcScriptGen(
 		)
 	);
 	const htmlGen = computed(() => {
-		if (html.value) {
-			return templateGen.generate(html.value);
+		if (sfcTemplateCompileResult.value?.ast) {
+			return templateGen.generate(sfcTemplateCompileResult.value.ast);
 		}
 	})
 	const suggestionCodeGen = computed(() =>
