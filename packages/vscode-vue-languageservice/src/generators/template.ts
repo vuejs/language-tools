@@ -40,6 +40,7 @@ export const transformContext: CompilerDOM.TransformContext = {
 export function generate(
 	sourceLang: 'html' | 'pug',
 	templateAst: CompilerDOM.RootNode,
+	isVue2: boolean,
 	componentNames: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
@@ -484,7 +485,7 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'model'
 			) {
-				write('props', getModelValuePropName(node.tag), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
+				write('props', getModelValuePropName(node.tag, isVue2), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -625,7 +626,7 @@ export function generate(
 				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 			) {
 
-				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node.tag);
+				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node.tag, isVue2);
 				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 				const propValue = prop.exp?.content ?? 'undefined';
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
@@ -1361,11 +1362,12 @@ function keepHyphenateName(oldName: string, newName: string) {
 	return newName
 }
 // https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-function getModelValuePropName(tag: string) {
+function getModelValuePropName(tag: string, isVue2: boolean) {
 	if (
 		tag === 'input' ||
 		tag === 'textarea' ||
-		tag === 'select'
+		tag === 'select' ||
+		isVue2
 	) return 'value';
 
 	return 'modelValue';

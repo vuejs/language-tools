@@ -84,7 +84,7 @@ export function createServiceHandler(
 
 		await Promise.all([...fileRenamings]);
 
-		parsedCommandLine = createParsedCommandLine(ts, tsConfig);
+		parsedCommandLine = createParsedCommandLine(tsConfig);
 
 		const fileNames = new shared.FsPathSet(parsedCommandLine.fileNames);
 		let changed = false;
@@ -185,6 +185,7 @@ export function createServiceHandler(
 			schemaRequestService: options.features?.schemaRequestService ? getSchemaRequestService(connection, options.features.schemaRequestService) : undefined,
 			getPreferences: (document) => tsConfigs.getPreferences(connection, document),
 			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
+			getParsedCommandLine: () => parsedCommandLine,
 			// ts
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -280,21 +281,15 @@ export function createServiceHandler(
 			disposable.dispose();
 		}
 	}
-}
-
-function createParsedCommandLine(ts: typeof import('typescript/lib/tsserverlibrary'), tsConfig: string) {
-	const parseConfigHost: ts.ParseConfigHost = {
-		...ts.sys,
-		readDirectory: (path, extensions, exclude, include, depth) => {
-			return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
-		},
-	};
-	const realTsConfig = ts.sys.realpath!(tsConfig);
-	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, upath.dirname(realTsConfig), {}, upath.basename(realTsConfig));
-	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
-	content.fileNames = content.fileNames.map(shared.normalizeFileName);
-	return content;
+	function createParsedCommandLine(tsConfig: string) {
+		const parseConfigHost: ts.ParseConfigHost = {
+			...ts.sys,
+			readDirectory: (path, extensions, exclude, include, depth) => {
+				return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
+			},
+		};
+		return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+	}
 }
 
 export function getScriptText(
