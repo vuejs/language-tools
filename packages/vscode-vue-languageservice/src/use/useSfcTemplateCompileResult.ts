@@ -2,7 +2,7 @@ import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerVue2 from '../utils/vue2templateCompiler';
+import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
 
 export function useSfcTemplateCompileResult(
 	htmlDocument: Ref<TextDocument | undefined>,
