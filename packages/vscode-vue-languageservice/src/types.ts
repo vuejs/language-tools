@@ -77,6 +77,7 @@ export type Modules = {
 };
 
 export type LanguageServiceContextBase = {
+	isVue2Mode: boolean,
 	modules: Modules,
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,

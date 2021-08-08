@@ -90,7 +90,7 @@ export function createSourceFile(
 			};
 		}
 	});
-	const sfcTemplateCompileResult = useSfcTemplateCompileResult(computed(() => sfcTemplateData.value?.htmlTextDocument));
+	const sfcTemplateCompileResult = useSfcTemplateCompileResult(computed(() => sfcTemplateData.value?.htmlTextDocument), context.isVue2Mode);
 	const sfcTemplateScript = useSfcTemplateScript(
 		untrack(() => document.value),
 		computed(() => descriptor.template),

@@ -2,10 +2,11 @@ import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import * as CompilerDOM from '@vue/compiler-dom';
-// import * as CompilerVue2 from '../utils/vue2templateCompiler';
+import * as CompilerVue2 from '../utils/vue2templateCompiler';
 
 export function useSfcTemplateCompileResult(
 	htmlDocument: Ref<TextDocument | undefined>,
+	isVue2Mode: boolean,
 ) {
 	return computed(() => {
 
@@ -16,7 +17,7 @@ export function useSfcTemplateCompileResult(
 		let ast: CompilerDOM.RootNode | undefined;
 
 		try {
-			ast = CompilerDOM.compile(htmlDocument.value.getText(), {
+			ast = (isVue2Mode ? CompilerVue2 : CompilerDOM).compile(htmlDocument.value.getText(), {
 				onError: err => {
 					if (!err.loc) return;
 

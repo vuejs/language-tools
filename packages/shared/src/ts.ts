@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import type * as ts from 'typescript';
 import type { MapLike } from 'typescript';
 import * as path from 'upath';
+import { normalizeFileName } from './path';
 
 export function createTsLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -136,4 +137,17 @@ export function getTypeScriptVersion(serverPath: string): string | undefined {
 		return undefined;
 	}
 	return desc.version;
+}
+
+export function createParsedCommandLine(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	parseConfigHost: ts.ParseConfigHost,
+	tsConfig: string,
+) {
+	const realTsConfig = ts.sys.realpath!(tsConfig);
+	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
+	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
+	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
+	content.fileNames = content.fileNames.map(normalizeFileName);
+	return content;
 }

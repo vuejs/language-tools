@@ -64,6 +64,7 @@ export function getDocumentLanguageService(
 ) {
 	const cache = new Map<string, [number, html.HTMLDocument]>();
 	const context: HtmlLanguageServiceContext = {
+		isVue2Mode: false,
 		modules: {
 			typescript: modules.typescript,
 			emmet,
@@ -155,7 +156,13 @@ export function createLanguageService(
 		},
 	}
 
+	const tsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'tsconfig.json');
+	const jsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'jsconfig.json');
+	const configFile = ts.sys.fileExists(tsconfigFile) ? tsconfigFile : ts.sys.fileExists(jsconfigFile) ? jsconfigFile : undefined;
+	const config = configFile ? shared.createParsedCommandLine(ts, ts.sys, configFile) : undefined;
+
 	const context: ApiLanguageServiceContext = {
+		isVue2Mode: config?.raw.vueCompilerOptions?.experimentalCompatMode === 2,
 		modules: {
 			typescript: modules.typescript,
 			emmet,
