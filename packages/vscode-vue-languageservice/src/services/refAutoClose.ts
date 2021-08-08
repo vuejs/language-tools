@@ -42,6 +42,9 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 		else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 			return true;
 		}
+		else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+			return true;
+		}
 		else if (ts.isShorthandPropertyAssignment(node)) {
 			return true;
 		}
