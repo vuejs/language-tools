@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.26.14
+
+- fix: prevent `vue-tsc --noEmit` warnings with `"experimentalCompatMode": 2` [#351#issuecomment-895019036](https://github.com/johnsoncodehk/volar/pull/351#issuecomment-895019036)
+- fix: vue-tsc build failed with `<xxx v-for v-slot>` due to code gen side effects ([vue-tsc#53](https://github.com/johnsoncodehk/vue-tsc/issues/53))
+
 ## 0.26.13
 
 - fix: republish to replace incorrect script name: `vue2templateCompiler.js` -> `vue2TemplateCompiler.js` ([#352](https://github.com/johnsoncodehk/volar/issues/352))
@@ -18,6 +23,7 @@
 - feat: support config for HTML formatting print width by `volar.formatting.printWidth` option ([#321](https://github.com/johnsoncodehk/volar/issues/321))
 - feat: support for typescript `updateImportsOnFileMove` setting to disable prompt ([#332](https://github.com/johnsoncodehk/volar/issues/332))
 - feat: add "Show in Browser" button to component preview
+- fix: `<input>`, `<textarea>`, `<select>` v-model prop name shoud be `value`
 - fix: component preview not working on windows
 - fix: delete file can't trigger related scripts diagnostics update
 - fix: disable component tag type-checking to avoid some unable fix edge cases ([#333](https://github.com/johnsoncodehk/volar/issues/333))
