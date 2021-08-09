@@ -112,24 +112,10 @@ export function generate(
 	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 
-			// TODO: track https://github.com/vuejs/vue-next/issues/3498
-			const forDirective = node.props.find(
-				(prop): prop is CompilerDOM.DirectiveNode =>
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.name === 'for'
-			);
-			if (forDirective) {
-				node.props = node.props.filter(prop => prop !== forDirective);
-				let forNode: CompilerDOM.ForNode | undefined;
-				CompilerCore.processFor(node, forDirective, transformContext, _forNode => {
-					forNode = _forNode;
-					return undefined;
-				});
-				if (forNode) {
-					forNode.children = [node];
-					visitNode(forNode, parentEl);
-					return;
-				}
+			const patchForNode = getPatchForSlotNode(node);
+			if (patchForNode) {
+				visitNode(patchForNode, parentEl);
+				return;
 			}
 
 			if (node.tag !== 'template') {
@@ -1371,4 +1357,27 @@ function getModelValuePropName(tag: string, isVue2: boolean) {
 	) return 'value';
 
 	return 'modelValue';
+}
+
+// TODO: track https://github.com/vuejs/vue-next/issues/3498
+export function getPatchForSlotNode(node: CompilerDOM.ElementNode) {
+	const forDirective = node.props.find(
+		(prop): prop is CompilerDOM.DirectiveNode =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'for'
+	);
+	if (forDirective) {
+		let forNode: CompilerDOM.ForNode | undefined;
+		CompilerCore.processFor(node, forDirective, transformContext, _forNode => {
+			forNode = { ..._forNode };
+			return undefined;
+		});
+		if (forNode) {
+			forNode.children = [{
+				...node,
+				props: node.props.filter(prop => prop !== forDirective),
+			}];
+			return forNode;
+		}
+	}
 }

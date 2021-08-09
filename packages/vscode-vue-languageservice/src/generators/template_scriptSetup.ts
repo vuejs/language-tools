@@ -1,7 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerCore from '@vue/compiler-dom';
-import { transformContext } from './template';
-
+import { getPatchForSlotNode } from './template';
 
 export function generate(node: CompilerDOM.RootNode) {
 
@@ -20,24 +18,10 @@ export function generate(node: CompilerDOM.RootNode) {
 	function visitNode(node: CompilerDOM.TemplateChildNode): void {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 
-			// TODO: track https://github.com/vuejs/vue-next/issues/3498
-			const forDirective = node.props.find(
-				(prop): prop is CompilerDOM.DirectiveNode =>
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.name === 'for'
-			);
-			if (forDirective) {
-				node.props = node.props.filter(prop => prop !== forDirective);
-				let forNode: CompilerDOM.ForNode | undefined;
-				CompilerCore.processFor(node, forDirective, transformContext, _forNode => {
-					forNode = _forNode;
-					return undefined;
-				});
-				if (forNode) {
-					forNode.children = [node];
-					visitNode(forNode);
-					return;
-				}
+			const patchForNode = getPatchForSlotNode(node);
+			if (patchForNode) {
+				visitNode(patchForNode);
+				return;
 			}
 
 			tags.add(node.tag);
