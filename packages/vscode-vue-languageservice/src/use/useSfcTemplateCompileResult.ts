@@ -18,22 +18,26 @@ export function useSfcTemplateCompileResult(
 
 		try {
 			ast = (isVue2Mode ? CompilerVue2 : CompilerDOM).compile(htmlDocument.value.getText(), {
-				onError: err => {
-					if (!err.loc) return;
-
-					const diagnostic: vscode.Diagnostic = {
-						range: {
-							start: htmlDocument.value!.positionAt(err.loc.start.offset),
-							end: htmlDocument.value!.positionAt(err.loc.end.offset),
-						},
-						severity: vscode.DiagnosticSeverity.Error,
-						code: err.code,
-						source: 'vue',
-						message: err.message,
-					};
-					errors.push(diagnostic);
-				},
+				onError: err => onCompilerError(err, vscode.DiagnosticSeverity.Error),
+				onWarn: err => onCompilerError(err, vscode.DiagnosticSeverity.Warning),
 			}).ast;
+
+			function onCompilerError(err: CompilerDOM.CompilerError, severity: vscode.DiagnosticSeverity) {
+				
+				if (!err.loc) return;
+
+				const diagnostic: vscode.Diagnostic = {
+					range: {
+						start: htmlDocument.value!.positionAt(err.loc.start.offset),
+						end: htmlDocument.value!.positionAt(err.loc.end.offset),
+					},
+					severity,
+					code: err.code,
+					source: 'vue',
+					message: err.message,
+				};
+				errors.push(diagnostic);
+			}
 		}
 		catch (err) {
 			const diagnostic: vscode.Diagnostic = {
