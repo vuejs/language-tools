@@ -53,18 +53,69 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 ## Using
 
-<!-- Global components support -->
 <details>
-<summary>Global components support (Updated at 5/4/2021)</summary>
+<summary>Setup Vue 2</summary>
 
-See: https://github.com/vuejs/vue-next/pull/3399
+1. Add `@vue/runtime-dom`
 
-By default, Local components, Built-in components, native HTML elements Type-Checking are active.
+This extension required Vue 3 types from the `@vue/runtime-dom`.
 
-For Global components, you need to have Vue 3 `GlobalComponents` interface definition, for example:
+Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have to install this package yourself:
+
+```jsonc
+// package.json
+{
+  "devDependencies": {
+    "@vue/runtime-dom": "latest"
+  }
+}
+```
+
+2. Remove `Vue.extend`
+
+Template type-checking do not support with `Vue.extend`, you can use [composition-api](https://github.com/vuejs/composition-api), [vue-class-component](https://github.com/vuejs/vue-class-component), or `export default { ... }` instead of `export default Vue.extend`.
+
+3. Add tsconfig.json / jsconfig.json if you don't have
+
+4. Support Vue 2 template
+
+Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different. You need to set the `experimentalCompatMode` option to support Vue 2 template.
+
+```jsonc
+// tsconfig.json
+{
+  "compilerOptions": {
+    ...
+  },
+  "vueCompilerOptions": {
+    "experimentalCompatMode": 2
+  },
+}
+```
+
+</details>
+
+<details>
+<summary>Setup Vue 3</summary>
+
+1. Add tsconfig.json / jsconfig.json if you don't have
+
+</details>
+
+<details>
+<summary>Define Global Components</summary>
+
+PR: https://github.com/vuejs/vue-next/pull/3399
+
+Local components, Built-in components, native HTML elements Type-Checking is available with no configuration.
+
+For Global components, you need to define `GlobalComponents` interface, for example:
 
 ```typescript
 // components.d.ts
+
+// declare module '@vue/runtime-core' works for vue 3
+// declare module 'vue' works for vue2 + vue 3
 declare module 'vue' {
   export interface GlobalComponents {
     RouterLink: typeof import('vue-router')['RouterLink']
@@ -73,58 +124,6 @@ declare module 'vue' {
 }
 
 export {}
-```
-
-</details>
-
-<!-- v-slot support -->
-<details>
-<summary>v-slot support</summary>
-
-v-slot Type-Checking will auto service all .vue files under the project, but for third party libraries, you need to define the slot types, for example:
-
-```typescript
-// components.d.ts
-import { RouterLink, RouterView, useLink, RouteLocationNormalized } from 'vue-router'
-import { UnwrapRef, VNode } from 'vue'
-
-declare module 'vue' {
-  export interface GlobalComponents {
-    RouterLink: typeof RouterLink & {
-      __VLS_slots: {
-        default: UnwrapRef<ReturnType<typeof useLink>>
-      }
-    }
-    RouterView: typeof RouterView & {
-      __VLS_slots: {
-        default: {
-          Component: VNode
-          route: RouteLocationNormalized & { href: string }
-        }
-      }
-    }
-  }
-}
-
-export {}
-```
-
-</details>
-
-<!-- Work with Vue 2? -->
-<details>
-<summary>Work with Vue 2?</summary>
-
-This tool required Vue 3 types from the `@vue/runtime-dom` module.
-
-Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have to install this package yourself:
-
-```json
-{
-  "devDependencies": {
-    "@vue/runtime-dom": "latest"
-  }
-}
 ```
 
 </details>
