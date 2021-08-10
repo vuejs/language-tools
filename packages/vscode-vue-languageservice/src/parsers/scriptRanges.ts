@@ -4,7 +4,7 @@ import type { TextRange } from './types';
 
 export type ScriptRanges = ReturnType<typeof parseScriptRanges>;
 
-export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), content: string, lang: string, hasScriptSetup: boolean, withComponentOption = false, withNode = false) {
+export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, hasScriptSetup: boolean, withComponentOption = false, withNode = false) {
 
 	let exportDefault: (TextRange & {
 		expression: TextRange,
@@ -14,10 +14,9 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 		componentsOptionNode: ts.ObjectLiteralExpression | undefined,
 	}) | undefined;
 
-	const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
-	const bindings = hasScriptSetup ? parseBindingRanges(ts, sourceFile) : [];
+	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
 
-	sourceFile.forEachChild(node => {
+	ast.forEachChild(node => {
 		if (ts.isExportAssignment(node)) {
 			let obj: ts.ObjectLiteralExpression | undefined;
 			if (ts.isObjectLiteralExpression(node.expression)) {
@@ -53,12 +52,11 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 	});
 
 	return {
-		sourceFile,
 		exportDefault,
 		bindings,
 	};
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, sourceFile);
+		return getStartEnd(node, ast);
 	}
 }

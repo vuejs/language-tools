@@ -46,12 +46,15 @@ async function getUnRefSugarEdits(
 	const descriptor = sourceFile.getDescriptor();
 	if (!descriptor.scriptSetup) return [];
 
+	const scriptSetupAst = sourceFile.getScriptSetupAst();
+	if (!scriptSetupAst) return [];
+
 	const genData = sourceFile.getScriptSetupData();
 	if (!genData) return [];
 
 	const document = sourceFile.getTextDocument();
 	const scriptSetup = descriptor.scriptSetup;
-	const genData2 = parseRefSugarRanges(ts, scriptSetup.content, scriptSetup.lang);
+	const genData2 = parseRefSugarRanges(ts, scriptSetupAst);
 
 	let varsNum = 0;
 	let varsCur = 0;

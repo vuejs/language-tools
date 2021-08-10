@@ -7,8 +7,14 @@ import * as SourceMaps from '../utils/sourceMaps';
 export function useSfcScript(
 	getUnreactiveDoc: () => TextDocument,
 	script: Ref<IDescriptor['script']>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	let version = 0;
+	const ast = computed(() => {
+		if (script.value) {
+			return ts.createSourceFile('foo.' + shared.getValidScriptSyntax(script.value.lang), script.value.content, ts.ScriptTarget.Latest);
+		}
+	});
 	const textDocument = computed(() => {
 		if (script.value) {
 			const vueDoc = getUnreactiveDoc();
@@ -49,6 +55,7 @@ export function useSfcScript(
 		}
 	});
 	return {
+		ast,
 		textDocument,
 		sourceMap,
 	};

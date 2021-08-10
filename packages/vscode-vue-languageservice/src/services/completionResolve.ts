@@ -87,6 +87,8 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			const importFile = shared.uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
 			const descriptor = sourceFile.getDescriptor();
+			const scriptAst = sourceFile.getScriptAst();
+			const scriptSetupAst = sourceFile.getScriptSetupAst();
 
 			let importPath = path.relative(path.dirname(data.uri), data.importUri);
 			if (!importPath.startsWith('.')) {
@@ -104,8 +106,8 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 
 			vueItem.labelDetails = { description: rPath };
 
-			const scriptImport = descriptor.script ? getLastImportNode(descriptor.script.content, descriptor.script.lang) : undefined;
-			const scriptSetupImport = descriptor.scriptSetup ? getLastImportNode(descriptor.scriptSetup.content, descriptor.scriptSetup.lang) : undefined;
+			const scriptImport = scriptAst ? getLastImportNode(scriptAst) : undefined;
+			const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
 			const componentName = capitalize(camelize(vueItem.label));
 			const textDoc = sourceFile.getTextDocument();
 			let insertText = '';
@@ -126,21 +128,21 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 					),
 				];
 			}
-			else if (descriptor.script) {
+			else if (descriptor.script && scriptAst) {
 				vueItem.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						textDoc.positionAt(descriptor.script.loc.start + (scriptImport ? scriptImport.end : 0)),
 						'\n' + insertText,
 					),
 				];
-				const scriptRanges = parseScriptRanges(ts, descriptor.script.content, descriptor.script.lang, true, true);
+				const scriptRanges = parseScriptRanges(ts, scriptAst, true, true);
 				const exportDefault = scriptRanges.exportDefault;
 				if (exportDefault) {
 					// https://github.com/microsoft/TypeScript/issues/36174
 					const printer = ts.createPrinter();
 					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
 						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptRanges.sourceFile);
+						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.start),
@@ -151,7 +153,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 					}
 					else if (exportDefault.args && exportDefault.argsNode) {
 						(exportDefault.argsNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`));
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptRanges.sourceFile);
+						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.start),
@@ -196,16 +198,15 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 		}
 	}
 
-	function getLastImportNode(code: string, lang: string) {
-		const sourceFile = ts.createSourceFile('foo.' + lang, code, ts.ScriptTarget.Latest);
+	function getLastImportNode(ast: ts.SourceFile) {
 		let importNode: ts.ImportDeclaration | undefined;
-		sourceFile.forEachChild(node => {
+		ast.forEachChild(node => {
 			if (ts.isImportDeclaration(node)) {
 				importNode = node;
 			}
 		});
 		return importNode ? {
-			text: importNode.getFullText(sourceFile).trim(),
+			text: importNode.getFullText(ast).trim(),
 			end: importNode.getEnd(),
 		} : undefined;
 	}

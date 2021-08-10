@@ -90,12 +90,45 @@ export function createSourceFile(
 			};
 		}
 	});
-	const sfcTemplateCompileResult = useSfcTemplateCompileResult(computed(() => sfcTemplateData.value?.htmlTextDocument), context.isVue2Mode);
-	const sfcScript = useSfcScript(untrack(() => document.value), computed(() => descriptor.script));
-	const sfcScriptSetup = useSfcScript(untrack(() => document.value), computed(() => descriptor.scriptSetup));
-	const sfcScriptForTemplateLs = useSfcScriptGen('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
-	const sfcScriptForScriptLs = useSfcScriptGen('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
-	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(untrack(() => document.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
+	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
+		computed(() => sfcTemplateData.value?.htmlTextDocument),
+		context.isVue2Mode,
+	);
+	const sfcScript = useSfcScript(
+		untrack(() => document.value),
+		computed(() => descriptor.script),
+		context.modules.typescript,
+	);
+	const sfcScriptSetup = useSfcScript(
+		untrack(() => document.value),
+		computed(() => descriptor.scriptSetup),
+		context.modules.typescript,
+	);
+	const sfcScriptForTemplateLs = useSfcScriptGen(
+		'template',
+		context.modules.typescript,
+		document,
+		computed(() => descriptor.script),
+		computed(() => descriptor.scriptSetup),
+		computed(() => sfcScript.ast.value),
+		computed(() => sfcScriptSetup.ast.value),
+		sfcTemplateCompileResult,
+	);
+	const sfcScriptForScriptLs = useSfcScriptGen('script',
+		context.modules.typescript,
+		document,
+		computed(() => descriptor.script),
+		computed(() => descriptor.scriptSetup),
+		computed(() => sfcScript.ast.value),
+		computed(() => sfcScriptSetup.ast.value),
+		sfcTemplateCompileResult,
+	);
+	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
+		untrack(() => document.value),
+		computed(() => descriptor.script),
+		computed(() => descriptor.scriptSetup),
+		computed(() => descriptor.template),
+	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		untrack(() => document.value),
 		computed(() => descriptor.template),
@@ -162,7 +195,9 @@ export function createSourceFile(
 		getHtmlSourceMaps: untrack(() => sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
 		getPugSourceMaps: untrack(() => sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getDescriptor: untrack(() => descriptor),
+		getDescriptor: untrack(() => descriptor), // TODO: untrack not working for reactive
+		getScriptAst: untrack(() => sfcScript.ast.value),
+		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
 		getScriptSetupData: untrack(() => sfcScriptForTemplateLs.scriptSetupRanges.value),
 		docLsScripts: untrack(() => ({

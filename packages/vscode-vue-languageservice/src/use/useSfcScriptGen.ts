@@ -15,6 +15,8 @@ export function useSfcScriptGen(
 	vueDoc: Ref<TextDocument>,
 	script: Ref<IDescriptor['script']>,
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,
+	scriptAst: Ref<ts.SourceFile | undefined>,
+	scriptSetupAst: Ref<ts.SourceFile | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 ) {
 
@@ -22,13 +24,13 @@ export function useSfcScriptGen(
 	const uri = vueDoc.value.uri;
 
 	const scriptRanges = computed(() =>
-		script.value
-			? parseScriptRanges(ts, script.value.content, script.value.lang, !!scriptSetup.value)
+		scriptAst.value
+			? parseScriptRanges(ts, scriptAst.value, !!scriptSetup.value)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
-		scriptSetup.value
-			? parseScriptSetupRanges(ts, scriptSetup.value.content, scriptSetup.value.lang)
+		scriptSetupAst.value
+			? parseScriptSetupRanges(ts, scriptSetupAst.value)
 			: undefined
 	);
 	const codeGen = computed(() =>

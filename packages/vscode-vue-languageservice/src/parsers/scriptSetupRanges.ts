@@ -3,7 +3,7 @@ import type { TextRange } from './types';
 
 export type ScriptSetupRanges = ReturnType<typeof parseScriptSetupRanges>;
 
-export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), content: string, lang: string) {
+export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 	const labels: (TextRange & {
 		binarys: {
 			parent: TextRange,
@@ -28,11 +28,10 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
 
-	const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
-	const bindings = parseBindingRanges(ts, sourceFile);
+	const bindings = parseBindingRanges(ts, ast);
 
-	sourceFile.forEachChild(node => {
-		visitNode(node, sourceFile, true);
+	ast.forEachChild(node => {
+		visitNode(node, ast, true);
 	});
 
 	return {
@@ -47,18 +46,18 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	};
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, sourceFile);
+		return getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node, parent: ts.Node, inRoot: boolean) {
 		if (
 			ts.isIdentifier(node)
-			&& node.getText(sourceFile).startsWith('$')
+			&& node.getText(ast).startsWith('$')
 		) {
-			dollars.push(node.getStart(sourceFile));
+			dollars.push(node.getStart(ast));
 		}
 		if (
 			ts.isLabeledStatement(node)
-			&& node.label.getText(sourceFile) === 'ref'
+			&& node.label.getText(ast) === 'ref'
 			&& ts.isExpressionStatement(node.statement)
 		) {
 			labels.push({
@@ -72,7 +71,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
 		) {
-			const callText = node.expression.getText(sourceFile);
+			const callText = node.expression.getText(ast);
 			if (
 				callText === 'defineProps'
 				|| callText === 'defineEmit' // TODO: remove this in future
@@ -138,7 +137,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 						left: leftRange,
 						right: {
 							...rightRange,
-							isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(sourceFile) === 'computed',
+							isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(ast) === 'computed',
 							withoutAs: _getStartEnd(rightWituoutAs),
 							as: rightAs ? _getStartEnd(rightAs) : undefined,
 						},
@@ -251,7 +250,7 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 		return findBindingVars(ts, left, sourceFile);
 	}
 }
-export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverlibrary'), content: string, lang: string) {
+export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 	const refCalls: (TextRange & {
 		vars: TextRange[],
 		left: TextRange,
@@ -260,8 +259,7 @@ export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverli
 	})[] = [];
 	const shorthandPropertys: TextRange[] = [];
 
-	const sourceFile = ts.createSourceFile('foo.' + lang, content, ts.ScriptTarget.Latest);
-	sourceFile.forEachChild(visitNode);
+	ast.forEachChild(visitNode);
 
 	return {
 		refCalls,
@@ -269,10 +267,10 @@ export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverli
 	};
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, sourceFile);
+		return getStartEnd(node, ast);
 	}
 	function _findBindingVars(left: ts.BindingName) {
-		return findBindingVars(ts, left, sourceFile);
+		return findBindingVars(ts, left, ast);
 	}
 	function visitNode(node: ts.Node) {
 		if (
@@ -281,11 +279,11 @@ export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverli
 			&& node.declarations[0].initializer
 			&& ts.isCallExpression(node.declarations[0].initializer)
 			&& ts.isIdentifier(node.declarations[0].initializer.expression)
-			&& ['ref', 'computed'].includes(node.declarations[0].initializer.expression.getText(sourceFile))
+			&& ['ref', 'computed'].includes(node.declarations[0].initializer.expression.getText(ast))
 		) {
 			const declaration = node.declarations[0];
 			const refCall = node.declarations[0].initializer;
-			const isRef = refCall.expression.getText(sourceFile) === 'ref';
+			const isRef = refCall.expression.getText(ast) === 'ref';
 			const wrapContant = isRef ? (refCall.arguments.length ? refCall.arguments[0] : undefined) : refCall;
 			const wrapType = isRef && refCall.typeArguments?.length ? refCall.typeArguments[0] : undefined;
 			refCalls.push({

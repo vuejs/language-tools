@@ -3,14 +3,18 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import * as shared from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
+import type * as ts from 'typescript';
 
 export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+
+	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 
 	return (document: TextDocument, position: vscode.Position): string | undefined | null => {
 
 		for (const tsLoc of sourceFiles.toTsLocations(document.uri, position)) {
 
-			// TODO: ignore templatet?
+			if (tsLoc.lsType === 'template')
+				continue;
 
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
 				continue;
@@ -20,8 +24,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 			if (!tsDoc)
 				continue;
 
-			// TODO: use computed
-			const sourceFile = ts.createSourceFile(shared.uriToFsPath(tsLoc.uri), tsDoc.getText(), ts.ScriptTarget.Latest);
+			const sourceFile = getAst(tsDoc);
 			if (isBlacklistNode(sourceFile, tsDoc.offsetAt(tsLoc.range.start)))
 				continue;
 
@@ -32,6 +35,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 		}
 	}
 
+	function getAst(tsDoc: TextDocument) {
+		let ast = asts.get(tsDoc);
+		if (!ast) {
+			ast = ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), ts.ScriptTarget.Latest);
+			asts.set(tsDoc, ast);
+		}
+		return ast;
+	}
 	function isBlacklistNode(node: ts.Node, pos: number) {
 		if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 			return true;
