@@ -54,7 +54,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.html.embedded.html.vue",
+					"name": "text.html.markdown",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -80,7 +80,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.html.embedded.html.vue",
+					"name": "text.html.derivative",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -106,7 +106,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.pug.embedded.html.vue",
+					"name": "text.pug",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -132,7 +132,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.stylus.embedded.html.vue",
+					"name": "source.stylus",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -158,7 +158,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.postcss.embedded.html.vue",
+					"name": "source.postcss",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -184,7 +184,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.sass.embedded.html.vue",
+					"name": "source.sass",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -210,7 +210,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.css.embedded.html.vue",
+					"name": "source.css",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -236,7 +236,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.scss.embedded.html.vue",
+					"name": "source.css.scss",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -262,7 +262,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.less.embedded.html.vue",
+					"name": "source.css.less",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -288,7 +288,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.js.embedded.html.vue",
+					"name": "source.js",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -314,7 +314,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.ts.embedded.html.vue",
+					"name": "source.ts",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -340,7 +340,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.jsx.embedded.html.vue",
+					"name": "source.js.jsx",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -366,7 +366,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.tsx.embedded.html.vue",
+					"name": "source.tsx",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -392,7 +392,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.json.embedded.html.vue",
+					"name": "source.json",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -418,7 +418,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.json.comments.embedded.html.vue",
+					"name": "source.json.comments",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -444,7 +444,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.yaml.embedded.html.vue",
+					"name": "source.yaml",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -470,7 +470,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.graphql.embedded.html.vue",
+					"name": "source.graphql",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -496,7 +496,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.html.embedded.html.vue",
+					"name": "text.html.derivative",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -522,7 +522,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.js.embedded.html.vue",
+					"name": "source.js",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -548,7 +548,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.css.embedded.html.vue",
+					"name": "source.css",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
@@ -574,7 +574,7 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.embedded.html.vue",
+					"name": "text",
 					"patterns": [
 						{
 							"include": "#tag-stuff"

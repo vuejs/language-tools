@@ -208,13 +208,13 @@
 				"path": "./syntaxes/vue.tmLanguage.json",
 				"embeddedLanguages": {
 					"source.vue": "vue",
-					"text.html.markdown": "markdown",
-					"text.html": "html",
-					"text.pug": "jade",
 					"text": "plaintext",
+					"text.html.derivative": "html",
+					"text.html.markdown": "markdown",
+					"text.pug": "jade",
 					"source.css": "css",
-					"source.scss": "scss",
-					"source.less": "less",
+					"source.css.scss": "scss",
+					"source.css.less": "less",
 					"source.sass": "sass",
 					"source.stylus": "stylus",
 					"source.postcss": "postcss",
@@ -222,8 +222,8 @@
 					"source.ts": "typescript",
 					"source.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
-					"source.json.comments": "jsonc",
 					"source.json": "json",
+					"source.json.comments": "jsonc",
 					"source.yaml": "yaml"
 				}
 			}
