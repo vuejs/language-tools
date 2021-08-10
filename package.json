@@ -224,7 +224,8 @@
 					"source.tsx": "typescriptreact",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
-					"source.yaml": "yaml"
+					"source.yaml": "yaml",
+					"source.graphql": "graphql"
 				}
 			}
 		],
