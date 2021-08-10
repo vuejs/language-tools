@@ -471,7 +471,7 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'model'
 			) {
-				write('props', getModelValuePropName(node.tag, isVue2), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
+				write('props', getModelValuePropName(node, isVue2), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -612,7 +612,7 @@ export function generate(
 				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 			) {
 
-				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node.tag, isVue2);
+				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node, isVue2);
 				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 				const propValue = prop.exp?.content ?? 'undefined';
 				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
@@ -1348,7 +1348,16 @@ function keepHyphenateName(oldName: string, newName: string) {
 	return newName
 }
 // https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-function getModelValuePropName(tag: string, isVue2: boolean) {
+// https://v3.vuejs.org/guide/forms.html#basic-usage
+function getModelValuePropName(node: CompilerDOM.ElementNode, isVue2: boolean) {
+
+	const tag = node.tag;
+	const typeAttr = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'type') as CompilerDOM.AttributeNode | undefined;
+	const type = typeAttr?.value?.content;
+
+	if (tag === 'input' && (type === 'checkbox' || type === 'radio'))
+		return 'checked';
+
 	if (
 		tag === 'input' ||
 		tag === 'textarea' ||
