@@ -91,6 +91,11 @@ export function createSourceFile(
 		}
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(computed(() => sfcTemplateData.value?.htmlTextDocument), context.isVue2Mode);
+	const sfcScript = useSfcScript(untrack(() => document.value), computed(() => descriptor.script));
+	const sfcScriptSetup = useSfcScript(untrack(() => document.value), computed(() => descriptor.scriptSetup));
+	const sfcScriptForTemplateLs = useSfcScriptGen('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
+	const sfcScriptForScriptLs = useSfcScriptGen('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
+	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(untrack(() => document.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 	const sfcTemplateScript = useSfcTemplateScript(
 		untrack(() => document.value),
 		computed(() => descriptor.template),
@@ -99,13 +104,9 @@ export function createSourceFile(
 		sfcStyles.sourceMaps,
 		sfcTemplateData,
 		sfcTemplateCompileResult,
+		sfcScriptForScriptLs.lang,
 		context,
 	);
-	const sfcScript = useSfcScript(untrack(() => document.value), computed(() => descriptor.script));
-	const sfcScriptSetup = useSfcScript(untrack(() => document.value), computed(() => descriptor.scriptSetup));
-	const sfcScriptForTemplateLs = useSfcScriptGen('template', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
-	const sfcScriptForScriptLs = useSfcScriptGen('script', context.modules.typescript, document, computed(() => descriptor.script), computed(() => descriptor.scriptSetup), sfcTemplateCompileResult);
-	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(untrack(() => document.value), computed(() => descriptor.script), computed(() => descriptor.scriptSetup), computed(() => descriptor.template));
 
 	// getters
 	const cssLsDocuments = computed(() => [
@@ -218,7 +219,7 @@ export function createSourceFile(
 			document.value = newDocument;
 		}
 
-		sfcTemplateScript.update(sfcScriptForScriptLs.lang.value); // TODO
+		sfcTemplateScript.update(); // TODO
 
 		const versionsAfterUpdate = [
 			sfcScriptForTemplateLs.textDocument.value?.version,
@@ -413,7 +414,7 @@ export function createSourceFile(
 		templateScriptData.props = propNames;
 		templateScriptData.setupReturns = setupReturnNames;
 		templateScriptData.componentItems = components;
-		sfcTemplateScript.update(sfcScriptForScriptLs.lang.value); // TODO
+		sfcTemplateScript.update(); // TODO
 		return true;
 	}
 	function shouldVerifyTsScript(templateTsHost: ts.LanguageServiceHost, tsUri: string, mode: 1 | 2 | 3 | 4): 'all' | 'none' | 'unused' {

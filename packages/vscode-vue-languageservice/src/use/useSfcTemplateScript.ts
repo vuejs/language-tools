@@ -31,6 +31,7 @@ export function useSfcTemplateScript(
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
+	scriptLang: Ref<string>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
@@ -61,7 +62,10 @@ export function useSfcTemplateScript(
 
 		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 
-		codeGen.addText(`\n\n`);
+		if (scriptLang.value === 'js' || scriptLang.value === 'jsx') {
+			codeGen.addText(`// @ts-nocheck\n`);
+		}
+
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
 		codeGen.addText(`declare var __VLS_ctxRaw: InstanceType<typeof __VLS_component>;\n`);
 		codeGen.addText(`declare var __VLS_ctx: __VLS_ExtractRawComponents<typeof __VLS_ctxRaw>;\n`);
@@ -352,12 +356,12 @@ export function useSfcTemplateScript(
 			end: range.end + templateOffset,
 		};
 	}
-	function update(lang: string) {
-		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== shared.syntaxToLanguageId(lang))) {
+	function update() {
+		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== shared.syntaxToLanguageId(scriptLang.value))) {
 			if (data.value && templateCodeGens.value) {
 				const _version = version++;
-				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + lang, shared.syntaxToLanguageId(lang), _version, data.value.getText());
-				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.' + lang, shared.syntaxToLanguageId(lang), _version, templateCodeGens.value.formatCodeGen.getText());
+				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + scriptLang.value, shared.syntaxToLanguageId(scriptLang.value), _version, data.value.getText());
+				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.' + scriptLang.value, shared.syntaxToLanguageId(scriptLang.value), _version, templateCodeGens.value.formatCodeGen.getText());
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {
