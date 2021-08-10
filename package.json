@@ -204,10 +204,10 @@
 		"grammars": [
 			{
 				"language": "vue",
-				"scopeName": "text.html.vue",
+				"scopeName": "source.vue",
 				"path": "./syntaxes/vue.tmLanguage.json",
 				"embeddedLanguages": {
-					"text.html.vue": "vue",
+					"source.vue": "vue",
 					"text.html.markdown": "markdown",
 					"text.html": "html",
 					"text.pug": "jade",

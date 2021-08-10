@@ -1,6 +1,6 @@
 {
 	"name": "Vue",
-	"scopeName": "text.html.vue",
+	"scopeName": "source.vue",
 	"injections": {
 		"L:meta.tag": {
 			"patterns": [
