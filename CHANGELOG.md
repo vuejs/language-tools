@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.15
+
+- feat: support GraphQL custom block
+- feat: support inline GraphQL syntax highlighting ([#358](https://github.com/johnsoncodehk/volar/issues/358))
+- fix: checkbox, radio input tag v-model prop name should be "checked" ([#356](https://github.com/johnsoncodehk/volar/issues/356)) ([vue-tsc#55](https://github.com/johnsoncodehk/vue-tsc/issues/55))
+- fix: ignore `"checkJs": true` for template interpolations ([#353](https://github.com/johnsoncodehk/volar/issues/353))
+- perf: reuse `ts.createSourceFile` result to reduce script contents update cost
+
 ## 0.26.14
 
 - fix: prevent `vue-tsc --noEmit` warnings with `"experimentalCompatMode": 2` [#351#issuecomment-895019036](https://github.com/johnsoncodehk/volar/pull/351#issuecomment-895019036)
