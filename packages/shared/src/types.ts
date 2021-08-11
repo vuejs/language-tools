@@ -13,7 +13,7 @@ export interface ServerInitializationOptions {
 	/**
 	 * typescript, html, css... language service will be create in server if this option is not null
 	 */
-	features?: {
+	languageFeatures?: {
 		references?: boolean | { enabledInTsScript: boolean }
 		definition?: boolean | { enabledInTsScript: boolean }
 		typeDefinition?: boolean | { enabledInTsScript: boolean }
@@ -63,7 +63,7 @@ export interface ServerInitializationOptions {
 	/**
 	 * html language service will be create in server if this option is not null
 	 */
-	htmlFeatures?: {
+	documentFeatures?: {
 		foldingRange?: boolean
 		linkedEditingRange?: boolean
 		documentFormatting?: {

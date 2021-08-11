@@ -4,7 +4,7 @@ import { vueDocReg } from '../features/shared';
 
 export function register(
 	connection: vscode.Connection,
-	features: NonNullable<shared.ServerInitializationOptions['htmlFeatures']>,
+	features: NonNullable<shared.ServerInitializationOptions['documentFeatures']>,
 ) {
 	if (features.foldingRange) {
 		connection.client.register(vscode.FoldingRangeRequest.type, vueDocReg);

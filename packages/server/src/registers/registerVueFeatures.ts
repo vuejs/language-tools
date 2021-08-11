@@ -5,7 +5,7 @@ import { allFilesReg, vueFileReg } from '../features/shared';
 
 export function register(
 	connection: vscode.Connection,
-	features: NonNullable<shared.ServerInitializationOptions['features']>,
+	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	legend: vscode.SemanticTokensLegend,
 ) {
 	if (features.references) {

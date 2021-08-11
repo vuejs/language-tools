@@ -92,7 +92,7 @@ export function createServicesManager(
 	}
 	async function updateDocumentDiagnostics(changedFileName?: string) {
 
-		if (!options.features?.diagnostics)
+		if (!options.languageFeatures?.diagnostics)
 			return;
 
 		const otherDocs: TextDocument[] = [];
@@ -121,7 +121,7 @@ export function createServicesManager(
 			if (_isCancel) {
 				return true;
 			}
-			if (typeof options.features?.diagnostics === 'object' && options.features.diagnostics.getDocumentVersionRequest) {
+			if (typeof options.languageFeatures?.diagnostics === 'object' && options.languageFeatures.diagnostics.getDocumentVersionRequest) {
 				const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
 				if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
 					_isCancel = true;
@@ -174,7 +174,7 @@ export function createServicesManager(
 				documents,
 				changedFileName => {
 					updateDocumentDiagnostics(changedFileName);
-					if (options.features?.semanticTokens) {
+					if (options.languageFeatures?.semanticTokens) {
 						connection.languages.semanticTokens.refresh();
 					}
 				},

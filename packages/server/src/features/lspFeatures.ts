@@ -10,7 +10,7 @@ export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	servicesManager: ServicesManager,
-	features: NonNullable<shared.ServerInitializationOptions['features']>,
+	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 ) {
 	connection.onCompletion(async handler => {
 		return servicesManager

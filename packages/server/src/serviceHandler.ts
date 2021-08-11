@@ -58,9 +58,9 @@ export function createServiceHandler(
 	function getLanguageService() {
 		if (!vueLs) {
 			let numOfFeatures = 0;
-			if (options.features) {
-				for (let feature in options.features) {
-					if (!!options.features[feature as keyof typeof options.features]) {
+			if (options.languageFeatures) {
+				for (let feature in options.languageFeatures) {
+					if (!!options.languageFeatures[feature as keyof typeof options.languageFeatures]) {
 						numOfFeatures++;
 					}
 				}
@@ -182,7 +182,7 @@ export function createServiceHandler(
 				return shared.createTsLanguageService(ts, ShPlugin, host);
 			},
 			getEmmetConfig: getEmmetConfiguration,
-			schemaRequestService: options.features?.schemaRequestService ? getSchemaRequestService(connection, options.features.schemaRequestService) : undefined,
+			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,
 			getPreferences: (document) => tsConfigs.getPreferences(connection, document),
 			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			getParsedCommandLine: () => parsedCommandLine,

@@ -36,7 +36,7 @@ function onInitialize(params: vscode.InitializeParams) {
 		}
 	};
 
-	if (options.features?.renameFileRefactoring) {
+	if (options.languageFeatures?.renameFileRefactoring) {
 		result.capabilities.workspace = {
 			fileOperations: {
 				willRename: {
@@ -59,7 +59,7 @@ async function onInitialized() {
 
 	connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
 
-	if (options.features) {
+	if (options.languageFeatures) {
 		const servicesManager = createServicesManager(
 			options,
 			loadTs,
@@ -69,8 +69,8 @@ async function onInitialized() {
 		);
 
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(loadTs().server, connection, documents, servicesManager, options.features);
-		(await import('./registers/registerVueFeatures')).register(connection, options.features, vue.getSemanticTokenLegend());
+		(await import('./features/lspFeatures')).register(loadTs().server, connection, documents, servicesManager, options.languageFeatures);
+		(await import('./registers/registerVueFeatures')).register(connection, options.languageFeatures, vue.getSemanticTokenLegend());
 
 		connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {
 			if (newTsOptions) {
@@ -83,25 +83,25 @@ async function onInitialized() {
 		updateConfigs(connection);
 	}
 
-	if (options.htmlFeatures) {
+	if (options.documentFeatures) {
 		const formatters = await import('./formatters');
 		const noStateLs = vue.getDocumentLanguageService(
 			{ typescript: loadTs().server },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			formatters.getFormatters(async (uri) => {
-				if (options.htmlFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
+				if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
 					const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
 					if (response !== undefined) {
 						return response;
 					}
 				}
-				return options.htmlFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
+				return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
 			}),
 		);
 
 		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
-		(await import('./registers/registerHtmlFeatures')).register(connection, options.htmlFeatures);
+		(await import('./registers/registerHtmlFeatures')).register(connection, options.documentFeatures);
 	}
 }
 

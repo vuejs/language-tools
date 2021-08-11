@@ -35,7 +35,7 @@ const file = getFileRequestService();
 
 export function getSchemaRequestService(
 	connection: vscode.Connection,
-	options: NonNullable<NonNullable<shared.ServerInitializationOptions['features']>['schemaRequestService']>,
+	options: NonNullable<NonNullable<shared.ServerInitializationOptions['languageFeatures']>['schemaRequestService']>,
 	handledSchemas: string[] = ['https', 'http', 'file'],
 ) {
 	const builtInHandlers: { [protocol: string]: json.SchemaRequestService | undefined } = {};

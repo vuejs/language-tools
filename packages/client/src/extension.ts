@@ -81,7 +81,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 	};
 	const serverInitOptions: shared.ServerInitializationOptions = {
 		typescript: tsVersion.getCurrentTsPaths(context),
-		features: mode === 'api' ? {
+		languageFeatures: mode === 'api' ? {
 			references: { enabledInTsScript: !tsPlugin.isTsPluginEnabled() },
 			definition: true,
 			typeDefinition: true,
@@ -109,7 +109,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			diagnostics: { getDocumentVersionRequest: true },
 			schemaRequestService: { getDocumentContentRequest: true },
 		} : undefined,
-		htmlFeatures: mode === 'html' ? {
+		documentFeatures: mode === 'html' ? {
 			foldingRange: true,
 			linkedEditingRange: true,
 			documentFormatting: {
