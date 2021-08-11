@@ -13,6 +13,11 @@ export function register(
 		if (!document) return;
 		return noStateLs.doFormatting(document, handler.options);
 	});
+	connection.onSelectionRanges(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.getSelectionRanges(document, handler.positions);
+	});
 	connection.onFoldingRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;

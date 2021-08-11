@@ -80,6 +80,7 @@ export function getDocumentLanguageService(
 	return {
 		doFormatting: formatting.register(context, getPreferences, getFormatOptions, formatters),
 		getFoldingRanges: foldingRanges.register(context, getPreferences, getFormatOptions),
+		getSelectionRanges: selectionRanges.register(context, getPreferences, getFormatOptions),
 		doTagComplete: autoClose.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
 	}
@@ -263,7 +264,6 @@ export function createLanguageService(
 		doCompletionResolve: apiHook(completionResolve.register(context), false),
 		doCodeLensResolve: apiHook(codeLensResolve.register(context), false),
 		getSignatureHelp: apiHook(signatureHelp.register(context), false),
-		getSelectionRanges: apiHook(selectionRanges.register(context), false),
 		getColorPresentations: apiHook(colorPresentations.register(context), false),
 		getCodeLens: apiHook(codeLens.register(context), false),
 		findDocumentHighlights: apiHook(documentHighlight.register(context), false),

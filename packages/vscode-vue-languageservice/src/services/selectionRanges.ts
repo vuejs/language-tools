@@ -1,79 +1,114 @@
+import * as shared from '@volar/shared';
+import { transformSelectionRanges } from '@volar/transforms';
 import type * as vscode from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import { createSourceFile } from '../sourceFile';
+import type { HtmlLanguageServiceContext } from '../types';
+import { getDummyTsLs } from '../utils/sharedLs';
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
-	return (uri: string, positions: vscode.Position[]) => {
-		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile) return;
+export function register(
+	context: HtmlLanguageServiceContext,
+	getPreferences: LanguageServiceHost['getPreferences'],
+	getFormatOptions: LanguageServiceHost['getFormatOptions'],
+) {
 
-		const tsResult = getTsResult();
+	const { modules, htmlLs, pugLs, getCssLs } = context;
+
+	return (document: TextDocument, positions: vscode.Position[]) => {
+
+		const sourceFile = createSourceFile(document, context);
+
+		// const vueResult = getVueResult(sourceFile); // TODO
+		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);
-		return [...cssResult, ...htmlResult, ...tsResult];
 
-		function getTsResult() {
+		const embeddedResult = [
+			...cssResult,
+			...htmlResult,
+			...tsResult,
+		];
+
+		// for (const embeddedRange of embeddedResult) {
+		// 	const lastParent = findLastParent(embeddedRange);
+		// 	for (const vueRange of vueResult) {
+		// 		if (shared.isInsideRange(vueRange.range, lastParent.range)) {
+		// 			lastParent.parent = vueRange;
+		// 			break;
+		// 		}
+		// 	}
+		// }
+
+		return embeddedResult;
+
+		// function findLastParent(range: vscode.SelectionRange) {
+		// 	let parent = range;
+		// 	while (range.parent) {
+		// 		parent = range.parent;
+		// 	}
+		// 	return parent;
+		// }
+		function getVueResult(sourceFile: SourceFile) {
+
+			const descriptor = sourceFile.getDescriptor();
+
+			let emptyBlocksContent = document.getText();
+
+			for (const block of [
+				descriptor.script,
+				descriptor.scriptSetup,
+				descriptor.template,
+				...descriptor.styles,
+				...descriptor.customBlocks,
+			].filter(shared.notEmpty)) {
+				emptyBlocksContent = emptyBlocksContent.substring(0, block.loc.start) + ' '.repeat(block.loc.end - block.loc.start) + emptyBlocksContent.substring(block.loc.end);
+			}
+
 			let result: vscode.SelectionRange[] = [];
-			for (const position of positions) {
-				for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+			result = result.concat(htmlLs.getSelectionRanges(TextDocument.create(document.uri, document.languageId, document.version, emptyBlocksContent), positions));
+			return result;
+		}
+		function getTsResult(sourceFile: SourceFile) {
+			const tsSourceMaps = [
+				sourceFile.getTemplateFormattingScript().sourceMap,
+				...sourceFile.docLsScripts().sourceMaps,
+			].filter(shared.notEmpty);
 
-					if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
-						continue;
-
-					const selectRange = getTsLs(tsLoc.lsType).getSelectionRange(tsLoc.uri, tsLoc.range.start);
-					if (selectRange) {
-						for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, selectRange.range.start, selectRange.range.end)) {
-							result.push({
-								range: vueLoc.range,
-								// TODO: parent
-							});
-						}
-					}
-				}
+			let result: vscode.SelectionRange[] = [];
+			for (const sourceMap of tsSourceMaps) {
+				if (!sourceMap.capabilities.foldingRanges)
+					continue;
+				const dummyTs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const tsStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
+				const tsSelectRange = dummyTs.ls.getSelectionRanges(dummyTs.uri, tsStarts);
+				result = result.concat(transformSelectionRanges(tsSelectRange, range => sourceMap.getSourceRange(range.start, range.end)));
 			}
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.SelectionRange[] = [];
-			for (const position of positions) {
-				for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-					for (const htmlRange of sourceMap.getMappedRanges(position)) {
-						const selectRanges = sourceMap.language === 'html'
-							? htmlLs.getSelectionRanges(sourceMap.mappedDocument, [htmlRange.start])
-							: pugLs.getSelectionRanges(sourceMap.pugDocument, [htmlRange.start])
-						for (const selectRange of selectRanges) {
-							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
-							if (vueRange) {
-								result.push({
-									range: vueRange,
-									// TODO: parent
-								});
-							}
-						}
-					}
-				}
+			for (const sourceMap of [
+				...sourceFile.getHtmlSourceMaps(),
+				...sourceFile.getPugSourceMaps()
+			]) {
+				const htmlStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
+				const selectRanges = sourceMap.language === 'html'
+					? htmlLs.getSelectionRanges(sourceMap.mappedDocument, htmlStarts)
+					: pugLs.getSelectionRanges(sourceMap.pugDocument, htmlStarts)
+				result = result.concat(transformSelectionRanges(selectRanges, range => sourceMap.getSourceRange(range.start, range.end)));
 			}
 			return result;
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.SelectionRange[] = [];
-			for (const position of positions) {
-				for (const sourceMap of sourceFile.getCssSourceMaps()) {
-					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-					if (!cssLs || !sourceMap.stylesheet) continue;
-					for (const cssRange of sourceMap.getMappedRanges(position)) {
-						const selectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, [cssRange.start], sourceMap.stylesheet);
-						for (const selectRange of selectRanges) {
-							const vueRange = sourceMap.getSourceRange(selectRange.range.start, selectRange.range.end);
-							if (vueRange) {
-								result.push({
-									range: vueRange,
-									// TODO: parent
-								});
-							}
-						}
-					}
-				}
+			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+				if (!cssLs || !sourceMap.stylesheet) continue;
+				const cssStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
+				const cssSelectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, cssStarts, sourceMap.stylesheet);
+				result = result.concat(transformSelectionRanges(cssSelectRanges, range => sourceMap.getSourceRange(range.start, range.end)));
 			}
 			return result;
 		}

@@ -3,5 +3,6 @@ export { transform as transformCompletionList } from './completionList';
 export { transform as transformHover } from './hover';
 export { transform as transformLocation } from './locationLike';
 export { transform as transformLocations } from './locationsLike';
+export { transform as transformSelectionRange } from './selectionRange';
+export { transform as transformSelectionRanges } from './selectionRanges';
 export { transform as transformTextEdit } from './textEdit';
-

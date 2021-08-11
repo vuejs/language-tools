@@ -89,7 +89,6 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			hover: true,
 			rename: true,
 			renameFileRefactoring: true,
-			selectionRange: true,
 			signatureHelp: true,
 			completion: {
 				defaultTagNameCase: 'both',
@@ -110,6 +109,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			schemaRequestService: { getDocumentContentRequest: true },
 		} : undefined,
 		documentFeatures: mode === 'html' ? {
+			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,
 			documentFormatting: {

@@ -49,11 +49,6 @@ export function register(
 			.getMatchService(handler.textDocument.uri)
 			?.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
 	});
-	connection.onSelectionRanges(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getSelectionRanges(handler.textDocument.uri, handler.positions);
-	});
 	connection.onPrepareRename(handler => {
 		return servicesManager
 			.getMatchService(handler.textDocument.uri)

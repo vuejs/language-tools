@@ -33,9 +33,6 @@ export function register(
 			prepareProvider: true,
 		});
 	}
-	if (features.selectionRange) {
-		connection.client.register(vscode.SelectionRangeRequest.type, vueFileReg);
-	}
 	if (features.signatureHelp) {
 		connection.client.register(vscode.SignatureHelpRequest.type, {
 			documentSelector: vueFileReg.documentSelector,

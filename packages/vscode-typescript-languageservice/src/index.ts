@@ -55,7 +55,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getValidTextDocument, host),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),
-		getSelectionRange: selectionRanges.register(languageService, getValidTextDocument),
+		getSelectionRanges: selectionRanges.register(languageService, getValidTextDocument),
 		doValidation: diagnostics.register(languageService, getValidTextDocument, ts),
 		getFoldingRanges: foldingRanges.register(languageService, getValidTextDocument, ts),
 		getDocumentSemanticTokens: semanticTokens.register(languageService, getValidTextDocument),

@@ -21,7 +21,6 @@ export interface ServerInitializationOptions {
 		hover?: boolean
 		rename?: boolean
 		renameFileRefactoring?: boolean
-		selectionRange?: boolean
 		signatureHelp?: boolean
 		completion?: {
 			defaultTagNameCase: 'both' | 'kebabCase' | 'pascalCase',
@@ -64,6 +63,7 @@ export interface ServerInitializationOptions {
 	 * html language service will be create in server if this option is not null
 	 */
 	documentFeatures?: {
+		selectionRange?: boolean
 		foldingRange?: boolean
 		linkedEditingRange?: boolean
 		documentFormatting?: {
