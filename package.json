@@ -307,11 +307,6 @@
 				"icon": "images/split-editors.png"
 			},
 			{
-				"command": "volar.action.splitEditors2",
-				"title": "Start Split Editing Mode",
-				"category": "Volar (Experimental)"
-			},
-			{
 				"command": "volar.action.finder",
 				"title": "Open Code Finder (WebView)",
 				"category": "Volar (Experimental)",
