@@ -25,7 +25,6 @@
 		"@vue/compiler-sfc": "^3.2.1",
 		"@vue/reactivity": "^3.2.1",
 		"@vue/shared": "^3.2.1",
-		"jsonc-parser": "^3.0.0",
 		"request-light": "^0.5.4",
 		"upath": "^2.0.1",
 		"vscode-css-languageservice": "^5.1.4",
