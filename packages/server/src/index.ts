@@ -69,8 +69,8 @@ async function onInitialized() {
 		);
 
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/lspFeatures')).register(loadTs().server, connection, documents, servicesManager, options.languageFeatures);
-		(await import('./registers/registerVueFeatures')).register(connection, options.languageFeatures, vue.getSemanticTokenLegend());
+		(await import('./features/languageFeatures')).register(loadTs().server, connection, documents, servicesManager, options.languageFeatures);
+		(await import('./registers/registerlanguageFeatures')).register(connection, options.languageFeatures, vue.getSemanticTokenLegend());
 
 		connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {
 			if (newTsOptions) {
@@ -100,8 +100,8 @@ async function onInitialized() {
 			}),
 		);
 
-		(await import('./features/htmlFeatures')).register(connection, documents, noStateLs);
-		(await import('./registers/registerHtmlFeatures')).register(connection, options.documentFeatures);
+		(await import('./features/documentFeatures')).register(connection, documents, noStateLs);
+		(await import('./registers/registerDocumentFeatures')).register(connection, options.documentFeatures);
 	}
 }
 
