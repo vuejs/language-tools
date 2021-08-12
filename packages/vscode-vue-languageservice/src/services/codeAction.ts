@@ -47,17 +47,21 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				);
 			}
 
-			const data: Data = { lsType: tsLoc.lsType };
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const edit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, tsCodeAction.edit, sourceFiles, () => true) : undefined;
-				if (tsCodeAction.edit && !edit) continue;
+				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, tsCodeAction.edit, sourceFiles, () => true) : undefined;
+				if (tsCodeAction.edit && !vueEdit) continue;
+
+				const data: Data = {
+					lsType: tsLoc.lsType,
+					tsData: tsCodeAction.data,
+				};
 
 				result.push({
 					...tsCodeAction,
 					data,
-					edit,
+					edit: vueEdit,
 				});
 			}
 		}

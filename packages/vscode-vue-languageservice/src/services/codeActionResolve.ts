@@ -6,7 +6,11 @@ import type { Data } from './callHierarchy';
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 	return async (codeAction: CodeAction) => {
 		const data: Data = codeAction.data as any;
-		codeAction = await getTsLs(data.lsType).doCodeActionResolve(codeAction);
+		const tsCodeAction: CodeAction = {
+			...codeAction,
+			data: data.tsData,
+		};
+		codeAction = await getTsLs(data.lsType).doCodeActionResolve(tsCodeAction);
 		if (codeAction.edit) {
 			codeAction.edit = tsEditToVueEdit(data.lsType, codeAction.edit, sourceFiles, () => true);
 		}

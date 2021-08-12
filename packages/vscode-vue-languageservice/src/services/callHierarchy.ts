@@ -6,6 +6,7 @@ import * as dedupe from '../utils/dedupe';
 
 export interface Data {
 	lsType: 'script' | 'template'
+	tsData: any
 }
 
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
@@ -18,8 +19,11 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 				continue;
 
 			const items = worker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start);
-			const data: Data = { lsType: tsLoc.lsType };
 			for (const item of items) {
+				const data: Data = {
+					lsType: tsLoc.lsType,
+					tsData: item.data,
+				};
 				item.data = data;
 			}
 			vueItems = vueItems.concat(items);
