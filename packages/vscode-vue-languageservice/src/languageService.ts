@@ -83,6 +83,7 @@ export function getDocumentLanguageService(
 		getSelectionRanges: selectionRanges.register(context, getPreferences, getFormatOptions),
 		doTagComplete: autoClose.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
+		findDocumentSymbols: documentSymbol.register(context, getPreferences, getFormatOptions),
 	}
 	function getHtmlDocument(document: TextDocument) {
 		const _cache = cache.get(document.uri);
@@ -267,7 +268,6 @@ export function createLanguageService(
 		getColorPresentations: apiHook(colorPresentations.register(context), false),
 		getCodeLens: apiHook(codeLens.register(context), false),
 		findDocumentHighlights: apiHook(documentHighlight.register(context), false),
-		findDocumentSymbols: apiHook(documentSymbol.register(context), false),
 		findDocumentLinks: apiHook(documentLink.register(context), false),
 		findDocumentColors: apiHook(documentColor.register(context), false),
 		dispose: () => {

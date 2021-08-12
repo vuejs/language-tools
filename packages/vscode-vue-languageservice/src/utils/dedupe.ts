@@ -55,6 +55,17 @@ export function withDiagnostics<T extends vscode.Diagnostic>(items: T[]): T[] {
 		item.message,
 	].join(':'));
 }
+export function withSymbolInformations<T extends vscode.SymbolInformation>(items: T[]): T[] {
+	return dedupe(items, item => [
+		item.name,
+		item.kind,
+		item.location.uri,
+		item.location.range.start.line,
+		item.location.range.start.character,
+		item.location.range.end.line,
+		item.location.range.end.character,
+	].join(':'));
+}
 export function withLocations<T extends vscode.Location>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.uri,

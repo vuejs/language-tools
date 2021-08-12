@@ -23,6 +23,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		column: number,
 		filename: string,
 	} | undefined;
+	let fullPugTagEnd: number;
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
@@ -67,12 +68,31 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			}
 		}
 		else if (node.type === 'Tag') {
+
+			const fullHtmlStart = codeGen.getText().length;
+			const pugTagRange = getDocRange(node.line, node.column, node.name.length);
+			const fullPugStart = pugTagRange.start;
+			fullPugTagEnd = pugTagRange.end;
+
 			const selfClosing = node.block.nodes.length === 0;
 			addStartTag(node, selfClosing);
 			if (!selfClosing) {
 				visitNode(node.block, next);
 				addEndTag(node, next);
 			}
+			const fullHtmlEnd = codeGen.getText().length;
+			codeGen.addMapping2({
+				data: undefined,
+				sourceRange: {
+					start: fullPugStart,
+					end: fullPugTagEnd,
+				},
+				mappedRange: {
+					start: fullHtmlStart,
+					end: fullHtmlEnd,
+				},
+				mode: SourceMap.Mode.Totally,
+			});
 		}
 		else if (node.type === 'Text') {
 			codeGen.addCode(
@@ -153,6 +173,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 				nextStart = getDocOffset(next.line, next.column);
 			}
 		}
+		fullPugTagEnd = nextStart;
 		codeGen.addCode(
 			'',
 			{

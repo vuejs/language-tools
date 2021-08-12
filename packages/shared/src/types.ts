@@ -35,7 +35,6 @@ export interface ServerInitializationOptions {
 			getDocumentSelectionRequest?: boolean,
 		}
 		documentHighlight?: boolean
-		documentSymbol?: boolean
 		documentLink?: boolean
 		documentColor?: boolean
 		codeLens?: boolean | {
@@ -66,6 +65,7 @@ export interface ServerInitializationOptions {
 		selectionRange?: boolean
 		foldingRange?: boolean
 		linkedEditingRange?: boolean
+		documentSymbol?: boolean
 		documentFormatting?: {
 			defaultPrintWidth: number,
 			/**

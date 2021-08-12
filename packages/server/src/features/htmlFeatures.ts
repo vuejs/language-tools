@@ -28,6 +28,11 @@ export function register(
 		if (!document) return;
 		return noStateLs.findLinkedEditingRanges(document, handler.position);
 	});
+	connection.onDocumentSymbol(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.findDocumentSymbols(document);
+	});
 	connection.onRequest(shared.GetTagCloseEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;

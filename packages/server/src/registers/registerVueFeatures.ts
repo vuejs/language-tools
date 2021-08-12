@@ -61,9 +61,6 @@ export function register(
 	if (features.documentHighlight) {
 		connection.client.register(vscode.DocumentHighlightRequest.type, vueFileReg);
 	}
-	if (features.documentSymbol) {
-		connection.client.register(vscode.DocumentSymbolRequest.type, vueFileReg);
-	}
 	if (features.documentLink) {
 		connection.client.register(vscode.DocumentLinkRequest.type, vueFileReg);
 	}

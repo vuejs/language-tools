@@ -99,7 +99,6 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			schemaRequestService: { getDocumentContentRequest: true },
 		} : mode === 'doc' ? {
 			documentHighlight: true,
-			documentSymbol: true,
 			documentLink: true,
 			documentColor: true,
 			codeLens: { showReferencesNotification: true },
@@ -112,6 +111,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,
+			documentSymbol: true,
 			documentFormatting: {
 				defaultPrintWidth: 100,
 				getDocumentPrintWidthRequest: true,

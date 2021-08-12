@@ -15,6 +15,9 @@ export function register(
 	if (features.linkedEditingRange) {
 		connection.client.register(vscode.LinkedEditingRangeRequest.type, vueDocReg);
 	}
+	if (features.documentSymbol) {
+		connection.client.register(vscode.DocumentSymbolRequest.type, vueDocReg);
+	}
 	if (features.documentFormatting) {
 		connection.client.register(vscode.DocumentFormattingRequest.type, vueDocReg);
 	}

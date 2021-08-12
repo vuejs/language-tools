@@ -144,11 +144,6 @@ export function register(
 			.getMatchService(handler.textDocument.uri)
 			?.findDocumentHighlights(handler.textDocument.uri, handler.position);
 	});
-	connection.onDocumentSymbol(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findDocumentSymbols(handler.textDocument.uri);
-	});
 	connection.onDocumentLinks(handler => {
 		return servicesManager
 			.getMatchService(handler.textDocument.uri)
