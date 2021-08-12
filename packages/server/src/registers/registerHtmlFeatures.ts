@@ -18,6 +18,9 @@ export function register(
 	if (features.documentSymbol) {
 		connection.client.register(vscode.DocumentSymbolRequest.type, vueDocReg);
 	}
+	if (features.documentColor) {
+		connection.client.register(vscode.DocumentColorRequest.type, vueDocReg);
+	}
 	if (features.documentFormatting) {
 		connection.client.register(vscode.DocumentFormattingRequest.type, vueDocReg);
 	}

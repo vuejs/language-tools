@@ -84,6 +84,8 @@ export function getDocumentLanguageService(
 		doTagComplete: autoClose.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
 		findDocumentSymbols: documentSymbol.register(context, getPreferences, getFormatOptions),
+		findDocumentColors: documentColor.register(context),
+		getColorPresentations: colorPresentations.register(context),
 	}
 	function getHtmlDocument(document: TextDocument) {
 		const _cache = cache.get(document.uri);
@@ -265,11 +267,9 @@ export function createLanguageService(
 		doCompletionResolve: apiHook(completionResolve.register(context), false),
 		doCodeLensResolve: apiHook(codeLensResolve.register(context), false),
 		getSignatureHelp: apiHook(signatureHelp.register(context), false),
-		getColorPresentations: apiHook(colorPresentations.register(context), false),
 		getCodeLens: apiHook(codeLens.register(context), false),
 		findDocumentHighlights: apiHook(documentHighlight.register(context), false),
 		findDocumentLinks: apiHook(documentLink.register(context), false),
-		findDocumentColors: apiHook(documentColor.register(context), false),
 		dispose: () => {
 			scriptTsLs.dispose();
 			templateTsLs.dispose();

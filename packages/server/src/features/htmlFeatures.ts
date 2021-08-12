@@ -33,6 +33,16 @@ export function register(
 		if (!document) return;
 		return noStateLs.findDocumentSymbols(document);
 	});
+	connection.onDocumentColor(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.findDocumentColors(document);
+	});
+	connection.onColorPresentation(handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.getColorPresentations(document, handler.color, handler.range);
+	});
 	connection.onRequest(shared.GetTagCloseEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;

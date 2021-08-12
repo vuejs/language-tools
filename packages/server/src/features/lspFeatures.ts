@@ -129,16 +129,6 @@ export function register(
 			.getMatchService(handler.textDocument.uri)
 			?.findTypeDefinition(handler.textDocument.uri, handler.position);
 	});
-	connection.onDocumentColor(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findDocumentColors(handler.textDocument.uri);
-	});
-	connection.onColorPresentation(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getColorPresentations(handler.textDocument.uri, handler.color, handler.range);
-	});
 	connection.onDocumentHighlight(handler => {
 		return servicesManager
 			.getMatchService(handler.textDocument.uri)

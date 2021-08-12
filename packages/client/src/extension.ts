@@ -100,7 +100,6 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		} : mode === 'doc' ? {
 			documentHighlight: true,
 			documentLink: true,
-			documentColor: true,
 			codeLens: { showReferencesNotification: true },
 			semanticTokens: true,
 			codeAction: true,
@@ -112,6 +111,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			foldingRange: true,
 			linkedEditingRange: true,
 			documentSymbol: true,
+			documentColor: true,
 			documentFormatting: {
 				defaultPrintWidth: 100,
 				getDocumentPrintWidthRequest: true,

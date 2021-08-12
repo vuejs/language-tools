@@ -64,9 +64,6 @@ export function register(
 	if (features.documentLink) {
 		connection.client.register(vscode.DocumentLinkRequest.type, vueFileReg);
 	}
-	if (features.documentColor) {
-		connection.client.register(vscode.DocumentColorRequest.type, vueFileReg);
-	}
 	if (features.codeLens) {
 		connection.client.register(vscode.CodeLensRequest.type, {
 			documentSelector: allFilesReg.documentSelector,

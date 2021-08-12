@@ -36,7 +36,6 @@ export interface ServerInitializationOptions {
 		}
 		documentHighlight?: boolean
 		documentLink?: boolean
-		documentColor?: boolean
 		codeLens?: boolean | {
 			/**
 			 * {@link __requests.ShowReferencesNotification}
@@ -66,6 +65,7 @@ export interface ServerInitializationOptions {
 		foldingRange?: boolean
 		linkedEditingRange?: boolean
 		documentSymbol?: boolean
+		documentColor?: boolean
 		documentFormatting?: {
 			defaultPrintWidth: number,
 			/**

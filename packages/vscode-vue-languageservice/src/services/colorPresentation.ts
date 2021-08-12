@@ -1,11 +1,16 @@
 import * as vscode from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import { createSourceFile } from '../sourceFile';
+import type { HtmlLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, getCssLs }: ApiLanguageServiceContext) {
-	return (uri: string, color: vscode.Color, range: vscode.Range) => {
-		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile) return;
+export function register(context: HtmlLanguageServiceContext) {
+
+	const { getCssLs } = context;
+
+	return (document: TextDocument, color: vscode.Color, range: vscode.Range) => {
+
+		const sourceFile = createSourceFile(document, context);
 
 		const cssResult = getCssResult(sourceFile);
 		return cssResult;
