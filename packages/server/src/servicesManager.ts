@@ -63,6 +63,7 @@ export function createServicesManager(
 		for (const [_, service] of services) {
 			service.onDocumentUpdated(change.document);
 		}
+		updateDocumentDiagnostics(shared.uriToFsPath(change.document.uri));
 		// preload
 		getMatchService(change.document.uri);
 	});
