@@ -106,6 +106,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			rename: true,
 			renameFileRefactoring: true,
 			signatureHelp: true,
+			codeAction: true,
 			completion: {
 				defaultTagNameCase: 'both',
 				defaultAttrNameCase: 'kebabCase',
@@ -118,7 +119,6 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			documentLink: true,
 			codeLens: { showReferencesNotification: true },
 			semanticTokens: true,
-			codeAction: true,
 			diagnostics: { getDocumentVersionRequest: true },
 			schemaRequestService: { getDocumentContentRequest: true },
 		} : undefined,
