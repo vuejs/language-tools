@@ -10,7 +10,7 @@ export function execute(document: TextDocument, sourceFile: SourceFile, connecti
 	if (lang !== 'pug') return;
 
 	const html = pugToHtml(desc.template.content);
-	const newTemplate = `<template>\n` + html;
+	const newTemplate = `<template>\n` + html + `\n`;
 
 	let start = desc.template.loc.start - '<template>'.length;
 	const end = desc.template.loc.end;
