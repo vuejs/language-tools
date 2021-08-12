@@ -31,7 +31,9 @@ export function createSourceFile(
 ) {
 
 	// refs
-	const document = ref(_document);
+	const content = ref(_document.getText());
+	const version = ref(_document.version);
+	const document = computed(() => TextDocument.create(_document.uri, _document.languageId, version.value, content.value));
 	const descriptor = reactive<IDescriptor>({
 		template: null,
 		script: null,
@@ -250,9 +252,8 @@ export function createSourceFile(
 		updateStyles(newDescriptor);
 		updateCustomBlocks(newDescriptor);
 
-		if (newDocument.getText() !== document.value.getText()) {
-			document.value = newDocument;
-		}
+		content.value = newDocument.getText();
+		version.value = newDocument.version;
 
 		sfcTemplateScript.update(); // TODO
 

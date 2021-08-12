@@ -1,12 +1,13 @@
-import type * as vscode from 'vscode-languageserver';
-import type * as ts2 from 'vscode-typescript-languageservice';
-import type { TextDocument, DocumentContext } from 'vscode-css-languageservice';
-import type { HTMLDocument } from 'vscode-html-languageservice';
-import type { LanguageServiceHost } from './languageService';
 import type * as css from 'vscode-css-languageservice';
+import type { DocumentContext, TextDocument } from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice';
+import type { HTMLDocument } from 'vscode-html-languageservice';
 import type * as json from 'vscode-json-languageservice';
+import type * as vscode from 'vscode-languageserver';
 import type * as pug from 'vscode-pug-languageservice';
+import type * as ts2 from 'vscode-typescript-languageservice';
+import type { LanguageServiceHost } from './languageService';
+import type { SourceFile } from './sourceFile';
 import type { SourceFiles } from './sourceFiles';
 
 export interface TsCompletionData {
@@ -86,6 +87,7 @@ export type LanguageServiceContextBase = {
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {
 	getHtmlDocument(document: TextDocument): HTMLDocument;
+	getVueDocument(document: TextDocument): SourceFile;
 }
 export type ApiLanguageServiceContext = LanguageServiceContextBase & {
 	sourceFiles: SourceFiles;

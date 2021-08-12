@@ -1,7 +1,7 @@
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import { createSourceFile } from './sourceFile';
+import { createSourceFile, SourceFile } from './sourceFile';
 import { createGlobalDefineDocument } from './utils/globalDoc';
 import * as upath from 'upath';
 import type * as ts from 'typescript';
@@ -62,7 +62,8 @@ export function getDocumentLanguageService(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	formatters: Parameters<typeof formatting['register']>[3],
 ) {
-	const cache = new Map<string, [number, html.HTMLDocument]>();
+	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
+	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const context: HtmlLanguageServiceContext = {
 		isVue2Mode: false,
 		modules: {
@@ -76,6 +77,7 @@ export function getDocumentLanguageService(
 		},
 		...createContext(modules.typescript),
 		getHtmlDocument,
+		getVueDocument,
 	};
 	return {
 		doFormatting: formatting.register(context, getPreferences, getFormatOptions, formatters),
@@ -87,16 +89,33 @@ export function getDocumentLanguageService(
 		findDocumentColors: documentColor.register(context),
 		getColorPresentations: colorPresentations.register(context),
 	}
+	function getVueDocument(document: TextDocument) {
+		const cacheVueDoc = vueDocuments.get(document);
+		if (cacheVueDoc) {
+
+			const oldText = cacheVueDoc.getTextDocument().getText();
+			const newText = document.getText();
+
+			if (oldText.length !== newText.length || oldText !== newText) {
+				cacheVueDoc.update(document);
+			}
+
+			return cacheVueDoc;
+		}
+		const vueDoc = createSourceFile(document, context);
+		vueDocuments.set(document, vueDoc);
+		return vueDoc;
+	}
 	function getHtmlDocument(document: TextDocument) {
-		const _cache = cache.get(document.uri);
-		if (_cache) {
-			const [cacheVersion, cacheHtmlDoc] = _cache;
+		const cache = htmlDocuments.get(document);
+		if (cache) {
+			const [cacheVersion, cacheHtmlDoc] = cache;
 			if (cacheVersion === document.version) {
 				return cacheHtmlDoc;
 			}
 		}
 		const htmlDoc = context.htmlLs.parseHTMLDocument(document);
-		cache.set(document.uri, [document.version, htmlDoc]);
+		htmlDocuments.set(document, [document.version, htmlDoc]);
 		return htmlDoc;
 	}
 }

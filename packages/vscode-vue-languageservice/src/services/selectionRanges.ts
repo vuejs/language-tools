@@ -4,7 +4,6 @@ import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';
-import { createSourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 import { getDummyTsLs } from '../utils/sharedLs';
 
@@ -18,8 +17,7 @@ export function register(
 
 	return (document: TextDocument, positions: vscode.Position[]) => {
 
-		const sourceFile = createSourceFile(document, context);
-
+		const sourceFile = context.getVueDocument(document);
 		// const vueResult = getVueResult(sourceFile); // TODO
 		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);

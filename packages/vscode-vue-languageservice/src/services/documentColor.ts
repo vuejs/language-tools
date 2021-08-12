@@ -1,7 +1,6 @@
 import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
-import { createSourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 
 export function register(context: HtmlLanguageServiceContext) {
@@ -10,9 +9,9 @@ export function register(context: HtmlLanguageServiceContext) {
 
 	return (document: TextDocument) => {
 
-		const sourceFile = createSourceFile(document, context);
-
+		const sourceFile = context.getVueDocument(document);
 		const cssResult = getCssResult(sourceFile);
+
 		return cssResult;
 
 		function getCssResult(sourceFile: SourceFile) {

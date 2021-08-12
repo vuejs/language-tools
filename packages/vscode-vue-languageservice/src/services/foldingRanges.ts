@@ -3,7 +3,6 @@ import type { SourceFile } from '../sourceFile';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { FoldingRangeKind } from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver';
-import { createSourceFile } from '../sourceFile';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as shared from '@volar/shared';
 import type { HtmlLanguageServiceContext } from '../types';
@@ -17,7 +16,7 @@ export function register(
 	const { htmlLs, getCssLs, modules } = context;
 	return (document: TextDocument) => {
 
-		const sourceFile = createSourceFile(document, context);
+		const sourceFile = context.getVueDocument(document);
 		const vueResult = getVueResult(sourceFile); // include html folding ranges
 		const tsResult = getTsResult(sourceFile);
 		const cssResult = getCssResult(sourceFile);

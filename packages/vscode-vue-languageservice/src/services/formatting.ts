@@ -3,7 +3,7 @@ import { transformTextEdit } from '@volar/transforms';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
-import { createSourceFile, SourceFile } from '../sourceFile';
+import type { SourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 import * as sharedServices from '../utils/sharedLs';
 
@@ -24,7 +24,7 @@ export function register(
 ) {
 	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
-		const sourceFile = createSourceFile(document, context);
+		const sourceFile = context.getVueDocument(document);
 		let newDocument = document;
 
 		const pugEdits = await getPugFormattingEdits(sourceFile, options);
