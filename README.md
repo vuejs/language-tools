@@ -4,7 +4,7 @@
 
 https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
 
-Volar is a Language Support plugin built specifically for Vue 3. It's based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate TypeScript on-demand to optimize performance similar to the native TypeScript language service.
+Volar is a Language Support plugin built specifically for Vue 3. It's based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
 
 🛠️ This project is still in refactoring to make contributing easier.
 
@@ -37,6 +37,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 - [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
 - [Vitesse](https://github.com/antfu/vitesse)
+- [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
 ## Community's Language Client Implements
 
@@ -54,7 +55,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 ## Using
 
 <details>
-<summary>Setup Vue 2</summary>
+<summary>Setup for Vue 2</summary>
 
 1. Add `@vue/runtime-dom`
 
@@ -96,7 +97,7 @@ Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different
 </details>
 
 <details>
-<summary>Setup Vue 3</summary>
+<summary>Setup for Vue 3</summary>
 
 1. Add tsconfig.json / jsconfig.json if you don't have
 
@@ -140,11 +141,9 @@ export {}
 > - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 > - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
 
-> tsconfig.json / jsconfig.json is required.
+> tsconfig.json / jsconfig.json is required for now.
 >
 > Also required `"strict": true` and `"moduleResolution": "node"`.
-
-> `__VLS_slots` is planed to remove in future, see: [#40](https://github.com/johnsoncodehk/volar/discussions/40)
 
 > Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
 
