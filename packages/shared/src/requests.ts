@@ -87,14 +87,6 @@ export namespace WriteVirtualFilesNotification {
 	export const type = new rpc.NotificationType<ParamsType>('volar.action.writeVirtualFiles');
 }
 
-export namespace RestartServerNotification {
-	export type ParamsType = {
-		serverPath: string,
-		localizedPath: string | undefined,
-	} | undefined;
-	export const type = new rpc.NotificationType<ParamsType>('volar.action.restartServer');
-}
-
 export namespace DetectDocumentNameCasesRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = {

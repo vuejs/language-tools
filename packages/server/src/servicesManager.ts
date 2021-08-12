@@ -73,7 +73,6 @@ export function createServicesManager(
 		services,
 		getMatchService,
 		getMatchTsConfig,
-		restartAll,
 	};
 
 	async function getTsconfigProgress(tsconfigs: string[]) {
@@ -197,21 +196,6 @@ export function createServicesManager(
 				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 			}
 		}
-	}
-	async function restartAll() {
-		for (const doc of documents.all()) {
-			if (doc.languageId === 'vue') {
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
-			}
-		}
-		const tsConfigs = [...services.keys()];
-		progressMap.clear();
-		const progress = await getTsconfigProgress(tsConfigs);
-		clearDiagnostics();
-		for (const tsConfig of tsConfigs) {
-			updateLsHandler(tsConfig, progress[tsConfig]);
-		}
-		updateDocumentDiagnostics(undefined);
 	}
 	function getMatchService(uri: string) {
 		const tsConfig = getMatchTsConfig(uri);

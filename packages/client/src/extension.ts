@@ -10,7 +10,6 @@ import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
 import * as documentPrintWidth from './features/documentPrintWidth';
 import * as preview from './features/preview';
-import * as restart from './features/restart';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
 import * as tagClosing from './features/tagClosing';
@@ -30,23 +29,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	docClient = createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, 'file');
 	htmlClient = createLanguageService(context, 'html', 'volar-html', 'Volar - HTML', 6011, undefined);
 
-	for (const client of [apiClient, docClient, htmlClient]) {
-		showReferences.activate(context, client);
-		documentVersion.activate(context, client);
-		documentContent.activate(context, client);
-		documentPrintWidth.activate(context, client);
-		activeSelection.activate(context, apiClient);
-	}
+	const clients = [apiClient, docClient, htmlClient];
 
-	(async () => {
-		const getTagNameCase = await tagNameCase.activate(context, apiClient);
-		const getAttrNameCase = await attrNameCase.activate(context, apiClient);
-
-		apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
-			tagNameCase: getTagNameCase(handler.uri),
-			attrNameCase: getAttrNameCase(handler.uri),
-		}));
-	})();
+	registarRestartRequest();
+	registarClientRequests();
 
 	splitEditors.activate(context);
 	preview.activate(context);
@@ -56,11 +42,41 @@ export async function activate(context: vscode.ExtensionContext) {
 	verifyAll.activate(context, docClient);
 	virtualFiles.activate(context, docClient);
 	tagClosing.activate(context, htmlClient, apiClient);
-	restart.activate(context, [apiClient, docClient]);
 	tsPlugin.activate(context);
 	tsVersion.activate(context, [apiClient, docClient]);
 
 	startEmbeddedLanguageServices();
+
+	async function registarRestartRequest() {
+
+		await Promise.all(clients.map(client => client.onReady()));
+
+		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
+			await Promise.all(clients.map(client => client.stop()));
+			await Promise.all(clients.map(client => client.start()));
+			registarClientRequests();
+		}));
+	}
+	function registarClientRequests() {
+
+		for (const client of clients) {
+			showReferences.activate(context, client);
+			documentVersion.activate(context, client);
+			documentContent.activate(context, client);
+			documentPrintWidth.activate(context, client);
+			activeSelection.activate(context, client);
+		}
+
+		(async () => {
+			const getTagNameCase = await tagNameCase.activate(context, apiClient);
+			const getAttrNameCase = await attrNameCase.activate(context, apiClient);
+
+			apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
+				tagNameCase: getTagNameCase(handler.uri),
+				attrNameCase: getAttrNameCase(handler.uri),
+			}));
+		})();
+	}
 }
 
 export function deactivate(): Thenable<void> | undefined {

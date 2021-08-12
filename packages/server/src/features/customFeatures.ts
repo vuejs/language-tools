@@ -47,9 +47,6 @@ export function register(
 			progress.done();
 		}
 	});
-	connection.onNotification(shared.RestartServerNotification.type, async () => {
-		servicesManager.restartAll();
-	});
 	connection.onRequest(shared.GetRefCompleteEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;

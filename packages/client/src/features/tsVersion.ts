@@ -84,11 +84,16 @@ export async function activate(context: vscode.ExtensionContext, clients: Langua
 			statusBar.show();
 		}
 	}
-	function reloadServers() {
+	async function reloadServers() {
 		const tsPaths = getCurrentTsPaths(context);
 		for (const client of clients) {
-			client.sendNotification(shared.RestartServerNotification.type, tsPaths);
+			const newInitOptions: shared.ServerInitializationOptions = {
+				...client.clientOptions.initializationOptions,
+				typescript: tsPaths,
+			};
+			client.clientOptions.initializationOptions = newInitOptions;
 		}
+		vscode.commands.executeCommand('volar.action.restartServer');
 	}
 }
 

@@ -72,13 +72,6 @@ async function onInitialized() {
 		(await import('./features/languageFeatures')).register(loadTs().server, connection, documents, servicesManager, options.languageFeatures);
 		(await import('./registers/registerlanguageFeatures')).register(connection, options.languageFeatures, vue.getSemanticTokenLegend());
 
-		connection.onNotification(shared.RestartServerNotification.type, newTsOptions => {
-			if (newTsOptions) {
-				options.typescript.serverPath = newTsOptions.serverPath;
-				options.typescript.localizedPath = newTsOptions.localizedPath;
-			}
-			servicesManager.restartAll();
-		});
 		connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
 		updateConfigs(connection);
 	}
