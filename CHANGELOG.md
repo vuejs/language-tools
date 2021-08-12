@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.26.16
+
+- feat: improve pug conversion result ([#363](https://github.com/johnsoncodehk/volar/issues/363))
+- feat: improve `DocumentSymbolRequest` support
+- feat: support `SelectionRangeRequest`
+- fix: diagnostics do not report with open second vue document
+- fix: add missing `vscode-uri` dep ([#365](https://github.com/johnsoncodehk/volar/issues/365))
+- fix: "Delete all unused imports" code action not working
+- perf: faster split editors
+- perf: faster document update for html server
+- perf: move codeAction to api server to prevent codeAction request blocking by diagnostics when save + auto-formatting
+
+**`@volar/server` Breaking changes**
+
+- ServerInitializationOptions: features -> languageFeatures
+- ServerInitializationOptions: htmlFeatures -> documentFeatures
+- ServerInitializationOptions: move `selectionRange`, `documentSymbol`, `documentColor` to documentFeatures
+- remove `RestartServerNotification` (restart by client now)
+
 ## 0.26.15
 
 - feat: support GraphQL custom block
