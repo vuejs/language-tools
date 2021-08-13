@@ -18,7 +18,6 @@ import * as tsPlugin from './features/tsPlugin';
 import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
-import * as removeRefSugars from './features/removeRefSugars';
 
 let apiClient: lsp.LanguageClient;
 let docClient: lsp.LanguageClient;
@@ -38,7 +37,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	preview.activate(context);
 	createWorkspaceSnippets.activate(context);
 	callGraph.activate(context, apiClient);
-	removeRefSugars.activate(context, apiClient);
 	verifyAll.activate(context, docClient);
 	virtualFiles.activate(context, docClient);
 	tagClosing.activate(context, htmlClient, apiClient);

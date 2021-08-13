@@ -33,9 +33,6 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			result = result.concat(getHtmlResult(sourceFile));
 			result = result.concat(getPugResult(sourceFile));
 		}
-		if (options.scriptSetupTool) {
-			result = result.concat(getScriptSetupResult(sourceFile));
-		}
 
 		return result;
 
@@ -59,37 +56,6 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 						data,
 					});
 				}
-			}
-			return result;
-		}
-		function getScriptSetupResult(sourceFile: SourceFile) {
-			const result: vscode.CodeLens[] = [];
-			const descriptor = sourceFile.getDescriptor();
-			const data = sourceFile.getScriptSetupData();
-			if (descriptor.scriptSetup && data) {
-				result.push({
-					range: {
-						start: document.positionAt(descriptor.scriptSetup.loc.start),
-						end: document.positionAt(descriptor.scriptSetup.loc.end),
-					},
-					command: {
-						title: 'ref sugar ' + (data.labels.length ? '☑' : '☐'),
-						command: data.labels.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
-						arguments: [uri],
-					},
-				});
-			}
-			if (descriptor.scriptSetup && data?.labels.length) {
-				result.push({
-					range: {
-						start: document.positionAt(descriptor.scriptSetup.loc.start),
-						end: document.positionAt(descriptor.scriptSetup.loc.end),
-					},
-					command: {
-						title: '* label syntax dropped in vue 3.2 and volar 0.27, please use "Volar: Remove All Ref Sugars" command to convert all SFC',
-						command: '',
-					},
-				});
 			}
 			return result;
 		}

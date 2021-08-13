@@ -259,12 +259,6 @@
 					],
 					"componentTag": [
 						"support.class.component.vue"
-					],
-					"refLabel": [
-						"storage.type.vue"
-					],
-					"refVariable": [
-						"variable.ref"
 					]
 				}
 			}
@@ -278,11 +272,6 @@
 			{
 				"command": "volar.action.verifyAllScripts",
 				"title": "Verify All Scripts",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.removeRefSugars",
-				"title": "Remove All Ref Sugars in Project",
 				"category": "Volar"
 			},
 			{

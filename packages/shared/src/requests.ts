@@ -96,7 +96,3 @@ export namespace DetectDocumentNameCasesRequest {
 	export type ErrorType = never;
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getTagNameCaseServer');
 }
-
-export namespace RemoveAllRefSugars {
-	export const type = new rpc.NotificationType0('volar/removeAllRefSugars');
-}

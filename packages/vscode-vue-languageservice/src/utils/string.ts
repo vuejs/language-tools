@@ -4,7 +4,6 @@ export enum SearchTexts {
 	Props = '/* __VLS_.SearchTexts.Props */',
 	SetupReturns = '/* __VLS_.SearchTexts.SetupReturns */',
 	GlobalAttrs = '/* __VLS_.SearchTexts.GlobalAttrs */',
-	Ref = '/* __VLS_.SearchTexts.ref */',
 }
 
 export function replaceToComment(str: string, start: number, end: number) {

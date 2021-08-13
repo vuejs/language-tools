@@ -136,257 +136,27 @@ export function generate(
 	function writeScriptSetup() {
 		if (!scriptSetup)
 			return;
-		if (!scriptSetupRanges)
-			return;
 
-		const data = scriptSetupRanges;
-		const originalCode = scriptSetup.content;
-		let sourceCode = scriptSetup.content;
-
-		const labels = data.labels.sort((a, b) => a.start - b.start);
-		let tsOffset = 0;
-		for (const label of labels) {
-			mapSubText(tsOffset, label.start);
-			let first = true;
-
-			codeGen.addText(`{ `);
-			for (const binary of label.binarys) {
-				if (first) {
-					first = false;
-					codeGen.addText(`let `);
-				}
-				else {
-					codeGen.addText(`, `);
-				}
-				for (const v of binary.vars) {
-					(v as any)['teleportRange'] = {
-						start: codeGen.getText().length + v.start - binary.left.start,
-						end: codeGen.getText().length + v.end - binary.left.start,
-					};
-				}
-				codeGen.addCode(
-					originalCode.substring(binary.left.start, binary.left.end),
-					binary.left,
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'scriptSetup',
-						capabilities: {
-							completion: lsType === 'script',
-							definitions: lsType === 'script',
-							references: true,
-							semanticTokens: lsType === 'script',
-							rename: true,
-						},
-					},
-				);
-				if (binary.right) {
-					codeGen.addText(` = `);
-					mapSubText(binary.right.start, binary.right.end);
-				}
-			}
-			codeGen.addText(`; }\n`);
-
-			first = true;
-			for (const binary of label.binarys) {
-				if (first) {
-					first = false;
-					codeGen.addText(`const `);
-				}
-				else {
-					codeGen.addText(`, `);
-				}
-
-				let leftPos = binary.left.start;
-				for (const prop of binary.vars.sort((a, b) => a.start - b.start)) {
-					const propName = scriptSetup.content.substring(prop.start, prop.end);
-					codeGen.addText(originalCode.substring(leftPos, prop.start));
-					if (prop.isShortand) {
-						codeGen.addCode(
-							propName,
-							prop,
-							SourceMaps.Mode.Offset,
-							{
-								vueTag: 'scriptSetup',
-								capabilities: {
-									diagnostic: lsType === 'script',
-								},
-							},
-						);
-						codeGen.addText(`: `);
-					}
-					codeGen.addCode(
-						`__VLS_refs_${propName}`,
-						prop,
-						SourceMaps.Mode.Totally,
-						{
-							vueTag: 'scriptSetup',
-							capabilities: {
-								diagnostic: lsType === 'script',
-							},
-						},
-					);
-					leftPos = prop.end;
-				}
-				codeGen.addText(originalCode.substring(leftPos, binary.left.end));
-
-				if (binary.right) {
-					codeGen.addText(` = `);
-					codeGen.addText(originalCode.substring(binary.right.start, binary.right.end));
-				}
-			}
-			codeGen.addText(`;\n`);
-
-			for (const binary of label.binarys) {
-				for (const prop of binary.vars) {
-					const propName = scriptSetup.content.substring(prop.start, prop.end);
-					codeGen.addText(`let `);
-					const refVarRange = codeGen.addCode(
-						propName,
-						{
-							start: prop.start,
-							end: prop.end,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'scriptSetup',
-							capabilities: {
-								basic: lsType === 'script', // hover
-								references: true,
-								diagnostic: lsType === 'script',
-							},
-						},
-					);
-					codeGen.addText(` = (await import('vue')).unref(`);
-					if (binary.right) {
-						codeGen.addCode(
-							`__VLS_refs_${propName}`,
-							binary.right,
-							SourceMaps.Mode.Offset, // TODO
-							{
-								vueTag: 'scriptSetup',
-								capabilities: {},
-							},
-						);
-					}
-					else {
-						codeGen.addText(`__VLS_refs_${propName}`);
-					}
-					codeGen.addText(`); ${propName};\n`);
-
-					codeGen.addText(`const `);
-					const dollarRefVarRange = codeGen.addCode(
-						'$' + propName,
-						{
-							start: prop.start,
-							end: prop.end,
-						},
-						SourceMaps.Mode.Offset, // TODO
-						{
-							vueTag: 'scriptSetup',
-							capabilities: {
-								diagnostic: lsType === 'script',
-							},
-						},
-					);
-					codeGen.addText(` = (await import('vue')).ref(`);
-					if (binary.right) {
-						codeGen.addCode(
-							`__VLS_refs_${propName}`,
-							binary.right,
-							SourceMaps.Mode.Offset, // TODO
-							{
-								vueTag: 'scriptSetup',
-								capabilities: {},
-							},
-						);
-					}
-					else {
-						codeGen.addText(`__VLS_refs_${propName}`);
-					}
-					codeGen.addText(`); $${propName};\n`);
-
-					teleports.push({
-						mode: SourceMaps.Mode.Offset,
-						sourceRange: (prop as any)['teleportRange'],
-						mappedRange: refVarRange,
-						data: {
-							toSource: {
-								capabilities: {
-									rename: true,
-								},
-							},
-							toTarget: {
-								capabilities: {
-									rename: true,
-									references: true,
-								},
-							},
-						},
-					});
-					teleports.push({
-						mode: SourceMaps.Mode.Totally,
-						sourceRange: refVarRange,
-						mappedRange: dollarRefVarRange,
-						additional: [
-							{
-								mode: SourceMaps.Mode.Offset,
-								sourceRange: refVarRange,
-								mappedRange: {
-									start: dollarRefVarRange.start + 1, // remove $
-									end: dollarRefVarRange.end,
-								},
-							},
-						],
-						data: {
-							toTarget: {
-								editRenameText: newName => '$' + newName,
-								capabilities: {
-									references: true,
-									rename: true,
-								},
-							},
-							toSource: {
-								editRenameText: newName => newName.startsWith('$') ? newName.substr(1) : newName,
-								capabilities: {
-									references: true,
-									rename: true,
-								},
-							},
-						},
-					});
-				}
-			}
-
-			tsOffset = label.end;
-		}
-		mapSubText(tsOffset, sourceCode.length);
-
-		// TODO: remove in future
-		codeGen.addText(`\n// @ts-ignore\n`);
-		codeGen.addText(`ref${SearchTexts.Ref};\n`); // for execute auto import
-
-		function mapSubText(start: number, end: number) {
-			codeGen.addCode(
-				sourceCode.substring(start, end),
-				{
-					start,
-					end,
+		codeGen.addCode(
+			scriptSetup.content,
+			{
+				start: 0,
+				end: scriptSetup.content.length,
+			},
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: 'scriptSetup',
+				capabilities: {
+					basic: lsType === 'script',
+					references: true,
+					definitions: lsType === 'script',
+					diagnostic: lsType === 'script',
+					rename: true,
+					completion: lsType === 'script',
+					semanticTokens: lsType === 'script',
 				},
-				SourceMaps.Mode.Offset,
-				{
-					vueTag: 'scriptSetup',
-					capabilities: {
-						basic: lsType === 'script',
-						references: true,
-						definitions: lsType === 'script',
-						diagnostic: lsType === 'script',
-						rename: true,
-						completion: lsType === 'script',
-						semanticTokens: lsType === 'script',
-					},
-				},
-			);
-		}
+			},
+		);
 	}
 	function writeExportComponent() {
 		if (shouldPatchExportDefault) {
@@ -485,43 +255,6 @@ export function generate(
 							},
 						},
 					});
-				}
-			}
-			if (scriptSetupRanges && scriptSetup) {
-				for (const label of scriptSetupRanges.labels) {
-					for (const binary of label.binarys) {
-						for (const refVar of binary.vars) {
-							if (refVar.inRoot) {
-								const varName = scriptSetup.content.substring(refVar.start, refVar.end);
-								const templateSideRange = codeGen.addText(varName);
-								codeGen.addText(': ');
-								const scriptSideRange = codeGen.addText(varName);
-								codeGen.addText(', \n');
-
-								teleports.push({
-									sourceRange: scriptSideRange,
-									mappedRange: templateSideRange,
-									mode: SourceMaps.Mode.Offset,
-									data: {
-										toSource: {
-											capabilities: {
-												definitions: true,
-												references: true,
-												rename: true,
-											},
-										},
-										toTarget: {
-											capabilities: {
-												definitions: true,
-												references: true,
-												rename: true,
-											},
-										},
-									},
-								});
-							}
-						}
-					}
 				}
 			}
 			codeGen.addText(`};\n`);

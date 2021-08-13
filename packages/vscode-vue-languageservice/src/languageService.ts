@@ -37,7 +37,6 @@ import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
-import * as unrefSugar from './commands/unuseRefSugar';
 // context
 import * as fs from 'fs';
 import * as emmet from 'vscode-emmet-helper';
@@ -312,7 +311,6 @@ export function createLanguageService(
 			executeCommand: apiHook(executeCommand.register(context, references.register(context))),
 			detectTagNameCase: apiHook(tagNameCase.register(context)),
 			doRefAutoClose: apiHook(refAutoClose.register(context), false),
-			getUnrefSugarEdits: apiHook(unrefSugar.register(context, references.register(context)), false),
 		},
 	};
 

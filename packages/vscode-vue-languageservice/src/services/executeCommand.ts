@@ -4,8 +4,6 @@ import { execute as executeConvertTagNameCase } from '../commands/convertTagName
 import { execute as executeHtmlToPug } from '../commands/htmlToPug';
 import { execute as executePugToHtml } from '../commands/pugToHtml';
 import { execute as executeShowReferences } from '../commands/showReferences';
-import { execute as executeUnuseRefSugar } from '../commands/unuseRefSugar';
-import { execute as executeUseRefSugar } from '../commands/useRefSugar';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register(
@@ -27,12 +25,6 @@ export function register(
 
 		const document = sourceFile.getTextDocument();
 
-		if (command === Commands.USE_REF_SUGAR) {
-			await executeUseRefSugar(ts, document, sourceFile, connection, findReferences);
-		}
-		if (command === Commands.UNUSE_REF_SUGAR) {
-			await executeUnuseRefSugar(connection, context, uri, findReferences);
-		}
 		if (command === Commands.HTML_TO_PUG) {
 			await executeHtmlToPug(document, sourceFile, connection);
 		}

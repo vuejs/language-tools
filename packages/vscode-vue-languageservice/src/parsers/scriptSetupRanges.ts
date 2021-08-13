@@ -4,24 +4,7 @@ import type { TextRange } from './types';
 export type ScriptSetupRanges = ReturnType<typeof parseScriptSetupRanges>;
 
 export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
-	const labels: (TextRange & {
-		binarys: {
-			parent: TextRange,
-			vars: (TextRange & {
-				isShortand: boolean,
-				inRoot: boolean,
-			})[],
-			left: TextRange,
-			right: undefined | (TextRange & {
-				isComputedCall: boolean,
-				withoutAs: TextRange,
-				as: undefined | TextRange,
-			}),
-		}[],
-		label: TextRange,
-		parent: TextRange,
-	})[] = [];
-	const dollars: number[] = [];
+
 	let withDefaultsArg: TextRange | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
@@ -31,13 +14,11 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	const bindings = parseBindingRanges(ts, ast);
 
 	ast.forEachChild(node => {
-		visitNode(node, ast, true);
+		visitNode(node);
 	});
 
 	return {
-		labels,
 		bindings,
-		dollars,
 		withDefaultsArg,
 		propsRuntimeArg,
 		propsTypeArg,
@@ -48,35 +29,13 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
-	function visitNode(node: ts.Node, parent: ts.Node, inRoot: boolean) {
+	function visitNode(node: ts.Node) {
 		if (
-			ts.isIdentifier(node)
-			&& node.getText(ast).startsWith('$')
-		) {
-			dollars.push(node.getStart(ast));
-		}
-		if (
-			ts.isLabeledStatement(node)
-			&& node.label.getText(ast) === 'ref'
-			&& ts.isExpressionStatement(node.statement)
-		) {
-			labels.push({
-				..._getStartEnd(node),
-				label: _getStartEnd(node.label),
-				parent: _getStartEnd(parent),
-				binarys: findBinaryExpressions(node.statement.expression, inRoot),
-			});
-		}
-		else if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (
-				callText === 'defineProps'
-				|| callText === 'defineEmit' // TODO: remove this in future
-				|| callText === 'defineEmits'
-			) {
+			if (callText === 'defineProps' || callText === 'defineEmits') {
 				if (node.arguments.length) {
 					const runtimeArg = node.arguments[0];
 					if (callText === 'defineProps') {
@@ -103,100 +62,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 				}
 			}
 		}
-		node.forEachChild(child => visitNode(child, node, false));
-	}
-	function findBinaryExpressions(exp: ts.Expression, inRoot: boolean) {
-		const binaryExps: typeof labels[0]['binarys'] = [];
-		worker(exp);
-		return binaryExps;
-		function worker(node: ts.Expression, parenthesized?: ts.ParenthesizedExpression) {
-			if (ts.isIdentifier(node)) {
-				const range = _getStartEnd(node);
-				binaryExps.push({
-					vars: findLabelVars(node, inRoot),
-					left: range,
-					parent: range,
-					right: undefined,
-				});
-			}
-			else if (ts.isBinaryExpression(node)) {
-				let parent: ts.Node = parenthesized ?? node;
-				let right = node.right;
-				let rightWituoutAs = right;
-				let rightAs: ts.TypeNode | undefined;
-				if (ts.isAsExpression(node.right)) {
-					rightWituoutAs = node.right.expression;
-					rightAs = node.right.type;
-				}
-				const leftRange = _getStartEnd(node.left);
-				const rightRange = _getStartEnd(node.right);
-				const parentRange = _getStartEnd(parent);
-				if (parentRange.start <= leftRange.start && parentRange.end >= rightRange.end) { // fix `ref: in` #85
-					binaryExps.push({
-						vars: findLabelVars(node.left, inRoot),
-						left: leftRange,
-						right: {
-							...rightRange,
-							isComputedCall: ts.isCallExpression(node.right) && ts.isIdentifier(node.right.expression) && node.right.expression.getText(ast) === 'computed',
-							withoutAs: _getStartEnd(rightWituoutAs),
-							as: rightAs ? _getStartEnd(rightAs) : undefined,
-						},
-						parent: parentRange,
-					});
-				}
-			}
-			else if (ts.isParenthesizedExpression(node)) {
-				// unwrap (...)
-				worker(node.expression, parenthesized ?? node);
-			}
-		}
-	}
-	function findLabelVars(exp: ts.Expression, inRoot: boolean) {
-		const vars: typeof labels[0]['binarys'][0]['vars'] = [];
-		worker(exp);
-		return vars;
-		function worker(_node: ts.Node) {
-			if (ts.isIdentifier(_node)) {
-				vars.push({
-					isShortand: false,
-					inRoot,
-					..._getStartEnd(_node),
-				});
-			}
-			// { ? } = ...
-			else if (ts.isObjectLiteralExpression(_node)) {
-				for (const property of _node.properties) {
-					worker(property);
-				}
-			}
-			// [ ? ] = ...
-			else if (ts.isArrayLiteralExpression(_node)) {
-				for (const property of _node.elements) {
-					worker(property);
-				}
-			}
-			// { foo: ? } = ...
-			else if (ts.isPropertyAssignment(_node)) {
-				worker(_node.initializer);
-			}
-			// { e: f = 2 } = ...
-			else if (ts.isBinaryExpression(_node) && ts.isIdentifier(_node.left)) {
-				worker(_node.left);
-			}
-			// { foo } = ...
-			else if (ts.isShorthandPropertyAssignment(_node)) {
-				vars.push({
-					isShortand: true,
-					inRoot,
-					..._getStartEnd(_node.name),
-				});
-			}
-			// { ...? } = ...
-			// [ ...? ] = ...
-			else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
-				worker(_node.expression);
-			}
-		}
+		node.forEachChild(child => visitNode(child));
 	}
 }
 
@@ -248,56 +114,6 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 	}
 	function _findBindingVars(left: ts.BindingName) {
 		return findBindingVars(ts, left, sourceFile);
-	}
-}
-export function parseRefSugarRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
-	const refCalls: (TextRange & {
-		vars: TextRange[],
-		left: TextRange,
-		rightExpression: undefined | TextRange,
-		rightType: undefined | TextRange,
-	})[] = [];
-	const shorthandPropertys: TextRange[] = [];
-
-	ast.forEachChild(visitNode);
-
-	return {
-		refCalls,
-		shorthandPropertys,
-	};
-
-	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
-	}
-	function _findBindingVars(left: ts.BindingName) {
-		return findBindingVars(ts, left, ast);
-	}
-	function visitNode(node: ts.Node) {
-		if (
-			ts.isVariableDeclarationList(node)
-			&& node.declarations.length === 1
-			&& node.declarations[0].initializer
-			&& ts.isCallExpression(node.declarations[0].initializer)
-			&& ts.isIdentifier(node.declarations[0].initializer.expression)
-			&& ['ref', 'computed'].includes(node.declarations[0].initializer.expression.getText(ast))
-		) {
-			const declaration = node.declarations[0];
-			const refCall = node.declarations[0].initializer;
-			const isRef = refCall.expression.getText(ast) === 'ref';
-			const wrapContant = isRef ? (refCall.arguments.length ? refCall.arguments[0] : undefined) : refCall;
-			const wrapType = isRef && refCall.typeArguments?.length ? refCall.typeArguments[0] : undefined;
-			refCalls.push({
-				..._getStartEnd(node),
-				vars: _findBindingVars(declaration.name),
-				left: _getStartEnd(declaration.name),
-				rightExpression: wrapContant ? _getStartEnd(wrapContant) : undefined,
-				rightType: wrapType ? _getStartEnd(wrapType) : undefined,
-			});
-		}
-		else if (ts.isShorthandPropertyAssignment(node)) {
-			shorthandPropertys.push(_getStartEnd(node));
-		}
-		node.forEachChild(visitNode);
 	}
 }
 

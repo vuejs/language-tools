@@ -12,9 +12,6 @@ export function getSemanticTokenLegend() {
 	const tokenTypesLegend = [
 		...tsLegend.types,
 		'componentTag',
-		'refLabel',
-		'refVariable',
-		'refVariableRaw',
 	];
 	const semanticTokenLegend: vscode.SemanticTokensLegend = {
 		tokenTypes: tokenTypesLegend,
@@ -47,24 +44,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html 
 		let tokens: TokenData[] = [];
 
 		if (cancle?.isCancellationRequested) return;
-		const scriptSetupResult = getScriptSetupResult(sourceFile);
-		if (!cancle?.isCancellationRequested && scriptSetupResult.length) {
-			tokens = tokens.concat(scriptSetupResult);
-			resultProgress?.report(buildTokens(tokens));
-		}
-
-		if (cancle?.isCancellationRequested) return;
-		let scriptResult = getTsResult(sourceFile, 'script');
-		scriptResult = scriptResult.filter(tsToken => {
-			for (const setupToken of scriptSetupResult) {
-				if (setupToken[0] === tsToken[0]
-					&& setupToken[1] >= tsToken[1]
-					&& setupToken[2] <= tsToken[2]) {
-					return false;
-				}
-			}
-			return true;
-		});
+		const scriptResult = getTsResult(sourceFile, 'script');
 		if (!cancle?.isCancellationRequested && scriptResult.length) {
 			tokens = tokens.concat(scriptResult);
 			resultProgress?.report(buildTokens(tokens));
@@ -98,19 +78,6 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html 
 			}
 
 			return builder.build();
-		}
-		function getScriptSetupResult(sourceFile: SourceFile) {
-			const result: TokenData[] = [];
-			const scriptSetupGen = sourceFile.getScriptSetupData();
-			const scriptSetup = sourceFile.getDescriptor().scriptSetup;
-			if (scriptSetupGen && scriptSetup) {
-				const genData = scriptSetupGen;
-				for (const label of genData.labels) {
-					const labelPos = document.positionAt(scriptSetup.loc.start + label.label.start);
-					result.push([labelPos.line, labelPos.character, label.label.end - label.label.start + 1, tokenTypes.get('refLabel') ?? -1, undefined]);
-				}
-			}
-			return result;
 		}
 		function getTsResult(sourceFile: SourceFile, lsType: 'script' | 'template') {
 			const result: TokenData[] = [];
