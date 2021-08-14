@@ -72,8 +72,7 @@ export function useSfcScriptGen(
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: lsType === 'script',
-				codeActions: lsType === 'script',
-				organizeImports: !script.value?.src && !scriptSetup.value,
+				codeActions: !script.value?.src && lsType === 'script',
 			},
 			codeGen.value.getMappings(parseMappingSourceRange),
 		);

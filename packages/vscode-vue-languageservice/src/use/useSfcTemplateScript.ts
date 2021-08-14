@@ -250,7 +250,6 @@ export function useSfcTemplateScript(
 					formatting: false,
 					documentSymbol: false,
 					codeActions: false,
-					organizeImports: false,
 				},
 				data.value.getMappings(parseMappingSourceRange),
 			);
@@ -297,7 +296,6 @@ export function useSfcTemplateScript(
 					formatting: true,
 					documentSymbol: false,
 					codeActions: false,
-					organizeImports: false,
 				},
 				templateCodeGens.value.formatCodeGen.getMappings(parseMappingSourceRange),
 			);

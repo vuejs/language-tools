@@ -55,7 +55,6 @@ export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 			formatting: boolean,
 			documentSymbol: boolean,
 			codeActions: boolean,
-			organizeImports: boolean,
 		},
 		mappings?: SourceMaps.Mapping<TsMappingData>[],
 	) {

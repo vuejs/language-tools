@@ -64,7 +64,6 @@ export function useSfcEntryForTemplateLs(
 				formatting: false,
 				documentSymbol: false,
 				codeActions: false,
-				organizeImports: false,
 			});
 			sourceMap.add({
 				data: {

@@ -40,13 +40,6 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!tsCodeActions)
 				continue;
 
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.organizeImports) {
-				tsCodeActions = tsCodeActions.filter(codeAction =>
-					codeAction.kind !== vscode.CodeActionKind.SourceOrganizeImports
-					&& codeAction.kind !== vscode.CodeActionKind.SourceFixAll
-				);
-			}
-
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 

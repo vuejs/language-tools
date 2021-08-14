@@ -31,7 +31,6 @@ export function useSfcScript(
 				formatting: true,
 				documentSymbol: false,
 				codeActions: false,
-				organizeImports: false,
 			});
 			sourceMap.add({
 				data: {
