@@ -4,8 +4,10 @@ import { execute as executeConvertTagNameCase } from '../commands/convertTagName
 import { execute as executeHtmlToPug } from '../commands/htmlToPug';
 import { execute as executePugToHtml } from '../commands/pugToHtml';
 import { execute as executeShowReferences } from '../commands/showReferences';
-import * as unuseRefSugar from '../commands/unuseRefSugar';
+import * as useSetupSugar from '../commands/useSetupSugar';
+import * as unuseSetupSugar from '../commands/unuseSetupSugar';
 import * as useRefSugar from '../commands/useRefSugar';
+import * as unuseRefSugar from '../commands/unuseRefSugar';
 import type { ApiLanguageServiceContext } from '../types';
 import * as references from '../services/references';
 
@@ -13,6 +15,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 	const { sourceFiles } = context;
 	const findReferences = references.register(context);
+	const doUseSetupSugar = useSetupSugar.register(context);
+	const doUnuseSetupSugar = unuseSetupSugar.register(context);
 	const doUseRefSugar = useRefSugar.register(context);
 	const doUnuseRefSugar = unuseRefSugar.register(context);
 
@@ -20,6 +24,12 @@ export function register(context: ApiLanguageServiceContext) {
 
 		if (command === Commands.SHOW_REFERENCES && args) {
 			await executeShowReferences(args[0], args[1], args[2], connection);
+		}
+		if (command === Commands.USE_SETUP_SUGAR) {
+			await doUseSetupSugar(connection, uri);
+		}
+		if (command === Commands.UNUSE_SETUP_SUGAR) {
+			await doUnuseSetupSugar(connection, uri);
 		}
 		if (command === Commands.USE_REF_SUGAR) {
 			await doUseRefSugar(connection, uri);

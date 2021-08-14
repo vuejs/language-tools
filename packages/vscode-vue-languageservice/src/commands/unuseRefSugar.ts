@@ -86,7 +86,6 @@ export function register(context: ApiLanguageServiceContext) {
 			for (const error of errors) {
 				const errorText = document.getText(error.range);
 				if (error.code === 2339 && errorText === 'value') {
-					console.log(error.range);
 					edits.push(vscode.TextEdit.del({
 						start: {
 							line: error.range.start.line,

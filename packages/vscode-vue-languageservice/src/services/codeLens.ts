@@ -34,7 +34,8 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			result = result.concat(getPugResult(sourceFile));
 		}
 		if (options.scriptSetupTool) {
-			result = result.concat(getScriptSetupResult(sourceFile));
+			result = result.concat(getScriptSetupConvertConvert(sourceFile));
+			result = result.concat(getRefSugarConvert(sourceFile));
 		}
 
 		return result;
@@ -62,7 +63,43 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			}
 			return result;
 		}
-		function getScriptSetupResult(sourceFile: SourceFile) {
+		function getScriptSetupConvertConvert(sourceFile: SourceFile) {
+
+			const ranges = sourceFile.getSfcRefSugarRanges();
+			if (ranges?.refs.length)
+				return [];
+
+			const result: vscode.CodeLens[] = [];
+			const descriptor = sourceFile.getDescriptor();
+			if (descriptor.scriptSetup) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.loc.start),
+						end: document.positionAt(descriptor.scriptSetup.loc.end),
+					},
+					command: {
+						title: 'setup sugar ☑',
+						command: Commands.UNUSE_SETUP_SUGAR,
+						arguments: [uri],
+					},
+				});
+			}
+			else if (descriptor.script) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.script.loc.start),
+						end: document.positionAt(descriptor.script.loc.end),
+					},
+					command: {
+						title: 'setup sugar ☐',
+						command: Commands.USE_SETUP_SUGAR,
+						arguments: [uri],
+					},
+				});
+			}
+			return result;
+		}
+		function getRefSugarConvert(sourceFile: SourceFile) {
 			const result: vscode.CodeLens[] = [];
 			const descriptor = sourceFile.getDescriptor();
 			const ranges = sourceFile.getSfcRefSugarRanges();

@@ -73,6 +73,8 @@ export function register(
 			commands: [
 				vue.Commands.HTML_TO_PUG,
 				vue.Commands.PUG_TO_HTML,
+				vue.Commands.USE_SETUP_SUGAR,
+				vue.Commands.UNUSE_SETUP_SUGAR,
 				vue.Commands.USE_REF_SUGAR,
 				vue.Commands.UNUSE_REF_SUGAR,
 				vue.Commands.SHOW_REFERENCES,
