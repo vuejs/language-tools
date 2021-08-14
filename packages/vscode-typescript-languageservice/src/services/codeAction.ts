@@ -44,34 +44,40 @@ export function register(
 		let result: vscode.CodeAction[] = [];
 
 		for (const error of context.diagnostics) {
-			const codeFixes = languageService.getCodeFixesAtPosition(
-				fileName,
-				document.offsetAt(error.range.start),
-				document.offsetAt(error.range.end),
-				[Number(error.code)],
-				formatOptions,
-				preferences,
-			);
-			for (const codeFix of codeFixes) {
-				result = result.concat(transformCodeFix(codeFix, [error]));
-			}
+			try {
+				const codeFixes = languageService.getCodeFixesAtPosition(
+					fileName,
+					document.offsetAt(error.range.start),
+					document.offsetAt(error.range.end),
+					[Number(error.code)],
+					formatOptions,
+					preferences,
+				);
+				for (const codeFix of codeFixes) {
+					result = result.concat(transformCodeFix(codeFix, [error]));
+				}
+			} catch { }
 		}
 
 		if (context.only) {
 			for (const only of context.only) {
 				if (only.split('.')[0] === vscode.CodeActionKind.Refactor) {
-					const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, only);
-					for (const refactor of refactors) {
-						result = result.concat(transformRefactor(refactor));
-					}
+					try {
+						const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, only);
+						for (const refactor of refactors) {
+							result = result.concat(transformRefactor(refactor));
+						}
+					} catch { }
 				}
 			}
 		}
 		else {
-			const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, undefined);
-			for (const refactor of refactors) {
-				result = result.concat(transformRefactor(refactor));
-			}
+			try {
+				const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, undefined);
+				for (const refactor of refactors) {
+					result = result.concat(transformRefactor(refactor));
+				}
+			} catch { }
 		}
 
 		if (matchOnlyKind(vscode.CodeActionKind.SourceOrganizeImports)) {
