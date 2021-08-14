@@ -5,17 +5,18 @@ import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
+import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
 import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from './types';
-import { SearchTexts } from './utils/string';
-import { untrack } from './utils/untrack';
+import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
 import { useSfcScript } from './use/useSfcScript';
+import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
 import { useSfcTemplate } from './use/useSfcTemplate';
-import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
-import { useSfcScriptGen } from './use/useSfcScriptGen';
-import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
+import { useSfcTemplateScript } from './use/useSfcTemplateScript';
+import { SearchTexts } from './utils/string';
+import { untrack } from './utils/untrack';
 
 export const defaultLanguages = {
 	template: 'html',
@@ -142,6 +143,10 @@ export function createSourceFile(
 		sfcScriptForScriptLs.lang,
 		context,
 	);
+	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
+		refs: parseRefSugarDeclarationRanges(context.modules.typescript, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
+		raws: parseRefSugarCallRanges(context.modules.typescript, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
+	} : undefined));
 
 	// getters
 	const cssLsDocuments = computed(() => [
@@ -208,6 +213,7 @@ export function createSourceFile(
 			document: sfcTemplateScript.textDocumentForFormatting.value,
 			sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
 		})),
+		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 
 		refs: {
 			document,

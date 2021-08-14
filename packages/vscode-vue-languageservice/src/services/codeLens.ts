@@ -33,6 +33,9 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			result = result.concat(getHtmlResult(sourceFile));
 			result = result.concat(getPugResult(sourceFile));
 		}
+		if (options.scriptSetupTool) {
+			result = result.concat(getScriptSetupResult(sourceFile));
+		}
 
 		return result;
 
@@ -56,6 +59,25 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 						data,
 					});
 				}
+			}
+			return result;
+		}
+		function getScriptSetupResult(sourceFile: SourceFile) {
+			const result: vscode.CodeLens[] = [];
+			const descriptor = sourceFile.getDescriptor();
+			const ranges = sourceFile.getSfcRefSugarRanges();
+			if (descriptor.scriptSetup && ranges) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.loc.start),
+						end: document.positionAt(descriptor.scriptSetup.loc.end),
+					},
+					command: {
+						title: 'ref sugar (take 2) ' + (ranges.refs.length ? '☑' : '☐'),
+						command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
+						arguments: [uri],
+					},
+				});
 			}
 			return result;
 		}

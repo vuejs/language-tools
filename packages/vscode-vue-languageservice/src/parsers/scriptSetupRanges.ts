@@ -117,7 +117,7 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 	}
 }
 
-function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrary'), left: ts.BindingName, sourceFile: ts.SourceFile) {
+export function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrary'), left: ts.BindingName, sourceFile: ts.SourceFile) {
 	const vars: TextRange[] = [];
 	worker(left);
 	return vars;
@@ -149,6 +149,7 @@ function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrary'), le
 		}
 	}
 }
+
 export function getStartEnd(node: ts.Node, sourceFile: ts.SourceFile) {
 	// TODO: high cost
 	const start = node.getStart(sourceFile);

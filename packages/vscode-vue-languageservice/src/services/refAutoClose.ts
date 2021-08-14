@@ -25,7 +25,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 				continue;
 
 			const sourceFile = getAst(tsDoc);
-			if (isBlacklistNode(sourceFile, tsDoc.offsetAt(tsLoc.range.start)))
+			if (isBlacklistNode(ts, sourceFile, tsDoc.offsetAt(tsLoc.range.start)))
 				continue;
 
 			const typeDefs = tsLs.findTypeDefinition(tsLoc.uri, tsLoc.range.start);
@@ -43,43 +43,43 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 		}
 		return ast;
 	}
-	function isBlacklistNode(node: ts.Node, pos: number) {
-		if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
-			return true;
-		}
-		else if (ts.isFunctionDeclaration(node) && node.name && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
-			return true;
-		}
-		else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
-			return true;
-		}
-		else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
-			return true;
-		}
-		else if (ts.isShorthandPropertyAssignment(node)) {
-			return true;
-		}
-		else if (ts.isImportDeclaration(node)) {
-			return true;
-		}
-		else if (ts.isLiteralTypeNode(node)) {
-			return true;
-		}
-		else {
-			let _isBlacklistNode = false;
-			node.forEachChild(node => {
-				if (_isBlacklistNode) return;
-				if (pos >= node.getFullStart() && pos <= node.getEnd()) {
-					if (isBlacklistNode(node, pos)) {
-						_isBlacklistNode = true;
-					}
-				}
-			});
-			return _isBlacklistNode;
-		}
-	}
 }
 
+export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number) {
+	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+		return true;
+	}
+	else if (ts.isFunctionDeclaration(node) && node.name && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+		return true;
+	}
+	else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+		return true;
+	}
+	else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+		return true;
+	}
+	else if (ts.isShorthandPropertyAssignment(node)) {
+		return true;
+	}
+	else if (ts.isImportDeclaration(node)) {
+		return true;
+	}
+	else if (ts.isLiteralTypeNode(node)) {
+		return true;
+	}
+	else {
+		let _isBlacklistNode = false;
+		node.forEachChild(node => {
+			if (_isBlacklistNode) return;
+			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
+				if (isBlacklistNode(ts, node, pos)) {
+					_isBlacklistNode = true;
+				}
+			}
+		});
+		return _isBlacklistNode;
+	}
+}
 export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageService) {
 	for (const typeDefine of typeDefs) {
 		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;

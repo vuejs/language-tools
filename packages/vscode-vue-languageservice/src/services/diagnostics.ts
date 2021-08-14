@@ -17,7 +17,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 	return async (uri: string, response: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 		const sourceFile = sourceFiles.get(uri);
-
 		if (!sourceFile)
 			return;
 
@@ -26,7 +25,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			worker = untrack(useDiagnostics(sourceFile));
 			workers.set(sourceFile, worker);
 		}
-		worker(response, isCancel);
+
+		return await worker(response, isCancel);
 	};
 
 	function useDiagnostics(sourceFile: SourceFile) {
@@ -51,8 +51,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		const templateTsProjectVersion = ref<string>();
 		const scriptTsProjectVersion = ref<string>();
-
-		const tsOptions = templateTsLs.__internal__.host.getCompilationSettings();
 
 		const nonTs: [{
 			result: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
@@ -110,6 +108,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			}
 
 			let isDirty = false;
+			let lastResponse: vscode.Diagnostic[] | undefined;
 
 			for (let i = 0; i < all.length; i++) {
 				if (await isCancel?.()) return;
@@ -147,9 +146,12 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					))
 				) {
 					isDirty = false;
-					response(dedupe.withDiagnostics(newErrors.concat(oldErrors)));
+					lastResponse = dedupe.withDiagnostics(newErrors.concat(oldErrors));
+					response(lastResponse);
 				}
 			}
+
+			return lastResponse;
 
 			function isErrorsDirty(oldErrors: vscode.Diagnostic[], newErrors: vscode.Diagnostic[]) {
 				return !shared.eqSet(errorsToKeys(oldErrors), errorsToKeys(newErrors));
