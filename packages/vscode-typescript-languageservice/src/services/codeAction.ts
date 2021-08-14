@@ -21,7 +21,13 @@ export interface RefactorData {
 	range: { pos: number, end: number },
 }
 
-export type Data = FixAllData | RefactorData;
+export interface OrganizeImportsData {
+	type: 'organizeImports',
+	uri: string,
+	fileName: string,
+}
+
+export type Data = FixAllData | RefactorData | OrganizeImportsData;
 
 export function register(
 	languageService: ts.LanguageService,
@@ -81,13 +87,14 @@ export function register(
 		}
 
 		if (matchOnlyKind(vscode.CodeActionKind.SourceOrganizeImports)) {
-			const changes = languageService.organizeImports({ type: 'file', fileName: fileName }, formatOptions, preferences);
-			const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
-			result.push(vscode.CodeAction.create(
-				'Organize Imports',
-				edit,
-				vscode.CodeActionKind.SourceOrganizeImports,
-			));
+			const action = vscode.CodeAction.create('Organize Imports', vscode.CodeActionKind.SourceOrganizeImports);
+			const data: OrganizeImportsData = {
+				type: 'organizeImports',
+				uri,
+				fileName,
+			};
+			action.data = data;
+			result.push(action);
 		}
 
 		if (matchOnlyKind(`${vscode.CodeActionKind.SourceFixAll}.ts`)) {
@@ -144,7 +151,9 @@ export function register(
 		}
 
 		for (const codeAction of result) {
-			codeAction.diagnostics = context.diagnostics;
+			if (codeAction.diagnostics === undefined) {
+				codeAction.diagnostics = context.diagnostics;
+			}
 		}
 
 		return result;

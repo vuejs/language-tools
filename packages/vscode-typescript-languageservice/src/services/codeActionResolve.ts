@@ -33,10 +33,13 @@ export function register(
 			const editInfo = languageService.getEditsForRefactor(data.fileName, formatOptions, data.range, data.refactorName, data.actionName, preferences);
 			if (editInfo) {
 				const edit = fileTextChangesToWorkspaceEdit(editInfo.edits, getTextDocument);
-				// TODO: renameFilename
-				// TODO: renameLocation
 				codeAction.edit = edit;
 			}
+		}
+		else if (data?.type === 'organizeImports') {
+			const changes = languageService.organizeImports({ type: 'file', fileName: data.fileName }, formatOptions, preferences);
+			const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
+			codeAction.edit = edit;
 		}
 
 		return codeAction;
