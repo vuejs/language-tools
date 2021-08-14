@@ -166,7 +166,6 @@ export function generate(
 	function writeExportComponent() {
 		if (shouldAddExportDefault) {
 			const start = codeGen.getText().length;
-			codeGen.addText(`\n`);
 			codeGen.addText(`export default __VLS_defineComponent({\n`);
 			overlapMapRanges.push({
 				start,
@@ -268,8 +267,7 @@ export function generate(
 			codeGen.addText(`},\n`);
 		}
 
-		codeGen.addText(`});`);
-		codeGen.addText(`\n`);
+		codeGen.addText(`});\n`);
 
 		function mapSubText(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
 			for (const mapping of codeGen.getMappings()) {

@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import * as vscode from 'vscode-languageserver';
 import * as shared from '@volar/shared';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'upath';
 import { renameInfoOptions } from './prepareRename';
 import type { LanguageServiceHost } from '../';
@@ -79,11 +79,13 @@ export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChan
 		}
 
 		const uri = shared.fsPathToUri(change.fileName);
+		let doc = getTextDocument(uri);
+
 		if (change.isNewFile) {
 			workspaceEdit.documentChanges.push(vscode.CreateFile.create(uri));
+			doc = TextDocument.create(uri, 'typescript', 0, '');
 		}
 
-		const doc = getTextDocument(uri);
 		if (!doc)
 			continue;
 
