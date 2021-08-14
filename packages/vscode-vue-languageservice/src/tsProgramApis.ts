@@ -59,16 +59,6 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 				&& diagnostic.length !== undefined
 			) {
 				const fileName = shared.normalizeFileName(tsLsHost.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
-				let checkMode: 'all' | 'none' | 'unused' = 'all';
-				if (mode) {
-					const uri = shared.fsPathToUri(fileName);
-					const vueSourceFile = sourceFiles.getSourceFileByTsUri(lsType, uri);
-					if (vueSourceFile) {
-						checkMode = vueSourceFile.shouldVerifyTsScript(templateTsHost, uri, mode);
-					}
-				}
-				if (checkMode === 'none') continue;
-				if (checkMode === 'unused' && !(diagnostic as ts.Diagnostic).reportsUnnecessary) continue;
 				for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
 					lsType,
 					shared.fsPathToUri(fileName),

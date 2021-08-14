@@ -53,7 +53,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		const scriptTsProjectVersion = ref<string>();
 
 		const tsOptions = templateTsLs.__internal__.host.getCompilationSettings();
-		const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
 
 		const nonTs: [{
 			result: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
@@ -78,9 +77,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		}, number, vscode.Diagnostic[]][] = [
 				[useScriptValidation(sfcScriptForScriptLs.textDocument, 1), 0, []],
 				[useScriptValidation(sfcScriptForScriptLs.textDocument, 2), 0, []],
-				[useScriptValidation(computed(() => sfcScriptForScriptLs.textDocumentForSuggestion.value ?? sfcScriptForScriptLs.textDocument.value), 3), 0, []],
+				[useScriptValidation(sfcScriptForScriptLs.textDocument, 3), 0, []],
 				// [useScriptValidation(virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
-				[useScriptValidation(computed(() => anyNoUnusedEnabled ? sfcScriptForScriptLs.textDocumentForSuggestion.value : undefined), 1, true), 0, []],
 			];
 
 		return async (response: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {

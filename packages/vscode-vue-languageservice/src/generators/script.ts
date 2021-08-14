@@ -1,9 +1,10 @@
 import { createCodeGen } from '@volar/code-gen';
+import { hyphenate } from '@vue/shared';
+import * as path from 'upath';
+import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import * as SourceMaps from '../utils/sourceMaps';
-import { SearchTexts } from '../utils/string';
-import * as path from 'upath';
 
 export function generate(
 	lsType: 'template' | 'script',
@@ -17,18 +18,22 @@ export function generate(
 	},
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
+	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 ) {
 
 	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
-	const shouldPatchExportDefault = lsType === 'script' && (!script || !!scriptSetup);
+	const shouldAddExportDefault = lsType === 'script' && (!script || !!scriptSetup);
 	const overlapMapRanges: SourceMaps.Range[] = [];
 
 	writeScriptSrc();
 	writeScript();
 	writeScriptSetup();
 
-	if (lsType === 'template' || shouldPatchExportDefault)
+	if (lsType === 'script')
+		writeTemplate();
+
+	if (lsType === 'template' || shouldAddExportDefault)
 		writeExportComponent();
 
 	if (lsType === 'template') {
@@ -105,7 +110,7 @@ export function generate(
 			return;
 
 		let addText = script.content;
-		if (shouldPatchExportDefault && scriptRanges?.exportDefault) {
+		if (shouldAddExportDefault && scriptRanges?.exportDefault) {
 			const insteadOfExport = 'await ';
 			const newStart = scriptRanges.exportDefault.start + insteadOfExport.length;
 			addText = addText.substr(0, scriptRanges.exportDefault.start)
@@ -159,7 +164,7 @@ export function generate(
 		);
 	}
 	function writeExportComponent() {
-		if (shouldPatchExportDefault) {
+		if (shouldAddExportDefault) {
 			const start = codeGen.getText().length;
 			codeGen.addText(`\n`);
 			codeGen.addText(`export default __VLS_defineComponent({\n`);
@@ -226,35 +231,37 @@ export function generate(
 			}
 			codeGen.addText(`setup() {\n`);
 			codeGen.addText(`return {\n`);
-			for (const { bindings, content, vueTag } of bindingsArr) {
-				for (const expose of bindings) {
-					const varName = content.substring(expose.start, expose.end);
-					const templateSideRange = codeGen.addText(varName);
-					codeGen.addText(`: `);
-					const scriptSideRange = codeGen.addText(varName);
-					codeGen.addText(',\n');
+			if (lsType === 'template') {
+				for (const { bindings, content } of bindingsArr) {
+					for (const expose of bindings) {
+						const varName = content.substring(expose.start, expose.end);
+						const templateSideRange = codeGen.addText(varName);
+						codeGen.addText(`: `);
+						const scriptSideRange = codeGen.addText(varName);
+						codeGen.addText(',\n');
 
-					teleports.push({
-						sourceRange: scriptSideRange,
-						mappedRange: templateSideRange,
-						mode: SourceMaps.Mode.Offset,
-						data: {
-							toSource: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
+						teleports.push({
+							sourceRange: scriptSideRange,
+							mappedRange: templateSideRange,
+							mode: SourceMaps.Mode.Offset,
+							data: {
+								toSource: {
+									capabilities: {
+										definitions: true,
+										references: true,
+										rename: true,
+									},
+								},
+								toTarget: {
+									capabilities: {
+										definitions: true,
+										references: true,
+										rename: true,
+									},
 								},
 							},
-							toTarget: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
-							},
-						},
-					});
+						});
+					}
 				}
 			}
 			codeGen.addText(`};\n`);
@@ -399,5 +406,30 @@ export function generate(
 		else {
 			codeGen.addText(`export const __VLS_name = undefined;\n`);
 		}
+	}
+	function writeTemplate() {
+		if (!scriptSetup)
+			return;
+		if (!htmlGen)
+			return;
+
+		let bindingNames: string[] = [];
+
+		if (scriptSetupRanges) {
+			bindingNames = bindingNames.concat(scriptSetupRanges.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? ''));
+		}
+		if (scriptRanges) {
+			bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
+		}
+
+		codeGen.addText('{\n');
+		for (const varName of bindingNames) {
+			if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
+				// fix import components unused report
+				codeGen.addText(varName + ';\n');
+			}
+		}
+		codeGen.addText(htmlGen.text);
+		codeGen.addText('}\n');
 	}
 }

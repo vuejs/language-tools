@@ -159,7 +159,6 @@ export function createSourceFile(
 	].filter(shared.notEmpty));
 	const scriptLsSourceMaps = computed(() => [
 		sfcScriptForScriptLs.sourceMap.value,
-		sfcScriptForScriptLs.sourceMapForSuggestion.value,
 	].filter(shared.notEmpty));
 	const templateLsDocuments = computed(() => [
 		sfcEntryForTemplateLs.textDocument.value,
@@ -168,7 +167,6 @@ export function createSourceFile(
 	].filter(shared.notEmpty));
 	const scriptLsDocuments = computed(() => [
 		sfcScriptForScriptLs.textDocument.value,
-		sfcScriptForScriptLs.textDocumentForSuggestion.value,
 	].filter(shared.notEmpty));
 	const tsSourceMaps = computed(() => [
 		sfcScriptForScriptLs.sourceMap.value,
@@ -210,7 +208,6 @@ export function createSourceFile(
 			document: sfcTemplateScript.textDocumentForFormatting.value,
 			sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
 		})),
-		shouldVerifyTsScript: untrack(shouldVerifyTsScript),
 
 		refs: {
 			document,
@@ -452,25 +449,5 @@ export function createSourceFile(
 		templateScriptData.componentItems = components;
 		sfcTemplateScript.update(); // TODO
 		return true;
-	}
-	function shouldVerifyTsScript(templateTsHost: ts.LanguageServiceHost, tsUri: string, mode: 1 | 2 | 3 | 4): 'all' | 'none' | 'unused' {
-		if (tsUri.toLowerCase() === sfcScriptForTemplateLs.textDocumentForSuggestion.value?.uri.toLowerCase()) {
-			if (mode === 3) {
-				return 'all';
-			}
-			if (mode === 1) {
-				const tsOptions = templateTsHost.getCompilationSettings();
-				const anyNoUnusedEnabled = tsOptions.noUnusedLocals || tsOptions.noUnusedParameters;
-				return anyNoUnusedEnabled ? 'unused' : 'none';
-			}
-			return 'none';
-		}
-		if (tsUri.toLowerCase() === sfcScriptForTemplateLs.textDocument.value?.uri.toLowerCase()) {
-			if (mode === 3) {
-				return !sfcScriptForTemplateLs.textDocumentForSuggestion.value ? 'all' : 'none';
-			}
-			return 'all';
-		}
-		return 'all';
 	}
 }

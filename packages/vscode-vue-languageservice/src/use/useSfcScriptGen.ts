@@ -6,7 +6,6 @@ import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/s
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { generate as genScript } from '../generators/script';
-import { generate as genScriptSuggestion } from '../generators/script_suggestion';
 import * as templateGen from '../generators/template_scriptSetup';
 
 export function useSfcScriptGen(
@@ -41,6 +40,7 @@ export function useSfcScriptGen(
 			scriptSetup.value,
 			scriptRanges.value,
 			scriptSetupRanges.value,
+			htmlGen.value,
 		)
 	);
 	const htmlGen = computed(() => {
@@ -48,15 +48,6 @@ export function useSfcScriptGen(
 			return templateGen.generate(sfcTemplateCompileResult.value.ast);
 		}
 	})
-	const suggestionCodeGen = computed(() =>
-		genScriptSuggestion(
-			script.value,
-			scriptSetup.value,
-			scriptRanges.value,
-			scriptSetupRanges.value,
-			htmlGen.value,
-		)
-	);
 	const lang = computed(() => {
 		return !script.value && !scriptSetup.value ? 'ts'
 			: scriptSetup.value && scriptSetup.value.lang !== 'js' ? shared.getValidScriptSyntax(scriptSetup.value.lang)
@@ -69,17 +60,6 @@ export function useSfcScriptGen(
 			shared.syntaxToLanguageId(lang.value),
 			version++,
 			codeGen.value.getText(),
-		);
-	});
-	const textDocumentForSuggestion = computed(() => {
-		if (!suggestionCodeGen.value)
-			return;
-
-		return TextDocument.create(
-			`${uri}.__VLS_script.suggestion.${lang.value}`,
-			shared.syntaxToLanguageId(lang.value),
-			version++,
-			suggestionCodeGen.value.getText(),
 		);
 	});
 	const sourceMap = computed(() => {
@@ -100,29 +80,6 @@ export function useSfcScriptGen(
 
 		return sourceMap;
 	});
-	const sourceMapForSuggestion = computed(() => {
-		if (!suggestionCodeGen.value)
-			return;
-		if (!textDocumentForSuggestion.value)
-			return;
-
-		const sourceMap = new TsSourceMap(
-			vueDoc.value,
-			textDocumentForSuggestion.value,
-			lsType,
-			false,
-			{
-				foldingRanges: false,
-				formatting: false,
-				documentSymbol: false,
-				codeActions: lsType === 'script',
-				organizeImports: lsType === 'script',
-			},
-			suggestionCodeGen.value.getMappings(parseMappingSourceRange),
-		);
-
-		return sourceMap;
-	});
 	const teleportSourceMap = computed(() => {
 		const doc = textDocument.value;
 		const sourceMap = new TeleportSourceMap(doc, false);
@@ -137,9 +94,7 @@ export function useSfcScriptGen(
 		lang,
 		scriptSetupRanges,
 		textDocument,
-		textDocumentForSuggestion,
 		sourceMap,
-		sourceMapForSuggestion,
 		teleportSourceMap,
 	};
 
