@@ -128,14 +128,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 			for (const editUri in tsResult.changes) {
 				const textEdits = tsResult.changes[editUri];
 				for (const textEdit of textEdits) {
-					if (
-						textEdit.newText !== newName
-						&& textEdit.newText.indexOf(':') >= 0
-						&& textEdit.newText.split(':')[0] === newName
-					) {
-						// TODO: patching foo => bar: foo
-						continue;
-					}
+
 					loopChecker.add({ uri: editUri, range: textEdit.range });
 
 					const teleport = sourceFiles.getTsTeleports(lsType).get(editUri);

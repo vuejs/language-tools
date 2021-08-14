@@ -551,20 +551,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 								end: vueRange.end,
 							};
 						}
-
-						// patching for ref sugar
-						// TODO: move to source map
-						const vueStartRange = sourceMap.getSourceRange(virtualRange.start);
-						if (vueStartRange && vueStartRange.data.capabilities.diagnostic) {
-							const vueEndRange = sourceMap.getSourceRange(virtualRange.end);
-							if (vueStartRange && vueEndRange && vueStartRange.data.capabilities.diagnostic && vueEndRange.data.capabilities.diagnostic) {
-								return {
-									uri: sourceFile.uri,
-									start: vueStartRange.start,
-									end: vueEndRange.start,
-								};
-							}
-						}
 					}
 				}
 				for (const vueLoc of sourceFiles.fromTsLocation(lsType, virtualUri, virtualRange.start, virtualRange.end)) {

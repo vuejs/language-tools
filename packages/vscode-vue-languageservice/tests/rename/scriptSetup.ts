@@ -11,7 +11,7 @@ defineRename({
 			length: 4,
 		},
 		{
-			position: Position.create(3, 5),
+			position: Position.create(3, 6),
 			newName: 'bar',
 			length: 4,
 		},
@@ -20,6 +20,6 @@ defineRename({
 <template>{{ bar }}</template>
 
 <script lang="ts" setup>
-ref: bar = 1;
+const bar = 1;
 </script>`.trim(),
 });
