@@ -30,9 +30,6 @@ export function generate(
 	writeScript();
 	writeScriptSetup();
 
-	if (lsType === 'script')
-		writeTemplate();
-
 	if (lsType === 'template' || shouldAddExportDefault)
 		writeExportComponent();
 
@@ -40,6 +37,9 @@ export function generate(
 		writeExportOptions();
 		writeConstNameOption();
 	}
+
+	if (lsType === 'script')
+		writeTemplate();
 
 	/**
 	 * support find definition for <script> block less with:
@@ -431,5 +431,19 @@ export function generate(
 		}
 		codeGen.addText(htmlGen.text);
 		codeGen.addText('}\n');
+
+		// for code action edits
+		codeGen.addCode(
+			'',
+			{
+				start: scriptSetup.content.length,
+				end: scriptSetup.content.length,
+			},
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: 'scriptSetup',
+				capabilities: {},
+			},
+		);
 	}
 }

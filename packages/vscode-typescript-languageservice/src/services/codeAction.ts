@@ -40,55 +40,48 @@ export function register(
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const start = document.offsetAt(range.start);
-		const end = document.offsetAt(range.start);
+		const end = document.offsetAt(range.end);
 		const errorCodes = context.diagnostics.map(error => error.code) as number[];
 		let result: vscode.CodeAction[] = [];
 
 		if (
 			!context.only
-			|| context.only.includes(vscode.CodeActionKind.QuickFix)
+			|| context.only.some(only => only.split('.')[0] === vscode.CodeActionKind.QuickFix)
 		) {
-			try {
-				const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
-				for (const codeFix of codeFixes) {
-					result = result.concat(transformCodeFix(codeFix));
+			const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+			for (const codeFix of codeFixes) {
+				result = result.concat(transformCodeFix(codeFix));
+			}
+		}
+
+		if (context.only) {
+			for (const only of context.only) {
+				if (only.split('.')[0] === vscode.CodeActionKind.Refactor) {
+					const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, only);
+					for (const refactor of refactors) {
+						result = result.concat(transformRefactor(refactor));
+					}
 				}
-			} catch { }
+			}
+		}
+		else {
+			const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, undefined);
+			for (const refactor of refactors) {
+				result = result.concat(transformRefactor(refactor));
+			}
 		}
 
-		if (
-			context.only?.includes(vscode.CodeActionKind.Refactor)
-			|| context.only?.includes(vscode.CodeActionKind.RefactorExtract)
-			|| context.only?.includes(vscode.CodeActionKind.RefactorInline)
-			|| context.only?.includes(vscode.CodeActionKind.RefactorRewrite)
-		) {
-			try {
-				const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined /* TODO */, undefined /* TODO */);
-				for (const refactor of refactors) {
-					result = result.concat(transformRefactor(refactor));
-				}
-			} catch { }
+		if (matchOnlyKind(vscode.CodeActionKind.SourceOrganizeImports)) {
+			const changes = languageService.organizeImports({ type: 'file', fileName: fileName }, formatOptions, preferences);
+			const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
+			result.push(vscode.CodeAction.create(
+				'Organize Imports',
+				edit,
+				vscode.CodeActionKind.SourceOrganizeImports,
+			));
 		}
 
-		if (
-			context.only?.includes(vscode.CodeActionKind.Source)
-			|| context.only?.includes(vscode.CodeActionKind.SourceOrganizeImports)
-		) {
-			try {
-				const changes = languageService.organizeImports({ type: 'file', fileName: fileName }, formatOptions, preferences);
-				const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
-				result.push(vscode.CodeAction.create(
-					'Organize Imports',
-					edit,
-					vscode.CodeActionKind.SourceOrganizeImports,
-				));
-			} catch { }
-		}
-
-		if (
-			context.only?.includes(vscode.CodeActionKind.Source)
-			|| context.only?.includes(vscode.CodeActionKind.SourceFixAll)
-		) {
+		if (matchOnlyKind(`${vscode.CodeActionKind.SourceFixAll}.ts`)) {
 			const action = vscode.CodeAction.create('Fix All', vscode.CodeActionKind.SourceFixAll);
 			const data: FixAllData = {
 				uri,
@@ -104,42 +97,41 @@ export function register(
 			result.push(action);
 		}
 
-		if (context.only?.includes(vscode.CodeActionKind.Source)) {
-			{
-				const action = vscode.CodeAction.create('Remove all unused code', vscode.CodeActionKind.SourceFixAll);
-				const data: FixAllData = {
-					uri,
-					type: 'fixAll',
-					fileName,
-					fixIds: [
-						// not working and throw
-						fixNames.unusedIdentifier,
-						// TODO: remove patching
-						'unusedIdentifier_prefix',
-						'unusedIdentifier_deleteImports',
-						'unusedIdentifier_delete',
-						'unusedIdentifier_infer',
-					],
-				};
-				action.data = data;
-				result.push(action);
-			}
-			{
-				const action = vscode.CodeAction.create('Add all missing imports', vscode.CodeActionKind.SourceFixAll);
-				const data: FixAllData = {
-					uri,
-					type: 'fixAll',
-					fileName,
-					fixIds: [
-						// not working and throw
-						fixNames.fixImport,
-						// TODO: remove patching
-						'fixMissingImport',
-					],
-				};
-				action.data = data;
-				result.push(action);
-			}
+		if (matchOnlyKind(`${vscode.CodeActionKind.Source}.removeUnused.ts`)) {
+			const action = vscode.CodeAction.create('Remove all unused code', vscode.CodeActionKind.SourceFixAll);
+			const data: FixAllData = {
+				uri,
+				type: 'fixAll',
+				fileName,
+				fixIds: [
+					// not working and throw
+					fixNames.unusedIdentifier,
+					// TODO: remove patching
+					'unusedIdentifier_prefix',
+					'unusedIdentifier_deleteImports',
+					'unusedIdentifier_delete',
+					'unusedIdentifier_infer',
+				],
+			};
+			action.data = data;
+			result.push(action);
+		}
+
+		if (matchOnlyKind(`${vscode.CodeActionKind.Source}.addMissingImports.ts`)) {
+			const action = vscode.CodeAction.create('Add all missing imports', vscode.CodeActionKind.SourceFixAll);
+			const data: FixAllData = {
+				uri,
+				type: 'fixAll',
+				fileName,
+				fixIds: [
+					// not working and throw
+					fixNames.fixImport,
+					// TODO: remove patching
+					'fixMissingImport',
+				],
+			};
+			action.data = data;
+			result.push(action);
 		}
 
 		for (const codeAction of result) {
@@ -148,6 +140,29 @@ export function register(
 
 		return result;
 
+		function matchOnlyKind(kind: string) {
+			if (context.only) {
+				for (const only of context.only) {
+
+					const a = only.split('.');
+					const b = kind.split('.');
+
+					if (a.length <= b.length) {
+
+						let matchNums = 0;
+
+						for (let i = 0; i < a.length; i++) {
+							if (a[i] == b[i]) {
+								matchNums++;
+							}
+						}
+
+						if (matchNums === a.length)
+							return true;
+					}
+				}
+			}
+		}
 		function transformCodeFix(codeFix: ts.CodeFixAction) {
 			const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
 			const codeActions: vscode.CodeAction[] = [];
@@ -177,8 +192,8 @@ export function register(
 			const codeActions: vscode.CodeAction[] = [];
 			for (const action of refactor.actions) {
 				const codeAction = vscode.CodeAction.create(
-					action.name,
-					vscode.CodeActionKind.Refactor,
+					action.description,
+					action.kind,
 				);
 				const data: RefactorData = {
 					uri,
