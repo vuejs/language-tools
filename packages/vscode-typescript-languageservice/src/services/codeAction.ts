@@ -41,16 +41,19 @@ export function register(
 		const fileName = shared.uriToFsPath(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);
-		const errorCodes = context.diagnostics.map(error => error.code) as number[];
 		let result: vscode.CodeAction[] = [];
 
-		if (
-			!context.only
-			|| context.only.some(only => only.split('.')[0] === vscode.CodeActionKind.QuickFix)
-		) {
-			const codeFixes = languageService.getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+		for (const error of context.diagnostics) {
+			const codeFixes = languageService.getCodeFixesAtPosition(
+				fileName,
+				document.offsetAt(error.range.start),
+				document.offsetAt(error.range.end),
+				[Number(error.code)],
+				formatOptions,
+				preferences,
+			);
 			for (const codeFix of codeFixes) {
-				result = result.concat(transformCodeFix(codeFix));
+				result = result.concat(transformCodeFix(codeFix, [error]));
 			}
 		}
 
@@ -163,7 +166,7 @@ export function register(
 				}
 			}
 		}
-		function transformCodeFix(codeFix: ts.CodeFixAction) {
+		function transformCodeFix(codeFix: ts.CodeFixAction, diagnostics: vscode.Diagnostic[]) {
 			const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
 			const codeActions: vscode.CodeAction[] = [];
 			const fix = vscode.CodeAction.create(
@@ -171,6 +174,7 @@ export function register(
 				edit,
 				vscode.CodeActionKind.QuickFix,
 			);
+			fix.diagnostics = diagnostics;
 			codeActions.push(fix);
 			if (codeFix.fixAllDescription && codeFix.fixId) {
 				const fixAll = vscode.CodeAction.create(
@@ -184,6 +188,7 @@ export function register(
 					fixIds: [codeFix.fixId],
 				};
 				fixAll.data = data;
+				fixAll.diagnostics = diagnostics;
 				codeActions.push(fixAll);
 			}
 			return codeActions;
