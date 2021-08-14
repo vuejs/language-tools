@@ -112,6 +112,9 @@ export function register(context: ApiLanguageServiceContext) {
 					}
 					else if (declaration.rightFn) {
 						const fnText = _scriptSetup.content.substring(declaration.rightFn.start, declaration.rightFn.end);
+						if (['ref', 'shallowRef'].includes(fnText)) {
+							addReplace(declaration.flag.start, declaration.flag.end, 'let');
+						}
 						if (['ref', 'computed', 'shallowRef'].includes(fnText)) {
 							addReplace(declaration.right.start, declaration.right.start, '$');
 						}
