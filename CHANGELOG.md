@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.27.0
+
+- feat: support ref sugar (take 2) convert codeLens
+- feat: support setup sugar convert codeLens
+- feat: support more TS refactor code actions
+- perf: faster code action and validation
+- fix: setup returns unused check not working
+
+** Breaking changes**
+
+- unsupported ref sugar (take 1) syntax and convert codeLens
+
 ## 0.26.16
 
 - feat: improve pug conversion result ([#363](https://github.com/johnsoncodehk/volar/issues/363))
@@ -12,7 +24,7 @@
 - perf: faster document update for html server
 - perf: move codeAction to api server to prevent codeAction request blocking by diagnostics when save + auto-formatting
 
-**`@volar/server` Breaking changes**
+** `@volar/server` Breaking changes**
 
 - ServerInitializationOptions: features -> languageFeatures
 - ServerInitializationOptions: htmlFeatures -> documentFeatures
