@@ -450,7 +450,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				for (const diag of errors_1.value) {
 					const spanText = sfcTemplateScript.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = sfcTemplateScript.teleportSourceMap.value.getMappedRanges(diag.range.start, diag.range.end);
+					const propRights = sfcTemplateScript.teleportSourceMap.value.getSourceRanges(diag.range.start, diag.range.end);
 					for (const propRight of propRights) {
 						if (propRight.data.isAdditionalReference) continue;
 						const definitions = templateTsLs.findDefinition(sfcTemplateScript.textDocument.value.uri, propRight.start);

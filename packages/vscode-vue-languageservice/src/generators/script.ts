@@ -129,7 +129,7 @@ export function generate(
 					references: true,
 					definitions: lsType === 'script',
 					rename: true,
-					diagnostic: lsType === 'script',
+					diagnostic: true, // also working for setup() returns unused in template checking
 					formatting: lsType === 'script',
 					completion: lsType === 'script',
 					semanticTokens: lsType === 'script',
