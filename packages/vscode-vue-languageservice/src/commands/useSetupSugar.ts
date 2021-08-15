@@ -37,6 +37,8 @@ export function register(context: ApiLanguageServiceContext) {
 			await shared.sleep(0);
 
 			const errors = await getDiagnostics(uri, () => { }) ?? [];
+			await shared.sleep(0);
+
 			const importEdits = await getAddMissingImportsEdits(sourceFile, descriptor.scriptSetup!, errors);
 
 			if (importEdits) {

@@ -32,10 +32,7 @@ export function register(context: ApiLanguageServiceContext) {
 			return;
 
 		if (edits?.length) {
-
 			await connection.workspace.applyEdit({ changes: { [uri]: edits } });
-			await shared.sleep(0);
-
 		}
 
 		progress.done();
