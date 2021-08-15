@@ -32,12 +32,15 @@ export function generate(node: CompilerDOM.RootNode) {
 					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				) {
 					if (prop.name === 'slot') {
+						text += `// @ts-ignore\n`;
 						text += `let ${prop.exp.content} = {} as any;\n`;
 					}
 					else if (prop.name === 'on') {
+						text += `// @ts-ignore\n`;
 						text += `() => { ${prop.exp.content} };\n`;
 					}
 					else {
+						text += `// @ts-ignore\n`;
 						text += `(${prop.exp.content});\n`;
 					}
 				}
@@ -46,6 +49,7 @@ export function generate(node: CompilerDOM.RootNode) {
 					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					&& prop.arg.content !== ''
 				) {
+					text += `// @ts-ignore\n`;
 					text += `(${prop.arg.content});\n`;
 				}
 				else if (
@@ -77,6 +81,7 @@ export function generate(node: CompilerDOM.RootNode) {
 		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 			// {{ ... }}
 			const context = node.loc.source.substring(2, node.loc.source.length - 2);
+			text += `// @ts-ignore\n`;
 			text += `{ ${context} };\n`;
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
@@ -84,6 +89,8 @@ export function generate(node: CompilerDOM.RootNode) {
 			for (let i = 0; i < node.branches.length; i++) {
 
 				const branch = node.branches[i];
+
+				text += `// @ts-ignore\n`;
 
 				if (i === 0)
 					text += 'if';
@@ -113,11 +120,16 @@ export function generate(node: CompilerDOM.RootNode) {
 				source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& value?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
+				text += `// @ts-ignore\n`;
 				text += `for (let ${value.content} of ${source.content}) {\n`
-				if (key?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				if (key?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					text += `// @ts-ignore\n`;
 					text += `let ${key.content} = {} as any;`;
-				if (index?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				}
+				if (index?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					text += `// @ts-ignore\n`;
 					text += `let ${index.content} = {} as any;`;
+				}
 				for (const childNode of node.children) {
 					visitNode(childNode);
 				}
