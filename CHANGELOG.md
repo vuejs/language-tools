@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.27.1
+
+- fix: remove `vscode-emmet-helper` rename warning for vue-tsc
+- fix: components option should be remove when convert to setup sugar
+- fix: fixed sometime throw error when convert setup sugar
+- fix: prevent top level await error in `<script>` block
+
 ## 0.27.0
 
 - feat: support ref sugar (take 2) convert codeLens
