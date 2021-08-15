@@ -38,8 +38,21 @@ export function generate(
 		writeConstNameOption();
 	}
 
-	if (lsType === 'script')
-		writeTemplate();
+	if (lsType === 'script' && scriptSetup) {
+		// for code action edits
+		codeGen.addCode(
+			'',
+			{
+				start: scriptSetup.content.length,
+				end: scriptSetup.content.length,
+			},
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: 'scriptSetup',
+				capabilities: {},
+			},
+		);
+	}
 
 	/**
 	 * support find definition for <script> block less with:
@@ -229,8 +242,13 @@ export function generate(
 				});
 			}
 			codeGen.addText(`setup() {\n`);
-			codeGen.addText(`return {\n`);
-			if (lsType === 'template') {
+			if (lsType === 'script') {
+				codeGen.addText(`return () => {\n`);
+				writeTemplate();
+				codeGen.addText(`};\n`);
+			}
+			else if (lsType === 'template') {
+				codeGen.addText(`return {\n`);
 				for (const { bindings, content } of bindingsArr) {
 					for (const expose of bindings) {
 						const varName = content.substring(expose.start, expose.end);
@@ -262,8 +280,8 @@ export function generate(
 						});
 					}
 				}
+				codeGen.addText(`};\n`);
 			}
-			codeGen.addText(`};\n`);
 			codeGen.addText(`},\n`);
 		}
 
@@ -420,7 +438,6 @@ export function generate(
 			bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
 		}
 
-		codeGen.addText('{\n');
 		for (const varName of bindingNames) {
 			if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
 				// fix import components unused report
@@ -428,20 +445,5 @@ export function generate(
 			}
 		}
 		codeGen.addText(htmlGen.text);
-		codeGen.addText('}\n');
-
-		// for code action edits
-		codeGen.addCode(
-			'',
-			{
-				start: scriptSetup.content.length,
-				end: scriptSetup.content.length,
-			},
-			SourceMaps.Mode.Offset,
-			{
-				vueTag: 'scriptSetup',
-				capabilities: {},
-			},
-		);
 	}
 }
