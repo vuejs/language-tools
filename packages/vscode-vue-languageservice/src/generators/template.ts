@@ -42,6 +42,7 @@ export function generate(
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
 	componentNames: string[] = [],
+	setupReturns: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
 ) {
@@ -61,6 +62,8 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const componentsMap = new Map<string, string>();
+	const componentNamesSet = new Set(componentNames);
+	const setupReturnsSet = new Set(setupReturns);
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 
 	for (const componentName of componentNames) {
@@ -122,10 +125,16 @@ export function generate(
 				parentEl = node;
 			}
 
-			usedComponents.add(getComponentName(node.tag));
+			const componentName = getComponentName(node.tag);
+
+			usedComponents.add(componentName);
 			tagNames.add(node.tag);
 			tsCodeGen.addText(`{\n`);
 			{
+
+				if (componentNamesSet.has(componentName) && setupReturnsSet.has(componentName)) {
+					tsCodeGen.addText(`${componentName}; // ignore unused in setup returns\n`)
+				}
 
 				writeInlineCss(node);
 				if (parentEl) writeImportSlots(node, parentEl);

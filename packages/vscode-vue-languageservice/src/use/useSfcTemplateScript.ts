@@ -52,6 +52,7 @@ export function useSfcTemplateScript(
 			sfcTemplateCompileResult.value.ast,
 			context.isVue2Mode,
 			templateScriptData.components,
+			templateScriptData.setupReturns,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 		);
