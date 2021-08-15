@@ -204,3 +204,127 @@ export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/ts
 		node.forEachChild(child => visitNode_withDefaults(child));
 	}
 }
+
+export function parseUseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
+
+	const imports: TextRange[] = [];
+	let exportDefault: TextRange | undefined;
+	let propsOption: TextRange | undefined;
+	let emitsOption: TextRange | undefined;
+	let setupOption: {
+		props: TextRange | undefined,
+		context: TextRange | {
+			emit: TextRange | undefined,
+			slots: TextRange | undefined,
+			attrs: TextRange | undefined,
+		} | undefined,
+		body: TextRange,
+		bodyReturn: TextRange | undefined,
+	} | undefined;
+	const otherOptions: TextRange[] = [];
+	const otherScriptStatements: TextRange[] = [];
+
+	ast.forEachChild(node => {
+		if (ts.isImportDeclaration(node)) {
+			imports.push(_getStartEnd(node));
+		}
+		else if (ts.isExportAssignment(node)) {
+			let options: ts.ObjectLiteralExpression | undefined;
+			if (ts.isObjectLiteralExpression(node.expression)) {
+				options = node.expression;
+			}
+			else if (ts.isCallExpression(node.expression) && node.expression.arguments.length) {
+				const arg0 = node.expression.arguments[0];
+				if (ts.isObjectLiteralExpression(arg0)) {
+					options = arg0;
+				}
+			}
+			exportDefault = _getStartEnd(node);
+			if (options) {
+				for (const option of options.properties) {
+
+					const optionName = option.name?.getText(ast);
+					let setupFunction: ts.MethodDeclaration | ts.ArrowFunction | undefined;
+
+					if (optionName === 'props' && ts.isPropertyAssignment(option)) {
+						propsOption = _getStartEnd(option.initializer);
+					}
+					else if (optionName === 'emits' && ts.isPropertyAssignment(option)) {
+						emitsOption = _getStartEnd(option.initializer);
+					}
+					else if (optionName === 'setup' && ts.isPropertyAssignment(option) && ts.isArrowFunction(option.initializer)) {
+						setupFunction = option.initializer;
+					}
+					else if (optionName === 'setup' && ts.isMethodDeclaration(option)) {
+						setupFunction = option;
+					}
+					else {
+						otherOptions.push(_getStartEnd(option));
+					}
+
+					if (setupFunction?.body) {
+
+						setupOption = {
+							props: undefined,
+							context: undefined,
+							body: _getStartEnd(setupFunction.body),
+							bodyReturn: undefined,
+						};
+
+						if (setupFunction.parameters.length >= 1) {
+							setupOption.props = _getStartEnd(setupFunction.parameters[0].name);
+						}
+						if (setupFunction.parameters.length >= 2) {
+							const context = setupFunction.parameters[1];
+							if (ts.isObjectBindingPattern(context.name)) {
+								setupOption.context = {
+									emit: undefined,
+									slots: undefined,
+									attrs: undefined,
+								};
+								for (const element of context.name.elements) {
+									const elementName = (element.propertyName ?? element.name).getText(ast);
+									if (elementName === 'emit') {
+										setupOption.context.emit = _getStartEnd(element.name);
+									}
+									else if (elementName === 'slots') {
+										setupOption.context.slots = _getStartEnd(element.name);
+									}
+									else if (elementName === 'attrs') {
+										setupOption.context.attrs = _getStartEnd(element.name);
+									}
+								}
+							}
+							else {
+								setupOption.context = _getStartEnd(context.name);
+							}
+						}
+
+						setupFunction.body.forEachChild(statement => {
+							if (ts.isReturnStatement(statement)) {
+								setupOption!.bodyReturn = _getStartEnd(statement);
+							}
+						});
+					}
+				}
+			}
+		}
+		else {
+			otherScriptStatements.push(_getStartEnd(node));
+		}
+	});
+
+	return {
+		imports,
+		exportDefault,
+		propsOption,
+		emitsOption,
+		setupOption,
+		otherOptions,
+		otherScriptStatements,
+	};
+
+	function _getStartEnd(node: ts.Node) {
+		return getStartEnd(node, ast);
+	}
+}
