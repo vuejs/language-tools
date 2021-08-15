@@ -111,7 +111,7 @@ export function generate(
 
 		let addText = script.content;
 		if (shouldAddExportDefault && scriptRanges?.exportDefault) {
-			const insteadOfExport = 'await ';
+			const insteadOfExport = ' '.repeat('export'.length);
 			const newStart = scriptRanges.exportDefault.start + insteadOfExport.length;
 			addText = addText.substr(0, scriptRanges.exportDefault.start)
 				+ insteadOfExport
