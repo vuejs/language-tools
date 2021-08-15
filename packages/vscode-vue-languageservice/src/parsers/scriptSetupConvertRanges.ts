@@ -258,6 +258,9 @@ export function parseUseScriptSetupRanges(ts: typeof import('typescript/lib/tsse
 					else if (optionName === 'setup' && ts.isMethodDeclaration(option)) {
 						setupFunction = option;
 					}
+					else if (optionName === 'components') {
+						// ignore
+					}
 					else {
 						otherOptions.push(_getStartEnd(option));
 					}
