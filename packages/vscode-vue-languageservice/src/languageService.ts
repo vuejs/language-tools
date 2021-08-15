@@ -39,7 +39,7 @@ import * as tagNameCase from './services/tagNameCase';
 import * as d3 from './services/d3';
 // context
 import * as fs from 'fs';
-import * as emmet from 'vscode-emmet-helper';
+import * as emmet from '@vscode/emmet-helper';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';

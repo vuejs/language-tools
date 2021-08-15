@@ -74,7 +74,7 @@ export type Modules = {
 	html: typeof import('vscode-html-languageservice'),
 	json: typeof import('vscode-json-languageservice'),
 	pug: typeof import('vscode-pug-languageservice'),
-	emmet: typeof import('vscode-emmet-helper'),
+	emmet: typeof import('@vscode/emmet-helper'),
 };
 
 export type LanguageServiceContextBase = {

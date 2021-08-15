@@ -1,5 +1,5 @@
 import * as vue from 'vscode-vue-languageservice';
-import type * as emmet from 'vscode-emmet-helper';
+import type * as emmet from '@vscode/emmet-helper';
 import * as vscode from 'vscode-languageserver';
 
 let emmetConfig: any = {};
