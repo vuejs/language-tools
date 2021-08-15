@@ -1,5 +1,5 @@
 import type { ApiLanguageServiceContext } from './types';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
 const lsTypes = ['script', 'template'] as const;

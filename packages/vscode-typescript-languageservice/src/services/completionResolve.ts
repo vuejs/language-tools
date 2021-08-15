@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';

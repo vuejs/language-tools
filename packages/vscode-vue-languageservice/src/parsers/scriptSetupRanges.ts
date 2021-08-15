@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextRange } from './types';
 
 export type ScriptSetupRanges = ReturnType<typeof parseScriptSetupRanges>;

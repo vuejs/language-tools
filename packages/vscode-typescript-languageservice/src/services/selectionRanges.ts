@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 

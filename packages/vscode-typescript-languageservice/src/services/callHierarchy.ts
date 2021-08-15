@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import * as PConst from '../protocol.const';
 import { parseKindModifier } from '../utils/modifiers';

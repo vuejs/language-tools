@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
 import { createGlobalDefineDocument } from './utils/globalDoc';
 import * as upath from 'upath';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules } from './types';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';

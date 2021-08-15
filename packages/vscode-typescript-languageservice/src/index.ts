@@ -23,7 +23,7 @@ import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
 import * as path from 'path';

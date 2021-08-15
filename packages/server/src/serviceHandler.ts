@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as vue from 'vscode-vue-languageservice';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as vscode from 'vscode-languageserver';

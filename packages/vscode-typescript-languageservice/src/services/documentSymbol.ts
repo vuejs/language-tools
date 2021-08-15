@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as PConst from '../protocol.const';
 import * as vscode from 'vscode-languageserver';
 import { parseKindModifier } from '../utils/modifiers';

@@ -1,4 +1,4 @@
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 import type { TextRange } from './types';
 

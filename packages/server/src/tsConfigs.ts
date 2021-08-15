@@ -1,6 +1,6 @@
 import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export async function getFormatOptions(
 	connection: vscode.Connection,

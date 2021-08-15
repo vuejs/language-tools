@@ -1,6 +1,5 @@
 import * as fs from 'fs';
-import type * as ts from 'typescript';
-import type { MapLike } from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import { normalizeFileName } from './path';
 
@@ -98,7 +97,7 @@ export function loadTypescript(tsPath: string): typeof import('typescript/lib/ts
 	return require(path.toUnix(tsPath));
 }
 
-export function loadTypescriptLocalized(tsPath: string): MapLike<string> | undefined {
+export function loadTypescriptLocalized(tsPath: string): ts.MapLike<string> | undefined {
 	if (fs.existsSync(tsPath)) {
 		return require(path.toUnix(tsPath));
 	}

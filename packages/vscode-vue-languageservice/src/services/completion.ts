@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
 import { computed, ref } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
-import type * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
