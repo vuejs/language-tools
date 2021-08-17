@@ -62,6 +62,22 @@ export function useSfcScriptGen(
 			codeGen.value.getText(),
 		);
 	});
+	const textDocumentTs = computed(() => {
+		if (lsType === 'template') {
+			if (lang.value === 'ts' || lang.value === 'tsx') {
+				return textDocument.value;
+			}
+			else {
+				const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
+				return TextDocument.create(
+					`${uri}.__VLS_script_ts.${tsLang}`,
+					shared.syntaxToLanguageId(tsLang),
+					textDocument.value.version,
+					textDocument.value.getText(),
+				);
+			}
+		}
+	});
 	const sourceMap = computed(() => {
 		const sourceMap = new TsSourceMap(
 			vueDoc.value,
@@ -93,6 +109,7 @@ export function useSfcScriptGen(
 		lang,
 		scriptSetupRanges,
 		textDocument,
+		textDocumentTs,
 		sourceMap,
 		teleportSourceMap,
 	};

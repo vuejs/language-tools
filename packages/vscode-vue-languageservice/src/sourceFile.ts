@@ -140,7 +140,6 @@ export function createSourceFile(
 		sfcStyles.sourceMaps,
 		sfcTemplateData,
 		sfcTemplateCompileResult,
-		sfcScriptForScriptLs.lang,
 		context,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
@@ -168,6 +167,7 @@ export function createSourceFile(
 	const templateLsDocuments = computed(() => [
 		sfcEntryForTemplateLs.textDocument.value,
 		sfcScriptForTemplateLs.textDocument.value,
+		sfcScriptForTemplateLs.textDocumentTs.value,
 		sfcTemplateScript.textDocument.value,
 	].filter(shared.notEmpty));
 	const scriptLsDocuments = computed(() => [

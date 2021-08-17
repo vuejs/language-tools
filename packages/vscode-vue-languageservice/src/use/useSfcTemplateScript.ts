@@ -31,7 +31,6 @@ export function useSfcTemplateScript(
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
-	scriptLang: Ref<string>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
@@ -62,10 +61,6 @@ export function useSfcTemplateScript(
 			return;
 
 		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
-
-		if (scriptLang.value === 'js' || scriptLang.value === 'jsx') {
-			codeGen.addText(`// @ts-nocheck\n`);
-		}
 
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
 		codeGen.addText(`declare var __VLS_ctxRaw: InstanceType<typeof __VLS_component>;\n`);
@@ -356,11 +351,11 @@ export function useSfcTemplateScript(
 		};
 	}
 	function update() {
-		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== shared.syntaxToLanguageId(scriptLang.value))) {
+		if (data.value?.getText() !== textDoc.value?.getText()) {
 			if (data.value && templateCodeGens.value) {
 				const _version = version++;
-				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + scriptLang.value, shared.syntaxToLanguageId(scriptLang.value), _version, data.value.getText());
-				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.' + scriptLang.value, shared.syntaxToLanguageId(scriptLang.value), _version, templateCodeGens.value.formatCodeGen.getText());
+				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.ts', shared.syntaxToLanguageId('ts'), _version, data.value.getText());
+				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', shared.syntaxToLanguageId('ts'), _version, templateCodeGens.value.formatCodeGen.getText());
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {
