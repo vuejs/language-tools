@@ -21,7 +21,7 @@ export function useSfcTemplateScript(
 			textDocument: TextDocument;
 			stylesheet: css.Stylesheet;
 		}[];
-		module: boolean;
+		module: string | boolean;
 		scoped: boolean;
 	}[]>,
 	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
@@ -37,7 +37,15 @@ export function useSfcTemplateScript(
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = upath.basename(shared.uriToFsPath(_vueDoc.uri));
-	const cssModuleClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.module), context));
+	// <style module> or <style module="">
+	const cssUnnamedModules = computed(() => styleDocuments.value.filter(style => style.module === true))
+	const cssModuleClasses = computed(() => cssClasses.parse(context.modules.css, cssUnnamedModules.value, context));
+	// <style module="Foo">, <style module="Bar">, ...
+	const cssNamedModules = computed(() => styleDocuments.value.filter(style => typeof style.module === 'string'))
+	const cssNamedModuleClasses = computed(() => cssNamedModules.value.reduce((map, module) => {
+		map.set(module.module as string, cssClasses.parse(context.modules.css, [module], context))
+		return map
+	}, new Map<string, ReturnType<typeof cssClasses.parse>>()))
 	const cssScopedClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {
 
@@ -101,6 +109,15 @@ export function useSfcTemplateScript(
 		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, true);
 		codeGen.addText('};\n');
 
+		const cssNamedModuleMappings = [];
+		for (const { module } of cssNamedModules.value) {
+			const moduleClasses = cssNamedModuleClasses.value.get(module as string)
+			if (!moduleClasses) continue
+			codeGen.addText(`declare var ${module}: Record<string, string> & {\n`);
+			cssNamedModuleMappings.push(writeCssClassProperties(moduleClasses, true));
+			codeGen.addText('};\n');
+		}
+
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
 		codeGen.addText('declare var __VLS_styleScopedClasses: {\n');
@@ -116,6 +133,7 @@ export function useSfcTemplateScript(
 		return {
 			...codeGen,
 			cssModuleMappings,
+			cssNamedModuleMappings,
 			cssScopedMappings,
 			ctxMappings,
 		};
@@ -249,7 +267,11 @@ export function useSfcTemplateScript(
 				},
 				data.value.getMappings(parseMappingSourceRange),
 			);
-			for (const [uri, mappings] of [...data.value.cssModuleMappings, ...data.value.cssScopedMappings]) {
+			for (const [uri, mappings] of [
+				...data.value.cssModuleMappings, 
+				...data.value.cssScopedMappings, 
+				...data.value.cssNamedModuleMappings.flatMap(m => [...m])
+			]) {
 				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.mappedDocument.uri === uri);
 				if (!cssSourceMap) continue;
 				for (const maped of mappings) {

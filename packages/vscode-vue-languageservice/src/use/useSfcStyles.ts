@@ -22,7 +22,7 @@ export function useSfcStyles(
 				textDocument: TextDocument,
 				stylesheet: css.Stylesheet,
 			}[],
-			module: boolean,
+			module: string | boolean,
 			scoped: boolean,
 		}[] = [];
 		for (let i = 0; i < styles.value.length; i++) {
