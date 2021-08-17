@@ -1364,8 +1364,11 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, isVue2: boolean) {
 	const typeAttr = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'type') as CompilerDOM.AttributeNode | undefined;
 	const type = typeAttr?.value?.content;
 
-	if (tag === 'input' && (type === 'checkbox' || type === 'radio'))
+	if (tag === 'input' && type === 'checkbox')
 		return 'checked';
+
+	if (tag === 'input' && type === 'radio')
+		return '--radio-binding';
 
 	if (
 		tag === 'input' ||
