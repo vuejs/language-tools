@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
-import { LanguageClient } from 'vscode-languageclient/node';
+import { LanguageClient, State } from 'vscode-languageclient/node';
 import * as shared from '@volar/shared';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
@@ -16,13 +16,14 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	statusBar.command = 'volar.action.tagNameCase';
 
 	onChangeDocument(vscode.window.activeTextEditor?.document);
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(e => {
+
+	const d_1 = vscode.window.onDidChangeActiveTextEditor(e => {
 		onChangeDocument(e?.document);
-	}));
-	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((doc) => {
+	});
+	const d_2 = vscode.workspace.onDidCloseTextDocument((doc) => {
 		tagCases.delete(doc.uri.toString());
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagNameCase', async () => {
+	});
+	const d_3 = vscode.commands.registerCommand('volar.action.tagNameCase', async () => {
 
 		const crtDoc = vscode.window.activeTextEditor?.document;
 		if (!crtDoc) return;
@@ -67,21 +68,31 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		if (select === '8') {
 			vscode.commands.executeCommand('volar.action.tagNameCase.convertToPascalCase');
 		}
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagNameCase.convertToKebabCase', async () => {
+	});
+	const d_4 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToKebabCase', async () => {
 		if (vscode.window.activeTextEditor) {
 			await vscode.commands.executeCommand('volar.server.executeConvertToKebabCase', vscode.window.activeTextEditor.document.uri.toString());
 			tagCases.set(vscode.window.activeTextEditor.document.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.tagNameCase.convertToPascalCase', async () => {
+	});
+	const d_5 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToPascalCase', async () => {
 		if (vscode.window.activeTextEditor) {
 			await vscode.commands.executeCommand('volar.server.executeConvertToPascalCase', vscode.window.activeTextEditor.document.uri.toString());
 			tagCases.set(vscode.window.activeTextEditor.document.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}
-	}));
+	});
+
+	languageClient.onDidChangeState(e => {
+		if (e.newState === State.Stopped) {
+			d_1.dispose();
+			d_2.dispose();
+			d_3.dispose();
+			d_4.dispose();
+			d_5.dispose();
+		}
+	});
 
 	return (uri: string) => {
 		let tagCase = tagCases.get(uri);

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
-import { LanguageClient } from 'vscode-languageclient/node';
+import { LanguageClient, State } from 'vscode-languageclient/node';
 import * as shared from '@volar/shared';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
@@ -16,13 +16,13 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	statusBar.command = 'volar.action.attrNameCase';
 
 	onChangeDocument(vscode.window.activeTextEditor?.document);
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(e => {
+	const d_1 = vscode.window.onDidChangeActiveTextEditor(e => {
 		onChangeDocument(e?.document);
-	}));
-	context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((doc) => {
+	});
+	const d_2 = vscode.workspace.onDidCloseTextDocument((doc) => {
 		attrCases.delete(doc.uri.toString());
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.attrNameCase', async () => {
+	});
+	const d_3 = vscode.commands.registerCommand('volar.action.attrNameCase', async () => {
 
 		const crtDoc = vscode.window.activeTextEditor?.document;
 		if (!crtDoc) return;
@@ -53,7 +53,15 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 				updateStatusBarText(getValidAttrCase(detects.attr));
 			}
 		}
-	}));
+	});
+
+	languageClient.onDidChangeState(e => {
+		if (e.newState === State.Stopped) {
+			d_1.dispose();
+			d_2.dispose();
+			d_3.dispose();
+		}
+	});
 
 	return (uri: string) => {
 		let attrCase = attrCases.get(uri);
