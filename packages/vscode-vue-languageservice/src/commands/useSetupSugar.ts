@@ -91,16 +91,12 @@ export function register(context: ApiLanguageServiceContext) {
 			const newScriptSetupCode = getScriptSetupCode();
 			const newScriptCode = getScriptCode();
 
-			let newBlockCode = '\n' + newScriptSetupCode + '\n';
+			addReplace(0, _script.content.length, '\n' + newScriptSetupCode + '\n');
 
 			if (newScriptCode !== '') {
-				newBlockCode += '</script>\n';
-				newBlockCode += '\n';
-				newBlockCode += startTagText + '\n';
-				newBlockCode += newScriptCode + '\n';
+				let newScriptBlock = `${startTagText}\n${newScriptCode}\n</script>\n\n`;
+				addReplace(-startTagText.length, -startTagText.length, newScriptBlock);
 			}
-
-			addReplace(0, _script.content.length, newBlockCode);
 
 			return edits;
 
