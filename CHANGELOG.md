@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.27.2
+
+- feat: support template type-checking with jsdoc in `<script lang="js">`
+- fix: `setup()` return properties unused check not working for component
+- fix: radio v-model should not bind to checked
+- fix: clear registered commands when restart servers ([#374](https://github.com/johnsoncodehk/volar/issues/374))
+
 ## 0.27.1
 
 - fix: remove `vscode-emmet-helper` rename warning for vue-tsc
