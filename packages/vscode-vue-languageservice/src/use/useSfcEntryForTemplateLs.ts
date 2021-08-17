@@ -19,7 +19,8 @@ export function useSfcEntryForTemplateLs(
 		const vueFileName = upath.basename(shared.uriToFsPath(vueDoc.uri));
 		let content = '';
 		if (scriptSetup.value || script.value) {
-			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script_ts';\n`;
+			content += `import { __VLS_options as __VLS_options_ts, __VLS_name as __VLS_name_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
+			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
 			content += `export { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
 			content += `export * from './${vueFileName}.__VLS_script';\n`;
 
@@ -52,8 +53,8 @@ export function useSfcEntryForTemplateLs(
 		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx> & __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
-		content += `__VLS_options.setup().${SearchTexts.SetupReturns};\n`;
-		content += `__VLS_options.props.${SearchTexts.Props};\n`;
+		content += `__VLS_options_ts.setup().${SearchTexts.SetupReturns};\n`;
+		content += `__VLS_options_ts.props.${SearchTexts.Props};\n`;
 		content += `\n`;
 		content += `export default {} as typeof __VLS_component & {\n`;
 		content += `__VLS_raw: typeof __VLS_component\n`;
