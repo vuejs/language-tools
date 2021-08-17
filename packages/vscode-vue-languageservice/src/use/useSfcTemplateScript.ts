@@ -21,7 +21,7 @@ export function useSfcTemplateScript(
 			textDocument: TextDocument;
 			stylesheet: css.Stylesheet;
 		}[];
-		module: boolean;
+		module: string | undefined;
 		scoped: boolean;
 	}[]>,
 	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
@@ -37,7 +37,14 @@ export function useSfcTemplateScript(
 	const _vueDoc = getUnreactiveDoc();
 	const vueUri = _vueDoc.uri;
 	const vueFileName = upath.basename(shared.uriToFsPath(_vueDoc.uri));
-	const cssModuleClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.module), context));
+	const cssModuleClasses = computed(() =>
+		styleDocuments.value.reduce((map, style) => {
+			if (style.module) {
+				map.set(style.module, cssClasses.parse(context.modules.css, [style], context));
+			}
+			return map;
+		}, new Map<string, ReturnType<typeof cssClasses.parse>>())
+	);
 	const cssScopedClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.scoped), context));
 	const templateCodeGens = computed(() => {
 
@@ -97,9 +104,12 @@ export function useSfcTemplateScript(
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');
-		codeGen.addText('declare var $style: Record<string, string> & {\n');
-		const cssModuleMappings = writeCssClassProperties(cssModuleClasses.value, true);
-		codeGen.addText('};\n');
+		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
+		for (const [moduleName, moduleClasses] of cssModuleClasses.value) {
+			codeGen.addText(`declare var ${moduleName}: Record<string, string> & {\n`);
+			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true));
+			codeGen.addText('};\n');
+		}
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
@@ -115,7 +125,7 @@ export function useSfcTemplateScript(
 
 		return {
 			...codeGen,
-			cssModuleMappings,
+			cssModuleMappingsArr,
 			cssScopedMappings,
 			ctxMappings,
 		};
@@ -249,7 +259,10 @@ export function useSfcTemplateScript(
 				},
 				data.value.getMappings(parseMappingSourceRange),
 			);
-			for (const [uri, mappings] of [...data.value.cssModuleMappings, ...data.value.cssScopedMappings]) {
+			for (const [uri, mappings] of [
+				...data.value.cssModuleMappingsArr.flatMap(m => [...m]),
+				...data.value.cssScopedMappings,
+			]) {
 				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.mappedDocument.uri === uri);
 				if (!cssSourceMap) continue;
 				for (const maped of mappings) {
@@ -318,7 +331,7 @@ export function useSfcTemplateScript(
 				vueDoc,
 				cssTextDocument.value.textDocument,
 				cssTextDocument.value.stylesheet,
-				false,
+				undefined,
 				false,
 				[],
 				{ foldingRanges: false, formatting: false },

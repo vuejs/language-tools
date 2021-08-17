@@ -51,7 +51,7 @@ export interface IDescriptor {
 	}) | null;
 	scriptSetup: IDescriptorBlock | null;
 	styles: (IDescriptorBlock & {
-		module: boolean;
+		module: string | undefined;
 		scoped: boolean;
 	})[];
 	customBlocks: (IDescriptorBlock & {

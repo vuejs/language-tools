@@ -370,7 +370,7 @@ export function createSourceFile(
 						start: style.loc.start.offset,
 						end: style.loc.end.offset,
 					},
-					module: !!style.module,
+					module: style.module === true ? '$style' : typeof style.module === 'string' ? style.module : undefined,
 					scoped: !!style.scoped,
 				};
 				if (descriptor.styles.length > i) {
