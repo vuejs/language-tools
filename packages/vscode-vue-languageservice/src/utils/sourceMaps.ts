@@ -67,7 +67,7 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
 		public stylesheet: Stylesheet | undefined,
-		public module: string | boolean,
+		public module: string | undefined,
 		public scoped: boolean,
 		public links: { textDocument: TextDocument, stylesheet: Stylesheet }[],
 		public capabilities: {
