@@ -11,12 +11,14 @@ export function useSfcEntryForTemplateLs(
 	script: Ref<IDescriptor['script']>,
 	scriptSetup: Ref<IDescriptor['scriptSetup']>,
 	template: Ref<IDescriptor['template']>,
+	hasTsDoc: Ref<boolean>,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
 		const vueDoc = getUnreactiveDoc();
 		const uri = `${vueDoc.uri}.ts`;
 		const vueFileName = upath.basename(shared.uriToFsPath(vueDoc.uri));
+		const tsScriptFileName = hasTsDoc.value ? '__VLS_script_ts' : '__VLS_script';
 		let content = '';
 		if (scriptSetup.value || script.value) {
 			content += `import { __VLS_options as __VLS_options_ts, __VLS_name as __VLS_name_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
@@ -25,14 +27,14 @@ export function useSfcEntryForTemplateLs(
 			content += `export * from './${vueFileName}.__VLS_script';\n`;
 
 			if (scriptSetup.value) {
-				content += `import { __VLS_component as __VLS_component_ts } from './${vueFileName}.__VLS_script_ts';\n`;
+				content += `import { __VLS_component as __VLS_component_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
 				content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
 				content += `export { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
 			}
 			else if (script.value) {
-				content += `import __VLS_component_1_ts from './${vueFileName}.__VLS_script_ts';\n`;
+				content += `import __VLS_component_1_ts from './${vueFileName}.${tsScriptFileName}';\n`;
 				content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
-				content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.__VLS_script_ts';\n`;
+				content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
 				content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
 				content += `declare var __VLS_component_ts: typeof __VLS_component_1_ts extends (new (...args: infer _1) => infer _2)\n`;
 				content += `    ? typeof __VLS_component_1_ts : typeof __VLS_component_1_ts extends ((...args: infer _3) => infer _4)\n`;

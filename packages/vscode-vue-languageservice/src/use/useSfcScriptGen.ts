@@ -64,15 +64,15 @@ export function useSfcScriptGen(
 	});
 	const textDocumentTs = computed(() => {
 		if (lsType === 'template') {
-			const tsLang = lang.value === 'jsx' ? 'tsx'
-				: lang.value === 'js' ? 'ts'
-					: lang.value;
-			return TextDocument.create(
-				`${uri}.__VLS_script_ts.${tsLang}`,
-				shared.syntaxToLanguageId(tsLang),
-				textDocument.value.version,
-				textDocument.value.getText(),
-			);
+			if (lang.value === 'js' || lang.value === 'jsx') {
+				const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
+				return TextDocument.create(
+					`${uri}.__VLS_script_ts.${tsLang}`,
+					shared.syntaxToLanguageId(tsLang),
+					textDocument.value.version,
+					textDocument.value.getText(),
+				);
+			}
 		}
 	});
 	const sourceMap = computed(() => {

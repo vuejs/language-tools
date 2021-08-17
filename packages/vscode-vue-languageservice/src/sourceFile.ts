@@ -131,6 +131,7 @@ export function createSourceFile(
 		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
 		computed(() => descriptor.template),
+		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		untrack(() => document.value),
