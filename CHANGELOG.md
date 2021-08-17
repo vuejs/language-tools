@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.27.3
+
+- fix: go to component props definition broken in template
+- perf: reduce virtual files for TS project (against 0.27.2)
+
 ## 0.27.2
 
 - feat: support template type-checking with jsdoc in `<script lang="js">`
