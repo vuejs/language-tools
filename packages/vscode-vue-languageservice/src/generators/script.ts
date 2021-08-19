@@ -4,6 +4,7 @@ import * as path from 'upath';
 import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import type { TextRange } from '../parsers/types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function generate(
@@ -122,34 +123,43 @@ export function generate(
 		if (!script)
 			return;
 
-		let addText = script.content;
+		const sections: (TextRange | string)[] = [];
+
 		if (shouldAddExportDefault && scriptRanges?.exportDefault) {
-			const insteadOfExport = ' '.repeat('export'.length);
-			const newStart = scriptRanges.exportDefault.start + insteadOfExport.length;
-			addText = addText.substr(0, scriptRanges.exportDefault.start)
-				+ insteadOfExport
-				+ ' '.repeat(scriptRanges.exportDefault.expression.start - newStart)
-				+ addText.substr(scriptRanges.exportDefault.expression.start);
+			sections.push({ start: 0, end: scriptRanges.exportDefault.start });
+			sections.push('await' + ' '.repeat(scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start - 'await'.length));
+			sections.push({ start: scriptRanges.exportDefault.expression.start, end: script.content.length });
 		}
-		codeGen.addCode(
-			addText,
-			{ start: 0, end: script.content.length },
-			SourceMaps.Mode.Offset,
-			{
-				vueTag: 'script',
-				capabilities: {
-					basic: lsType === 'script',
-					references: true,
-					definitions: lsType === 'script',
-					rename: true,
-					diagnostic: true, // also working for setup() returns unused in template checking
-					formatting: lsType === 'script',
-					completion: lsType === 'script',
-					semanticTokens: lsType === 'script',
-					foldingRanges: lsType === 'script',
-				},
+		else {
+			sections.push({ start: 0, end: script.content.length });
+		}
+
+		for (const section of sections) {
+			if (typeof section === 'string') {
+				codeGen.addText(section);
 			}
-		);
+			else {
+				codeGen.addCode(
+					script.content.substring(section.start, section.end),
+					section,
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'script',
+						capabilities: {
+							basic: lsType === 'script',
+							references: true,
+							definitions: lsType === 'script',
+							rename: true,
+							diagnostic: true, // also working for setup() returns unused in template checking
+							formatting: lsType === 'script',
+							completion: lsType === 'script',
+							semanticTokens: lsType === 'script',
+							foldingRanges: lsType === 'script',
+						},
+					}
+				);
+			}
+		}
 	}
 	function writeScriptSetup() {
 		if (!scriptSetup)
