@@ -106,7 +106,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 		/** internal */
 		getNameCases?: (uri: string) => Promise<{
 			tagNameCase: 'both' | 'kebabCase' | 'pascalCase',
-			attrNameCase: 'kebabCase' | 'pascalCase',
+			attrNameCase: 'kebabCase' | 'camelCase',
 		}>,
 	) => {
 		const sourceFile = sourceFiles.get(uri);
@@ -242,7 +242,10 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
 				return;
 			}
-			let nameCases = { tag: 'both', attr: 'kebabCase' };
+			let nameCases = {
+				tag: 'both' as 'both' | 'kebabCase' | 'pascalCase',
+				attr: 'kebabCase' as 'kebabCase' | 'camelCase',
+			};
 			if (getNameCases) {
 				const clientCases = await getNameCases(uri);
 				nameCases.tag = clientCases.tagNameCase;
@@ -270,7 +273,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 						const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
 						for (const prop of bind) {
 							const data: Data = prop.data;
-							const name = nameCases.attr === 'pascalCase' ? data.name : hyphenate(data.name);
+							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
 							if (hyphenate(name).startsWith('on-')) {
 								const propName = '@' +
 									(name.startsWith('on-')
@@ -302,7 +305,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 						}
 						for (const event of on) {
 							const data: Data = event.data;
-							const name = nameCases.attr === 'pascalCase' ? data.name : hyphenate(data.name);
+							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
 							const propName = '@' + name;
 							const propKey = componentName + ':' + propName;
 							attributes.push({

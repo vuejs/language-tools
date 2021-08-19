@@ -5,7 +5,7 @@ import { SourceFile } from '../sourceFile';
 export function register({ sourceFiles }: ApiLanguageServiceContext) {
 	return (uri: string): {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
-		attr: 'kebabCase' | 'pascalCase' | 'unsure',
+		attr: 'kebabCase' | 'camelCase' | 'unsure',
 	} => {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -19,17 +19,17 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			attr: getAttrNameCase(sourceFile),
 		};
 
-		function getAttrNameCase(sourceFile: SourceFile): 'kebabCase' | 'pascalCase' | 'unsure' {
+		function getAttrNameCase(sourceFile: SourceFile): 'kebabCase' | 'camelCase' | 'unsure' {
 
 			const attrNames = sourceFile.getTemplateAttrNames() ?? new Set();
 
-			let hasPascalCase = false;
+			let hasCamelCase = false;
 			let hasKebabCase = false;
 
 			for (const tagName of attrNames) {
 				// attrName
 				if (tagName !== hyphenate(tagName)) {
-					hasPascalCase = true;
+					hasCamelCase = true;
 					break;
 				}
 			}
@@ -41,11 +41,11 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 				}
 			}
 
-			if (hasPascalCase && hasKebabCase) {
+			if (hasCamelCase && hasKebabCase) {
 				return 'kebabCase';
 			}
-			if (hasPascalCase) {
-				return 'pascalCase';
+			if (hasCamelCase) {
+				return 'camelCase';
 			}
 			if (hasKebabCase) {
 				return 'kebabCase';

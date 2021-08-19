@@ -28,7 +28,7 @@ export namespace GetDocumentNameCasesRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = {
 		tagNameCase: 'both' | 'kebabCase' | 'pascalCase',
-		attrNameCase: 'kebabCase' | 'pascalCase',
+		attrNameCase: 'kebabCase' | 'camelCase',
 	};
 	export type ErrorType = never;
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getAttrNameCaseClient');
@@ -91,7 +91,7 @@ export namespace DetectDocumentNameCasesRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
-		attr: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
+		attr: 'both' | 'kebabCase' | 'camelCase' | 'unsure',
 	} | null | undefined;
 	export type ErrorType = never;
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getTagNameCaseServer');

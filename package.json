@@ -171,15 +171,15 @@
 					"type": "string",
 					"enum": [
 						"auto-kebab",
-						"auto-pascal",
+						"auto-camel",
 						"kebab",
-						"pascal"
+						"camel"
 					],
 					"enumDescriptions": [
-						"Auto Detect from Content (Preference kebab-case)",
-						"Auto Detect from Content (Preference pascalCase)",
-						"kebab-case",
-						"pascalCase"
+						"Auto Detect from Content (Preferred :kebab-case=\"...\")",
+						"Auto Detect from Content (Preferred :camelCase=\"...\")",
+						":kebab-case=\"...\"",
+						":camelCase=\"...\""
 					],
 					"default": "auto-kebab",
 					"description": "Preferred attr name case."

@@ -24,7 +24,7 @@ export interface ServerInitializationOptions {
 		signatureHelp?: boolean
 		completion?: {
 			defaultTagNameCase: 'both' | 'kebabCase' | 'pascalCase',
-			defaultAttrNameCase: 'kebabCase' | 'pascalCase',
+			defaultAttrNameCase: 'kebabCase' | 'camelCase',
 			/**
 			 * {@link __requests.GetDocumentNameCasesRequest}
 			 */
