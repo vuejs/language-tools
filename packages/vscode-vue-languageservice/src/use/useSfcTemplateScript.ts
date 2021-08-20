@@ -96,11 +96,6 @@ export function useSfcTemplateScript(
 			codeGen.addText(`// @ts-ignore\n`);
 			codeGen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
 		}
-		codeGen.addText('/* Completion: Slots */\n');
-		for (const name of templateCodeGens.value.usedComponents) {
-			codeGen.addText(`// @ts-ignore\n`);
-			codeGen.addText(`__VLS_components_0['${name}'].__VLS_slots[''];\n`); // TODO
-		}
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');

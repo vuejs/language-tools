@@ -437,20 +437,33 @@ export function createSourceFile(
 		const propNames = props.map(entry => (entry.data as TsCompletionData).name);
 		const setupReturnNames = setupReturns.map(entry => (entry.data as TsCompletionData).name);
 
-		if (shared.eqSet(new Set(contextNames), new Set(templateScriptData.context))
-			&& shared.eqSet(new Set(componentNames), new Set(templateScriptData.components))
-			&& shared.eqSet(new Set(propNames), new Set(templateScriptData.props))
-			&& shared.eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))
-		) {
-			return false;
+		let dirty = false;
+
+		if (!shared.eqSet(new Set(contextNames), new Set(templateScriptData.context))) {
+			templateScriptData.context = contextNames;
+			dirty = true;
 		}
 
-		templateScriptData.context = contextNames;
-		templateScriptData.components = componentNames;
-		templateScriptData.props = propNames;
-		templateScriptData.setupReturns = setupReturnNames;
-		templateScriptData.componentItems = components;
-		sfcTemplateScript.update(); // TODO
-		return true;
+		if (!shared.eqSet(new Set(componentNames), new Set(templateScriptData.components))) {
+			templateScriptData.components = componentNames;
+			templateScriptData.componentItems = components;
+			dirty = true;
+		}
+
+		if (!shared.eqSet(new Set(propNames), new Set(templateScriptData.props))) {
+			templateScriptData.props = propNames;
+			dirty = true;
+		}
+
+		if (!shared.eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))) {
+			templateScriptData.setupReturns = setupReturnNames;
+			dirty = true;
+		}
+
+		if (dirty) {
+			sfcTemplateScript.update(); // TODO
+		}
+
+		return dirty;
 	}
 }

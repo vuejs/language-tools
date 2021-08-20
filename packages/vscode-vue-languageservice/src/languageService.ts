@@ -346,12 +346,8 @@ export function createLanguageService(
 	) {
 		const handler = {
 			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-				if (typeof shouldUpdateTemplateScript === 'boolean') {
-					update(shouldUpdateTemplateScript);
-				}
-				else {
-					update(shouldUpdateTemplateScript.apply(null, argumentsList));
-				}
+				const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
+				update(_shouldUpdateTemplateScript);
 				return target.apply(thisArg, argumentsList);
 			}
 		};
@@ -367,12 +363,8 @@ export function createLanguageService(
 				for (const runningRequest of blockingRequests) {
 					await runningRequest;
 				}
-				if (typeof shouldUpdateTemplateScript === 'boolean') {
-					update(shouldUpdateTemplateScript);
-				}
-				else {
-					update(shouldUpdateTemplateScript.apply(null, argumentsList));
-				}
+				const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
+				update(_shouldUpdateTemplateScript);
 				const runner = target.apply(thisArg, argumentsList);
 				if (blockNewRequest && runner instanceof Promise) {
 					blockingRequests.add(runner);
@@ -486,7 +478,7 @@ export function createLanguageService(
 				}
 				: undefined,
 			getProjectVersion: () => {
-				return vueHost.getProjectVersion?.() + ':' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion);
+				return (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
 			},
 			getScriptFileNames,
 			getScriptVersion,

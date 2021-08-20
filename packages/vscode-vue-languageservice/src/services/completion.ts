@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
-import { computed, ref } from '@vue/reactivity';
+import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
@@ -85,7 +85,7 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs }: ApiLanguageServiceContext) {
+export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, scriptTsLs }: ApiLanguageServiceContext) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -261,8 +261,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 					{ name: 'v-else', valueSet: 'v' },
 					{ name: 'v-for' },
 				];
-				const slots: html.IAttributeData[] = [];
-				for (const [_componentName, { item, bind, on, slot }] of componentCompletion) {
+				for (const [_componentName, { item, bind, on }] of componentCompletion) {
 					const componentNames =
 						nameCases.tag === 'kebabCase'
 							? new Set([hyphenate(_componentName)])
@@ -314,16 +313,6 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 							});
 							tsItems.set(propKey, event);
 						}
-						for (const _slot of slot) {
-							const data: Data = _slot.data;
-							const propName = '#' + data.name;
-							const propKey = componentName + ':' + propName;
-							slots.push({
-								name: propName,
-								description: propKey,
-							});
-							tsItems.set(propKey, _slot);
-						}
 						if (componentName !== '*') {
 							tags.push({
 								name: componentName,
@@ -336,10 +325,6 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 						}
 					}
 				}
-				tags.push({
-					name: 'template',
-					attributes: slots,
-				});
 				const descriptor = sourceFile.getDescriptor();
 				if (descriptor.script || descriptor.scriptSetup) {
 					for (const vueFile of sourceFiles.getAll()) {
@@ -605,24 +590,24 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 
 		const {
 			sfcTemplateScript,
-			sfcTemplate,
 			templateScriptData,
 		} = sourceFile.refs;
 
-		const templateTsProjectVersion = ref<string>();
+		const projectVersion = ref<string>();
 		const result = computed(() => {
 			{ // watching
-				templateTsProjectVersion.value;
+				projectVersion.value;
 			}
-			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[], slot: vscode.CompletionItem[] }>();
-			if (sfcTemplateScript.textDocument.value && sfcTemplate.textDocument.value) {
-				const doc = sfcTemplateScript.textDocument.value;
+			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
+			pauseTracking();
+			const doc = sfcTemplateScript.textDocument.value;
+			resetTracking();
+			if (doc) {
 				const text = doc.getText();
 				for (const tag of templateScriptData.componentItems) {
 					const tagName = (tag.data as TsCompletionData).name;
 					let bind: vscode.CompletionItem[] = [];
 					let on: vscode.CompletionItem[] = [];
-					let slot: vscode.CompletionItem[] = [];
 					{
 						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
 						let offset = text.indexOf(searchText);
@@ -639,23 +624,15 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 							on = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
 						}
 					}
-					{
-						const searchText = `__VLS_components_0['${tagName}'].__VLS_slots['`;
-						let offset = text.indexOf(searchText);
-						if (offset >= 0) {
-							offset += searchText.length;
-							slot = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
-						}
-					}
-					data.set(tagName, { item: tag, bind, on, slot });
+					data.set(tagName, { item: tag, bind, on });
 				}
 				const globalBind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
-				data.set('*', { item: undefined, bind: globalBind, on: [], slot: [] });
+				data.set('*', { item: undefined, bind: globalBind, on: [] });
 			}
 			return data;
 		});
 		return () => {
-			templateTsProjectVersion.value = templateTsLs.__internal__.host.getProjectVersion?.();
+			projectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
 			return result.value;
 		};
 	}
