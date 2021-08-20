@@ -129,7 +129,8 @@ export function createLanguageService(
 
 	let vueProjectVersion: string | undefined;
 	let lastScriptVersions = new Map<string, string>();
-	let scriptProjectVersion = 0;
+	let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
+	let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
 	let templateProjectVersion = 0;
 	let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
 	const documents = new shared.UriMap<TextDocument>();
@@ -279,7 +280,7 @@ export function createLanguageService(
 		getSemanticTokens: publicApiHook(semanticTokens.register(context, () => update(true)), false),
 
 		doHover: publicApiHook(hover.register(context), isTemplateScriptPosition),
-		doComplete: publicApiHook(completions.register(context), isTemplateScriptPosition),
+		doComplete: publicApiHook(completions.register(context, () => scriptContentVersion), isTemplateScriptPosition),
 
 		getCodeActions: publicApiHook(codeActions.register(context), false),
 		doCodeActionResolve: publicApiHook(codeActionResolve.register(context), false),
@@ -426,6 +427,7 @@ export function createLanguageService(
 			}
 
 			if (tsFileChanged) {
+				scriptContentVersion++;
 				scriptProjectVersion++;
 				templateProjectVersion++;
 				updates.length = 0;
@@ -585,6 +587,8 @@ export function createLanguageService(
 		}
 	}
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
+
+		let vueScriptContentsUpdate = false;
 		let vueScriptsUpdated = false;
 		let templateScriptUpdated = false;
 
@@ -603,6 +607,9 @@ export function createLanguageService(
 			}
 			else {
 				const updates = sourceFile.update(doc);
+				if (updates.scriptContentUpdated) {
+					vueScriptContentsUpdate = true;
+				}
 				if (updates.scriptUpdated) {
 					vueScriptsUpdated = true;
 				}
@@ -612,12 +619,15 @@ export function createLanguageService(
 			}
 			templateScriptUpdateUris.add(uri);
 		}
+		if (vueScriptContentsUpdate) {
+			scriptContentVersion++;
+		}
 		if (vueScriptsUpdated) {
 			scriptProjectVersion++;
 			templateProjectVersion++;
 		}
-		if (shouldUpdateTemplateScript && lastScriptProjectVersionWhenTemplateProjectVersionUpdate !== scriptProjectVersion) {
-			lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptProjectVersion;
+		if (shouldUpdateTemplateScript && lastScriptProjectVersionWhenTemplateProjectVersionUpdate !== scriptContentVersion) {
+			lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
 			let currentNums = 0;
 			for (const uri of templateScriptUpdateUris) {
 				if (sourceFiles.get(uri)?.updateTemplateScript(templateTsLs)) {
@@ -645,6 +655,7 @@ export function createLanguageService(
 			}
 		}
 		if (updated) {
+			scriptContentVersion++;
 			scriptProjectVersion++;
 			templateProjectVersion++;
 		}

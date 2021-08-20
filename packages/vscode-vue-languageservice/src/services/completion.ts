@@ -85,7 +85,10 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, scriptTsLs }: ApiLanguageServiceContext) {
+export function register(
+	{ modules: { html, emmet }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs }: ApiLanguageServiceContext,
+	getScriptContentVersion: () => number,
+) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
@@ -593,7 +596,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 			templateScriptData,
 		} = sourceFile.refs;
 
-		const projectVersion = ref<string>();
+		const projectVersion = ref<number>();
 		const result = computed(() => {
 			{ // watching
 				projectVersion.value;
@@ -632,7 +635,7 @@ export function register({ modules: { html, emmet }, sourceFiles, getTsLs, htmlL
 			return data;
 		});
 		return () => {
-			projectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
+			projectVersion.value = getScriptContentVersion();
 			return result.value;
 		};
 	}

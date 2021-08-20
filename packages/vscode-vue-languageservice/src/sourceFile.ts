@@ -269,6 +269,7 @@ export function createSourceFile(
 		const templateScriptVersion_2 = sfcTemplateScript.textDocument.value?.version;
 
 		return {
+			scriptContentUpdated: lastUpdated.script || lastUpdated.scriptSetup,
 			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2, // TODO
 			templateScriptUpdated: templateScriptVersion_1 !== templateScriptVersion_2,
 		};
