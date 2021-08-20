@@ -136,6 +136,7 @@ export function createLanguageService(
 	const sourceFiles = createSourceFiles();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
+	const blockingRequests = new Set<Promise<any>>();
 
 	const templateTsHost = createTsLsHost('template');
 	const scriptTsHost = createTsLsHost('script');
@@ -263,31 +264,31 @@ export function createLanguageService(
 	});
 
 	return {
-		doValidation: apiHook(diagnostics.register(context, () => update(true)), false),
-		findDefinition: apiHook(findDefinition.on, isTemplateScriptPosition),
-		findReferences: apiHook(references.register(context), true),
-		findTypeDefinition: apiHook(findDefinition.onType, isTemplateScriptPosition),
+		doValidation: publicApiHook(diagnostics.register(context, () => update(true)), false, false),
+		findDefinition: publicApiHook(findDefinition.on, isTemplateScriptPosition),
+		findReferences: publicApiHook(references.register(context), true),
+		findTypeDefinition: publicApiHook(findDefinition.onType, isTemplateScriptPosition),
 		callHierarchy: {
-			doPrepare: apiHook(_callHierarchy.doPrepare, isTemplateScriptPosition),
-			getIncomingCalls: apiHook(_callHierarchy.getIncomingCalls, true),
-			getOutgoingCalls: apiHook(_callHierarchy.getOutgoingCalls, true),
+			doPrepare: publicApiHook(_callHierarchy.doPrepare, isTemplateScriptPosition),
+			getIncomingCalls: publicApiHook(_callHierarchy.getIncomingCalls, true),
+			getOutgoingCalls: publicApiHook(_callHierarchy.getOutgoingCalls, true),
 		},
-		prepareRename: apiHook(renames.prepareRename, isTemplateScriptPosition),
-		doRename: apiHook(renames.doRename, true),
-		getEditsForFileRename: apiHook(renames.onRenameFile, false),
-		getSemanticTokens: apiHook(semanticTokens.register(context, () => update(true)), false),
+		prepareRename: publicApiHook(renames.prepareRename, isTemplateScriptPosition),
+		doRename: publicApiHook(renames.doRename, true),
+		getEditsForFileRename: publicApiHook(renames.onRenameFile, false),
+		getSemanticTokens: publicApiHook(semanticTokens.register(context, () => update(true)), false),
 
-		doHover: apiHook(hover.register(context), isTemplateScriptPosition),
-		doComplete: apiHook(completions.register(context), isTemplateScriptPosition),
+		doHover: publicApiHook(hover.register(context), isTemplateScriptPosition),
+		doComplete: publicApiHook(completions.register(context), isTemplateScriptPosition),
 
-		getCodeActions: apiHook(codeActions.register(context), false),
-		doCodeActionResolve: apiHook(codeActionResolve.register(context), false),
-		doCompletionResolve: apiHook(completionResolve.register(context), false),
-		doCodeLensResolve: apiHook(codeLensResolve.register(context), false),
-		getSignatureHelp: apiHook(signatureHelp.register(context), false),
-		getCodeLens: apiHook(codeLens.register(context), false),
-		findDocumentHighlights: apiHook(documentHighlight.register(context), false),
-		findDocumentLinks: apiHook(documentLink.register(context), false),
+		getCodeActions: publicApiHook(codeActions.register(context), false),
+		doCodeActionResolve: publicApiHook(codeActionResolve.register(context), false),
+		doCompletionResolve: publicApiHook(completionResolve.register(context), false),
+		doCodeLensResolve: publicApiHook(codeLensResolve.register(context), false),
+		getSignatureHelp: publicApiHook(signatureHelp.register(context), false),
+		getCodeLens: publicApiHook(codeLens.register(context), false),
+		findDocumentHighlights: publicApiHook(documentHighlight.register(context), false),
+		findDocumentLinks: publicApiHook(documentLink.register(context), false),
 		dispose: () => {
 			scriptTsLs.dispose();
 			templateTsLs.dispose();
@@ -301,16 +302,16 @@ export function createLanguageService(
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
 			},
-			checkProject: apiHook(() => {
+			checkProject: publicApiHook(() => {
 				const vueImportErrors = scriptTsLs.doValidation(globalDoc.uri, { semantic: true });
 				return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
 			}, false),
 			getGlobalDocs: () => [globalDoc],
-			getContext: apiHook(() => context),
-			getD3: apiHook(d3.register(context)),
-			executeCommand: apiHook(executeCommand.register(context)),
-			detectTagNameCase: apiHook(tagNameCase.register(context)),
-			doRefAutoClose: apiHook(refAutoClose.register(context), false),
+			getContext: publicApiHook(() => context),
+			getD3: publicApiHook(d3.register(context)),
+			executeCommand: publicApiHook(executeCommand.register(context)),
+			detectTagNameCase: publicApiHook(tagNameCase.register(context)),
+			doRefAutoClose: publicApiHook(refAutoClose.register(context), false),
 		},
 	};
 
@@ -339,9 +340,12 @@ export function createLanguageService(
 
 		return false;
 	}
-	function apiHook<T extends (...args: any) => any>(api: T, shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true) {
+	function apiHook<T extends (...args: any) => any>(
+		api: T,
+		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
+	) {
 		const handler = {
-			apply: function (target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
+			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
 				if (typeof shouldUpdateTemplateScript === 'boolean') {
 					update(shouldUpdateTemplateScript);
 				}
@@ -349,6 +353,32 @@ export function createLanguageService(
 					update(shouldUpdateTemplateScript.apply(null, argumentsList));
 				}
 				return target.apply(thisArg, argumentsList);
+			}
+		};
+		return new Proxy<T>(api, handler);
+	}
+	function publicApiHook<T extends (...args: any) => any>(
+		api: T,
+		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
+		blockNewRequest = true,
+	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+		const handler = {
+			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
+				for (const runningRequest of blockingRequests) {
+					await runningRequest;
+				}
+				if (typeof shouldUpdateTemplateScript === 'boolean') {
+					update(shouldUpdateTemplateScript);
+				}
+				else {
+					update(shouldUpdateTemplateScript.apply(null, argumentsList));
+				}
+				const runner = target.apply(thisArg, argumentsList);
+				if (blockNewRequest && runner instanceof Promise) {
+					blockingRequests.add(runner);
+					runner.then(() => blockingRequests.delete(runner));
+				}
+				return runner;
 			}
 		};
 		return new Proxy<T>(api, handler);

@@ -13,7 +13,7 @@ export function register(
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 ) {
 	connection.onCompletion(async handler => {
-		return servicesManager
+		return await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.doComplete(
 				handler.textDocument.uri,
@@ -54,8 +54,8 @@ export function register(
 			.getMatchService(handler.textDocument.uri)
 			?.prepareRename(handler.textDocument.uri, handler.position);
 	});
-	connection.onRenameRequest(handler => {
-		return servicesManager
+	connection.onRenameRequest(async handler => {
+		return await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
@@ -93,16 +93,16 @@ export function register(
 			return codeActions;
 		}
 	});
-	connection.onCodeActionResolve(codeAction => {
+	connection.onCodeActionResolve(async codeAction => {
 		const tsConfig: string | undefined = (codeAction.data as any)?.tsConfig;
 		const service = tsConfig ? servicesManager.services.get(tsConfig)?.getLanguageService() : undefined;
 		if (service) {
-			return service.doCodeActionResolve(codeAction);
+			return await service.doCodeActionResolve(codeAction);
 		}
 		return codeAction;
 	});
-	connection.onReferences(handler => {
-		const result = servicesManager
+	connection.onReferences(async handler => {
+		const result = await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.findReferences(handler.textDocument.uri, handler.position);
 		if (result && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
@@ -110,8 +110,8 @@ export function register(
 		}
 		return result;
 	});
-	connection.onDefinition(handler => {
-		const result = servicesManager
+	connection.onDefinition(async handler => {
+		const result = await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.findDefinition(handler.textDocument.uri, handler.position);
 		if (result && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
@@ -134,13 +134,13 @@ export function register(
 			.getMatchService(handler.textDocument.uri)
 			?.findDocumentHighlights(handler.textDocument.uri, handler.position);
 	});
-	connection.onDocumentLinks(handler => {
-		return servicesManager
+	connection.onDocumentLinks(async handler => {
+		return await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.findDocumentLinks(handler.textDocument.uri);
 	});
-	connection.languages.callHierarchy.onPrepare(handler => {
-		const items = servicesManager
+	connection.languages.callHierarchy.onPrepare(async handler => {
+		const items = await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
 		if (items) {
@@ -165,8 +165,8 @@ export function register(
 			.getMatchService(uri)
 			?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
-	connection.languages.semanticTokens.on((handler, token, _, resultProgress) => {
-		const result = servicesManager
+	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
+		const result = await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
 		return {
@@ -174,8 +174,8 @@ export function register(
 			data: result?.data ?? [],
 		};
 	});
-	connection.languages.semanticTokens.onRange((handler, token, _, resultProgress) => {
-		const result = servicesManager
+	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
+		const result = await servicesManager
 			.getMatchService(handler.textDocument.uri)
 			?.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
 		return {
@@ -230,8 +230,8 @@ export function register(
 
 		async function worker() {
 			const edits = (await Promise.all(handler.files
-				.map(file => {
-					return servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
+				.map(async file => {
+					return await servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
 				}))).filter(shared.notEmpty);
 			if (edits.length) {
 				const result = edits[0];
