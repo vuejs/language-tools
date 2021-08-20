@@ -11,8 +11,8 @@ export interface IFilePathToResourceConverter {
 	/**
 	 * Convert a typescript filepath to a VS Code resource.
 	 */
-	toResource(filepath: string): string;
-}
+		toResource(filepath: string): string;
+	}
 
 function replaceLinks(text: string): string {
 	return text
@@ -184,8 +184,7 @@ function convertLinkTags(
 			case 'linkName':
 				if (currentLink) {
 					currentLink.name = part.text;
-					// TODO: remove cast once we pick up TS 4.3
-					currentLink.target = (part as any as Proto.JSDocLinkDisplayPart).target;
+					currentLink.target = (part as Proto.JSDocLinkDisplayPart).target;
 				}
 				break;
 
