@@ -244,10 +244,7 @@ export function createSourceFile(
 	function update(newDocument: TextDocument) {
 		const parsedSfc = vueSfc.parse(newDocument.getText(), { sourceMap: false, ignoreEmpty: false });
 		const newDescriptor = parsedSfc.descriptor;
-		const versionsBeforeUpdate = [
-			sfcScriptForTemplateLs.textDocument.value?.version,
-			sfcTemplateScript.textDocument.value?.version,
-		];
+		const templateScriptVersion_1 = sfcTemplateScript.textDocument.value?.version;
 
 		updateSfcErrors();
 		updateTemplate(newDescriptor);
@@ -260,15 +257,11 @@ export function createSourceFile(
 		version.value = newDocument.version;
 
 		sfcTemplateScript.update(); // TODO
-
-		const versionsAfterUpdate = [
-			sfcScriptForTemplateLs.textDocument.value?.version,
-			sfcTemplateScript.textDocument.value?.version,
-		];
+		const templateScriptVersion_2 = sfcTemplateScript.textDocument.value?.version;
 
 		return {
-			scriptUpdated: versionsBeforeUpdate[0] !== versionsAfterUpdate[0],
-			templateScriptUpdated: versionsBeforeUpdate[1] !== versionsAfterUpdate[1],
+			scriptUpdated: lastUpdated.script || lastUpdated.scriptSetup,
+			templateScriptUpdated: templateScriptVersion_1 !== templateScriptVersion_2,
 		};
 
 		function updateSfcErrors() {
@@ -302,7 +295,8 @@ export function createSourceFile(
 				},
 			} : null;
 
-			lastUpdated.template = descriptor.template?.content !== newData?.content;
+			lastUpdated.template = descriptor.template?.lang !== newData?.lang
+				|| descriptor.template?.content !== newData?.content;
 
 			if (descriptor.template && newData) {
 				descriptor.template.lang = newData.lang;
@@ -325,7 +319,8 @@ export function createSourceFile(
 				},
 			} : null;
 
-			lastUpdated.script = descriptor.script?.content !== newData?.content;
+			lastUpdated.script = descriptor.script?.lang !== newData?.lang
+				|| descriptor.script?.content !== newData?.content;
 
 			if (descriptor.script && newData) {
 				descriptor.script.src = newData.src;
@@ -348,7 +343,8 @@ export function createSourceFile(
 				},
 			} : null;
 
-			lastUpdated.scriptSetup = descriptor.scriptSetup?.content !== newData?.content;
+			lastUpdated.scriptSetup = descriptor.scriptSetup?.lang !== newData?.lang
+				|| descriptor.scriptSetup?.content !== newData?.content;
 
 			if (descriptor.scriptSetup && newData) {
 				descriptor.scriptSetup.lang = newData.lang;

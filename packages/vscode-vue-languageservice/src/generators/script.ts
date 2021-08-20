@@ -19,7 +19,7 @@ export function generate(
 	},
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
-	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
+	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
 ) {
 
 	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
@@ -436,6 +436,8 @@ export function generate(
 	function writeTemplate() {
 		if (!scriptSetup)
 			return;
+
+		const htmlGen = getHtmlGen();
 		if (!htmlGen)
 			return;
 

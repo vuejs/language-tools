@@ -40,7 +40,7 @@ export function useSfcScriptGen(
 			scriptSetup.value,
 			scriptRanges.value,
 			scriptSetupRanges.value,
-			htmlGen.value,
+			() => htmlGen.value,
 		)
 	);
 	const htmlGen = computed(() => {
