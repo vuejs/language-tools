@@ -15,10 +15,10 @@ export function register(
 		if (!document) return;
 		return servicesManager.getMatchService(document.uri)?.__internal__.doRefAutoClose(document, handler.position);
 	});
-	connection.onRequest(shared.D3Request.type, handler => {
+	connection.onRequest(shared.D3Request.type, async handler => {
 		const document = documents.get(handler.uri);
 		if (!document) return;
-		return servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
+		return await servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
 	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async ({ lsType }) => {
 		for (const [_, service] of servicesManager.services) {
@@ -28,7 +28,7 @@ export function register(
 			for (const globalDoc of globalDocs) {
 				fs.writeFile(shared.uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
 			}
-			const { sourceFiles } = ls.__internal__.getContext();
+			const { sourceFiles } = await ls.__internal__.getContext();
 			for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
 				fs.writeFile(shared.uriToFsPath(doc.uri), doc.getText(), () => { });
 			}
@@ -44,7 +44,7 @@ export function register(
 		for (const [_, service] of servicesManager.services) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
-			const { sourceFiles } = ls.__internal__.getContext();
+			const { sourceFiles } = await ls.__internal__.getContext();
 			const allFiles = sourceFiles.getAll();
 			let i = 0;
 			for (const sourceFile of allFiles) {
