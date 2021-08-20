@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.27.4
+
+- feat: support css variable injection ([#335](https://github.com/johnsoncodehk/volar/issues/335))
+- feat: make `<script setup>` below `<script>` when convert to setup sugar ([#378](https://github.com/johnsoncodehk/volar/issues/378))
+- feat: support sfc named css modules ([#379](https://github.com/johnsoncodehk/volar/issues/379))
+- fix: `export default { ... }` syntax broken with setup sugar ([#383](https://github.com/johnsoncodehk/volar/issues/383))
+- fix: attr name case option "pascalCase" -> "camelCase" ([#384](https://github.com/johnsoncodehk/volar/issues/384))
+- fix: html completion edit range incorrect if typing before old completion request finish ([#385](https://github.com/johnsoncodehk/volar/issues/385))
+- perf: faster intellisense and diagnostic in `<template>`
+
 ## 0.27.3
 
 - fix: go to component props definition broken in template
@@ -27,7 +37,7 @@
 - perf: faster code action and validation
 - fix: setup returns unused check not working
 
-** Breaking changes**
+**Breaking changes**
 
 - unsupported ref sugar (take 1) syntax and convert codeLens
 
@@ -43,7 +53,7 @@
 - perf: faster document update for html server
 - perf: move codeAction to api server to prevent codeAction request blocking by diagnostics when save + auto-formatting
 
-** `@volar/server` Breaking changes**
+**`@volar/server` Breaking changes**
 
 - ServerInitializationOptions: features -> languageFeatures
 - ServerInitializationOptions: htmlFeatures -> documentFeatures
