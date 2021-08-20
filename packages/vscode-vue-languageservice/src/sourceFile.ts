@@ -116,6 +116,7 @@ export function createSourceFile(
 		computed(() => sfcScript.ast.value),
 		computed(() => sfcScriptSetup.ast.value),
 		sfcTemplateCompileResult,
+		computed(() => sfcStyles.textDocuments.value),
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen('script',
 		context.modules.typescript,
@@ -125,6 +126,7 @@ export function createSourceFile(
 		computed(() => sfcScript.ast.value),
 		computed(() => sfcScriptSetup.ast.value),
 		sfcTemplateCompileResult,
+		computed(() => sfcStyles.textDocuments.value),
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		untrack(() => document.value),
@@ -136,11 +138,13 @@ export function createSourceFile(
 	const sfcTemplateScript = useSfcTemplateScript(
 		untrack(() => document.value),
 		computed(() => descriptor.template),
+		computed(() => descriptor.styles),
 		templateScriptData,
 		sfcStyles.textDocuments,
 		sfcStyles.sourceMaps,
 		sfcTemplateData,
 		sfcTemplateCompileResult,
+		computed(() => sfcStyles.textDocuments.value),
 		context,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
@@ -244,6 +248,8 @@ export function createSourceFile(
 	function update(newDocument: TextDocument) {
 		const parsedSfc = vueSfc.parse(newDocument.getText(), { sourceMap: false, ignoreEmpty: false });
 		const newDescriptor = parsedSfc.descriptor;
+		const scriptLang_1 = sfcScriptForScriptLs.textDocument.value.languageId;
+		const scriptText_1 = sfcScriptForScriptLs.textDocument.value.getText();
 		const templateScriptVersion_1 = sfcTemplateScript.textDocument.value?.version;
 
 		updateSfcErrors();
@@ -257,10 +263,13 @@ export function createSourceFile(
 		version.value = newDocument.version;
 
 		sfcTemplateScript.update(); // TODO
+
+		const scriptLang_2 = sfcScriptForScriptLs.textDocument.value.languageId;
+		const scriptText_2 = sfcScriptForScriptLs.textDocument.value.getText();
 		const templateScriptVersion_2 = sfcTemplateScript.textDocument.value?.version;
 
 		return {
-			scriptUpdated: lastUpdated.script || lastUpdated.scriptSetup,
+			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2, // TODO
 			templateScriptUpdated: templateScriptVersion_1 !== templateScriptVersion_2,
 		};
 

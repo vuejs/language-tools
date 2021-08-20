@@ -17,6 +17,7 @@ export function useSfcScriptGen(
 	scriptAst: Ref<ts.SourceFile | undefined>,
 	scriptSetupAst: Ref<ts.SourceFile | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
+	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 ) {
 
 	let version = 0;
@@ -32,6 +33,11 @@ export function useSfcScriptGen(
 			? parseScriptSetupRanges(ts, scriptSetupAst.value)
 			: undefined
 	);
+	const htmlGen = computed(() => {
+		if (sfcTemplateCompileResult.value?.ast) {
+			return templateGen.generate(sfcTemplateCompileResult.value.ast);
+		}
+	});
 	const codeGen = computed(() =>
 		genScript(
 			lsType,
@@ -41,13 +47,9 @@ export function useSfcScriptGen(
 			scriptRanges.value,
 			scriptSetupRanges.value,
 			() => htmlGen.value,
+			() => sfcStyles.value,
 		)
 	);
-	const htmlGen = computed(() => {
-		if (sfcTemplateCompileResult.value?.ast) {
-			return templateGen.generate(sfcTemplateCompileResult.value.ast);
-		}
-	})
 	const lang = computed(() => {
 		return !script.value && !scriptSetup.value ? 'ts'
 			: scriptSetup.value && scriptSetup.value.lang !== 'js' ? shared.getValidScriptSyntax(scriptSetup.value.lang)

@@ -13,6 +13,7 @@ import { SearchTexts } from '../utils/string';
 export function useSfcTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
 	template: Ref<IDescriptor['template']>,
+	styles: Ref<IDescriptor['styles']>,
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
@@ -31,6 +32,7 @@ export function useSfcTemplateScript(
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
+	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
@@ -64,8 +66,6 @@ export function useSfcTemplateScript(
 		);
 	});
 	const data = computed(() => {
-		if (!templateCodeGens.value)
-			return;
 
 		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 
@@ -83,18 +83,20 @@ export function useSfcTemplateScript(
 		codeGen.addText('declare var __VLS_componentProps: __VLS_MapPropsType<typeof __VLS_components>;\n');
 		codeGen.addText('declare var __VLS_componentEmits: __VLS_MapEmitType<typeof __VLS_components>;\n');
 
-		/* Completion */
-		codeGen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
+		if (templateCodeGens.value) {
+			/* Completion */
+			codeGen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
 
-		codeGen.addText('/* Completion: Emits */\n');
-		for (const name of templateCodeGens.value.usedComponents) {
-			codeGen.addText(`// @ts-ignore\n`);
-			codeGen.addText(`__VLS_componentEmits['${name}']('');\n`); // TODO
-		}
-		codeGen.addText('/* Completion: Props */\n');
-		for (const name of templateCodeGens.value.usedComponents) {
-			codeGen.addText(`// @ts-ignore\n`);
-			codeGen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
+			codeGen.addText('/* Completion: Emits */\n');
+			for (const name of templateCodeGens.value.usedComponents) {
+				codeGen.addText(`// @ts-ignore\n`);
+				codeGen.addText(`__VLS_componentEmits['${name}']('');\n`); // TODO
+			}
+			codeGen.addText('/* Completion: Props */\n');
+			for (const name of templateCodeGens.value.usedComponents) {
+				codeGen.addText(`// @ts-ignore\n`);
+				codeGen.addText(`__VLS_componentPropsBase['${name}'][''];\n`); // TODO
+			}
 		}
 
 		/* CSS Module */
@@ -116,7 +118,12 @@ export function useSfcTemplateScript(
 		codeGen.addText(`/* Props */\n`);
 		const ctxMappings = writeProps();
 
-		margeCodeGen(codeGen as CodeGen, templateCodeGens.value.codeGen as CodeGen);
+		codeGen.addText(`/* CSS variable injection */\n`);
+		writeCssVars();
+
+		if (templateCodeGens.value) {
+			margeCodeGen(codeGen as CodeGen, templateCodeGens.value.codeGen as CodeGen);
+		}
 
 		return {
 			...codeGen,
@@ -237,9 +244,37 @@ export function useSfcTemplateScript(
 			}
 			return mappings;
 		}
+		function writeCssVars() {
+			for (let i = 0; i < sfcStyles.value.length; i++) {
+				const style = sfcStyles.value[i];
+				const docText = style.textDocument.getText();
+				for (const cssBind of style.binds) {
+					const bindText = docText.substring(cssBind.start, cssBind.end);
+					codeGen.addCode(
+						bindText,
+						cssBind,
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'style',
+							vueTagIndex: i,
+							capabilities: {
+								basic: true,
+								references: true,
+								definitions: true,
+								diagnostic: true,
+								rename: true,
+								completion: true,
+								semanticTokens: true,
+							},
+						},
+					);
+					codeGen.addText(';\n');
+				}
+			}
+		}
 	});
 	const sourceMap = computed(() => {
-		if (data.value && textDoc.value && template.value) {
+		if (textDoc.value) {
 			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.TsSourceMap(
 				vueDoc,
@@ -352,18 +387,26 @@ export function useSfcTemplateScript(
 	};
 
 	function parseMappingSourceRange(data: any, range: SourceMaps.Range) {
+		if (data.vueTag === 'style' && data.vueTagIndex !== undefined) {
+			return {
+				start: styles.value[data.vueTagIndex].loc.start + range.start,
+				end: styles.value[data.vueTagIndex].loc.start + range.end,
+			};
+		}
 		const templateOffset = template.value?.loc.start ?? 0;
 		return {
-			start: range.start + templateOffset,
-			end: range.end + templateOffset,
+			start: templateOffset + range.start,
+			end: templateOffset + range.end,
 		};
 	}
 	function update() {
-		if (data.value?.getText() !== textDoc.value?.getText()) {
-			if (data.value && templateCodeGens.value) {
+		if (data.value.getText() !== textDoc.value?.getText()) {
+			if (data.value) {
 				const _version = version++;
 				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.ts', shared.syntaxToLanguageId('ts'), _version, data.value.getText());
-				formatTextDoc.value = TextDocument.create(vueUri + '.__VLS_template.format.ts', shared.syntaxToLanguageId('ts'), _version, templateCodeGens.value.formatCodeGen.getText());
+				formatTextDoc.value = templateCodeGens.value
+					? TextDocument.create(vueUri + '.__VLS_template.format.ts', shared.syntaxToLanguageId('ts'), _version, templateCodeGens.value.formatCodeGen.getText())
+					: undefined;
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {

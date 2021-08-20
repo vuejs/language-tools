@@ -20,6 +20,7 @@ export function generate(
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
 	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
+	getSfcStyles: () => ReturnType<(typeof import('../use/useSfcStyles'))['useSfcStyles']>['textDocuments']['value'],
 ) {
 
 	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
@@ -254,6 +255,7 @@ export function generate(
 			codeGen.addText(`setup() {\n`);
 			if (lsType === 'script') {
 				codeGen.addText(`return () => {\n`);
+				withCssBinds();
 				writeTemplate();
 				codeGen.addText(`};\n`);
 			}
@@ -433,9 +435,16 @@ export function generate(
 			codeGen.addText(`export const __VLS_name = undefined;\n`);
 		}
 	}
+	function withCssBinds() {
+		for (const style of getSfcStyles()) {
+			const docText = style.textDocument.getText();
+			for (const cssBind of style.binds) {
+				const bindText = docText.substring(cssBind.start, cssBind.end);
+				codeGen.addText(bindText + ';\n');
+			}
+		}
+	}
 	function writeTemplate() {
-		if (!scriptSetup)
-			return;
 
 		const htmlGen = getHtmlGen();
 		if (!htmlGen)
