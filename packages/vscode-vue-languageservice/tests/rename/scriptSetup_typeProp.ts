@@ -6,7 +6,7 @@ defineRename({
 	fileName: path.resolve(__dirname, '../../testCases/scriptSetup_typeProp.vue'),
 	actions: [
 		{
-			position: Position.create(4, 14),
+			position: Position.create(3, 14),
 			newName: 'bar',
 			length: 4,
 		},
@@ -20,7 +20,6 @@ defineRename({
 <template>{{ bar }}</template>
 
 <script lang="ts" setup>
-import { defineProps } from '@vue/runtime-core';
 defineProps<{ bar: string }>();
 </script>`.trim(),
 });

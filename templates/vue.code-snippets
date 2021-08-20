@@ -33,11 +33,7 @@
     //     "prefix": "script setup",
     //     "body": [
     //         "<script lang=\"ts\" setup>",
-    //         "defineProps({ $1 });",
-    //         "</script>",
-    //         "",
-    //         "<script lang=\"ts\">",
-    //         "import { defineProps } from 'vue';",
+    //         "defineProps<{ $1 }>();",
     //         "</script>"
     //     ],
     //     "description": "Create <script setup> + <script> blocks"
