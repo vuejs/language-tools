@@ -79,6 +79,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		}
 		return getTextDocument(uri);
 	}
+
 	function getTextDocument(uri: string) {
 		const fileName = shared.uriToFsPath(uri);
 		const version = host.getScriptVersion(fileName);
@@ -93,6 +94,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		}
 		return documents.get(uri)?.[1];
 	}
+
 	function dispose() {
 		languageService.dispose();
 	}
