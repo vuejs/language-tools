@@ -64,7 +64,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 			const referencesCount = references?.length ?? 0;
 			codeLens.command = {
 				title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
-				command: Commands.SHOW_REFERENCES,
+				command: canShowReferences ? Commands.SHOW_REFERENCES : '',
 				arguments: [uri, codeLens.range.start, vueReferences],
 			};
 		}
