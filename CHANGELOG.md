@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.27.6
+
+- feat: support multiple `v-bind(...)` in single css expression
+- feat: support `v-bind(...)` expression syntax with quotes
+- fix: unhandled language client option: `showReferencesNotification`
+- fix: codeLens resolve request broken in template
+
 ## 0.27.5
 
 - fix: language server borken when execute sugar convert commands ([#397](https://github.com/johnsoncodehk/volar/issues/397))
