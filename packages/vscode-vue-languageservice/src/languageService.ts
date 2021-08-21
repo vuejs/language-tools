@@ -310,7 +310,7 @@ export function createLanguageService(
 			getGlobalDocs: () => [globalDoc],
 			getContext: publicApiHook(() => context),
 			getD3: publicApiHook(d3.register(context)),
-			executeCommand: publicApiHook(executeCommand.register(context)),
+			executeCommand: publicApiHook(executeCommand.register(context), true, false),
 			detectTagNameCase: publicApiHook(tagNameCase.register(context)),
 			doRefAutoClose: publicApiHook(refAutoClose.register(context), false),
 		},
