@@ -11,8 +11,8 @@ export interface IFilePathToResourceConverter {
 	/**
 	 * Convert a typescript filepath to a VS Code resource.
 	 */
-		toResource(filepath: string): string;
-	}
+	toResource(filepath: string): string;
+}
 
 function replaceLinks(text: string): string {
 	return text

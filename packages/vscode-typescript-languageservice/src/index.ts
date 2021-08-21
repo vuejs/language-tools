@@ -94,6 +94,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		}
 		return documents.get(uri)?.[1];
 	}
+
 	function dispose() {
 		languageService.dispose();
 	}
