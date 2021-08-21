@@ -1,4 +1,4 @@
-.import type * as Requests from './requests';
+import type * as Requests from './requests';
 
 export declare let __requests: typeof Requests; // keep this code for jsdoc link
 
