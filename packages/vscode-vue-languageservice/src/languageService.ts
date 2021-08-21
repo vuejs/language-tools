@@ -346,7 +346,7 @@ export function createLanguageService(
 		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
 	) {
 		const handler = {
-			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
+			apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
 				const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
 				update(_shouldUpdateTemplateScript);
 				return target.apply(thisArg, argumentsList);
