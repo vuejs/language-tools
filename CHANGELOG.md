@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.27.5
+
+- fix: language server borken when execute sugar convert commands ([#397](https://github.com/johnsoncodehk/volar/issues/397))
+
 ## 0.27.4
 
 - feat: support css variable injection ([#335](https://github.com/johnsoncodehk/volar/issues/335))
