@@ -230,12 +230,26 @@ export function createServicesManager(
 				}
 			}
 		}
-		firstMatchTsConfigs = firstMatchTsConfigs.sort((a, b) => b.split('/').length - a.split('/').length)
-		secondMatchTsConfigs = secondMatchTsConfigs.sort((a, b) => b.split('/').length - a.split('/').length)
+		firstMatchTsConfigs = firstMatchTsConfigs.sort(sortPaths);
+		secondMatchTsConfigs = secondMatchTsConfigs.sort(sortPaths);
 
 		return [
 			...firstMatchTsConfigs,
 			...secondMatchTsConfigs,
 		];
+
+		function sortPaths(a: string, b: string) {
+
+			const aLength = a.split('/').length;
+			const bLength = b.split('/').length;
+
+			if (aLength === bLength) {
+				const aWeight = upath.basename(a) === 'tsconfig.json' ? 1 : 0;
+				const bWeight = upath.basename(b) === 'tsconfig.json' ? 1 : 0;
+				return bWeight - aWeight;
+			}
+
+			return bLength - aLength;
+		}
 	}
 }
