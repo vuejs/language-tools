@@ -9,7 +9,7 @@ export type ServicesManager = ReturnType<typeof createServicesManager>;
 
 export function createServicesManager(
 	options: shared.ServerInitializationOptions,
-	getTs: () => {
+	loadedTs: {
 		server: typeof import('typescript/lib/tsserverlibrary'),
 		localized: ts.MapLike<string> | undefined,
 	},
@@ -19,7 +19,7 @@ export function createServicesManager(
 ) {
 
 	let filesUpdateTrigger = false;
-	const originalTs = getTs().server;
+	const originalTs = loadedTs.server;
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const services = new Map<string, ServiceHandler>();
@@ -162,9 +162,8 @@ export function createServicesManager(
 			tsConfigWatchers.get(tsConfig)?.close();
 			services.delete(tsConfig);
 		}
-		const _ts = getTs();
-		const ts = _ts.server;
-		const tsLocalized = _ts.localized;
+		const ts = loadedTs.server;
+		const tsLocalized = loadedTs.localized;
 		if (ts.sys.fileExists(tsConfig)) {
 			services.set(tsConfig, createServiceHandler(
 				ts,

@@ -1,15 +1,20 @@
-import type * as Requests from './requests';
+.import type * as Requests from './requests';
 
 export declare let __requests: typeof Requests; // keep this code for jsdoc link
 
 export interface ServerInitializationOptions {
-	typescript: {
+	/**
+	 * If this option is null, Volar will try to:
+	 * 1. Use tsserver in node_modules of the workspace root.
+	 * 2. Use bundled tsserver in node_modules of a Volar extension.
+	 */
+	typescript?: {
 		/**
 		 * Path of tsserverlibrary.js / tsserver.js / typescript.js
 		 */
 		serverPath: string
 		localizedPath: string | undefined
-	}
+	} | undefined
 	/**
 	 * typescript, html, css... language service will be create in server if this option is not null
 	 */

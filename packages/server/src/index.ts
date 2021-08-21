@@ -5,6 +5,7 @@ import * as vscode from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
 import { createServicesManager } from './servicesManager';
 import * as tsConfigs from './tsConfigs';
+import * as path from 'path';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 const documents = new vscode.TextDocuments(TextDocument);
@@ -58,18 +59,18 @@ function onInitialize(params: vscode.InitializeParams) {
 async function onInitialized() {
 
 	connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
-
+	const loadedTs = loadTs()
 	if (options.languageFeatures) {
 		const servicesManager = createServicesManager(
 			options,
-			loadTs,
+			loadedTs,
 			connection,
 			documents,
 			folders,
 		);
 
 		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/languageFeatures')).register(loadTs().server, connection, documents, servicesManager, options.languageFeatures);
+		(await import('./features/languageFeatures')).register(loadedTs.server, connection, documents, servicesManager, options.languageFeatures);
 		(await import('./registers/registerlanguageFeatures')).register(connection, options.languageFeatures, vue.getSemanticTokenLegend());
 
 		connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
@@ -79,7 +80,7 @@ async function onInitialized() {
 	if (options.documentFeatures) {
 		const formatters = await import('./formatters');
 		const noStateLs = vue.getDocumentLanguageService(
-			{ typescript: loadTs().server },
+			{ typescript: loadedTs.server },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			formatters.getFormatters(async (uri) => {
@@ -99,8 +100,39 @@ async function onInitialized() {
 }
 
 function loadTs() {
+	const tsserverPath = findTsserverPath()
+	connection.console.info(`Loaded tsserver: '${tsserverPath}'`);
 	return {
-		server: shared.loadTypescript(options.typescript.serverPath),
-		localized: options.typescript.localizedPath ? shared.loadTypescriptLocalized(options.typescript.localizedPath) : undefined,
+		server: shared.loadTypescript(findTsserverPath()),
+		localized: options.typescript?.localizedPath ? shared.loadTypescriptLocalized(options.typescript.localizedPath) : undefined,
 	}
+}
+
+function findTsserverPath(): string {
+	if (options.typescript?.serverPath) {
+		return options.typescript.serverPath;
+	}
+
+	const tsServerPath = path.join('typescript', 'lib', 'tsserver.js');
+
+	// look into node_modules of workspace root
+	let executable = findPathToModule(folders[0], tsServerPath);
+	if (executable) {
+		return executable;
+	}
+
+	// look into node_modules of typescript-language-server
+	const bundled = findPathToModule(__dirname, tsServerPath);
+	if (!bundled) {
+		throw Error(`Couldn't find the 'tsserver.js' module`);
+	}
+	return bundled;
+}
+
+export function findPathToModule(dir: string, moduleName: string): string|undefined {
+    try {
+        return require.resolve(moduleName, { paths: [dir] });
+    } catch {
+        return undefined;
+    }
 }
