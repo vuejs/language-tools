@@ -3,25 +3,25 @@ import * as fs from 'fs';
 import * as path from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import type { ServicesManager } from '../servicesManager';
+import type { Projects } from '../projects';
 
 export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	servicesManager: ServicesManager,
+	projects: Projects,
 ) {
 	connection.onRequest(shared.GetRefCompleteEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return servicesManager.getMatchService(document.uri)?.__internal__.doRefAutoClose(document, handler.position);
+		return projects.get(document.uri)?.service.__internal__.doRefAutoClose(document, handler.position);
 	});
 	connection.onRequest(shared.D3Request.type, async handler => {
 		const document = documents.get(handler.uri);
 		if (!document) return;
-		return await servicesManager.getMatchService(document.uri)?.__internal__.getD3(document);
+		return await projects.get(document.uri)?.service.__internal__.getD3(document);
 	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async ({ lsType }) => {
-		for (const [_, service] of servicesManager.services) {
+		for (const [_, service] of projects.projects.size ? projects.projects : projects.inferredProjects) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
 			const globalDocs = ls.__internal__.getGlobalDocs();
@@ -41,7 +41,7 @@ export function register(
 
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Verify', 0, '', true);
-		for (const [_, service] of servicesManager.services) {
+		for (const [_, service] of projects.projects.size ? projects.projects : projects.inferredProjects) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
 			const { sourceFiles } = await ls.__internal__.getContext();
@@ -66,6 +66,6 @@ export function register(
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
 	connection.onRequest(shared.DetectDocumentNameCasesRequest.type, handler => {
-		return servicesManager.getMatchService(handler.uri)?.__internal__.detectTagNameCase(handler.uri);
+		return projects.get(handler.uri)?.service.__internal__.detectTagNameCase(handler.uri);
 	});
 }

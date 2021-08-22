@@ -2,20 +2,20 @@ import * as shared from '@volar/shared';
 import * as vue from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import type { ServicesManager } from '../servicesManager';
-import { fileRenamings, renameFileContentCache, getScriptText } from '../serviceHandler';
+import type { Projects } from '../projects';
+import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 
 export function register(
 	ts: vue.Modules['typescript'],
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	servicesManager: ServicesManager,
+	projects: Projects,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 ) {
 	connection.onCompletion(async handler => {
-		return await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.doComplete(
+		return await projects
+			.get(handler.textDocument.uri)?.service
+			.doComplete(
 				handler.textDocument.uri,
 				handler.position,
 				handler.context,
@@ -37,83 +37,82 @@ export function register(
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
-		return servicesManager.getMatchService(uri)?.doCompletionResolve(item, newPosition) ?? item;
+		return projects.get(uri)?.service.doCompletionResolve(item, newPosition) ?? item;
 	});
 	connection.onHover(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.doHover(handler.textDocument.uri, handler.position);
+		return projects
+			.get(handler.textDocument.uri)?.service
+			.doHover(handler.textDocument.uri, handler.position);
 	});
 	connection.onSignatureHelp(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
+		return projects
+			.get(handler.textDocument.uri)?.service
+			.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
 	});
 	connection.onPrepareRename(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.prepareRename(handler.textDocument.uri, handler.position);
+		return projects
+			.get(handler.textDocument.uri)?.service
+			.prepareRename(handler.textDocument.uri, handler.position);
 	});
 	connection.onRenameRequest(async handler => {
-		return await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.doRename(handler.textDocument.uri, handler.position, handler.newName);
+		return await projects
+			.get(handler.textDocument.uri)?.service
+			.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
 	connection.onCodeLens(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getCodeLens(handler.textDocument.uri);
+		return projects
+			.get(handler.textDocument.uri)?.service
+			.getCodeLens(handler.textDocument.uri);
 	});
 	connection.onCodeLensResolve(codeLens => {
 		const uri = codeLens.data?.uri;
-		return servicesManager
-			.getMatchService(uri)
-			?.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
+		return projects
+			.get(uri)?.service
+			.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
-		return servicesManager
-			.getMatchService(uri)
-			?.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
+		return projects
+			.get(uri)?.service
+			.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
 	});
 	connection.onCodeAction(async handler => {
 		const uri = handler.textDocument.uri;
-		const tsConfig = servicesManager.getMatchTsConfig(uri);
-		const service = tsConfig ? servicesManager.services.get(tsConfig)?.getLanguageService() : undefined;
-		if (service) {
-			const codeActions = await service.getCodeActions(uri, handler.range, handler.context);
+		const project = projects.get(uri);
+		if (project) {
+			const codeActions = await project.service.getCodeActions(uri, handler.range, handler.context);
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
-					(codeAction.data as any).tsConfig = tsConfig;
+					(codeAction.data as any).uri = uri;
 				}
 				else {
-					codeAction.data = { tsConfig };
+					codeAction.data = { uri };
 				}
 			}
 			return codeActions;
 		}
 	});
 	connection.onCodeActionResolve(async codeAction => {
-		const tsConfig: string | undefined = (codeAction.data as any)?.tsConfig;
-		const service = tsConfig ? servicesManager.services.get(tsConfig)?.getLanguageService() : undefined;
-		if (service) {
-			return await service.doCodeActionResolve(codeAction);
+		const uri: string | undefined = (codeAction.data as any)?.uri;
+		const project = uri ? projects.get(uri) : undefined;
+		if (project) {
+			return await project.service.doCodeActionResolve(codeAction);
 		}
 		return codeAction;
 	});
 	connection.onReferences(async handler => {
-		const result = await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findReferences(handler.textDocument.uri, handler.position);
+		const result = await projects
+			.get(handler.textDocument.uri)?.service
+			.findReferences(handler.textDocument.uri, handler.position);
 		if (result && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
 			return result.filter(loc => loc.uri.endsWith('.vue'));
 		}
 		return result;
 	});
 	connection.onDefinition(async handler => {
-		const result = await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findDefinition(handler.textDocument.uri, handler.position);
+		const result = await projects
+			.get(handler.textDocument.uri)?.service
+			.findDefinition(handler.textDocument.uri, handler.position);
 		if (result && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
 			return (result as (vscode.Location | vscode.LocationLink)[]).filter(loc => {
 				if (vscode.Location.is(loc))
@@ -125,24 +124,24 @@ export function register(
 		return result;
 	});
 	connection.onTypeDefinition(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findTypeDefinition(handler.textDocument.uri, handler.position);
+		return projects
+			.get(handler.textDocument.uri)?.service
+			.findTypeDefinition(handler.textDocument.uri, handler.position);
 	});
 	connection.onDocumentHighlight(handler => {
-		return servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findDocumentHighlights(handler.textDocument.uri, handler.position);
+		return projects
+			.get(handler.textDocument.uri)?.service
+			.findDocumentHighlights(handler.textDocument.uri, handler.position);
 	});
 	connection.onDocumentLinks(async handler => {
-		return await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.findDocumentLinks(handler.textDocument.uri);
+		return await projects
+			.get(handler.textDocument.uri)?.service
+			.findDocumentLinks(handler.textDocument.uri);
 	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
-		const items = await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
+		const items = await projects
+			.get(handler.textDocument.uri)?.service
+			.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
 		if (items) {
 			for (const item of items) {
 				if (typeof item.data !== 'object') item.data = {};
@@ -154,30 +153,30 @@ export function register(
 	connection.languages.callHierarchy.onIncomingCalls(handler => {
 		const data = handler.item.data as { __uri?: string } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		return servicesManager
-			.getMatchService(uri)
-			?.callHierarchy.getIncomingCalls(handler.item) ?? [];
+		return projects
+			.get(uri)?.service
+			.callHierarchy.getIncomingCalls(handler.item) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(handler => {
 		const data = handler.item.data as { __uri?: string } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		return servicesManager
-			.getMatchService(uri)
-			?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
+		return projects
+			.get(uri)?.service
+			.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
-		const result = await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
+		const result = await projects
+			.get(handler.textDocument.uri)?.service
+			.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
 		return {
 			resultId: result?.resultId,
 			data: result?.data ?? [],
 		};
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
-		const result = await servicesManager
-			.getMatchService(handler.textDocument.uri)
-			?.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
+		const result = await projects
+			.get(handler.textDocument.uri)?.service
+			.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
 		return {
 			resultId: result?.resultId,
 			data: result?.data ?? [],
@@ -231,7 +230,7 @@ export function register(
 		async function worker() {
 			const edits = (await Promise.all(handler.files
 				.map(async file => {
-					return await servicesManager.getMatchService(file.oldUri)?.getEditsForFileRename(file.oldUri, file.newUri);
+					return await projects.get(file.oldUri)?.service.getEditsForFileRename(file.oldUri, file.newUri);
 				}))).filter(shared.notEmpty);
 			if (edits.length) {
 				const result = edits[0];

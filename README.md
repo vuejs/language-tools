@@ -76,9 +76,7 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 
 Template type-checking do not support with `Vue.extend`, you can use [composition-api](https://github.com/vuejs/composition-api), [vue-class-component](https://github.com/vuejs/vue-class-component), or `export default { ... }` instead of `export default Vue.extend`.
 
-3. Add tsconfig.json / jsconfig.json if you don't have
-
-4. Support Vue 2 template
+3. Support Vue 2 template
 
 Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different. You need to set the `experimentalCompatMode` option to support Vue 2 template.
 
@@ -93,13 +91,6 @@ Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different
   },
 }
 ```
-
-</details>
-
-<details>
-<summary>Setup for Vue 3</summary>
-
-1. Add tsconfig.json / jsconfig.json if you don't have
 
 </details>
 
@@ -141,9 +132,7 @@ export {}
 > - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 > - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
 
-> tsconfig.json / jsconfig.json is required for now.
->
-> Also required `"strict": true` and `"moduleResolution": "node"`.
+> Please check https://vuejs.org/v2/guide/typescript.html#Recommended-Configuration for recommended tsconfig options.
 
 > Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
 

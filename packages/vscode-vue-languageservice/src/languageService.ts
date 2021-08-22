@@ -180,6 +180,7 @@ export function createLanguageService(
 		},
 	}
 
+	// TODO: not working for vue-tsc --project flag
 	const tsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'tsconfig.json');
 	const jsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'jsconfig.json');
 	const configFile = ts.sys.fileExists(tsconfigFile) ? tsconfigFile : ts.sys.fileExists(jsconfigFile) ? jsconfigFile : undefined;

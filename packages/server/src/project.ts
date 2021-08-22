@@ -1,7 +1,6 @@
 import * as shared from '@volar/shared';
 import * as vue from 'vscode-vue-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as vscode from 'vscode-languageserver';
 import { getEmmetConfiguration } from './configs';
@@ -9,14 +8,15 @@ import { getSchemaRequestService } from './schemaRequestService';
 import * as tsConfigs from './tsConfigs';
 import * as ShPlugin from 'typescript-vscode-sh-plugin';
 
-export type ServiceHandler = ReturnType<typeof createServiceHandler>;
+export type Project = ReturnType<typeof createProject>;
 export const fileRenamings = new Set<Promise<void>>();
 export const renameFileContentCache = new Map<string, string>();
 
-export function createServiceHandler(
+export function createProject(
 	ts: vue.Modules['typescript'],
 	options: shared.ServerInitializationOptions,
-	tsConfig: string,
+	rootPath: string,
+	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	onFileUpdated: (changedFileName: string | undefined) => any,
@@ -84,7 +84,7 @@ export function createServiceHandler(
 
 		await Promise.all([...fileRenamings]);
 
-		parsedCommandLine = createParsedCommandLine(tsConfig);
+		parsedCommandLine = createParsedCommandLine();
 
 		const fileNames = new shared.FsPathSet(parsedCommandLine.fileNames);
 		let changed = false;
@@ -203,7 +203,7 @@ export function createServiceHandler(
 				...parsedCommandLine.fileNames,
 				...[...extraScripts.values()].map(file => file.fileName).filter(fileName => fileName.endsWith('.vue')), // create virtual files from extra vue scripts
 			],
-			getCurrentDirectory: () => upath.dirname(tsConfig),
+			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,
 			getScriptVersion,
 			getScriptSnapshot,
@@ -281,14 +281,22 @@ export function createServiceHandler(
 			disposable.dispose();
 		}
 	}
-	function createParsedCommandLine(tsConfig: string) {
+	function createParsedCommandLine() {
 		const parseConfigHost: ts.ParseConfigHost = {
 			...ts.sys,
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
 			},
 		};
-		return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+		if (typeof tsConfig === 'string') {
+			return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+		}
+		else {
+			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');
+			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
+			content.fileNames = content.fileNames.map(shared.normalizeFileName);
+			return content;
+		}
 	}
 }
 

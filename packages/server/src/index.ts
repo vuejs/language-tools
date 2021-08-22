@@ -3,8 +3,9 @@ import * as vue from 'vscode-vue-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver/node';
 import { updateConfigs } from './configs';
-import { createServicesManager } from './servicesManager';
+import { createProjects } from './projects';
 import * as tsConfigs from './tsConfigs';
+import { getInferredCompilerOptions } from './inferredCompilerOptions';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 const documents = new vscode.TextDocuments(TextDocument);
@@ -59,17 +60,25 @@ async function onInitialized() {
 
 	connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
 
+	const ts = shared.loadTypescript(options.typescript.serverPath);
+
 	if (options.languageFeatures) {
-		const servicesManager = createServicesManager(
+
+		const inferredCompilerOptions = await getInferredCompilerOptions(ts, connection);
+		const tsLocalized = options.typescript.localizedPath ? shared.loadTypescriptLocalized(options.typescript.localizedPath) : undefined;
+
+		const projects = createProjects(
 			options,
-			loadTs,
+			ts,
+			tsLocalized,
 			connection,
 			documents,
 			folders,
+			inferredCompilerOptions,
 		);
 
-		(await import('./features/customFeatures')).register(connection, documents, servicesManager);
-		(await import('./features/languageFeatures')).register(loadTs().server, connection, documents, servicesManager, options.languageFeatures);
+		(await import('./features/customFeatures')).register(connection, documents, projects);
+		(await import('./features/languageFeatures')).register(ts, connection, documents, projects, options.languageFeatures);
 		(await import('./registers/registerlanguageFeatures')).register(connection, options.languageFeatures, vue.getSemanticTokenLegend());
 
 		connection.client.register(vscode.DidChangeConfigurationNotification.type, undefined);
@@ -79,7 +88,7 @@ async function onInitialized() {
 	if (options.documentFeatures) {
 		const formatters = await import('./formatters');
 		const noStateLs = vue.getDocumentLanguageService(
-			{ typescript: loadTs().server },
+			{ typescript: ts },
 			(document) => tsConfigs.getPreferences(connection, document),
 			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			formatters.getFormatters(async (uri) => {
@@ -95,12 +104,5 @@ async function onInitialized() {
 
 		(await import('./features/documentFeatures')).register(connection, documents, noStateLs);
 		(await import('./registers/registerDocumentFeatures')).register(connection, options.documentFeatures);
-	}
-}
-
-function loadTs() {
-	return {
-		server: shared.loadTypescript(options.typescript.serverPath),
-		localized: options.typescript.localizedPath ? shared.loadTypescriptLocalized(options.typescript.localizedPath) : undefined,
 	}
 }

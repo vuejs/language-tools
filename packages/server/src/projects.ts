@@ -3,46 +3,50 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as vscode from 'vscode-languageserver';
-import { createServiceHandler, ServiceHandler } from './serviceHandler';
+import { createProject, Project } from './project';
 
-export type ServicesManager = ReturnType<typeof createServicesManager>;
+export type Projects = ReturnType<typeof createProjects>;
 
-export function createServicesManager(
+export function createProjects(
 	options: shared.ServerInitializationOptions,
-	getTs: () => {
-		server: typeof import('typescript/lib/tsserverlibrary'),
-		localized: ts.MapLike<string> | undefined,
-	},
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLocalized: ts.MapLike<string> | undefined,
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	rootPaths: string[],
+	inferredCompilerOptions: ts.CompilerOptions,
 ) {
 
 	let filesUpdateTrigger = false;
-	const originalTs = getTs().server;
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
-	const services = new Map<string, ServiceHandler>();
-	const tsConfigSet = new Set(rootPaths.map(rootPath => originalTs.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
+	const projects = new Map<string, Project>();
+	const inferredProjects = new Map<string, Project>();
+	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
 	const tsConfigs = [...tsConfigSet].filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)));
-	const checkedProject = new Set<string>();
+	const inferredTsConfigs = rootPaths.map(rootPath => upath.join(rootPath, 'tsconfig.json'));
+	const checkedProjects = new Set<string>();
 	const progressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
+	const virtualProgressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
 
 	(async () => {
-		const progress = await getTsconfigProgress(tsConfigs);
+		const { progress, virtualProgress } = await getTsconfigProgress(tsConfigs, inferredTsConfigs);
 		clearDiagnostics();
 		for (const tsConfig of tsConfigs) {
-			updateLsHandler(tsConfig, progress[tsConfig]);
+			updateProject(tsConfig, progress[tsConfig]);
+		}
+		for (const tsConfig of inferredTsConfigs) {
+			createInferredProject(tsConfig, virtualProgress[tsConfig]);
 		}
 		updateDocumentDiagnostics(undefined);
 	})();
 	for (const rootPath of rootPaths) {
-		originalTs.sys.watchDirectory!(rootPath, async fileName => {
+		ts.sys.watchDirectory!(rootPath, async fileName => {
 			if (tsConfigNames.includes(upath.basename(fileName))) {
 				// tsconfig.json changed
-				const progress = await getTsconfigProgress([fileName]);
+				const { progress } = await getTsconfigProgress([fileName], []);
 				clearDiagnostics();
-				updateLsHandler(fileName, progress[fileName]);
+				updateProject(fileName, progress[fileName]);
 				updateDocumentDiagnostics(undefined);
 			}
 			else {
@@ -51,7 +55,7 @@ export function createServicesManager(
 				await shared.sleep(0);
 				if (filesUpdateTrigger) {
 					filesUpdateTrigger = false;
-					for (const [_, service] of services) {
+					for (const [_, service] of [...projects, ...inferredProjects]) {
 						service.update();
 					}
 				}
@@ -60,35 +64,50 @@ export function createServicesManager(
 	}
 
 	documents.onDidChangeContent(change => {
-		for (const [_, service] of services) {
+		for (const [_, service] of [...projects, ...inferredProjects]) {
 			service.onDocumentUpdated(change.document);
 		}
 		updateDocumentDiagnostics(shared.uriToFsPath(change.document.uri));
 		// preload
-		getMatchService(change.document.uri);
+		get(change.document.uri);
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
 
 	return {
-		services,
-		getMatchService,
-		getMatchTsConfig,
+		projects,
+		inferredProjects,
+		get,
 	};
 
-	async function getTsconfigProgress(tsconfigs: string[]) {
+	async function getTsconfigProgress(tsconfigs: string[], virtualTsconfigs: string[]) {
 		for (const tsconfig of tsconfigs) {
 			if (!progressMap.has(tsconfig)) {
 				progressMap.set(tsconfig, connection.window.createWorkDoneProgress());
 			}
 		}
+		for (const tsconfig of virtualTsconfigs) {
+			if (!virtualProgressMap.has(tsconfig)) {
+				virtualProgressMap.set(tsconfig, connection.window.createWorkDoneProgress());
+			}
+		}
 		const result: Record<string, vscode.WorkDoneProgressServerReporter> = {};
+		const virtualResult: Record<string, vscode.WorkDoneProgressServerReporter> = {};
 		for (const tsconfig of tsconfigs) {
 			const progress = progressMap.get(tsconfig);
 			if (progress) {
 				result[tsconfig] = await progress;
 			}
 		}
-		return result;
+		for (const tsconfig of virtualTsconfigs) {
+			const progress = virtualProgressMap.get(tsconfig);
+			if (progress) {
+				virtualResult[tsconfig] = await progress;
+			}
+		}
+		return {
+			progress: result,
+			virtualProgress: virtualResult,
+		};
 	}
 	async function updateDocumentDiagnostics(changedFileName?: string) {
 
@@ -132,23 +151,18 @@ export function createServicesManager(
 	}
 	async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
 
-		const matchTsConfig = getMatchTsConfig(uri);
-		if (!matchTsConfig) return;
-
-		const matchService = services.get(matchTsConfig);
-		if (!matchService) return;
-
-		const matchLs = matchService.getLanguageService();
+		const match = get(uri);
+		if (!match) return;
 
 		let send = false; // is vue document
-		await matchLs.doValidation(uri, async result => {
+		await match.service.doValidation(uri, async result => {
 			send = true;
 			connection.sendDiagnostics({ uri: uri, diagnostics: result });
 		}, isCancel);
 
-		if (send && !checkedProject.has(matchTsConfig)) {
-			checkedProject.add(matchTsConfig);
-			const projectValid = matchLs.__internal__.checkProject();
+		if (send && !checkedProjects.has(match.tsConfig)) {
+			checkedProjects.add(match.tsConfig);
+			const projectValid = match.service.__internal__.checkProject();
 			if (!projectValid) {
 				connection.window.showWarningMessage(
 					"Cannot import Vue 3 types from @vue/runtime-dom. If you are using Vue 2, you may need to install @vue/runtime-dom in additionally."
@@ -156,19 +170,17 @@ export function createServicesManager(
 			}
 		}
 	}
-	function updateLsHandler(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
-		if (services.has(tsConfig)) {
-			services.get(tsConfig)?.dispose();
+	function updateProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
+		if (projects.has(tsConfig)) {
+			projects.get(tsConfig)?.dispose();
 			tsConfigWatchers.get(tsConfig)?.close();
-			services.delete(tsConfig);
+			projects.delete(tsConfig);
 		}
-		const _ts = getTs();
-		const ts = _ts.server;
-		const tsLocalized = _ts.localized;
 		if (ts.sys.fileExists(tsConfig)) {
-			services.set(tsConfig, createServiceHandler(
+			projects.set(tsConfig, createProject(
 				ts,
 				options,
+				upath.dirname(tsConfig),
 				tsConfig,
 				tsLocalized,
 				documents,
@@ -184,11 +196,29 @@ export function createServicesManager(
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
 					clearDiagnostics();
-					updateLsHandler(tsConfig, progress);
+					updateProject(tsConfig, progress);
 					updateDocumentDiagnostics(undefined);
 				}
 			}));
 		}
+	}
+	function createInferredProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
+		inferredProjects.set(tsConfig, createProject(
+			ts,
+			options,
+			upath.dirname(tsConfig),
+			inferredCompilerOptions,
+			tsLocalized,
+			documents,
+			changedFileName => {
+				updateDocumentDiagnostics(changedFileName);
+				if (options.languageFeatures?.semanticTokens) {
+					connection.languages.semanticTokens.refresh();
+				}
+			},
+			progress,
+			connection,
+		));
 	}
 	function clearDiagnostics() {
 		for (const doc of documents.all()) {
@@ -197,20 +227,32 @@ export function createServicesManager(
 			}
 		}
 	}
-	function getMatchService(uri: string) {
-		const tsConfig = getMatchTsConfig(uri);
-		if (tsConfig) {
-			return services.get(tsConfig)?.getLanguageService();
+	function get(uri: string) {
+		const tsConfigs = getMatchTsConfigs(uri, projects);
+		if (tsConfigs.length) {
+			const service = projects.get(tsConfigs[0]);
+			if (service) {
+				return {
+					tsConfig: tsConfigs[0],
+					service: service.getLanguageService(),
+				};
+			}
+		}
+		const inferredTsConfigs = getMatchTsConfigs(uri, inferredProjects);
+		if (inferredTsConfigs.length) {
+			const service = inferredProjects.get(inferredTsConfigs[0]);
+			if (service) {
+				return {
+					tsConfig: inferredTsConfigs[0],
+					service: service.getLanguageService(),
+				};
+			}
 		}
 	}
-	function getMatchTsConfig(uri: string) {
-		const matches = getMatchTsConfigs(uri);
-		if (matches.length)
-			return matches[0];
-	}
-	function getMatchTsConfigs(uri: string) {
+	function getMatchTsConfigs(uri: string, services: Map<string, Project>) {
 
 		const fileName = shared.uriToFsPath(uri);
+
 		let firstMatchTsConfigs: string[] = [];
 		let secondMatchTsConfigs: string[] = [];
 
@@ -230,6 +272,7 @@ export function createServicesManager(
 				}
 			}
 		}
+
 		firstMatchTsConfigs = firstMatchTsConfigs.sort(sortPaths);
 		secondMatchTsConfigs = secondMatchTsConfigs.sort(sortPaths);
 
