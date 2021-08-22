@@ -84,7 +84,7 @@ export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageSer
 	for (const typeDefine of typeDefs) {
 		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
 		const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-		if (uri.endsWith('reactivity.d.ts')) {
+		if (uri.endsWith('reactivity.d.ts') || uri.endsWith('vue-composition-api.d.ts')) {
 			const defineDoc = tsLs.__internal__.getTextDocument(uri);
 			if (!defineDoc)
 				continue;
