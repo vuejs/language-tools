@@ -150,6 +150,11 @@
 					"default": true,
 					"description": "Display TS Server Plugin status bar item."
 				},
+				"volar.checkVueTscVersion": {
+					"type": "boolean",
+					"default": true,
+					"description": "Check node_modules/vscode-vue-languageservice version when start extension."
+				},
 				"volar.preferredTagNameCase": {
 					"type": "string",
 					"enum": [
