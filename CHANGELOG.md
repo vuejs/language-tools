@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.27.7
+
+- feat: check vue-tsc version on start extension ([#381](https://github.com/johnsoncodehk/volar/issues/381))
+- feat: support for non-tsconfig project ([#349](https://github.com/johnsoncodehk/volar/issues/349))
+- fix: tsconfig priority should be higher than jsconfig ([#400](https://github.com/johnsoncodehk/volar/issues/400))
+- fix: fixed hover info broken in *.ts when TS plugin enabled
+
 ## 0.27.6
 
 - feat: support multiple `v-bind(...)` in single css expression
