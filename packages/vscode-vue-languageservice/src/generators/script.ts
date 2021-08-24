@@ -25,12 +25,27 @@ export function generate(
 
 	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
-	const shouldAddExportDefault = lsType === 'script' && (!script || !!scriptSetup);
+	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
 	const overlapMapRanges: SourceMaps.Range[] = [];
 
 	writeScriptSrc();
 	writeScript();
 	writeScriptSetup();
+
+	if (lsType === 'script' && !script && !scriptSetup) {
+		codeGen.addCode(
+			'export default {} as any',
+			{
+				start: 0,
+				end: 0,
+			},
+			SourceMaps.Mode.Expand,
+			{
+				vueTag: 'sfc',
+				capabilities: {},
+			},
+		);
+	}
 
 	if (lsType === 'template' || shouldAddExportDefault)
 		writeExportComponent();
