@@ -28,3 +28,9 @@ node_modules/prettier/**
 # vscode-*
 node_modules/**/lib/esm/
 node_modules/**/lib/browser/
+
+# @vue/*
+node_modules/**/@vue/**/*.cjs.prod.js
+node_modules/**/@vue/**/*.esm-browser.*
+node_modules/**/@vue/**/*.esm-bundler.js
+node_modules/**/@vue/**/*.global.*
