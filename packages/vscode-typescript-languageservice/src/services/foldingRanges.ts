@@ -13,9 +13,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const foldingRanges: vscode.FoldingRange[] = [];
 
 		for (const outliningSpan of outliningSpans) {
-			outliningSpan.kind
+
 			const start = document.positionAt(outliningSpan.textSpan.start);
-			const end = document.positionAt(outliningSpan.textSpan.start + outliningSpan.textSpan.length);
+			const end = adjustFoldingEnd(start, document.positionAt(outliningSpan.textSpan.start + outliningSpan.textSpan.length), document);
+
 			const foldingRange = vscode.FoldingRange.create(
 				start.line,
 				end.line,
@@ -36,4 +37,23 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			case ts.OutliningSpanKind.Region: return vscode.FoldingRangeKind.Region;
 		}
 	}
+}
+
+const foldEndPairCharacters = ['}', ']', ')', '`'];
+
+// https://github.com/microsoft/vscode/blob/bed61166fb604e519e82e4d1d1ed839bc45d65f8/extensions/typescript-language-features/src/languageFeatures/folding.ts#L61-L73
+function adjustFoldingEnd(start: vscode.Position, end: vscode.Position, document: TextDocument) {
+	// workaround for #47240
+	if (end.character > 0) {
+		const foldEndCharacter = document.getText({
+			start: { line: end.line, character: end.character - 1 },
+			end,
+		});
+		if (foldEndPairCharacters.includes(foldEndCharacter)) {
+			const endOffset = Math.max(document.offsetAt({ line: end.line, character: 0 }) - 1, document.offsetAt(start));
+			return document.positionAt(endOffset);
+		}
+	}
+
+	return end;
 }
