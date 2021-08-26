@@ -50,10 +50,11 @@ export function createSourceFile(
 	const templateScriptData = reactive<ITemplateScriptData>({
 		projectVersion: undefined,
 		context: [],
+		contextItems: [],
 		components: [],
+		componentItems: [],
 		props: [],
 		setupReturns: [],
-		componentItems: [],
 	});
 	const vueHtmlDocument = computed(() => {
 		return context.htmlLs.parseHTMLDocument(document.value);
@@ -451,6 +452,7 @@ export function createSourceFile(
 
 		if (!shared.eqSet(new Set(contextNames), new Set(templateScriptData.context))) {
 			templateScriptData.context = contextNames;
+			templateScriptData.contextItems = context;
 			dirty = true;
 		}
 

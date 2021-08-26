@@ -4,47 +4,27 @@ import { join } from 'upath';
 
 export function createGlobalDefineDocument(root: string) {
 	let code = `
-import * as vue_1 from '@vue/runtime-dom';
-import type { FunctionalComponent as FunctionalComponent_1 } from '@vue/runtime-dom';
-import type { HTMLAttributes as HTMLAttributes_1 } from '@vue/runtime-dom';
-import type { VNodeProps as VNodeProps_1 } from '@vue/runtime-dom';
-import type { AllowedComponentProps as AllowedComponentProps_1 } from '@vue/runtime-dom';
-import type { PropType as PropType_1 } from '@vue/runtime-dom';
-import type { EmitsOptions as EmitsOptions_1 } from '@vue/runtime-dom';
-import type { DefineComponent as DefineComponent_1 } from '@vue/runtime-dom';
-import type { defineComponent as defineComponent_1 } from '@vue/runtime-dom';
-import type { GlobalComponents as CoreGlobalComponents_1 } from '@vue/runtime-dom';
-import type { SetupContext as SetupContext_1 } from '@vue/runtime-dom';
-
-import * as vue_2 from 'vue';
-import type { FunctionalComponent as FunctionalComponent_2 } from 'vue';
-import type { HTMLAttributes as HTMLAttributes_2 } from 'vue';
-import type { VNodeProps as VNodeProps_2 } from 'vue';
-import type { AllowedComponentProps as AllowedComponentProps_2 } from 'vue';
-import type { PropType as PropType_2 } from 'vue';
-import type { EmitsOptions as EmitsOptions_2 } from 'vue';
-import type { DefineComponent as DefineComponent_2 } from 'vue';
-import type { defineComponent as defineComponent_2 } from 'vue';
-import type { GlobalComponents as CoreGlobalComponents_2 } from 'vue';
-import type { SetupContext as SetupContext_2 } from '@vue/runtime-dom';
-
-import type { HTMLAttributes as HTMLAttributes_3 } from "@vue/runtime-dom/types/jsx";
-import type { GlobalComponents as CoreGlobalComponents_3 } from '@vue/runtime-core';
+import type * as vue_1 from '@vue/runtime-dom';
+import type * as vue_2 from 'vue';
+import type * as vue_3 from '@vue/runtime-core';
+import type * as vue_4 from '@vue/runtime-dom/types/jsx';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
-
-type FunctionalComponent<P = {}, E extends EmitsOptions = {}> = PickNotAny<FunctionalComponent_1<P, E>, FunctionalComponent_2<P, E>>;
-type HTMLAttributes = PickNotAny<PickNotAny<HTMLAttributes_1, HTMLAttributes_2>, HTMLAttributes_3>;
-type VNodeProps = PickNotAny<VNodeProps_1, VNodeProps_2>;
-type AllowedComponentProps = PickNotAny<AllowedComponentProps_1, AllowedComponentProps_2>;
-type PropType<T> = PickNotAny<PropType_1<T>, PropType_2<T>>;
-type EmitsOptions = PickNotAny<EmitsOptions_1, EmitsOptions_2>;
-type DefineComponent<P, E extends EmitsOptions> = PickNotAny<DefineComponent_1<P, any, any, any, any, any, any, E>, DefineComponent_2<P, any, any, any, any, any, any, E>>;
-type CoreGlobalComponents = PickNotAny<PickNotAny<PickNotAny<CoreGlobalComponents_1, CoreGlobalComponents_2>, CoreGlobalComponents_3>, {}>;
-type SetupContext<T> = PickNotAny<SetupContext_1<T>, SetupContext_2<T>>;
 type AnyArray<T = any> = T[] | readonly T[];
 type NonUndefinedable<T> = T extends undefined ? never : T;
+
+type FunctionalComponent<P = {}, E extends EmitsOptions = {}> = PickNotAny<vue_1.FunctionalComponent<P, E>, vue_2.FunctionalComponent<P, E>>;
+type HTMLAttributes = PickNotAny<PickNotAny<vue_1.HTMLAttributes, vue_2.HTMLAttributes>, vue_4.HTMLAttributes>;
+type VNodeProps = PickNotAny<vue_1.VNodeProps, vue_2.VNodeProps>;
+type AllowedComponentProps = PickNotAny<vue_1.AllowedComponentProps, vue_2.AllowedComponentProps>;
+type PropType<T> = PickNotAny<vue_1.PropType<T>, vue_2.PropType<T>>;
+type EmitsOptions = PickNotAny<vue_1.EmitsOptions, vue_2.EmitsOptions>;
+type DefineComponent<P, E extends EmitsOptions> = PickNotAny<vue_1.DefineComponent<P, any, any, any, any, any, any, E>, vue_2.DefineComponent<P, any, any, any, any, any, any, E>>;
+type GlobalComponents = PickNotAny<PickNotAny<PickNotAny<vue_1.GlobalComponents, vue_2.GlobalComponents>, vue_3.GlobalComponents>, {}>;
+type SetupContext<T> = PickNotAny<vue_1.SetupContext<T>, vue_2.SetupContext<T>>;
+type ObjectDirective<T, V> = PickNotAny<vue_1.ObjectDirective<T, V>, vue_2.ObjectDirective<T, V>>;
+type FunctionDirective<T, V> = PickNotAny<vue_1.FunctionDirective<T, V>, vue_2.FunctionDirective<T, V>>;
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
 
@@ -55,9 +35,9 @@ declare global {
 		| 'KeepAlive'
 		| 'Suspense'
 		| 'Teleport'
-		> { }
-	interface __VLS_GlobalComponents extends CoreGlobalComponents { }
-	var __VLS_defineComponent: PickNotAny<typeof defineComponent_1, typeof defineComponent_2>;
+	> { }
+	interface __VLS_GlobalComponents extends GlobalComponents { }
+	var __VLS_defineComponent: PickNotAny<typeof vue_1.defineComponent, typeof vue_2.defineComponent>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
 	function __VLS_getVforKeyType<T>(source: T): T extends AnyArray ? number : keyof T;
 	function __VLS_getVforIndexType<T>(source: T): T extends AnyArray ? undefined : number;
@@ -68,6 +48,8 @@ declare global {
 			default: D[K]
 		} : P[K]
 	}
+	function __VLS_directiveFunction<T>(dir: T): T extends ObjectDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void
+		: T extends FunctionDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void : T;
 	type __VLS_ConstAttrType_Props<C> = (C extends (payload: infer P) => any ? P : {}) & Record<string, unknown>;
 	type __VLS_ConstAttrType<C, K extends string> = true extends __VLS_ConstAttrType_Props<C>[K] ? true : "";
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];

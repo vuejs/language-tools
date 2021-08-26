@@ -53,13 +53,12 @@ export function generate(node: CompilerDOM.RootNode) {
 					}
 
 					// name
-					if (prop.name === 'slot') {
-						// ignore
-					}
-					else if (prop.name === 'on') {
-						// ignore
-					}
-					else {
+					if (
+						prop.name !== 'slot'
+						&& prop.name !== 'on'
+						&& prop.name !== 'model'
+						&& prop.name !== 'bind'
+					) {
 						text += `// @ts-ignore\n`;
 						text += `(${camelize('v-' + prop.name)});\n`;
 					}

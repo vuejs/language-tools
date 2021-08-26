@@ -264,6 +264,18 @@ export function register(
 					{ name: 'v-else', valueSet: 'v' },
 					{ name: 'v-for' },
 				];
+
+				const { contextItems } = sourceFile.getTemplateScriptData();
+				for (const c of contextItems) {
+					const data: Data = c.data;
+					const dir = hyphenate(data.name);
+					if (dir.startsWith('v-')) {
+						const key = 'dir:' + dir;
+						globalAttributes.push({ name: dir, description: key });
+						tsItems.set(key, c);
+					}
+				}
+
 				for (const [_componentName, { item, bind, on }] of componentCompletion) {
 					const componentNames =
 						nameCases.tag === 'kebabCase'
@@ -430,17 +442,30 @@ export function register(
 							if (tsItem) {
 								vueItem.documentation = undefined;
 							}
-							if (
-								(vueItem.label.startsWith(':') || vueItem.label.startsWith('@'))
-								&& !documentation?.startsWith('*:') // not globalAttributes
-							) {
-								vueItem.sortText = '\u0000' + vueItem.sortText;
+							if (vueItem.label.startsWith(':') || vueItem.label.startsWith('@')) {
+								if (!documentation?.startsWith('*:')) {
+									vueItem.sortText = '\u0000' + vueItem.sortText;
+								}
 								if (tsItem) {
-									vueItem.kind = vscode.CompletionItemKind.Field;
+									if (vueItem.label.startsWith(':')) {
+										vueItem.kind = vscode.CompletionItemKind.Property;
+									}
+									else {
+										vueItem.kind = vscode.CompletionItemKind.Event;
+									}
 								}
 							}
-							else if (vueItem.label.startsWith('v-')) {
+							else if (
+								vueItem.label === 'v-if'
+								|| vueItem.label === 'v-else-if'
+								|| vueItem.label === 'v-else'
+								|| vueItem.label === 'v-for'
+							) {
 								vueItem.kind = vscode.CompletionItemKind.Method;
+								vueItem.sortText = '\u0003' + vueItem.sortText;
+							}
+							else if (vueItem.label.startsWith('v-')) {
+								vueItem.kind = vscode.CompletionItemKind.Function;
 								vueItem.sortText = '\u0002' + vueItem.sortText;
 							}
 							else {

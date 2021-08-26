@@ -553,26 +553,60 @@ export function generate(
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name !== 'slot'
+				&& prop.name !== 'on'
 				&& prop.name !== 'model'
 				&& prop.name !== 'bind'
-				&& !prop.arg
-				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				tsCodeGen.addText(`(`);
+
+				const diagStart = tsCodeGen.getText().length;
+				tsCodeGen.addText(`__VLS_directiveFunction(`);
 				writeCode(
-					prop.exp.content,
+					camelize('v-' + prop.name),
 					{
-						start: prop.exp.loc.start.offset,
-						end: prop.exp.loc.end.offset,
+						start: prop.loc.start.offset,
+						end: prop.loc.start.offset + 'v-'.length + prop.name.length,
 					},
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
+						beforeRename: camelize,
+						doRename: keepHyphenateName,
 					},
-					formatBrackets.round,
 				);
-				tsCodeGen.addText(`);\n`);
+				tsCodeGen.addText(`)(`);
+				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					writeCode(
+						prop.exp.content,
+						{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+						formatBrackets.round,
+					);
+				}
+				tsCodeGen.addText(`)`);
+				addMapping(tsCodeGen, {
+					sourceRange: {
+						start: prop.loc.start.offset,
+						end: prop.loc.end.offset,
+					},
+					mappedRange: {
+						start: diagStart,
+						end: tsCodeGen.getText().length,
+					},
+					mode: SourceMaps.Mode.Totally,
+					data: {
+						vueTag: 'template',
+						capabilities: capabilitiesSet.diagnosticOnly,
+					},
+				});
+				tsCodeGen.addText(`;\n`);
 			}
 		}
 	}

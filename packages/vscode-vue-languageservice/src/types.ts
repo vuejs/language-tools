@@ -61,8 +61,9 @@ export interface IDescriptor {
 export interface ITemplateScriptData {
 	projectVersion: string | undefined;
 	context: string[];
-	componentItems: vscode.CompletionItem[];
+	contextItems: vscode.CompletionItem[];
 	components: string[];
+	componentItems: vscode.CompletionItem[];
 	props: string[];
 	setupReturns: string[];
 }
