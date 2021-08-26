@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { camelize } from '@vue/shared';
 import { getPatchForSlotNode } from './template';
 
 export function generate(node: CompilerDOM.RootNode) {
@@ -27,30 +28,41 @@ export function generate(node: CompilerDOM.RootNode) {
 			tags.add(node.tag);
 			text += `{\n`;
 			for (const prop of node.props) {
-				if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				) {
-					if (prop.name === 'slot') {
+				if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE) {
+
+					// arg
+					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						text += `// @ts-ignore\n`;
-						text += `let ${prop.exp.content} = {} as any;\n`;
+						text += `(${prop.arg.content});\n`;
+					}
+
+					// exp
+					if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+						if (prop.name === 'slot') {
+							text += `// @ts-ignore\n`;
+							text += `let ${prop.exp.content} = {} as any;\n`;
+						}
+						else if (prop.name === 'on') {
+							text += `// @ts-ignore\n`;
+							text += `() => { ${prop.exp.content} };\n`;
+						}
+						else {
+							text += `// @ts-ignore\n`;
+							text += `(${prop.exp.content});\n`;
+						}
+					}
+
+					// name
+					if (prop.name === 'slot') {
+						// ignore
 					}
 					else if (prop.name === 'on') {
-						text += `// @ts-ignore\n`;
-						text += `() => { ${prop.exp.content} };\n`;
+						// ignore
 					}
 					else {
 						text += `// @ts-ignore\n`;
-						text += `(${prop.exp.content});\n`;
+						text += `(${camelize('v-' + prop.name)});\n`;
 					}
-				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					&& prop.arg.content !== ''
-				) {
-					text += `// @ts-ignore\n`;
-					text += `(${prop.arg.content});\n`;
 				}
 				else if (
 					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
