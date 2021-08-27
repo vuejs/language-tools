@@ -2,7 +2,21 @@
 	"name": "Vue",
 	"scopeName": "source.vue",
 	"injections": {
-		"L:meta.tag": {
+		"L:meta.tag.structure": {
+			"patterns": [
+				{
+					"include": "#vue-directives"
+				}
+			]
+		},
+		"L:meta.tag.custom": {
+			"patterns": [
+				{
+					"include": "#vue-directives"
+				}
+			]
+		},
+		"L:meta.tag.other": {
 			"patterns": [
 				{
 					"include": "#vue-directives"
