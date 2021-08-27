@@ -3,7 +3,11 @@ import * as vscode from 'vscode-languageserver';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function entriesToLocations(entries: { fileName: string, textSpan: ts.TextSpan }[], getTextDocument: (uri: string) => TextDocument | undefined) {
+export function entriesToLocations(
+	entries: { fileName: string, textSpan: ts.TextSpan }[],
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	getLocationUri?: (uri: string) => string | undefined,
+) {
 	const locations: vscode.Location[] = [];
 	for (const entry of entries) {
 		const entryUri = shared.fsPathToUri(entry.fileName);
@@ -13,8 +17,7 @@ export function entriesToLocations(entries: { fileName: string, textSpan: ts.Tex
 			doc.positionAt(entry.textSpan.start),
 			doc.positionAt(entry.textSpan.start + entry.textSpan.length),
 		);
-		const uri = shared.fsPathToUri(entry.fileName);
-		const location = vscode.Location.create(uri, range);
+		const location = vscode.Location.create(getLocationUri?.(entryUri) ?? entryUri, range);
 		locations.push(location);
 	}
 	return locations;
