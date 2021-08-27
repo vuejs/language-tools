@@ -54,8 +54,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 			const document = _sourceFile.getTextDocument();
 			const codeActions = await getCodeActions(uri, {
-				start: document.positionAt(_scriptSetup.loc.start),
-				end: document.positionAt(_scriptSetup.loc.start),
+				start: document.positionAt(_scriptSetup.startTagEnd),
+				end: document.positionAt(_scriptSetup.startTagEnd),
 			}, {
 				diagnostics: errors.filter(error => error.code === 2552),
 				only: [`${vscode.CodeActionKind.Source}.addMissingImports.ts`],
@@ -77,7 +77,7 @@ export function register(context: ApiLanguageServiceContext) {
 			const ranges = parseUseScriptSetupRanges(ts, _scriptAst);
 			const document = _sourceFile.getTextDocument();
 			const edits: vscode.TextEdit[] = [];
-			const scriptStartPos = document.positionAt(_script.loc.start);
+			const scriptStartPos = document.positionAt(_script.startTagEnd);
 			const startTagText = document.getText({
 				start: {
 					line: scriptStartPos.line,
@@ -196,8 +196,8 @@ export function register(context: ApiLanguageServiceContext) {
 			function addReplace(start: number, end: number, text: string) {
 				edits.push(vscode.TextEdit.replace(
 					{
-						start: document.positionAt(_script.loc.start + start),
-						end: document.positionAt(_script.loc.start + end),
+						start: document.positionAt(_script.startTagEnd + start),
+						end: document.positionAt(_script.startTagEnd + end),
 					},
 					text
 				));

@@ -1,12 +1,12 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor, LanguageServiceContext } from '../types';
+import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcTemplate(
 	getUnreactiveDoc: () => TextDocument,
-	template: Ref<IDescriptor['template']>,
+	template: Ref<shared.Sfc['template']>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
@@ -37,12 +37,12 @@ export function useSfcTemplate(
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
-					start: template.value.loc.start,
-					end: template.value.loc.end,
+					start: template.value.startTagEnd,
+					end: template.value.startTagEnd + template.value.content.length,
 				},
 				mappedRange: {
 					start: 0,
-					end: template.value.loc.end - template.value.loc.start,
+					end: template.value.content.length,
 				},
 			});
 			return sourceMap;
@@ -65,12 +65,12 @@ export function useSfcTemplate(
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
-					start: template.value.loc.start,
-					end: template.value.loc.end,
+					start: template.value.startTagEnd,
+					end: template.value.startTagEnd + template.value.content.length,
 				},
 				mappedRange: {
 					start: 0,
-					end: template.value.loc.end - template.value.loc.start,
+					end: template.value.content.length,
 				},
 			});
 			return sourceMap;

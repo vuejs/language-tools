@@ -56,8 +56,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 			const document = _sourceFile.getTextDocument();
 			const codeActions = await getCodeActions(uri, {
-				start: document.positionAt(_script.loc.start),
-				end: document.positionAt(_script.loc.start),
+				start: document.positionAt(_script.startTagEnd),
+				end: document.positionAt(_script.startTagEnd),
 			}, {
 				diagnostics: errors.filter(error => error.code === 2552),
 				only: [`${vscode.CodeActionKind.Source}.addMissingImports.ts`],
@@ -84,7 +84,7 @@ export function register(context: ApiLanguageServiceContext) {
 			const removeSetupTextRanges: TextRange[] = [...ranges.imports];
 
 			const sfcCode = document.getText();
-			const setupAttr = sfcCode.substring(0, _scriptSetup.loc.start).lastIndexOf(' setup');
+			const setupAttr = sfcCode.substring(0, _scriptSetup.startTagEnd).lastIndexOf(' setup');
 
 			edits.push(vscode.TextEdit.replace(
 				{
@@ -97,11 +97,11 @@ export function register(context: ApiLanguageServiceContext) {
 				edits.push(vscode.TextEdit.replace(
 					{
 						start: {
-							line: document.positionAt(_script.loc.start).line,
+							line: document.positionAt(_script.startTagEnd).line,
 							character: 0,
 						},
 						end: {
-							line: document.positionAt(_script.loc.end).line + 1,
+							line: document.positionAt(_script.startTagEnd + _script.content.length).line + 1,
 							character: 0,
 						},
 					},
@@ -282,8 +282,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 				edits.push(vscode.TextEdit.replace(
 					{
-						start: document.positionAt(_scriptSetup.loc.start + start),
-						end: document.positionAt(_scriptSetup.loc.start + end),
+						start: document.positionAt(_scriptSetup.startTagEnd + start),
+						end: document.positionAt(_scriptSetup.startTagEnd + end),
 					},
 					text
 				));

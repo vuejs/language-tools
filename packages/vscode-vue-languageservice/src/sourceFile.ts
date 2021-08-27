@@ -1,12 +1,10 @@
 import * as shared from '@volar/shared';
-import * as vueSfc from '@vue/compiler-sfc';
 import { computed, reactive, ref } from '@vue/reactivity';
-import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
-import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from './types';
+import { ITemplateScriptData, LanguageServiceContext } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
 import { useSfcScript } from './use/useSfcScript';
@@ -18,12 +16,6 @@ import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
 
-export const defaultLanguages = {
-	template: 'html',
-	script: 'js',
-	style: 'css',
-};
-
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(
@@ -34,8 +26,7 @@ export function createSourceFile(
 	// refs
 	const content = ref(_document.getText());
 	const version = ref(_document.version);
-	const document = computed(() => TextDocument.create(_document.uri, _document.languageId, version.value, content.value));
-	const descriptor = reactive<IDescriptor>({
+	const descriptor = reactive<shared.Sfc>({
 		template: null,
 		script: null,
 		scriptSetup: null,
@@ -56,10 +47,10 @@ export function createSourceFile(
 		props: [],
 		setupReturns: [],
 	});
-	const vueHtmlDocument = computed(() => {
-		return context.htmlLs.parseHTMLDocument(document.value);
-	});
-	const sfcErrors = ref<vscode.Diagnostic[]>([]);
+
+	// computeds
+	const document = computed(() => TextDocument.create(_document.uri, _document.languageId, version.value, content.value));
+	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
 
 	// use
 	const sfcStyles = useSfcStyles(context, untrack(() => document.value), computed(() => descriptor.styles));
@@ -225,7 +216,6 @@ export function createSourceFile(
 			document,
 			descriptor,
 			lastUpdated,
-			sfcErrors,
 
 			sfcJsons,
 			sfcTemplate,
@@ -247,21 +237,20 @@ export function createSourceFile(
 	};
 
 	function update(newDocument: TextDocument) {
-		const parsedSfc = vueSfc.parse(newDocument.getText(), { sourceMap: false, ignoreEmpty: false });
-		const newDescriptor = parsedSfc.descriptor;
+
 		const scriptLang_1 = sfcScriptForScriptLs.textDocument.value.languageId;
 		const scriptText_1 = sfcScriptForScriptLs.textDocument.value.getText();
 		const templateScriptVersion_1 = sfcTemplateScript.textDocument.value?.version;
 
-		updateSfcErrors();
-		updateTemplate(newDescriptor);
-		updateScript(newDescriptor);
-		updateScriptSetup(newDescriptor);
-		updateStyles(newDescriptor);
-		updateCustomBlocks(newDescriptor);
-
 		content.value = newDocument.getText();
 		version.value = newDocument.version;
+		const parsedSfc = shared.parseSfc(newDocument.getText(), vueHtmlDocument.value);
+
+		updateTemplate(parsedSfc['template']);
+		updateScript(parsedSfc['script']);
+		updateScriptSetup(parsedSfc['scriptSetup']);
+		updateStyles(parsedSfc['styles']);
+		updateCustomBlocks(parsedSfc['customBlocks']);
 
 		sfcTemplateScript.update(); // TODO
 
@@ -275,36 +264,7 @@ export function createSourceFile(
 			templateScriptUpdated: templateScriptVersion_1 !== templateScriptVersion_2,
 		};
 
-		function updateSfcErrors() {
-			const errors: vscode.Diagnostic[] = [];
-			for (const error of parsedSfc.errors) {
-				if ('code' in error && error.loc) {
-					const diag = vscode.Diagnostic.create(
-						vscode.Range.create(
-							error.loc.start.line - 1,
-							error.loc.start.column - 1,
-							error.loc.end.line - 1,
-							error.loc.end.column - 1,
-						),
-						error.message,
-						vscode.DiagnosticSeverity.Error,
-						error.code,
-						'vue',
-					);
-					errors.push(diag);
-				}
-			}
-			sfcErrors.value = errors;
-		}
-		function updateTemplate(newDescriptor: vueSfc.SFCDescriptor) {
-			const newData = newDescriptor.template ? {
-				lang: newDescriptor.template.lang ?? defaultLanguages.template,
-				content: newDescriptor.template.content,
-				loc: {
-					start: newDescriptor.template.loc.start.offset,
-					end: newDescriptor.template.loc.end.offset,
-				},
-			} : null;
+		function updateTemplate(newData: shared.Sfc['template']) {
 
 			lastUpdated.template = descriptor.template?.lang !== newData?.lang
 				|| descriptor.template?.content !== newData?.content;
@@ -312,23 +272,13 @@ export function createSourceFile(
 			if (descriptor.template && newData) {
 				descriptor.template.lang = newData.lang;
 				descriptor.template.content = newData.content;
-				descriptor.template.loc.start = newData.loc.start;
-				descriptor.template.loc.end = newData.loc.end;
+				descriptor.template.startTagEnd = newData.startTagEnd;
 			}
 			else {
 				descriptor.template = newData;
 			}
 		}
-		function updateScript(newDescriptor: vueSfc.SFCDescriptor) {
-			const newData = newDescriptor.script ? {
-				src: newDescriptor.script.src,
-				lang: newDescriptor.script.lang ?? defaultLanguages.script,
-				content: newDescriptor.script.content,
-				loc: {
-					start: newDescriptor.script.loc.start.offset,
-					end: newDescriptor.script.loc.end.offset,
-				},
-			} : null;
+		function updateScript(newData: shared.Sfc['script']) {
 
 			lastUpdated.script = descriptor.script?.lang !== newData?.lang
 				|| descriptor.script?.content !== newData?.content;
@@ -337,22 +287,13 @@ export function createSourceFile(
 				descriptor.script.src = newData.src;
 				descriptor.script.lang = newData.lang;
 				descriptor.script.content = newData.content;
-				descriptor.script.loc.start = newData.loc.start;
-				descriptor.script.loc.end = newData.loc.end;
+				descriptor.script.startTagEnd = newData.startTagEnd;
 			}
 			else {
 				descriptor.script = newData;
 			}
 		}
-		function updateScriptSetup(newDescriptor: vueSfc.SFCDescriptor) {
-			const newData = newDescriptor.scriptSetup ? {
-				lang: newDescriptor.scriptSetup.lang ?? defaultLanguages.script,
-				content: newDescriptor.scriptSetup.content,
-				loc: {
-					start: newDescriptor.scriptSetup.loc.start.offset,
-					end: newDescriptor.scriptSetup.loc.end.offset,
-				},
-			} : null;
+		function updateScriptSetup(newData: shared.Sfc['scriptSetup']) {
 
 			lastUpdated.scriptSetup = descriptor.scriptSetup?.lang !== newData?.lang
 				|| descriptor.scriptSetup?.content !== newData?.content;
@@ -360,31 +301,19 @@ export function createSourceFile(
 			if (descriptor.scriptSetup && newData) {
 				descriptor.scriptSetup.lang = newData.lang;
 				descriptor.scriptSetup.content = newData.content;
-				descriptor.scriptSetup.loc.start = newData.loc.start;
-				descriptor.scriptSetup.loc.end = newData.loc.end;
+				descriptor.scriptSetup.startTagEnd = newData.startTagEnd;
 			}
 			else {
 				descriptor.scriptSetup = newData;
 			}
 		}
-		function updateStyles(newDescriptor: vueSfc.SFCDescriptor) {
-			for (let i = 0; i < newDescriptor.styles.length; i++) {
-				const style = newDescriptor.styles[i];
-				const newData = {
-					lang: style.lang ?? defaultLanguages.style,
-					content: style.content,
-					loc: {
-						start: style.loc.start.offset,
-						end: style.loc.end.offset,
-					},
-					module: style.module === true ? '$style' : typeof style.module === 'string' ? style.module : undefined,
-					scoped: !!style.scoped,
-				};
+		function updateStyles(newDataArr: shared.Sfc['styles']) {
+			for (let i = 0; i < newDataArr.length; i++) {
+				const newData = newDataArr[i];
 				if (descriptor.styles.length > i) {
 					descriptor.styles[i].lang = newData.lang;
 					descriptor.styles[i].content = newData.content;
-					descriptor.styles[i].loc.start = newData.loc.start;
-					descriptor.styles[i].loc.end = newData.loc.end;
+					descriptor.styles[i].startTagEnd = newData.startTagEnd;
 					descriptor.styles[i].module = newData.module;
 					descriptor.styles[i].scoped = newData.scoped;
 				}
@@ -392,34 +321,24 @@ export function createSourceFile(
 					descriptor.styles.push(newData);
 				}
 			}
-			while (descriptor.styles.length > newDescriptor.styles.length) {
+			while (descriptor.styles.length > newDataArr.length) {
 				descriptor.styles.pop();
 			}
 		}
-		function updateCustomBlocks(newDescriptor: vueSfc.SFCDescriptor) {
-			for (let i = 0; i < newDescriptor.customBlocks.length; i++) {
-				const block = newDescriptor.customBlocks[i];
-				const newData = {
-					type: block.type,
-					lang: block.lang ?? '',
-					content: block.content,
-					loc: {
-						start: block.loc.start.offset,
-						end: block.loc.end.offset,
-					},
-				};
+		function updateCustomBlocks(newDataArr: shared.Sfc['customBlocks']) {
+			for (let i = 0; i < newDataArr.length; i++) {
+				const newData = newDataArr[i];
 				if (descriptor.customBlocks.length > i) {
 					descriptor.customBlocks[i].type = newData.type;
 					descriptor.customBlocks[i].lang = newData.lang;
 					descriptor.customBlocks[i].content = newData.content;
-					descriptor.customBlocks[i].loc.start = newData.loc.start;
-					descriptor.customBlocks[i].loc.end = newData.loc.end;
+					descriptor.customBlocks[i].startTagEnd = newData.startTagEnd;
 				}
 				else {
 					descriptor.customBlocks.push(newData);
 				}
 			}
-			while (descriptor.customBlocks.length > newDescriptor.customBlocks.length) {
+			while (descriptor.customBlocks.length > newDataArr.length) {
 				descriptor.customBlocks.pop();
 			}
 		}

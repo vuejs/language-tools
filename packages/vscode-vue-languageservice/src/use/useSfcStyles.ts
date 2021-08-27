@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor, LanguageServiceContext } from '../types';
+import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
@@ -11,7 +11,7 @@ import { parse as parseCssBinds } from '../parsers/cssBinds';
 export function useSfcStyles(
 	context: LanguageServiceContext,
 	getUnreactiveDoc: () => TextDocument,
-	styles: Ref<IDescriptor['styles']>,
+	styles: Ref<shared.Sfc['styles']>,
 ) {
 	const { modules: { typescript: ts } } = context;
 	let version = 0;
@@ -86,32 +86,26 @@ export function useSfcStyles(
 
 			const cssData = textDocuments.value[i];
 			const style = styles.value[i];
-			const document = cssData.textDocument;
-			const stylesheet = cssData.stylesheet;
-			const linkStyles = cssData.links;
-			const loc = style.loc;
-			const module = style.module;
-			const scoped = style.scoped;
 
 			const sourceMap = new SourceMaps.CssSourceMap(
 				vueDoc,
-				document,
-				stylesheet,
-				module,
-				scoped,
-				linkStyles,
+				cssData.textDocument,
+				cssData.stylesheet,
+				style.module,
+				style.scoped,
+				cssData.links,
 				{ foldingRanges: true, formatting: true },
 			);
 			sourceMap.add({
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
-					start: loc.start,
-					end: loc.end,
+					start: style.startTagEnd,
+					end: style.startTagEnd + style.content.length,
 				},
 				mappedRange: {
 					start: 0,
-					end: loc.end - loc.start,
+					end: style.content.length,
 				},
 			});
 			sourceMaps.push(sourceMap);

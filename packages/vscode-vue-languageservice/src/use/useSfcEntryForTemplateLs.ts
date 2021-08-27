@@ -1,6 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
@@ -8,9 +7,9 @@ import * as shared from '@volar/shared';
 
 export function useSfcEntryForTemplateLs(
 	getUnreactiveDoc: () => TextDocument,
-	script: Ref<IDescriptor['script']>,
-	scriptSetup: Ref<IDescriptor['scriptSetup']>,
-	template: Ref<IDescriptor['template']>,
+	script: Ref<shared.Sfc['script']>,
+	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
+	template: Ref<shared.Sfc['template']>,
 	hasTsDoc: Ref<boolean>,
 ) {
 	let version = 0;

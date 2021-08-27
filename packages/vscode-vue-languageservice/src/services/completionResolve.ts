@@ -123,7 +123,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			if (descriptor.scriptSetup) {
 				vueItem.additionalTextEdits = [
 					vscode.TextEdit.insert(
-						textDoc.positionAt(descriptor.scriptSetup.loc.start + (scriptSetupImport ? scriptSetupImport.end : 0)),
+						textDoc.positionAt(descriptor.scriptSetup.startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0)),
 						'\n' + insertText,
 					),
 				];
@@ -131,7 +131,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			else if (descriptor.script && scriptAst) {
 				vueItem.additionalTextEdits = [
 					vscode.TextEdit.insert(
-						textDoc.positionAt(descriptor.script.loc.start + (scriptImport ? scriptImport.end : 0)),
+						textDoc.positionAt(descriptor.script.startTagEnd + (scriptImport ? scriptImport.end : 0)),
 						'\n' + insertText,
 					),
 				];
@@ -145,8 +145,8 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
-								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.start),
-								textDoc.positionAt(descriptor.script.loc.start + exportDefault.componentsOption.end),
+								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
+								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.end),
 							),
 							unescape(printText.replace(/\\u/g, '%u')),
 						));
@@ -156,8 +156,8 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
-								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.start),
-								textDoc.positionAt(descriptor.script.loc.start + exportDefault.args.end),
+								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),
+								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.end),
 							),
 							unescape(printText.replace(/\\u/g, '%u')),
 						));

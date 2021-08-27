@@ -74,8 +74,8 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			if (descriptor.scriptSetup) {
 				result.push({
 					range: {
-						start: document.positionAt(descriptor.scriptSetup.loc.start),
-						end: document.positionAt(descriptor.scriptSetup.loc.end),
+						start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+						end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
 					},
 					command: {
 						title: 'setup sugar ☑',
@@ -87,8 +87,8 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			else if (descriptor.script) {
 				result.push({
 					range: {
-						start: document.positionAt(descriptor.script.loc.start),
-						end: document.positionAt(descriptor.script.loc.end),
+						start: document.positionAt(descriptor.script.startTagEnd),
+						end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
 					},
 					command: {
 						title: 'setup sugar ☐',
@@ -106,8 +106,8 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 			if (descriptor.scriptSetup && ranges) {
 				result.push({
 					range: {
-						start: document.positionAt(descriptor.scriptSetup.loc.start),
-						end: document.positionAt(descriptor.scriptSetup.loc.end),
+						start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+						end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
 					},
 					command: {
 						title: 'ref sugar (take 2) ' + (ranges.refs.length ? '☑' : '☐'),

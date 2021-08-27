@@ -4,12 +4,11 @@ export * from './types';
 export * from './uriMap';
 export * from './ts';
 export * from './http';
+export * from './vue';
 
 import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { promisify } from 'util';
-
-const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 export const sleep = promisify(setTimeout);
 
@@ -33,13 +32,6 @@ export function languageIdToSyntax(languageId: string) {
 		case 'jade': return 'pug';
 	}
 	return languageId;
-}
-
-export function getValidScriptSyntax(syntax: string) {
-	if (validScriptSyntaxs.has(syntax)) {
-		return syntax;
-	}
-	return 'js';
 }
 
 export function notEmpty<T>(value: T | null | undefined): value is T {

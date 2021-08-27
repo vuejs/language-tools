@@ -36,28 +36,6 @@ export interface AutoImportComponentCompletionData {
 
 export type CompletionData = TsCompletionData | HtmlCompletionData | CssCompletionData | AutoImportComponentCompletionData;
 
-export interface IDescriptorBlock {
-	lang: string;
-	content: string;
-	loc: {
-		start: number;
-		end: number;
-	};
-}
-export interface IDescriptor {
-	template: IDescriptorBlock | null;
-	script: (IDescriptorBlock & {
-		src?: string;
-	}) | null;
-	scriptSetup: IDescriptorBlock | null;
-	styles: (IDescriptorBlock & {
-		module: string | undefined;
-		scoped: boolean;
-	})[];
-	customBlocks: (IDescriptorBlock & {
-		type: string;
-	})[];
-}
 export interface ITemplateScriptData {
 	projectVersion: string | undefined;
 	context: string[];

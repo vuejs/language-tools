@@ -61,7 +61,7 @@ export function register(
 				...descriptor.styles,
 				...descriptor.customBlocks,
 			].filter(shared.notEmpty)) {
-				emptyBlocksContent = emptyBlocksContent.substring(0, block.loc.start) + ' '.repeat(block.loc.end - block.loc.start) + emptyBlocksContent.substring(block.loc.end);
+				emptyBlocksContent = emptyBlocksContent.substring(0, block.startTagEnd) + ' '.repeat(block.content.length) + emptyBlocksContent.substring(block.startTagEnd + block.content.length);
 			}
 
 			let result: vscode.SelectionRange[] = [];

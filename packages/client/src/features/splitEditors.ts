@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
-import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { ref, computed } from '@vue/reactivity';
 import * as shared from '@volar/shared';
+import * as html from 'vscode-html-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+
+export const htmlLs = html.getLanguageService();
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -16,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const doc = editor.document;
 		const descriptor = getDocDescriptor(doc.getText());
-		const blocksSet: SFCBlock[][] = [];
+		const blocksSet: shared.SfcBlock[][] = [];
 
 		if (descriptor.scriptSetup || descriptor.script) {
 			blocksSet.push([descriptor.scriptSetup, descriptor.script].filter(shared.notEmpty));
@@ -39,13 +42,13 @@ export function activate(context: vscode.ExtensionContext) {
 		for (let i = 0; i < blocksSet.length; i++) {
 
 			const blocks = blocksSet[i];
-			const firstBlock = blocks.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
+			const firstBlock = blocks.sort((a, b) => a.startTagEnd - b.startTagEnd)[0];
 
 			const editor = await vscode.window.showTextDocument(doc, startViewColumn + i);
-			editor.selections = blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)));
+			editor.selections = blocks.map(block => new vscode.Selection(doc.positionAt(block.startTagEnd), doc.positionAt(block.startTagEnd)));
 
 			await vscode.commands.executeCommand('editor.foldLevel1');
-			editor.revealRange(new vscode.Range(doc.positionAt(firstBlock.loc.start.offset), new vscode.Position(editor.document.lineCount, 0)), vscode.TextEditorRevealType.AtTop);
+			editor.revealRange(new vscode.Range(doc.positionAt(firstBlock.startTagEnd), new vscode.Position(editor.document.lineCount, 0)), vscode.TextEditorRevealType.AtTop);
 		}
 	}
 }
@@ -71,7 +74,7 @@ async function splitCurrentEditors(num: number) {
 function useDocDescriptor() {
 
 	const splitDocText = ref('');
-	const splitDocDescriptor = computed(() => parse(splitDocText.value, { sourceMap: false, ignoreEmpty: false }).descriptor);
+	const splitDocDescriptor = computed(() => shared.parseSfc(splitDocText.value, htmlLs.parseHTMLDocument(TextDocument.create('', '', 0, splitDocText.value))));
 
 	return getDescriptor;
 

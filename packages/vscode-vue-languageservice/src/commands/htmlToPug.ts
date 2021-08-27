@@ -12,23 +12,9 @@ export function execute(document: TextDocument, sourceFile: SourceFile, connecti
 	const pug = htmlToPug(desc.template.content) + '\n';
 	const newTemplate = `<template lang="pug">` + pug;
 
-	let start = desc.template.loc.start - '<template>'.length;
-	const end = desc.template.loc.end;
-	const startMatch = '<template';
-
-	while (!document.getText(vscode.Range.create(
-		document.positionAt(start),
-		document.positionAt(start + startMatch.length),
-	)).startsWith(startMatch)) {
-		start--;
-		if (start < 0) {
-			throw `Can't find start of tag <template>`
-		}
-	}
-
 	const range = vscode.Range.create(
-		document.positionAt(start),
-		document.positionAt(end),
+		document.positionAt(desc.template.start),
+		document.positionAt(desc.template.startTagEnd + desc.template.content.length),
 	);
 	const textEdit = vscode.TextEdit.replace(range, newTemplate);
 	connection.workspace.applyEdit({ changes: { [document.uri]: [textEdit] } });

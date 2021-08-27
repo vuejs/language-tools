@@ -1,12 +1,11 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcScript(
 	getUnreactiveDoc: () => TextDocument,
-	script: Ref<IDescriptor['script']>,
+	script: Ref<shared.Sfc['script']>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	let version = 0;
@@ -42,12 +41,12 @@ export function useSfcScript(
 				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
-					start: script.value.loc.start,
-					end: script.value.loc.end,
+					start: script.value.startTagEnd,
+					end: script.value.startTagEnd + script.value.content.length,
 				},
 				mappedRange: {
 					start: 0,
-					end: script.value.loc.end - script.value.loc.start,
+					end: script.value.content.length,
 				},
 			});
 			return sourceMap;

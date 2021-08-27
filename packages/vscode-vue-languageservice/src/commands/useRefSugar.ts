@@ -54,7 +54,7 @@ export function register(context: ApiLanguageServiceContext) {
 
 				for (const binding of declaration.leftBindings) {
 
-					const definitions = await findTypeDefinition(uri, document.positionAt(_scriptSetup.loc.start + binding.end));
+					const definitions = await findTypeDefinition(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end));
 					const _isRefType = isRefType(definitions, scriptTsLs);
 
 					if (!_isRefType)
@@ -62,7 +62,7 @@ export function register(context: ApiLanguageServiceContext) {
 
 					isRefDeclaration = true;
 
-					let references = await findReferences(uri, document.positionAt(_scriptSetup.loc.start + binding.end));
+					let references = await findReferences(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end));
 
 					references = references.filter(reference => {
 
@@ -72,13 +72,13 @@ export function register(context: ApiLanguageServiceContext) {
 						const start = document.offsetAt(reference.range.start);
 						const end = document.offsetAt(reference.range.end);
 
-						if (start >= (_scriptSetup.loc.start + binding.start) && end <= (_scriptSetup.loc.start + binding.end))
+						if (start >= (_scriptSetup.startTagEnd + binding.start) && end <= (_scriptSetup.startTagEnd + binding.end))
 							return false;
 
-						if (end < _scriptSetup.loc.start || start > _scriptSetup.loc.end)
+						if (end < _scriptSetup.startTagEnd || start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
 							return false;
 
-						if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.loc.start))
+						if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.startTagEnd))
 							return false;
 
 						return true;
@@ -88,8 +88,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 						const sfcStart = document.offsetAt(reference.range.start);
 						const sfcEnd = document.offsetAt(reference.range.end);
-						const setupStart = sfcStart - _scriptSetup.loc.start;
-						const setupEnd = sfcEnd - _scriptSetup.loc.start;
+						const setupStart = sfcStart - _scriptSetup.startTagEnd;
+						const setupEnd = sfcEnd - _scriptSetup.startTagEnd;
 						const dotValue = dotValueRanges.find(dot => dot.beforeDot === setupEnd);
 
 						if (!dotValue) {
@@ -132,8 +132,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 				edits.push(vscode.TextEdit.replace(
 					{
-						start: document.positionAt(_scriptSetup.loc.start + start),
-						end: document.positionAt(_scriptSetup.loc.start + end),
+						start: document.positionAt(_scriptSetup.startTagEnd + start),
+						end: document.positionAt(_scriptSetup.startTagEnd + end),
 					},
 					text
 				));

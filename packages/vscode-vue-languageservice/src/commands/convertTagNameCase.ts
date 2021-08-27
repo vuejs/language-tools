@@ -36,8 +36,8 @@ export async function execute(
 			for (const reference of references) {
 				if (
 					reference.uri === sourceFile.uri
-					&& document.offsetAt(reference.range.start) >= template.loc.start
-					&& document.offsetAt(reference.range.end) <= template.loc.end
+					&& document.offsetAt(reference.range.start) >= template.startTagEnd
+					&& document.offsetAt(reference.range.end) <= template.startTagEnd + template.content.length
 				) {
 					const referenceText = document.getText(reference.range);
 					for (const component of components) {

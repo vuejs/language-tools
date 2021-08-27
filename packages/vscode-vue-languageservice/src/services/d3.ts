@@ -45,12 +45,12 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 					type: 'func',
 					name: '__template__',
 					range: {
-						start: document.positionAt(template.loc.start),
-						end: document.positionAt(template.loc.start),
+						start: document.positionAt(template.startTagEnd),
+						end: document.positionAt(template.startTagEnd),
 					},
 					blockRange: {
-						start: document.positionAt(template.loc.start),
-						end: document.positionAt(template.loc.end),
+						start: document.positionAt(template.startTagEnd),
+						end: document.positionAt(template.startTagEnd + template.content.length),
 					},
 				});
 			}

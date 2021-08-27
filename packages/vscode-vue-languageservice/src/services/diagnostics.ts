@@ -37,7 +37,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			sfcJsons,
 			sfcScriptForScriptLs,
 			lastUpdated,
-			sfcErrors,
 			sfcTemplate,
 			descriptor,
 			document,
@@ -126,15 +125,14 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				const _newErrors = all
 					.slice(0, i + 1)
 					.map(async diag => await diag[0].result.value)
-					.flat()
+					.flat();
 				const newErrors = (await Promise.all(_newErrors))
-					.flat()
-					.concat(sfcErrors.value);
+					.flat();
 				const _oldErrors = all
 					.slice(i + 1)
 					.map(async diag => i >= mainTsErrorStart && !isScriptChanged ? await diag[0].cache.value : diag[2])
 				const oldErrors = (await Promise.all(_oldErrors))
-					.flat();;
+					.flat();
 				const isLast = i === all.length - 1
 				if (await isCancel?.()) return;
 				if (
@@ -333,8 +331,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						if (!script || script.content === '') continue;
 						const error = vscode.Diagnostic.create(
 							{
-								start: document.value.positionAt(script.loc.start),
-								end: document.value.positionAt(script.loc.end),
+								start: document.value.positionAt(script.startTagEnd),
+								end: document.value.positionAt(script.startTagEnd + script.content.length),
 							},
 							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
 							vscode.DiagnosticSeverity.Information,

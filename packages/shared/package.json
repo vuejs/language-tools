@@ -18,6 +18,7 @@
 		"vscode-uri": "^3.0.2"
 	},
 	"devDependencies": {
+		"vscode-html-languageservice": "^4.0.7",
 		"typescript": "latest"
 	}
 }

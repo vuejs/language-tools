@@ -63,8 +63,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 			const document = _sourceFile.getTextDocument();
 			const codeActions = await getCodeActions(uri, {
-				start: document.positionAt(_scriptSetup.loc.start),
-				end: document.positionAt(_scriptSetup.loc.start),
+				start: document.positionAt(_scriptSetup.startTagEnd),
+				end: document.positionAt(_scriptSetup.startTagEnd),
 			}, {
 				diagnostics: errors.filter(error => error.code === 2552),
 				only: [`${vscode.CodeActionKind.Source}.addMissingImports.ts`],
@@ -149,7 +149,7 @@ export function register(context: ApiLanguageServiceContext) {
 					await shared.sleep(0);
 
 					const bindingName = _scriptSetup.content.substring(binding.start, binding.end);
-					const renames = await doRename(uri, document.positionAt(_scriptSetup.loc.start + binding.end), bindingName + '.value');
+					const renames = await doRename(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end), bindingName + '.value');
 
 					if (renames?.changes) {
 						const edits_2 = renames.changes[uri];
@@ -161,10 +161,10 @@ export function register(context: ApiLanguageServiceContext) {
 									end: document.offsetAt(edit.range.end),
 								};
 
-								if (editRange.start >= (_scriptSetup.loc.start + binding.start) && editRange.end <= (_scriptSetup.loc.start + binding.end))
+								if (editRange.start >= (_scriptSetup.startTagEnd + binding.start) && editRange.end <= (_scriptSetup.startTagEnd + binding.end))
 									continue;
 
-								if (editRange.end < _scriptSetup.loc.start || editRange.start > _scriptSetup.loc.end)
+								if (editRange.end < _scriptSetup.startTagEnd || editRange.start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
 									continue;
 
 								if (inRawCall(editRange.start, editRange.end))
@@ -187,7 +187,7 @@ export function register(context: ApiLanguageServiceContext) {
 			function inRawCall(start: number, end: number) {
 				if (ranges) {
 					for (const rawRange of ranges.raws) {
-						if (start >= (_scriptSetup.loc.start + rawRange.argsRange.start) && end <= (_scriptSetup.loc.start + rawRange.argsRange.end)) {
+						if (start >= (_scriptSetup.startTagEnd + rawRange.argsRange.start) && end <= (_scriptSetup.startTagEnd + rawRange.argsRange.end)) {
 							return true;
 						}
 					}
@@ -201,8 +201,8 @@ export function register(context: ApiLanguageServiceContext) {
 
 				edits.push(vscode.TextEdit.replace(
 					{
-						start: document.positionAt(_scriptSetup.loc.start + start),
-						end: document.positionAt(_scriptSetup.loc.start + end),
+						start: document.positionAt(_scriptSetup.startTagEnd + start),
+						end: document.positionAt(_scriptSetup.startTagEnd + end),
 					},
 					text
 				));

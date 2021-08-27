@@ -1,4 +1,3 @@
-import type { IDescriptor } from '../types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
@@ -12,8 +11,8 @@ export function useSfcScriptGen(
 	lsType: 'template' | 'script',
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDoc: Ref<TextDocument>,
-	script: Ref<IDescriptor['script']>,
-	scriptSetup: Ref<IDescriptor['scriptSetup']>,
+	script: Ref<shared.Sfc['script']>,
+	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
 	scriptAst: Ref<ts.SourceFile | undefined>,
 	scriptSetupAst: Ref<ts.SourceFile | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
@@ -115,7 +114,7 @@ export function useSfcScriptGen(
 
 	function parseMappingSourceRange(data: TsMappingData, sourceRange: Range) {
 		if (data.vueTag === 'scriptSrc' && script.value?.src) {
-			const vueStart = vueDoc.value.getText().substring(0, script.value.loc.start).lastIndexOf(script.value.src);
+			const vueStart = vueDoc.value.getText().substring(0, script.value.startTagEnd).lastIndexOf(script.value.src);
 			const vueEnd = vueStart + script.value.src.length;
 			return {
 				start: vueStart - 1,
@@ -124,14 +123,14 @@ export function useSfcScriptGen(
 		}
 		else if (data.vueTag === 'script' && script.value) {
 			return {
-				start: script.value.loc.start + sourceRange.start,
-				end: script.value.loc.start + sourceRange.end,
+				start: script.value.startTagEnd + sourceRange.start,
+				end: script.value.startTagEnd + sourceRange.end,
 			};
 		}
 		else if (data.vueTag === 'scriptSetup' && scriptSetup.value) {
 			return {
-				start: scriptSetup.value.loc.start + sourceRange.start,
-				end: scriptSetup.value.loc.start + sourceRange.end,
+				start: scriptSetup.value.startTagEnd + sourceRange.start,
+				end: scriptSetup.value.startTagEnd + sourceRange.end,
 			};
 		}
 		else {

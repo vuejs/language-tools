@@ -41,8 +41,8 @@ export function register(
 					name: '<template>',
 					kind: vscode.SymbolKind.Module,
 					location: vscode.Location.create(document.uri, vscode.Range.create(
-						document.positionAt(desc.template.loc.start),
-						document.positionAt(desc.template.loc.end),
+						document.positionAt(desc.template.startTagEnd),
+						document.positionAt(desc.template.startTagEnd + desc.template.content.length),
 					)),
 				});
 			}
@@ -51,8 +51,8 @@ export function register(
 					name: '<script>',
 					kind: vscode.SymbolKind.Module,
 					location: vscode.Location.create(document.uri, vscode.Range.create(
-						document.positionAt(desc.script.loc.start),
-						document.positionAt(desc.script.loc.end),
+						document.positionAt(desc.script.startTagEnd),
+						document.positionAt(desc.script.startTagEnd + desc.script.content.length),
 					)),
 				});
 			}
@@ -61,8 +61,8 @@ export function register(
 					name: '<script setup>',
 					kind: vscode.SymbolKind.Module,
 					location: vscode.Location.create(document.uri, vscode.Range.create(
-						document.positionAt(desc.scriptSetup.loc.start),
-						document.positionAt(desc.scriptSetup.loc.end),
+						document.positionAt(desc.scriptSetup.startTagEnd),
+						document.positionAt(desc.scriptSetup.startTagEnd + desc.scriptSetup.content.length),
 					)),
 				});
 			}
@@ -71,8 +71,8 @@ export function register(
 					name: `<${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}>`,
 					kind: vscode.SymbolKind.Module,
 					location: vscode.Location.create(document.uri, vscode.Range.create(
-						document.positionAt(style.loc.start),
-						document.positionAt(style.loc.end),
+						document.positionAt(style.startTagEnd),
+						document.positionAt(style.startTagEnd + style.content.length),
 					)),
 				});
 			}
@@ -81,8 +81,8 @@ export function register(
 					name: `<${customBlock.type}>`,
 					kind: vscode.SymbolKind.Module,
 					location: vscode.Location.create(document.uri, vscode.Range.create(
-						document.positionAt(customBlock.loc.start),
-						document.positionAt(customBlock.loc.end),
+						document.positionAt(customBlock.startTagEnd),
+						document.positionAt(customBlock.startTagEnd + customBlock.content.length),
 					)),
 				});
 			}

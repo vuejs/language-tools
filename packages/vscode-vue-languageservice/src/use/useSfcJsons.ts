@@ -1,12 +1,13 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { IDescriptor, LanguageServiceContext } from '../types';
-import * as SourceMaps from '../utils/sourceMaps';
 import type * as json from 'vscode-json-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { LanguageServiceContext } from '../types';
+import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcJsons(
 	getUnreactiveDoc: () => TextDocument,
-	customBlocks: Ref<IDescriptor['customBlocks']>,
+	customBlocks: Ref<shared.Sfc['customBlocks']>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
@@ -47,12 +48,12 @@ export function useSfcJsons(
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
-					start: customBlock.loc.start,
-					end: customBlock.loc.end,
+					start: customBlock.startTagEnd,
+					end: customBlock.startTagEnd + customBlock.content.length,
 				},
 				mappedRange: {
 					start: 0,
-					end: customBlock.loc.end - customBlock.loc.start,
+					end: customBlock.content.length,
 				},
 			});
 			sourceMaps.push(sourceMap);

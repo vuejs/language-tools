@@ -23,7 +23,6 @@
 		"@volar/transforms": "^0.27.7",
 		"@vscode/emmet-helper": "^2.7.0",
 		"@vue/compiler-dom": "^3.2.6",
-		"@vue/compiler-sfc": "^3.2.6",
 		"@vue/reactivity": "^3.2.6",
 		"@vue/shared": "^3.2.6",
 		"request-light": "^0.5.4",

@@ -37,10 +37,10 @@ export function register(
 				blocks.push(desc.template);
 			}
 			for (const block of blocks) {
-				const content = docTextWithoutBlocks.substring(block.loc.start, block.loc.end);
-				docTextWithoutBlocks = docTextWithoutBlocks.substring(0, block.loc.start)
+				const content = docTextWithoutBlocks.substring(block.startTagEnd, block.startTagEnd + block.content.length);
+				docTextWithoutBlocks = docTextWithoutBlocks.substring(0, block.startTagEnd)
 					+ content.split('\n').map(line => ' '.repeat(line.length)).join('\n')
-					+ docTextWithoutBlocks.substring(block.loc.end);
+					+ docTextWithoutBlocks.substring(block.startTagEnd + block.content.length);
 			}
 			return htmlLs.getFoldingRanges(TextDocument.create(document.uri, document.languageId, document.version, docTextWithoutBlocks));
 		}

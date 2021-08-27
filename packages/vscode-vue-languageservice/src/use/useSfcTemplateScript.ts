@@ -6,14 +6,14 @@ import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
-import { IDescriptor, ITemplateScriptData, LanguageServiceContext } from '../types';
+import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
 export function useSfcTemplateScript(
 	getUnreactiveDoc: () => TextDocument,
-	template: Ref<IDescriptor['template']>,
-	styles: Ref<IDescriptor['styles']>,
+	template: Ref<shared.Sfc['template']>,
+	styles: Ref<shared.Sfc['styles']>,
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
@@ -389,11 +389,11 @@ export function useSfcTemplateScript(
 	function parseMappingSourceRange(data: any /* TODO */, range: SourceMaps.Range) {
 		if (data?.vueTag === 'style' && data?.vueTagIndex !== undefined) {
 			return {
-				start: styles.value[data.vueTagIndex].loc.start + range.start,
-				end: styles.value[data.vueTagIndex].loc.start + range.end,
+				start: styles.value[data.vueTagIndex].startTagEnd + range.start,
+				end: styles.value[data.vueTagIndex].startTagEnd + range.end,
 			};
 		}
-		const templateOffset = template.value?.loc.start ?? 0;
+		const templateOffset = template.value?.startTagEnd ?? 0;
 		return {
 			start: templateOffset + range.start,
 			end: templateOffset + range.end,
