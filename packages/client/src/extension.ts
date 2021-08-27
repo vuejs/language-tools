@@ -19,6 +19,7 @@ import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as vueTscVersion from './features/vueTscVersion';
+import * as whitelist from './features/whitelist';
 
 let apiClient: lsp.LanguageClient;
 let docClient: lsp.LanguageClient;
@@ -44,6 +45,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	tsPlugin.activate(context);
 	tsVersion.activate(context, [apiClient, docClient]);
 	vueTscVersion.activate(context);
+	whitelist.activate(context, [apiClient, docClient, htmlClient]);
 
 	startEmbeddedLanguageServices();
 

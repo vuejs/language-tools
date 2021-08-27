@@ -290,6 +290,11 @@
 				"category": "Volar (Debug)"
 			},
 			{
+				"command": "volar.action.getWhitelist",
+				"title": "Get .vscodeignore Whitelist",
+				"category": "Volar (Debug)"
+			},
+			{
 				"command": "volar.action.showCallGraph",
 				"title": "Show Call Graph",
 				"category": "Volar (Experimental)"

@@ -59,6 +59,7 @@ function onInitialize(params: vscode.InitializeParams) {
 async function onInitialized() {
 
 	connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
+	connection.onRequest(shared.DepsRequest.type, () => Object.keys(require.cache));
 
 	const ts = shared.loadTypescript(options.typescript.serverPath);
 

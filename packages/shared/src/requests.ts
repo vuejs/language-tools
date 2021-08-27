@@ -57,6 +57,12 @@ export namespace PingRequest {
 	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/ping');
 }
 
+export namespace DepsRequest {
+	export type ResponseType = string[];
+	export type ErrorType = never;
+	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/depFiles');
+}
+
 export namespace D3Request {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = string | null | undefined;
