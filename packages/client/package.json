@@ -20,7 +20,7 @@
 		"@vue/reactivity": "^3.2.6",
 		"upath": "^2.0.1",
 		"vscode-html-languageservice": "^4.0.7",
-		"vscode-languageclient": "^8.0.0-next.1",
+		"vscode-languageclient": "^8.0.0-next.2",
 		"vscode-languageserver-textdocument": "^1.0.1",
 		"vscode-nls": "5.0.0"
 	},
