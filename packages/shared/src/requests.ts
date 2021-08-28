@@ -16,7 +16,7 @@ export namespace GetDocumentVersionRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = number | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vue/docUpdated');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vue/docVersion');
 }
 
 export namespace ShowReferencesNotification {

@@ -17,59 +17,26 @@ export function createProjects(
 	inferredCompilerOptions: ts.CompilerOptions,
 ) {
 
-	let filesUpdateTrigger = false;
+	let semanticTokensReq = 0;
+	let workspaceFilesUpdateReq = 0;
+	let documentUpdatedReq = 0;
+
+	const updatedWorkspaceFiles = new Set<string>();
+	const updatedUris = new Set<string>();
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const projects = new Map<string, Project>();
 	const inferredProjects = new Map<string, Project>();
-	const tsConfigSet = new Set(rootPaths.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*'])).flat());
-	const tsConfigs = [...tsConfigSet].filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)));
-	const inferredTsConfigs = rootPaths.map(rootPath => upath.join(rootPath, 'tsconfig.json'));
 	const checkedProjects = new Set<string>();
 	const progressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
-	const virtualProgressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
+	const inferredProgressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
 
-	(async () => {
-		const { progress, virtualProgress } = await getTsconfigProgress(tsConfigs, inferredTsConfigs);
-		clearDiagnostics();
-		for (const tsConfig of tsConfigs) {
-			updateProject(tsConfig, progress[tsConfig]);
-		}
-		for (const tsConfig of inferredTsConfigs) {
-			createInferredProject(tsConfig, virtualProgress[tsConfig]);
-		}
-		updateDocumentDiagnostics(undefined);
-	})();
-	for (const rootPath of rootPaths) {
-		ts.sys.watchDirectory!(rootPath, async fileName => {
-			if (tsConfigNames.includes(upath.basename(fileName))) {
-				// tsconfig.json changed
-				const { progress } = await getTsconfigProgress([fileName], []);
-				clearDiagnostics();
-				updateProject(fileName, progress[fileName]);
-				updateDocumentDiagnostics(undefined);
-			}
-			else {
-				// *.vue, *.ts ... changed
-				filesUpdateTrigger = true;
-				await shared.sleep(0);
-				if (filesUpdateTrigger) {
-					filesUpdateTrigger = false;
-					for (const [_, service] of [...projects, ...inferredProjects]) {
-						service.update();
-					}
-				}
-			}
-		}, true);
-	}
+	initProjects();
 
 	documents.onDidChangeContent(change => {
 		for (const [_, service] of [...projects, ...inferredProjects]) {
 			service.onDocumentUpdated(change.document);
 		}
-		updateDocumentDiagnostics(shared.uriToFsPath(change.document.uri));
-		// preload
-		get(change.document.uri);
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
 
@@ -79,62 +46,158 @@ export function createProjects(
 		get,
 	};
 
-	async function getTsconfigProgress(tsconfigs: string[], virtualTsconfigs: string[]) {
+	async function initProjects() {
+
+		const tsConfigs = searchTsConfigs();
+		const { projectProgress } = await getProjectProgress(tsConfigs, []);
+
+		for (const tsConfig of tsConfigs) {
+			updateProject(tsConfig, projectProgress[tsConfig]);
+		}
+
+		updateInferredProjects();
+		updateDiagnostics(undefined);
+
+		for (const rootPath of rootPaths) {
+			ts.sys.watchDirectory!(rootPath, async fileName => {
+				if (tsConfigNames.includes(upath.basename(fileName))) {
+					// tsconfig.json changed
+					const { projectProgress } = await getProjectProgress([fileName], []);
+					clearDiagnostics();
+					updateProject(fileName, projectProgress[fileName]);
+					await updateInferredProjects();
+					updateDiagnostics(undefined);
+				}
+				else if (
+					fileName.endsWith('.vue')
+					|| fileName.endsWith('.js')
+					|| fileName.endsWith('.jsx')
+					|| fileName.endsWith('.ts')
+					|| fileName.endsWith('.tsx')
+					|| fileName.endsWith('.json')
+				) {
+					// *.vue, *.ts ... changed
+
+					const req = ++workspaceFilesUpdateReq;
+					updatedWorkspaceFiles.add(fileName);
+
+					await shared.sleep(100);
+
+					if (req === workspaceFilesUpdateReq) {
+
+						const changes = [...updatedWorkspaceFiles].map(fileName => ({
+							fileName,
+							fileExist: ts.sys.fileExists(fileName),
+						}));
+
+						for (const [_, service] of [...projects, ...inferredProjects]) {
+							service.onWorkspaceFilesChanged(changes);
+						}
+					}
+				}
+			}, true, { excludeDirectories: [upath.join(rootPath, '.git')] });
+		}
+
+	}
+	function searchTsConfigs() {
+		const tsConfigSet = new Set(rootPaths
+			.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*']))
+			.flat()
+			.filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)))
+		);
+		const tsConfigs = [...tsConfigSet];
+
+		return tsConfigs;
+	}
+	async function getProjectProgress(tsconfigs: string[], inferredTsconfigs: string[]) {
+
 		for (const tsconfig of tsconfigs) {
 			if (!progressMap.has(tsconfig)) {
 				progressMap.set(tsconfig, connection.window.createWorkDoneProgress());
 			}
 		}
-		for (const tsconfig of virtualTsconfigs) {
-			if (!virtualProgressMap.has(tsconfig)) {
-				virtualProgressMap.set(tsconfig, connection.window.createWorkDoneProgress());
+		for (const tsconfig of inferredTsconfigs) {
+			if (!inferredProgressMap.has(tsconfig)) {
+				inferredProgressMap.set(tsconfig, connection.window.createWorkDoneProgress());
 			}
 		}
-		const result: Record<string, vscode.WorkDoneProgressServerReporter> = {};
-		const virtualResult: Record<string, vscode.WorkDoneProgressServerReporter> = {};
+
+		const projectProgress: Record<string, vscode.WorkDoneProgressServerReporter> = {};
+		const inferredProjectProgress: Record<string, vscode.WorkDoneProgressServerReporter> = {};
+
 		for (const tsconfig of tsconfigs) {
 			const progress = progressMap.get(tsconfig);
 			if (progress) {
-				result[tsconfig] = await progress;
+				projectProgress[tsconfig] = await progress;
 			}
 		}
-		for (const tsconfig of virtualTsconfigs) {
-			const progress = virtualProgressMap.get(tsconfig);
+		for (const tsconfig of inferredTsconfigs) {
+			const progress = inferredProgressMap.get(tsconfig);
 			if (progress) {
-				virtualResult[tsconfig] = await progress;
+				inferredProjectProgress[tsconfig] = await progress;
 			}
 		}
+
 		return {
-			progress: result,
-			virtualProgress: virtualResult,
+			projectProgress,
+			inferredProjectProgress,
 		};
 	}
-	async function updateDocumentDiagnostics(changedFileName?: string) {
+	async function updateDiagnostics(docUri?: string) {
 
 		if (!options.languageFeatures?.diagnostics)
 			return;
 
-		const otherDocs: TextDocument[] = [];
-		const changeDoc = changedFileName ? documents.get(shared.fsPathToUri(changedFileName)) : undefined;
-		const isCancel = changeDoc ? getIsCancel(changeDoc.uri, changeDoc.version) : async () => false;
+		if (docUri) {
+			updatedUris.add(docUri);
+		}
 
-		for (const document of documents.all()) {
-			if (document.languageId === 'vue' && document.uri !== changeDoc?.uri) {
-				otherDocs.push(document);
+		const req = ++documentUpdatedReq;
+
+		await shared.sleep(100);
+
+		if (req !== documentUpdatedReq)
+			return;
+
+		const changeDocs = [...updatedUris].map(uri => documents.get(uri)).filter(shared.notEmpty);
+		const otherDocs = documents.all().filter(doc => doc.languageId === 'vue' && !updatedUris.has(doc.uri));
+
+		for (const changeDoc of changeDocs) {
+
+			if (req !== documentUpdatedReq)
+				return;
+
+			let _isCancel = false;
+			const isDocCancel = getCancelChecker(changeDoc.uri, changeDoc.version);
+			const isCancel = async () => {
+				const result = req !== documentUpdatedReq || await isDocCancel();
+				_isCancel = result;
+				return result;
+			};
+
+			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
+
+			if (!_isCancel) {
+				updatedUris.delete(changeDoc.uri);
 			}
 		}
 
-		if (changeDoc) {
-			if (await isCancel()) return;
-			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
-		}
-
 		for (const doc of otherDocs) {
-			if (await isCancel()) break;
+
+			if (req !== documentUpdatedReq)
+				return;
+
+			const changeDoc = docUri ? documents.get(docUri) : undefined;
+			const isDocCancel = changeDoc ? getCancelChecker(changeDoc.uri, changeDoc.version) : async () => {
+				await shared.sleep(0);
+				return false;
+			};
+			const isCancel = async () => req !== documentUpdatedReq || await isDocCancel();;
+
 			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}
 	}
-	function getIsCancel(uri: string, version: number) {
+	function getCancelChecker(uri: string, version: number) {
 		let _isCancel = false;
 		return async () => {
 			if (_isCancel) {
@@ -180,16 +243,12 @@ export function createProjects(
 			projects.set(tsConfig, createProject(
 				ts,
 				options,
+				rootPaths,
 				upath.dirname(tsConfig),
 				tsConfig,
 				tsLocalized,
 				documents,
-				changedFileName => {
-					updateDocumentDiagnostics(changedFileName);
-					if (options.languageFeatures?.semanticTokens) {
-						connection.languages.semanticTokens.refresh();
-					}
-				},
+				onDriveFileUpdated,
 				progress,
 				connection,
 			));
@@ -197,28 +256,48 @@ export function createProjects(
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
 					clearDiagnostics();
 					updateProject(tsConfig, progress);
-					updateDocumentDiagnostics(undefined);
+					updateDiagnostics(undefined);
 				}
 			}));
 		}
 	}
-	function createInferredProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
-		inferredProjects.set(tsConfig, createProject(
-			ts,
-			options,
-			upath.dirname(tsConfig),
-			inferredCompilerOptions,
-			tsLocalized,
-			documents,
-			changedFileName => {
-				updateDocumentDiagnostics(changedFileName);
-				if (options.languageFeatures?.semanticTokens) {
-					connection.languages.semanticTokens.refresh();
-				}
-			},
-			progress,
-			connection,
-		));
+	async function updateInferredProjects() {
+
+		const tsConfigDirs = [...projects.keys()].map(upath.dirname);
+		const inferredTsConfigs = rootPaths
+			.filter(rootPath => !tsConfigDirs.includes(rootPath))
+			.map(rootPath => upath.join(rootPath, 'tsconfig.json'));
+		const inferredTsConfigsToCreate = inferredTsConfigs.filter(tsConfig => !inferredProjects.has(tsConfig));
+		const { inferredProjectProgress } = await getProjectProgress([], inferredTsConfigsToCreate);
+
+		for (const inferredTsConfig of inferredTsConfigsToCreate) {
+			inferredProjects.set(inferredTsConfig, createProject(
+				ts,
+				options,
+				rootPaths,
+				upath.dirname(inferredTsConfig),
+				inferredCompilerOptions,
+				tsLocalized,
+				documents,
+				onDriveFileUpdated,
+				inferredProjectProgress[inferredTsConfig],
+				connection,
+			));
+		}
+	}
+	async function onDriveFileUpdated(driveFileName: string | undefined) {
+
+		const req = ++semanticTokensReq;
+
+		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
+
+		await shared.sleep(100);
+
+		if (req === semanticTokensReq) {
+			if (options.languageFeatures?.semanticTokens) {
+				connection.languages.semanticTokens.refresh();
+			}
+		}
 	}
 	function clearDiagnostics() {
 		for (const doc of documents.all()) {
