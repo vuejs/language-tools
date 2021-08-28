@@ -275,8 +275,8 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.getWhitelist",
-				"title": "Get .vscodeignore Whitelist",
+				"command": "volar.action.genWhitelist",
+				"title": "Generate .vscodeignore Whitelist",
 				"category": "Volar (Debug)"
 			},
 			{

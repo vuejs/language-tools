@@ -6,7 +6,7 @@ import * as shared from '@volar/shared';
 
 export async function activate(context: vscode.ExtensionContext, clients: lsp.LanguageClient[]) {
 
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.getWhitelist', async () => {
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.genWhitelist', async () => {
 
 		const clientDeps = Object.keys(require.cache);
 		const serversDeps = await Promise.all(clients.map(client => client.sendRequest(shared.DepsRequest.type)));
