@@ -18,6 +18,7 @@ export async function activate(context: vscode.ExtensionContext, clients: lsp.La
 			.filter(file => file.endsWith('.js'))
 			.map(file => path.relative(root, file))
 			.filter(file => !file.startsWith('..'))
+			.filter(file => !file.startsWith('node_modules/@vue/compiler-core/node_modules/@babel')) // use node_modules/@babel instead of
 			.map(file => {
 				if (file.startsWith('packages/')) {
 					const parts = file.split('/');
@@ -70,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext, clients: lsp.La
 		}
 
 
-		const final: string[] = [];
+		let final: string[] = [];
 
 		for (const dir in dirs) {
 			const dirStat = dirs[dir];
@@ -84,6 +85,12 @@ export async function activate(context: vscode.ExtensionContext, clients: lsp.La
 			}
 		}
 
-		fs.writeFileSync(root + '/.vscodeignore-whitelist.txt', final.map(file => '!' + file).join('\n'));
+		final = final.map(file => '!' + file);
+
+		// use node_modules/@babel instead of
+		final.splice(0, 0, 'node_modules/@vue/**/@babel/**');
+		final = final.filter(file => !file.startsWith('!node_modules/@vue/compiler-core/node_modules/@babel'));
+
+		fs.writeFileSync(root + '/.vscodeignore-whitelist.txt', final.join('\n'));
 	}));
 }
