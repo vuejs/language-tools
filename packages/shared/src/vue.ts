@@ -94,7 +94,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 		else {
 			sfc.customBlocks.push({
 				type: node.tag ?? '',
-				lang: lang !== undefined ? parseAttr(lang, '') : defaultLanguages.template,
+				lang: lang !== undefined ? parseAttr(lang, '') : '',
 				content: node.startTagEnd !== undefined ? text.substring(node.startTagEnd, node.endTagStart) : '',
 				startTagEnd: node.startTagEnd ?? node.end,
 				start: node.start,
