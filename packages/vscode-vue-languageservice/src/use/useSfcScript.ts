@@ -11,13 +11,13 @@ export function useSfcScript(
 	let version = 0;
 	const ast = computed(() => {
 		if (script.value) {
-			return ts.createSourceFile('foo.' + shared.getValidScriptSyntax(script.value.lang), script.value.content, ts.ScriptTarget.Latest);
+			return ts.createSourceFile('foo.' + script.value.lang, script.value.content, ts.ScriptTarget.Latest);
 		}
 	});
 	const textDocument = computed(() => {
 		if (script.value) {
 			const vueDoc = getUnreactiveDoc();
-			const lang = shared.getValidScriptSyntax(script.value.lang);
+			const lang = script.value.lang;
 			const uri = `${vueDoc.uri}.${lang}`;
 			return TextDocument.create(uri, shared.syntaxToLanguageId(lang), version++, script.value.content);
 		}

@@ -51,8 +51,8 @@ export function useSfcScriptGen(
 	);
 	const lang = computed(() => {
 		return !script.value && !scriptSetup.value ? 'ts'
-			: scriptSetup.value && scriptSetup.value.lang !== 'js' ? shared.getValidScriptSyntax(scriptSetup.value.lang)
-				: script.value && script.value.lang !== 'js' ? shared.getValidScriptSyntax(script.value.lang)
+			: scriptSetup.value && scriptSetup.value.lang !== 'js' ? scriptSetup.value.lang
+				: script.value && script.value.lang !== 'js' ? script.value.lang
 					: 'js'
 	});
 	const textDocument = computed(() => {

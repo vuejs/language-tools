@@ -28,11 +28,13 @@ export const defaultLanguages = {
 	style: 'css',
 };
 
-const validScriptSyntaxs = new Set(['js', 'jsx', 'ts', 'tsx']);
+const validScriptSyntaxs = ['js', 'jsx', 'ts', 'tsx'] as const;
 
-export function getValidScriptSyntax(syntax: string) {
-	if (validScriptSyntaxs.has(syntax)) {
-		return syntax;
+type ValidScriptSyntax = typeof validScriptSyntaxs[number];
+
+function getValidScriptSyntax(syntax: string): ValidScriptSyntax {
+	if (validScriptSyntaxs.includes(syntax as ValidScriptSyntax)) {
+		return syntax as ValidScriptSyntax;
 	}
 	return 'js';
 }
@@ -62,7 +64,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 		else if (node.tag === 'script' && node.startTagEnd !== undefined) {
 			if (node.attributes?.['setup'] === undefined) {
 				sfc.script = {
-					lang: lang !== undefined ? parseAttr(lang, defaultLanguages.script) : defaultLanguages.script,
+					lang: lang !== undefined ? getValidScriptSyntax(parseAttr(lang, defaultLanguages.script)) : defaultLanguages.script,
 					content: text.substring(node.startTagEnd, node.endTagStart),
 					startTagEnd: node.startTagEnd,
 					start: node.start,
@@ -70,7 +72,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 			}
 			else {
 				sfc.scriptSetup = {
-					lang: lang !== undefined ? parseAttr(lang, defaultLanguages.script) : defaultLanguages.script,
+					lang: lang !== undefined ? getValidScriptSyntax(parseAttr(lang, defaultLanguages.script)) : defaultLanguages.script,
 					content: text.substring(node.startTagEnd, node.endTagStart),
 					startTagEnd: node.startTagEnd,
 					start: node.start,
