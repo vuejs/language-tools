@@ -6,7 +6,7 @@ import * as CompilerCore from '@vue/compiler-core';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	noFormatting: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true, completion: true, },
 	tag: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
@@ -569,7 +569,7 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
+						capabilities: capabilitiesSet.noDiagnostic,
 						beforeRename: camelize,
 						doRename: keepHyphenateName,
 					},
