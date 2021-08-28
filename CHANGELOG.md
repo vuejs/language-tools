@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.27.8
+
+- feat: consistent folding range with typescript-language-features ([#414](https://github.com/johnsoncodehk/volar/issues/414))
+- feat: support custom directives type-checking with `<script setup>` ([#422](https://github.com/johnsoncodehk/volar/issues/422))
+- feat: check directives used for `<script setup>` ([#327](https://github.com/johnsoncodehk/volar/issues/327))
+- feat: imporve SFC parser ([#420](https://github.com/johnsoncodehk/volar/issues/420))
+- feat: .vscodeignore whitelist ([#423](https://github.com/johnsoncodehk/volar/issues/423))
+- feat: more loose template type-check with `<script lang="js">`
+- fix: specific language syntax highlighting not working with single quotes ([#409](https://github.com/johnsoncodehk/volar/issues/409))
+- fix: component should be `any` is no script block ([#412](https://github.com/johnsoncodehk/volar/issues/412))
+- fix: add `@volar/server` missing deps ([LSP-volar#9](https://github.com/sublimelsp/LSP-volar/issues/9))
+- fix: add `@volar/transforms` missing deps ([#430](https://github.com/johnsoncodehk/volar/issues/430))
+- fix: jsx / tsx syntax highlighting broken by html syntax injection ([#426](https://github.com/johnsoncodehk/volar/issues/426))
+- pref: fixed high CPU usage after switched branch ([#432](https://github.com/johnsoncodehk/volar/issues/432))
+
+**Breaking changes**
+
+- remove tsPlugin required / unrequired prompt and `volar.tsPlugin` setting 
+
 ## 0.27.7
 
 - feat: check vue-tsc version on start extension ([#381](https://github.com/johnsoncodehk/volar/issues/381))
