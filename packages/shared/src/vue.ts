@@ -2,6 +2,7 @@ import type * as html from 'vscode-html-languageservice';
 
 export interface SfcBlock {
 	start: number;
+	end: number;
 	lang: string;
 	content: string;
 	startTagEnd: number;
@@ -59,6 +60,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 				content: text.substring(node.startTagEnd, node.endTagStart),
 				startTagEnd: node.startTagEnd,
 				start: node.start,
+				end: node.end,
 			};
 		}
 		else if (node.tag === 'script' && node.startTagEnd !== undefined) {
@@ -68,6 +70,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 					content: text.substring(node.startTagEnd, node.endTagStart),
 					startTagEnd: node.startTagEnd,
 					start: node.start,
+					end: node.end,
 				};
 			}
 			else {
@@ -76,6 +79,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 					content: text.substring(node.startTagEnd, node.endTagStart),
 					startTagEnd: node.startTagEnd,
 					start: node.start,
+					end: node.end,
 				};
 			}
 		}
@@ -89,6 +93,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 				content: text.substring(node.startTagEnd, node.endTagStart),
 				startTagEnd: node.startTagEnd,
 				start: node.start,
+				end: node.end,
 				module: module !== undefined ? parseAttr(module, '$style') : undefined,
 				scoped: scoped !== undefined,
 			});
@@ -100,6 +105,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 				content: node.startTagEnd !== undefined ? text.substring(node.startTagEnd, node.endTagStart) : '',
 				startTagEnd: node.startTagEnd ?? node.end,
 				start: node.start,
+				end: node.end,
 			});
 		}
 	}
