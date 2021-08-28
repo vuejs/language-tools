@@ -12,6 +12,8 @@ Volar is a Language Support plugin built specifically for Vue 3. It's based on [
 
 ## Sponsors
 
+Create a tool that can help many people it feels amazing! But maintain this project requires lot of time and energy, if you want to support the sustainability of this project, please consider becoming a sponsor, thank you. 🙏
+
 This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
 
 <table>
