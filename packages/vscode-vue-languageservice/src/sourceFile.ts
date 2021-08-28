@@ -271,9 +271,7 @@ export function createSourceFile(
 				|| descriptor.template?.content !== newData?.content;
 
 			if (descriptor.template && newData) {
-				descriptor.template.lang = newData.lang;
-				descriptor.template.content = newData.content;
-				descriptor.template.startTagEnd = newData.startTagEnd;
+				updateBlock(descriptor.template, newData);
 			}
 			else {
 				descriptor.template = newData;
@@ -285,10 +283,7 @@ export function createSourceFile(
 				|| descriptor.script?.content !== newData?.content;
 
 			if (descriptor.script && newData) {
-				descriptor.script.src = newData.src;
-				descriptor.script.lang = newData.lang;
-				descriptor.script.content = newData.content;
-				descriptor.script.startTagEnd = newData.startTagEnd;
+				updateBlock(descriptor.script, newData);
 			}
 			else {
 				descriptor.script = newData;
@@ -300,9 +295,7 @@ export function createSourceFile(
 				|| descriptor.scriptSetup?.content !== newData?.content;
 
 			if (descriptor.scriptSetup && newData) {
-				descriptor.scriptSetup.lang = newData.lang;
-				descriptor.scriptSetup.content = newData.content;
-				descriptor.scriptSetup.startTagEnd = newData.startTagEnd;
+				updateBlock(descriptor.scriptSetup, newData);
 			}
 			else {
 				descriptor.scriptSetup = newData;
@@ -312,11 +305,7 @@ export function createSourceFile(
 			for (let i = 0; i < newDataArr.length; i++) {
 				const newData = newDataArr[i];
 				if (descriptor.styles.length > i) {
-					descriptor.styles[i].lang = newData.lang;
-					descriptor.styles[i].content = newData.content;
-					descriptor.styles[i].startTagEnd = newData.startTagEnd;
-					descriptor.styles[i].module = newData.module;
-					descriptor.styles[i].scoped = newData.scoped;
+					updateBlock(descriptor.styles[i], newData);
 				}
 				else {
 					descriptor.styles.push(newData);
@@ -330,10 +319,7 @@ export function createSourceFile(
 			for (let i = 0; i < newDataArr.length; i++) {
 				const newData = newDataArr[i];
 				if (descriptor.customBlocks.length > i) {
-					descriptor.customBlocks[i].type = newData.type;
-					descriptor.customBlocks[i].lang = newData.lang;
-					descriptor.customBlocks[i].content = newData.content;
-					descriptor.customBlocks[i].startTagEnd = newData.startTagEnd;
+					updateBlock(descriptor.customBlocks[i], newData);
 				}
 				else {
 					descriptor.customBlocks.push(newData);
@@ -341,6 +327,11 @@ export function createSourceFile(
 			}
 			while (descriptor.customBlocks.length > newDataArr.length) {
 				descriptor.customBlocks.pop();
+			}
+		}
+		function updateBlock<T>(oldBlock: T, newBlock: T) {
+			for (let key in newBlock) {
+				oldBlock[key] = newBlock[key];
 			}
 		}
 	}
