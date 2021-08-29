@@ -90,6 +90,11 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.lowPowerMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Using one language server to do the work of two language serves can reduce system resource usage, but features such as auto-complete will be much slower."
+				},
 				"volar.codeLens.references": {
 					"type": "boolean",
 					"default": true,

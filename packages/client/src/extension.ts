@@ -22,16 +22,29 @@ import * as vueTscVersion from './features/vueTscVersion';
 import * as whitelist from './features/whitelist';
 
 let apiClient: lsp.LanguageClient;
-let docClient: lsp.LanguageClient;
+let docClient: lsp.LanguageClient | undefined;
 let htmlClient: lsp.LanguageClient;
+let lowPowerMode = false;
 
 export async function activate(context: vscode.ExtensionContext) {
+
+	lowPowerMode = isLowPowerMode();
+	if (lowPowerMode) {
+		(async () => {
+			const disable = await vscode.window.showInformationMessage('Low Power Mode Enabled.', 'Disable');
+			if (disable !== undefined) {
+				vscode.commands.executeCommand('workbench.action.openSettings', 'volar.lowPowerMode');
+			}
+		})();
+	}
+
 	apiClient = createLanguageService(context, 'api', 'volar-api', 'Volar - API', 6009, 'file');
-	docClient = createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, 'file');
+	docClient = !lowPowerMode ? createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, 'file') : undefined;
 	htmlClient = createLanguageService(context, 'html', 'volar-html', 'Volar - HTML', 6011, undefined);
 
-	const clients = [apiClient, docClient, htmlClient];
+	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
 
+	registarLowPowerModeChange();
 	registarRestartRequest();
 	registarClientRequests();
 
@@ -39,16 +52,26 @@ export async function activate(context: vscode.ExtensionContext) {
 	preview.activate(context);
 	createWorkspaceSnippets.activate(context);
 	callGraph.activate(context, apiClient);
-	verifyAll.activate(context, docClient);
-	virtualFiles.activate(context, docClient);
+	verifyAll.activate(context, docClient ?? apiClient);
+	virtualFiles.activate(context, docClient ?? apiClient);
 	tagClosing.activate(context, htmlClient, apiClient);
 	tsPlugin.activate(context);
-	tsVersion.activate(context, [apiClient, docClient]);
+	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	vueTscVersion.activate(context);
-	whitelist.activate(context, [apiClient, docClient, htmlClient]);
+	whitelist.activate(context, clients);
 
 	startEmbeddedLanguageServices();
 
+	async function registarLowPowerModeChange() {
+		vscode.workspace.onDidChangeConfiguration(async () => {
+			const nowIsLowPowerMode = isLowPowerMode();
+			if (lowPowerMode !== nowIsLowPowerMode) {
+				const reload = await vscode.window.showInformationMessage('Please reload VSCode to switch low power mode.', 'Reload Window');
+				if (reload === undefined) return; // cancel
+				vscode.commands.executeCommand('workbench.action.reloadWindow');
+			}
+		});
+	}
 	async function registarRestartRequest() {
 
 		await Promise.all(clients.map(client => client.onReady()));
@@ -81,8 +104,16 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 }
 
-export function deactivate(): Thenable<void> | undefined {
-	return apiClient?.stop() && docClient?.stop() && htmlClient?.stop();
+export function deactivate(): Thenable<any> | undefined {
+	return Promise.all([
+		apiClient?.stop(),
+		docClient?.stop(),
+		htmlClient?.stop(),
+	].filter(shared.notEmpty));
+}
+
+function isLowPowerMode() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('lowPowerMode');
 }
 
 function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, scheme: string | undefined) {
@@ -99,30 +130,33 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 	};
 	const serverInitOptions: shared.ServerInitializationOptions = {
 		typescript: tsVersion.getCurrentTsPaths(context),
-		languageFeatures: mode === 'api' ? {
-			references: { enabledInTsScript: !tsPlugin.isTsPluginEnabled() },
-			definition: true,
-			typeDefinition: true,
-			callHierarchy: { enabledInTsScript: true /** TODO: wait for ts plugin support call hierarchy */ },
-			hover: true,
-			rename: true,
-			renameFileRefactoring: true,
-			signatureHelp: true,
-			codeAction: true,
-			completion: {
-				defaultTagNameCase: 'both',
-				defaultAttrNameCase: 'kebabCase',
-				getDocumentNameCasesRequest: true,
-				getDocumentSelectionRequest: true,
-			},
-			schemaRequestService: { getDocumentContentRequest: true },
-		} : mode === 'doc' ? {
-			documentHighlight: true,
-			documentLink: true,
-			codeLens: { showReferencesNotification: true },
-			semanticTokens: true,
-			diagnostics: { getDocumentVersionRequest: true },
-			schemaRequestService: { getDocumentContentRequest: true },
+		languageFeatures: (mode === 'api' || mode === 'doc') ? {
+			...(mode === 'api' ? {
+				references: { enabledInTsScript: !tsPlugin.isTsPluginEnabled() },
+				definition: true,
+				typeDefinition: true,
+				callHierarchy: { enabledInTsScript: true /** TODO: wait for ts plugin support call hierarchy */ },
+				hover: true,
+				rename: true,
+				renameFileRefactoring: true,
+				signatureHelp: true,
+				codeAction: true,
+				completion: {
+					defaultTagNameCase: 'both',
+					defaultAttrNameCase: 'kebabCase',
+					getDocumentNameCasesRequest: true,
+					getDocumentSelectionRequest: true,
+				},
+				schemaRequestService: { getDocumentContentRequest: true },
+			} : {}),
+			...((mode === 'doc' || (mode === 'api' && lowPowerMode)) ? {
+				documentHighlight: true,
+				documentLink: true,
+				codeLens: { showReferencesNotification: true },
+				semanticTokens: true,
+				diagnostics: { getDocumentVersionRequest: true },
+				schemaRequestService: { getDocumentContentRequest: true },
+			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'html' ? {
 			selectionRange: true,
@@ -156,6 +190,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 
 	return client;
 }
+
 function startEmbeddedLanguageServices() {
 
 	// track https://github.com/microsoft/vscode/issues/125748
