@@ -1,11 +1,18 @@
 # Changelog
 
+## 0.27.9
+
+- feat: low power mode ([#390](https://github.com/johnsoncodehk/volar/issues/390))
+- feat: improve setup sugar conversion
+- fix: setup sugar convert failed in 0.27.8
+- fix: incorrect indentation after generic argument ([#429](https://github.com/johnsoncodehk/volar/issues/429))
+
 ## 0.27.8
 
 - feat: consistent folding range with typescript-language-features ([#414](https://github.com/johnsoncodehk/volar/issues/414))
 - feat: support custom directives type-checking with `<script setup>` ([#422](https://github.com/johnsoncodehk/volar/issues/422))
 - feat: check directives used for `<script setup>` ([#327](https://github.com/johnsoncodehk/volar/issues/327))
-- feat: imporve SFC parser ([#420](https://github.com/johnsoncodehk/volar/issues/420))
+- feat: improve SFC parser ([#420](https://github.com/johnsoncodehk/volar/issues/420))
 - feat: .vscodeignore whitelist ([#423](https://github.com/johnsoncodehk/volar/issues/423))
 - feat: more loose template type-check with `<script lang="js">`
 - fix: specific language syntax highlighting not working with single quotes ([#409](https://github.com/johnsoncodehk/volar/issues/409))
@@ -13,7 +20,7 @@
 - fix: add `@volar/server` missing deps ([LSP-volar#9](https://github.com/sublimelsp/LSP-volar/issues/9))
 - fix: add `@volar/transforms` missing deps ([#430](https://github.com/johnsoncodehk/volar/issues/430))
 - fix: jsx / tsx syntax highlighting broken by html syntax injection ([#426](https://github.com/johnsoncodehk/volar/issues/426))
-- pref: fixed high CPU usage after switched branch ([#432](https://github.com/johnsoncodehk/volar/issues/432))
+- perf: fixed high CPU usage after switched branch ([#432](https://github.com/johnsoncodehk/volar/issues/432))
 
 **Breaking changes**
 
