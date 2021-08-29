@@ -43,7 +43,8 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 ## Community's Language Client Implements
 
-- coc.nvim: https://github.com/yaegassy/coc-volar
+- coc.nvim: https://github.com/yaegassy/coc-volar (Stable ⭐)
+- Sublime: https://github.com/sublimelsp/LSP-volar
 
 ## By-product
 
