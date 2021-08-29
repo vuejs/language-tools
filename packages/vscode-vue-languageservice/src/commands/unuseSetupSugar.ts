@@ -6,6 +6,7 @@ import type { ApiLanguageServiceContext } from '../types';
 import * as codeAction from '../services/codeAction';
 import * as codeActionResolve from '../services/codeActionResolve';
 import * as diagnostics from '../services/diagnostics';
+import { parseUseScriptSetupRanges } from '../parsers/scriptSetupConvertRanges';
 
 export function register(context: ApiLanguageServiceContext) {
 
@@ -79,6 +80,8 @@ export function register(context: ApiLanguageServiceContext) {
 		) {
 
 			const ranges = parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
+			const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
+
 			const document = _sourceFile.getTextDocument();
 			const edits: vscode.TextEdit[] = [];
 			const removeSetupTextRanges: TextRange[] = [...ranges.imports];
@@ -93,17 +96,12 @@ export function register(context: ApiLanguageServiceContext) {
 				},
 				''
 			));
+
 			if (_script) {
 				edits.push(vscode.TextEdit.replace(
 					{
-						start: {
-							line: document.positionAt(_script.startTagEnd).line,
-							character: 0,
-						},
-						end: {
-							line: document.positionAt(_script.startTagEnd + _script.content.length).line + 1,
-							character: 0,
-						},
+						start: document.positionAt(_script.start),
+						end: document.positionAt(_script.end),
 					},
 					''
 				));
@@ -128,12 +126,32 @@ export function register(context: ApiLanguageServiceContext) {
 				newScriptCode += _scriptSetup.content.substring(setupImport.start, setupImport.end);
 				newScriptCode += '\n';
 			}
+
 			if (_script) {
-				newScriptCode += _script.content;
+				if (scriptRanges?.exportDefault) {
+
+					let scriptCodeWithoutExport =
+						_script.content.substring(0, scriptRanges.exportDefault.start).trim() + '\n'
+						+ _script.content.substring(scriptRanges.exportDefault.end).trim();
+					scriptCodeWithoutExport = scriptCodeWithoutExport.trim();
+
+					if (scriptCodeWithoutExport) {
+						newScriptCode += '\n' + scriptCodeWithoutExport + '\n';
+					}
+				}
+				else {
+					newScriptCode += _script.content;
+				}
 			}
 
 			newScriptCode += '\n';
 			newScriptCode += 'export default defineComponent({\n';
+
+			if (scriptRanges && _script) {
+				for (const otherOption of scriptRanges.otherOptions) {
+					newScriptCode += _script.content.substring(otherOption.start, otherOption.end) + ',\n';
+				}
+			}
 
 			if (ranges.defineProps && 'args' in ranges.defineProps) {
 				newScriptCode += 'props: ';
