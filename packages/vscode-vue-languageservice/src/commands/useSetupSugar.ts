@@ -34,7 +34,7 @@ export function register(context: ApiLanguageServiceContext) {
 		if (edits?.length) {
 
 			await connection.workspace.applyEdit({ changes: { [uri]: edits } });
-			await shared.sleep(0);
+			await shared.sleep(200);
 
 			const errors = await getDiagnostics(uri, () => { }) ?? [];
 			await shared.sleep(0);

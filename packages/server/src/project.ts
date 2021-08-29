@@ -104,12 +104,14 @@ export function createProject(
 					hasDeleteFile = true;
 				}
 			}
+			else if (extraScripts.has(fileName)) {
+				onExtraFileUpdated(fileName, change.fileExist ? ts.FileWatcherEventKind.Changed : ts.FileWatcherEventKind.Deleted);
+				if (!change.fileExist) {
+					hasDeleteFile = true;
+				}
+			}
 			else if (change.fileExist && shared.isFileInDir(fileName, rootPath)) {
 				newFiles.push(fileName);
-			}
-
-			if (extraScripts.has(fileName)) {
-				onExtraFileUpdated(fileName, change.fileExist ? ts.FileWatcherEventKind.Changed : ts.FileWatcherEventKind.Deleted);
 			}
 		}
 
