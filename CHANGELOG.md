@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.11
+
+- feat: unused dynamic registration to adapt nvim LSP [#441#issuecomment-895019036](https://github.com/johnsoncodehk/volar/discussions/441#discussioncomment-1258701)
+- fix: can't not find template context properties if `<script>` block missing ([#437](https://github.com/johnsoncodehk/volar/issues/437))
+- fix: import completion incorrectly append `$1` ([#371](https://github.com/johnsoncodehk/volar/issues/371))
+- fix: completion should retrigger by space
+- fix: json types cannot update in *.vue on editing
+
 ## 0.27.10
 
 - fix: `<script src>` unprocessed since v0.27.8 ([vue-tsc#65](https://github.com/johnsoncodehk/vue-tsc/issues/65))
