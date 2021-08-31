@@ -46,8 +46,8 @@ export function useSfcEntryForTemplateLs(
 		else {
 			content += `export var __VLS_options = {};\n`;
 			content += `export var __VLS_name = undefined;\n`;
-			content += `declare var __VLS_component_ts: any;\n`;
-			content += `export declare var __VLS_component: any;\n`;
+			content += `var __VLS_component_ts = __VLS_defineComponent({});\n`;
+			content += `export var __VLS_component = __VLS_defineComponent({});\n`;
 		}
 		content += `declare var __VLS_ctx: __VLS_PickNotAny<InstanceType<typeof __VLS_component_ts>, ReturnType<typeof __VLS_component_ts>>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;
