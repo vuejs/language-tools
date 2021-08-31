@@ -1,10 +1,17 @@
 # Changelog
 
+## 0.27.10
+
+- fix: `<script src>` unprocessed since v0.27.8 ([vue-tsc#65](https://github.com/johnsoncodehk/vue-tsc/issues/65))
+- fix: TS plugin not working since v0.27.8 ([#435](https://github.com/johnsoncodehk/volar/issues/435))
+- fix: de-ref-sugar conversion can't add missing imports
+- fix: more acurrate code action result
+
 ## 0.27.9
 
 - feat: low power mode ([#390](https://github.com/johnsoncodehk/volar/issues/390))
 - feat: improve setup sugar conversion
-- fix: setup sugar convert failed in 0.27.8
+- fix: setup sugar convert failed since v0.27.8
 - fix: incorrect indentation after generic argument ([#429](https://github.com/johnsoncodehk/volar/issues/429))
 
 ## 0.27.8
