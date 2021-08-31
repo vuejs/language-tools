@@ -16,7 +16,7 @@ import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
 
 export const triggerCharacter = {
-	typescript: [".", "\"", "'", "`", "/", "@", "<", "#"],
+	typescript: [".", "\"", "'", "`", "/", "@", "<", "#", " "],
 	html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
 	css: ['.', '@', '/'/* path completion */],
 	json: ['"', ':'],
