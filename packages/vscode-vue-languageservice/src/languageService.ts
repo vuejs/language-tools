@@ -50,6 +50,7 @@ import { createSourceFiles } from './sourceFiles';
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
+	getExternalScriptFileNames?(): string[],
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
 	schemaRequestService?: json.SchemaRequestService,
@@ -384,7 +385,7 @@ export function createLanguageService(
 			let tsFileChanged = false;
 			vueProjectVersion = newVueProjectVersion;
 			const oldFiles = new Set([...lastScriptVersions.keys()]);
-			const newFiles = new Set([...vueHost.getScriptFileNames()]);
+			const newFiles = new Set([...vueHost.getScriptFileNames(), ...(vueHost.getExternalScriptFileNames?.() ?? [])]);
 			const removes: string[] = [];
 			const adds: string[] = [];
 			const updates: string[] = [];

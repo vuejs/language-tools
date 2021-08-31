@@ -38,9 +38,42 @@ export async function activate(context: vscode.ExtensionContext) {
 		})();
 	}
 
-	apiClient = createLanguageService(context, 'api', 'volar-api', 'Volar - API', 6009, 'file');
-	docClient = !lowPowerMode ? createLanguageService(context, 'doc', 'volar-document', 'Volar - Document', 6010, 'file') : undefined;
-	htmlClient = createLanguageService(context, 'html', 'volar-html', 'Volar - HTML', 6011, undefined);
+	const apiDocumentSelector: lsp.DocumentSelector = [
+		{ scheme: 'file', language: 'vue' },
+		{ scheme: 'file', language: 'javascript' },
+		{ scheme: 'file', language: 'typescript' },
+		{ scheme: 'file', language: 'javascriptreact' },
+		{ scheme: 'file', language: 'typescriptreact' },
+		{ scheme: 'file', language: 'json' },
+	];
+	const htmlDocumentSelector: lsp.DocumentSelector = [
+		{ language: 'vue' },
+	];
+
+	apiClient = createLanguageService(
+		context,
+		'api',
+		'volar-api',
+		'Volar - API',
+		6009,
+		apiDocumentSelector,
+	);
+	docClient = !lowPowerMode ? createLanguageService(
+		context,
+		'doc',
+		'volar-document',
+		'Volar - Document',
+		6010,
+		apiDocumentSelector,
+	) : undefined;
+	htmlClient = createLanguageService(
+		context,
+		'html',
+		'volar-html',
+		'Volar - HTML',
+		6011,
+		htmlDocumentSelector,
+	);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
 
@@ -116,7 +149,7 @@ function isLowPowerMode() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('lowPowerMode');
 }
 
-function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, scheme: string | undefined) {
+function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, documentSelector: lsp.DocumentSelector) {
 
 	const serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'server', 'out', 'index.js'));
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
@@ -128,7 +161,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			options: debugOptions
 		},
 	};
-	const serverInitOptions: shared.ServerInitializationOptions = {
+	const initializationOptions: shared.ServerInitializationOptions = {
 		typescript: tsVersion.getCurrentTsPaths(context),
 		languageFeatures: (mode === 'api' || mode === 'doc') ? {
 			...(mode === 'api' ? {
@@ -171,14 +204,8 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		} : undefined,
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
-		documentSelector: [
-			{ scheme, language: 'vue' },
-			{ scheme, language: 'javascript' },
-			{ scheme, language: 'typescript' },
-			{ scheme, language: 'javascriptreact' },
-			{ scheme, language: 'typescriptreact' },
-		],
-		initializationOptions: serverInitOptions,
+		documentSelector,
+		initializationOptions,
 	};
 	const client = new lsp.LanguageClient(
 		id,

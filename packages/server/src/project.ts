@@ -266,6 +266,7 @@ export function createProject(
 			getPreferences: (document) => tsConfigs.getPreferences(connection, document),
 			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			getParsedCommandLine: () => parsedCommandLine,
+			getExternalScriptFileNames: () => [...extraScripts.values()].map(file => file.fileName),
 			// ts
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -279,10 +280,7 @@ export function createProject(
 			fileExists,
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 			getProjectVersion: () => projectVersion.toString(),
-			getScriptFileNames: () => [
-				...parsedCommandLine.fileNames,
-				...[...extraScripts.values()].map(file => file.fileName).filter(fileName => fileName.endsWith('.vue')), // create virtual files from extra vue scripts
-			],
+			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,
 			getScriptVersion,
