@@ -1,27 +1,26 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver';
-import { vueDocReg } from '../features/shared';
 
 export function register(
-	connection: vscode.Connection,
 	features: NonNullable<shared.ServerInitializationOptions['documentFeatures']>,
+	server: vscode.ServerCapabilities,
 ) {
 	if (features.selectionRange) {
-		connection.client.register(vscode.SelectionRangeRequest.type, vueDocReg);
+		server.selectionRangeProvider = true;
 	}
 	if (features.foldingRange) {
-		connection.client.register(vscode.FoldingRangeRequest.type, vueDocReg);
+		server.foldingRangeProvider = true;
 	}
 	if (features.linkedEditingRange) {
-		connection.client.register(vscode.LinkedEditingRangeRequest.type, vueDocReg);
-	}
-	if (features.documentSymbol) {
-		connection.client.register(vscode.DocumentSymbolRequest.type, vueDocReg);
+		server.linkedEditingRangeProvider = true;
 	}
 	if (features.documentColor) {
-		connection.client.register(vscode.DocumentColorRequest.type, vueDocReg);
+		server.colorProvider = true;
+	}
+	if (features.documentSymbol) {
+		server.documentSymbolProvider = true;
 	}
 	if (features.documentFormatting) {
-		connection.client.register(vscode.DocumentFormattingRequest.type, vueDocReg);
+		server.documentFormattingProvider = true;
 	}
 }

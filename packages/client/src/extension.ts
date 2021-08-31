@@ -165,10 +165,10 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 		typescript: tsVersion.getCurrentTsPaths(context),
 		languageFeatures: (mode === 'api' || mode === 'doc') ? {
 			...(mode === 'api' ? {
-				references: { enabledInTsScript: !tsPlugin.isTsPluginEnabled() },
+				references: true,
 				definition: true,
 				typeDefinition: true,
-				callHierarchy: { enabledInTsScript: true /** TODO: wait for ts plugin support call hierarchy */ },
+				callHierarchy: true,
 				hover: true,
 				rename: true,
 				renameFileRefactoring: true,

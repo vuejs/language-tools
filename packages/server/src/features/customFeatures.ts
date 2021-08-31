@@ -8,19 +8,23 @@ import type { Projects } from '../projects';
 export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	projects: Projects,
+	getProjects: () => Projects | undefined,
 ) {
 	connection.onRequest(shared.GetRefCompleteEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return projects.get(document.uri)?.service.__internal__.doRefAutoClose(document, handler.position);
+		return getProjects()?.get(document.uri)?.service.__internal__.doRefAutoClose(document, handler.position);
 	});
 	connection.onRequest(shared.D3Request.type, async handler => {
 		const document = documents.get(handler.uri);
 		if (!document) return;
-		return await projects.get(document.uri)?.service.__internal__.getD3(document);
+		return await getProjects()?.get(document.uri)?.service.__internal__.getD3(document);
 	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async ({ lsType }) => {
+
+		const projects = getProjects();
+		if (!projects) return;
+
 		for (const [_, service] of projects.projects.size ? projects.projects : projects.inferredProjects) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
@@ -35,6 +39,9 @@ export function register(
 		}
 	});
 	connection.onNotification(shared.VerifyAllScriptsNotification.type, async () => {
+
+		const projects = getProjects();
+		if (!projects) return;
 
 		let errors = 0;
 		let warnings = 0;
@@ -66,6 +73,6 @@ export function register(
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
 	connection.onRequest(shared.DetectDocumentNameCasesRequest.type, handler => {
-		return projects.get(handler.uri)?.service.__internal__.detectTagNameCase(handler.uri);
+		return getProjects()?.get(handler.uri)?.service.__internal__.detectTagNameCase(handler.uri);
 	});
 }

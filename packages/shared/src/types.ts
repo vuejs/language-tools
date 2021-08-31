@@ -14,10 +14,10 @@ export interface ServerInitializationOptions {
 	 * typescript, html, css... language service will be create in server if this option is not null
 	 */
 	languageFeatures?: {
-		references?: boolean | { enabledInTsScript: boolean }
-		definition?: boolean | { enabledInTsScript: boolean }
-		typeDefinition?: boolean | { enabledInTsScript: boolean }
-		callHierarchy?: boolean | { enabledInTsScript: boolean }
+		references?: boolean
+		definition?: boolean
+		typeDefinition?: boolean
+		callHierarchy?: boolean
 		hover?: boolean
 		rename?: boolean
 		renameFileRefactoring?: boolean

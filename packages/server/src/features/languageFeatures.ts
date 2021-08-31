@@ -4,17 +4,22 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
+import { URI } from 'vscode-uri';
 
 export function register(
 	ts: vue.Modules['typescript'],
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	projects: Projects,
+	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 ) {
 	connection.onCompletion(async handler => {
-		return await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.doComplete(
 				handler.textDocument.uri,
 				handler.position,
@@ -37,48 +42,72 @@ export function register(
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
-		return projects.get(uri)?.service.doCompletionResolve(item, newPosition) ?? item;
+		return getProjects()?.get(uri)?.service.doCompletionResolve(item, newPosition) ?? item;
 	});
 	connection.onHover(handler => {
-		return projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.doHover(handler.textDocument.uri, handler.position);
 	});
 	connection.onSignatureHelp(handler => {
-		return projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
 	});
 	connection.onPrepareRename(handler => {
-		return projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.prepareRename(handler.textDocument.uri, handler.position);
 	});
 	connection.onRenameRequest(async handler => {
-		return await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
 	connection.onCodeLens(handler => {
-		return projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.getCodeLens(handler.textDocument.uri);
 	});
 	connection.onCodeLensResolve(codeLens => {
 		const uri = codeLens.data?.uri;
-		return projects
-			.get(uri)?.service
+		return getProjects()
+			?.get(uri)?.service
 			.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
 	});
 	connection.onExecuteCommand(handler => {
 		const uri = handler.arguments?.[0];
-		return projects
-			.get(uri)?.service
+		return getProjects()
+			?.get(uri)?.service
 			.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
 	});
 	connection.onCodeAction(async handler => {
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
 		const uri = handler.textDocument.uri;
-		const project = projects.get(uri);
+		const project = getProjects()?.get(uri);
 		if (project) {
 			const codeActions = await project.service.getCodeActions(uri, handler.range, handler.context);
 			for (const codeAction of codeActions) {
@@ -94,53 +123,64 @@ export function register(
 	});
 	connection.onCodeActionResolve(async codeAction => {
 		const uri: string | undefined = (codeAction.data as any)?.uri;
-		const project = uri ? projects.get(uri) : undefined;
+		const project = uri ? getProjects()?.get(uri) : undefined;
 		if (project) {
 			return await project.service.doCodeActionResolve(codeAction);
 		}
 		return codeAction;
 	});
 	connection.onReferences(async handler => {
-		const result = await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.findReferences(handler.textDocument.uri, handler.position);
-		if (result && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
-			return result.filter(loc => loc.uri.endsWith('.vue'));
-		}
-		return result;
 	});
 	connection.onDefinition(async handler => {
-		const result = await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.findDefinition(handler.textDocument.uri, handler.position);
-		if (result && documents.get(handler.textDocument.uri)?.languageId !== 'vue') {
-			return (result as (vscode.Location | vscode.LocationLink)[]).filter(loc => {
-				if (vscode.Location.is(loc))
-					return loc.uri.endsWith('.vue');
-				else
-					return loc.targetUri.endsWith('.vue');
-			}) as vscode.Location[] | vscode.LocationLink[];
-		}
-		return result;
 	});
 	connection.onTypeDefinition(handler => {
-		return projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.findTypeDefinition(handler.textDocument.uri, handler.position);
 	});
 	connection.onDocumentHighlight(handler => {
-		return projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.findDocumentHighlights(handler.textDocument.uri, handler.position);
 	});
 	connection.onDocumentLinks(async handler => {
-		return await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.findDocumentLinks(handler.textDocument.uri);
 	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
-		const items = await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return null;
+
+		const items = await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
 		if (items) {
 			for (const item of items) {
@@ -153,20 +193,24 @@ export function register(
 	connection.languages.callHierarchy.onIncomingCalls(handler => {
 		const data = handler.item.data as { __uri?: string } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		return projects
-			.get(uri)?.service
+		return getProjects()
+			?.get(uri)?.service
 			.callHierarchy.getIncomingCalls(handler.item) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(handler => {
 		const data = handler.item.data as { __uri?: string } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		return projects
-			.get(uri)?.service
+		return getProjects()
+			?.get(uri)?.service
 			.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
-		const result = await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return { data: [] };
+
+		const result = await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
 		return {
 			resultId: result?.resultId,
@@ -174,8 +218,12 @@ export function register(
 		};
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
-		const result = await projects
-			.get(handler.textDocument.uri)?.service
+
+		if (!isVueFile(handler.textDocument))
+			return { data: [] };
+
+		const result = await getProjects()
+			?.get(handler.textDocument.uri)?.service
 			.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
 		return {
 			resultId: result?.resultId,
@@ -230,7 +278,7 @@ export function register(
 		async function worker() {
 			const edits = (await Promise.all(handler.files
 				.map(async file => {
-					return await projects.get(file.oldUri)?.service.getEditsForFileRename(file.oldUri, file.newUri);
+					return await getProjects()?.get(file.oldUri)?.service.getEditsForFileRename(file.oldUri, file.newUri);
 				}))).filter(shared.notEmpty);
 			if (edits.length) {
 				const result = edits[0];
@@ -240,4 +288,8 @@ export function register(
 			return null;
 		}
 	});
+}
+
+function isVueFile(textDocument: vscode.TextDocumentIdentifier) {
+	return URI.parse(textDocument.uri).scheme === 'file' && textDocument.uri.endsWith('.vue');
 }
