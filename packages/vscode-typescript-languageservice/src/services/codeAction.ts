@@ -49,20 +49,22 @@ export function register(
 		const end = document.offsetAt(range.end);
 		let result: vscode.CodeAction[] = [];
 
-		for (const error of context.diagnostics) {
-			try {
-				const codeFixes = languageService.getCodeFixesAtPosition(
-					fileName,
-					document.offsetAt(error.range.start),
-					document.offsetAt(error.range.end),
-					[Number(error.code)],
-					formatOptions,
-					preferences,
-				);
-				for (const codeFix of codeFixes) {
-					result = result.concat(transformCodeFix(codeFix, [error]));
-				}
-			} catch { }
+		if (!context.only || matchOnlyKind(vscode.CodeActionKind.QuickFix)) {
+			for (const error of context.diagnostics) {
+				try {
+					const codeFixes = languageService.getCodeFixesAtPosition(
+						fileName,
+						document.offsetAt(error.range.start),
+						document.offsetAt(error.range.end),
+						[Number(error.code)],
+						formatOptions,
+						preferences,
+					);
+					for (const codeFix of codeFixes) {
+						result = result.concat(transformCodeFix(codeFix, [error], context.only ? vscode.CodeActionKind.QuickFix : vscode.CodeActionKind.Empty));
+					}
+				} catch { }
+			}
 		}
 
 		if (context.only) {
@@ -181,20 +183,20 @@ export function register(
 				}
 			}
 		}
-		function transformCodeFix(codeFix: ts.CodeFixAction, diagnostics: vscode.Diagnostic[]) {
+		function transformCodeFix(codeFix: ts.CodeFixAction, diagnostics: vscode.Diagnostic[], kind: vscode.CodeActionKind) {
 			const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
 			const codeActions: vscode.CodeAction[] = [];
 			const fix = vscode.CodeAction.create(
 				codeFix.description,
 				edit,
-				vscode.CodeActionKind.QuickFix,
+				kind,
 			);
 			fix.diagnostics = diagnostics;
 			codeActions.push(fix);
 			if (codeFix.fixAllDescription && codeFix.fixId) {
 				const fixAll = vscode.CodeAction.create(
 					codeFix.fixAllDescription,
-					vscode.CodeActionKind.QuickFix,
+					kind,
 				);
 				const data: FixAllData = {
 					uri,
