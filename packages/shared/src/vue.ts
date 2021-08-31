@@ -11,7 +11,7 @@ export interface SfcBlock {
 export interface Sfc {
 	template: SfcBlock | null;
 	script: (SfcBlock & {
-		src?: string;
+		src: string | undefined;
 	}) | null;
 	scriptSetup: SfcBlock | null;
 	styles: (SfcBlock & {
@@ -65,7 +65,11 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 		}
 		else if (node.tag === 'script' && node.startTagEnd !== undefined) {
 			if (node.attributes?.['setup'] === undefined) {
+
+				const src = node.attributes?.['src'];
+
 				sfc.script = {
+					src: src !== undefined ? parseAttr(src, '') : undefined,
 					lang: lang !== undefined ? getValidScriptSyntax(parseAttr(lang, defaultLanguages.script)) : defaultLanguages.script,
 					content: text.substring(node.startTagEnd, node.endTagStart),
 					startTagEnd: node.startTagEnd,

@@ -5,7 +5,7 @@ import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcScript(
 	getUnreactiveDoc: () => TextDocument,
-	script: Ref<shared.Sfc['script']>,
+	script: Ref<shared.Sfc['scriptSetup']>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	let version = 0;
