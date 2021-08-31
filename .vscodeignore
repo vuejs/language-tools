@@ -20,6 +20,7 @@ node_modules/**/LICENSE
 
 # ignore all *.js
 node_modules/**/*.js
+!node_modules/typescript-vue-plugin/out/*.js
 
 # whitelist
 node_modules/@vue/**/@babel/**
