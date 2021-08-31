@@ -62,6 +62,7 @@ export function register(
 					kind: convertKind(entry.kind),
 					sortText: entry.sortText,
 					insertText: entry.insertText,
+					insertTextFormat: entry.isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText,
 					preselect: entry.isRecommended,
 					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
 					data,
