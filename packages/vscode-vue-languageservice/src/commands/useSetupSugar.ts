@@ -36,11 +36,7 @@ export function register(context: ApiLanguageServiceContext) {
 			await connection.workspace.applyEdit({ changes: { [uri]: edits } });
 			await shared.sleep(200);
 
-			const errors = await getDiagnostics(uri, () => { }) ?? [];
-			await shared.sleep(0);
-
-			const importEdits = await getAddMissingImportsEdits(sourceFile, descriptor.scriptSetup!, errors);
-
+			const importEdits = await getAddMissingImportsEdits(sourceFile, descriptor.scriptSetup!);
 			if (importEdits) {
 				await connection.workspace.applyEdit(importEdits);
 			}
@@ -49,7 +45,6 @@ export function register(context: ApiLanguageServiceContext) {
 		async function getAddMissingImportsEdits(
 			_sourceFile: NonNullable<typeof sourceFile>,
 			_scriptSetup: NonNullable<typeof descriptor['scriptSetup']>,
-			errors: vscode.Diagnostic[],
 		) {
 
 			const document = _sourceFile.getTextDocument();
@@ -57,7 +52,7 @@ export function register(context: ApiLanguageServiceContext) {
 				start: document.positionAt(_scriptSetup.startTagEnd),
 				end: document.positionAt(_scriptSetup.startTagEnd),
 			}, {
-				diagnostics: errors.filter(error => error.code === 2552),
+				diagnostics: [],
 				only: [`${vscode.CodeActionKind.Source}.addMissingImports.ts`],
 			});
 
