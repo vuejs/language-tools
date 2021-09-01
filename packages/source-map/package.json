@@ -13,6 +13,6 @@
 		"directory": "packages/source-map"
 	},
 	"dependencies": {
-		"@volar/shared": "^0.27.11"
+		"@volar/shared": "0.27.11"
 	}
 }
