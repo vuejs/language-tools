@@ -22,6 +22,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 
 	const options: shared.ServerInitializationOptions = params.initializationOptions;
 	let folders: string[] = [];
+	let rootUri: URI;
 
 	if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
 		folders = params.workspaceFolders
@@ -29,14 +30,11 @@ async function onInitialize(params: vscode.InitializeParams) {
 			.filter(uri => uri.scheme === 'file')
 			.map(uri => uri.fsPath);
 	}
+	else if (params.rootUri && (rootUri = URI.parse(params.rootUri)).scheme === 'file') {
+		folders = [rootUri.fsPath];
+	}
 	else if (params.rootPath) {
 		folders = [params.rootPath];
-	}
-	else if (params.rootUri) {
-		const rootUri = URI.parse(params.rootUri);
-		if (rootUri.scheme === 'file') {
-			folders = [rootUri.fsPath];
-		}
 	}
 
 	const result: vscode.InitializeResult = {
