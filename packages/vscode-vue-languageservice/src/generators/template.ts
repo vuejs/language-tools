@@ -1015,8 +1015,8 @@ export function generate(
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.name === 'on'
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				const var_on = `__VLS_${elementIndex++}`;
 				let key_1 = prop.arg.content;
@@ -1053,7 +1053,6 @@ export function generate(
 
 				const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
 				for (const prop_2 of transformResult.props) {
-					const value = prop_2.value;
 					tsCodeGen.addText(`${var_on} = {\n`);
 					writeObjectProperty(
 						key_1,
@@ -1067,55 +1066,78 @@ export function generate(
 						},
 					);
 					tsCodeGen.addText(`: `);
-					appendExpressionNode(prop);
+					appendExpressionNode(prop, prop_2.value);
 					tsCodeGen.addText(`\n};\n`);
+				}
+			}
+			else if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				// for vue 2 nameless event
+				// https://github.com/johnsoncodehk/vue-tsc/issues/67
+				tsCodeGen.addText(`$event => {(\n`);
+				writeCode(
+					prop.exp.content,
+					{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					formatBrackets.empty,
+				);
+				tsCodeGen.addText(`\n)};\n`);
+			}
 
-					function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
-						if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-							if (value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-								appendSimpleExpressionNode(value, prop.exp);
-							}
-							else if (value.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
-								appendCompoundExpressionNode(value, prop.exp);
-							}
-						}
-						else {
-							tsCodeGen.addText(`undefined`);
-						}
+			function appendExpressionNode(prop: CompilerDOM.DirectiveNode, jsChildNode: CompilerDOM.JSChildNode) {
+				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					if (jsChildNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+						appendSimpleExpressionNode(jsChildNode, prop.exp);
 					}
-					function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
-						for (const child of node.children) {
-							if (typeof child === 'string') {
-								tsCodeGen.addText(child);
-							}
-							else if (typeof child === 'symbol') {
-								// ignore
-							}
-							else if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-								appendSimpleExpressionNode(child, exp);
-							}
-						}
+					else if (jsChildNode.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
+						appendCompoundExpressionNode(jsChildNode, prop.exp);
 					}
-					function appendSimpleExpressionNode(node: CompilerDOM.SimpleExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
-						if (node.content === exp.content) {
-							writeCode(
-								node.content,
-								{
-									start: exp.loc.start.offset,
-									end: exp.loc.end.offset,
-								},
-								SourceMaps.Mode.Offset,
-								{
-									vueTag: 'template',
-									capabilities: capabilitiesSet.all,
-								},
-								formatBrackets.empty,
-							);
-						}
-						else {
-							tsCodeGen.addText(node.content);
-						}
+				}
+				else {
+					tsCodeGen.addText(`undefined`);
+				}
+			}
+			function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
+				for (const child of node.children) {
+					if (typeof child === 'string') {
+						tsCodeGen.addText(child);
 					}
+					else if (typeof child === 'symbol') {
+						// ignore
+					}
+					else if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+						appendSimpleExpressionNode(child, exp);
+					}
+				}
+			}
+			function appendSimpleExpressionNode(node: CompilerDOM.SimpleExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
+				if (node.content === exp.content) {
+					writeCode(
+						node.content,
+						{
+							start: exp.loc.start.offset,
+							end: exp.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+						formatBrackets.empty,
+					);
+				}
+				else {
+					tsCodeGen.addText(node.content);
 				}
 			}
 		}
