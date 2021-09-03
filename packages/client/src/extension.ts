@@ -86,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	preview.activate(context);
 	createWorkspaceSnippets.activate(context);
 	callGraph.activate(context, apiClient);
-	inlayHints.activate(context, apiClient);
+	inlayHints.activate(context, docClient ?? apiClient);
 	verifyAll.activate(context, docClient ?? apiClient);
 	virtualFiles.activate(context, docClient ?? apiClient);
 	tagClosing.activate(context, htmlClient, apiClient);
