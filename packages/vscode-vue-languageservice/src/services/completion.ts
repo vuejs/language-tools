@@ -86,7 +86,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs }: ApiLanguageServiceContext,
+	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs }: ApiLanguageServiceContext,
 	getScriptContentVersion: () => number,
 ) {
 
@@ -200,16 +200,18 @@ export function register(
 					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 				});
 				if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template') {
-					tsItems = tsItems.filter(tsItem => {
-						const sortText = Number(tsItem.sortText);
-						if (Number.isNaN(sortText))
+					const sortTexts = shared.getTsCompletions(ts)?.SortText;
+					if (sortTexts) {
+						tsItems = tsItems.filter(tsItem => {
+							if (
+								(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
+								|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
+							) {
+								return isGloballyWhitelisted(tsItem.label);
+							}
 							return true;
-						if (sortText < 4)
-							return true;
-						if (isGloballyWhitelisted(tsItem.label))
-							return true;
-						return false;
-					});
+						});
+					}
 				}
 				const vueItems: vscode.CompletionItem[] = tsItems.map(tsItem => {
 					const vueItem = transformCompletionItem(
