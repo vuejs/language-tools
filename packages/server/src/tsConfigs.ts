@@ -66,7 +66,7 @@ export async function getPreferences(
 		{
 			section: isTypeScriptDocument(document) ? 'typescript.preferences' : 'javascript.preferences',
 			scopeUri: document.uri
-		}
+		},
 	]);
 
 	config = config ?? {};
@@ -102,17 +102,17 @@ function getQuoteStylePreference(config: any) {
 function getInlayHintsPreferences(config: any) {
 	return {
 		includeInlayParameterNameHints: getInlayParameterNameHintsPreference(config),
-		includeInlayParameterNameHintsWhenArgumentMatchesName: !(config['inlayHints.parameterNames.suppressWhenArgumentMatchesName'] ?? true),
-		includeInlayFunctionParameterTypeHints: config['inlayHints.parameterTypes.enabled'] ?? false,
-		includeInlayVariableTypeHints: config['inlayHints.variableTypes.enabled'] ?? false,
-		includeInlayPropertyDeclarationTypeHints: config['inlayHints.propertyDeclarationTypes.enabled'] ?? false,
-		includeInlayFunctionLikeReturnTypeHints: config['inlayHints.functionLikeReturnTypes.enabled'] ?? false,
-		includeInlayEnumMemberValueHints: config['inlayHints.enumMemberValues.enabled'] ?? false,
+		includeInlayParameterNameHintsWhenArgumentMatchesName: !(config.inlayHints?.parameterNames?.suppressWhenArgumentMatchesName ?? true),
+		includeInlayFunctionParameterTypeHints: config.inlayHints?.parameterTypes?.enabled ?? false,
+		includeInlayVariableTypeHints: config.inlayHints?.variableTypes?.enabled ?? false,
+		includeInlayPropertyDeclarationTypeHints: config.inlayHints?.propertyDeclarationTypes?.enabled ?? false,
+		includeInlayFunctionLikeReturnTypeHints: config.inlayHints?.functionLikeReturnTypes?.enabled ?? false,
+		includeInlayEnumMemberValueHints: config.inlayHints?.enumMemberValues?.enabled ?? false,
 	} as const;
 }
 
 function getInlayParameterNameHintsPreference(config: any) {
-	switch (config['inlayHints.parameterNames.enabled'] as string) {
+	switch (config.inlayHints?.parameterNames?.enabled as string) {
 		case 'none': return 'none';
 		case 'literals': return 'literals';
 		case 'all': return 'all';
