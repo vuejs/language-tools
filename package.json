@@ -29,13 +29,13 @@
 	"main": "./node_modules/@volar/client/out/extension",
 	"capabilities": {
 		"untrustedWorkspaces": {
-		  "supported": "limited",
-		  "description": "%workspaceTrust%",
-		  "restrictedConfigurations": [
-			"typescript.tsdk",
-			"typescript.tsserver.pluginPaths",
-			"typescript.npm"
-		  ]
+			"supported": "limited",
+			"description": "%workspaceTrust%",
+			"restrictedConfigurations": [
+				"typescript.tsdk",
+				"typescript.tsserver.pluginPaths",
+				"typescript.npm"
+			]
 		}
 	},
 	"contributes": {
@@ -407,8 +407,7 @@
 		"compile": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
 		"pack": "yarn && npm run test && vsce package --yarn",
-		"publish-npm": "yarn && npm run test && lerna publish --yes --no-push",
-		"publish-vsce": "yarn && npm run test && vsce publish --yarn",
+		"publish": "yarn && npm run test && lerna publish --yes && vsce publish --yarn",
 		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
 		"test": "jest"
 	},
