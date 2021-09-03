@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.27.12
+
+- feat: support vue2 nameless event ([vue-tsc#67](https://github.com/johnsoncodehk/vue-tsc/issues/67))
+- feat: support lsp client which unsupported workspaceFolders
+- fix: `/** */` auto close not working ([#446](https://github.com/johnsoncodehk/volar/issues/446))
+
 ## 0.27.11
 
 - feat: unused dynamic registration to adapt nvim LSP [#441#issuecomment-895019036](https://github.com/johnsoncodehk/volar/discussions/441#discussioncomment-1258701)
