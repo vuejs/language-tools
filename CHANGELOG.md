@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.27.13
+
+- feat: support TS 4.4 ([#428](https://github.com/johnsoncodehk/volar/issues/428))
+
 ## 0.27.12
 
 - feat: support vue2 nameless event ([vue-tsc#67](https://github.com/johnsoncodehk/vue-tsc/issues/67))
