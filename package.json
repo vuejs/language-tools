@@ -419,6 +419,9 @@
 		"typescript": "latest",
 		"vsce": "latest"
 	},
+	"resolutions": {
+		"to-vfile": "7.1.0"
+	},
 	"workspaces": [
 		"packages/*"
 	]

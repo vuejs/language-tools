@@ -39,7 +39,8 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			undefined,
 		);
 	}
-	catch (_error) {
+	catch (e) {
+		const _error = e as NonNullable<typeof error>;
 		error = {
 			..._error,
 			line: _error.line - 1,

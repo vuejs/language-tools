@@ -17,14 +17,10 @@ function getHTTPRequestService(): json.SchemaRequestService {
 }
 
 function getFileRequestService(): json.SchemaRequestService {
-	return (location: string, encoding?: string) => {
-		return new Promise((c, e) => {
-			const uri = Uri.parse(location);
-			fs.readFile(uri.fsPath, encoding, (err, buf) => {
-				if (err) {
-					return e(err);
-				}
-				c(buf.toString());
+	return (uri: string, encoding?: BufferEncoding) => {
+		return new Promise((resolve, reject) => {
+			fs.readFile(Uri.parse(uri).fsPath, { encoding }, (err, buf) => {
+				err ? reject(err) : resolve(buf.toString());
 			});
 		});
 	};

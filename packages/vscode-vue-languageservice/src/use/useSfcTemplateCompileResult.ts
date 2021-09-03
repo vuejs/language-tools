@@ -39,7 +39,8 @@ export function useSfcTemplateCompileResult(
 				errors.push(diagnostic);
 			}
 		}
-		catch (err) {
+		catch (e) {
+			const err = e as CompilerDOM.CompilerError;
 			const diagnostic: vscode.Diagnostic = {
 				range: {
 					start: htmlDocument.value.positionAt(0),
