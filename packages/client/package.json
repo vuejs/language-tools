@@ -25,6 +25,6 @@
 		"vscode-nls": "5.0.0"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.58.1"
+		"@types/vscode": "^1.60.0"
 	}
 }

@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
@@ -14,6 +14,7 @@ import * as completionResolve from './services/completionResolve';
 import * as autoClose from './services/autoClose';
 import * as refAutoClose from './services/refAutoClose';
 import * as hover from './services/hover';
+import * as inlayHints from './services/inlayHints';
 import * as diagnostics from './services/diagnostics';
 import * as formatting from './services/formatting';
 import * as definitions from './services/definition';
@@ -282,6 +283,7 @@ export function createLanguageService(
 		getSemanticTokens: publicApiHook(semanticTokens.register(context, () => update(true)), false),
 
 		doHover: publicApiHook(hover.register(context), isTemplateScriptPosition),
+		getInlayHints: publicApiHook(inlayHints.register(context), isTemplateScriptPosition),
 		doComplete: publicApiHook(completions.register(context, () => scriptContentVersion), isTemplateScriptPosition),
 
 		getCodeActions: publicApiHook(codeActions.register(context), false),
@@ -318,7 +320,7 @@ export function createLanguageService(
 		},
 	};
 
-	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
+	function isTemplateScriptPosition(uri: string, posOrRange: vscode.Position | vscode.Range) {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) {
@@ -328,16 +330,32 @@ export function createLanguageService(
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
 			if (sourceMap.lsType === 'script')
 				continue;
-			for (const tsRange of sourceMap.getMappedRanges(pos)) {
-				if (tsRange.data.vueTag === 'template') {
-					return true;
+			if (vscode.Position.is(posOrRange)) {
+				for (const tsRange of sourceMap.getMappedRanges(posOrRange)) {
+					if (tsRange.data.vueTag === 'template') {
+						return true;
+					}
+				}
+			}
+			else {
+				for (const tsRange of sourceMap.getMappedRanges(posOrRange.start, posOrRange.end)) {
+					if (tsRange.data.vueTag === 'template') {
+						return true;
+					}
 				}
 			}
 		}
 
 		for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-			for (const _ of sourceMap.getMappedRanges(pos)) {
-				return true;
+			if (vscode.Position.is(posOrRange)) {
+				for (const _ of sourceMap.getMappedRanges(posOrRange)) {
+					return true;
+				}
+			}
+			else {
+				for (const _ of sourceMap.getMappedRanges(posOrRange.start, posOrRange.end)) {
+					return true;
+				}
 			}
 		}
 

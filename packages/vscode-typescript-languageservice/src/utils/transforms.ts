@@ -19,6 +19,7 @@ export function entriesToLocations(entries: { fileName: string, textSpan: ts.Tex
 	}
 	return locations;
 }
+
 export function entriesToLocationLinks(entries: ts.DefinitionInfo[], getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
 	const locations: vscode.LocationLink[] = [];
 	for (const entry of entries) {
@@ -43,6 +44,7 @@ export function entriesToLocationLinks(entries: ts.DefinitionInfo[], getTextDocu
 	}
 	return locations;
 }
+
 export function boundSpanToLocationLinks(info: ts.DefinitionInfoAndBoundSpan, originalDoc: TextDocument, getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
 	const locations: vscode.LocationLink[] = [];
 	if (!info.definitions) return locations;

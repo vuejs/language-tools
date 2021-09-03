@@ -2,6 +2,20 @@ import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
+namespace ExperimentalProto {
+	export interface UserPreferences extends ts.UserPreferences {
+		displayPartsForJSDoc: true
+
+		includeInlayParameterNameHints?: 'none' | 'literals' | 'all';
+		includeInlayParameterNameHintsWhenArgumentMatchesName?: boolean;
+		includeInlayFunctionParameterTypeHints?: boolean;
+		includeInlayVariableTypeHints?: boolean;
+		includeInlayPropertyDeclarationTypeHints?: boolean;
+		includeInlayFunctionLikeReturnTypeHints?: boolean;
+		includeInlayEnumMemberValueHints?: boolean;
+	}
+}
+
 export async function getFormatOptions(
 	connection: vscode.Connection,
 	document: TextDocument,
@@ -58,7 +72,7 @@ export async function getPreferences(
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};
 
-	const preferences: ts.UserPreferences & { displayPartsForJSDoc: true } = {
+	const preferences: ExperimentalProto.UserPreferences = {
 		quotePreference: getQuoteStylePreference(preferencesConfig),
 		importModuleSpecifierPreference: getImportModuleSpecifierPreference(preferencesConfig),
 		importModuleSpecifierEnding: getImportModuleSpecifierEndingPreference(preferencesConfig),
@@ -71,6 +85,7 @@ export async function getPreferences(
 		includeCompletionsForImportStatements: config['suggest.includeCompletionsForImportStatements'] ?? true,
 		includeCompletionsWithSnippetText: config['suggest.includeCompletionsWithSnippetText'] ?? true,
 		displayPartsForJSDoc: true,
+		...getInlayHintsPreferences(config),
 	};
 
 	return preferences;
@@ -81,6 +96,27 @@ function getQuoteStylePreference(config: any) {
 		case 'single': return 'single';
 		case 'double': return 'double';
 		default: return 'auto';
+	}
+}
+
+function getInlayHintsPreferences(config: any) {
+	return {
+		includeInlayParameterNameHints: getInlayParameterNameHintsPreference(config),
+		includeInlayParameterNameHintsWhenArgumentMatchesName: !(config['inlayHints.parameterNames.suppressWhenArgumentMatchesName'] ?? true),
+		includeInlayFunctionParameterTypeHints: config['inlayHints.parameterTypes.enabled'] ?? false,
+		includeInlayVariableTypeHints: config['inlayHints.variableTypes.enabled'] ?? false,
+		includeInlayPropertyDeclarationTypeHints: config['inlayHints.propertyDeclarationTypes.enabled'] ?? false,
+		includeInlayFunctionLikeReturnTypeHints: config['inlayHints.functionLikeReturnTypes.enabled'] ?? false,
+		includeInlayEnumMemberValueHints: config['inlayHints.enumMemberValues.enabled'] ?? false,
+	} as const;
+}
+
+function getInlayParameterNameHintsPreference(config: any) {
+	switch (config['inlayHints.parameterNames.enabled'] as string) {
+		case 'none': return 'none';
+		case 'literals': return 'literals';
+		case 'all': return 'all';
+		default: return undefined;
 	}
 }
 

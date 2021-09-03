@@ -1,5 +1,6 @@
 {
 	"private": true,
+	"enableProposedApi": true,
 	"name": "volar",
 	"displayName": "Volar",
 	"description": "Language support for Vue 3",
@@ -12,7 +13,7 @@
 		"url": "https://github.com/johnsoncodehk/volar.git"
 	},
 	"engines": {
-		"vscode": "^1.58.0"
+		"vscode": "^1.60.0"
 	},
 	"keywords": [
 		"volar",

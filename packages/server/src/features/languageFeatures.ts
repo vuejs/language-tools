@@ -288,6 +288,18 @@ export function register(
 			return null;
 		}
 	});
+	connection.onRequest(shared.GetInlayHintsRequest.type, async handler => {
+
+		if (!isVueFile(handler.textDocument))
+			return;
+
+		return await getProjects()
+			?.get(handler.textDocument.uri)?.service
+			.getInlayHints(
+				handler.textDocument.uri,
+				handler.range,
+			);
+	});
 }
 
 function isVueFile(textDocument: vscode.TextDocumentIdentifier) {

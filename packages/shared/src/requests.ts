@@ -102,3 +102,27 @@ export namespace DetectDocumentNameCasesRequest {
 	export type ErrorType = never;
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getTagNameCaseServer');
 }
+
+export enum InlayHintKind {
+	Other = 0,
+	Type = 1,
+	Parameter = 2,
+}
+
+export interface InlayHint {
+	text: string;
+	position: vscode.Position;
+	kind?: InlayHintKind;
+	whitespaceBefore?: boolean;
+	whitespaceAfter?: boolean;
+}
+
+export namespace GetInlayHintsRequest {
+	export type ParamsType = {
+		textDocument: vscode.TextDocumentIdentifier;
+		range: vscode.Range;
+	};
+	export type ResponseType = InlayHint[] | undefined | null;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/getInlayHints');
+}

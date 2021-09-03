@@ -9,6 +9,7 @@ import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
 import * as documentPrintWidth from './features/documentPrintWidth';
+import * as inlayHints from './features/inlayHints';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
@@ -85,6 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	preview.activate(context);
 	createWorkspaceSnippets.activate(context);
 	callGraph.activate(context, apiClient);
+	inlayHints.activate(context, apiClient);
 	verifyAll.activate(context, docClient ?? apiClient);
 	virtualFiles.activate(context, docClient ?? apiClient);
 	tagClosing.activate(context, htmlClient, apiClient);

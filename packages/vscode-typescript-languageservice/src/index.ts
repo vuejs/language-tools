@@ -11,6 +11,7 @@ import * as fileRename from './services/fileRename';
 import * as codeActions from './services/codeAction';
 import * as codeActionResolve from './services/codeActionResolve';
 import * as hover from './services/hover';
+import * as inlayHints from './services/inlayHints';
 import * as signatureHelp from './services/signatureHelp';
 import * as selectionRanges from './services/selectionRanges';
 import * as diagnostics from './services/diagnostics';
@@ -53,6 +54,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		doComplete: completions2.register(languageService, getValidTextDocument, host),
 		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, host),
 		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),
+		getInlayHints: inlayHints.register(languageService, getValidTextDocument, host, ts),
 		doFormatting: formatting.register(languageService, getValidTextDocument, host),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),
 		getSelectionRanges: selectionRanges.register(languageService, getValidTextDocument),
