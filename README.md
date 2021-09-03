@@ -45,6 +45,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 - coc.nvim: https://github.com/yaegassy/coc-volar (Stable ⭐)
 - Sublime: https://github.com/sublimelsp/LSP-volar
+- vim-lsp: https://github.com/mattn/vim-lsp-settings
 
 ## By-product
 
