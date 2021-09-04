@@ -2,6 +2,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { join } from 'upath';
 
+const camelCaseText = [
+	'type CamelCase<S extends string> = S extends `${infer First}-${infer Right}`',
+	'? Capitalize<Right> extends Right',
+	'? `${First}-${CamelCase<Capitalize<Right>>}`',
+	': `${First}${CamelCase<Capitalize<Right>>}`',
+	': S',
+].join('\n');
+
 export function createGlobalDefineDocument(root: string) {
 	let code = `
 import type * as vue_1 from '@vue/runtime-dom';
@@ -15,6 +23,7 @@ type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true 
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 type NonUndefinedable<T> = T extends undefined ? never : T;
+${camelCaseText};
 
 type FunctionalComponent<P = {}, E extends EmitsOptions = {}> = PickNotAny<vue_1.FunctionalComponent<P, E>, vue_2.FunctionalComponent<P, E>>;
 type HTMLAttributes = PickNotAny<PickNotAny<vue_1.HTMLAttributes, vue_2.HTMLAttributes>, vue_4.HTMLAttributes>;
@@ -52,6 +61,11 @@ declare global {
 	}
 	function __VLS_directiveFunction<T>(dir: T): T extends ObjectDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void
 		: T extends FunctionDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void : T;
+
+	type __VLS_GetComponentName<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : __VLS_GetComponentName_CamelCase<T, CamelCase<K>> : __VLS_GetComponentName_CamelCase<T, CamelCase<K>>;
+	type __VLS_GetComponentName_CamelCase<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : __VLS_GetComponentName_CapitalCase<T, Capitalize<K>> : __VLS_GetComponentName_CapitalCase<T, Capitalize<K>>;
+	type __VLS_GetComponentName_CapitalCase<T, K> = K extends keyof T ? K : never;
+
 	type __VLS_ConstAttrType_Props<C> = (C extends (payload: infer P) => any ? P : {}) & Record<string, unknown>;
 	type __VLS_ConstAttrType<C, K extends string> = true extends __VLS_ConstAttrType_Props<C>[K] ? true : "";
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
@@ -61,10 +75,10 @@ declare global {
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: __VLS_ExtractRawComponent<T[K]> };
 	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]:
-		T[K] extends FunctionalComponent<infer A> ? (props: A & JSX.IntrinsicAttributes & Record<string, unknown>) => any
-		: (props: __VLS_ExtractComponentProps<T[K]> & Omit<__VLS_GlobalAttrs, keyof __VLS_ExtractComponentProps<T[K]>> & Record<string, unknown>) => any
-	};
+	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_ToFunctionalComponent<T[K]> };
+	type __VLS_ToFunctionalComponent<T> =
+		T extends FunctionalComponent<infer A> ? (props: A & JSX.IntrinsicAttributes & Record<string, unknown>) => any
+		: (props: __VLS_ExtractComponentProps<T> & Omit<__VLS_GlobalAttrs, keyof __VLS_ExtractComponentProps<T>> & Record<string, unknown>) => any;
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> =
 		T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']

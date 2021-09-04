@@ -8,7 +8,8 @@ const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true, completion: true, },
-	tag: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	tagHover: { basic: true },
+	tagReference: { references: true, definitions: true, rename: true, },
 	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
@@ -41,8 +42,6 @@ export function generate(
 	sourceLang: 'html' | 'pug',
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
-	componentNames: string[] = [],
-	setupReturns: string[] = [],
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
 ) {
@@ -61,17 +60,7 @@ export function generate(
 		varName: string,
 		loc: SourceMaps.Range,
 	}>();
-	const componentsMap = new Map<string, string>();
-	const componentNamesSet = new Set(componentNames);
-	const setupReturnsSet = new Set(setupReturns);
 	const cssScopedClassesSet = new Set(cssScopedClasses);
-
-	for (const componentName of componentNames) {
-		const variantName = hyphenate(componentName);
-		if (!isHTMLTag(variantName)) {
-			componentsMap.set(variantName, componentName);
-		}
-	}
 
 	let elementIndex = 0;
 
@@ -109,49 +98,9 @@ export function generate(
 		attrNames,
 	};
 
-	function getComponentName(tagName: string) {
-		return componentsMap.get(tagName) ?? tagName;
-	}
 	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-
-			const patchForNode = getPatchForSlotNode(node);
-			if (patchForNode) {
-				visitNode(patchForNode, parentEl);
-				return;
-			}
-
-			if (node.tag !== 'template') {
-				parentEl = node;
-			}
-
-			const componentName = getComponentName(node.tag);
-
-			usedComponents.add(componentName);
-			tagNames.add(node.tag);
-			tsCodeGen.addText(`{\n`);
-			{
-
-				if (componentNamesSet.has(componentName) && setupReturnsSet.has(componentName)) {
-					tsCodeGen.addText(`${componentName}; // ignore unused in setup returns\n`)
-				}
-
-				writeInlineCss(node);
-				if (parentEl) writeImportSlots(node, parentEl);
-				writeDirectives(node);
-				writeElReferences(node); // <el ref="foo" />
-				writeProps(node, true);
-				writeProps(node, false);
-				writeClassScopeds(node);
-				writeEvents(node);
-				writeOptionReferences(node);
-				writeSlots(node);
-
-				for (const childNode of node.children) {
-					visitNode(childNode, parentEl);
-				}
-			}
-			tsCodeGen.addText('}\n');
+			visitElementNode(node, parentEl);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
@@ -340,6 +289,633 @@ export function generate(
 			tsCodeGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
+	function visitElementNode(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
+
+		const patchForNode = getPatchForSlotNode(node);
+		if (patchForNode) {
+			visitNode(patchForNode, parentEl);
+			return;
+		}
+
+		if (node.tag !== 'template') {
+			parentEl = node;
+		}
+
+		const var_correctTagName = `__VLS_${elementIndex++}`;
+		const var_filteredComponents = `__VLS_${elementIndex++}`;
+
+		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_components, '${node.tag}'>;\n`);
+		tsCodeGen.addText(`declare const ${var_filteredComponents}: Pick<typeof __VLS_components, typeof ${var_correctTagName}>;;\n`);
+
+		const name1 = node.tag; // hello-world
+		const name2 = camelize(node.tag); // helloWorld
+		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
+		const componentNames = new Set([name1, name2, name3]);
+
+		usedComponents.add(name1);
+		usedComponents.add(name2);
+		usedComponents.add(name3);
+
+		tagNames.add(node.tag);
+		tsCodeGen.addText(`{\n`);
+		{
+
+			tsCodeGen.addText(`// @ts-ignore\n`)
+			for (const name of componentNames) {
+				tsCodeGen.addText(`${name}; `);
+			}
+			tsCodeGen.addText(`// ignore unused in setup returns\n`)
+
+			writeInlineCss(node);
+			if (parentEl) writeImportSlots(node, parentEl);
+			writeDirectives(node);
+			writeElReferences(node); // <el ref="foo" />
+			writeProps(node, true);
+			writeProps(node, false);
+			writeClassScopeds(node);
+			writeEvents(node);
+			writeOptionReferences(node);
+			writeSlots(node);
+
+			for (const childNode of node.children) {
+				visitNode(childNode, parentEl);
+			}
+		}
+		tsCodeGen.addText('}\n');
+
+		function writeEvents(node: CompilerDOM.ElementNode) {
+			for (const prop of node.props) {
+				if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.name === 'on'
+					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				) {
+					const var_on = `__VLS_${elementIndex++}`;
+					let key_1 = prop.arg.content;
+					let keyOffset = 0;
+
+					const key_2 = camelize('on-' + key_1);
+					const key_3 = camelize(key_1);
+
+					tsCodeGen.addText(`let ${var_on}!: { `);
+					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
+					tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
+					if (key_1 !== key_3) {
+						tsCodeGen.addText(`__VLS_FirstFunction<\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_1}'>,\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_3}'>\n`);
+						tsCodeGen.addText(`>,\n`);
+					}
+					else {
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_1}'>,\n`);
+					}
+					tsCodeGen.addText(`(typeof __VLS_componentPropsBase[typeof ${var_correctTagName}] & __VLS_GlobalAttrs & Record<string, unknown>)[`)
+					writeCodeWithQuotes(
+						key_2,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.attr,
+						},
+					);
+					tsCodeGen.addText(`]>>\n};\n`);
+
+					const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
+					for (const prop_2 of transformResult.props) {
+						tsCodeGen.addText(`${var_on} = {\n`);
+						writeObjectProperty(
+							key_1,
+							{
+								start: prop.arg.loc.start.offset + keyOffset,
+								end: prop.arg.loc.end.offset,
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.attr,
+							},
+						);
+						tsCodeGen.addText(`: `);
+						appendExpressionNode(prop, prop_2.value);
+						tsCodeGen.addText(`\n};\n`);
+					}
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.name === 'on'
+					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				) {
+					// for vue 2 nameless event
+					// https://github.com/johnsoncodehk/vue-tsc/issues/67
+					tsCodeGen.addText(`$event => {(\n`);
+					writeCode(
+						prop.exp.content,
+						{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+						formatBrackets.empty,
+					);
+					tsCodeGen.addText(`\n)};\n`);
+				}
+
+				function appendExpressionNode(prop: CompilerDOM.DirectiveNode, jsChildNode: CompilerDOM.JSChildNode) {
+					if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+						if (jsChildNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							appendSimpleExpressionNode(jsChildNode, prop.exp);
+						}
+						else if (jsChildNode.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
+							appendCompoundExpressionNode(jsChildNode, prop.exp);
+						}
+					}
+					else {
+						tsCodeGen.addText(`undefined`);
+					}
+				}
+				function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
+					for (const child of node.children) {
+						if (typeof child === 'string') {
+							tsCodeGen.addText(child);
+						}
+						else if (typeof child === 'symbol') {
+							// ignore
+						}
+						else if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+							appendSimpleExpressionNode(child, exp);
+						}
+					}
+				}
+				function appendSimpleExpressionNode(node: CompilerDOM.SimpleExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
+					if (node.content === exp.content) {
+						writeCode(
+							node.content,
+							{
+								start: exp.loc.start.offset,
+								end: exp.loc.end.offset,
+							},
+							SourceMaps.Mode.Offset,
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.all,
+							},
+							formatBrackets.empty,
+						);
+					}
+					else {
+						tsCodeGen.addText(node.content);
+					}
+				}
+			}
+		}
+		function writeOptionReferences(node: CompilerDOM.ElementNode) {
+			// fix find references not work if prop has default value
+			// fix emits references not work
+			for (const prop of node.props) {
+				if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.arg
+					&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+					&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& !(prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
+				) {
+					if (prop.name === 'bind' || prop.name === 'model') {
+						write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
+					}
+					else if (prop.name === 'on') {
+						write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
+					}
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.name === 'model'
+				) {
+					write('props', getModelValuePropName(node, isVue2), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+				) {
+					write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
+				}
+			}
+			function write(option: 'props' | 'emits', propName: string, start: number, end: number, checking = false, rename = true) {
+				const props = new Set<string>();
+				const emits = new Set<string>();
+				if (option === 'props') {
+					props.add(propName);
+					props.add(camelize(propName));
+				}
+				else if (option === 'emits') {
+					emits.add(propName);
+					emits.add(camelize(propName));
+					props.add(camelize('on-' + propName));
+				}
+				for (const name of props.values()) {
+					// __VLS_options.props
+					if (!checking)
+						tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`__VLS_components_0[${var_correctTagName}].__VLS_options.props`);
+					writePropertyAccess(
+						name,
+						{
+							start,
+							end,
+						},
+						{
+							vueTag: 'template',
+							capabilities: {
+								...capabilitiesSet.attr,
+								basic: false,
+								rename: rename,
+							},
+							doRename: keepHyphenateName,
+						},
+					);
+					tsCodeGen.addText(`;\n`);
+				}
+				for (const name of emits.values()) {
+					// __VLS_options.emits
+					if (!checking)
+						tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`__VLS_components_0[${var_correctTagName}].__VLS_options.emits`);
+					writePropertyAccess(
+						name,
+						{
+							start,
+							end,
+						},
+						{
+							vueTag: 'template',
+							capabilities: {
+								...capabilitiesSet.attr,
+								basic: false,
+								rename: rename,
+							},
+							doRename: keepHyphenateName,
+						},
+					);
+					tsCodeGen.addText(`;\n`);
+				}
+			}
+		}
+		function writeProps(node: CompilerDOM.ElementNode, forDirectiveClassOrStyle: boolean) {
+
+			let startDiag: number | undefined;
+			let endDiag: number | undefined;
+
+			if (forDirectiveClassOrStyle) {
+				tsCodeGen.addText(`__VLS_componentProps[${var_correctTagName}]({\n`);
+			}
+			else {
+				startDiag = addStartWrap();
+			}
+
+			for (const prop of node.props) {
+				if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& (prop.name === 'bind' || prop.name === 'model')
+					&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+					&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				) {
+
+					const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node, isVue2);
+					const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
+					const propValue = prop.exp?.content ?? 'undefined';
+					const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
+					const isDirective = !prop.exp || prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY;
+
+					if ((isClassOrStyleAttr && isDirective) !== forDirectiveClassOrStyle) {
+						continue;
+					}
+
+					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+						attrNames.add(prop.arg.content);
+					}
+
+					// camelize name
+					const diagStart = tsCodeGen.getText().length;
+					// `'${propName}': (${propValue})`
+					if (!prop.arg) {
+						writeObjectProperty(
+							propName_1,
+							{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + 'v-model'.length,
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.attr,
+							},
+						);
+					}
+					else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
+						writeObjectProperty(
+							propName_2,
+							{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.attr,
+								doRename: keepHyphenateName,
+							},
+						);
+					}
+					else {
+						writeObjectProperty(
+							propName_2,
+							{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.attr,
+								doRename: keepHyphenateName,
+							},
+						);
+					}
+					tsCodeGen.addText(`: (`);
+					if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+						writeCode(
+							propValue,
+							{
+								start: prop.exp.loc.start.offset,
+								end: prop.exp.loc.end.offset,
+							},
+							SourceMaps.Mode.Offset,
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.all,
+							},
+							formatBrackets.round,
+						);
+					}
+					else {
+						tsCodeGen.addText(propValue);
+					}
+					tsCodeGen.addText(`)`);
+					addMapping(tsCodeGen, {
+						sourceRange: {
+							start: prop.loc.start.offset,
+							end: prop.loc.end.offset,
+						},
+						mappedRange: {
+							start: diagStart,
+							end: tsCodeGen.getText().length,
+						},
+						mode: SourceMaps.Mode.Totally,
+						data: {
+							vueTag: 'template',
+							capabilities: capabilitiesSet.diagnosticOnly,
+						},
+					});
+					tsCodeGen.addText(`,\n`);
+					// original name
+					if (prop.arg && propName_1 !== propName_2) {
+						writeObjectProperty(
+							propName_1,
+							{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.attr,
+								doRename: keepHyphenateName,
+							},
+						);
+						tsCodeGen.addText(`: (${propValue}),\n`);
+					}
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+				) {
+					if (forDirectiveClassOrStyle) {
+						continue;
+					}
+
+					const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
+					const propName2 = prop.name;
+					const isClassOrStyleAttr = ['style', 'class'].includes(propName);
+
+					attrNames.add(prop.name);
+
+					if (isClassOrStyleAttr) {
+						tsCodeGen.addText(`// @ts-ignore\n`);
+					}
+
+					// camelize name
+					const diagStart = tsCodeGen.getText().length;
+					writeObjectProperty(
+						propName,
+						{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + propName2.length,
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.attr,
+							doRename: keepHyphenateName,
+						},
+					);
+					tsCodeGen.addText(': ');
+					writeAttrValue(prop.value, propName);
+					const diagEnd = tsCodeGen.getText().length;
+					tsCodeGen.addText(',\n');
+					addMapping(tsCodeGen, {
+						sourceRange: {
+							start: prop.loc.start.offset,
+							end: prop.loc.end.offset,
+						},
+						mappedRange: {
+							start: diagStart,
+							end: diagEnd,
+						},
+						mode: SourceMaps.Mode.Totally,
+						data: {
+							vueTag: 'template',
+							capabilities: capabilitiesSet.diagnosticOnly,
+						},
+					});
+					// original name
+					if (propName2 !== propName) {
+						writeObjectProperty(
+							propName2,
+							{
+								start: prop.loc.start.offset,
+								end: prop.loc.start.offset + propName2.length,
+							},
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.attr,
+								doRename: keepHyphenateName,
+							},
+						);
+						tsCodeGen.addText(': ');
+						writeAttrValue(prop.value, propName);
+						tsCodeGen.addText(',\n');
+					}
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.name === 'bind'
+					&& !prop.arg
+					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				) {
+					if (forDirectiveClassOrStyle) {
+						continue;
+					}
+					tsCodeGen.addText('...(');
+					writeCode(
+						prop.exp.content,
+						{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+						formatBrackets.round,
+					);
+					tsCodeGen.addText('),\n');
+				}
+				else {
+					if (forDirectiveClassOrStyle) {
+						continue;
+					}
+					tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
+				}
+			}
+
+			if (forDirectiveClassOrStyle) {
+				tsCodeGen.addText(`});\n`);
+			}
+			else {
+				endDiag = addEndWrap();
+			}
+
+			if (startDiag && endDiag) {
+				addMapping(
+					tsCodeGen,
+					{
+						mappedRange: {
+							start: startDiag,
+							end: endDiag,
+						},
+						sourceRange: {
+							start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+							end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+						},
+						mode: SourceMaps.Mode.Totally,
+						data: {
+							vueTag: 'template',
+							capabilities: capabilitiesSet.diagnosticOnly,
+						},
+					},
+				);
+			}
+
+			function writeAttrValue(attrNode: CompilerDOM.TextNode | undefined, propName: string) {
+				if (attrNode) {
+					tsCodeGen.addText('"');
+					let start = attrNode.loc.start.offset;
+					let end = attrNode.loc.end.offset;
+					if (end - start > attrNode.content.length) {
+						start++;
+						end--;
+					}
+					writeCode(
+						toUnicode(attrNode.content),
+						{ start, end },
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all
+						},
+					);
+					tsCodeGen.addText('"');
+				}
+				else {
+					tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps[${var_correctTagName}], '${propName}'>`);
+				}
+			}
+			function addStartWrap() {
+				// start tag
+				addTag(
+					node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+				);
+				if (!node.isSelfClosing && sourceLang === 'html') {
+					// end tag
+					addTag(
+						node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
+						node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
+					);
+				}
+				tsCodeGen.addText(`__VLS_componentProps[${var_correctTagName}](`);
+				const diagStart = tsCodeGen.getText().length;
+				tsCodeGen.addText(`{\n`);
+				return diagStart;
+			}
+			function addTag(start: number, end: number) {
+				tsCodeGen.addText(`// @ts-ignore start tag\n`);
+				tsCodeGen.addText(`const __VLS_${elementIndex++} = { `);
+				writeObjectProperty(
+					node.tag,
+					{
+						start,
+						end,
+					},
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.tagHover,
+					},
+				)
+				tsCodeGen.addText(': {} as ');
+				tsCodeGen.addText(`__VLS_PickNotAny<`.repeat(componentNames.size - 1));
+				const names = [...componentNames];
+				for (let i = 0; i < names.length; i++) {
+					if (i > 0) {
+						tsCodeGen.addText(', ');
+					}
+					tsCodeGen.addText(`typeof ${var_filteredComponents}`);
+					writePropertyAccess(
+						names[i],
+						{
+							start,
+							end,
+						},
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.tagReference,
+							beforeRename: node.tag === names[i] ? undefined : unHyphenatComponentName,
+							doRename: keepHyphenateName,
+						},
+					);
+					if (i > 0) {
+						tsCodeGen.addText('>');
+					}
+				}
+				tsCodeGen.addText(` };\n`);
+			}
+			function addEndWrap() {
+				tsCodeGen.addText(`}`);
+				const diagEnd = tsCodeGen.getText().length;
+				tsCodeGen.addText(`);\n`);
+				return diagEnd;
+			}
+		}
+	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
@@ -406,7 +982,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_components_0['${getComponentName(parentEl.tag)}'].__VLS_slots`);
+				tsCodeGen.addText(`__VLS_components_0['' as __VLS_GetComponentName<typeof __VLS_components_0, ${parentEl.tag}>].__VLS_slots`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
@@ -454,96 +1030,6 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				tsCodeGen.addText(`;\n`);
-			}
-		}
-	}
-	function writeOptionReferences(node: CompilerDOM.ElementNode) {
-		// fix find references not work if prop has default value
-		// fix emits references not work
-		for (const prop of node.props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.arg
-				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
-				&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& !(prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
-			) {
-				if (prop.name === 'bind' || prop.name === 'model') {
-					write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
-				}
-				else if (prop.name === 'on') {
-					write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
-				}
-			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'model'
-			) {
-				write('props', getModelValuePropName(node, isVue2), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
-			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			) {
-				write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
-			}
-		}
-		function write(option: 'props' | 'emits', propName: string, start: number, end: number, checking = false, rename = true) {
-			const props = new Set<string>();
-			const emits = new Set<string>();
-			if (option === 'props') {
-				props.add(propName);
-				props.add(camelize(propName));
-			}
-			else if (option === 'emits') {
-				emits.add(propName);
-				emits.add(camelize(propName));
-				props.add(camelize('on-' + propName));
-			}
-			for (const name of props.values()) {
-				// __VLS_options.props
-				if (!checking)
-					tsCodeGen.addText(`// @ts-ignore\n`);
-				tsCodeGen.addText(`__VLS_components_0['${getComponentName(node.tag)}'].__VLS_options.props`);
-				writePropertyAccess(
-					name,
-					{
-						start,
-						end,
-					},
-					{
-						vueTag: 'template',
-						capabilities: {
-							...capabilitiesSet.attr,
-							basic: false,
-							rename: rename,
-						},
-						doRename: keepHyphenateName,
-					},
-				);
-				tsCodeGen.addText(`;\n`);
-			}
-			for (const name of emits.values()) {
-				// __VLS_options.emits
-				if (!checking)
-					tsCodeGen.addText(`// @ts-ignore\n`);
-				tsCodeGen.addText(`__VLS_components_0['${getComponentName(node.tag)}'].__VLS_options.emits`);
-				writePropertyAccess(
-					name,
-					{
-						start,
-						end,
-					},
-					{
-						vueTag: 'template',
-						capabilities: {
-							...capabilitiesSet.attr,
-							basic: false,
-							rename: rename,
-						},
-						doRename: keepHyphenateName,
-					},
-				);
 				tsCodeGen.addText(`;\n`);
 			}
 		}
@@ -635,339 +1121,6 @@ export function generate(
 			}
 		}
 	}
-	function writeProps(node: CompilerDOM.ElementNode, forDirectiveClassOrStyle: boolean) {
-
-		let startDiag: number | undefined;
-		let endDiag: number | undefined;
-
-		if (forDirectiveClassOrStyle) {
-			tsCodeGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}']({\n`);
-		}
-		else {
-			startDiag = addStartWrap();
-		}
-
-		for (const prop of node.props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& (prop.name === 'bind' || prop.name === 'model')
-				&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
-				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
-			) {
-
-				const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node, isVue2);
-				const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
-				const propValue = prop.exp?.content ?? 'undefined';
-				const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
-				const isDirective = !prop.exp || prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY;
-
-				if ((isClassOrStyleAttr && isDirective) !== forDirectiveClassOrStyle) {
-					continue;
-				}
-
-				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					attrNames.add(prop.arg.content);
-				}
-
-				// camelize name
-				const diagStart = tsCodeGen.getText().length;
-				// `'${propName}': (${propValue})`
-				if (!prop.arg) {
-					writeObjectProperty(
-						propName_1,
-						{
-							start: prop.loc.start.offset,
-							end: prop.loc.start.offset + 'v-model'.length,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-						},
-					);
-				}
-				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					writeObjectProperty(
-						propName_2,
-						{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-							doRename: keepHyphenateName,
-						},
-					);
-				}
-				else {
-					writeObjectProperty(
-						propName_2,
-						{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-							doRename: keepHyphenateName,
-						},
-					);
-				}
-				tsCodeGen.addText(`: (`);
-				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
-					writeCode(
-						propValue,
-						{
-							start: prop.exp.loc.start.offset,
-							end: prop.exp.loc.end.offset,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.all,
-						},
-						formatBrackets.round,
-					);
-				}
-				else {
-					tsCodeGen.addText(propValue);
-				}
-				tsCodeGen.addText(`)`);
-				addMapping(tsCodeGen, {
-					sourceRange: {
-						start: prop.loc.start.offset,
-						end: prop.loc.end.offset,
-					},
-					mappedRange: {
-						start: diagStart,
-						end: tsCodeGen.getText().length,
-					},
-					mode: SourceMaps.Mode.Totally,
-					data: {
-						vueTag: 'template',
-						capabilities: capabilitiesSet.diagnosticOnly,
-					},
-				});
-				tsCodeGen.addText(`,\n`);
-				// original name
-				if (prop.arg && propName_1 !== propName_2) {
-					writeObjectProperty(
-						propName_1,
-						{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-							doRename: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(`: (${propValue}),\n`);
-				}
-			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			) {
-				if (forDirectiveClassOrStyle) {
-					continue;
-				}
-
-				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-				const propName2 = prop.name;
-				const isClassOrStyleAttr = ['style', 'class'].includes(propName);
-
-				attrNames.add(prop.name);
-
-				if (isClassOrStyleAttr) {
-					tsCodeGen.addText(`// @ts-ignore\n`);
-				}
-
-				// camelize name
-				const diagStart = tsCodeGen.getText().length;
-				writeObjectProperty(
-					propName,
-					{
-						start: prop.loc.start.offset,
-						end: prop.loc.start.offset + propName2.length,
-					},
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.attr,
-						doRename: keepHyphenateName,
-					},
-				);
-				tsCodeGen.addText(': ');
-				writeAttrValue(prop.value, getComponentName(node.tag), propName);
-				const diagEnd = tsCodeGen.getText().length;
-				tsCodeGen.addText(',\n');
-				addMapping(tsCodeGen, {
-					sourceRange: {
-						start: prop.loc.start.offset,
-						end: prop.loc.end.offset,
-					},
-					mappedRange: {
-						start: diagStart,
-						end: diagEnd,
-					},
-					mode: SourceMaps.Mode.Totally,
-					data: {
-						vueTag: 'template',
-						capabilities: capabilitiesSet.diagnosticOnly,
-					},
-				});
-				// original name
-				if (propName2 !== propName) {
-					writeObjectProperty(
-						propName2,
-						{
-							start: prop.loc.start.offset,
-							end: prop.loc.start.offset + propName2.length,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-							doRename: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(': ');
-					writeAttrValue(prop.value, getComponentName(node.tag), propName);
-					tsCodeGen.addText(',\n');
-				}
-			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'bind'
-				&& !prop.arg
-				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			) {
-				if (forDirectiveClassOrStyle) {
-					continue;
-				}
-				tsCodeGen.addText('...(');
-				writeCode(
-					prop.exp.content,
-					{
-						start: prop.exp.loc.start.offset,
-						end: prop.exp.loc.end.offset,
-					},
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-					formatBrackets.round,
-				);
-				tsCodeGen.addText('),\n');
-			}
-			else {
-				if (forDirectiveClassOrStyle) {
-					continue;
-				}
-				tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
-			}
-		}
-
-		if (forDirectiveClassOrStyle) {
-			tsCodeGen.addText(`});\n`);
-		}
-		else {
-			endDiag = addEndWrap();
-		}
-
-		if (startDiag && endDiag) {
-			addMapping(
-				tsCodeGen,
-				{
-					mappedRange: {
-						start: startDiag,
-						end: endDiag,
-					},
-					sourceRange: {
-						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-					},
-					mode: SourceMaps.Mode.Totally,
-					data: {
-						vueTag: 'template',
-						capabilities: capabilitiesSet.diagnosticOnly,
-					},
-				},
-			);
-		}
-
-		function writeAttrValue(attrNode: CompilerDOM.TextNode | undefined, componentName: string, propName: string) {
-			if (attrNode) {
-				tsCodeGen.addText('"');
-				let start = attrNode.loc.start.offset;
-				let end = attrNode.loc.end.offset;
-				if (end - start > attrNode.content.length) {
-					start++;
-					end--;
-				}
-				writeCode(
-					toUnicode(attrNode.content),
-					{ start, end },
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all
-					},
-				);
-				tsCodeGen.addText('"');
-			}
-			else {
-				tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps['${componentName}'], '${propName}'>`);
-			}
-		}
-		function addStartWrap() {
-			const componentName = getComponentName(node.tag);
-			{ // start tag
-				tsCodeGen.addText(`// @ts-ignore start tag\n__VLS_components`);
-				writePropertyAccess(
-					componentName,
-					{
-						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-					},
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.tag,
-						beforeRename: node.tag === componentName ? undefined : unHyphenatComponentName,
-						doRename: keepHyphenateName,
-					},
-				);
-				tsCodeGen.addText(`;\n`);
-			}
-			if (!node.isSelfClosing && sourceLang === 'html') { // end tag
-				tsCodeGen.addText(`// @ts-ignore end tag\n__VLS_components`);
-				writePropertyAccess(
-					componentName,
-					{
-						start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
-						end: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
-					},
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.tag,
-						beforeRename: node.tag === componentName ? undefined : unHyphenatComponentName,
-						doRename: keepHyphenateName,
-					},
-				);
-				tsCodeGen.addText(`;\n`);
-			}
-			tsCodeGen.addText(`__VLS_componentProps['${getComponentName(node.tag)}'](`);
-			const diagStart = tsCodeGen.getText().length;
-			tsCodeGen.addText(`{\n`);
-			return diagStart;
-		}
-		function addEndWrap() {
-			tsCodeGen.addText(`}`);
-			const diagEnd = tsCodeGen.getText().length;
-			tsCodeGen.addText(`);\n`);
-			return diagEnd;
-		}
-	}
 	function writeClassScopeds(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
@@ -1007,137 +1160,6 @@ export function generate(
 						},
 					);
 					tsCodeGen.addText(`;\n`);
-				}
-			}
-		}
-	}
-	function writeEvents(node: CompilerDOM.ElementNode) {
-		for (const prop of node.props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			) {
-				const var_on = `__VLS_${elementIndex++}`;
-				let key_1 = prop.arg.content;
-				let keyOffset = 0;
-
-				const key_2 = camelize('on-' + key_1);
-				const key_3 = camelize(key_1);
-
-				tsCodeGen.addText(`let ${var_on}!: { `);
-				tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-				tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
-				if (key_1 !== key_3) {
-					tsCodeGen.addText(`__VLS_FirstFunction<\n`);
-					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
-					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_3}'>\n`);
-					tsCodeGen.addText(`>,\n`);
-				}
-				else {
-					tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components['${getComponentName(node.tag)}'], '${key_1}'>,\n`);
-				}
-				tsCodeGen.addText(`(typeof __VLS_componentPropsBase['${getComponentName(node.tag)}'] & __VLS_GlobalAttrs & Record<string, unknown>)[`)
-				writeCodeWithQuotes(
-					key_2,
-					{
-						start: prop.arg.loc.start.offset,
-						end: prop.arg.loc.end.offset,
-					},
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.attr,
-					},
-				);
-				tsCodeGen.addText(`]>>\n};\n`);
-
-				const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
-				for (const prop_2 of transformResult.props) {
-					tsCodeGen.addText(`${var_on} = {\n`);
-					writeObjectProperty(
-						key_1,
-						{
-							start: prop.arg.loc.start.offset + keyOffset,
-							end: prop.arg.loc.end.offset,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-						},
-					);
-					tsCodeGen.addText(`: `);
-					appendExpressionNode(prop, prop_2.value);
-					tsCodeGen.addText(`\n};\n`);
-				}
-			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			) {
-				// for vue 2 nameless event
-				// https://github.com/johnsoncodehk/vue-tsc/issues/67
-				tsCodeGen.addText(`$event => {(\n`);
-				writeCode(
-					prop.exp.content,
-					{
-						start: prop.exp.loc.start.offset,
-						end: prop.exp.loc.end.offset,
-					},
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-					formatBrackets.empty,
-				);
-				tsCodeGen.addText(`\n)};\n`);
-			}
-
-			function appendExpressionNode(prop: CompilerDOM.DirectiveNode, jsChildNode: CompilerDOM.JSChildNode) {
-				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					if (jsChildNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						appendSimpleExpressionNode(jsChildNode, prop.exp);
-					}
-					else if (jsChildNode.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
-						appendCompoundExpressionNode(jsChildNode, prop.exp);
-					}
-				}
-				else {
-					tsCodeGen.addText(`undefined`);
-				}
-			}
-			function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
-				for (const child of node.children) {
-					if (typeof child === 'string') {
-						tsCodeGen.addText(child);
-					}
-					else if (typeof child === 'symbol') {
-						// ignore
-					}
-					else if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						appendSimpleExpressionNode(child, exp);
-					}
-				}
-			}
-			function appendSimpleExpressionNode(node: CompilerDOM.SimpleExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
-				if (node.content === exp.content) {
-					writeCode(
-						node.content,
-						{
-							start: exp.loc.start.offset,
-							end: exp.loc.end.offset,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.all,
-						},
-						formatBrackets.empty,
-					);
-				}
-				else {
-					tsCodeGen.addText(node.content);
 				}
 			}
 		}

@@ -47,6 +47,9 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 	}
 
 	function onTsPrepare(uri: string, position: vscode.Position) {
+
+		let error: vscode.ResponseError | undefined;
+
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 			const tsLs = getTsLs(tsLoc.lsType);
 			if (
@@ -61,13 +64,17 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 				if (!tsPrepare)
 					continue;
 
-				if (tsPrepare instanceof vscode.ResponseError)
-					return tsPrepare;
+				if (tsPrepare instanceof vscode.ResponseError) {
+					error = tsPrepare;
+					continue;
+				}
 
 				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
 					return vueLoc.range;
 			}
 		}
+
+		return error;
 	}
 	async function onTsFile(oldUri: string, newUri: string) {
 
