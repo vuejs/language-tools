@@ -10,6 +10,8 @@ import type * as vue_3 from '@vue/runtime-core';
 import type * as vue_4 from '@vue/runtime-dom/types/jsx';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
+type IsComponent<T> = T extends (new (...args: any) => any) | FunctionalComponent<infer _> ? true : false;
+type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true ? K : never]: any };
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 type NonUndefinedable<T> = T extends undefined ? never : T;
@@ -105,9 +107,7 @@ declare global {
 	type __VLS_GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 	type __VLS_GlobalAttrs = __VLS_GlobalAttrsBase & HTMLAttributes;
 	type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: PropType<NonUndefinedable<T[K]>> } : { type: PropType<T[K]>, required: true } };
-	type __VLS_PickComponents<T> = { [K in keyof T as T[K] extends (new (...args: any) => any) | FunctionalComponent<infer _> ? K : never]:
-		T[K] extends never ? any : T[K] // fix https://github.com/johnsoncodehk/vue-tsc/issues/21
-	};
+	type __VLS_PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;
 	type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 
 	${genConstructorOverloads()}
