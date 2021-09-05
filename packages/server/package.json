@@ -6,6 +6,9 @@
 		"out/**/*.js",
 		"out/**/*.d.ts"
 	],
+	"bin": {
+	  "vue-server": "./bin/vue-server.js"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
