@@ -6,6 +6,10 @@ export interface ServerInitializationOptions {
 	typescript: {
 		/**
 		 * Path of tsserverlibrary.js / tsserver.js / typescript.js
+		 * @example
+		 * '/usr/local/lib/node_modules/typescript/lib/tsserverlibrary.js' // use global typescript install
+		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in client's node_modules
+		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/server/out/index.js
 		 */
 		serverPath: string
 		localizedPath: string | undefined
