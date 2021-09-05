@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.27.14
+
+- feat: expose `@volar/server/out/index.js` to `volar-server` command ([#458](https://github.com/johnsoncodehk/volar/issues/458))
+- fix: component type incorrect if duplicate name in props ([#453](https://github.com/johnsoncodehk/volar/issues/453))
+- fix: fixed `typescript.serverPath` relative path finding
+
 ## 0.27.13
 
 - feat: support TS 4.4 ([#428](https://github.com/johnsoncodehk/volar/issues/428))
