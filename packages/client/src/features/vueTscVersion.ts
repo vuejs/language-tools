@@ -17,7 +17,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					const depVersion = packageJson.version;
 					if (depVersion && depVersion !== context.extension.packageJSON.version) {
 
-						const message = `Your vue-tsc dependency is not same with Extension version (${depVersion} ~ ${context.extension.packageJSON.version}). It may cause inconsistent type check results between cli and IDE.`;
+						const message = `vue-tsc dependency version (${depVersion}) is different to Extension version (${context.extension.packageJSON.version}). Type-checking behavior maybe different.`;
 						const howTo = 'How To Update?';
 						const disable = 'Disable Version Checking';
 						const option = await vscode.window.showInformationMessage(message, howTo, disable);
