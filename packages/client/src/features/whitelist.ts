@@ -85,6 +85,7 @@ export async function activate(context: vscode.ExtensionContext, clients: lsp.La
 			}
 		}
 
+		final = final.sort();
 		final = final.map(file => '!' + file);
 
 		// use node_modules/@babel instead of
