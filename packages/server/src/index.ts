@@ -1,12 +1,15 @@
 import * as shared from '@volar/shared';
-import * as vue from 'vscode-vue-languageservice';
+import * as fs from 'fs';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as path from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver/node';
+import { URI } from 'vscode-uri';
+import * as vue from 'vscode-vue-languageservice';
 import { updateConfigs } from './configs';
+import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
 import * as tsConfigs from './tsConfigs';
-import { getInferredCompilerOptions } from './inferredCompilerOptions';
-import { URI } from 'vscode-uri';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 connection.onInitialize(onInitialize);
@@ -45,7 +48,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 
 	if (options.documentFeatures) {
 
-		const ts = shared.loadTypescript(options.typescript.serverPath);
+		const ts = loadTypescript(options.typescript.serverPath);
 		const formatters = await import('./formatters');
 		const noStateLs = vue.getDocumentLanguageService(
 			{ typescript: ts },
@@ -70,7 +73,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 
 		let projects: ReturnType<typeof createProjects> | undefined;
 
-		const ts = shared.loadTypescript(options.typescript.serverPath);
+		const ts = loadTypescript(options.typescript.serverPath);
 
 		(await import('./features/customFeatures')).register(connection, documents, () => projects);
 		(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures);
@@ -79,7 +82,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 		connection.onInitialized(async () => {
 
 			const inferredCompilerOptions = await getInferredCompilerOptions(ts, connection);
-			const tsLocalized = options.typescript.localizedPath ? shared.loadTypescriptLocalized(options.typescript.localizedPath) : undefined;
+			const tsLocalized = options.typescript.localizedPath ? loadTypescriptLocalized(options.typescript.localizedPath) : undefined;
 			projects = createProjects(
 				options,
 				ts,
@@ -99,4 +102,14 @@ async function onInitialize(params: vscode.InitializeParams) {
 	}
 
 	return result;
+}
+
+function loadTypescript(tsPath: string): typeof import('typescript/lib/tsserverlibrary') {
+	return require(path.toUnix(tsPath));
+}
+
+function loadTypescriptLocalized(tsPath: string): ts.MapLike<string> | undefined {
+	if (fs.existsSync(tsPath)) {
+		return require(path.toUnix(tsPath));
+	}
 }

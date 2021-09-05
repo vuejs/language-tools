@@ -143,16 +143,6 @@ export function getVscodeTypescriptLocalizedPath(appRoot: string, lang: string):
 	}
 }
 
-export function loadTypescript(tsPath: string): typeof import('typescript/lib/tsserverlibrary') {
-	return require(path.toUnix(tsPath));
-}
-
-export function loadTypescriptLocalized(tsPath: string): ts.MapLike<string> | undefined {
-	if (fs.existsSync(tsPath)) {
-		return require(path.toUnix(tsPath));
-	}
-}
-
 export function getTypeScriptVersion(serverPath: string): string | undefined {
 	if (!fs.existsSync(serverPath)) {
 		return undefined;
