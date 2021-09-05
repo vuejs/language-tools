@@ -43,9 +43,12 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 ## Community's Language Client Implements
 
-- coc.nvim: https://github.com/yaegassy/coc-volar (Stable ⭐)
-- Sublime: https://github.com/sublimelsp/LSP-volar
+- coc.nvim: https://github.com/yaegassy/coc-volar ⚡
+- nvim: https://github.com/neovim/nvim-lspconfig
 - vim-lsp: https://github.com/mattn/vim-lsp-settings
+- Sublime: https://github.com/sublimelsp/LSP-volar
+
+⚡ - This implement supported multiple server ([Affect](https://github.com/johnsoncodehk/volar/discussions/441#discussioncomment-1263173))
 
 ## By-product
 
