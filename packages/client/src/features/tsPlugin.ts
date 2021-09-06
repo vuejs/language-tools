@@ -7,6 +7,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.toggleTsPlugin';
+	updateTsPlugin();
 	updateTsPluginStatus();
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.toggleTsPlugin', async () => {
@@ -30,8 +31,23 @@ export async function activate(context: vscode.ExtensionContext) {
 			toggleTsPlugin();
 		}
 	}));
+	vscode.workspace.onDidChangeConfiguration(updateTsPlugin);
 	vscode.workspace.onDidChangeConfiguration(updateTsPluginStatus);
 
+	async function updateTsPlugin() {
+		const shouldTsPluginEnabled = getTsPluginConfig();
+		const _isTsPluginEnabled = isTsPluginEnabled();
+		if (shouldTsPluginEnabled !== null && shouldTsPluginEnabled !== _isTsPluginEnabled) {
+			const msg = shouldTsPluginEnabled
+				? `Workspace required TS plugin but currently disabled, do you want to turn it on?`
+				: `Workspace unrequired TS plugin but currently enabled, do you want to turn it off?`;
+			const btnText = shouldTsPluginEnabled ? 'Enable TS Plugin' : 'Disable TS Plugin';
+			const toggle = await vscode.window.showInformationMessage(msg, btnText);
+			if (toggle === btnText) {
+				toggleTsPlugin();
+			}
+		}
+	}
 	function updateTsPluginStatus() {
 		if (getTsPluginStatusConfig()) {
 			if (isTsPluginEnabled()) {
@@ -96,6 +112,9 @@ export function isTsPluginEnabled() {
 	} catch { }
 
 	return false;
+}
+function getTsPluginConfig() {
+	return vscode.workspace.getConfiguration('volar').get<boolean | null>('tsPlugin');
 }
 function getTsPluginStatusConfig() {
 	return vscode.workspace.getConfiguration('volar').get<boolean>('tsPluginStatus');
