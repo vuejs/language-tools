@@ -71,14 +71,20 @@ declare global {
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 	type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
-	type __VLS_ExtractComponentProps<C> = C extends new (...args: any) => { $props: infer P1 } ? P1 : C extends FunctionalComponent<infer P2> ? P2 : C extends { props: infer P3 } ? P3 : C;
+
+	type __VLS_ExtractComponentProps<T> =
+		T extends new (...args: any) => { $props?: infer P1 } ? P1
+		: T extends FunctionalComponent<infer P2> ? P2
+		: {}
+	type __VLS_ExtractCompleteComponentProps<T> =
+		T extends new (...args: any) => { $props?: infer P1 } ? P1 & Omit<__VLS_GlobalAttrs, keyof P1> & Record<string, unknown>
+		: T extends FunctionalComponent<infer P2> ? P2 & JSX.IntrinsicAttributes & Record<string, unknown>
+		: __VLS_GlobalAttrs & Record<string, unknown>
+
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: __VLS_ExtractRawComponent<T[K]> };
 	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
 	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]: __VLS_ToFunctionalComponent<T[K]> };
-	type __VLS_ToFunctionalComponent<T> =
-		T extends FunctionalComponent<infer A> ? (props: A & JSX.IntrinsicAttributes & Record<string, unknown>) => any
-		: (props: __VLS_ExtractComponentProps<T> & Omit<__VLS_GlobalAttrs, keyof __VLS_ExtractComponentProps<T>> & Record<string, unknown>) => any;
+	type __VLS_MapPropsType<T> = { [K in keyof T]: (props: __VLS_ExtractCompleteComponentProps<T[K]>) => void };
 	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> =
 		T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
