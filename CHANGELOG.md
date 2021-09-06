@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.27.15
+
+- fix: template slot type-checking broken ([vue-tsc#70](https://github.com/johnsoncodehk/vue-tsc/issues/70))
+- fix: more accurate component props extract ([#459](https://github.com/johnsoncodehk/volar/issues/459))
+
 ## 0.27.14
 
 - feat: expose `@volar/server/out/index.js` to `volar-server` command ([#458](https://github.com/johnsoncodehk/volar/issues/458))
