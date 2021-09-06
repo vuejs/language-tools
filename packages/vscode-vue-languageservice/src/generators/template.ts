@@ -846,7 +846,7 @@ export function generate(
 					tsCodeGen.addText('"');
 				}
 				else {
-					tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps[${var_correctTagName}], '${propName}'>`);
+					tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps[typeof ${var_correctTagName}], '${propName}'>`);
 				}
 			}
 			function addStartWrap() {
@@ -982,7 +982,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_components_0['' as __VLS_GetComponentName<typeof __VLS_components_0, ${parentEl.tag}>].__VLS_slots`);
+				tsCodeGen.addText(`__VLS_components_0['' as __VLS_GetComponentName<typeof __VLS_components_0, '${parentEl.tag}'>].__VLS_slots`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
