@@ -351,11 +351,11 @@ export function generate(
 					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				) {
 					const var_on = `__VLS_${elementIndex++}`;
-					let key_1 = prop.arg.content;
 					let keyOffset = 0;
-
-					const key_2 = camelize('on-' + key_1);
-					const key_3 = camelize(key_1);
+					
+					const key_1 = prop.arg.content; // click-outside
+					const key_2 = camelize('on-' + key_1); // onClickOutside
+					const key_3 = camelize(key_1); // clickOutside
 
 					tsCodeGen.addText(`let ${var_on}!: { `);
 					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
@@ -369,7 +369,7 @@ export function generate(
 					else {
 						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_1}'>,\n`);
 					}
-					tsCodeGen.addText(`(typeof __VLS_componentPropsBase[typeof ${var_correctTagName}] & __VLS_GlobalAttrs & Record<string, unknown>)[`)
+					tsCodeGen.addText(`(typeof __VLS_componentPropsBase[typeof ${var_correctTagName}] & Omit<__VLS_GlobalAttrs, keyof typeof __VLS_componentPropsBase[typeof ${var_correctTagName}]>)[`)
 					writeCodeWithQuotes(
 						key_2,
 						{
