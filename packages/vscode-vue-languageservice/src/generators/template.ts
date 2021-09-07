@@ -1,6 +1,6 @@
 import * as SourceMaps from '../utils/sourceMaps';
 import { createCodeGen } from '@volar/code-gen';
-import { camelize, hyphenate, isHTMLTag } from '@vue/shared';
+import { camelize, hyphenate } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 
@@ -352,7 +352,7 @@ export function generate(
 				) {
 					const var_on = `__VLS_${elementIndex++}`;
 					let keyOffset = 0;
-					
+
 					const key_1 = prop.arg.content; // click-outside
 					const key_2 = camelize('on-' + key_1); // onClickOutside
 					const key_3 = camelize(key_1); // clickOutside
@@ -369,7 +369,7 @@ export function generate(
 					else {
 						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_1}'>,\n`);
 					}
-					tsCodeGen.addText(`(typeof __VLS_componentPropsBase[typeof ${var_correctTagName}] & Omit<__VLS_GlobalAttrs, keyof typeof __VLS_componentPropsBase[typeof ${var_correctTagName}]>)[`)
+					tsCodeGen.addText(`(typeof __VLS_componentPropsBase[typeof ${var_correctTagName}] & Omit<__VLS_GlobalAttrs, keyof typeof __VLS_componentPropsBase[typeof ${var_correctTagName}]> & Record<string, unknown>)[`)
 					writeCodeWithQuotes(
 						key_2,
 						{
