@@ -19,7 +19,7 @@ import type * as vue_4 from '@vue/runtime-dom/types/jsx';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsComponent<T> = T extends (new (...args: any) => any) | FunctionalComponent<infer _> ? true : false;
-type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true ? K : never]: any };
+type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends false ? never : K]: any };
 type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 type NonUndefinedable<T> = T extends undefined ? never : T;
