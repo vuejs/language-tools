@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.16
+
+- feat: reuse `volar.tsPlugin`
+- fix: can't override events type by props
+- fix: don't report error on unknown events
+- fix: `any` type comoponent should not show red ([#461](https://github.com/johnsoncodehk/volar/issues/461))
+- fix: html element attrs type-check broken
+
 ## 0.27.15
 
 - fix: template slot type-checking broken ([vue-tsc#70](https://github.com/johnsoncodehk/vue-tsc/issues/70))
