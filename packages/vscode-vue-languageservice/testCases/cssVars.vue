@@ -4,4 +4,8 @@ const foo = 1;
 
 <style>
 .bar { color: v-bind(foo); }
+.bar { color: v-bind("foo"); }
+.bar { color: v-bind(foo + foo); }
+.bar { color: v-bind("foo + foo"); }
+.bar { color: v-bind(); }
 </style>
