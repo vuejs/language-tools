@@ -5,6 +5,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 
 // Fast dummy TS language service, only has one script.
 let dummyTsScriptVersion = 0;
+let dummyTsScriptFile = `dummy.${dummyTsScriptVersion}.ts`;
 let dummyTsScriptKind = 3;
 let dummyTsScript: ts.IScriptSnapshot | undefined;
 let dummyTsLs: ts2.LanguageService | undefined;
@@ -19,8 +20,8 @@ export function getDummyTsLs(
 		const host: ts2.LanguageServiceHost = {
 			getPreferences,
 			getFormatOptions,
-			getCompilationSettings: () => ({}),
-			getScriptFileNames: () => [shared.normalizeFileName(`dummy.${dummyTsScriptVersion}.ts`)],
+			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),
+			getScriptFileNames: () => [shared.normalizeFileName(dummyTsScriptFile)],
 			getScriptVersion: () => dummyTsScriptVersion.toString(),
 			getScriptSnapshot: () => dummyTsScript,
 			getScriptKind: () => dummyTsScriptKind,
@@ -33,6 +34,7 @@ export function getDummyTsLs(
 			ts.createLanguageService(host),
 		);
 	}
+	dummyTsScriptFile = `dummy.${dummyTsScriptVersion}.${shared.languageIdToSyntax(doc.languageId)}`;
 	dummyTsScriptVersion++;
 	switch (doc.languageId) {
 		case 'javascript': dummyTsScriptKind = ts.ScriptKind.JS; break;
@@ -44,6 +46,6 @@ export function getDummyTsLs(
 	dummyTsScript = ts.ScriptSnapshot.fromString(doc.getText());
 	return {
 		ls: dummyTsLs,
-		uri: shared.fsPathToUri(`dummy.${dummyTsScriptVersion}.ts`),
+		uri: shared.fsPathToUri(dummyTsScriptFile),
 	};
 }
