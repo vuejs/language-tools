@@ -38,25 +38,13 @@ export async function activate(context: vscode.ExtensionContext) {
 		})();
 	}
 
-	const apiDocumentSelector: lsp.DocumentSelector = [
-		{ scheme: 'file', language: 'vue' },
-		{ scheme: 'file', language: 'javascript' },
-		{ scheme: 'file', language: 'typescript' },
-		{ scheme: 'file', language: 'javascriptreact' },
-		{ scheme: 'file', language: 'typescriptreact' },
-		{ scheme: 'file', language: 'json' },
-	];
-	const htmlDocumentSelector: lsp.DocumentSelector = [
-		{ language: 'vue' },
-	];
-
 	apiClient = createLanguageService(
 		context,
 		'api',
 		'volar-api',
 		'Volar - API',
 		6009,
-		apiDocumentSelector,
+		[{ scheme: 'file', language: 'vue' }],
 	);
 	docClient = !lowPowerMode ? createLanguageService(
 		context,
@@ -64,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		'volar-document',
 		'Volar - Document',
 		6010,
-		apiDocumentSelector,
+		[{ scheme: 'file', language: 'vue' }],
 	) : undefined;
 	htmlClient = createLanguageService(
 		context,
@@ -72,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		'volar-html',
 		'Volar - HTML',
 		6011,
-		htmlDocumentSelector,
+		[{ language: 'vue' }],
 	);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);

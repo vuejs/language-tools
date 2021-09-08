@@ -85,13 +85,12 @@ export function createProjects(
 
 					if (req === workspaceFilesUpdateReq) {
 
-						const changes = [...updatedWorkspaceFiles].map(fileName => ({
-							fileName,
-							fileExist: ts.sys.fileExists(fileName),
-						}));
+						const changes = [...updatedWorkspaceFiles].filter(fileName => ts.sys.fileExists(fileName));
 
-						for (const [_, service] of [...projects, ...inferredProjects]) {
-							service.onWorkspaceFilesChanged(changes);
+						if (changes.length) {
+							for (const [_, service] of [...projects, ...inferredProjects]) {
+								service.onWorkspaceFilesChanged(changes);
+							}
 						}
 					}
 				}
@@ -243,7 +242,6 @@ export function createProjects(
 			projects.set(tsConfig, createProject(
 				ts,
 				options,
-				rootPaths,
 				upath.dirname(tsConfig),
 				tsConfig,
 				tsLocalized,
@@ -274,7 +272,6 @@ export function createProjects(
 			inferredProjects.set(inferredTsConfig, createProject(
 				ts,
 				options,
-				rootPaths,
 				upath.dirname(inferredTsConfig),
 				inferredCompilerOptions,
 				tsLocalized,

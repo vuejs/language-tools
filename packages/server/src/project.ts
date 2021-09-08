@@ -15,7 +15,6 @@ export const renameFileContentCache = new Map<string, string>();
 export function createProject(
 	ts: vue.Modules['typescript'],
 	options: shared.ServerInitializationOptions,
-	workspaces: string[],
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -35,12 +34,12 @@ export function createProject(
 	const scripts = new shared.FsPathMap<{
 		version: number,
 		fileName: string,
-		fileWatcher: ts.FileWatcher | undefined,
+		fileWatcher: ts.FileWatcher,
 	}>();
 	const extraScripts = new shared.FsPathMap<{
 		version: number,
 		fileName: string,
-		fileWatcher: ts.FileWatcher | undefined,
+		fileWatcher: ts.FileWatcher,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
 	const disposables: vscode.Disposable[] = [];
@@ -56,14 +55,6 @@ export function createProject(
 		dispose,
 	};
 
-	function isWorkspacesFile(fileName: string) {
-		for (const workspace of workspaces) {
-			if (shared.isFileInDir(fileName, workspace)) {
-				return true;
-			}
-		}
-		return false;
-	}
 	function getLanguageService() {
 		if (!vueLs) {
 			let numOfFeatures = 0;
@@ -89,39 +80,26 @@ export function createProject(
 		}
 		return vueLs;
 	}
-	function onWorkspaceFilesChanged(changes: { fileName: string, fileExist: boolean }[]) {
+	function onWorkspaceFilesChanged(changes: string[]) {
 
-		let hasDeleteFile = false;
 		const newFiles: string[] = [];
 
 		for (const change of changes) {
 
-			const fileName = shared.normalizeFileName(change.fileName);
+			const fileName = shared.normalizeFileName(change);
 
-			if (scripts.has(fileName)) {
-				onDriveFileUpdated(fileName, change.fileExist ? ts.FileWatcherEventKind.Changed : ts.FileWatcherEventKind.Deleted);
-				if (!change.fileExist) {
-					hasDeleteFile = true;
-				}
-			}
-			else if (extraScripts.has(fileName)) {
-				onExtraFileUpdated(fileName, change.fileExist ? ts.FileWatcherEventKind.Changed : ts.FileWatcherEventKind.Deleted);
-				if (!change.fileExist) {
-					hasDeleteFile = true;
-				}
-			}
-			else if (change.fileExist && shared.isFileInDir(fileName, rootPath)) {
+			if (!scripts.has(fileName) && !extraScripts.has(fileName) && shared.isFileInDir(fileName, rootPath)) {
 				newFiles.push(fileName);
 			}
 		}
 
-		if (hasDeleteFile || newFiles.length) {
+		if (newFiles.length) {
 			parsedCommandLine = createParsedCommandLine();
 		}
 
 		for (const fileName of newFiles) {
 			if (parsedCommandLine.fileNames.includes(fileName)) {
-				const fileWatcher = !isWorkspacesFile(fileName) ? ts.sys.watchFile!(fileName, onDriveFileUpdated) : undefined;
+				const fileWatcher = ts.sys.watchFile!(fileName, onDriveFileUpdated);
 				scripts.set(fileName, {
 					fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
@@ -158,7 +136,7 @@ export function createProject(
 		}
 		for (const fileName of parsedCommandLine.fileNames) {
 			if (!scripts.has(fileName)) {
-				const fileWatcher = !isWorkspacesFile(fileName) ? ts.sys.watchFile!(fileName, onDriveFileUpdated) : undefined;
+				const fileWatcher = ts.sys.watchFile!(fileName, onDriveFileUpdated);
 				scripts.set(fileName, {
 					fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
@@ -301,7 +279,7 @@ export function createProject(
 				&& !scripts.has(fileName)
 				&& !extraScripts.has(fileName)
 			) {
-				const fileWatcher = !isWorkspacesFile(fileName) ? ts.sys.watchFile!(fileName, onExtraFileUpdated) : undefined;
+				const fileWatcher = ts.sys.watchFile!(fileName, onExtraFileUpdated);
 				extraScripts.set(fileName, {
 					fileName: fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
