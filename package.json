@@ -135,6 +135,11 @@
 					"default": true,
 					"description": "Auto-complete Ref value with `.value`."
 				},
+				"volar.takeOverBuiltinTsExtension": {
+					"type": "boolean",
+					"default": true,
+					"description": "If built-in VSCode TypeScript Extension disabled, take over language support for *.ts."
+				},
 				"volar.tsPlugin": {
 					"type": "boolean",
 					"enum": [
@@ -152,7 +157,7 @@
 				},
 				"volar.tsPluginStatus": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Display TS Server Plugin status bar item."
 				},
 				"volar.checkVueTscVersion": {

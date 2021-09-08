@@ -28,15 +28,49 @@ let lowPowerMode = false;
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	lowPowerMode = isLowPowerMode();
+	lowPowerMode = lowPowerModeEnabled();
 	if (lowPowerMode) {
-		(async () => {
-			const disable = await vscode.window.showInformationMessage('Low Power Mode Enabled.', 'Disable');
-			if (disable !== undefined) {
-				vscode.commands.executeCommand('workbench.action.openSettings', 'volar.lowPowerMode');
-			}
-		})();
+		vscode.window
+			.showInformationMessage('Low Power Mode Enabled.', 'Disable')
+			.then(option => {
+				if (option !== undefined) {
+					vscode.commands.executeCommand('workbench.action.openSettings', 'volar.lowPowerMode');
+				}
+			});
 	}
+
+	const takeOverMode = takeOverModeEnabled();
+	if (takeOverMode) {
+		vscode.window
+			.showInformationMessage('Take Over Mode enabled.', 'What is Take Over Mode?')
+			.then(option => {
+				if (option !== undefined) {
+					vscode.env.openExternal(vscode.Uri.parse('https://github.com/johnsoncodehk/volar/discussions/471'));
+				}
+			});
+	}
+
+	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
+		[
+			{ scheme: 'file', language: 'vue' },
+			{ scheme: 'file', language: 'javascript' },
+			{ scheme: 'file', language: 'typescript' },
+			{ scheme: 'file', language: 'javascriptreact' },
+			{ scheme: 'file', language: 'typescriptreact' },
+			{ scheme: 'file', language: 'json' },
+		] : [
+			{ scheme: 'file', language: 'vue' },
+		];
+	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
+		[
+			{ language: 'vue' },
+			{ language: 'javascript' },
+			{ language: 'typescript' },
+			{ language: 'javascriptreact' },
+			{ language: 'typescriptreact' },
+		] : [
+			{ language: 'vue' },
+		];
 
 	apiClient = createLanguageService(
 		context,
@@ -44,7 +78,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		'volar-api',
 		'Volar - API',
 		6009,
-		[{ scheme: 'file', language: 'vue' }],
+		languageFeaturesDocumentSelector,
 	);
 	docClient = !lowPowerMode ? createLanguageService(
 		context,
@@ -52,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		'volar-document',
 		'Volar - Document',
 		6010,
-		[{ scheme: 'file', language: 'vue' }],
+		languageFeaturesDocumentSelector,
 	) : undefined;
 	htmlClient = createLanguageService(
 		context,
@@ -60,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		'volar-html',
 		'Volar - HTML',
 		6011,
-		[{ language: 'vue' }],
+		documentFeaturesDocumentSelector,
 	);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
@@ -85,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function registarLowPowerModeChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
-			const nowIsLowPowerMode = isLowPowerMode();
+			const nowIsLowPowerMode = lowPowerModeEnabled();
 			if (lowPowerMode !== nowIsLowPowerMode) {
 				const reload = await vscode.window.showInformationMessage('Please reload VSCode to switch low power mode.', 'Reload Window');
 				if (reload === undefined) return; // cancel
@@ -133,7 +167,11 @@ export function deactivate(): Thenable<any> | undefined {
 	].filter(shared.notEmpty));
 }
 
-function isLowPowerMode() {
+export function takeOverModeEnabled() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('takeOverBuiltinTsExtension') && !vscode.extensions.getExtension('vscode.typescript-language-features');
+}
+
+function lowPowerModeEnabled() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('lowPowerMode');
 }
 

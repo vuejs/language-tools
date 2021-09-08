@@ -65,8 +65,8 @@ export type LanguageServiceContextBase = {
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {
-	getHtmlDocument(document: TextDocument): HTMLDocument;
-	getVueDocument(document: TextDocument): SourceFile;
+	getHtmlDocument(document: TextDocument): HTMLDocument | undefined;
+	getVueDocument(document: TextDocument): SourceFile | undefined;
 }
 export type ApiLanguageServiceContext = LanguageServiceContextBase & {
 	sourceFiles: SourceFiles;

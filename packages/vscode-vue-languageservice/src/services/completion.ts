@@ -113,26 +113,25 @@ export function register(
 		}>,
 	) => {
 		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile) return;
 
 		if (context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
 			if (cache.tsResult?.isIncomplete) {
 				cache.tsResult = await getTsResult();
 			}
 			if (cache.emmetResult?.isIncomplete) {
-				cache.emmetResult = await getEmmetResult(sourceFile);
+				cache.emmetResult = sourceFile ? await getEmmetResult(sourceFile) : undefined;
 			}
 			if (cache.cssResult?.isIncomplete) {
-				cache.cssResult = await getCssResult(sourceFile);
+				cache.cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
 			}
 			if (cache.jsonResult?.isIncomplete) {
-				cache.jsonResult = await getJsonResult(sourceFile);
+				cache.jsonResult = sourceFile ? await getJsonResult(sourceFile) : undefined;
 			}
 			if (cache.htmlResult?.isIncomplete) {
-				cache.htmlResult = await getHtmlResult(sourceFile);
+				cache.htmlResult = sourceFile ? await getHtmlResult(sourceFile) : undefined;
 			}
 			if (cache.vueResult?.isIncomplete) {
-				cache.vueResult = await getVueResult(sourceFile);
+				cache.vueResult = sourceFile ? await getVueResult(sourceFile) : undefined;
 			}
 			const lists = [
 				cache.tsResult,
@@ -144,26 +143,26 @@ export function register(
 			return combineResults(...lists.filter(shared.notEmpty));
 		}
 
-		const emmetResult = await getEmmetResult(sourceFile);
+		const emmetResult = sourceFile ? await getEmmetResult(sourceFile) : undefined;
 
 		const tsResult = await getTsResult();
 		cache = { uri, tsResult, emmetResult };
 		if (tsResult) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
 
 		// precede html for support inline css service
-		const cssResult = await getCssResult(sourceFile);
+		const cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
 		cache = { uri, cssResult, emmetResult };
 		if (cssResult) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
 
-		const jsonResult = await getJsonResult(sourceFile);
+		const jsonResult = sourceFile ? await getJsonResult(sourceFile) : undefined;
 		cache = { uri, jsonResult, emmetResult };
 		if (jsonResult) return emmetResult ? combineResults(jsonResult, emmetResult) : jsonResult;
 
-		const htmlResult = await getHtmlResult(sourceFile);
+		const htmlResult = sourceFile ? await getHtmlResult(sourceFile) : undefined;
 		cache = { uri, htmlResult, emmetResult };
 		if (htmlResult) return emmetResult ? combineResults(htmlResult, emmetResult) : htmlResult;
 
-		const vueResult = await getVueResult(sourceFile);
+		const vueResult = sourceFile ? await getVueResult(sourceFile) : undefined;
 		cache = { uri, vueResult, emmetResult };
 		if (vueResult) return emmetResult ? combineResults(vueResult, emmetResult) : vueResult;
 
@@ -184,6 +183,9 @@ export function register(
 			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
 				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
+					continue;
+
+				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;
 
 				if (!result) {

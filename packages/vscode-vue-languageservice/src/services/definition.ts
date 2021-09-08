@@ -39,6 +39,9 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.definitions)
 				continue;
 
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
 			const loopChecker = dedupe.createLocationSet();
 			const tsLs = getTsLs(tsLoc.lsType);
 			let tsResult: (vscode.LocationLink & { originalUri: string, isOriginal: boolean })[] = [];

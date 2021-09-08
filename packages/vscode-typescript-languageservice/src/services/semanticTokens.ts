@@ -15,14 +15,14 @@ export function getSemanticTokenLegend() {
 }
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string, range: vscode.Range, cancle?: vscode.CancellationToken) => {
+	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken) => {
 
 		const document = getTextDocument(uri);
 		if (!document) return;
 
 		const file = shared.uriToFsPath(uri);
-		const start = document.offsetAt(range.start);
-		const length = document.offsetAt(range.end) - start;
+		const start = range ? document.offsetAt(range.start) : 0;
+		const length = range ? (document.offsetAt(range.end) - start) : document.getText().length;
 
 		if (cancle?.isCancellationRequested) return;
 		const response1 = languageService.getEncodedSemanticClassifications(file, { start, length });

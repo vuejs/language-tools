@@ -7,9 +7,10 @@ import * as completion from './completion';
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
-) {
-	const worker = completion.register(languageService, getTextDocument, host);
+	host: LanguageServiceHost,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	) {
+	const worker = completion.register(languageService, getTextDocument, ts);
 	return async (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions) => {
 
 		const document = getTextDocument(uri);

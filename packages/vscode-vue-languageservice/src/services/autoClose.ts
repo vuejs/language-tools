@@ -4,6 +4,9 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register({ getHtmlDocument, htmlLs }: HtmlLanguageServiceContext) {
 	return (document: TextDocument, position: vscode.Position): string | undefined | null => {
-		return htmlLs.doTagComplete(document, position, getHtmlDocument(document));
+		const htmlDoc = getHtmlDocument(document);
+		if (htmlDoc) {
+			return htmlLs.doTagComplete(document, position, htmlDoc);
+		}
 	}
 }

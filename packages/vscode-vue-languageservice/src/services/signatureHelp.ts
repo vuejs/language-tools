@@ -9,8 +9,13 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 		function getTsResult() {
 			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+
 				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
 					continue;
+
+				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+					continue;
+
 				const result = getTsLs(tsLoc.lsType).getSignatureHelp(tsLoc.uri, tsLoc.range.start, context);
 				if (result) {
 					return result;

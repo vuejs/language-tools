@@ -19,6 +19,9 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
 				continue;
 
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
 			const tsLs = getTsLs(tsLoc.lsType);
 			const tsDoc = tsLs.__internal__.getTextDocument(tsLoc.uri);
 			if (!tsDoc)

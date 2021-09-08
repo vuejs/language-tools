@@ -1,30 +1,36 @@
 import * as shared from '@volar/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 
 // Fast dummy TS language service, only has one script.
-let dummyTsScriptVersion = 0;
-let dummyTsScriptFile = `dummy.${dummyTsScriptVersion}.ts`;
-let dummyTsScriptKind = 3;
-let dummyTsScript: ts.IScriptSnapshot | undefined;
+let dummyProjectVersion = 0;
 let dummyTsLs: ts2.LanguageService | undefined;
+let doc: TextDocument;
 export function getDummyTsLs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ts2: typeof import('vscode-typescript-languageservice'),
-	doc: TextDocument,
+	_doc: TextDocument,
 	getPreferences: ts2.LanguageServiceHost['getPreferences'],
 	getFormatOptions: ts2.LanguageServiceHost['getFormatOptions'],
 ) {
 	if (!dummyTsLs) {
 		const host: ts2.LanguageServiceHost = {
+			getProjectVersion: () => dummyProjectVersion.toString(),
 			getPreferences,
 			getFormatOptions,
 			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),
-			getScriptFileNames: () => [shared.normalizeFileName(dummyTsScriptFile)],
-			getScriptVersion: () => dummyTsScriptVersion.toString(),
-			getScriptSnapshot: () => dummyTsScript,
-			getScriptKind: () => dummyTsScriptKind,
+			getScriptFileNames: () => [shared.uriToFsPath(doc.uri)],
+			getScriptVersion: () => doc.version.toString(),
+			getScriptSnapshot: () => ts.ScriptSnapshot.fromString(doc.getText()),
+			getScriptKind: () => {
+				switch (doc.languageId) {
+					case 'javascript': return ts.ScriptKind.JS;
+					case 'typescript': return ts.ScriptKind.TS;
+					case 'javascriptreact': return ts.ScriptKind.JSX;
+					case 'typescriptreact': return ts.ScriptKind.TSX;
+					default: return ts.ScriptKind.TS;
+				}
+			},
 			getCurrentDirectory: () => '',
 			getDefaultLibFileName: () => '',
 		};
@@ -34,18 +40,7 @@ export function getDummyTsLs(
 			ts.createLanguageService(host),
 		);
 	}
-	dummyTsScriptFile = `dummy.${dummyTsScriptVersion}.${shared.languageIdToSyntax(doc.languageId)}`;
-	dummyTsScriptVersion++;
-	switch (doc.languageId) {
-		case 'javascript': dummyTsScriptKind = ts.ScriptKind.JS; break;
-		case 'typescript': dummyTsScriptKind = ts.ScriptKind.TS; break;
-		case 'javascriptreact': dummyTsScriptKind = ts.ScriptKind.JSX; break;
-		case 'typescriptreact': dummyTsScriptKind = ts.ScriptKind.TSX; break;
-		default: dummyTsScriptKind = ts.ScriptKind.TS; break;
-	}
-	dummyTsScript = ts.ScriptSnapshot.fromString(doc.getText());
-	return {
-		ls: dummyTsLs,
-		uri: shared.fsPathToUri(dummyTsScriptFile),
-	};
+	dummyProjectVersion++;
+	doc = _doc;
+	return dummyTsLs;
 }

@@ -8,53 +8,55 @@ import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 
-export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost }: ApiLanguageServiceContext) {
+export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost, scriptTsLs }: ApiLanguageServiceContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
 		const data: CompletionData | undefined = item.data;
 		if (!data) return item;
 
 		const sourceFile = sourceFiles.get(data.uri);
-		if (!sourceFile) return item;
 
 		if (data.mode === 'ts') {
-			return await getTsResult(sourceFile, item, data);
+			return await getTsResult(data);
 		}
 		if (data.mode === 'html') {
-			return await getHtmlResult(sourceFile, item, data);
+			return await getHtmlResult(item, data);
 		}
-		if (data.mode === 'autoImport') {
+		if (data.mode === 'autoImport' && sourceFile) {
 			return getAutoImportResult(sourceFile, item, data);
 		}
 
 		return item;
 
-		async function getTsResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: TsCompletionData) {
+		async function getTsResult(data: TsCompletionData) {
+
 			const sourceMap = sourceFiles.getTsSourceMaps(data.lsType).get(data.docUri);
-			if (sourceMap) {
-				let newPosition_2: vscode.Position | undefined;
-				if (newPosition) {
-					for (const tsRange of sourceMap.getMappedRanges(newPosition)) {
-						if (!tsRange.data.capabilities.completion) continue;
-						newPosition_2 = tsRange.start;
-						break;
-					}
-				}
-				data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
-				const newVueItem = transformCompletionItem(
-					data.tsItem,
-					tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
-				);
-				newVueItem.data = data;
-				// TODO: this is a patch for import ts file icon
-				if (newVueItem.detail !== data.tsItem.detail + '.ts') {
-					newVueItem.detail = data.tsItem.detail;
-				}
-				return newVueItem;
+			if (!sourceMap) {
+				// take over mode
+				return await scriptTsLs.doCompletionResolve(data.tsItem, newPosition);
 			}
-			return vueItem;
+
+			let newPosition_2: vscode.Position | undefined;
+			if (newPosition) {
+				for (const tsRange of sourceMap.getMappedRanges(newPosition)) {
+					if (!tsRange.data.capabilities.completion) continue;
+					newPosition_2 = tsRange.start;
+					break;
+				}
+			}
+			data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
+			const newVueItem = transformCompletionItem(
+				data.tsItem,
+				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
+			);
+			newVueItem.data = data;
+			// TODO: this is a patch for import ts file icon
+			if (newVueItem.detail !== data.tsItem.detail + '.ts') {
+				newVueItem.detail = data.tsItem.detail;
+			}
+			return newVueItem;
 		}
-		async function getHtmlResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: HtmlCompletionData) {
+		async function getHtmlResult(vueItem: vscode.CompletionItem, data: HtmlCompletionData) {
 			let tsItem: vscode.CompletionItem | undefined = data.tsItem;
 			if (!tsItem) return vueItem;
 
@@ -82,7 +84,6 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			return vueItem;
 		}
 		function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
-
 
 			const importFile = shared.uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);

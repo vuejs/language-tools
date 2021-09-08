@@ -10,6 +10,9 @@ export function register(context: HtmlLanguageServiceContext) {
 	return (document: TextDocument, color: vscode.Color, range: vscode.Range) => {
 
 		const sourceFile = context.getVueDocument(document);
+		if (!sourceFile)
+			return;
+
 		const cssResult = getCssResult(sourceFile);
 
 		return cssResult;

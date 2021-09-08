@@ -159,7 +159,7 @@ export function createProjects(
 			return;
 
 		const changeDocs = [...updatedUris].map(uri => documents.get(uri)).filter(shared.notEmpty);
-		const otherDocs = documents.all().filter(doc => doc.languageId === 'vue' && !updatedUris.has(doc.uri));
+		const otherDocs = documents.all().filter(doc => !updatedUris.has(doc.uri));
 
 		for (const changeDoc of changeDocs) {
 
@@ -298,9 +298,7 @@ export function createProjects(
 	}
 	function clearDiagnostics() {
 		for (const doc of documents.all()) {
-			if (doc.languageId === 'vue') {
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
-			}
+			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 		}
 	}
 	function get(uri: string) {

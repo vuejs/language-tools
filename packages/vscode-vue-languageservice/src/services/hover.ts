@@ -38,6 +38,9 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
 				continue;
 
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
 			const tsLs = getTsLs(tsLoc.lsType);
 			const tsHover = tsLs.doHover(
 				tsLoc.uri,

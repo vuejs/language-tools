@@ -50,7 +50,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getValidTextDocument),
-		doComplete: completions2.register(languageService, getValidTextDocument, host),
+		doComplete: completions2.register(languageService, getValidTextDocument, host, ts),
 		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, host),
 		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getValidTextDocument, host),
@@ -68,7 +68,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 			raw: languageService,
 			getTextDocument,
 			getValidTextDocument,
-			doCompleteSync: completions.register(languageService, getValidTextDocument, host),
+			doCompleteSync: completions.register(languageService, getValidTextDocument, ts),
 		},
 	};
 

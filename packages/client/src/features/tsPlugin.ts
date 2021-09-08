@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'upath';
 import * as fs from 'fs';
 import { userPick } from './splitEditors';
+import { takeOverModeEnabled } from '../extension';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -37,14 +38,18 @@ export async function activate(context: vscode.ExtensionContext) {
 	async function updateTsPlugin() {
 		const shouldTsPluginEnabled = getTsPluginConfig();
 		const _isTsPluginEnabled = isTsPluginEnabled();
-		if (shouldTsPluginEnabled !== null && shouldTsPluginEnabled !== _isTsPluginEnabled) {
+		if (shouldTsPluginEnabled !== null && shouldTsPluginEnabled !== _isTsPluginEnabled && !takeOverModeEnabled()) {
 			const msg = shouldTsPluginEnabled
 				? `Workspace required TS plugin but currently disabled, do you want to turn it on?`
 				: `Workspace unrequired TS plugin but currently enabled, do you want to turn it off?`;
 			const btnText = shouldTsPluginEnabled ? 'Enable TS Plugin' : 'Disable TS Plugin';
-			const toggle = await vscode.window.showInformationMessage(msg, btnText);
+			const takeOverMode = 'What is Take Over Mode?';
+			const toggle = await vscode.window.showInformationMessage(msg, btnText, takeOverMode);
 			if (toggle === btnText) {
 				toggleTsPlugin();
+			}
+			else if (toggle === takeOverMode) {
+				vscode.env.openExternal(vscode.Uri.parse('https://github.com/johnsoncodehk/volar/discussions/471'));
 			}
 		}
 	}

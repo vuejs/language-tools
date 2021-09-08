@@ -3,8 +3,6 @@ import * as PConst from '../protocol.const';
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import * as path from 'upath';
-import type { LanguageServiceHost } from '../';
 
 export interface Data {
 	uri: string,
@@ -18,7 +16,7 @@ export interface Data {
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	return (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): vscode.CompletionItem[] => {
 
@@ -57,7 +55,7 @@ export function register(
 				let item: vscode.CompletionItem = {
 					label: entry.name,
 					labelDetails: {
-						description: entry.source && path.isAbsolute(entry.source) ? path.relative(host.getCurrentDirectory(), entry.source) : entry.source /* TS don't display source if source not a path */,
+						description: ts.displayPartsToString(entry.sourceDisplay),
 					},
 					kind: convertKind(entry.kind),
 					sortText: entry.sortText,
@@ -73,6 +71,7 @@ export function register(
 
 				return item;
 			});
+
 		return entries;
 
 		// from vscode typescript

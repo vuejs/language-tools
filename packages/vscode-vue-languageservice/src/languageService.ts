@@ -90,6 +90,10 @@ export function getDocumentLanguageService(
 		getColorPresentations: colorPresentations.register(context),
 	}
 	function getVueDocument(document: TextDocument) {
+
+		if (document.languageId !== 'vue')
+			return;
+
 		const cacheVueDoc = vueDocuments.get(document);
 		if (cacheVueDoc) {
 
@@ -107,6 +111,10 @@ export function getDocumentLanguageService(
 		return vueDoc;
 	}
 	function getHtmlDocument(document: TextDocument) {
+
+		if (document.languageId !== 'vue')
+			return;
+
 		const cache = htmlDocuments.get(document);
 		if (cache) {
 			const [cacheVersion, cacheHtmlDoc] = cache;
@@ -432,14 +440,16 @@ export function createLanguageService(
 				scriptContentVersion++;
 				scriptProjectVersion++;
 				templateProjectVersion++;
-				updates.length = 0;
-				for (const fileName of oldFiles) {
-					if (newFiles.has(fileName)) {
-						if (fileName.endsWith('.vue')) {
-							updates.push(fileName);
-						}
-					}
-				}
+				// TODO: template global properties can't update by .d.ts definition
+				// wait for https://github.com/johnsoncodehk/volar/issues/455
+				// updates.length = 0;
+				// for (const fileName of oldFiles) {
+				// 	if (newFiles.has(fileName)) {
+				// 		if (fileName.endsWith('.vue')) {
+				// 			updates.push(fileName);
+				// 		}
+				// 	}
+				// }
 			}
 
 			const finalUpdates = adds.concat(updates);

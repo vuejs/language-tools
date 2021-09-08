@@ -4,13 +4,13 @@ import type { ApiLanguageServiceContext } from '../types';
 
 export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
 	return (uri: string, position: vscode.Position) => {
-		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile) return;
 
-		const htmlResult = getHtmlResult(sourceFile);
+		const sourceFile = sourceFiles.get(uri);
+
+		const htmlResult = sourceFile ? getHtmlResult(sourceFile) : [];
 		if (htmlResult.length) return htmlResult;
 
-		const cssResult = getCssResult(sourceFile);
+		const cssResult = sourceFile ? getCssResult(sourceFile) : [];
 		if (cssResult.length) return cssResult;
 
 		const tsResult = getTsResult();
@@ -21,6 +21,9 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
 
 				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
+					continue;
+
+				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;
 
 				const highlights = getTsLs(tsLoc.lsType).findDocumentHighlights(tsLoc.uri, tsLoc.range.start);

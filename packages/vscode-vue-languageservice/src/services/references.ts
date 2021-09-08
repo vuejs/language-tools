@@ -25,6 +25,9 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
 				continue;
 
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
 			const loopChecker = dedupe.createLocationSet();
 			const tsLs = getTsLs(tsLoc.lsType);
 			let tsResult: vscode.Location[] = [];
@@ -37,7 +40,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					if (vueLoc.type === 'embedded-ts' && !vueLoc.range.data.capabilities.references)
 						continue;
 
-					if (vueLoc.type === 'source-ts' && tsLoc.lsType === 'template')
+					if (vueLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 						continue;
 
 					vueResult.push({

@@ -36,6 +36,9 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.codeActions)
 				continue;
 
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
 			let tsCodeActions = await tsLs.getCodeActions(tsLoc.uri, tsLoc.range, tsContext);
 			if (!tsCodeActions)
 				continue;

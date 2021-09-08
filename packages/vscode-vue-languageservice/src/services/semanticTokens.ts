@@ -21,7 +21,7 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html } }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modules: { html } }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
@@ -29,7 +29,11 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, modules: { html 
 	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
 
 		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile) return;
+		if (!sourceFile) {
+			// take over mode
+			const tokens = scriptTsLs.getDocumentSemanticTokens(uri, range, cancle);
+			return buildTokens(tokens ?? []);
+		}
 
 		const document = sourceFile.getTextDocument();
 		const offsetRange = range ?

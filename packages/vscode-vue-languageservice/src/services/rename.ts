@@ -93,25 +93,28 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 		let result: vscode.WorkspaceEdit | undefined;
 
 		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-			if (
-				tsLoc.type === 'source-ts'
-				|| tsLoc.range.data.capabilities.rename === true
-				|| (typeof tsLoc.range.data.capabilities.rename === 'object' && tsLoc.range.data.capabilities.rename.in)
-			) {
 
-				let newName_2 = newName;
-				if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
-					newName_2 = tsLoc.range.data.beforeRename(newName);
+			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.rename)
+				continue;
 
-				const tsResult = await doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
-				if (tsResult) {
-					const vueResult = tsEditToVueEdit(tsLoc.lsType, tsResult, sourceFiles, canRename);
-					if (vueResult) {
-						if (!result)
-							result = vueResult;
-						else
-							margeWorkspaceEdits(result, vueResult);
-					}
+			if (tsLoc.type === 'embedded-ts' && typeof tsLoc.range.data.capabilities.rename === 'object' && !tsLoc.range.data.capabilities.rename.in)
+				continue;
+
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
+			let newName_2 = newName;
+			if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
+				newName_2 = tsLoc.range.data.beforeRename(newName);
+
+			const tsResult = await doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
+			if (tsResult) {
+				const vueResult = tsEditToVueEdit(tsLoc.lsType, tsResult, sourceFiles, canRename);
+				if (vueResult) {
+					if (!result)
+						result = vueResult;
+					else
+						margeWorkspaceEdits(result, vueResult);
 				}
 			}
 		}

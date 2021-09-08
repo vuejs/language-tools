@@ -18,6 +18,12 @@ export function register(
 	return (document: TextDocument, positions: vscode.Position[]) => {
 
 		const sourceFile = context.getVueDocument(document);
+		if (!sourceFile) {
+			// take over mode
+			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
+			return dummyTsLs.getSelectionRanges(document.uri, positions);
+		}
+
 		// const vueResult = getVueResult(sourceFile); // TODO
 		const tsResult = getTsResult(sourceFile);
 		const htmlResult = getHtmlResult(sourceFile);
@@ -78,9 +84,9 @@ export function register(
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const tsStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
-				const tsSelectRange = dummyTs.ls.getSelectionRanges(dummyTs.uri, tsStarts);
+				const tsSelectRange = dummyTsLs.getSelectionRanges(sourceMap.mappedDocument.uri, tsStarts);
 				result = result.concat(transformSelectionRanges(tsSelectRange, range => sourceMap.getSourceRange(range.start, range.end)));
 			}
 			return result;

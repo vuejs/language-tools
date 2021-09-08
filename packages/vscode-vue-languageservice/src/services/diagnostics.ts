@@ -12,23 +12,127 @@ import { untrack } from '../utils/untrack';
 
 export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
-	const workers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
+	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
+	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
 
 	return async (uri: string, response: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile)
-			return;
+		if (sourceFile) {
 
-		let worker = workers.get(sourceFile);
-		if (!worker) {
-			worker = untrack(useDiagnostics(sourceFile));
-			workers.set(sourceFile, worker);
+			let worker = vueWorkers.get(sourceFile);
+			if (!worker) {
+				worker = untrack(useDiagnostics(sourceFile));
+				vueWorkers.set(sourceFile, worker);
+			}
+
+			return await worker(response, isCancel);
 		}
+		else {
 
-		return await worker(response, isCancel);
+			let worker = tsWorkers.get(uri);
+			if (!worker) {
+				worker = untrack(useDiagnostics_ts(uri));
+				tsWorkers.set(uri, worker);
+			}
+
+			return await worker(response, isCancel);
+		}
 	};
 
+	function useDiagnostics_ts(uri: string) {
+
+		const scriptTsProjectVersion = ref<string>();
+
+		let all: [ReturnType<typeof useScriptValidation>, number, vscode.Diagnostic[]][] = [
+			[useScriptValidation(1), 0, []],
+			[useScriptValidation(2), 0, []],
+			[useScriptValidation(3), 0, []],
+		];
+
+		return async (response: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+
+			scriptTsProjectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
+
+			// sort by cost
+			all = all.sort((a, b) => a[1] - b[1]);
+
+			let isDirty = false;
+			let lastResponse: vscode.Diagnostic[] | undefined;
+
+			for (let i = 0; i < all.length; i++) {
+				if (await isCancel?.()) return;
+				const startTime = Date.now();
+				const diag = all[i];
+				if (!isDirty) {
+					isDirty = isErrorsDirty(diag[2], await diag[0].result.value);
+				}
+				diag[2] = await diag[0].result.value;
+				diag[1] = Date.now() - startTime;
+				const _newErrors = all
+					.slice(0, i + 1)
+					.map(async diag => await diag[0].result.value)
+					.flat();
+				const newErrors = (await Promise.all(_newErrors))
+					.flat();
+				const _oldErrors = all
+					.slice(i + 1)
+					.map(async diag => diag[2])
+				const oldErrors = (await Promise.all(_oldErrors))
+					.flat();
+				const isLast = i === all.length - 1
+				if (await isCancel?.()) return;
+				if (isLast || isDirty) {
+					isDirty = false;
+					lastResponse = dedupe.withDiagnostics(newErrors.concat(oldErrors));
+					response(lastResponse);
+				}
+			}
+
+			return lastResponse;
+
+			function isErrorsDirty(oldErrors: vscode.Diagnostic[], newErrors: vscode.Diagnostic[]) {
+				return !shared.eqSet(errorsToKeys(oldErrors), errorsToKeys(newErrors));
+			}
+			function errorsToKeys(errors: vscode.Diagnostic[]) {
+				return new Set(errors.map(error =>
+					error.source
+					+ ':' + error.code
+					+ ':' + error.message
+				));
+			}
+		}
+
+		function useScriptValidation(mode: 1 | 2 | 3 | 4) {
+			const errors = computed(() => {
+				if (mode === 1) { // watching
+					scriptTsProjectVersion.value;
+				}
+				if (mode === 1) {
+					return scriptTsLs.doValidation(uri, { semantic: true });
+				}
+				else if (mode === 2) {
+					return scriptTsLs.doValidation(uri, { syntactic: true });
+				}
+				else if (mode === 3) {
+					return scriptTsLs.doValidation(uri, { suggestion: true });
+				}
+				else if (mode === 4) {
+					return scriptTsLs.doValidation(uri, { declaration: true });
+				}
+				return [];
+			});
+			const errors_cache = ref<vscode.Diagnostic[]>([]);
+			const result = computed(() => {
+				errors_cache.value = errors.value;
+				return errors_cache.value;
+			});
+			return {
+				result,
+				cache: errors_cache,
+			};
+		}
+	}
 	function useDiagnostics(sourceFile: SourceFile) {
 
 		const {

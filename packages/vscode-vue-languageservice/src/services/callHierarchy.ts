@@ -18,6 +18,9 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
 				continue;
 
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+				continue;
+
 			const items = worker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start);
 			for (const item of items) {
 				const data: Data = {
@@ -135,6 +138,9 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		for (const tsLoc of sourceFiles.toTsLocations(item.uri, item.range.start, item.range.end)) {
 
 			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
+				continue;
+
+			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
 
 			for (const tsSelectionLoc of sourceFiles.toTsLocations(item.uri, item.selectionRange.start, item.selectionRange.end)) {
