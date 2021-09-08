@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.17
+
+- 🎉 feat: take over mode ([#461](https://github.com/johnsoncodehk/volar/discussions/471))
+- feat: ts plugin status bar default hide
+- feat: improve accurate style variables support ([#463](https://github.com/johnsoncodehk/volar/issues/463))
+- fix: javascript format settings not working ([#466](https://github.com/johnsoncodehk/volar/issues/466))
+- fix: semantics token not working in *.ts ([#469](https://github.com/johnsoncodehk/volar/issues/469))
+- fix: fixed formatting result broken extreme case ([#470](https://github.com/johnsoncodehk/volar/issues/470))
+
 ## 0.27.16
 
 - feat: reuse `volar.tsPlugin`
