@@ -4,7 +4,8 @@ import { computed, Ref } from '@vue/reactivity';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcScript(
-	getUnreactiveDoc: () => TextDocument,
+	vueUri: string,
+	vueDoc: Ref<TextDocument>,
 	script: Ref<shared.Sfc['scriptSetup']>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
@@ -16,16 +17,14 @@ export function useSfcScript(
 	});
 	const textDocument = computed(() => {
 		if (script.value) {
-			const vueDoc = getUnreactiveDoc();
 			const lang = script.value.lang;
-			const uri = `${vueDoc.uri}.${lang}`;
+			const uri = `${vueUri}.${lang}`;
 			return TextDocument.create(uri, shared.syntaxToLanguageId(lang), version++, script.value.content);
 		}
 	});
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
-			const vueDoc = getUnreactiveDoc();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, 'template', false, {
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
 				foldingRanges: true,
 				formatting: true,
 				documentSymbol: false,

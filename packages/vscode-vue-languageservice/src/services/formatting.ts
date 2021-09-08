@@ -34,7 +34,7 @@ export function register(
 				...pugEdits,
 				...htmlEdits,
 			]));
-			sourceFile.update(newDocument); // TODO: high cost
+			sourceFile.update(newDocument.getText(), newDocument.version); // TODO: high cost
 		}
 
 		const tsEdits = await getTsFormattingEdits(sourceFile, options);
@@ -44,7 +44,7 @@ export function register(
 				...tsEdits,
 				...cssEdits,
 			]));
-			sourceFile.update(newDocument); // TODO: high cost
+			sourceFile.update(newDocument.getText(), newDocument.version); // TODO: high cost
 		}
 
 		const indentTextEdits = patchInterpolationIndent(sourceFile);

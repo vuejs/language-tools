@@ -6,7 +6,8 @@ import { SearchTexts } from '../utils/string';
 import * as shared from '@volar/shared';
 
 export function useSfcEntryForTemplateLs(
-	getUnreactiveDoc: () => TextDocument,
+	vueUri: string,
+	vueDoc: Ref<TextDocument>,
 	script: Ref<shared.Sfc['script']>,
 	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
 	template: Ref<shared.Sfc['template']>,
@@ -14,9 +15,8 @@ export function useSfcEntryForTemplateLs(
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
-		const vueDoc = getUnreactiveDoc();
-		const uri = `${vueDoc.uri}.ts`;
-		const vueFileName = upath.basename(shared.uriToFsPath(vueDoc.uri));
+		const uri = `${vueUri}.ts`;
+		const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
 		const tsScriptFileName = hasTsDoc.value ? '__VLS_script_ts' : '__VLS_script';
 		let content = '';
 		if (scriptSetup.value || script.value) {
@@ -66,9 +66,8 @@ export function useSfcEntryForTemplateLs(
 	});
 	const sourceMap = computed(() => {
 		if (textDocument.value) {
-			const vueDoc = getUnreactiveDoc();
 			const docText = textDocument.value.getText();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc, textDocument.value, 'template', false, {
+			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,

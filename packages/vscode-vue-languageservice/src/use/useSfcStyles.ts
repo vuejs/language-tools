@@ -10,13 +10,13 @@ import { parse as parseCssBinds } from '../parsers/cssBinds';
 
 export function useSfcStyles(
 	context: LanguageServiceContext,
-	getUnreactiveDoc: () => TextDocument,
+	vueUri: string,
+	vueDoc: Ref<TextDocument>,
 	styles: Ref<shared.Sfc['styles']>,
 ) {
 	const { modules: { typescript: ts } } = context;
 	let version = 0;
 	const textDocuments = computed(() => {
-		const vueDoc = getUnreactiveDoc();
 		const documents: {
 			textDocument: TextDocument,
 			stylesheet: css.Stylesheet | undefined,
@@ -32,7 +32,7 @@ export function useSfcStyles(
 			const style = styles.value[i];
 			const lang = style.lang;
 			let content = style.content;
-			const documentUri = vueDoc.uri + '.' + i + '.' + lang;
+			const documentUri = vueUri + '.' + i + '.' + lang;
 			const document = TextDocument.create(documentUri, lang, version++, content);
 			const linkStyles: {
 				textDocument: TextDocument,
@@ -80,7 +80,6 @@ export function useSfcStyles(
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const vueDoc = getUnreactiveDoc();
 		const sourceMaps: SourceMaps.CssSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
 
@@ -88,7 +87,7 @@ export function useSfcStyles(
 			const style = styles.value[i];
 
 			const sourceMap = new SourceMaps.CssSourceMap(
-				vueDoc,
+				vueDoc.value,
 				cssData.textDocument,
 				cssData.stylesheet,
 				style.module,

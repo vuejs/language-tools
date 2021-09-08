@@ -6,13 +6,13 @@ import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcJsons(
-	getUnreactiveDoc: () => TextDocument,
+	vueUri: string,
+	vueDoc: Ref<TextDocument>,
 	customBlocks: Ref<shared.Sfc['customBlocks']>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
-		const vueDoc = getUnreactiveDoc();
 		const documents: {
 			index: number,
 			textDocument: TextDocument,
@@ -22,7 +22,7 @@ export function useSfcJsons(
 			const customBlock = customBlocks.value[i];
 			const lang = customBlock.lang;
 			const content = customBlock.content;
-			const uri = vueDoc.uri + '.' + i + '.' + lang;
+			const uri = vueUri + '.' + i + '.' + lang;
 			const document = TextDocument.create(uri, lang, version++, content);
 			if (lang === 'json' || lang === 'jsonc') {
 				documents.push({
@@ -35,12 +35,11 @@ export function useSfcJsons(
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const vueDoc = getUnreactiveDoc();
 		const sourceMaps: SourceMaps.JsonSourceMap[] = [];
 		for (const doc of textDocuments.value) {
 			const customBlock = customBlocks.value[doc.index];
 			const sourceMap = new SourceMaps.JsonSourceMap(
-				vueDoc,
+				vueDoc.value,
 				doc.textDocument,
 				doc.jsonDocument,
 			);

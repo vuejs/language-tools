@@ -5,16 +5,16 @@ import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcTemplate(
-	getUnreactiveDoc: () => TextDocument,
+	vueUri: string,
+	vueDoc: Ref<TextDocument>,
 	template: Ref<shared.Sfc['template']>,
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
 		if (template.value) {
-			const vueDoc = getUnreactiveDoc();
 			const langId = shared.syntaxToLanguageId(template.value.lang);
-			const uri = vueDoc.uri + '.' + template.value.lang;
+			const uri = vueUri + '.' + template.value.lang;
 			const content = template.value.content;
 			const document = TextDocument.create(uri, langId, version++, content);
 			return document;
@@ -27,9 +27,8 @@ export function useSfcTemplate(
 	});
 	const htmlSourceMap = computed(() => {
 		if (textDocument.value && textDocument.value && template.value && htmlDocument.value) {
-			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.HtmlSourceMap(
-				vueDoc,
+				vueDoc.value,
 				textDocument.value,
 				htmlDocument.value,
 			);
@@ -55,9 +54,8 @@ export function useSfcTemplate(
 	});
 	const pugSourceMap = computed(() => {
 		if (textDocument.value && template.value && pugDocument.value) {
-			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.PugSourceMap(
-				vueDoc,
+				vueDoc.value,
 				textDocument.value,
 				pugDocument.value,
 			);

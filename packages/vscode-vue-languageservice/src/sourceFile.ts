@@ -19,13 +19,15 @@ import { untrack } from './utils/untrack';
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
 export function createSourceFile(
-	_document: TextDocument,
+	uri: string,
+	_content: string,
+	_version: number,
 	context: LanguageServiceContext,
 ) {
 
 	// refs
-	const content = ref(_document.getText());
-	const version = ref(_document.version);
+	const content = ref('');
+	const version = ref(-1);
 	const descriptor = reactive<shared.Sfc>({
 		template: null,
 		script: null,
@@ -49,13 +51,13 @@ export function createSourceFile(
 	});
 
 	// computeds
-	const document = computed(() => TextDocument.create(_document.uri, _document.languageId, version.value, content.value));
+	const document = computed(() => TextDocument.create(uri, 'vue', version.value, content.value));
 	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
 
 	// use
-	const sfcStyles = useSfcStyles(context, untrack(() => document.value), computed(() => descriptor.styles));
-	const sfcJsons = useSfcJsons(untrack(() => document.value), computed(() => descriptor.customBlocks), context);
-	const sfcTemplate = useSfcTemplate(untrack(() => document.value), computed(() => descriptor.template), context);
+	const sfcStyles = useSfcStyles(context, uri, document, computed(() => descriptor.styles));
+	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks), context);
+	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template), context);
 	const sfcTemplateData = computed<undefined | {
 		sourceLang: 'html' | 'pug',
 		html: string,
@@ -90,18 +92,21 @@ export function createSourceFile(
 		context.isVue2Mode,
 	);
 	const sfcScript = useSfcScript(
-		untrack(() => document.value),
+		uri,
+		document,
 		computed(() => descriptor.script),
 		context.modules.typescript,
 	);
 	const sfcScriptSetup = useSfcScript(
-		untrack(() => document.value),
+		uri,
+		document,
 		computed(() => descriptor.scriptSetup),
 		context.modules.typescript,
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
 		'template',
 		context.modules.typescript,
+		uri,
 		document,
 		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
@@ -112,6 +117,7 @@ export function createSourceFile(
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen('script',
 		context.modules.typescript,
+		uri,
 		document,
 		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
@@ -121,14 +127,16 @@ export function createSourceFile(
 		computed(() => sfcStyles.textDocuments.value),
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
-		untrack(() => document.value),
+		uri,
+		document,
 		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
 		computed(() => descriptor.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
-		untrack(() => document.value),
+		uri,
+		document,
 		computed(() => descriptor.template),
 		computed(() => descriptor.styles),
 		templateScriptData,
@@ -180,10 +188,10 @@ export function createSourceFile(
 		sfcScriptForTemplateLs.teleportSourceMap.value,
 	].filter(shared.notEmpty));
 
-	update(_document);
+	update(_content, _version);
 
 	return {
-		uri: _document.uri,
+		uri,
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
 		getTextDocument: untrack(() => document.value),
@@ -237,15 +245,15 @@ export function createSourceFile(
 		},
 	};
 
-	function update(newDocument: TextDocument) {
+	function update(newContent: string, newVersion: number) {
 
 		const scriptLang_1 = sfcScriptForScriptLs.textDocument.value.languageId;
 		const scriptText_1 = sfcScriptForScriptLs.textDocument.value.getText();
 		const templateScriptVersion_1 = sfcTemplateScript.textDocument.value?.version;
 
-		content.value = newDocument.getText();
-		version.value = newDocument.version;
-		const parsedSfc = shared.parseSfc(newDocument.getText(), vueHtmlDocument.value);
+		content.value = newContent;
+		version.value = newVersion;
+		const parsedSfc = shared.parseSfc(newContent, vueHtmlDocument.value);
 
 		updateTemplate(parsedSfc['template']);
 		updateScript(parsedSfc['script']);

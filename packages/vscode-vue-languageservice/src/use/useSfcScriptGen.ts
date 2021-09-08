@@ -10,6 +10,7 @@ import * as templateGen from '../generators/template_scriptSetup';
 export function useSfcScriptGen(
 	lsType: 'template' | 'script',
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	script: Ref<shared.Sfc['script']>,
 	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
@@ -20,7 +21,6 @@ export function useSfcScriptGen(
 ) {
 
 	let version = 0;
-	const uri = vueDoc.value.uri;
 
 	const scriptRanges = computed(() =>
 		scriptAst.value
@@ -40,7 +40,7 @@ export function useSfcScriptGen(
 	const codeGen = computed(() =>
 		genScript(
 			lsType,
-			uri,
+			vueUri,
 			script.value,
 			scriptSetup.value,
 			scriptRanges.value,
@@ -57,7 +57,7 @@ export function useSfcScriptGen(
 	});
 	const textDocument = computed(() => {
 		return TextDocument.create(
-			lsType === 'template' ? `${uri}.__VLS_script.${lang.value}` : `${uri}.${lang.value}`,
+			lsType === 'template' ? `${vueUri}.__VLS_script.${lang.value}` : `${vueUri}.${lang.value}`,
 			shared.syntaxToLanguageId(lang.value),
 			version++,
 			codeGen.value.getText(),
@@ -68,7 +68,7 @@ export function useSfcScriptGen(
 			if (lang.value === 'js' || lang.value === 'jsx') {
 				const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
 				return TextDocument.create(
-					`${uri}.__VLS_script_ts.${tsLang}`,
+					`${vueUri}.__VLS_script_ts.${tsLang}`,
 					shared.syntaxToLanguageId(tsLang),
 					textDocument.value.version,
 					textDocument.value.getText(),

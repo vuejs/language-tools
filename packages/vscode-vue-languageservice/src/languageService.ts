@@ -97,12 +97,12 @@ export function getDocumentLanguageService(
 			const newText = document.getText();
 
 			if (oldText.length !== newText.length || oldText !== newText) {
-				cacheVueDoc.update(document);
+				cacheVueDoc.update(document.getText(), document.version);
 			}
 
 			return cacheVueDoc;
 		}
-		const vueDoc = createSourceFile(document, context);
+		const vueDoc = createSourceFile(document.uri, document.getText(), document.version, context);
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;
 	}
@@ -604,11 +604,11 @@ export function createLanguageService(
 			const doc = getHostDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc, context));
+				sourceFiles.set(uri, createSourceFile(doc.uri, doc.getText(), doc.version, context));
 				vueScriptsUpdated = true;
 			}
 			else {
-				const updates = sourceFile.update(doc);
+				const updates = sourceFile.update(doc.getText(), doc.version);
 				if (updates.scriptContentUpdated) {
 					vueScriptContentsUpdate = true;
 				}

@@ -11,7 +11,8 @@ import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
 export function useSfcTemplateScript(
-	getUnreactiveDoc: () => TextDocument,
+	vueUri: string,
+	vueDoc: Ref<TextDocument>,
 	template: Ref<shared.Sfc['template']>,
 	styles: Ref<shared.Sfc['styles']>,
 	templateScriptData: ITemplateScriptData,
@@ -37,9 +38,7 @@ export function useSfcTemplateScript(
 	context: LanguageServiceContext,
 ) {
 	let version = 0;
-	const _vueDoc = getUnreactiveDoc();
-	const vueUri = _vueDoc.uri;
-	const vueFileName = upath.basename(shared.uriToFsPath(_vueDoc.uri));
+	const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
 	const cssModuleClasses = computed(() =>
 		styleDocuments.value.reduce((map, style) => {
 			if (style.module) {
@@ -274,9 +273,8 @@ export function useSfcTemplateScript(
 	});
 	const sourceMap = computed(() => {
 		if (textDoc.value) {
-			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.TsSourceMap(
-				vueDoc,
+				vueDoc.value,
 				textDoc.value,
 				'template',
 				true,
@@ -323,9 +321,8 @@ export function useSfcTemplateScript(
 	});
 	const formatSourceMap = computed(() => {
 		if (templateCodeGens.value && formatTextDoc.value && template.value) {
-			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.TsSourceMap(
-				vueDoc,
+				vueDoc.value,
 				formatTextDoc.value,
 				'template',
 				true,
@@ -355,9 +352,8 @@ export function useSfcTemplateScript(
 	});
 	const cssSourceMap = computed(() => {
 		if (templateCodeGens.value && cssTextDocument.value && template.value) {
-			const vueDoc = getUnreactiveDoc();
 			const sourceMap = new SourceMaps.CssSourceMap(
-				vueDoc,
+				vueDoc.value,
 				cssTextDocument.value.textDocument,
 				cssTextDocument.value.stylesheet,
 				undefined,
