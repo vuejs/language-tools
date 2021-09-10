@@ -79,7 +79,7 @@ declare global {
 	type __VLS_ExtractCompleteComponentProps<T> =
 		T extends new (...args: any) => { $props?: infer P1 } ? P1 & Omit<__VLS_GlobalAttrs, keyof P1> & Record<string, unknown>
 		: T extends FunctionalComponent<infer P2> ? P2 & JSX.IntrinsicAttributes & Record<string, unknown>
-		: T & Omit<__VLS_GlobalAttrs, T> & Record<string, unknown>
+		: T & Omit<__VLS_GlobalAttrs, keyof T> & Record<string, unknown>
 
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: __VLS_ExtractRawComponent<T[K]> };
 	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
