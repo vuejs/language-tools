@@ -23,8 +23,10 @@ const baz = 1;
 
 <style>
 .bar { color: v-bind(baz); }
+.bar { color: v-bind('baz'); }
 .bar { color: v-bind("baz"); }
 .bar { color: v-bind(baz + baz); }
+.bar { color: v-bind('baz + baz'); }
 .bar { color: v-bind("baz + baz"); }
 .bar { color: v-bind(); }
 </style>
