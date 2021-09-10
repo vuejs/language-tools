@@ -6,6 +6,7 @@ export function register(
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	legend: vscode.SemanticTokensLegend,
 	server: vscode.ServerCapabilities,
+	tsVersion: string,
 ) {
 	if (features.references) {
 		server.referencesProvider = true;
@@ -50,13 +51,9 @@ export function register(
 		};
 	}
 	if (features.completion) {
+		const triggerCharacters = vue.getTriggerCharacters(tsVersion);
 		server.completionProvider = {
-			triggerCharacters: [
-				...vue.triggerCharacter.typescript,
-				...vue.triggerCharacter.html,
-				...vue.triggerCharacter.css,
-				...vue.triggerCharacter.json,
-			],
+			triggerCharacters: Object.values(triggerCharacters).flat(),
 			resolveProvider: true,
 		};
 		server.executeCommandProvider = {

@@ -14,13 +14,30 @@ import { CompletionData } from '../types';
 import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
+import * as semver from 'semver';
 
-export const triggerCharacter = {
-	typescript: [".", "\"", "'", "`", "/", "@", "<", "#", " "],
-	html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
-	css: ['.', '@', '/'/* path completion */],
-	json: ['"', ':'],
-};
+export function getTriggerCharacters(tsVersion: string) {
+
+	const triggerCharacter = {
+		typescript: ['.', '\'', '\\', '`', '/', '<'],
+		html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
+		css: ['.', '@', '/'/* path completion */],
+		json: ['"', ':'],
+	};
+
+	// https://github.com/microsoft/vscode/blob/8e65ae28d5fb8b3c931135da1a41edb9c80ae46f/extensions/typescript-language-features/src/languageFeatures/completions.ts#L811-L833
+	if (semver.lt(tsVersion, '3.1.0') || semver.gte(tsVersion, '3.2.0')) {
+		triggerCharacter.typescript.push("@");
+	}
+	if (semver.gte(tsVersion, '3.8.1')) {
+		triggerCharacter.typescript.push("#");
+	}
+	if (semver.gte(tsVersion, '4.3.0')) {
+		triggerCharacter.typescript.push(" ");
+	}
+
+	return triggerCharacter;
+}
 export const wordPatterns: { [lang: string]: RegExp } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
 	less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
@@ -112,7 +129,9 @@ export function register(
 			attrNameCase: 'kebabCase' | 'camelCase',
 		}>,
 	) => {
+
 		const sourceFile = sourceFiles.get(uri);
+		const triggerCharacters = getTriggerCharacters(ts.version);
 
 		if (context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
 			if (cache.tsResult?.isIncomplete) {
@@ -177,7 +196,7 @@ export function register(
 		}
 		async function getTsResult() {
 			let result: vscode.CompletionList | undefined;
-			if (context?.triggerCharacter && !triggerCharacter.typescript.includes(context.triggerCharacter)) {
+			if (context?.triggerCharacter && !triggerCharacters.typescript.includes(context.triggerCharacter)) {
 				return result;
 			}
 			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
@@ -246,7 +265,7 @@ export function register(
 		}
 		async function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.CompletionList | undefined = undefined;
-			if (context?.triggerCharacter && !triggerCharacter.html.includes(context.triggerCharacter)) {
+			if (context?.triggerCharacter && !triggerCharacters.html.includes(context.triggerCharacter)) {
 				return;
 			}
 			let nameCases = {
@@ -502,7 +521,7 @@ export function register(
 		}
 		async function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.CompletionList | undefined = undefined;
-			if (context?.triggerCharacter && !triggerCharacter.css.includes(context.triggerCharacter)) {
+			if (context?.triggerCharacter && !triggerCharacters.css.includes(context.triggerCharacter)) {
 				return;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
@@ -545,7 +564,7 @@ export function register(
 		}
 		async function getJsonResult(sourceFile: SourceFile) {
 			let result: vscode.CompletionList | undefined = undefined;
-			if (context?.triggerCharacter && !triggerCharacter.json.includes(context.triggerCharacter)) {
+			if (context?.triggerCharacter && !triggerCharacters.json.includes(context.triggerCharacter)) {
 				return;
 			}
 			for (const sourceMap of sourceFile.getJsonSourceMaps()) {

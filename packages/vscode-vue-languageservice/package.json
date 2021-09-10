@@ -13,6 +13,7 @@
 		"directory": "packages/vscode-vue-languageservice"
 	},
 	"devDependencies": {
+		"@types/semver": "^7.3.8",
 		"typescript": "latest"
 	},
 	"dependencies": {
@@ -26,6 +27,7 @@
 		"@vue/reactivity": "^3.2.6",
 		"@vue/shared": "^3.2.6",
 		"request-light": "^0.5.4",
+		"semver": "^7.3.5",
 		"upath": "^2.0.1",
 		"vscode-css-languageservice": "^5.1.4",
 		"vscode-html-languageservice": "^4.0.7",
