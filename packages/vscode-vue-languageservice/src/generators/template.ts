@@ -14,7 +14,7 @@ const capabilitiesSet = {
 	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
-	referencesOnly: { references: true, definitions: true, },
+	refAttr: { references: true, definitions: true, rename: true, },
 }
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
@@ -1114,7 +1114,7 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.referencesOnly,
+						capabilities: capabilitiesSet.refAttr,
 					},
 				);
 				tsCodeGen.addText(`);\n`);
