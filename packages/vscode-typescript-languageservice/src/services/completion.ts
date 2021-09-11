@@ -3,6 +3,7 @@ import * as PConst from '../protocol.const';
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
+import * as semver from 'semver';
 
 export interface Data {
 	uri: string,
@@ -11,6 +12,24 @@ export interface Data {
 	source: string | undefined,
 	name: string,
 	tsData: any,
+}
+
+export function getTriggerCharacters(tsVersion: string) {
+
+	const triggerCharacters = ['.', '\'', '\\', '`', '/', '<'];
+
+	// https://github.com/microsoft/vscode/blob/8e65ae28d5fb8b3c931135da1a41edb9c80ae46f/extensions/typescript-language-features/src/languageFeatures/completions.ts#L811-L833
+	if (semver.lt(tsVersion, '3.1.0') || semver.gte(tsVersion, '3.2.0')) {
+		triggerCharacters.push('@');
+	}
+	if (semver.gte(tsVersion, '3.8.1')) {
+		triggerCharacters.push('#');
+	}
+	if (semver.gte(tsVersion, '4.3.0')) {
+		triggerCharacters.push(' ');
+	}
+
+	return triggerCharacters;
 }
 
 export function register(

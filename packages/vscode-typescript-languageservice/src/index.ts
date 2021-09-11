@@ -26,6 +26,7 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export { getSemanticTokenLegend } from './services/semanticTokens';
+export { getTriggerCharacters } from './services/completion';
 import * as path from 'path';
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {

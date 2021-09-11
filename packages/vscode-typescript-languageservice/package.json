@@ -13,10 +13,12 @@
 		"directory": "packages/vscode-typescript-languageservice"
 	},
 	"devDependencies": {
+		"@types/semver": "^7.3.8",
 		"typescript": "latest"
 	},
 	"dependencies": {
 		"@volar/shared": "^0.27.14",
+		"semver": "^7.3.5",
 		"upath": "^2.0.1",
 		"vscode-languageserver": "^8.0.0-next.2",
 		"vscode-languageserver-textdocument": "^1.0.1"

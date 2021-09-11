@@ -5,6 +5,7 @@ import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/sha
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import type * as html from 'vscode-html-languageservice';
+import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
@@ -14,29 +15,14 @@ import { CompletionData } from '../types';
 import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
-import * as semver from 'semver';
 
 export function getTriggerCharacters(tsVersion: string) {
-
-	const triggerCharacter = {
-		typescript: ['.', '\'', '\\', '`', '/', '<'],
+	return {
+		typescript: ts2.getTriggerCharacters(tsVersion),
 		html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
 		css: ['.', '@', '/'/* path completion */],
 		json: ['"', ':'],
 	};
-
-	// https://github.com/microsoft/vscode/blob/8e65ae28d5fb8b3c931135da1a41edb9c80ae46f/extensions/typescript-language-features/src/languageFeatures/completions.ts#L811-L833
-	if (semver.lt(tsVersion, '3.1.0') || semver.gte(tsVersion, '3.2.0')) {
-		triggerCharacter.typescript.push("@");
-	}
-	if (semver.gte(tsVersion, '3.8.1')) {
-		triggerCharacter.typescript.push("#");
-	}
-	if (semver.gte(tsVersion, '4.3.0')) {
-		triggerCharacter.typescript.push(" ");
-	}
-
-	return triggerCharacter;
 }
 export const wordPatterns: { [lang: string]: RegExp } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
