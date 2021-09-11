@@ -1,8 +1,18 @@
 # Changelog
 
+## 0.27.18
+
+- feat: support renaming for `ref="xxx"` ([#472](https://github.com/johnsoncodehk/volar/issues/472))
+- feat: support bracket pair colorization
+- fix: request failed when typing `import |` if TS version < 4.3 ([#468](https://github.com/johnsoncodehk/volar/issues/468))
+- fix: `ref` attribute type incorrect ([#473](https://github.com/johnsoncodehk/volar/issues/473))
+- fix: `v-bind` + single quote parse failed ([#474](https://github.com/johnsoncodehk/volar/issues/474))
+- fix: tag name conversion not working ([#475](https://github.com/johnsoncodehk/volar/issues/475))
+- fix: auto import path preview not working
+
 ## 0.27.17
 
-- 🎉 feat: take over mode ([#461](https://github.com/johnsoncodehk/volar/discussions/471))
+- 🎉 feat: take over mode ([#471](https://github.com/johnsoncodehk/volar/discussions/471))
 - feat: ts plugin status bar default hide
 - feat: improve accurate style variables support ([#463](https://github.com/johnsoncodehk/volar/issues/463))
 - fix: javascript format settings not working ([#466](https://github.com/johnsoncodehk/volar/issues/466))
