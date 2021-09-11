@@ -9,12 +9,12 @@ export function register(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	host: LanguageServiceHost,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	) {
+) {
 	const worker = completion.register(languageService, getTextDocument, ts);
-	return async (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions) => {
+	return async (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): Promise<vscode.CompletionList | undefined> => {
 
 		const document = getTextDocument(uri);
-		if (!document) return [];
+		if (!document) return;
 
 		const preferences = await host.getPreferences?.(document) ?? {};
 

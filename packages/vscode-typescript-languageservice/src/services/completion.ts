@@ -18,20 +18,16 @@ export function register(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	return (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): vscode.CompletionItem[] => {
+	return (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): vscode.CompletionList | undefined => {
 
 		const document = getTextDocument(uri);
-		if (!document) return [];
+		if (!document) return;
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const _options: ts.GetCompletionsAtPositionOptions = {
-			includeCompletionsWithInsertText: true, // TODO: ?
-			...options,
-		};
 
-		const info = languageService.getCompletionsAtPosition(fileName, offset, _options);
-		if (info === undefined) return [];
+		const info = languageService.getCompletionsAtPosition(fileName, offset, options);
+		if (info === undefined) return;
 
 		const wordRange2 = info.optionalReplacementSpan ? {
 			start: info.optionalReplacementSpan.start,
@@ -72,7 +68,10 @@ export function register(
 				return item;
 			});
 
-		return entries;
+		return {
+			isIncomplete: !!info.isIncomplete,
+			items: entries,
+		};
 
 		// from vscode typescript
 		function fuzzyCompletionItem(info: ts.CompletionInfo, document: TextDocument, entry: ts.CompletionEntry, item: vscode.CompletionItem) {

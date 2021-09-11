@@ -213,17 +213,32 @@ export function register(
 						items: [],
 					};
 				}
-				const quotePreference = tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template' ? 'single' : 'auto';
-				let tsItems = await getTsLs(tsLoc.lsType).doComplete(tsLoc.uri, tsLoc.range.start, {
-					quotePreference,
-					includeCompletionsForModuleExports: tsLoc.type === 'source-ts' || ['script', 'scriptSetup'].includes(tsLoc.range.data.vueTag), // TODO: read ts config
-					includeCompletionsForImportStatements: tsLoc.type === 'source-ts' || ['script', 'scriptSetup'].includes(tsLoc.range.data.vueTag), // TODO: read ts config
+
+				const inTemplate = tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template';
+				const options: ts.GetCompletionsAtPositionOptions = {
 					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
-				});
-				if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template') {
+					triggerKind: context?.triggerKind,
+					includeCompletionsForModuleExports: true,
+					includeCompletionsWithInsertText: true, // TODO: not sure what is this
+					...(inTemplate ? {
+						quotePreference: 'single',
+						includeCompletionsForModuleExports: false,
+						includeCompletionsForImportStatements: false,
+					} : {}),
+				};
+
+				const tsComplete = await getTsLs(tsLoc.lsType).doComplete(tsLoc.uri, tsLoc.range.start, options);
+				if (!tsComplete)
+					continue;
+
+				if (tsComplete.isIncomplete) {
+					result.isIncomplete = true;
+				}
+
+				if (inTemplate) {
 					const sortTexts = shared.getTsCompletions(ts)?.SortText;
 					if (sortTexts) {
-						tsItems = tsItems.filter(tsItem => {
+						tsComplete.items = tsComplete.items.filter(tsItem => {
 							if (
 								(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
 								|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
@@ -234,7 +249,7 @@ export function register(
 						});
 					}
 				}
-				const vueItems: vscode.CompletionItem[] = tsItems.map(tsItem => {
+				const vueItems: vscode.CompletionItem[] = tsComplete.items.map(tsItem => {
 					const vueItem = transformCompletionItem(
 						tsItem,
 						tsRange => {
@@ -664,7 +679,7 @@ export function register(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							bind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
+							bind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset))?.items ?? [];
 						}
 					}
 					{
@@ -672,12 +687,12 @@ export function register(
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
-							on = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset));
+							on = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset))?.items ?? [];
 						}
 					}
 					data.set(tagName, { item: tag, bind, on });
 				}
-				const globalBind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)));
+				const globalBind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)))?.items ?? [];
 				data.set('*', { item: undefined, bind: globalBind, on: [] });
 			}
 			return data;
