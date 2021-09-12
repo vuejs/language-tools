@@ -72,7 +72,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 					if (tsOrVueLoc.type === 'embedded-ts' && !tsOrVueLoc.range.data.capabilities.diagnostic)
 						continue;
 
-					if (tsOrVueLoc.type === 'source-ts' && tsOrVueLoc.lsType === 'template')
+					if (tsOrVueLoc.type === 'source-ts' && lsType !== 'script')
 						continue;
 
 					let file = shared.uriToFsPath(tsOrVueLoc.uri) === fileName

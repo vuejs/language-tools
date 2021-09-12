@@ -33,22 +33,22 @@ export function generate(node: CompilerDOM.RootNode) {
 					// arg
 					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 						text += `// @ts-ignore\n`;
-						text += `(${prop.arg.content});\n`;
+						text += `(${wrapTsIgnores(prop.arg.loc.source)});\n`;
 					}
 
 					// exp
 					if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						if (prop.name === 'slot') {
 							text += `// @ts-ignore\n`;
-							text += `let ${prop.exp.content} = {} as any;\n`;
+							text += `let ${wrapTsIgnores(prop.exp.content)} = {} as any;\n`;
 						}
 						else if (prop.name === 'on') {
 							text += `// @ts-ignore\n`;
-							text += `() => { ${prop.exp.content} };\n`;
+							text += `() => { ${wrapTsIgnores(prop.exp.content)} };\n`;
 						}
 						else {
 							text += `// @ts-ignore\n`;
-							text += `(${prop.exp.content});\n`;
+							text += `(${wrapTsIgnores(prop.exp.content)});\n`;
 						}
 					}
 
@@ -111,7 +111,7 @@ export function generate(node: CompilerDOM.RootNode) {
 					text += 'else';
 
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					text += ` (${branch.condition.content})`;
+					text += ` (${wrapTsIgnores(branch.condition.content)})`;
 				}
 				text += ` {\n`;
 				for (const childNode of branch.children) {
@@ -132,14 +132,14 @@ export function generate(node: CompilerDOM.RootNode) {
 				&& value?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				text += `// @ts-ignore\n`;
-				text += `for (let ${value.content} of ${source.content}) {\n`
+				text += `for (let ${wrapTsIgnores(value.content)} of ${wrapTsIgnores(source.content, value.content.indexOf('\n') >= 0)}) {\n`
 				if (key?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					text += `// @ts-ignore\n`;
-					text += `let ${key.content} = {} as any;`;
+					text += `let ${wrapTsIgnores(key.content)} = {} as any;`;
 				}
 				if (index?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					text += `// @ts-ignore\n`;
-					text += `let ${index.content} = {} as any;`;
+					text += `let ${wrapTsIgnores(index.content)} = {} as any;`;
 				}
 				for (const childNode of node.children) {
 					visitNode(childNode);
@@ -148,4 +148,13 @@ export function generate(node: CompilerDOM.RootNode) {
 			}
 		}
 	};
+}
+
+function wrapTsIgnores(content: string, dontIgnoreFirstLine = false) {
+	if (content.indexOf('\n') === -1)
+		return content;
+	return content
+		.split('\n')
+		.map((line, i) => !dontIgnoreFirstLine && i === 0 ? line : `// @ts-ignore\n${line}`)
+		.join('\n');
 }

@@ -208,7 +208,6 @@ export function createSourceFiles() {
 			if (sourceMap) {
 				for (const vueRange of sourceMap.getSourceRanges2(start, end)) {
 					yield {
-						lsType,
 						type: 'embedded-ts' as const,
 						sourceMap,
 						uri: sourceMap.sourceDocument.uri,
@@ -218,7 +217,6 @@ export function createSourceFiles() {
 			}
 			else {
 				yield {
-					lsType,
 					type: 'source-ts' as const,
 					uri,
 					range: {

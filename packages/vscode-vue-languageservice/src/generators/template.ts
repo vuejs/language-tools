@@ -304,8 +304,8 @@ export function generate(
 		const var_correctTagName = `__VLS_${elementIndex++}`;
 		const var_filteredComponents = `__VLS_${elementIndex++}`;
 
-		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_components, '${node.tag}'>;\n`);
-		tsCodeGen.addText(`declare const ${var_filteredComponents}: Pick<typeof __VLS_components, typeof ${var_correctTagName}>;;\n`);
+		tsCodeGen.addText(`let ${var_correctTagName}!: __VLS_GetComponentName<typeof __VLS_components, '${node.tag}'>;\n`);
+		tsCodeGen.addText(`let ${var_filteredComponents}!: Pick<typeof __VLS_components, typeof ${var_correctTagName}>;;\n`);
 
 		const name1 = node.tag; // hello-world
 		const name2 = camelize(node.tag); // helloWorld
@@ -442,7 +442,7 @@ export function generate(
 				function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
 					for (const child of node.children) {
 						if (typeof child === 'string') {
-							tsCodeGen.addText(child);
+							tsCodeGen.addText(`// @ts-ignore\n${child}\n`);
 						}
 						else if (typeof child === 'symbol') {
 							// ignore
@@ -469,7 +469,7 @@ export function generate(
 						);
 					}
 					else {
-						tsCodeGen.addText(node.content);
+						tsCodeGen.addText(`// @ts-ignore\n${node.content}\n`);
 					}
 				}
 			}

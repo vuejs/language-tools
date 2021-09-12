@@ -8,7 +8,6 @@ import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
 import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import { SearchTexts } from '../utils/string';
 
 export function useSfcTemplateScript(
 	vueUri: string,
@@ -83,8 +82,6 @@ export function useSfcTemplateScript(
 
 		if (templateCodeGens.value) {
 			/* Completion */
-			codeGen.addText(`({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
-
 			codeGen.addText('/* Completion: Emits */\n');
 			for (const name of templateCodeGens.value.usedComponents) {
 				codeGen.addText(`// @ts-ignore\n`);

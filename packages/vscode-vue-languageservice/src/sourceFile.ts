@@ -231,6 +231,7 @@ export function createSourceFile(
 			sfcTemplateData,
 			sfcTemplateCompileResult,
 			sfcTemplateScript,
+			sfcEntryForTemplateLs,
 			sfcScriptForScriptLs,
 			sfcScriptForTemplateLs,
 			templateScriptData,

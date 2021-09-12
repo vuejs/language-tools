@@ -643,6 +643,7 @@ export function register(
 		const {
 			sfcTemplateScript,
 			templateScriptData,
+			sfcEntryForTemplateLs,
 		} = sourceFile.refs;
 
 		const projectVersion = ref<number>();
@@ -653,8 +654,9 @@ export function register(
 			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
 			pauseTracking();
 			const doc = sfcTemplateScript.textDocument.value;
+			const entryDoc = sfcEntryForTemplateLs.textDocument.value;
 			resetTracking();
-			if (doc) {
+			if (doc && entryDoc) {
 				const text = doc.getText();
 				for (const tag of templateScriptData.componentItems) {
 					const tagName = (tag.data as TsCompletionData).name;
@@ -678,7 +680,7 @@ export function register(
 					}
 					data.set(tagName, { item: tag, bind, on });
 				}
-				const globalBind = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(doc.getText().indexOf(SearchTexts.GlobalAttrs)))?.items ?? [];
+				const globalBind = templateTsLs.__internal__.doCompleteSync(entryDoc.uri, entryDoc.positionAt(entryDoc.getText().indexOf(SearchTexts.GlobalAttrs)))?.items ?? [];
 				data.set('*', { item: undefined, bind: globalBind, on: [] });
 			}
 			return data;

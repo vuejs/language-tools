@@ -28,6 +28,10 @@ export function generate(
 	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
 	const overlapMapRanges: SourceMaps.Range[] = [];
 
+	if (lsType === 'template') {
+		codeGen.addText('// @ts-nocheck\n');
+	}
+
 	writeScriptSrc();
 	writeScript();
 	writeScriptSetup();
@@ -455,6 +459,7 @@ export function generate(
 			const docText = style.textDocument.getText();
 			for (const cssBind of style.binds) {
 				const bindText = docText.substring(cssBind.start, cssBind.end);
+				codeGen.addText('// @ts-ignore\n');
 				codeGen.addText(bindText + ';\n');
 			}
 		}
@@ -477,6 +482,7 @@ export function generate(
 		for (const varName of bindingNames) {
 			if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
 				// fix import components unused report
+				codeGen.addText('// @ts-ignore\n');
 				codeGen.addText(varName + ';\n');
 			}
 		}
