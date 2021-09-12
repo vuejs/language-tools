@@ -31,7 +31,7 @@ export function generate(node: CompilerDOM.RootNode) {
 				if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE) {
 
 					// arg
-					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 						text += `// @ts-ignore\n`;
 						text += `(${prop.arg.content});\n`;
 					}

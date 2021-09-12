@@ -486,10 +486,10 @@ export function generate(
 					&& !(prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
 				) {
 					if (prop.name === 'bind' || prop.name === 'model') {
-						write('props', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
+						write('props', prop.arg.loc.source, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 					}
 					else if (prop.name === 'on') {
-						write('emits', prop.arg.content, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
+						write('emits', prop.arg.loc.source, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
 					}
 				}
 				else if (
@@ -584,8 +584,14 @@ export function generate(
 					&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 				) {
 
-					const propName_1 = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION ? prop.arg.content : getModelValuePropName(node, isVue2);
-					const propName_2 = hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
+					const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
+					const propName_1 =
+						prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+							? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
+								? prop.arg.content
+								: prop.arg.loc.source
+							: getModelValuePropName(node, isVue2);
+					const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 					const propValue = prop.exp?.content ?? 'undefined';
 					const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
 					const isDirective = !prop.exp || prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY;
@@ -1313,7 +1319,7 @@ export function generate(
 		}
 	}
 	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
-		if (validTsVar.test(mapCode)) {
+		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
 			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
 		else {
@@ -1329,6 +1335,9 @@ export function generate(
 			else {
 				return writeCode(mapCode, sourceRange, SourceMaps.Mode.Expand, data);
 			}
+		}
+		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
+			return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 		}
 		else {
 			tsCodeGen.addText(`[`);
