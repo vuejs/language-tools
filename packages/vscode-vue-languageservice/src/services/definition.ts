@@ -1,6 +1,7 @@
 import type * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
+import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
@@ -48,12 +49,16 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			withTeleports(tsLoc.uri, tsLoc.range.start, true);
 
 			// ts -> vue
+			const tempRange = { start: position, end: position };
 			let originSelectionRange: vscode.Range | undefined;
 			for (const tsLoc_2 of tsResult) {
 				if (tsLoc_2.originSelectionRange) {
 					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
+						if (shared.isInsideRange(vueLoc.range, tempRange)) {
+							originSelectionRange = vueLoc.range;
+							break;
+						}
 						originSelectionRange = vueLoc.range;
-						break;
 					}
 				}
 				if (originSelectionRange)

@@ -50,7 +50,6 @@ export function generate(
 	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const cssCodeGen = createCodeGen<undefined>();
 	const usedComponents = new Set<string>();
-	const tagNames = new Set<string>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
@@ -61,9 +60,75 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
+	const tags: Record<string, number[]> = {};
+	const tagResolves: Record<string, {
+		correctTagName: string,
+		filteredComponents: string,
+		hover: string,
+	}> = {};
 
 	let elementIndex = 0;
 
+	for (const childNode of templateAst.children) {
+		collectTags(childNode);
+	}
+	for (const tag in tags) {
+		const var_correctTagName = `__VLS_${elementIndex++}`;
+		const var_filteredComponents = `__VLS_${elementIndex++}`;
+		const var_hover = `__VLS_${elementIndex++}`;
+		const var_wrapComponent = `__VLS_${elementIndex++}`;
+
+		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_components, '${tag}'>;\n`);
+		tsCodeGen.addText(`declare const ${var_filteredComponents}: Pick<typeof __VLS_components, typeof ${var_correctTagName}>;\n`);
+
+		const name1 = tag; // hello-world
+		const name2 = camelize(tag); // helloWorld
+		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
+		const componentNames = new Set([name1, name2, name3]);
+
+		usedComponents.add(name1);
+		usedComponents.add(name2);
+		usedComponents.add(name3);
+
+		tsCodeGen.addText(`// @ts-ignore\n`)
+		for (const name of componentNames) {
+			if (validTsVar.test(name)) {
+				tsCodeGen.addText(`${name}; `);
+			}
+		}
+		tsCodeGen.addText(`// ignore unused in setup returns\n`)
+
+		tsCodeGen.addText(`// @ts-ignore\n`);
+		tsCodeGen.addText(`const ${var_hover} = { ${validTsVar.test(tag) ? tag : `'${tag}'`}: {} as `);
+		tsCodeGen.addText(`__VLS_PickNotAny<`.repeat(componentNames.size - 1));
+		const names = [...componentNames];
+		for (let i = 0; i < names.length; i++) {
+			if (i > 0) {
+				tsCodeGen.addText(', ');
+			}
+			tsCodeGen.addText(`typeof ${var_filteredComponents}`);
+			writePropertyAccess2(
+				names[i],
+				tags[tag].map(offset => ({ start: offset, end: offset + tag.length })),
+				{
+					vueTag: 'template',
+					capabilities: capabilitiesSet.tagReference,
+					beforeRename: tag === names[i] ? undefined : unHyphenatComponentName,
+					doRename: keepHyphenateName,
+				},
+			);
+			if (i > 0) {
+				tsCodeGen.addText('>');
+			}
+		}
+		tsCodeGen.addText(` };\n`);
+
+		tagResolves[tag] = {
+			correctTagName: var_correctTagName,
+			filteredComponents: var_filteredComponents,
+			hover: var_hover,
+		};
+	}
 	for (const childNode of templateAst.children) {
 		tsCodeGen.addText(`{\n`);
 		visitNode(childNode, undefined);
@@ -94,10 +159,44 @@ export function generate(
 		formatCodeGen: tsFormatCodeGen,
 		cssCodeGen: cssCodeGen,
 		usedComponents,
-		tagNames,
+		tagNames: new Set(Object.keys(tags)),
 		attrNames,
 	};
 
+	function collectTags(node: CompilerDOM.TemplateChildNode) {
+		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+			const patchForNode = getPatchForSlotNode(node);
+			if (patchForNode) {
+				collectTags(patchForNode);
+				return;
+			}
+			if (!tags[node.tag]) {
+				tags[node.tag] = [];
+			}
+			tags[node.tag].push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
+			if (!node.isSelfClosing && sourceLang === 'html') {
+				tags[node.tag].push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+			}
+			for (const childNode of node.children) {
+				collectTags(childNode);
+			}
+		}
+		else if (node.type === CompilerDOM.NodeTypes.IF) {
+			// v-if / v-else-if / v-else
+			for (let i = 0; i < node.branches.length; i++) {
+				const branch = node.branches[i];
+				for (const childNode of branch.children) {
+					collectTags(childNode);
+				}
+			}
+		}
+		else if (node.type === CompilerDOM.NodeTypes.FOR) {
+			// v-for
+			for (const childNode of node.children) {
+				collectTags(childNode);
+			}
+		}
+	}
 	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			visitElementNode(node, parentEl);
@@ -301,37 +400,30 @@ export function generate(
 			parentEl = node;
 		}
 
-		const var_correctTagName = `__VLS_${elementIndex++}`;
-		const var_filteredComponents = `__VLS_${elementIndex++}`;
+		const var_correctTagName = tagResolves[node.tag].correctTagName;
 
-		tsCodeGen.addText(`let ${var_correctTagName}!: __VLS_GetComponentName<typeof __VLS_components, '${node.tag}'>;\n`);
-		tsCodeGen.addText(`let ${var_filteredComponents}!: Pick<typeof __VLS_components, typeof ${var_correctTagName}>;;\n`);
-
-		const name1 = node.tag; // hello-world
-		const name2 = camelize(node.tag); // helloWorld
-		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
-		const componentNames = new Set([name1, name2, name3]);
-
-		usedComponents.add(name1);
-		usedComponents.add(name2);
-		usedComponents.add(name3);
-
-		tagNames.add(node.tag);
 		tsCodeGen.addText(`{\n`);
 		{
 
-			tsCodeGen.addText(`// @ts-ignore\n`)
-			for (const name of componentNames) {
-				tsCodeGen.addText(`${name}; `);
+			addTag(
+				node.loc.start.offset + node.loc.source.indexOf(node.tag),
+				node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+			);
+			if (!node.isSelfClosing && sourceLang === 'html') {
+				addTag(
+					node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
+					node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
+				);
 			}
-			tsCodeGen.addText(`// ignore unused in setup returns\n`)
 
 			writeInlineCss(node);
 			if (parentEl) writeImportSlots(node, parentEl);
 			writeDirectives(node);
 			writeElReferences(node); // <el ref="foo" />
-			writeProps(node, true);
-			writeProps(node, false);
+			const { hasRemainStyleOrClass } = writeProps(node, false);
+			if (hasRemainStyleOrClass) {
+				writeProps(node, true);
+			}
 			if (cssScopedClasses.length) writeClassScopeds(node);
 			writeEvents(node);
 			writeOptionReferences(node);
@@ -343,6 +435,21 @@ export function generate(
 		}
 		tsCodeGen.addText('}\n');
 
+		function addTag(start: number, end: number) {
+			tsCodeGen.addText(tagResolves[node.tag].hover);
+			writePropertyAccess(
+				node.tag,
+				{
+					start,
+					end,
+				},
+				{
+					vueTag: 'template',
+					capabilities: capabilitiesSet.tagHover,
+				},
+			);
+			tsCodeGen.addText(';\n');
+		}
 		function writeEvents(node: CompilerDOM.ElementNode) {
 			for (const prop of node.props) {
 				if (
@@ -564,17 +671,16 @@ export function generate(
 				}
 			}
 		}
-		function writeProps(node: CompilerDOM.ElementNode, forDirectiveClassOrStyle: boolean) {
+		function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean) {
 
 			let startDiag: number | undefined;
 			let endDiag: number | undefined;
+			let styleCount = 0;
+			let classCount = 0;
 
-			if (forDirectiveClassOrStyle) {
-				tsCodeGen.addText(`__VLS_componentProps[${var_correctTagName}]({\n`);
-			}
-			else {
-				startDiag = addStartWrap();
-			}
+			tsCodeGen.addText(`__VLS_componentProps[${var_correctTagName}](`);
+			if (!forRemainStyleOrClass) startDiag = tsCodeGen.getText().length;
+			tsCodeGen.addText(`{\n`);
 
 			for (const prop of node.props) {
 				if (
@@ -593,11 +699,14 @@ export function generate(
 							: getModelValuePropName(node, isVue2);
 					const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 					const propValue = prop.exp?.content ?? 'undefined';
-					const isClassOrStyleAttr = ['style', 'class'].includes(propName_2);
-					const isDirective = !prop.exp || prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY;
 
-					if ((isClassOrStyleAttr && isDirective) !== forDirectiveClassOrStyle) {
+					if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
 						continue;
+
+					if (propName_2 === 'style' || propName_2 === 'class') {
+						const index = propName_2 === 'style' ? styleCount++ : classCount++;
+						if (index >= 1 !== forRemainStyleOrClass)
+							continue;
 					}
 
 					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -704,19 +813,20 @@ export function generate(
 				else if (
 					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				) {
-					if (forDirectiveClassOrStyle) {
-						continue;
-					}
 
 					const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
 					const propName2 = prop.name;
-					const isClassOrStyleAttr = ['style', 'class'].includes(propName);
+
+					if (forRemainStyleOrClass && propName !== 'style' && propName !== 'class')
+						continue;
+
+					if (propName === 'style' || propName === 'class') {
+						const index = propName === 'style' ? styleCount++ : classCount++;
+						if (index >= 1 !== forRemainStyleOrClass)
+							continue;
+					}
 
 					attrNames.add(prop.name);
-
-					if (isClassOrStyleAttr) {
-						tsCodeGen.addText(`// @ts-ignore\n`);
-					}
 
 					// camelize name
 					const diagStart = tsCodeGen.getText().length;
@@ -776,7 +886,7 @@ export function generate(
 					&& !prop.arg
 					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				) {
-					if (forDirectiveClassOrStyle) {
+					if (forRemainStyleOrClass) {
 						continue;
 					}
 					tsCodeGen.addText('...(');
@@ -796,19 +906,16 @@ export function generate(
 					tsCodeGen.addText('),\n');
 				}
 				else {
-					if (forDirectiveClassOrStyle) {
+					if (forRemainStyleOrClass) {
 						continue;
 					}
 					tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
 				}
 			}
 
-			if (forDirectiveClassOrStyle) {
-				tsCodeGen.addText(`});\n`);
-			}
-			else {
-				endDiag = addEndWrap();
-			}
+			tsCodeGen.addText(`}`);
+			if (!forRemainStyleOrClass) endDiag = tsCodeGen.getText().length;
+			tsCodeGen.addText(`);\n`);
 
 			if (startDiag && endDiag) {
 				addMapping(
@@ -830,6 +937,8 @@ export function generate(
 					},
 				);
 			}
+
+			return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
 
 			function writeAttrValue(attrNode: CompilerDOM.TextNode | undefined, propName: string) {
 				if (attrNode) {
@@ -854,71 +963,6 @@ export function generate(
 				else {
 					tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps[typeof ${var_correctTagName}], '${propName}'>`);
 				}
-			}
-			function addStartWrap() {
-				// start tag
-				addTag(
-					node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-				);
-				if (!node.isSelfClosing && sourceLang === 'html') {
-					// end tag
-					addTag(
-						node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
-						node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
-					);
-				}
-				tsCodeGen.addText(`__VLS_componentProps[${var_correctTagName}](`);
-				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`{\n`);
-				return diagStart;
-			}
-			function addTag(start: number, end: number) {
-				tsCodeGen.addText(`// @ts-ignore start tag\n`);
-				tsCodeGen.addText(`const __VLS_${elementIndex++} = { `);
-				writeObjectProperty(
-					node.tag,
-					{
-						start,
-						end,
-					},
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.tagHover,
-					},
-				)
-				tsCodeGen.addText(': {} as ');
-				tsCodeGen.addText(`__VLS_PickNotAny<`.repeat(componentNames.size - 1));
-				const names = [...componentNames];
-				for (let i = 0; i < names.length; i++) {
-					if (i > 0) {
-						tsCodeGen.addText(', ');
-					}
-					tsCodeGen.addText(`typeof ${var_filteredComponents}`);
-					writePropertyAccess(
-						names[i],
-						{
-							start,
-							end,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.tagReference,
-							beforeRename: node.tag === names[i] ? undefined : unHyphenatComponentName,
-							doRename: keepHyphenateName,
-						},
-					);
-					if (i > 0) {
-						tsCodeGen.addText('>');
-					}
-				}
-				tsCodeGen.addText(` };\n`);
-			}
-			function addEndWrap() {
-				tsCodeGen.addText(`}`);
-				const diagEnd = tsCodeGen.getText().length;
-				tsCodeGen.addText(`);\n`);
-				return diagEnd;
 			}
 		}
 	}
@@ -1326,23 +1370,66 @@ export function generate(
 			writeCodeWithQuotes(mapCode, sourceRange, data);
 		}
 	}
+	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+		const sourceRange = sourceRanges[0];
+		const mode = writePropertyAccess(mapCode, sourceRange, data);
+
+		for (let i = 1; i < sourceRanges.length; i++) {
+			const sourceRange = sourceRanges[i];
+			if (mode === 1 || mode === 2) {
+				addMapping(tsCodeGen, {
+					sourceRange,
+					mappedRange: {
+						start: tsCodeGen.getText().length - mapCode.length,
+						end: tsCodeGen.getText().length,
+					},
+					mode: sourceRange.end - sourceRange.start === mapCode.length ? SourceMaps.Mode.Offset : SourceMaps.Mode.Expand,
+					data,
+				});
+			}
+			else if (mode === 3) {
+				addMapping(tsCodeGen, {
+					sourceRange,
+					mappedRange: {
+						start: tsCodeGen.getText().length - `['${mapCode}']`.length,
+						end: tsCodeGen.getText().length - `']`.length,
+					},
+					mode: SourceMaps.Mode.Offset,
+					additional: [
+						{
+							sourceRange,
+							mappedRange: {
+								start: tsCodeGen.getText().length - `'${mapCode}']`.length,
+								end: tsCodeGen.getText().length - `]`.length,
+							},
+							mode: SourceMaps.Mode.Totally,
+						}
+					],
+					data,
+				});
+			}
+		}
+	}
 	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		if (validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
-				return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+				writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 			}
 			else {
-				return writeCode(mapCode, sourceRange, SourceMaps.Mode.Expand, data);
+				writeCode(mapCode, sourceRange, SourceMaps.Mode.Expand, data);
 			}
+			return 1;
 		}
 		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
-			return writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			return 2;
 		}
 		else {
 			tsCodeGen.addText(`[`);
 			writeCodeWithQuotes(mapCode, sourceRange, data);
 			tsCodeGen.addText(`]`);
+			return 3;
 		}
 	}
 	function writeCodeWithQuotes(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
