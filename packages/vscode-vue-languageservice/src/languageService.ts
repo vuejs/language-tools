@@ -645,8 +645,9 @@ export function createLanguageService(
 				if (sourceFiles.get(uri)?.updateTemplateScript(templateTsLs)) {
 					templateScriptUpdated = true;
 				}
+				currentNums++;
 				for (const cb of initProgressCallback) {
-					cb(++currentNums / templateScriptUpdateUris.size);
+					cb(currentNums / templateScriptUpdateUris.size);
 				}
 			}
 			templateScriptUpdateUris.clear();
