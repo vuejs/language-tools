@@ -332,7 +332,7 @@ export function generate(
 			writeElReferences(node); // <el ref="foo" />
 			writeProps(node, true);
 			writeProps(node, false);
-			writeClassScopeds(node);
+			if (cssScopedClasses.length) writeClassScopeds(node);
 			writeEvents(node);
 			writeOptionReferences(node);
 			writeSlots(node);
@@ -1141,7 +1141,7 @@ export function generate(
 					if (char.trim() !== '') {
 						tempClassName += char;
 					}
-					else {
+					else if (tempClassName !== '') {
 						addClass(tempClassName, startOffset);
 						startOffset += tempClassName.length + 1;
 						tempClassName = '';
