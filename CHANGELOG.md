@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.27.19
+
+- feat: support dynamic prop
+- perf: much faster template type-checking for vue-tsc
+
 ## 0.27.18
 
 - feat: support renaming for `ref="xxx"` ([#472](https://github.com/johnsoncodehk/volar/issues/472))
