@@ -13,6 +13,7 @@ export function useSfcTemplateScript(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	template: Ref<shared.Sfc['template']>,
+	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
 	styles: Ref<shared.Sfc['styles']>,
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
@@ -60,6 +61,7 @@ export function useSfcTemplateScript(
 			context.isVue2Mode,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
+			!!scriptSetup.value,
 		);
 	});
 	const data = computed(() => {

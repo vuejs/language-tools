@@ -46,6 +46,7 @@ export function generate(
 	isVue2: boolean,
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
+	isScriptSetup: boolean,
 ) {
 
 	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
@@ -102,13 +103,15 @@ export function generate(
 		usedComponents.add(name2);
 		usedComponents.add(name3);
 
-		tsCodeGen.addText(`// @ts-ignore\n`)
-		for (const name of componentNames) {
-			if (validTsVar.test(name)) {
-				tsCodeGen.addText(`${name}; `);
+		if (!isScriptSetup) {
+			tsCodeGen.addText(`// @ts-ignore\n`)
+			for (const name of componentNames) {
+				if (validTsVar.test(name)) {
+					tsCodeGen.addText(`${name}; `);
+				}
 			}
+			tsCodeGen.addText(`// ignore unused in setup returns\n`)
 		}
-		tsCodeGen.addText(`// ignore unused in setup returns\n`)
 
 		tsCodeGen.addText(`// @ts-ignore\n`);
 		tsCodeGen.addText(`({ `);

@@ -138,6 +138,7 @@ export function createSourceFile(
 		uri,
 		document,
 		computed(() => descriptor.template),
+		computed(() => descriptor.scriptSetup),
 		computed(() => descriptor.styles),
 		templateScriptData,
 		sfcStyles.textDocuments,
