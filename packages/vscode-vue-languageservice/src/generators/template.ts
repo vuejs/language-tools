@@ -69,7 +69,6 @@ export function generate(
 		baseProps: string,
 		props: string,
 		emit: string,
-		hover: string,
 		offsets: number[],
 	}> = {};
 
@@ -85,7 +84,6 @@ export function generate(
 		const var_baseProps = `__VLS_${elementIndex++}`;
 		const var_props = `__VLS_${elementIndex++}`;
 		const var_emit = `__VLS_${elementIndex++}`;
-		const var_hover = `__VLS_${elementIndex++}`;
 
 		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
 		tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
@@ -98,6 +96,7 @@ export function generate(
 		const name2 = camelize(tag); // helloWorld
 		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
+		const tagRanges = tags[tag].map(offset => ({ start: offset, end: offset + tag.length }));
 
 		usedComponents.add(name1);
 		usedComponents.add(name2);
@@ -112,7 +111,16 @@ export function generate(
 		tsCodeGen.addText(`// ignore unused in setup returns\n`)
 
 		tsCodeGen.addText(`// @ts-ignore\n`);
-		tsCodeGen.addText(`const ${var_hover} = { ${validTsVar.test(tag) ? tag : `'${tag}'`}: {} as `);
+		tsCodeGen.addText(`({ `);
+		writeObjectProperty2(
+			tag,
+			tagRanges,
+			{
+				vueTag: 'template',
+				capabilities: capabilitiesSet.tagHover,
+			},
+		);
+		tsCodeGen.addText(`: {} as `);
 		tsCodeGen.addText(`__VLS_PickNotAny<`.repeat(componentNames.size - 1));
 		const names = [...componentNames];
 		for (let i = 0; i < names.length; i++) {
@@ -122,7 +130,7 @@ export function generate(
 			tsCodeGen.addText(`typeof __VLS_rawComponents`);
 			writePropertyAccess2(
 				names[i],
-				tags[tag].map(offset => ({ start: offset, end: offset + tag.length })),
+				tagRanges,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.tagReference,
@@ -134,7 +142,7 @@ export function generate(
 				tsCodeGen.addText('>');
 			}
 		}
-		tsCodeGen.addText(` };\n`);
+		tsCodeGen.addText(` });\n`);
 
 		tagResolves[tag] = {
 			wrapComponent: var_wrapComponent,
@@ -142,7 +150,6 @@ export function generate(
 			baseProps: var_baseProps,
 			props: var_props,
 			emit: var_emit,
-			hover: var_hover,
 			offsets: tags[tag].map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
 		};
 	}
@@ -438,17 +445,6 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
-			addTag(
-				node.loc.start.offset + node.loc.source.indexOf(node.tag),
-				node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-			);
-			if (!node.isSelfClosing && sourceLang === 'html') {
-				addTag(
-					node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
-					node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + node.tag.length,
-				);
-			}
-
 			writeInlineCss(node);
 			if (parentEl) writeImportSlots(node, parentEl);
 			writeDirectives(node);
@@ -468,21 +464,6 @@ export function generate(
 		}
 		tsCodeGen.addText('}\n');
 
-		function addTag(start: number, end: number) {
-			tsCodeGen.addText(tagResolves[node.tag].hover);
-			writePropertyAccess(
-				node.tag,
-				{
-					start,
-					end,
-				},
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.tagHover,
-				},
-			);
-			tsCodeGen.addText(';\n');
-		}
 		function writeEvents(node: CompilerDOM.ElementNode) {
 			for (const prop of node.props) {
 				if (
@@ -1395,12 +1376,54 @@ export function generate(
 			}
 		}
 	}
+	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+		const sourceRange = sourceRanges[0];
+		const mode = writeObjectProperty(mapCode, sourceRange, data);
+
+		for (let i = 1; i < sourceRanges.length; i++) {
+			const sourceRange = sourceRanges[i];
+			if (mode === 1) {
+				addMapping(tsCodeGen, {
+					sourceRange,
+					mappedRange: {
+						start: tsCodeGen.getText().length - mapCode.length,
+						end: tsCodeGen.getText().length,
+					},
+					mode: SourceMaps.Mode.Offset,
+					data,
+				});
+			}
+			else if (mode === 2) {
+				addMapping(tsCodeGen, {
+					sourceRange,
+					mappedRange: {
+						start: tsCodeGen.getText().length - `'${mapCode}'`.length,
+						end: tsCodeGen.getText().length - `'`.length,
+					},
+					mode: SourceMaps.Mode.Offset,
+					additional: [
+						{
+							sourceRange,
+							mappedRange: {
+								start: tsCodeGen.getText().length - `'${mapCode}'`.length,
+								end: tsCodeGen.getText().length,
+							},
+							mode: SourceMaps.Mode.Totally,
+						}
+					],
+					data,
+				});
+			}
+		}
+	}
 	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
 		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
 			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			return 1;
 		}
 		else {
 			writeCodeWithQuotes(mapCode, sourceRange, data);
+			return 2;
 		}
 	}
 	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {

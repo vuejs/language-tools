@@ -2,6 +2,7 @@ import * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import { HtmlSourceMap } from '../utils/sourceMaps';
 import { register as registerFindDefinitions } from './definition';
+import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
@@ -66,11 +67,14 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 
 			if (tsHover.range) {
 				// ts -> vue
-				for (const vueRange of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsHover.range.start, tsHover.range.end)) {
+				const hoverRange = { start: position, end: position };
+				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsHover.range.start, tsHover.range.end)) {
 					result = {
 						...tsHover,
-						range: vueRange.range,
+						range: vueLoc.range,
 					};
+					if (shared.isInsideRange(vueLoc.range, hoverRange))
+						break;
 				}
 			}
 			else {
