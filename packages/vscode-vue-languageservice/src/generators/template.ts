@@ -74,11 +74,10 @@ export function generate(
 		}>,
 	}> = {};
 	const tagResolves: Record<string, {
-		wrapComponent: string,
-		rawComponent: string,
 		baseProps: string,
 		props: string,
 		emit: string,
+		events: Record<string, string>,
 		offsets: number[],
 	}> = {};
 
@@ -94,6 +93,7 @@ export function generate(
 		const var_baseProps = `__VLS_${elementIndex++}`;
 		const var_props = `__VLS_${elementIndex++}`;
 		const var_emit = `__VLS_${elementIndex++}`;
+		const var_events: Record<string, string> = {};
 
 		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
 		tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
@@ -102,13 +102,57 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_props}: (props: __VLS_ExtractCompleteComponentProps<typeof ${var_rawComponent}>) => void;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 
+		const resolvedTag = tags[tag];
+		const tagRanges = resolvedTag.offsets.map(offset => ({ start: offset, end: offset + tag.length }));
+
+		for (const eventName in resolvedTag.events) {
+
+			const var_on = `__VLS_${elementIndex++}`;
+			const event = resolvedTag.events[eventName];
+			const key_1 = eventName; // click-outside
+			const key_2 = camelize('on-' + key_1); // onClickOutside
+			const key_3 = camelize(key_1); // clickOutside
+
+			tsCodeGen.addText(`declare let ${var_on}: { `);
+			tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
+			tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
+			if (key_1 !== key_3) {
+				tsCodeGen.addText(`__VLS_FirstFunction<\n`);
+				tsCodeGen.addText(`__VLS_EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
+				tsCodeGen.addText(`__VLS_EmitEvent<typeof ${var_rawComponent}, '${key_3}'>\n`);
+				tsCodeGen.addText(`>,\n`);
+			}
+			else {
+				tsCodeGen.addText(`__VLS_EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
+			}
+			tsCodeGen.addText(`(typeof ${var_baseProps} & Omit<__VLS_GlobalAttrs, keyof typeof ${var_baseProps}> & Record<string, unknown>)[`);
+			writeCodeWithQuotes(
+				key_2,
+				event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
+				{
+					vueTag: 'template',
+					capabilities: capabilitiesSet.attr,
+					beforeRename(newName) {
+						return camelize('on-' + newName);
+					},
+					doRename(oldName, newName) {
+						const hName = hyphenate(newName);
+						if (hyphenate(newName).startsWith('on-')) {
+							return camelize(hName.substr('on-'.length));
+						}
+						return newName;
+					},
+				},
+			);
+			tsCodeGen.addText(`]>>\n};\n`);
+
+			var_events[eventName] = var_on;
+		}
+
 		const name1 = tag; // hello-world
 		const name2 = camelize(tag); // helloWorld
 		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
-
-		const resolvedTag = tags[tag];
-		const tagRanges = resolvedTag.offsets.map(offset => ({ start: offset, end: offset + tag.length }));
 
 		usedComponents.add(name1);
 		usedComponents.add(name2);
@@ -161,11 +205,10 @@ export function generate(
 		writeOptionReferences();
 
 		tagResolves[tag] = {
-			wrapComponent: var_wrapComponent,
-			rawComponent: var_rawComponent,
 			baseProps: var_baseProps,
 			props: var_props,
 			emit: var_emit,
+			events: var_events,
 			offsets: tags[tag].offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
 		};
 
@@ -627,56 +670,14 @@ export function generate(
 					&& prop.name === 'on'
 					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				) {
-					const var_on = `__VLS_${elementIndex++}`;
-					let keyOffset = 0;
-
-					const key_1 = prop.arg.content; // click-outside
-					const key_2 = camelize('on-' + key_1); // onClickOutside
-					const key_3 = camelize(key_1); // clickOutside
-
-					tsCodeGen.addText(`let ${var_on}!: { `);
-					tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-					tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
-					if (key_1 !== key_3) {
-						tsCodeGen.addText(`__VLS_FirstFunction<\n`);
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_1}'>,\n`);
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_3}'>\n`);
-						tsCodeGen.addText(`>,\n`);
-					}
-					else {
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_1}'>,\n`);
-					}
-					tsCodeGen.addText(`(typeof ${tagResolves[node.tag].baseProps} & Omit<__VLS_GlobalAttrs, keyof typeof ${tagResolves[node.tag].baseProps}> & Record<string, unknown>)[`);
-					writeCodeWithQuotes(
-						key_2,
-						{
-							start: prop.arg.loc.start.offset,
-							end: prop.arg.loc.end.offset,
-						},
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attr,
-							beforeRename(newName) {
-								return camelize('on-' + newName);
-							},
-							doRename(oldName, newName) {
-								const hName = hyphenate(newName);
-								if (hyphenate(newName).startsWith('on-')) {
-									return camelize(hName.substr('on-'.length));
-								}
-								return newName;
-							},
-						},
-					);
-					tsCodeGen.addText(`]>>\n};\n`);
 
 					const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
 					for (const prop_2 of transformResult.props) {
-						tsCodeGen.addText(`${var_on} = {\n`);
+						tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]} = { `);
 						writeObjectProperty(
-							key_1,
+							prop.arg.loc.source,
 							{
-								start: prop.arg.loc.start.offset + keyOffset,
+								start: prop.arg.loc.start.offset,
 								end: prop.arg.loc.end.offset,
 							},
 							{
@@ -686,7 +687,7 @@ export function generate(
 						);
 						tsCodeGen.addText(`: `);
 						appendExpressionNode(prop, prop_2.value);
-						tsCodeGen.addText(`\n};\n`);
+						tsCodeGen.addText(` };\n`);
 					}
 				}
 				else if (
@@ -729,7 +730,7 @@ export function generate(
 				function appendCompoundExpressionNode(node: CompilerDOM.CompoundExpressionNode, exp: CompilerDOM.SimpleExpressionNode) {
 					for (const child of node.children) {
 						if (typeof child === 'string') {
-							tsCodeGen.addText(`// @ts-ignore\n${child}\n`);
+							tsCodeGen.addText(child);
 						}
 						else if (typeof child === 'symbol') {
 							// ignore
@@ -756,7 +757,7 @@ export function generate(
 						);
 					}
 					else {
-						tsCodeGen.addText(`// @ts-ignore\n${node.content}\n`);
+						tsCodeGen.addText(node.content);
 					}
 				}
 			}
@@ -770,7 +771,7 @@ export function generate(
 
 			tsCodeGen.addText(`${tagResolves[node.tag].props}(`);
 			if (!forRemainStyleOrClass) startDiag = tsCodeGen.getText().length;
-			tsCodeGen.addText(`{\n`);
+			tsCodeGen.addText(`{ `);
 
 			for (const prop of node.props) {
 				if (
@@ -884,7 +885,7 @@ export function generate(
 							capabilities: capabilitiesSet.diagnosticOnly,
 						},
 					});
-					tsCodeGen.addText(`,\n`);
+					tsCodeGen.addText(`, `);
 					// original name
 					if (prop.arg && propName_1 !== propName_2) {
 						writeObjectProperty(
@@ -900,7 +901,7 @@ export function generate(
 								doRename: keepHyphenateName,
 							},
 						);
-						tsCodeGen.addText(`: (${propValue}),\n`);
+						tsCodeGen.addText(`: (${propValue}), `);
 					}
 				}
 				else if (
@@ -939,7 +940,7 @@ export function generate(
 					tsCodeGen.addText(': ');
 					writeAttrValue(prop.value, propName);
 					const diagEnd = tsCodeGen.getText().length;
-					tsCodeGen.addText(',\n');
+					tsCodeGen.addText(', ');
 					addMapping(tsCodeGen, {
 						sourceRange: {
 							start: prop.loc.start.offset,
@@ -972,7 +973,7 @@ export function generate(
 						);
 						tsCodeGen.addText(': ');
 						writeAttrValue(prop.value, propName);
-						tsCodeGen.addText(',\n');
+						tsCodeGen.addText(', ');
 					}
 				}
 				else if (
@@ -998,17 +999,17 @@ export function generate(
 						},
 						formatBrackets.round,
 					);
-					tsCodeGen.addText('),\n');
+					tsCodeGen.addText('), ');
 				}
 				else {
 					if (forRemainStyleOrClass) {
 						continue;
 					}
-					tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */\n");
+					tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 				}
 			}
 
-			tsCodeGen.addText(`}`);
+			tsCodeGen.addText(` }`);
 			if (!forRemainStyleOrClass) endDiag = tsCodeGen.getText().length;
 			tsCodeGen.addText(`);\n`);
 
@@ -1571,27 +1572,29 @@ export function generate(
 			return 3;
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: SourceMaps.TsMappingData) {
 		const addText = `'${mapCode}'`;
-		addMapping(tsCodeGen, {
-			sourceRange,
-			mappedRange: {
-				start: tsCodeGen.getText().length + 1,
-				end: tsCodeGen.getText().length + addText.length - 1,
-			},
-			mode: SourceMaps.Mode.Offset,
-			additional: [
-				{
-					sourceRange,
-					mappedRange: {
-						start: tsCodeGen.getText().length,
-						end: tsCodeGen.getText().length + addText.length,
-					},
-					mode: SourceMaps.Mode.Totally,
-				}
-			],
-			data,
-		});
+		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
+			addMapping(tsCodeGen, {
+				sourceRange,
+				mappedRange: {
+					start: tsCodeGen.getText().length + 1,
+					end: tsCodeGen.getText().length + addText.length - 1,
+				},
+				mode: SourceMaps.Mode.Offset,
+				additional: [
+					{
+						sourceRange,
+						mappedRange: {
+							start: tsCodeGen.getText().length,
+							end: tsCodeGen.getText().length + addText.length,
+						},
+						mode: SourceMaps.Mode.Totally,
+					}
+				],
+				data,
+			});
+		}
 		tsCodeGen.addText(addText);
 	}
 	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: SourceMaps.TsMappingData, formatWrapper?: [string, string]) {
