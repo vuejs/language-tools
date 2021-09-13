@@ -663,7 +663,7 @@ export function register(
 					let bind: vscode.CompletionItem[] = [];
 					let on: vscode.CompletionItem[] = [];
 					{
-						const searchText = `__VLS_componentPropsBase['${tagName}']['`;
+						const searchText = SearchTexts.PropsCompletion(tagName);
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
@@ -671,7 +671,7 @@ export function register(
 						}
 					}
 					{
-						const searchText = `__VLS_componentEmits['${tagName}']('`;
+						const searchText = SearchTexts.EmitCompletion(tagName);
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;

@@ -36,12 +36,8 @@ export function useSfcEntryForTemplateLs(
 				content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
 				content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
 				content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
-				content += `declare var __VLS_component_ts: typeof __VLS_component_1_ts extends (new (...args: infer _1) => infer _2)\n`;
-				content += `    ? typeof __VLS_component_1_ts : typeof __VLS_component_1_ts extends ((...args: infer _3) => infer _4)\n`;
-				content += `    ? typeof __VLS_component_1_ts : typeof __VLS_component_2_ts;\n`;
-				content += `export declare var __VLS_component: typeof __VLS_component_1 extends (new (...args: infer _1) => infer _2)\n`;
-				content += `    ? typeof __VLS_component_1 : typeof __VLS_component_1 extends ((...args: infer _3) => infer _4)\n`;
-				content += `    ? typeof __VLS_component_1 : typeof __VLS_component_2;\n`;
+				content += `declare var __VLS_component_ts: __VLS_SelectComponent<typeof __VLS_component_1_ts, typeof __VLS_component_2_ts>;\n`;
+				content += `export declare var __VLS_component: __VLS_SelectComponent<typeof __VLS_component_1, typeof __VLS_component_2>;\n`;
 			}
 		}
 		else {
@@ -50,14 +46,14 @@ export function useSfcEntryForTemplateLs(
 			content += `var __VLS_component_ts = __VLS_defineComponent({});\n`;
 			content += `export var __VLS_component = __VLS_defineComponent({});\n`;
 		}
-		content += `declare var __VLS_ctx: __VLS_PickNotAny<InstanceType<typeof __VLS_component_ts>, ReturnType<typeof __VLS_component_ts>>;\n`;
+		content += `declare var __VLS_ctx: __VLS_ComponentContext<typeof __VLS_component_ts>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;
 		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx> & __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
-		content += `__VLS_options_ts.setup().${SearchTexts.SetupReturns};\n`;
-		content += `__VLS_options_ts.props.${SearchTexts.Props};\n`;
-		content += `({} as __VLS_GlobalAttrs)./* ${SearchTexts.GlobalAttrs} */;`;
+		content += `({} as __VLS_OptionsSetupReturns<typeof __VLS_options_ts>).${SearchTexts.SetupReturns};\n`;
+		content += `({} as __VLS_OptionsProps<typeof __VLS_options_ts>).${SearchTexts.Props};\n`;
+		content += `({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};`;
 		content += `\n`;
 		content += `export default {} as typeof __VLS_component & {\n`;
 		content += `__VLS_raw: typeof __VLS_component\n`;

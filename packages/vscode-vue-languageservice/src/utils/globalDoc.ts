@@ -71,6 +71,11 @@ declare global {
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 	type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
+	type __VLS_GetProperty<T, K, N = any> = K extends keyof T ? T[K] : N;
+	type __VLS_ComponentContext<T> = T extends new (...args: any) => any ? InstanceType<T> : T extends (...args: any) => any ? ReturnType<T> : T;
+	type __VLS_OptionsSetupReturns<T> = T extends { setup(): infer R } ? R : {};
+	type __VLS_OptionsProps<T> = T extends { props: infer R } ? R : {};
+	type __VLS_SelectComponent<T1, T2> = T1 extends (new (...args: any) => any) ? T1 : T1 extends ((...args: any) => any) ? T1 : T2;
 
 	type __VLS_ExtractComponentProps<T> =
 		T extends new (...args: any) => { $props?: infer P1 } ? P1
@@ -83,9 +88,6 @@ declare global {
 
 	type __VLS_ExtractRawComponents<T> = { [K in keyof T]: __VLS_ExtractRawComponent<T[K]> };
 	type __VLS_ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
-	type __VLS_MapPropsTypeBase<T> = { [K in keyof T]: __VLS_ExtractComponentProps<T[K]> };
-	type __VLS_MapPropsType<T> = { [K in keyof T]: (props: __VLS_ExtractCompleteComponentProps<T[K]>) => void };
-	type __VLS_MapEmitType<T> = { [K in keyof T]: __VLS_ExtractEmit2<T[K]> };
 	type __VLS_ExtractEmit2<T> =
 		T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
 		: T extends new (...args: any) => { $emit: infer Emit } ? Emit

@@ -55,7 +55,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		function getTagNameCase(sourceFile: SourceFile): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
 			const components = sourceFile.getTemplateScriptData().components;
-			const tagNames = sourceFile.getTemplateTagNames() ?? new Set();
+			const tagNames = new Set(Object.keys(sourceFile.getTemplateTagNames() ?? {}));
 
 			let anyComponentUsed = false;
 			let hasPascalCase = false;

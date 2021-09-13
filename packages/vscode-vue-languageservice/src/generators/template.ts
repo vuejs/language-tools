@@ -3,6 +3,8 @@ import { createCodeGen } from '@volar/code-gen';
 import { camelize, hyphenate } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
+import { SearchTexts } from '../utils/string';
+import * as shared from '@volar/shared';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -62,9 +64,13 @@ export function generate(
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 	const tags: Record<string, number[]> = {};
 	const tagResolves: Record<string, {
-		correctTagName: string,
-		filteredComponents: string,
+		wrapComponent: string,
+		rawComponent: string,
+		baseProps: string,
+		props: string,
+		emit: string,
 		hover: string,
+		offsets: number[],
 	}> = {};
 
 	let elementIndex = 0;
@@ -74,12 +80,19 @@ export function generate(
 	}
 	for (const tag in tags) {
 		const var_correctTagName = `__VLS_${elementIndex++}`;
-		const var_filteredComponents = `__VLS_${elementIndex++}`;
-		const var_hover = `__VLS_${elementIndex++}`;
 		const var_wrapComponent = `__VLS_${elementIndex++}`;
+		const var_rawComponent = `__VLS_${elementIndex++}`;
+		const var_baseProps = `__VLS_${elementIndex++}`;
+		const var_props = `__VLS_${elementIndex++}`;
+		const var_emit = `__VLS_${elementIndex++}`;
+		const var_hover = `__VLS_${elementIndex++}`;
 
-		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_components, '${tag}'>;\n`);
-		tsCodeGen.addText(`declare const ${var_filteredComponents}: Pick<typeof __VLS_components, typeof ${var_correctTagName}>;\n`);
+		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
+		tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
+		tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
+		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_props}: (props: __VLS_ExtractCompleteComponentProps<typeof ${var_rawComponent}>) => void;\n`);
+		tsCodeGen.addText(`declare const ${var_emit}: __VLS_ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 
 		const name1 = tag; // hello-world
 		const name2 = camelize(tag); // helloWorld
@@ -106,7 +119,7 @@ export function generate(
 			if (i > 0) {
 				tsCodeGen.addText(', ');
 			}
-			tsCodeGen.addText(`typeof ${var_filteredComponents}`);
+			tsCodeGen.addText(`typeof __VLS_rawComponents`);
 			writePropertyAccess2(
 				names[i],
 				tags[tag].map(offset => ({ start: offset, end: offset + tag.length })),
@@ -124,11 +137,33 @@ export function generate(
 		tsCodeGen.addText(` };\n`);
 
 		tagResolves[tag] = {
-			correctTagName: var_correctTagName,
-			filteredComponents: var_filteredComponents,
+			wrapComponent: var_wrapComponent,
+			rawComponent: var_rawComponent,
+			baseProps: var_baseProps,
+			props: var_props,
+			emit: var_emit,
 			hover: var_hover,
+			offsets: tags[tag].map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
 		};
 	}
+
+	/* Completion */
+	tsCodeGen.addText('/* Completion: Emits */\n');
+	for (const name of usedComponents) {
+		const tagResolved = tagResolves[name];
+		if (tagResolved) {
+			tsCodeGen.addText('// @ts-ignore\n');
+			tsCodeGen.addText(`${tagResolved.emit}('${SearchTexts.EmitCompletion(name)}');\n`);
+		}
+	}
+	tsCodeGen.addText('/* Completion: Props */\n');
+	for (const name of usedComponents) {
+		const tagResolved = tagResolves[name];
+		if (tagResolved) {
+			tsCodeGen.addText(`${tagResolved.baseProps}.${SearchTexts.PropsCompletion(name)};\n`);
+		}
+	}
+
 	for (const childNode of templateAst.children) {
 		tsCodeGen.addText(`{\n`);
 		visitNode(childNode, undefined);
@@ -159,7 +194,7 @@ export function generate(
 		formatCodeGen: tsFormatCodeGen,
 		cssCodeGen: cssCodeGen,
 		usedComponents,
-		tagNames: new Set(Object.keys(tags)),
+		tagNames: tagResolves,
 		attrNames,
 	};
 
@@ -400,8 +435,6 @@ export function generate(
 			parentEl = node;
 		}
 
-		const var_correctTagName = tagResolves[node.tag].correctTagName;
-
 		tsCodeGen.addText(`{\n`);
 		{
 
@@ -469,14 +502,14 @@ export function generate(
 					tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
 					if (key_1 !== key_3) {
 						tsCodeGen.addText(`__VLS_FirstFunction<\n`);
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_1}'>,\n`);
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_3}'>\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_1}'>,\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_3}'>\n`);
 						tsCodeGen.addText(`>,\n`);
 					}
 					else {
-						tsCodeGen.addText(`__VLS_EmitEvent<typeof __VLS_components[typeof ${var_correctTagName}], '${key_1}'>,\n`);
+						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_1}'>,\n`);
 					}
-					tsCodeGen.addText(`(typeof __VLS_componentPropsBase[typeof ${var_correctTagName}] & Omit<__VLS_GlobalAttrs, keyof typeof __VLS_componentPropsBase[typeof ${var_correctTagName}]> & Record<string, unknown>)[`)
+					tsCodeGen.addText(`(typeof ${tagResolves[node.tag].baseProps} & Omit<__VLS_GlobalAttrs, keyof typeof ${tagResolves[node.tag].baseProps}> & Record<string, unknown>)[`)
 					writeCodeWithQuotes(
 						key_2,
 						{
@@ -627,7 +660,7 @@ export function generate(
 					// __VLS_options.props
 					if (!checking)
 						tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`__VLS_components_0[${var_correctTagName}].__VLS_options.props`);
+					tsCodeGen.addText(`${tagResolves[node.tag].wrapComponent}.__VLS_options.props`);
 					writePropertyAccess(
 						name,
 						{
@@ -650,7 +683,7 @@ export function generate(
 					// __VLS_options.emits
 					if (!checking)
 						tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`__VLS_components_0[${var_correctTagName}].__VLS_options.emits`);
+					tsCodeGen.addText(`${tagResolves[node.tag].wrapComponent}.__VLS_options.emits`);
 					writePropertyAccess(
 						name,
 						{
@@ -678,7 +711,7 @@ export function generate(
 			let styleCount = 0;
 			let classCount = 0;
 
-			tsCodeGen.addText(`__VLS_componentProps[${var_correctTagName}](`);
+			tsCodeGen.addText(`${tagResolves[node.tag].props}(`);
 			if (!forRemainStyleOrClass) startDiag = tsCodeGen.getText().length;
 			tsCodeGen.addText(`{\n`);
 
@@ -961,7 +994,7 @@ export function generate(
 					tsCodeGen.addText('"');
 				}
 				else {
-					tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof __VLS_componentProps[typeof ${var_correctTagName}], '${propName}'>`);
+					tsCodeGen.addText(`{} as __VLS_ConstAttrType<typeof ${tagResolves[node.tag].props}, '${propName}'>`);
 				}
 			}
 		}
@@ -1032,7 +1065,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_components_0['' as __VLS_GetComponentName<typeof __VLS_components_0, '${parentEl.tag}'>].__VLS_slots`);
+				tsCodeGen.addText(`__VLS_wrapComponents['' as __VLS_GetComponentName<typeof __VLS_wrapComponents, '${parentEl.tag}'>].__VLS_slots`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
