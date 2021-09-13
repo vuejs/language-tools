@@ -63,7 +63,16 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
-	const tags: Record<string, number[]> = {};
+	const tags: Record<string, {
+		offsets: number[],
+		props: Record<string, {
+			argName: string,
+			offsets: number[],
+		}>,
+		events: Record<string, {
+			offsets: number[],
+		}>,
+	}> = {};
 	const tagResolves: Record<string, {
 		wrapComponent: string,
 		rawComponent: string,
@@ -97,7 +106,9 @@ export function generate(
 		const name2 = camelize(tag); // helloWorld
 		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
-		const tagRanges = tags[tag].map(offset => ({ start: offset, end: offset + tag.length }));
+
+		const resolvedTag = tags[tag];
+		const tagRanges = resolvedTag.offsets.map(offset => ({ start: offset, end: offset + tag.length }));
 
 		usedComponents.add(name1);
 		usedComponents.add(name2);
@@ -147,14 +158,107 @@ export function generate(
 		}
 		tsCodeGen.addText(` });\n`);
 
+		writeOptionReferences();
+
 		tagResolves[tag] = {
 			wrapComponent: var_wrapComponent,
 			rawComponent: var_rawComponent,
 			baseProps: var_baseProps,
 			props: var_props,
 			emit: var_emit,
-			offsets: tags[tag].map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
+			offsets: tags[tag].offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
 		};
+
+		function writeOptionReferences() {
+			// fix find references not work if prop has default value
+			// fix emits references not work
+			for (const propName in resolvedTag.props) {
+
+				const prop = resolvedTag.props[propName];
+				const propNames = new Set<string>();
+				propNames.add(propName);
+				propNames.add(camelize(propName));
+
+				for (const name of propNames.values()) {
+					// __VLS_options.props
+					tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`${var_wrapComponent}.__VLS_options.props`);
+					writePropertyAccess2(
+						name,
+						prop.offsets.map(offset => ({ start: offset, end: offset + prop.argName.length })),
+						{
+							vueTag: 'template',
+							capabilities: {
+								...capabilitiesSet.attr,
+								basic: false,
+								rename: propName === prop.argName,
+							},
+							beforeRename: camelize,
+							doRename: keepHyphenateName,
+						},
+					);
+					tsCodeGen.addText(`;\n`);
+				}
+			}
+			for (const eventName in resolvedTag.events) {
+
+				const event = resolvedTag.events[eventName];
+				const eventNames = new Set<string>();
+				const propNames = new Set<string>();
+				eventNames.add(eventName);
+				eventNames.add(camelize(eventName));
+				propNames.add(camelize('on-' + eventName));
+
+				for (const name of eventNames.values()) {
+					// __VLS_options.emits
+					tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`${var_wrapComponent}.__VLS_options.emits`);
+					writePropertyAccess2(
+						name,
+						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
+						{
+							vueTag: 'template',
+							capabilities: {
+								...capabilitiesSet.attr,
+								basic: false,
+								rename: true,
+							},
+							beforeRename: camelize,
+							doRename: keepHyphenateName,
+						},
+					);
+					tsCodeGen.addText(`;\n`);
+				}
+				for (const name of propNames.values()) {
+					// __VLS_options.props
+					tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`${var_wrapComponent}.__VLS_options.props`);
+					writePropertyAccess2(
+						name,
+						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
+						{
+							vueTag: 'template',
+							capabilities: {
+								...capabilitiesSet.attr,
+								basic: false,
+								rename: true,
+							},
+							beforeRename(newName) {
+								return camelize('on-' + newName);
+							},
+							doRename(oldName, newName) {
+								const hName = hyphenate(newName);
+								if (hyphenate(newName).startsWith('on-')) {
+									return camelize(hName.substr('on-'.length));
+								}
+								return newName;
+							},
+						},
+					);
+					tsCodeGen.addText(`;\n`);
+				}
+			}
+		}
 	}
 
 	/* Completion */
@@ -216,14 +320,64 @@ export function generate(
 				return;
 			}
 			if (!tags[node.tag]) {
-				tags[node.tag] = [];
+				tags[node.tag] = {
+					offsets: [],
+					props: {},
+					events: {},
+				};
 			}
-			tags[node.tag].push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
+			const resolvedTag = tags[node.tag];
+			resolvedTag.offsets.push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
 			if (!node.isSelfClosing && sourceLang === 'html') {
-				tags[node.tag].push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+				resolvedTag.offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+			}
+			for (const prop of node.props) {
+				if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& prop.arg.isStatic
+				) {
+
+					if (prop.name === 'bind' || prop.name === 'model') {
+						addProp(prop.arg.loc.source, prop.arg.loc.source, prop.arg.loc.start.offset);
+					}
+					else if (prop.name === 'on') {
+						addEvent(prop.arg.loc.source, prop.arg.loc.start.offset);
+					}
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+					&& !prop.arg
+					&& prop.name === 'model'
+				) {
+					addProp(getModelValuePropName(node, isVue2), 'v-model', prop.loc.start.offset);
+				}
+				else if (
+					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+				) {
+					addProp(prop.name, prop.name, prop.loc.start.offset);
+				}
 			}
 			for (const childNode of node.children) {
 				collectTags(childNode);
+			}
+
+			function addProp(propName: string, argName: string, offset: number) {
+				if (!resolvedTag.props[propName]) {
+					resolvedTag.props[propName] = {
+						argName,
+						offsets: [],
+					};
+				}
+				resolvedTag.props[propName].offsets.push(offset);
+			}
+			function addEvent(eventName: string, offset: number) {
+				if (!resolvedTag.events[eventName]) {
+					resolvedTag.events[eventName] = {
+						offsets: [],
+					};
+				}
+				resolvedTag.events[eventName].offsets.push(offset);
 			}
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
@@ -458,7 +612,6 @@ export function generate(
 			}
 			if (cssScopedClasses.length) writeClassScopeds(node);
 			writeEvents(node);
-			writeOptionReferences(node);
 			writeSlots(node);
 
 			for (const childNode of node.children) {
@@ -493,7 +646,7 @@ export function generate(
 					else {
 						tsCodeGen.addText(`__VLS_EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${key_1}'>,\n`);
 					}
-					tsCodeGen.addText(`(typeof ${tagResolves[node.tag].baseProps} & Omit<__VLS_GlobalAttrs, keyof typeof ${tagResolves[node.tag].baseProps}> & Record<string, unknown>)[`)
+					tsCodeGen.addText(`(typeof ${tagResolves[node.tag].baseProps} & Omit<__VLS_GlobalAttrs, keyof typeof ${tagResolves[node.tag].baseProps}> & Record<string, unknown>)[`);
 					writeCodeWithQuotes(
 						key_2,
 						{
@@ -503,6 +656,16 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.attr,
+							beforeRename(newName) {
+								return camelize('on-' + newName);
+							},
+							doRename(oldName, newName) {
+								const hName = hyphenate(newName);
+								if (hyphenate(newName).startsWith('on-')) {
+									return camelize(hName.substr('on-'.length));
+								}
+								return newName;
+							},
 						},
 					);
 					tsCodeGen.addText(`]>>\n};\n`);
@@ -518,7 +681,7 @@ export function generate(
 							},
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.attr,
+								capabilities: capabilitiesSet.tagHover,
 							},
 						);
 						tsCodeGen.addText(`: `);
@@ -598,96 +761,6 @@ export function generate(
 				}
 			}
 		}
-		function writeOptionReferences(node: CompilerDOM.ElementNode) {
-			// fix find references not work if prop has default value
-			// fix emits references not work
-			for (const prop of node.props) {
-				if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.arg
-					&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
-					&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					&& !(prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) // ignore style, style='z-index: 2' will compile to {'z-index':'2'}
-				) {
-					if (prop.name === 'bind' || prop.name === 'model') {
-						write('props', prop.arg.loc.source, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
-					}
-					else if (prop.name === 'on') {
-						write('emits', prop.arg.loc.source, prop.arg.loc.start.offset, prop.arg.loc.end.offset);
-					}
-				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.name === 'model'
-				) {
-					write('props', getModelValuePropName(node, isVue2), prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length, false, false);
-				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-				) {
-					write('props', prop.name, prop.loc.start.offset, prop.loc.start.offset + prop.name.length);
-				}
-			}
-			function write(option: 'props' | 'emits', propName: string, start: number, end: number, checking = false, rename = true) {
-				const props = new Set<string>();
-				const emits = new Set<string>();
-				if (option === 'props') {
-					props.add(propName);
-					props.add(camelize(propName));
-				}
-				else if (option === 'emits') {
-					emits.add(propName);
-					emits.add(camelize(propName));
-					props.add(camelize('on-' + propName));
-				}
-				for (const name of props.values()) {
-					// __VLS_options.props
-					if (!checking)
-						tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`${tagResolves[node.tag].wrapComponent}.__VLS_options.props`);
-					writePropertyAccess(
-						name,
-						{
-							start,
-							end,
-						},
-						{
-							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
-								rename: rename,
-							},
-							doRename: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(`;\n`);
-				}
-				for (const name of emits.values()) {
-					// __VLS_options.emits
-					if (!checking)
-						tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`${tagResolves[node.tag].wrapComponent}.__VLS_options.emits`);
-					writePropertyAccess(
-						name,
-						{
-							start,
-							end,
-						},
-						{
-							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
-								rename: rename,
-							},
-							doRename: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(`;\n`);
-				}
-			}
-		}
 		function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean) {
 
 			let startDiag: number | undefined;
@@ -756,6 +829,7 @@ export function generate(
 							{
 								vueTag: 'template',
 								capabilities: capabilitiesSet.attr,
+								beforeRename: camelize,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -770,6 +844,7 @@ export function generate(
 							{
 								vueTag: 'template',
 								capabilities: capabilitiesSet.attr,
+								beforeRename: camelize,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -821,6 +896,7 @@ export function generate(
 							{
 								vueTag: 'template',
 								capabilities: capabilitiesSet.attr,
+								beforeRename: camelize,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -856,6 +932,7 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.attr,
+							beforeRename: camelize,
 							doRename: keepHyphenateName,
 						},
 					);
@@ -889,6 +966,7 @@ export function generate(
 							{
 								vueTag: 'template',
 								capabilities: capabilitiesSet.attr,
+								beforeRename: camelize,
 								doRename: keepHyphenateName,
 							},
 						);
@@ -1282,6 +1360,7 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
+						beforeRename: camelize,
 						doRename: keepHyphenateName,
 						capabilities: capabilitiesSet.attr,
 					},
@@ -1315,6 +1394,7 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
+						beforeRename: camelize,
 						doRename: keepHyphenateName,
 						capabilities: capabilitiesSet.attr,
 					},

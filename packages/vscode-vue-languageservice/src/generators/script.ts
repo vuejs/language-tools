@@ -319,38 +319,19 @@ export function generate(
 		codeGen.addText(`});\n`);
 
 		function mapSubText(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-			for (const mapping of codeGen.getMappings()) {
-				if (mapping.data.vueTag === vueTag && start >= mapping.sourceRange.start && end <= mapping.mappedRange.end) {
-					teleports.push({
-						data: {
-							toSource: {
-								capabilities: {
-									references: true,
-									definitions: true,
-									rename: true,
-								},
-							},
-							toTarget: {
-								capabilities: {
-									references: true,
-									definitions: true,
-									rename: true,
-								},
-							},
-						},
-						sourceRange: {
-							start,
-							end,
-						},
-						mappedRange: {
-							start: codeGen.getText().length,
-							end: codeGen.getText().length + end - start,
-						},
-						mode: SourceMaps.Mode.Offset,
-					});
-				}
-			}
-			codeGen.addText((vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end));
+			codeGen.addCode(
+				(vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end),
+				{ start, end },
+				SourceMaps.Mode.Offset,
+				{
+					vueTag,
+					capabilities: {
+						references: true,
+						definitions: true,
+						rename: true,
+					},
+				},
+			);
 		}
 	}
 	function writeExportOptions() {
