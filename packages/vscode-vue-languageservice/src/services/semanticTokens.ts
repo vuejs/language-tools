@@ -132,10 +132,18 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 
+				const inSourceMap = [...sourceMap].some(mapping =>
+					(mapping.sourceRange.start >= offsetRange.start && mapping.sourceRange.start <= offsetRange.end)
+					|| (mapping.sourceRange.end >= offsetRange.start && mapping.sourceRange.end <= offsetRange.end)
+				);
+				if (!inSourceMap)
+					continue;
+
+				const htmlStart = sourceMap.getMappedRange2(offsetRange.start)?.start ?? 0;
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
-					? htmlLs.createScanner(docText, offsetRange.start)
-					: pugLs.createScanner(sourceMap.pugDocument, offsetRange.start)
+					? htmlLs.createScanner(docText, htmlStart)
+					: pugLs.createScanner(sourceMap.pugDocument, htmlStart)
 				if (!scanner) continue;
 
 				let token = scanner.scan();
