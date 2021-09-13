@@ -21,8 +21,10 @@ export function parse(docText: string, ss: css.Stylesheet) {
 			for (const match of matchs) {
 				if (match.index !== undefined) {
 					const matchText = match[1] ?? match[2] ?? match[3];
-					const offset = node.offset + match.index + nodeText.substr(match.index).indexOf(matchText);
-					result.push({ start: offset, end: offset + matchText.length });
+					if (matchText !== undefined) {
+						const offset = node.offset + match.index + nodeText.substr(match.index).indexOf(matchText);
+						result.push({ start: offset, end: offset + matchText.length });
+					}
 				}
 			}
 		}
