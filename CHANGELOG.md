@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.20
+
+- perf: improve template type-checking performance
+- fix: template component tags coloring range incorrect
+- fix: improve vue-tsc version checking accuracy
+- fix: language server broken when typed `\` ([#468](https://github.com/johnsoncodehk/volar/issues/468))
+- fix: remove old status bar items when restart servers ([#486](https://github.com/johnsoncodehk/volar/issues/486))
+- fix: fixed emits type extract failed edge cases
+
 ## 0.27.19
 
 - feat: support dynamic prop
