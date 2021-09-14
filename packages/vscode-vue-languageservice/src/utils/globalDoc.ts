@@ -32,6 +32,7 @@ type AllowedComponentProps = PickNotAny<vue_1.AllowedComponentProps, vue_2.Allow
 type PropType<T> = PickNotAny<vue_1.PropType<T>, vue_2.PropType<T>>;
 type EmitsOptions = PickNotAny<vue_1.EmitsOptions, vue_2.EmitsOptions>;
 type DefineComponent<P, E extends EmitsOptions> = PickNotAny<vue_1.DefineComponent<P, any, any, any, any, any, any, E>, vue_2.DefineComponent<P, any, any, any, any, any, any, E>>;
+type DefineComponent_2<P, E extends EmitsOptions> = DefineComponent<P, E>; // fix check extends failed if have no defineProps
 type GlobalComponents = PickNotAny<PickNotAny<PickNotAny<vue_1.GlobalComponents, vue_2.GlobalComponents>, vue_3.GlobalComponents>, {}>;
 type SetupContext<T> = PickNotAny<vue_1.SetupContext<T>, vue_2.SetupContext<T>>;
 type ObjectDirective<T, V> = PickNotAny<vue_1.ObjectDirective<T, V>, vue_2.ObjectDirective<T, V>>;
@@ -115,6 +116,7 @@ declare global {
 		: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 	type __VLS_EmitEvent<T, E> =
 		T extends DefineComponent<infer _, infer E2> ? __VLS_EmitEvent_3<E2, E>
+		: T extends DefineComponent_2<infer _, infer E2> ? __VLS_EmitEvent_3<E2, E>
 		: T extends FunctionalComponent<infer _, infer E2> ? __VLS_EmitEvent_3<E2, E>
 		: __VLS_EmitEvent2<__VLS_ExtractEmit2<T>, E>;
 	type __VLS_EmitEvent_3<E2, E> =
