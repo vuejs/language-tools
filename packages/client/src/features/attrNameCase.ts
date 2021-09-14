@@ -60,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			d_1.dispose();
 			d_2.dispose();
 			d_3.dispose();
+			statusBar.dispose();
 		}
 	});
 
