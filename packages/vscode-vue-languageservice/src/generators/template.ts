@@ -52,7 +52,6 @@ export function generate(
 	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
 	const cssCodeGen = createCodeGen<undefined>();
-	const usedComponents = new Set<string>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
@@ -154,10 +153,6 @@ export function generate(
 		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
-		usedComponents.add(name1);
-		usedComponents.add(name2);
-		usedComponents.add(name3);
-
 		if (!isScriptSetup) {
 			tsCodeGen.addText(`// @ts-ignore\n`)
 			for (const name of componentNames) {
@@ -203,6 +198,17 @@ export function generate(
 		tsCodeGen.addText(` });\n`);
 
 		writeOptionReferences();
+
+		/* Completion */
+		tsCodeGen.addText('/* Completion: Emits */\n');
+		for (const name of componentNames) {
+			tsCodeGen.addText('// @ts-ignore\n');
+			tsCodeGen.addText(`${var_emit}('${SearchTexts.EmitCompletion(name)}');\n`);
+		}
+		tsCodeGen.addText('/* Completion: Props */\n');
+		for (const name of componentNames) {
+			tsCodeGen.addText(`${var_baseProps}.${SearchTexts.PropsCompletion(name)};\n`);
+		}
 
 		tagResolves[tag] = {
 			baseProps: var_baseProps,
@@ -304,23 +310,6 @@ export function generate(
 		}
 	}
 
-	/* Completion */
-	tsCodeGen.addText('/* Completion: Emits */\n');
-	for (const name of usedComponents) {
-		const tagResolved = tagResolves[name];
-		if (tagResolved) {
-			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`${tagResolved.emit}('${SearchTexts.EmitCompletion(name)}');\n`);
-		}
-	}
-	tsCodeGen.addText('/* Completion: Props */\n');
-	for (const name of usedComponents) {
-		const tagResolved = tagResolves[name];
-		if (tagResolved) {
-			tsCodeGen.addText(`${tagResolved.baseProps}.${SearchTexts.PropsCompletion(name)};\n`);
-		}
-	}
-
 	for (const childNode of templateAst.children) {
 		tsCodeGen.addText(`{\n`);
 		visitNode(childNode, undefined);
@@ -350,7 +339,6 @@ export function generate(
 		codeGen: tsCodeGen,
 		formatCodeGen: tsFormatCodeGen,
 		cssCodeGen: cssCodeGen,
-		usedComponents,
 		tagNames: tagResolves,
 		attrNames,
 	};
