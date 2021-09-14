@@ -16,7 +16,7 @@ export interface Data {
 
 export function getTriggerCharacters(tsVersion: string) {
 
-	const triggerCharacters = ['.', '\'', '\\', '`', '/', '<'];
+	const triggerCharacters = ['.', '"', '\'', '`', '/', '<'];
 
 	// https://github.com/microsoft/vscode/blob/8e65ae28d5fb8b3c931135da1a41edb9c80ae46f/extensions/typescript-language-features/src/languageFeatures/completions.ts#L811-L833
 	if (semver.lt(tsVersion, '3.1.0') || semver.gte(tsVersion, '3.2.0')) {
