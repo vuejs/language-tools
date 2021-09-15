@@ -4,6 +4,7 @@ import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
+import type { createLsConfigs } from './configs';
 
 export type Projects = ReturnType<typeof createProjects>;
 
@@ -15,6 +16,7 @@ export function createProjects(
 	documents: vscode.TextDocuments<TextDocument>,
 	rootPaths: string[],
 	inferredCompilerOptions: ts.CompilerOptions,
+	lsConfigs: ReturnType<typeof createLsConfigs>,
 ) {
 
 	let semanticTokensReq = 0;
@@ -198,15 +200,21 @@ export function createProjects(
 	}
 	function getCancelChecker(uri: string, version: number) {
 		let _isCancel = false;
+		let lastResultAt = Date.now();
 		return async () => {
 			if (_isCancel) {
 				return true;
 			}
-			if (typeof options.languageFeatures?.diagnostics === 'object' && options.languageFeatures.diagnostics.getDocumentVersionRequest) {
+			if (
+				typeof options.languageFeatures?.diagnostics === 'object'
+				&& options.languageFeatures.diagnostics.getDocumentVersionRequest
+				&& Date.now() - lastResultAt >= 1 // 1ms
+			) {
 				const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
 				if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
 					_isCancel = true;
 				}
+				lastResultAt = Date.now();
 			}
 			return _isCancel;
 		};
@@ -249,6 +257,7 @@ export function createProjects(
 				onDriveFileUpdated,
 				progress,
 				connection,
+				lsConfigs,
 			));
 			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
 				if (eventKind === ts.FileWatcherEventKind.Changed) {
@@ -279,6 +288,7 @@ export function createProjects(
 				onDriveFileUpdated,
 				inferredProjectProgress[inferredTsConfig],
 				connection,
+				lsConfigs,
 			));
 		}
 	}

@@ -4,6 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
+import type { createLsConfigs } from '../configs';
 
 export function register(
 	ts: vue.Modules['typescript'],
@@ -11,6 +12,7 @@ export function register(
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
+	lsConfigs: ReturnType<typeof createLsConfigs>,
 ) {
 	connection.onCompletion(async handler => {
 		return await getProjects()
@@ -59,10 +61,10 @@ export function register(
 			?.get(handler.textDocument.uri)?.service
 			.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
-	connection.onCodeLens(handler => {
+	connection.onCodeLens(async handler => {
 		return getProjects()
 			?.get(handler.textDocument.uri)?.service
-			.getCodeLens(handler.textDocument.uri);
+			.getCodeLens(handler.textDocument.uri, await lsConfigs.getCodeLensConfigs());
 	});
 	connection.onCodeLensResolve(codeLens => {
 		const uri = codeLens.data?.uri;

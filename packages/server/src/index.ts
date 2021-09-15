@@ -6,7 +6,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver/node';
 import { URI } from 'vscode-uri';
 import * as vue from 'vscode-vue-languageservice';
-import { updateConfigs } from './configs';
+import { createLsConfigs } from './configs';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
 import * as tsConfigs from './tsConfigs';
@@ -72,17 +72,23 @@ async function onInitialize(params: vscode.InitializeParams) {
 	if (options.languageFeatures) {
 
 		let projects: ReturnType<typeof createProjects> | undefined;
+		const lsConfigs = createLsConfigs(connection);
 
 		const ts = loadTypescript(options.typescript.serverPath);
 
 		(await import('./features/customFeatures')).register(connection, documents, () => projects);
-		(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures);
+		(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, lsConfigs);
 		(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, ts.version);
 
 		connection.onInitialized(async () => {
 
 			const inferredCompilerOptions = await getInferredCompilerOptions(ts, connection);
 			const tsLocalized = options.typescript.localizedPath ? loadTypescriptLocalized(options.typescript.localizedPath) : undefined;
+
+			if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
+				connection.client.register(vscode.DidChangeConfigurationNotification.type);
+			}
+
 			projects = createProjects(
 				options,
 				ts,
@@ -91,13 +97,8 @@ async function onInitialize(params: vscode.InitializeParams) {
 				documents,
 				folders,
 				inferredCompilerOptions,
+				lsConfigs,
 			);
-
-			if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
-				connection.onDidChangeConfiguration(() => updateConfigs(connection));
-				connection.client.register(vscode.DidChangeConfigurationNotification.type);
-			}
-			updateConfigs(connection);
 		});
 	}
 

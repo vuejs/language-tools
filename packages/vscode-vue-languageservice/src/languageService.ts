@@ -52,7 +52,7 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
 	getExternalScriptFileNames?(): string[],
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
-	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
+	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
 	schemaRequestService?: json.SchemaRequestService,
 	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>;
 };

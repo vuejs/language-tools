@@ -3,10 +3,9 @@ import * as vue from 'vscode-vue-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as vscode from 'vscode-languageserver';
-import { getEmmetConfiguration } from './configs';
 import { getSchemaRequestService } from './schemaRequestService';
-import * as tsConfigs from './tsConfigs';
 import * as ShPlugin from 'typescript-vscode-sh-plugin';
+import type { createLsConfigs } from './configs';
 
 export type Project = ReturnType<typeof createProject>;
 export const fileRenamings = new Set<Promise<void>>();
@@ -22,6 +21,7 @@ export function createProject(
 	onUpdated: (changedFileName: string | undefined) => any,
 	workDoneProgress: vscode.WorkDoneProgressServerReporter,
 	connection: vscode.Connection,
+	lsConfigs: ReturnType<typeof createLsConfigs>,
 ) {
 
 	let projectVersion = 0;
@@ -239,15 +239,13 @@ export function createProject(
 			createTsLanguageService(host) {
 				return shared.createTsLanguageService(ts, ShPlugin, host);
 			},
-			getEmmetConfig: getEmmetConfiguration,
+			getEmmetConfig: lsConfigs.getEmmetConfiguration,
 			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,
-			getPreferences: (document) => tsConfigs.getPreferences(connection, document),
-			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
+			getPreferences: lsConfigs.getTsPreferences,
+			getFormatOptions: lsConfigs.getTsFormatOptions,
 			getParsedCommandLine: () => parsedCommandLine,
 			getExternalScriptFileNames: () => [...extraScripts.values()].map(file => file.fileName),
-			getCssLanguageSettings: (textDocument) => {
-				return connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId });
-			},
+			getCssLanguageSettings: lsConfigs.getCssLanguageSettings,
 			// ts
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,

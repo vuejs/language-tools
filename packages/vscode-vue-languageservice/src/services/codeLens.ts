@@ -3,10 +3,10 @@ import { Commands } from '../commands';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export const options = {
-	references: true,
-	pugTool: true,
-	scriptSetupTool: true,
+type CodeLensOptions = {
+	references: boolean,
+	pugTool: boolean,
+	scriptSetupTool: boolean,
 };
 
 export interface TsCodeLensData {
@@ -18,7 +18,11 @@ export interface TsCodeLensData {
 }
 
 export function register({ sourceFiles }: ApiLanguageServiceContext) {
-	return (uri: string) => {
+	return (uri: string, options: CodeLensOptions = {
+		references: true,
+		pugTool: true,
+		scriptSetupTool: true,
+	}) => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
