@@ -369,11 +369,15 @@ export function generate(
 					&& prop.arg.isStatic
 				) {
 
+					const propName = prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
+						? prop.arg.content
+						: prop.arg.loc.source
+
 					if (prop.name === 'bind' || prop.name === 'model') {
-						addProp(prop.arg.loc.source, prop.arg.loc.source, prop.arg.loc.start.offset);
+						addProp(propName, propName, prop.arg.loc.start.offset);
 					}
 					else if (prop.name === 'on') {
-						addEvent(prop.arg.loc.source, prop.arg.loc.start.offset);
+						addEvent(propName, prop.arg.loc.start.offset);
 					}
 				}
 				else if (
