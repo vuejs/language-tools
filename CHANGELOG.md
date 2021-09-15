@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.21
+
+- feat: support css settings ([#492](https://github.com/johnsoncodehk/volar/issues/492))
+- perf: cache vscode configuration
+- fix: props auto-complete not working for hyphenate components ([#487](https://github.com/johnsoncodehk/volar/issues/487))
+- fix: inline style with line break is broken ([#489](https://github.com/johnsoncodehk/volar/issues/489))
+- fix: cannot find module 'upath' in vscode-pug-languageservice ([#493](https://github.com/johnsoncodehk/volar/issues/493))
+
 ## 0.27.20
 
 - perf: improve template type-checking performance
