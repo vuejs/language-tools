@@ -39,8 +39,8 @@ export function register(
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
 		return getProjects()?.get(uri)?.service.doCompletionResolve(item, newPosition) ?? item;
 	});
-	connection.onHover(handler => {
-		return getProjects()
+	connection.onHover(async handler => {
+		return await getProjects()
 			?.get(handler.textDocument.uri)?.service
 			.doHover(handler.textDocument.uri, handler.position);
 	});

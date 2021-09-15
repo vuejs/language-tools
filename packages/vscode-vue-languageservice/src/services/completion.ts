@@ -539,7 +539,8 @@ export function register(
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
 					const wordRange: vscode.Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
-					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext);
+					const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
+					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext, settings?.completion);
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}

@@ -54,6 +54,7 @@ export type LanguageServiceHost = ts2.LanguageServiceHost & {
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig> | emmet.VSCodeEmmetConfig,
 	schemaRequestService?: json.SchemaRequestService,
+	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>;
 };
 
 export function getDocumentLanguageService(

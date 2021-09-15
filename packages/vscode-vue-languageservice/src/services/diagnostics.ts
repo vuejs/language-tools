@@ -10,7 +10,7 @@ import * as dedupe from '../utils/dedupe';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -359,19 +359,20 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			};
 		}
 		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
-			const errors = computed(() => {
+			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
 				for (const { textDocument, stylesheet } of documents.value) {
 					const cssLs = getCssLs(textDocument.languageId);
 					if (!cssLs || !stylesheet) continue;
-					const errs = cssLs.doValidation(textDocument, stylesheet);
+					const settings = await vueHost.getCssLanguageSettings?.(textDocument);
+					const errs = cssLs.doValidation(textDocument, stylesheet, settings);
 					if (errs) result.set(textDocument.uri, errs);
 				}
 				return result;
 			});
 			const errors_cache = ref<Map<string, vscode.Diagnostic[]>>(new Map());
-			const result = computed(() => {
-				errors_cache.value = errors.value;
+			const result = computed(async () => {
+				errors_cache.value = await errors.value;
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap = computed(() => {

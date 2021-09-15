@@ -4,15 +4,15 @@ import { HtmlSourceMap } from '../utils/sourceMaps';
 import { register as registerFindDefinitions } from './definition';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost }: ApiLanguageServiceContext) {
 
 	const findDefinitions = registerFindDefinitions(arguments[0]);
 
-	return (uri: string, position: vscode.Position) => {
+	return async (uri: string, position: vscode.Position) => {
 
 		const tsResult = onTs(uri, position);
 		const htmlResult = onHtml(uri, position);
-		const cssResult = onCss(uri, position);
+		const cssResult = await onCss(uri, position);
 
 		if (!tsResult && !htmlResult && !cssResult) return;
 
@@ -126,7 +126,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 
 		return result;
 	}
-	function onCss(uri: string, position: vscode.Position) {
+	async function onCss(uri: string, position: vscode.Position) {
 
 		let result: vscode.Hover | undefined;
 
@@ -145,10 +145,12 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs }: ApiL
 				continue;
 
 			for (const cssRange of sourceMap.getMappedRanges(position)) {
+				const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
 				const cssHover = cssLs.doHover(
 					sourceMap.mappedDocument,
 					cssRange.start,
 					sourceMap.stylesheet,
+					settings?.hover,
 				);
 				if (!cssHover)
 					continue;

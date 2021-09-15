@@ -245,6 +245,9 @@ export function createProject(
 			getFormatOptions: (document, options) => tsConfigs.getFormatOptions(connection, document, options),
 			getParsedCommandLine: () => parsedCommandLine,
 			getExternalScriptFileNames: () => [...extraScripts.values()].map(file => file.fileName),
+			getCssLanguageSettings: (textDocument) => {
+				return connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId });
+			},
 			// ts
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
