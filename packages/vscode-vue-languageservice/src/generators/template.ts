@@ -520,7 +520,6 @@ export function generate(
 				let start_source = source.loc.start.offset;
 
 				const sourceVarName = `__VLS_${elementIndex++}`;
-				const forOfItemName = `__VLS_${elementIndex++}`;
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
 				tsCodeGen.addText(`const ${sourceVarName} = __VLS_getVforSourceType(`);
@@ -538,7 +537,6 @@ export function generate(
 					formatBrackets.round,
 				);
 				tsCodeGen.addText(`);\n`);
-				tsCodeGen.addText(`for (var ${forOfItemName} of ${sourceVarName}) { }\n`);
 				tsCodeGen.addText(`for (const __VLS_${elementIndex++} in `);
 				writeCode(
 					sourceVarName,
@@ -568,7 +566,7 @@ export function generate(
 					},
 					formatBrackets.empty,
 				);
-				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName}, ${forOfItemName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
+				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
 
 				if (key && key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
