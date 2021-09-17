@@ -1,7 +1,6 @@
 import * as vue from 'vscode-vue-languageservice'
 import * as shared from '@volar/shared';
 import * as path from 'upath';
-import * as ShPlugin from 'typescript-vscode-sh-plugin';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -57,7 +56,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: vue.LanguageServiceHost = {
 		createTsLanguageService(host) {
-			return shared.createTsLanguageService(ts, ShPlugin, host)
+			return shared.createTsLanguageService(ts, host)
 		},
 		getNewLine: () => ts.sys.newLine,
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,

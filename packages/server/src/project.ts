@@ -4,7 +4,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as vscode from 'vscode-languageserver';
 import { getSchemaRequestService } from './schemaRequestService';
-import * as ShPlugin from 'typescript-vscode-sh-plugin';
 import type { createLsConfigs } from './configs';
 
 export type Project = ReturnType<typeof createProject>;
@@ -237,7 +236,7 @@ export function createProject(
 		const host: vue.LanguageServiceHost = {
 			// vue
 			createTsLanguageService(host) {
-				return shared.createTsLanguageService(ts, ShPlugin, host);
+				return shared.createTsLanguageService(ts, host);
 			},
 			getEmmetConfig: lsConfigs.getEmmetConfiguration,
 			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,

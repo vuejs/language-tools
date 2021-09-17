@@ -2,7 +2,6 @@ import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
-import { TokenEncodingConsts, TokenType, TokenModifier } from 'typescript-vscode-sh-plugin/lib/constants';
 
 export function getSemanticTokenLegend() {
 	if (tokenTypes.length !== TokenType._) {
@@ -14,7 +13,11 @@ export function getSemanticTokenLegend() {
 	return { types: tokenTypes, modifiers: tokenModifiers };
 }
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
+export function register(
+	languageService: ts.LanguageService,
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken) => {
 
 		const document = getTextDocument(uri);
@@ -25,9 +28,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const length = range ? (document.offsetAt(range.end) - start) : document.getText().length;
 
 		if (cancle?.isCancellationRequested) return;
-		const response1 = languageService.getEncodedSemanticClassifications(file, { start, length });
-		if (cancle?.isCancellationRequested) return;
 		const response2 = languageService.getEncodedSyntacticClassifications(file, { start, length });
+
+		if (cancle?.isCancellationRequested) return;
+		const response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty);
 
 		const tokenSpan = [...response1.spans, ...response2.spans];
 
@@ -74,8 +78,41 @@ function docLineLength(document: TextDocument, line: number) {
 	return nextLineOffset - currentLineOffset;
 }
 
-// typescript-vscode-sh-plugin encodes type and modifiers in the classification:
+// typescript encodes type and modifiers in the classification:
 // TSClassification = (TokenType + 1) << 8 + TokenModifier
+
+declare const enum TokenType {
+	class = 0,
+	enum = 1,
+	interface = 2,
+	namespace = 3,
+	typeParameter = 4,
+	type = 5,
+	parameter = 6,
+	variable = 7,
+	enumMember = 8,
+	property = 9,
+	function = 10,
+	method = 11,
+	_ = 12
+}
+declare const enum TokenModifier {
+	declaration = 0,
+	static = 1,
+	async = 2,
+	readonly = 3,
+	defaultLibrary = 4,
+	local = 5,
+	_ = 6
+}
+declare const enum TokenEncodingConsts {
+	typeOffset = 8,
+	modifierMask = 255
+}
+declare const enum VersionRequirement {
+	major = 3,
+	minor = 7
+}
 
 function getTokenTypeFromClassification(tsClassification: number): number | undefined {
 	if (tsClassification > TokenEncodingConsts.modifierMask) {
@@ -100,7 +137,7 @@ tokenTypes[TokenType.variable] = 'variable';
 tokenTypes[TokenType.enumMember] = 'enumMember';
 tokenTypes[TokenType.property] = 'property';
 tokenTypes[TokenType.function] = 'function';
-tokenTypes[TokenType.member] = 'member';
+tokenTypes[TokenType.method] = 'method';
 
 const tokenModifiers: string[] = [];
 tokenModifiers[TokenModifier.async] = 'async';
@@ -109,14 +146,6 @@ tokenModifiers[TokenModifier.readonly] = 'readonly';
 tokenModifiers[TokenModifier.static] = 'static';
 tokenModifiers[TokenModifier.local] = 'local';
 tokenModifiers[TokenModifier.defaultLibrary] = 'defaultLibrary';
-
-// make sure token types and modifiers are complete
-if (tokenTypes.filter(t => !!t).length !== TokenType._) {
-	console.warn('typescript-vscode-sh-plugin has added new tokens types.');
-}
-if (tokenModifiers.filter(t => !!t).length !== TokenModifier._) {
-	console.warn('typescript-vscode-sh-plugin has added new tokens modifiers.');
-}
 
 // mapping for the original ExperimentalProtocol.ClassificationType from TypeScript (only used when plugin is not available)
 const tokenTypeMap: number[] = [];

@@ -55,7 +55,6 @@ export function getTsCompletions(ts: typeof import('typescript/lib/tsserverlibra
 
 export function createTsLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	ShPlugin: typeof import('typescript-vscode-sh-plugin'),
 	_host: ts.LanguageServiceHost,
 ) {
 	// @ts-ignore
@@ -66,10 +65,7 @@ export function createTsLanguageService(
 		// TODO: crash on 'addListener' from 'node:process', reuse because TS has same problem
 		getImportSuggestionsCache: () => importSuggestionsCache,
 	};
-	const shPlugin = ShPlugin({ typescript: ts });
-	let languageService = ts.createLanguageService(host);
-	languageService = shPlugin.decorate(languageService);
-	return languageService;
+	return ts.createLanguageService(host);
 }
 
 export function getWorkspaceTypescriptPath(tsdk: string, workspaceFolderFsPaths: string[]) {

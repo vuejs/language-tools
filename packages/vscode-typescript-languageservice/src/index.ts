@@ -59,7 +59,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		getSelectionRanges: selectionRanges.register(languageService, getValidTextDocument),
 		doValidation: diagnostics.register(languageService, getValidTextDocument, ts),
 		getFoldingRanges: foldingRanges.register(languageService, getValidTextDocument, ts),
-		getDocumentSemanticTokens: semanticTokens.register(languageService, getValidTextDocument),
+		getDocumentSemanticTokens: semanticTokens.register(languageService, getValidTextDocument, ts),
 		callHierarchy: callHierarchy.register(languageService, getValidTextDocument),
 
 		dispose,
