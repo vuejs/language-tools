@@ -5,14 +5,31 @@
 		{
 			"type": "extensionHost",
 			"request": "launch",
-			"name": "Launch Client",
+			"name": "Launch Vue Language Features",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}"
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vue-language-features"
 			],
 			"outFiles": [
-				"${workspaceRoot}/packages/shared/out/**/*.js",
-				"${workspaceRoot}/packages/client/out/**/*.js"
+				"${workspaceRoot}/extensions/*/out/**/*.js",
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
+			"type": "extensionHost",
+			"request": "launch",
+			"name": "Launch TypeScript Vue Plugin",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/typescript-vue-plugin"
+			],
+			"outFiles": [
+				"${workspaceRoot}/extensions/*/out/**/*.js",
+				"${workspaceRoot}/packages/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -54,7 +71,7 @@
 		{
 			"name": "Client + Server",
 			"configurations": [
-				"Launch Client",
+				"Launch Vue Language Features",
 				"Attach to Server - API",
 				"Attach to Server - Document",
 				"Attach to Server - HTML"

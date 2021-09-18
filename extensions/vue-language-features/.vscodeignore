@@ -20,10 +20,8 @@ node_modules/**/LICENSE
 
 # ignore all *.js
 node_modules/**/*.js
-!node_modules/typescript-vue-plugin/out/*.js
 
 # whitelist
-node_modules/@vue/**/@babel/**
 !node_modules/@babel/helper-validator-identifier/lib/*.js
 !node_modules/@babel/parser/lib/*.js
 !node_modules/@babel/types/lib/*.js
@@ -219,7 +217,6 @@ node_modules/@vue/**/@babel/**
 !node_modules/to-fast-properties/*.js
 !node_modules/token-stream/*.js
 !node_modules/trough/*.js
-!node_modules/typescript-vscode-sh-plugin/lib/index.js
 !node_modules/unified/*.js
 !node_modules/unified/node_modules/unist-util-stringify-position/*.js
 !node_modules/unified/node_modules/vfile-message/*.js
@@ -232,12 +229,12 @@ node_modules/@vue/**/@babel/**
 !node_modules/unist-util-visit-parents/node_modules/unist-util-is/convert.js
 !node_modules/unist-util-visit/*.js
 !node_modules/upath/build/code/*.js
+!node_modules/vfile-message/*.js
 !node_modules/vfile/index.js
 !node_modules/vfile/lib/core.js
 !node_modules/vfile/lib/index.js
 !node_modules/vfile/lib/minpath.js
 !node_modules/vfile/lib/minproc.js
-!node_modules/vfile/node_modules/vfile-message/*.js
 !node_modules/void-elements/*.js
 !node_modules/vscode-css-languageservice/lib/umd/*.js
 !node_modules/vscode-css-languageservice/lib/umd/data/*.js
@@ -297,6 +294,13 @@ node_modules/@vue/**/@babel/**
 !node_modules/vscode-nls/lib/node/*.js
 !node_modules/vscode-pug-languageservice/out/*.js
 !node_modules/vscode-pug-languageservice/out/services/*.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/classes/comparator.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/classes/range.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/classes/semver.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/functions/*.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/index.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/internal/*.js
+!node_modules/vscode-typescript-languageservice/node_modules/semver/ranges/*.js
 !node_modules/vscode-typescript-languageservice/out/*.js
 !node_modules/vscode-typescript-languageservice/out/services/*.js
 !node_modules/vscode-typescript-languageservice/out/utils/fixNames.js

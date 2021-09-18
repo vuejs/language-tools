@@ -3,13 +3,10 @@
 	"include": [],
 	"references": [
 		{
-			"path": "./packages/client/tsconfig.build.json"
+			"path": "./extensions/vue-language-features/tsconfig.build.json"
 		},
 		{
-			"path": "./packages/server/tsconfig.build.json"
-		},
-		{
-			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"
+			"path": "./extensions/typescript-vue-plugin/tsconfig.build.json"
 		},
 		{
 			"path": "./packages/experimental/tsconfig.build.json"

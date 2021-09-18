@@ -1,21 +1,14 @@
 {
 	"private": true,
 	"name": "@volar/client",
-	"version": "0.27.20",
-	"license": "MIT",
-	"engines": {
-		"vscode": "latest"
-	},
-	"files": [
-		"out/**/*.js",
-		"out/**/*.d.ts"
-	],
+	"version": "0.27.21",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "packages/client"
 	},
 	"dependencies": {
+		"@volar/server": "^0.27.21",
 		"@volar/shared": "^0.27.14",
 		"@vue/reactivity": "^3.2.6",
 		"upath": "^2.0.1",
@@ -25,6 +18,6 @@
 		"vscode-nls": "5.0.0"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.58.1"
+		"@types/vscode": "1.58.0"
 	}
 }

@@ -1,0 +1,435 @@
+{
+	"private": true,
+	"name": "volar",
+	"version": "0.27.21",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "extensions/vue-language-features"
+	},
+	"displayName": "Vue Language Features (Volar)",
+	"description": "Language support for Vue 3",
+	"author": "johnsoncodehk",
+	"publisher": "johnsoncodehk",
+	"engines": {
+		"vscode": "^1.58.0"
+	},
+	"keywords": [
+		"volar",
+		"vue",
+		"vue3",
+		"ts",
+		"typescript",
+		"pug"
+	],
+	"activationEvents": [
+		"onLanguage:vue",
+		"onWebviewPanel:preview"
+	],
+	"main": "node_modules/@volar/client/out/extension.js",
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": "limited",
+			"description": "%workspaceTrust%",
+			"restrictedConfigurations": [
+				"typescript.tsdk",
+				"typescript.tsserver.pluginPaths",
+				"typescript.npm"
+			]
+		}
+	},
+	"contributes": {
+		"languages": [
+			{
+				"id": "vue",
+				"extensions": [
+					".vue"
+				],
+				"configuration": "./languages/vue-language-configuration.json"
+			}
+		],
+		"breakpoints": [
+			{
+				"language": "vue"
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Volar",
+			"properties": {
+				"volar-api.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"volar-document.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"volar-html.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"volar.lowPowerMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Using one language server to do the work of two language serves can reduce system resource usage, but features such as auto-complete will be much slower."
+				},
+				"volar.codeLens.references": {
+					"type": "boolean",
+					"default": true,
+					"description": "[references] code lens."
+				},
+				"volar.codeLens.pugTools": {
+					"type": "boolean",
+					"default": true,
+					"description": "[pug ☐] code lens."
+				},
+				"volar.formatting.printWidth": {
+					"type": "number",
+					"default": 100,
+					"description": "HTML formatting print width."
+				},
+				"volar.icon.splitEditors": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show split editor icon in title area of editor."
+				},
+				"volar.icon.preview": {
+					"type": "boolean",
+					"default": false,
+					"description": "(Experimental) Show preview component icon in title area of editor."
+				},
+				"volar.icon.finder": {
+					"type": "boolean",
+					"default": false,
+					"description": "(Experimental) Show code finder icon in title area of editor."
+				},
+				"volar.codeLens.scriptSetupTools": {
+					"type": "boolean",
+					"default": true,
+					"description": "[ref sugar ☐] code lens."
+				},
+				"volar.autoCompleteRefs": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto-complete Ref value with `.value`."
+				},
+				"volar.takeOverBuiltinTsExtension": {
+					"type": "boolean",
+					"default": true,
+					"description": "If built-in VSCode TypeScript Extension disabled, take over language support for *.ts."
+				},
+				"volar.tsPlugin": {
+					"type": "boolean",
+					"enum": [
+						null,
+						true,
+						false
+					],
+					"enumDescriptions": [
+						"Don't care (Don't reload VSCode)",
+						"Enable TS Plugin",
+						"Disable TS Plugin"
+					],
+					"default": null,
+					"description": "Enable Vue TS Server Plugin.\nSince TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases, this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), then you need to enable this setting."
+				},
+				"volar.tsPluginStatus": {
+					"type": "boolean",
+					"default": false,
+					"description": "Display TS Server Plugin status bar item."
+				},
+				"volar.checkVueTscVersion": {
+					"type": "boolean",
+					"default": true,
+					"description": "Check node_modules/vscode-vue-languageservice version when start extension."
+				},
+				"volar.preferredTagNameCase": {
+					"type": "string",
+					"enum": [
+						"auto",
+						"both",
+						"kebab",
+						"pascal"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content",
+						"<kebab-case> and <PascalCase>",
+						"<kebab-case>",
+						"<PascalCase>"
+					],
+					"default": "auto",
+					"description": "Preferred tag name case."
+				},
+				"volar.preferredAttrNameCase": {
+					"type": "string",
+					"enum": [
+						"auto-kebab",
+						"auto-camel",
+						"kebab",
+						"camel"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content (Preferred :kebab-case=\"...\")",
+						"Auto Detect from Content (Preferred :camelCase=\"...\")",
+						":kebab-case=\"...\"",
+						":camelCase=\"...\""
+					],
+					"default": "auto-kebab",
+					"description": "Preferred attr name case."
+				},
+				"volar.preview.port": {
+					"type": "number",
+					"default": 3333,
+					"description": "Default port for component preview server."
+				},
+				"volar.preview.backgroundColor": {
+					"type": "string",
+					"default": "#fff",
+					"description": "Component preview background color."
+				},
+				"volar.preview.transparentGrid": {
+					"type": "boolean",
+					"default": true,
+					"description": "Component preview background style."
+				}
+			}
+		},
+		"grammars": [
+			{
+				"language": "vue",
+				"scopeName": "source.vue",
+				"path": "./syntaxes/vue.tmLanguage.json",
+				"embeddedLanguages": {
+					"source.vue": "vue",
+					"text": "plaintext",
+					"text.html.derivative": "html",
+					"text.html.markdown": "markdown",
+					"text.pug": "jade",
+					"source.css": "css",
+					"source.css.scss": "scss",
+					"source.css.less": "less",
+					"source.sass": "sass",
+					"source.stylus": "stylus",
+					"source.postcss": "postcss",
+					"source.js": "javascript",
+					"source.ts": "typescript",
+					"source.jsx": "javascriptreact",
+					"source.tsx": "typescriptreact",
+					"source.json": "json",
+					"source.json.comments": "jsonc",
+					"source.yaml": "yaml",
+					"source.graphql": "graphql"
+				}
+			}
+		],
+		"semanticTokenScopes": [
+			{
+				"language": "vue",
+				"scopes": {
+					"property": [
+						"variable.other.property.vue"
+					],
+					"property.readonly": [
+						"variable.other.constant.property.vue"
+					],
+					"variable": [
+						"variable.other.readwrite.vue"
+					],
+					"variable.readonly": [
+						"variable.other.constant.object.vue"
+					],
+					"function": [
+						"entity.name.function.vue"
+					],
+					"namespace": [
+						"entity.name.type.module.vue"
+					],
+					"variable.defaultLibrary": [
+						"support.variable.vue"
+					],
+					"function.defaultLibrary": [
+						"support.function.vue"
+					],
+					"componentTag": [
+						"support.class.component.vue"
+					]
+				}
+			}
+		],
+		"commands": [
+			{
+				"command": "volar.action.restartServer",
+				"title": "Restart Vue server",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.verifyAllScripts",
+				"title": "Verify All Scripts",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.writeTemplateLsVirtualFiles",
+				"title": "Write Template LS Virtual Files",
+				"category": "Volar (Debug)"
+			},
+			{
+				"command": "volar.action.writeScriptLsVirtualFiles",
+				"title": "Write Script LS Virtual Files",
+				"category": "Volar (Debug)"
+			},
+			{
+				"command": "volar.action.genWhitelist",
+				"title": "Generate .vscodeignore Whitelist",
+				"category": "Volar (Debug)"
+			},
+			{
+				"command": "volar.action.showCallGraph",
+				"title": "Show Call Graph",
+				"category": "Volar (Experimental)"
+			},
+			{
+				"command": "volar.action.splitEditors",
+				"title": "Split <script>, <template>, <style> Editors",
+				"category": "Volar",
+				"icon": "images/split-editors.png"
+			},
+			{
+				"command": "volar.action.finder",
+				"title": "Open Code Finder (WebView)",
+				"category": "Volar (Experimental)",
+				"icon": "$(search)"
+			},
+			{
+				"command": "volar.action.preview",
+				"title": "Open Component Preview",
+				"category": "Volar (Experimental)",
+				"icon": "$(open-preview)"
+			},
+			{
+				"command": "volar.action.toggleTsPlugin",
+				"title": "Switch TS Plugin on / off",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.tagNameCase",
+				"title": "Change Tag Name Case",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.tagNameCase.convertToKebabCase",
+				"title": "Convert Tag Name Case to kebab-case",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.tagNameCase.convertToPascalCase",
+				"title": "Convert Tag Name Case to PascalCase",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.attrNameCase",
+				"title": "Change Attr Name Case",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.createWorkspaceSnippets",
+				"title": "Create Workspace Snippets",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.selectElement",
+				"title": "Select Element",
+				"category": "Volar",
+				"icon": "$(search)"
+			},
+			{
+				"command": "volar.action.showInBrowser",
+				"title": "Show in Browser",
+				"category": "Volar",
+				"icon": "$(browser)"
+			},
+			{
+				"command": "workbench.action.webview.reloadWebviewAction",
+				"title": "Refresh",
+				"category": "Volar",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "volar.selectTypeScriptVersion",
+				"title": "Select TypeScript Version...",
+				"category": "Volar"
+			}
+		],
+		"menus": {
+			"editor/title": [
+				{
+					"command": "volar.action.splitEditors",
+					"when": "editorLangId == vue && config.volar.icon.splitEditors",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.preview",
+					"when": "editorLangId == vue && config.volar.icon.preview",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.finder",
+					"when": "editorLangId == vue && config.volar.icon.finder",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.selectElement",
+					"when": "activeEditor == WebviewEditor && volar.showSelectElement",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.showInBrowser",
+					"when": "activeEditor == WebviewEditor",
+					"group": "navigation"
+				},
+				{
+					"command": "workbench.action.webview.reloadWebviewAction",
+					"when": "activeEditor == WebviewEditor",
+					"group": "navigation"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"prerelease": "vsce package --out vue-language-features.vsix --yarn",
+		"release": "vsce publish --packagePath vue-language-features.vsix --yarn"
+	},
+	"workspaces": [
+		"../../packages/*"
+	],
+	"dependencies": {
+		"@volar/client": "^0.27.21"
+	},
+	"devDependencies": {
+		"vsce": "latest"
+	},
+	"resolutions": {
+		"to-vfile": "7.1.0"
+	}
+}
