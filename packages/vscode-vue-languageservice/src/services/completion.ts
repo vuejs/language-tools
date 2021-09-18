@@ -648,9 +648,11 @@ export function register(
 		} = sourceFile.refs;
 
 		const projectVersion = ref<number>();
+		const usedTags = ref(new Set<string>());
 		const result = computed(() => {
 			{ // watching
 				projectVersion.value;
+				usedTags.value;
 			}
 			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
 			pauseTracking();
@@ -688,6 +690,10 @@ export function register(
 		});
 		return () => {
 			projectVersion.value = getScriptContentVersion();
+			const nowUsedTags = new Set(Object.keys(sfcTemplateScript.templateCodeGens.value?.tagNames ?? {}));
+			if (!shared.eqSet(usedTags.value, nowUsedTags)) {
+				usedTags.value = nowUsedTags;
+			}
 			return result.value;
 		};
 	}
