@@ -2,14 +2,14 @@
 	"private": true,
 	"scripts": {
 		"install": "yarn install:vue-language-features && yarn install:typescript-vue-plugin",
-		"install:vue-language-features": "cd extensions/vue-language-features && yarn",
-		"install:typescript-vue-plugin": "cd extensions/typescript-vue-plugin && yarn",
+		"install:vue-language-features": "cd extensions/vscode-vue-language-features && yarn",
+		"install:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn",
 		"compile": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
 		"prerelease": "yarn && yarn compile && yarn test",
 		"release": "lerna publish --yes && yarn release:vue-language-features && yarn release:typescript-vue-plugin",
-		"release:vue-language-features": "cd extensions/vue-language-features && yarn release",
-		"release:typescript-vue-plugin": "cd extensions/typescript-vue-plugin && yarn release",
+		"release:vue-language-features": "cd extensions/vscode-vue-language-features && yarn release",
+		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn release",
 		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
 		"test": "jest"
 	},

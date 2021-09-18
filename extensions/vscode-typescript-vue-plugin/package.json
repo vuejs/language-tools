@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"name": "typescript-vue-plugin",
+	"name": "vscode-typescript-vue-plugin",
 	"version": "0.27.21",
 	"repository": {
 		"type": "git",
