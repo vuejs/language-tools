@@ -55,6 +55,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 - [@volar/server](https://www.npmjs.com/package/@volar/server): Bridging module for LSP <-> vscode-vue-languageservice.
 - [vue-tsc](https://github.com/johnsoncodehk/vue-tsc): Type-Checking on command line
 - [typescript-vue-plugin](https://www.npmjs.com/package/typescript-vue-plugin): See [#169](https://github.com/johnsoncodehk/volar/issues/169#issuecomment-832377254).
+- [vscode-typescript-vue-plugin](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-vue-plugin): VSCode TypeScript server plugin extension by typescript-vue-plugin
 - [vscode-vue-languageservice](https://www.npmjs.com/package/vscode-vue-languageservice) : Generic language server module for Vue
 - [vscode-pug-languageservice](https://www.npmjs.com/package/vscode-pug-languageservice): Generic language server module for Pug
 - [vscode-typescript-languageservice](https://www.npmjs.com/package/vscode-typescript-languageservice): Generic language server module for TypeScript
