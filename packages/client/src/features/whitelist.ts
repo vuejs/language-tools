@@ -10,8 +10,8 @@ export async function activate(context: vscode.ExtensionContext, clients: lsp.La
 
 		const clientDeps = Object.keys(require.cache);
 		const serversDeps = await Promise.all(clients.map(client => client.sendRequest(shared.DepsRequest.type)));
-		const rootPath = path.resolve(__dirname, '..', '..', '..', '..');
-		const extPath = path.resolve(__dirname, '..', '..');
+		const rootPath = context.extensionPath; // path.resolve(__dirname, '..', '..', '..', '..');
+		// const extPath = path.resolve(__dirname, '..', '..');
 		const all = new Set([
 			...clientDeps,
 			...serversDeps.flat(),
@@ -22,22 +22,23 @@ export async function activate(context: vscode.ExtensionContext, clients: lsp.La
 			.filter(file => !file.startsWith('..'))
 			.map(convertMonorepoFileToNodeModeulsFile)
 			.filter(file => file.startsWith('node_modules/'))
-		const extDeps = [...all]
-			.map(file => path.relative(extPath, file))
-			.filter(file => !file.startsWith('..'))
-			.filter(file => file.startsWith('node_modules/'))
+		// const extDeps = [...all]
+		// 	.map(file => path.relative(extPath, file))
+		// 	.filter(file => !file.startsWith('..'))
+		// 	.filter(file => file.startsWith('node_modules/'))
 
 		const rootFinal = getFinal(rootDeps, rootPath);
-		const extFinal = getFinal(extDeps, extPath);
+		// const extFinal = getFinal(extDeps, extPath);
 		const final = [...new Set([
 			'node_modules/prettier/parser-postcss.js', // patch
 			...rootFinal,
-			...extFinal,
+			// ...extFinal,
 		])]
 			.sort()
 			.map(file => '!' + file)
 
-		fs.writeFileSync(rootPath + '/.vscodeignore-whitelist.txt', final.join('\n'));
+		const document = await vscode.workspace.openTextDocument({ content: final.join('\n') });
+		await vscode.window.showTextDocument(document);
 
 		function getFinal(files: string[], root: string) {
 
