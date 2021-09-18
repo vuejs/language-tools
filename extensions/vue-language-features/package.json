@@ -142,23 +142,8 @@
 				},
 				"volar.tsPlugin": {
 					"type": "boolean",
-					"enum": [
-						null,
-						true,
-						false
-					],
-					"enumDescriptions": [
-						"Don't care (Don't reload VSCode)",
-						"Enable TS Plugin",
-						"Disable TS Plugin"
-					],
-					"default": null,
-					"description": "Enable Vue TS Server Plugin.\nSince TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases, this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), then you need to enable this setting."
-				},
-				"volar.tsPluginStatus": {
-					"type": "boolean",
 					"default": false,
-					"description": "Display TS Server Plugin status bar item."
+					"description": "(Deprecated) Show TS plugin deprecated message."
 				},
 				"volar.checkVueTscVersion": {
 					"type": "boolean",
@@ -326,11 +311,6 @@
 				"title": "Open Component Preview",
 				"category": "Volar (Experimental)",
 				"icon": "$(open-preview)"
-			},
-			{
-				"command": "volar.action.toggleTsPlugin",
-				"title": "Switch TS Plugin on / off",
-				"category": "Volar"
 			},
 			{
 				"command": "volar.action.tagNameCase",
