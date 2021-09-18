@@ -23,7 +23,8 @@ export function createProject(
 	lsConfigs: ReturnType<typeof createLsConfigs>,
 ) {
 
-	let projectVersion = 0;
+	let tsProjectVersion = 0;
+	let vueProjectVersion = 0;
 	let parsedCommandLine: ts.ParsedCommandLine;
 	let vueLs: vue.LanguageService | undefined;
 	const snapshots = new shared.FsPathMap<{
@@ -145,7 +146,7 @@ export function createProject(
 			}
 		}
 		if (changed) {
-			onProjectUpdated(undefined);
+			onUpdated(undefined);
 		}
 	}
 	async function onDocumentUpdated(document: TextDocument) {
@@ -202,7 +203,7 @@ export function createProject(
 			if (script) {
 				script.fileWatcher?.close();
 				scripts.delete(fileName);
-				onProjectUpdated(undefined);
+				onProjectUpdated(fileName);
 			}
 		}
 	}
@@ -227,8 +228,13 @@ export function createProject(
 			onProjectUpdated(fileName);
 		}
 	}
-	async function onProjectUpdated(changedFileName: string | undefined) {
-		projectVersion++;
+	async function onProjectUpdated(changedFileName: string) {
+		if (changedFileName.endsWith('.vue')) {
+			vueProjectVersion++;
+		}
+		else {
+			tsProjectVersion++;
+		}
 		onUpdated(changedFileName);
 	}
 	function createLanguageServiceHost() {
@@ -243,7 +249,6 @@ export function createProject(
 			getPreferences: lsConfigs.getTsPreferences,
 			getFormatOptions: lsConfigs.getTsFormatOptions,
 			getParsedCommandLine: () => parsedCommandLine,
-			getExternalScriptFileNames: () => [...extraScripts.values()].map(file => file.fileName),
 			getCssLanguageSettings: lsConfigs.getCssLanguageSettings,
 			// ts
 			getNewLine: () => ts.sys.newLine,
@@ -257,7 +262,8 @@ export function createProject(
 			// custom
 			fileExists,
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
-			getProjectVersion: () => projectVersion.toString(),
+			getProjectVersion: () => tsProjectVersion.toString(),
+			getVueProjectVersion: () => vueProjectVersion.toString(),
 			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,

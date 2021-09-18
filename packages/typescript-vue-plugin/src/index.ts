@@ -48,12 +48,16 @@ export = init;
 function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), info: ts.server.PluginCreateInfo) {
 
 	let projectVersion = 0;
-	let anyFilesChanged = false;
+	let reloadVueFilesSeq = 0;
+	let sendDiagSeq = 0;
 	let disposed = false;
-	let vueFiles = new Set(getVueFiles());
-	const fileWatchers = new Map<string, ts.FileWatcher>();
-	const scriptVersions = new Map<string, number>();
-	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
+
+	const vueFiles = new Map<string, {
+		fileWatcher: ts.FileWatcher,
+		version: number,
+		snapshots: ts.IScriptSnapshot | undefined,
+		snapshotsVersion: string | undefined,
+	}>();
 	const host: vue.LanguageServiceHost = {
 		createTsLanguageService(host) {
 			return shared.createTsLanguageService(ts, host)
@@ -71,65 +75,64 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getCompilationSettings: () => info.project.getCompilationSettings(),
 		getCurrentDirectory: () => info.project.getCurrentDirectory(),
 		getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
+		getProjectVersion: () => info.project.getProjectVersion(),
+		getVueProjectVersion: () => projectVersion.toString(),
 
-		getProjectVersion,
 		getScriptFileNames,
 		getScriptVersion,
 		getScriptSnapshot,
 	};
 
-	checkFilesAddRemove();
+	update();
 
-	const directoryWatcher = info.serverHost.watchDirectory(info.project.getCurrentDirectory(), onFileChangedOrConfigUpdated, true);
+	const directoryWatcher = info.serverHost.watchDirectory(info.project.getCurrentDirectory(), onAnyDriveFileUpdated, true);
 
 	let tsconfigWatcher = info.project.fileExists(info.project.projectName)
 		? info.serverHost.watchFile(info.project.projectName, () => {
-			onFileChangedOrConfigUpdated();
+			onConfigUpdated();
 			onProjectUpdated();
 		})
 		: undefined;
 
 	return {
 		host,
-		getVueFiles: () => [...vueFiles],
+		getVueFiles: () => [...vueFiles.keys()],
 		dispose,
 	};
 
-	async function onFileChangedOrConfigUpdated() {
-		anyFilesChanged = true;
-		await shared.sleep(0);
-		if (anyFilesChanged && !disposed) {
-			anyFilesChanged = false;
-			vueFiles = new Set(getVueFiles());
-			checkFilesAddRemove();
+	async function onAnyDriveFileUpdated(fileName: string) {
+		if (fileName.endsWith('.vue') && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
+			onConfigUpdated();
 		}
 	}
-	function getProjectVersion() {
-		return info.project.getProjectVersion() + ':' + projectVersion.toString();
+	async function onConfigUpdated() {
+		const seq = ++reloadVueFilesSeq;
+		await shared.sleep(100);
+		if (seq === reloadVueFilesSeq && !disposed) {
+			update();
+		}
 	}
 	function getScriptFileNames() {
-		return info.project.getScriptFileNames().concat([...vueFiles]);
+		return info.project.getScriptFileNames().concat([...vueFiles.keys()]);
 	}
 	function getScriptVersion(fileName: string) {
 		if (vueFiles.has(fileName)) {
-			return (scriptVersions.get(fileName) ?? -1).toString();
+			return vueFiles.get(fileName)!.version.toString();
 		}
 		return info.project.getScriptVersion(fileName);
 	}
 	function getScriptSnapshot(fileName: string) {
 		if (vueFiles.has(fileName)) {
 			const version = getScriptVersion(fileName);
-			const cache = scriptSnapshots.get(fileName);
-			if (cache && cache[0] === version) {
-				return cache[1];
+			const file = vueFiles.get(fileName)!;
+			if (file.snapshotsVersion !== version) {
+				const text = getScriptText(fileName);
+				if (text === undefined) return;
+				file.snapshots = ts.ScriptSnapshot.fromString(text);
+				file.snapshotsVersion = version;
+				return file.snapshots;
 			}
-			const text = getScriptText(fileName);
-			if (text !== undefined) {
-				const snapshot = ts.ScriptSnapshot.fromString(text);
-				scriptSnapshots.set(fileName, [version.toString(), snapshot]);
-				return snapshot;
-			}
-			return;
+			return file.snapshots;
 		}
 		return info.project.getScriptSnapshot(fileName);
 	}
@@ -151,23 +154,34 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, info.project.getCurrentDirectory(), info.project.getCompilerOptions());
 		return fileNames;
 	}
-	function checkFilesAddRemove() {
+	function update() {
+		const newVueFiles = new Set(getVueFiles());
 		let changed = false;
-		for (const fileName of fileWatchers.keys()) {
-			if (!vueFiles.has(fileName)) {
-				fileWatchers.get(fileName)!.close();
-				fileWatchers.delete(fileName);
+		for (const fileName of vueFiles.keys()) {
+			if (!newVueFiles.has(fileName)) {
+				vueFiles.get(fileName)?.fileWatcher.close();
+				vueFiles.delete(fileName);
 				changed = true;
 			}
 		}
-		for (const fileName of vueFiles) {
-			if (!fileWatchers.has(fileName)) {
-				const fileWatcher = info.serverHost.watchFile(fileName, (fileName, eventKind) => {
+		for (const fileName of newVueFiles) {
+			if (!vueFiles.has(fileName)) {
+				const fileWatcher = info.serverHost.watchFile(fileName, (_, eventKind) => {
 					if (eventKind === ts.FileWatcherEventKind.Changed) {
 						onFileChanged(fileName);
 					}
+					else if (eventKind === ts.FileWatcherEventKind.Deleted) {
+						vueFiles.get(fileName)?.fileWatcher.close();
+						vueFiles.delete(fileName);
+						onProjectUpdated();
+					}
 				});
-				fileWatchers.set(fileName, fileWatcher);
+				vueFiles.set(fileName, {
+					fileWatcher,
+					version: 0,
+					snapshots: undefined,
+					snapshotsVersion: undefined,
+				});
 				changed = true;
 			}
 		}
@@ -177,26 +191,27 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	}
 	function onFileChanged(fileName: string) {
 		fileName = path.resolve(fileName);
-		const oldVersion = scriptVersions.get(fileName);
-		if (oldVersion === undefined) {
-			scriptVersions.set(fileName, 1);
-		}
-		else {
-			scriptVersions.set(fileName, oldVersion + 1);
+		const file = vueFiles.get(fileName);
+		if (file) {
+			file.version++;
 		}
 		onProjectUpdated();
 	}
-	function onProjectUpdated() {
+	async function onProjectUpdated() {
 		projectVersion++;
-		info.project.refreshDiagnostics();
+		const seq = ++sendDiagSeq;
+		await shared.sleep(100);
+		if (seq === sendDiagSeq) {
+			info.project.refreshDiagnostics();
+		}
 	}
 	function dispose() {
 		directoryWatcher.close();
 		if (tsconfigWatcher) {
 			tsconfigWatcher.close();
 		}
-		for (const [_, fileWatcher] of fileWatchers) {
-			fileWatcher.close();
+		for (const [_, file] of vueFiles) {
+			file.fileWatcher.close();
 		}
 		disposed = true;
 	}

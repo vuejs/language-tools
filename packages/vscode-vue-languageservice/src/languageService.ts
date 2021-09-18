@@ -50,7 +50,7 @@ import { createSourceFiles } from './sourceFiles';
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
-	getExternalScriptFileNames?(): string[],
+	getVueProjectVersion?(): string;
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
 	schemaRequestService?: json.SchemaRequestService,
@@ -388,36 +388,26 @@ export function createLanguageService(
 		return new Proxy<T>(api, handler);
 	}
 	function update(shouldUpdateTemplateScript: boolean) {
-		const newVueProjectVersion = vueHost.getProjectVersion?.();
+		const newVueProjectVersion = vueHost.getVueProjectVersion?.();
 		if (newVueProjectVersion === undefined || newVueProjectVersion !== vueProjectVersion) {
 
-			let tsFileChanged = false;
 			vueProjectVersion = newVueProjectVersion;
+
 			const oldFiles = new Set([...lastScriptVersions.keys()]);
-			const newFiles = new Set([...vueHost.getScriptFileNames(), ...(vueHost.getExternalScriptFileNames?.() ?? [])]);
+			const newFiles = new Set([...vueHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
 			const removes: string[] = [];
 			const adds: string[] = [];
 			const updates: string[] = [];
 
 			for (const fileName of oldFiles) {
 				if (!newFiles.has(fileName)) {
-					if (fileName.endsWith('.vue')) {
-						removes.push(fileName);
-					}
-					else {
-						tsFileChanged = true;
-					}
+					removes.push(fileName);
 					lastScriptVersions.delete(fileName);
 				}
 			}
 			for (const fileName of newFiles) {
 				if (!oldFiles.has(fileName)) {
-					if (fileName.endsWith('.vue')) {
-						adds.push(fileName);
-					}
-					else {
-						tsFileChanged = true;
-					}
+					adds.push(fileName);
 					lastScriptVersions.set(fileName, vueHost.getScriptVersion(fileName));
 				}
 			}
@@ -426,32 +416,27 @@ export function createLanguageService(
 					const oldVersion = lastScriptVersions.get(fileName);
 					const newVersion = vueHost.getScriptVersion(fileName);
 					if (oldVersion !== newVersion) {
-						if (fileName.endsWith('.vue')) {
-							updates.push(fileName);
-						}
-						else {
-							tsFileChanged = true;
-						}
+						updates.push(fileName);
 						lastScriptVersions.set(fileName, newVersion);
 					}
 				}
 			}
 
-			if (tsFileChanged) {
-				scriptContentVersion++;
-				scriptProjectVersion++;
-				templateProjectVersion++;
-				// TODO: template global properties can't update by .d.ts definition
-				// wait for https://github.com/johnsoncodehk/volar/issues/455
-				// updates.length = 0;
-				// for (const fileName of oldFiles) {
-				// 	if (newFiles.has(fileName)) {
-				// 		if (fileName.endsWith('.vue')) {
-				// 			updates.push(fileName);
-				// 		}
-				// 	}
-				// }
-			}
+			// if (tsFileChanged) {
+			// 	scriptContentVersion++;
+			// 	scriptProjectVersion++;
+			// 	templateProjectVersion++;
+			// 	// TODO: template global properties can't update by .d.ts definition
+			// 	// wait for https://github.com/johnsoncodehk/volar/issues/455
+			// 	// updates.length = 0;
+			// 	// for (const fileName of oldFiles) {
+			// 	// 	if (newFiles.has(fileName)) {
+			// 	// 		if (fileName.endsWith('.vue')) {
+			// 	// 			updates.push(fileName);
+			// 	// 		}
+			// 	// 	}
+			// 	// }
+			// }
 
 			const finalUpdates = adds.concat(updates);
 
@@ -493,7 +478,7 @@ export function createLanguageService(
 				}
 				: undefined,
 			getProjectVersion: () => {
-				return (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
+				return vueHost.getProjectVersion?.() + '-' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
 			},
 			getScriptFileNames,
 			getScriptVersion,
