@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.27.22
+
+- feat: remove TS plugin to single extension ([#501](https://github.com/johnsoncodehk/volar/issues/501))
+- fix: `v-for` item type report circular reference edge case
+- fix: external file snapshot cannot update in TS plugin ([#506](https://github.com/johnsoncodehk/volar/issues/506))
+- fix: cannot extract superset `DefineComponent` emit option type ([#495](https://github.com/johnsoncodehk/volar/issues/495))
+- fix: sometime component props auto-complete not working in template
+- fix: should not ignore `.vitepress` folder ([#506](https://github.com/johnsoncodehk/volar/issues/506))
+- fix: fixed a few drive file update event logic
+
 ## 0.27.21
 
 - feat: support css settings ([#492](https://github.com/johnsoncodehk/volar/issues/492))
