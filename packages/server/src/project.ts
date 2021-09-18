@@ -162,7 +162,7 @@ export function createProject(
 				snapshotLength === documentText.length
 				&& snapshot.snapshot.getText(0, snapshotLength) === documentText
 			) {
-				return;
+				return false;
 			}
 		}
 		const script = scripts.get(fileName);
@@ -175,7 +175,9 @@ export function createProject(
 		}
 		if (!!script || !!extraScript) {
 			onProjectUpdated(fileName);
+			return true;
 		}
+		return false;
 	}
 	async function onDriveFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
 

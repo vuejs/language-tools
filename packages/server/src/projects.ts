@@ -35,9 +35,13 @@ export function createProjects(
 
 	initProjects();
 
-	documents.onDidChangeContent(change => {
+	documents.onDidChangeContent(async change => {
+		let sendedUpdate = false;
 		for (const [_, service] of [...projects, ...inferredProjects]) {
-			service.onDocumentUpdated(change.document);
+			sendedUpdate = await service.onDocumentUpdated(change.document) || sendedUpdate;
+		}
+		if (!sendedUpdate) {
+			updateDiagnostics(change.document.uri);
 		}
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
@@ -339,12 +343,11 @@ export function createProjects(
 
 		let firstMatchTsConfigs: string[] = [];
 		let secondMatchTsConfigs: string[] = [];
+		let unMatchTsConfigs: string[] = [];
 
 		for (const kvp of services) {
 			const tsConfig = upath.resolve(kvp[0]);
 			const parsedCommandLine = kvp[1].getParsedCommandLine();
-			const hasVueFile = parsedCommandLine.fileNames.some(fileName => upath.extname(fileName) === '.vue');
-			if (!hasVueFile) continue;
 			const fileNames = new Set(parsedCommandLine.fileNames);
 			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.context.scriptTsLs.__internal__.getTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
@@ -355,14 +358,19 @@ export function createProjects(
 					secondMatchTsConfigs.push(tsConfig);
 				}
 			}
+			else {
+				unMatchTsConfigs.push(tsConfig);
+			}
 		}
 
 		firstMatchTsConfigs = firstMatchTsConfigs.sort(sortPaths);
 		secondMatchTsConfigs = secondMatchTsConfigs.sort(sortPaths);
+		unMatchTsConfigs = unMatchTsConfigs.sort(sortPaths);
 
 		return [
 			...firstMatchTsConfigs,
 			...secondMatchTsConfigs,
+			...unMatchTsConfigs,
 		];
 
 		function sortPaths(a: string, b: string) {

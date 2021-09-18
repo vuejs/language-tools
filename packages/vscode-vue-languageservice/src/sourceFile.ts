@@ -21,13 +21,13 @@ export type SourceFile = ReturnType<typeof createSourceFile>;
 export function createSourceFile(
 	uri: string,
 	_content: string,
-	_version: number,
+	_version: string,
 	context: LanguageServiceContext,
 ) {
 
 	// refs
 	const content = ref('');
-	const version = ref(-1);
+	const version = ref('');
 	const descriptor = reactive<shared.Sfc>({
 		template: null,
 		script: null,
@@ -51,7 +51,7 @@ export function createSourceFile(
 	});
 
 	// computeds
-	const document = computed(() => TextDocument.create(uri, 'vue', version.value, content.value));
+	const document = computed(() => TextDocument.create(uri, 'vue', 0, content.value));
 	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
 
 	// use
@@ -193,6 +193,7 @@ export function createSourceFile(
 
 	return {
 		uri,
+		getVersion: untrack(() => version.value),
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
 		getTextDocument: untrack(() => document.value),
@@ -247,7 +248,7 @@ export function createSourceFile(
 		},
 	};
 
-	function update(newContent: string, newVersion: number) {
+	function update(newContent: string, newVersion: string) {
 
 		const scriptLang_1 = sfcScriptForScriptLs.textDocument.value.languageId;
 		const scriptText_1 = sfcScriptForScriptLs.textDocument.value.getText();

@@ -102,12 +102,12 @@ export function getDocumentLanguageService(
 			const newText = document.getText();
 
 			if (oldText.length !== newText.length || oldText !== newText) {
-				cacheVueDoc.update(document.getText(), document.version);
+				cacheVueDoc.update(document.getText(), document.version.toString());
 			}
 
 			return cacheVueDoc;
 		}
-		const vueDoc = createSourceFile(document.uri, document.getText(), document.version, context);
+		const vueDoc = createSourceFile(document.uri, document.getText(), document.version.toString(), context);
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;
 	}
@@ -138,7 +138,6 @@ export function createLanguageService(
 	const { typescript: ts } = modules;
 
 	let vueProjectVersion: string | undefined;
-	let lastScriptVersions = new Map<string, string>();
 	let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
 	let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
 	let templateProjectVersion = 0;
@@ -393,32 +392,30 @@ export function createLanguageService(
 
 			vueProjectVersion = newVueProjectVersion;
 
-			const oldFiles = new Set([...lastScriptVersions.keys()]);
-			const newFiles = new Set([...vueHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
-			const removes: string[] = [];
-			const adds: string[] = [];
-			const updates: string[] = [];
+			const newFileUris = new Set([...vueHost.getScriptFileNames()].filter(file => file.endsWith('.vue')).map(shared.fsPathToUri));
+			const removeUris: string[] = [];
+			const addUris: string[] = [];
+			const updateUris: string[] = [];
 
-			for (const fileName of oldFiles) {
-				if (!newFiles.has(fileName)) {
-					removes.push(fileName);
-					lastScriptVersions.delete(fileName);
+			for (const sourceFile of sourceFiles.getAll()) {
+				const fileName = shared.uriToFsPath(sourceFile.uri);
+				if (!newFileUris.has(sourceFile.uri) && !vueHost.fileExists?.(fileName)) {
+					// delete
+					removeUris.push(sourceFile.uri);
 				}
-			}
-			for (const fileName of newFiles) {
-				if (!oldFiles.has(fileName)) {
-					adds.push(fileName);
-					lastScriptVersions.set(fileName, vueHost.getScriptVersion(fileName));
-				}
-			}
-			for (const fileName of oldFiles) {
-				if (newFiles.has(fileName)) {
-					const oldVersion = lastScriptVersions.get(fileName);
+				else {
+					// update
 					const newVersion = vueHost.getScriptVersion(fileName);
-					if (oldVersion !== newVersion) {
-						updates.push(fileName);
-						lastScriptVersions.set(fileName, newVersion);
+					if (sourceFile.getVersion() !== newVersion) {
+						updateUris.push(sourceFile.uri);
 					}
+				}
+			}
+
+			for (const newUri of newFileUris) {
+				if (!sourceFiles.get(newUri)) {
+					// add
+					addUris.push(newUri);
 				}
 			}
 
@@ -438,13 +435,13 @@ export function createLanguageService(
 			// 	// }
 			// }
 
-			const finalUpdates = adds.concat(updates);
+			const finalUpdateUris = addUris.concat(updateUris);
 
-			if (removes.length) {
-				unsetSourceFiles(removes.map(shared.fsPathToUri));
+			if (removeUris.length) {
+				unsetSourceFiles(removeUris);
 			}
-			if (finalUpdates.length) {
-				updateSourceFiles(finalUpdates.map(shared.fsPathToUri), shouldUpdateTemplateScript)
+			if (finalUpdateUris.length) {
+				updateSourceFiles(finalUpdateUris, shouldUpdateTemplateScript)
 			}
 		}
 		else if (shouldUpdateTemplateScript && templateScriptUpdateUris.size) {
@@ -462,12 +459,12 @@ export function createLanguageService(
 					// .vue.d.ts (never)
 					const fileNameTrim = upath.trimExt(fileName);
 					if (fileNameTrim.endsWith('.vue')) {
-						let sourceFile = sourceFiles.get(shared.fsPathToUri(fileNameTrim));
+						const uri = shared.fsPathToUri(fileNameTrim);
+						const sourceFile = sourceFiles.get(uri);
 						if (!sourceFile) {
 							const fileExists = !!vueHost.fileExists?.(fileNameTrim);
 							if (fileExists) {
-								vueProjectVersion += '-old'; // force update
-								update(false); // create virtual files
+								updateSourceFiles([uri], false); // create virtual files
 							}
 						}
 						return sourceFiles.getTsDocuments(lsType).has(shared.fsPathToUri(fileName));
@@ -600,11 +597,11 @@ export function createLanguageService(
 			const doc = getHostDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc.uri, doc.getText(), doc.version, context));
+				sourceFiles.set(uri, createSourceFile(doc.uri, doc.getText(), doc.version.toString(), context));
 				vueScriptsUpdated = true;
 			}
 			else {
-				const updates = sourceFile.update(doc.getText(), doc.version);
+				const updates = sourceFile.update(doc.getText(), doc.version.toString());
 				if (updates.scriptContentUpdated) {
 					vueScriptContentsUpdate = true;
 				}
