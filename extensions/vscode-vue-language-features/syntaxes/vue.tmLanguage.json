@@ -814,10 +814,10 @@
 							"name": "punctuation.definition.string.end.html.vue"
 						}
 					},
-					"name": "source.js.embedded.html.vue",
+					"name": "source.ts.embedded.html.vue",
 					"patterns": [
 						{
-							"include": "source.js"
+							"include": "source.ts"
 						}
 					]
 				}
@@ -858,10 +858,10 @@
 									"name": "punctuation.definition.string.end.html.vue"
 								}
 							},
-							"name": "source.js.embedded.html.vue",
+							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
-									"include": "source.js"
+									"include": "source.ts"
 								}
 							]
 						}
@@ -973,10 +973,10 @@
 						{
 							"begin": "\\G",
 							"end": "(?=\\}\\})",
-							"name": "source.js.embedded.html.vue",
+							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
-									"include": "source.js"
+									"include": "source.ts"
 								}
 							]
 						}
