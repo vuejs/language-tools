@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.23
+
+- feat: support `<script setup>` types in template expressions
+- feat: support TS syntax highlighting in template expressions
+- perf: cpu keep high usages if node_modules contains lot of d.ts files ([#507](https://github.com/johnsoncodehk/volar/issues/507))
+- perf: lazy calculation TS plugin proxy, TS program proxy to reduce initialization time ([#507](https://github.com/johnsoncodehk/volar/issues/507))
+- fix: SFC validation broken with `lang="postcss"` ([#507](https://github.com/johnsoncodehk/volar/issues/507))
+
 ## 0.27.22
 
 - feat: remove TS plugin to single extension ([#501](https://github.com/johnsoncodehk/volar/issues/501))
