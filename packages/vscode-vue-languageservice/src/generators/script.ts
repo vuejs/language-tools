@@ -57,6 +57,7 @@ export function generate(
 	if (lsType === 'template') {
 		writeExportOptions();
 		writeConstNameOption();
+		writeExportTypes();
 	}
 
 	if (lsType === 'script' && scriptSetup) {
@@ -419,6 +420,35 @@ export function generate(
 			codeGen.addText(`),\n`);
 		}
 		codeGen.addText(`};\n`);
+	}
+	function writeExportTypes() {
+
+		const bindingsArr: {
+			typeBindings: { start: number, end: number }[],
+			content: string,
+		}[] = [];
+
+		if (scriptSetupRanges && scriptSetup) {
+			bindingsArr.push({
+				typeBindings: scriptSetupRanges.typeBindings,
+				content: scriptSetup.content,
+			});
+		}
+		// if (scriptRanges && script) {
+		// 	bindingsArr.push({
+		// 		typeBindings: scriptRanges.typeBindings,
+		// 		content: script.content,
+		// 	});
+		// }
+
+		codeGen.addText('export {\n');
+		for (const bindings of bindingsArr) {
+			for (const typeBinding of bindings.typeBindings) {
+				const text = bindings.content.substring(typeBinding.start, typeBinding.end);
+				codeGen.addText(`${text} as __VLS_types_${text},\n`);
+			}
+		}
+		codeGen.addText('};\n');
 	}
 	function writeConstNameOption() {
 		codeGen.addText(`\n`);

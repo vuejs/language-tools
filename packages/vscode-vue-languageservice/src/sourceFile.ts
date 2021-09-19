@@ -15,6 +15,8 @@ import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
+import { parseScriptRanges } from './parsers/scriptRanges';
+import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
@@ -103,26 +105,35 @@ export function createSourceFile(
 		computed(() => descriptor.scriptSetup),
 		context.modules.typescript,
 	);
+	const scriptRanges = computed(() =>
+		sfcScript.ast.value
+			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup)
+			: undefined
+	);
+	const scriptSetupRanges = computed(() =>
+		sfcScriptSetup.ast.value
+			? parseScriptSetupRanges(context.modules.typescript, sfcScriptSetup.ast.value)
+			: undefined
+	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
 		'template',
-		context.modules.typescript,
 		uri,
 		document,
 		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
-		computed(() => sfcScript.ast.value),
-		computed(() => sfcScriptSetup.ast.value),
+		computed(() => scriptRanges.value),
+		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 	);
-	const sfcScriptForScriptLs = useSfcScriptGen('script',
-		context.modules.typescript,
+	const sfcScriptForScriptLs = useSfcScriptGen(
+		'script',
 		uri,
 		document,
 		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
-		computed(() => sfcScript.ast.value),
-		computed(() => sfcScriptSetup.ast.value),
+		computed(() => scriptRanges.value),
+		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 	);
@@ -139,6 +150,7 @@ export function createSourceFile(
 		document,
 		computed(() => descriptor.template),
 		computed(() => descriptor.scriptSetup),
+		computed(() => scriptSetupRanges.value),
 		computed(() => descriptor.styles),
 		templateScriptData,
 		sfcStyles.textDocuments,
@@ -212,7 +224,7 @@ export function createSourceFile(
 		getScriptAst: untrack(() => sfcScript.ast.value),
 		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
-		getScriptSetupData: untrack(() => sfcScriptForTemplateLs.scriptSetupRanges.value),
+		getScriptSetupData: untrack(() => scriptSetupRanges.value),
 		docLsScripts: untrack(() => ({
 			documents: [sfcScript.textDocument.value, sfcScriptSetup.textDocument.value].filter(shared.notEmpty),
 			sourceMaps: [sfcScript.sourceMap.value, sfcScriptSetup.sourceMap.value].filter(shared.notEmpty),

@@ -2,36 +2,25 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
-import { parseScriptRanges } from '../parsers/scriptRanges';
-import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template_scriptSetup';
+import type { parseScriptRanges } from '../parsers/scriptRanges';
+import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
 export function useSfcScriptGen(
 	lsType: 'template' | 'script',
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	script: Ref<shared.Sfc['script']>,
 	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
-	scriptAst: Ref<ts.SourceFile | undefined>,
-	scriptSetupAst: Ref<ts.SourceFile | undefined>,
+	scriptRanges: Ref<ReturnType<typeof parseScriptRanges> | undefined>,
+	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 ) {
 
 	let version = 0;
 
-	const scriptRanges = computed(() =>
-		scriptAst.value
-			? parseScriptRanges(ts, scriptAst.value, !!scriptSetup.value)
-			: undefined
-	);
-	const scriptSetupRanges = computed(() =>
-		scriptSetupAst.value
-			? parseScriptSetupRanges(ts, scriptSetupAst.value)
-			: undefined
-	);
 	const htmlGen = computed(() => {
 		if (sfcTemplateCompileResult.value?.ast) {
 			return templateGen.generate(sfcTemplateCompileResult.value.ast);
@@ -105,7 +94,6 @@ export function useSfcScriptGen(
 
 	return {
 		lang,
-		scriptSetupRanges,
 		textDocument,
 		textDocumentTs,
 		sourceMap,

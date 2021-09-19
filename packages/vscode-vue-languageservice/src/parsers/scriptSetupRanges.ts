@@ -11,7 +11,8 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
 
-	const bindings = parseBindingRanges(ts, ast);
+	const bindings = parseBindingRanges(ts, ast, false);
+	const typeBindings = parseBindingRanges(ts, ast, true);
 
 	ast.forEachChild(node => {
 		visitNode(node);
@@ -19,6 +20,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 
 	return {
 		bindings,
+		typeBindings,
 		withDefaultsArg,
 		propsRuntimeArg,
 		propsTypeArg,
@@ -66,24 +68,43 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	}
 }
 
-export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
+export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile, isType: boolean) {
 	const bindings: TextRange[] = [];
 	sourceFile.forEachChild(node => {
-		if (ts.isVariableStatement(node)) {
-			for (const node_2 of node.declarationList.declarations) {
-				const vars = _findBindingVars(node_2.name);
-				for (const _var of vars) {
-					bindings.push(_var);
+		if (!isType) {
+			if (ts.isVariableStatement(node)) {
+				for (const node_2 of node.declarationList.declarations) {
+					const vars = _findBindingVars(node_2.name);
+					for (const _var of vars) {
+						bindings.push(_var);
+					}
 				}
 			}
-		}
-		else if (ts.isFunctionDeclaration(node)) {
-			if (node.name && ts.isIdentifier(node.name)) {
+			else if (ts.isFunctionDeclaration(node)) {
+				if (node.name && ts.isIdentifier(node.name)) {
+					bindings.push(_getStartEnd(node.name));
+				}
+			}
+			else if (ts.isClassDeclaration(node)) {
+				if (node.name) {
+					bindings.push(_getStartEnd(node.name));
+				}
+			}
+			else if (ts.isEnumDeclaration(node)) {
 				bindings.push(_getStartEnd(node.name));
 			}
 		}
-		else if (ts.isImportDeclaration(node)) {
-			if (node.importClause && !node.importClause.isTypeOnly) {
+		else {
+			if (ts.isTypeAliasDeclaration(node)) {
+				bindings.push(_getStartEnd(node.name));
+			}
+			else if (ts.isInterfaceDeclaration(node)) {
+				bindings.push(_getStartEnd(node.name));
+			}
+		}
+
+		if (ts.isImportDeclaration(node)) {
+			if (node.importClause && (isType || !node.importClause.isTypeOnly)) {
 				if (node.importClause.name) {
 					bindings.push(_getStartEnd(node.importClause.name));
 				}
@@ -98,14 +119,6 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 					}
 				}
 			}
-		}
-		else if (ts.isClassDeclaration(node)) {
-			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
-			}
-		}
-		else if (ts.isEnumDeclaration(node)) {
-			bindings.push(_getStartEnd(node.name));
 		}
 	});
 	return bindings;

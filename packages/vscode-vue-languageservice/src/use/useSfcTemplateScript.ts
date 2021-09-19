@@ -8,12 +8,15 @@ import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
 import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
+import type { parseScriptRanges } from '../parsers/scriptRanges';
+import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
 export function useSfcTemplateScript(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	template: Ref<shared.Sfc['template']>,
 	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
+	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	styles: Ref<shared.Sfc['styles']>,
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
@@ -69,6 +72,9 @@ export function useSfcTemplateScript(
 		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
+
+		writeImportTypes();
+
 		codeGen.addText(`declare var __VLS_ctxRaw: InstanceType<typeof __VLS_component>;\n`);
 		codeGen.addText(`declare var __VLS_ctx: __VLS_ExtractRawComponents<typeof __VLS_ctxRaw>;\n`);
 		codeGen.addText(`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
@@ -93,6 +99,7 @@ export function useSfcTemplateScript(
 		codeGen.addText('declare var __VLS_styleScopedClasses: {\n');
 		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true);
 		codeGen.addText('};\n');
+		codeGen.addText(`{\n`);
 
 		/* Props */
 		codeGen.addText(`/* Props */\n`);
@@ -105,6 +112,9 @@ export function useSfcTemplateScript(
 			margeCodeGen(codeGen as CodeGen, templateCodeGens.value.codeGen as CodeGen);
 		}
 
+		codeGen.addText(`}\n`);
+		codeGen.addText(`export default __VLS_slots;\n`);
+
 		return {
 			...codeGen,
 			cssModuleMappingsArr,
@@ -112,6 +122,35 @@ export function useSfcTemplateScript(
 			ctxMappings,
 		};
 
+		function writeImportTypes() {
+
+			const bindingsArr: {
+				typeBindings: { start: number, end: number }[],
+				content: string,
+			}[] = [];
+
+			if (scriptSetupRanges.value && scriptSetup.value) {
+				bindingsArr.push({
+					typeBindings: scriptSetupRanges.value.typeBindings,
+					content: scriptSetup.value.content,
+				});
+			}
+			// if (scriptRanges.value && script.value) {
+			// 	bindingsArr.push({
+			// 		typeBindings: scriptRanges.value.typeBindings,
+			// 		content: script.value.content,
+			// 	});
+			// }
+
+			codeGen.addText('import {\n');
+			for (const bindings of bindingsArr) {
+				for (const typeBinding of bindings.typeBindings) {
+					const text = bindings.content.substring(typeBinding.start, typeBinding.end);
+					codeGen.addText(`__VLS_types_${text} as ${text},\n`);
+				}
+			}
+			codeGen.addText(`} from './${vueFileName}.__VLS_script';\n`);
+		}
 		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>, patchRename: boolean) {
 			const mappings = new Map<string, {
 				tsRange: {
@@ -163,7 +202,7 @@ export function useSfcTemplateScript(
 			const propsSet = new Set(templateScriptData.props);
 			const mappings: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 			for (const propName of templateScriptData.context) {
-				codeGen.addText(`declare var `);
+				codeGen.addText(`declare let `);
 				const templateSideRange = codeGen.addText(propName);
 				codeGen.addText(`: typeof __VLS_ctx.`);
 				const scriptSideRange = codeGen.addText(propName);

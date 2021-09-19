@@ -19,7 +19,7 @@ type EmitTypeArg = {
 export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 
 	const imports: TextRange[] = [];
-	const bindings = parseBindingRanges(ts, ast);
+	const bindings = parseBindingRanges(ts, ast, false);
 
 	let defineProps: {
 		range: TextRange,

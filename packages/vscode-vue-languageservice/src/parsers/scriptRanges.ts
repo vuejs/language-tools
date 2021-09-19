@@ -14,7 +14,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 		componentsOptionNode: ts.ObjectLiteralExpression | undefined,
 	}) | undefined;
 
-	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
+	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast, false) : [];
 
 	ast.forEachChild(node => {
 		if (ts.isExportAssignment(node)) {

@@ -316,7 +316,7 @@ export function generate(
 		tsCodeGen.addText(`}\n`);
 	}
 
-	tsCodeGen.addText(`declare const __VLS_slots:\n`);
+	tsCodeGen.addText(`declare var __VLS_slots:\n`);
 	for (const [exp, slot] of slotExps) {
 		tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
 	}
@@ -333,7 +333,6 @@ export function generate(
 		tsCodeGen.addText(`: typeof ${slot.varName},\n`);
 	}
 	tsCodeGen.addText(`};\n`);
-	tsCodeGen.addText(`export default __VLS_slots;\n`);
 
 	return {
 		codeGen: tsCodeGen,
