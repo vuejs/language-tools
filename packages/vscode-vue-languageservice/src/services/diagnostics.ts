@@ -365,7 +365,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					const cssLs = getCssLs(textDocument.languageId);
 					if (!cssLs || !stylesheet) continue;
 					const settings = await vueHost.getCssLanguageSettings?.(textDocument);
-					const errs = cssLs.doValidation(textDocument, stylesheet, settings);
+					const errs = cssLs.doValidation(textDocument, stylesheet, settings ?? undefined /* cssLs accept undefined but not null */);
 					if (errs) result.set(textDocument.uri, errs);
 				}
 				return result;
