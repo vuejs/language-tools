@@ -39,7 +39,6 @@ export function createProject(
 	const extraScripts = new shared.FsPathMap<{
 		version: number,
 		fileName: string,
-		fileWatcher: ts.FileWatcher,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
 	const disposables: vscode.Disposable[] = [];
@@ -118,9 +117,6 @@ export function createProject(
 		const fileNames = new shared.FsPathSet(parsedCommandLine.fileNames);
 		let changed = false;
 
-		for (const [_, { fileWatcher }] of extraScripts) {
-			fileWatcher?.close();
-		}
 		extraScripts.clear();
 
 		const removeKeys: string[] = [];
@@ -223,7 +219,6 @@ export function createProject(
 				extraFile.version++;
 			}
 			if (eventKind === ts.FileWatcherEventKind.Deleted) {
-				extraFile.fileWatcher?.close();
 				extraScripts.delete(fileName);
 				snapshots.delete(fileName);
 			}
@@ -287,11 +282,9 @@ export function createProject(
 				&& !scripts.has(fileName)
 				&& !extraScripts.has(fileName)
 			) {
-				const fileWatcher = ts.sys.watchFile!(fileName, onExtraFileUpdated);
 				extraScripts.set(fileName, {
 					fileName: fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
-					fileWatcher: fileWatcher,
 				});
 			}
 			return fileExists;
@@ -320,9 +313,6 @@ export function createProject(
 	}
 	function dispose() {
 		for (const [_, { fileWatcher }] of scripts) {
-			fileWatcher?.close();
-		}
-		for (const [_, { fileWatcher }] of extraScripts) {
 			fileWatcher?.close();
 		}
 		if (vueLs) {
