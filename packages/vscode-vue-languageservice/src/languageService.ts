@@ -222,57 +222,8 @@ export function createLanguageService(
 	const findDefinition = definitions.register(context);
 	const renames = rename.register(context);
 
-	// ts plugin proxy
-	const _tsPluginApis = tsPluginApis.register(context);
-	const tsPlugin: Partial<ts.LanguageService> = {
-		getSemanticDiagnostics: apiHook(scriptTsLsRaw.getSemanticDiagnostics, false),
-		getEncodedSemanticClassifications: apiHook(scriptTsLsRaw.getEncodedSemanticClassifications, false),
-		getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-		getCompletionEntryDetails: apiHook(scriptTsLsRaw.getCompletionEntryDetails, false), // not sure
-		getCompletionEntrySymbol: apiHook(scriptTsLsRaw.getCompletionEntrySymbol, false), // not sure
-		getQuickInfoAtPosition: apiHook(scriptTsLsRaw.getQuickInfoAtPosition, false),
-		getSignatureHelpItems: apiHook(scriptTsLsRaw.getSignatureHelpItems, false),
-		getRenameInfo: apiHook(scriptTsLsRaw.getRenameInfo, false),
-
-		findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
-		getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
-		getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
-		getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
-		getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition, false),
-		getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition, true),
-		findReferences: apiHook(_tsPluginApis.findReferences, true),
-
-		// TODO: now is handle by vue server
-		// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
-		// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
-		// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
-		// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
-
-		// TODO
-		// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
-		// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
-		// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
-		// getApplicableRefactors: apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
-		// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
-	};
-
-	// ts program proxy
-	const tsProgram = scriptTsLsRaw.getProgram(); // TODO: handle template ls?
-	if (!tsProgram) throw '!tsProgram';
-
-	const tsProgramApis_2 = tsProgramApis.register(context);
-	const tsProgramApis_3: Partial<typeof tsProgram> = {
-		emit: apiHook(tsProgramApis_2.emit),
-		getRootFileNames: apiHook(tsProgramApis_2.getRootFileNames),
-		getSemanticDiagnostics: apiHook(tsProgramApis_2.getSemanticDiagnostics),
-		getSyntacticDiagnostics: apiHook(tsProgramApis_2.getSyntacticDiagnostics),
-		getGlobalDiagnostics: apiHook(tsProgramApis_2.getGlobalDiagnostics),
-	};
-	const tsProgramProxy = new Proxy(tsProgram, {
-		get: (target: any, property: keyof typeof tsProgram) => {
-			return tsProgramApis_3[property] || target[property];
-		},
-	});
+	let tsPluginProxy: ReturnType<typeof createTsPluginProxy> | undefined;
+	let tsProgramProxy: ReturnType<typeof createTsProgramProxy> | undefined;;
 
 	return {
 		doValidation: publicApiHook(diagnostics.register(context, () => update(true)), false, false),
@@ -307,8 +258,18 @@ export function createLanguageService(
 
 		__internal__: {
 			rootPath: vueHost.getCurrentDirectory(),
-			tsPlugin,
-			tsProgramProxy,
+			get tsPlugin() {
+				if (!tsPluginProxy) {
+					tsPluginProxy = createTsPluginProxy();
+				}
+				return tsPluginProxy;
+			},
+			get tsProgramProxy() {
+				if (!tsProgramProxy) {
+					tsProgramProxy = createTsProgramProxy();
+				}
+				return tsProgramProxy;
+			},
 			context,
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
@@ -326,6 +287,66 @@ export function createLanguageService(
 		},
 	};
 
+	function createTsPluginProxy() {
+
+		// ts plugin proxy
+		const _tsPluginApis = tsPluginApis.register(context);
+		const tsPlugin: Partial<ts.LanguageService> = {
+			getSemanticDiagnostics: apiHook(scriptTsLsRaw.getSemanticDiagnostics, false),
+			getEncodedSemanticClassifications: apiHook(scriptTsLsRaw.getEncodedSemanticClassifications, false),
+			getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
+			getCompletionEntryDetails: apiHook(scriptTsLsRaw.getCompletionEntryDetails, false), // not sure
+			getCompletionEntrySymbol: apiHook(scriptTsLsRaw.getCompletionEntrySymbol, false), // not sure
+			getQuickInfoAtPosition: apiHook(scriptTsLsRaw.getQuickInfoAtPosition, false),
+			getSignatureHelpItems: apiHook(scriptTsLsRaw.getSignatureHelpItems, false),
+			getRenameInfo: apiHook(scriptTsLsRaw.getRenameInfo, false),
+
+			findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
+			getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
+			getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
+			getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
+			getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition, false),
+			getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition, true),
+			findReferences: apiHook(_tsPluginApis.findReferences, true),
+
+			// TODO: now is handle by vue server
+			// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
+			// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
+			// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
+			// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
+
+			// TODO
+			// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
+			// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
+			// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
+			// getApplicableRefactors: apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
+			// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
+		};
+
+		return tsPlugin;
+	}
+	function createTsProgramProxy() {
+
+		// ts program proxy
+		const tsProgram = scriptTsLsRaw.getProgram(); // TODO: handle template ls?
+		if (!tsProgram) throw '!tsProgram';
+
+		const tsProgramApis_2 = tsProgramApis.register(context);
+		const tsProgramApis_3: Partial<typeof tsProgram> = {
+			emit: apiHook(tsProgramApis_2.emit),
+			getRootFileNames: apiHook(tsProgramApis_2.getRootFileNames),
+			getSemanticDiagnostics: apiHook(tsProgramApis_2.getSemanticDiagnostics),
+			getSyntacticDiagnostics: apiHook(tsProgramApis_2.getSyntacticDiagnostics),
+			getGlobalDiagnostics: apiHook(tsProgramApis_2.getGlobalDiagnostics),
+		};
+		const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
+			get: (target: any, property: keyof typeof tsProgram) => {
+				return tsProgramApis_3[property] || target[property];
+			},
+		});
+
+		return tsProgramProxy;
+	}
 	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
 
 		const sourceFile = sourceFiles.get(uri);
