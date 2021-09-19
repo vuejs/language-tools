@@ -5,7 +5,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "extensions/vue-language-features"
+		"directory": "extensions/vscode-vue-language-features"
 	},
 	"displayName": "Vue Language Features (Volar)",
 	"description": "Language support for Vue 3",

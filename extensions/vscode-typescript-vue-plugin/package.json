@@ -5,7 +5,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "extensions/typescript-vue-plugin"
+		"directory": "extensions/vscode-typescript-vue-plugin"
 	},
 	"displayName": "TypeScript Vue Plugin (Volar)",
 	"description": "Vue Plugin for TypeScript server",
