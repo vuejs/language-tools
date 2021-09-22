@@ -39,6 +39,7 @@ export const transformContext: CompilerDOM.TransformContext = {
 		vPre: 0,
 		vSlot: 0,
 	},
+	expressionPlugins: ['typescript'],
 };
 
 export function generate(
