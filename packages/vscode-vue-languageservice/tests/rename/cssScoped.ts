@@ -2,26 +2,27 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-defineRename({
-	fileName: path.resolve(__dirname, '../../testCases/cssScoped.vue'),
-	actions: [
-		{
-			position: Position.create(5, 0),
-			newName: '.bar',
-			length: 5,
-		},
-		{
-			position: Position.create(1, 16),
-			newName: 'bar',
-			length: 4,
-		},
-	],
-	result: `
+const file = path.resolve(__dirname, '../../testCases/cssScoped.vue');
+const fileResult = `
 <template>
     <div class="bar"></div>
 </template>
 
 <style scoped>
 .bar { }
-</style>`.trim(),
-});
+</style>
+`.trim();
+
+defineRename({
+	fileName: file,
+	position: Position.create(5, 0),
+	newName: '.bar',
+	length: 5,
+}, { [file]: fileResult });
+
+defineRename({
+	fileName: file,
+	position: Position.create(1, 16),
+	newName: 'bar',
+	length: 4,
+}, { [file]: fileResult });

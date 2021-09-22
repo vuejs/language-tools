@@ -2,21 +2,8 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-defineRename({
-	fileName: path.resolve(__dirname, '../../testCases/cssVars.vue'),
-	actions: [
-		{
-			position: Position.create(1, 6),
-			newName: 'baz',
-			length: 4,
-		},
-		{
-			position: Position.create(5, 21),
-			newName: 'baz',
-			length: 4,
-		},
-	],
-	result: `
+const file = path.resolve(__dirname, '../../testCases/cssVars.vue');
+const fileResult = `
 <script lang="ts" setup>
 const baz = 1;
 </script>
@@ -30,5 +17,18 @@ const baz = 1;
 .bar { color: v-bind("baz + baz"); }
 .bar { color: v-bind(); }
 </style>
-`.trim(),
-});
+`.trim();
+
+defineRename({
+	fileName: file,
+	position: Position.create(1, 6),
+	newName: 'baz',
+	length: 4,
+}, { [file]: fileResult });
+
+defineRename({
+	fileName: file,
+	position: Position.create(5, 21),
+	newName: 'baz',
+	length: 4,
+}, { [file]: fileResult });

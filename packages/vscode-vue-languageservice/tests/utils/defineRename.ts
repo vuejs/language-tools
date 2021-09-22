@@ -2,52 +2,54 @@ import type * as vscode from 'vscode-languageserver/node';
 import * as path from 'upath';
 import { createTester } from './createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { fsPathToUri } from '@volar/shared';
+import * as shared from '@volar/shared';
 
 const volarRoot = path.resolve(__dirname, '../../../..');
 const testRoot = path.resolve(__dirname, '../../testCases');
 const tester = createTester(testRoot);
 
-export function defineRename(test: {
+export function defineRename(action: {
 	fileName: string,
-	actions: {
-		position: vscode.Position,
-		newName: string,
-		length: number,
-	}[],
-	result: string,
-}) {
-	const fileName = test.fileName;
-	const uri = fsPathToUri(fileName);
-	const script = tester.host.getScriptSnapshot(fileName);
+	position: vscode.Position,
+	newName: string,
+	length: number,
+}, results: Record<string, string>) {
+
+	const fileName = action.fileName;
+	const uri = shared.fsPathToUri(fileName);
 
 	describe(`renaming ${path.basename(fileName)}`, () => {
+		for (let i = 0; i < action.length; i++) {
+			const location = `${path.relative(volarRoot, fileName)}:${action.position.line + 1}:${action.position.character + i + 1}`;
+			it(`rename ${location} => ${action.newName}`, async () => {
+				const result = await tester.languageService.doRename(
+					uri,
+					{ line: action.position.line, character: action.position.character + i },
+					action.newName,
+				);
 
-		it(`should ${path.basename(fileName)} exist`, () => {
-			expect(!!script).toBe(true);
-		});
-		if (!script) return;
+				expect(!!result?.changes).toEqual(true);
+				if (!result?.changes) return;
 
-		const scriptText = script.getText(0, script.getLength());
+				expect(Object.keys(result.changes).length).toEqual(Object.keys(results).length);
+				if (Object.keys(result.changes).length !== Object.keys(results).length) return;
 
-		for (const action of test.actions) {
-			for (let i = 0; i < action.length; i++) {
-				const location = `${path.relative(volarRoot, fileName)}:${action.position.line + 1}:${action.position.character + i + 1}`;
-				it(`rename ${location} => ${action.newName}`, async () => {
-					const result = await tester.languageService.doRename(
-						uri,
-						{ line: action.position.line, character: action.position.character + i },
-						action.newName,
-					);
+				for (const fileName in results) {
 
-					const textEdits = result?.changes?.[uri];
+					const textEdits = result?.changes?.[shared.fsPathToUri(fileName)];
 					expect(!!textEdits).toEqual(true);
-					if (!textEdits) return;
+					if (!textEdits) continue;
 
-					const textResult = TextDocument.applyEdits(TextDocument.create('', '', 0, scriptText), textEdits);
-					expect(textResult).toEqual(test.result);
-				});
-			}
+					const renameScript = tester.host.getScriptSnapshot(fileName);
+					expect(!!renameScript).toEqual(true);
+					if (!renameScript) continue;
+
+					const renameScriptText = renameScript.getText(0, renameScript.getLength());
+					const renameScriptResult = TextDocument.applyEdits(TextDocument.create('', '', 0, renameScriptText), textEdits);
+					expect(renameScriptResult).toEqual(results[fileName]);
+
+				}
+			});
 		}
 	});
 }
