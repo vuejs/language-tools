@@ -1,9 +1,10 @@
+import './emit';
+import './prop';
+import './typeProp';
 import './cssModule';
 import './cssScoped';
 import './cssVars';
 import './dynamicProp';
 import './scriptSetup_component';
 import './scriptSetup_element';
-import './scriptSetup_prop';
-import './scriptSetup_typeProp';
 import './scriptSetup';
