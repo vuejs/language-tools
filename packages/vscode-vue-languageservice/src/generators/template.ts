@@ -11,6 +11,7 @@ const capabilitiesSet = {
 	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true, completion: true, },
 	tagHover: { basic: true },
+	event: { basic: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: true, },
 	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
@@ -671,7 +672,7 @@ export function generate(
 							},
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.tagHover,
+								capabilities: capabilitiesSet.event,
 							},
 						);
 						tsCodeGen.addText(`: `);
