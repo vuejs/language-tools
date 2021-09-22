@@ -20,6 +20,7 @@ export function useSfcTemplateCompileResult(
 			ast = (isVue2Mode ? CompilerVue2 : CompilerDOM).compile(htmlDocument.value.getText(), {
 				onError: err => onCompilerError(err, vscode.DiagnosticSeverity.Error),
 				onWarn: err => onCompilerError(err, vscode.DiagnosticSeverity.Warning),
+				expressionPlugins: ['typescript'],
 			}).ast;
 
 			function onCompilerError(err: CompilerDOM.CompilerError, severity: vscode.DiagnosticSeverity) {
