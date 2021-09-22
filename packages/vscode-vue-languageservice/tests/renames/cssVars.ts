@@ -2,7 +2,7 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-const file = path.resolve(__dirname, '../../testCases/cssVars.vue');
+const file = path.resolve(__dirname, '../../testCases/renames/cssVars.vue');
 const fileResult = `
 <script lang="ts" setup>
 const baz = 1;

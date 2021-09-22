@@ -2,7 +2,7 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-const file = path.resolve(__dirname, '../../testCases/scriptSetup_component.vue');
+const file = path.resolve(__dirname, '../../testCases/renames/scriptSetup_component.vue');
 const fileResult = `
 <template>
     <CcDd></CcDd>

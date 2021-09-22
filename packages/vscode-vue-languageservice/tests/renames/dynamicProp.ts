@@ -2,7 +2,7 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-const file = path.resolve(__dirname, '../../testCases/dynamicProp.vue');
+const file = path.resolve(__dirname, '../../testCases/renames/dynamicProp.vue');
 const fileResult = `
 <template>
     <div :[bar]="123"></div>

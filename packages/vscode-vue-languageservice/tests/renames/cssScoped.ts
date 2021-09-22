@@ -2,13 +2,13 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-const file = path.resolve(__dirname, '../../testCases/cssModule.vue');
+const file = path.resolve(__dirname, '../../testCases/renames/cssScoped.vue');
 const fileResult = `
 <template>
-    <div :class="$style.bar"></div>
+    <div class="bar"></div>
 </template>
 
-<style module>
+<style scoped>
 .bar { }
 </style>
 `.trim();
@@ -22,7 +22,7 @@ defineRename({
 
 defineRename({
 	fileName: file,
-	position: Position.create(1, 24),
+	position: Position.create(1, 16),
 	newName: 'bar',
 	length: 4,
 }, { [file]: fileResult });

@@ -2,13 +2,13 @@ import * as path from 'upath';
 import { Position } from 'vscode-languageserver/node';
 import { defineRename } from '../utils/defineRename';
 
-const file_from = path.resolve(__dirname, '../../testCases/typeProp_from.vue');
-const file_to = path.resolve(__dirname, '../../testCases/typeProp_to.vue');
+const file_from = path.resolve(__dirname, '../../testCases/renames/prop_from.vue');
+const file_to = path.resolve(__dirname, '../../testCases/renames/prop_to.vue');
 const fileResult_from = `
 <template>{{ barFoo }}</template>
 
 <script lang="ts" setup>
-defineProps<{ barFoo: string }>();
+defineProps({ barFoo: String });
 </script>
 `.trim();
 const fileResult_to = `
@@ -18,7 +18,7 @@ const fileResult_to = `
 </template>
 
 <script lang="ts" setup>
-import Comp from './typeProp_from.vue';
+import Comp from './prop_from.vue';
 </script>
 `.trim();
 
