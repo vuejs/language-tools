@@ -13,6 +13,7 @@ export function defineRename(action: {
 	position: vscode.Position,
 	newName: string,
 	length: number,
+	resultFileNums?: number,
 }, results: Record<string, string>) {
 
 	const fileName = action.fileName;
@@ -31,8 +32,7 @@ export function defineRename(action: {
 				expect(!!result?.changes).toEqual(true);
 				if (!result?.changes) return;
 
-				expect(Object.keys(result.changes).length).toEqual(Object.keys(results).length);
-				if (Object.keys(result.changes).length !== Object.keys(results).length) return;
+				expect(Object.keys(result.changes).length).toEqual(action.resultFileNums ?? Object.keys(results).length);
 
 				for (const fileName in results) {
 
