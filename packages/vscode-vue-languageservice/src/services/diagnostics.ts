@@ -15,7 +15,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
 
-	return async (uri: string, response: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (sourceFile) {
@@ -50,7 +50,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			[useScriptValidation(3), 0, []],
 		];
 
-		return async (response: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+		return async (response?: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 			scriptTsProjectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
 
@@ -85,7 +85,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				if (isLast || isDirty) {
 					isDirty = false;
 					lastResponse = dedupe.withDiagnostics(newErrors.concat(oldErrors));
-					response(lastResponse);
+					response?.(lastResponse);
 				}
 			}
 
@@ -182,7 +182,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				// [useScriptValidation(virtualScriptGen.textDocument, 4), 0, []], // TODO: support cancel because it's very slow
 			];
 
-		return async (response: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+		return async (response?: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 			templateTsProjectVersion.value = templateTsLs.__internal__.host.getProjectVersion?.();
 			scriptTsProjectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
@@ -249,7 +249,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				) {
 					isDirty = false;
 					lastResponse = dedupe.withDiagnostics(newErrors.concat(oldErrors));
-					response(lastResponse);
+					response?.(lastResponse);
 				}
 			}
 

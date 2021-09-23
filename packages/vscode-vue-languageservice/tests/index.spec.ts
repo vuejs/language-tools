@@ -8,3 +8,5 @@ import './renames/dynamicProp';
 import './renames/scriptSetup_component';
 import './renames/scriptSetup_element';
 import './renames/scriptSetup';
+
+import './typeChecks/emit';
