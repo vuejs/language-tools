@@ -55,16 +55,9 @@ export function getTsCompletions(ts: typeof import('typescript/lib/tsserverlibra
 
 export function createTsLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	_host: ts.LanguageServiceHost,
+	host: ts.LanguageServiceHost,
 ) {
-	// @ts-ignore
-	const importSuggestionsCache = ts.Completions?.createImportSuggestionsForFileCache?.();
-	const host = {
-		..._host,
-		// @ts-ignore
-		// TODO: crash on 'addListener' from 'node:process', reuse because TS has same problem
-		getImportSuggestionsCache: () => importSuggestionsCache,
-	};
+	// TODO: new cache logic https://github.com/microsoft/TypeScript/blob/4c0a51e14b67460b47bdcebea6b70270a83a243e/src/server/project.ts#L258
 	return ts.createLanguageService(host);
 }
 
