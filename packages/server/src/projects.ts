@@ -274,10 +274,7 @@ export function createProjects(
 	}
 	async function updateInferredProjects() {
 
-		const tsConfigDirs = [...projects.keys()].map(upath.dirname);
-		const inferredTsConfigs = rootPaths
-			.filter(rootPath => !tsConfigDirs.includes(rootPath))
-			.map(rootPath => upath.join(rootPath, 'tsconfig.json'));
+		const inferredTsConfigs = rootPaths.map(rootPath => upath.join(rootPath, 'tsconfig.json'));
 		const inferredTsConfigsToCreate = inferredTsConfigs.filter(tsConfig => !inferredProjects.has(tsConfig));
 		const { inferredProjectProgress } = await getProjectProgress([], inferredTsConfigsToCreate);
 
@@ -343,13 +340,12 @@ export function createProjects(
 
 		let firstMatchTsConfigs: string[] = [];
 		let secondMatchTsConfigs: string[] = [];
-		let unMatchTsConfigs: string[] = [];
 
 		for (const kvp of services) {
 			const tsConfig = upath.resolve(kvp[0]);
 			const parsedCommandLine = kvp[1].getParsedCommandLine();
 			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.context.scriptTsLs.__internal__.getTextDocument(uri)) {
+			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.context.scriptTsLs.__internal__.getValidTextDocument(uri)) {
 				const tsConfigDir = upath.dirname(tsConfig);
 				if (!upath.relative(tsConfigDir, fileName).startsWith('..')) { // is file under tsconfig.json folder
 					firstMatchTsConfigs.push(tsConfig);
@@ -358,19 +354,14 @@ export function createProjects(
 					secondMatchTsConfigs.push(tsConfig);
 				}
 			}
-			else {
-				unMatchTsConfigs.push(tsConfig);
-			}
 		}
 
 		firstMatchTsConfigs = firstMatchTsConfigs.sort(sortPaths);
 		secondMatchTsConfigs = secondMatchTsConfigs.sort(sortPaths);
-		unMatchTsConfigs = unMatchTsConfigs.sort(sortPaths);
 
 		return [
 			...firstMatchTsConfigs,
 			...secondMatchTsConfigs,
-			...unMatchTsConfigs,
 		];
 
 		function sortPaths(a: string, b: string) {
