@@ -10,7 +10,7 @@
 	"dependencies": {
 		"@volar/server": "^0.27.23",
 		"@volar/shared": "^0.27.22",
-		"@vue/reactivity": "^3.2.6",
+		"@vue/reactivity": "^3.2.14",
 		"upath": "^2.0.1",
 		"vscode-html-languageservice": "^4.0.7",
 		"vscode-languageclient": "^8.0.0-next.2",
