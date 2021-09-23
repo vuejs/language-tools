@@ -100,9 +100,6 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 			if (tsLoc.type === 'embedded-ts' && typeof tsLoc.range.data.capabilities.rename === 'object' && !tsLoc.range.data.capabilities.rename.in)
 				continue;
 
-			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
-				continue;
-
 			let newName_2 = newName;
 			if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
 				newName_2 = tsLoc.range.data.beforeRename(newName);
@@ -308,9 +305,6 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: vscode.
 					continue;
 
 				if (vueLoc.type === 'embedded-ts' && typeof vueLoc.range.data.capabilities.rename === 'object' && !vueLoc.range.data.capabilities.rename.out)
-					continue;
-
-				if (vueLoc.type === 'source-ts' && lsType === 'template')
 					continue;
 
 				let newText_2 = tsEdit.newText;
