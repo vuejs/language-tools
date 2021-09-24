@@ -76,8 +76,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		}
 		function translateDiagnosticRelated(diag: ts.Diagnostic): vscode.DiagnosticRelatedInformation | undefined {
 
-			if (!diag.start) return;
-			if (!diag.length) return;
+			if (diag.start === undefined) return;
+			if (diag.length === undefined) return;
 
 			let document: TextDocument | undefined;
 			if (diag.file) {
