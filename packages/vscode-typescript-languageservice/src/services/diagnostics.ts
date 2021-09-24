@@ -44,8 +44,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		}
 		function translateDiagnostic(diag: ts.Diagnostic, document: TextDocument): vscode.Diagnostic | undefined {
 
-			if (!diag.start) return;
-			if (!diag.length) return;
+			if (diag.start === undefined) return;
+			if (diag.length === undefined) return;
 
 			const diagnostic: vscode.Diagnostic = {
 				range: {
