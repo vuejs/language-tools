@@ -5,10 +5,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	const shouldTsPluginEnabled = getTsPluginConfig();
 	if (shouldTsPluginEnabled) {
 		const install = 'Install "TypeScript Vue Plugin"';
+		const openSettings = 'Open settings.json';
 		const takeOverMode = 'What is Take Over Mode?';
-		const select = await vscode.window.showWarningMessage('TS plugin is a independent extension after 0.27.22, please install "TypeScript Vue Plugin" extension, or use take over mode instead of. (Please remove `volar.tsPlugin` setting to disable this prompt)', install, takeOverMode);
+		const select = await vscode.window.showWarningMessage('TS plugin is a independent extension after 0.27.22, please install "TypeScript Vue Plugin" extension, or use take over mode instead of. (Please remove `volar.tsPlugin` setting to disable this prompt)', install, openSettings, takeOverMode);
 		if (select === install) {
 			vscode.env.openExternal(vscode.Uri.parse('https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-vue-plugin'));
+		}
+		else if (select === openSettings) {
+			vscode.commands.executeCommand('workbench.action.openWorkspaceSettingsFile');
 		}
 		else if (select === takeOverMode) {
 			vscode.env.openExternal(vscode.Uri.parse('https://github.com/johnsoncodehk/volar/discussions/471'));
