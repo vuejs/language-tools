@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as vue from 'vscode-vue-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver';
 import { getSchemaRequestService } from './schemaRequestService';
 import type { createLsConfigs } from './configs';
 
@@ -32,11 +32,6 @@ export function createProject(
 		snapshot: ts.IScriptSnapshot,
 	}>();
 	const scripts = new shared.FsPathMap<{
-		version: number,
-		fileName: string,
-		fileWatcher: ts.FileWatcher,
-	}>();
-	const extraScripts = new shared.FsPathMap<{
 		version: number,
 		fileName: string,
 	}>();
@@ -79,33 +74,51 @@ export function createProject(
 		}
 		return vueLs;
 	}
-	function onWorkspaceFilesChanged(changes: string[]) {
+	async function onWorkspaceFilesChanged(changes: vscode.FileEvent[]) {
 
-		const newFiles: string[] = [];
+		await Promise.all([...fileRenamings]);
 
-		for (const change of changes) {
+		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
+		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
+		const changedFileNames: string[] = [];
+		let changed = false;
 
-			const fileName = shared.normalizeFileName(change);
-
-			if (!scripts.has(fileName) && !extraScripts.has(fileName) && shared.isFileInDir(fileName, rootPath)) {
-				newFiles.push(fileName);
-			}
-		}
-
-		if (newFiles.length) {
+		if (creates.length || deletes.length) {
 			parsedCommandLine = createParsedCommandLine();
 		}
 
-		for (const fileName of newFiles) {
+		for (const change of creates) {
+			const fileName = shared.uriToFsPath(change.uri);
 			if (parsedCommandLine.fileNames.includes(fileName)) {
-				const fileWatcher = ts.sys.watchFile!(fileName, onDriveFileUpdated);
 				scripts.set(fileName, {
 					fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
-					fileWatcher,
 				});
-				onProjectUpdated(fileName);
+				onFileChanged(fileName);
+				changed = true;
 			}
+		}
+
+		for (const change of changes) {
+
+			const fileName = shared.uriToFsPath(change.uri);
+			const script = scripts.get(fileName);
+
+			if (script && change.type === vscode.FileChangeType.Changed) {
+				script.version++;
+				onFileChanged(fileName);
+				changedFileNames.push(fileName);
+				changed = true;
+			}
+			else if (script && change.type === vscode.FileChangeType.Deleted) {
+				scripts.delete(fileName);
+				onFileChanged(fileName);
+				changed = true;
+			}
+		}
+
+		if (changed) {
+			onUpdated(changedFileNames.length === 1 ? changedFileNames[0] : undefined);
 		}
 	}
 	async function init() {
@@ -117,12 +130,9 @@ export function createProject(
 		const fileNames = new shared.FsPathSet(parsedCommandLine.fileNames);
 		let changed = false;
 
-		extraScripts.clear();
-
 		const removeKeys: string[] = [];
-		for (const [key, { fileName, fileWatcher }] of scripts) {
+		for (const [key, { fileName }] of scripts) {
 			if (!fileNames.has(fileName)) {
-				fileWatcher?.close();
 				removeKeys.push(key);
 				changed = true;
 			}
@@ -132,11 +142,9 @@ export function createProject(
 		}
 		for (const fileName of parsedCommandLine.fileNames) {
 			if (!scripts.has(fileName)) {
-				const fileWatcher = ts.sys.watchFile!(fileName, onDriveFileUpdated);
 				scripts.set(fileName, {
 					fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
-					fileWatcher,
 				});
 				changed = true;
 			}
@@ -162,77 +170,23 @@ export function createProject(
 			}
 		}
 		const script = scripts.get(fileName);
-		const extraScript = extraScripts.get(fileName);
 		if (script) {
 			script.version = document.version;
 		}
-		if (extraScript) {
-			extraScript.version = document.version;
-		}
-		if (!!script || !!extraScript) {
-			onProjectUpdated(fileName);
+		if (!!script) {
+			onFileChanged(fileName);
+			onUpdated(fileName);
 			return true;
 		}
 		return false;
 	}
-	async function onDriveFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
-
-		await Promise.all([...fileRenamings]);
-
-		fileName = shared.normalizeFileName(fileName);
-
-		if (eventKind === ts.FileWatcherEventKind.Changed) {
-
-			const uri = shared.fsPathToUri(fileName);
-			if (documents.get(uri)) {
-				// this file handle by vscode event
-				return;
-			}
-
-			const script = scripts.get(fileName);
-			if (script) {
-				script.version++;
-				onProjectUpdated(fileName);
-			}
-		}
-		else if (eventKind === ts.FileWatcherEventKind.Deleted) {
-
-			const script = scripts.get(fileName);
-			if (script) {
-				script.fileWatcher?.close();
-				scripts.delete(fileName);
-				onProjectUpdated(fileName);
-			}
-		}
-	}
-	function onExtraFileUpdated(fileName: string, eventKind: ts.FileWatcherEventKind) {
-		const extraFile = extraScripts.get(fileName);
-		if (extraFile) {
-			if (eventKind === ts.FileWatcherEventKind.Changed) {
-
-				const uri = shared.fsPathToUri(fileName);
-				if (documents.get(uri)) {
-					// this file handle by vscode event
-					return;
-				}
-
-				extraFile.version++;
-			}
-			if (eventKind === ts.FileWatcherEventKind.Deleted) {
-				extraScripts.delete(fileName);
-				snapshots.delete(fileName);
-			}
-			onProjectUpdated(fileName);
-		}
-	}
-	async function onProjectUpdated(changedFileName: string) {
+	function onFileChanged(changedFileName: string) {
 		if (changedFileName.endsWith('.vue')) {
 			vueProjectVersion++;
 		}
 		else {
 			tsProjectVersion++;
 		}
-		onUpdated(changedFileName);
 	}
 	function createLanguageServiceHost() {
 
@@ -280,9 +234,8 @@ export function createProject(
 			if (
 				fileExists
 				&& !scripts.has(fileName)
-				&& !extraScripts.has(fileName)
 			) {
-				extraScripts.set(fileName, {
+				scripts.set(fileName, {
 					fileName: fileName,
 					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
 				});
@@ -291,7 +244,6 @@ export function createProject(
 		}
 		function getScriptVersion(fileName: string) {
 			return scripts.get(fileName)?.version.toString()
-				?? extraScripts.get(fileName)?.version.toString()
 				?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
@@ -312,9 +264,6 @@ export function createProject(
 		}
 	}
 	function dispose() {
-		for (const [_, { fileWatcher }] of scripts) {
-			fileWatcher?.close();
-		}
 		if (vueLs) {
 			vueLs.dispose();
 		}
@@ -322,7 +271,6 @@ export function createProject(
 			disposable.dispose();
 		}
 		scripts.clear();
-		extraScripts.clear();
 		disposables.length = 0;
 	}
 	function createParsedCommandLine() {

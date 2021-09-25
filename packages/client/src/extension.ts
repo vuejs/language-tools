@@ -232,6 +232,9 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector,
 		initializationOptions,
+		synchronize: {
+			fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
+		}
 	};
 	const client = new lsp.LanguageClient(
 		id,

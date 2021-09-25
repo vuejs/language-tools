@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createLsConfigs } from './configs';
 
@@ -20,13 +20,11 @@ export function createProjects(
 ) {
 
 	let semanticTokensReq = 0;
-	let workspaceFilesUpdateReq = 0;
 	let documentUpdatedReq = 0;
 
 	const updatedWorkspaceFiles = new Set<string>();
 	const updatedUris = new Set<string>();
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
-	const tsConfigWatchers = new Map<string, ts.FileWatcher>();
 	const projects = new Map<string, Project>();
 	const inferredProjects = new Map<string, Project>();
 	const checkedProjects = new Set<string>();
@@ -45,6 +43,48 @@ export function createProjects(
 		}
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
+	connection.onDidChangeWatchedFiles(async handler => {
+
+		const tsConfigChanges: vscode.FileEvent[] = [];
+		const scriptChanges: vscode.FileEvent[] = [];
+
+		for (const change of handler.changes) {
+			const fileName = shared.uriToFsPath(change.uri);
+			if (tsConfigNames.includes(upath.basename(fileName))) {
+				tsConfigChanges.push(change);
+			}
+			else {
+				scriptChanges.push(change);
+			}
+		}
+
+		if (tsConfigChanges.length) {
+
+			clearDiagnostics();
+			const { projectProgress } = await getProjectProgress(tsConfigChanges.map(change => shared.uriToFsPath(change.uri)), []);
+
+			for (const tsConfigChange of tsConfigChanges) {
+				const tsConfig = shared.uriToFsPath(tsConfigChange.uri);
+				if (tsConfigChange.type === vscode.FileChangeType.Deleted) {
+					if (projects.has(tsConfig)) {
+						projects.get(tsConfig)?.dispose();
+						projects.delete(tsConfig);
+					}
+				}
+				else {
+					setProject(tsConfig, projectProgress[tsConfig]);
+				}
+			}
+
+			updateDiagnostics(undefined);
+		}
+
+		if (scriptChanges.length) {
+			for (const [_, project] of [...projects, ...inferredProjects]) {
+				project.onWorkspaceFilesChanged(scriptChanges);
+			}
+		}
+	});
 
 	return {
 		projects,
@@ -58,51 +98,11 @@ export function createProjects(
 		const { projectProgress } = await getProjectProgress(tsConfigs, []);
 
 		for (const tsConfig of tsConfigs) {
-			updateProject(tsConfig, projectProgress[tsConfig]);
+			setProject(tsConfig, projectProgress[tsConfig]);
 		}
 
 		updateInferredProjects();
 		updateDiagnostics(undefined);
-
-		for (const rootPath of rootPaths) {
-			ts.sys.watchDirectory!(rootPath, async fileName => {
-				if (tsConfigNames.includes(upath.basename(fileName))) {
-					// tsconfig.json changed
-					const { projectProgress } = await getProjectProgress([fileName], []);
-					clearDiagnostics();
-					updateProject(fileName, projectProgress[fileName]);
-					await updateInferredProjects();
-					updateDiagnostics(undefined);
-				}
-				else if (
-					fileName.endsWith('.vue')
-					|| fileName.endsWith('.js')
-					|| fileName.endsWith('.jsx')
-					|| fileName.endsWith('.ts')
-					|| fileName.endsWith('.tsx')
-					|| fileName.endsWith('.json')
-				) {
-					// *.vue, *.ts ... changed
-
-					const req = ++workspaceFilesUpdateReq;
-					updatedWorkspaceFiles.add(fileName);
-
-					await shared.sleep(100);
-
-					if (req === workspaceFilesUpdateReq) {
-
-						const changes = [...updatedWorkspaceFiles].filter(fileName => ts.sys.fileExists(fileName));
-
-						if (changes.length) {
-							for (const [_, service] of [...projects, ...inferredProjects]) {
-								service.onWorkspaceFilesChanged(changes);
-							}
-						}
-					}
-				}
-			}, true, { excludeDirectories: [upath.join(rootPath, '.git')] });
-		}
-
 	}
 	function searchTsConfigs() {
 		const tsConfigSet = new Set(rootPaths
@@ -244,33 +244,23 @@ export function createProjects(
 			}
 		}
 	}
-	function updateProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
+	function setProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
 		if (projects.has(tsConfig)) {
 			projects.get(tsConfig)?.dispose();
-			tsConfigWatchers.get(tsConfig)?.close();
 			projects.delete(tsConfig);
 		}
-		if (ts.sys.fileExists(tsConfig)) {
-			projects.set(tsConfig, createProject(
-				ts,
-				options,
-				upath.dirname(tsConfig),
-				tsConfig,
-				tsLocalized,
-				documents,
-				onDriveFileUpdated,
-				progress,
-				connection,
-				lsConfigs,
-			));
-			tsConfigWatchers.set(tsConfig, ts.sys.watchFile!(tsConfig, (fileName, eventKind) => {
-				if (eventKind === ts.FileWatcherEventKind.Changed) {
-					clearDiagnostics();
-					updateProject(tsConfig, progress);
-					updateDiagnostics(undefined);
-				}
-			}));
-		}
+		projects.set(tsConfig, createProject(
+			ts,
+			options,
+			upath.dirname(tsConfig),
+			tsConfig,
+			tsLocalized,
+			documents,
+			onDriveFileUpdated,
+			progress,
+			connection,
+			lsConfigs,
+		));
 	}
 	async function updateInferredProjects() {
 
