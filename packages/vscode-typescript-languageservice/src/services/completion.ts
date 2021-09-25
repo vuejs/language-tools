@@ -4,6 +4,7 @@ import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as semver from 'semver';
+import { parseKindModifier } from '../utils/modifiers';
 
 export interface Data {
 	uri: string,
@@ -45,99 +46,193 @@ export function register(
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
-		const info = languageService.getCompletionsAtPosition(fileName, offset, options);
-		if (info === undefined) return;
+		const completionContext = languageService.getCompletionsAtPosition(fileName, offset, options);
+		if (completionContext === undefined) return;
 
-		const wordRange2 = info.optionalReplacementSpan ? {
-			start: info.optionalReplacementSpan.start,
-			end: info.optionalReplacementSpan.start + info.optionalReplacementSpan.length,
-		} : undefined;
-		const wordRange = wordRange2 ? vscode.Range.create(
-			document.positionAt(wordRange2.start),
-			document.positionAt(wordRange2.end),
+		const wordRange = completionContext.optionalReplacementSpan ? vscode.Range.create(
+			document.positionAt(completionContext.optionalReplacementSpan.start),
+			document.positionAt(completionContext.optionalReplacementSpan.start + completionContext.optionalReplacementSpan.length),
 		) : undefined;
 
-		const entries = info.entries
-			.map(entry => {
+		let line = document.getText({ start: position, end: { line: position.line + 1, character: 0 } });
+		if (line.endsWith('\n')) {
+			line = line.substring(0, line.length - 1);
+		}
+
+		const dotAccessorContext = getDotAccessorContext(ts.version, document);
+
+		const entries = completionContext.entries
+			.map(tsEntry => {
+
+				const item = vscode.CompletionItem.create(tsEntry.name);
+
+				item.kind = convertKind(tsEntry.kind);
+
+				if (tsEntry.source && tsEntry.hasAction) {
+					// De-prioritze auto-imports
+					// https://github.com/microsoft/vscode/issues/40311
+					item.sortText = '\uffff' + tsEntry.sortText;
+
+				} else {
+					item.sortText = tsEntry.sortText;
+				}
+
+				const { sourceDisplay, isSnippet } = tsEntry;
+				if (sourceDisplay) {
+					item.labelDetails = { description: ts.displayPartsToString(tsEntry.sourceDisplay) };
+				}
+
+				item.preselect = tsEntry.isRecommended;
+
+				let range: vscode.Range | ReturnType<typeof getRangeFromReplacementSpan> = getRangeFromReplacementSpan(tsEntry, document);
+				item.commitCharacters = getCommitCharacters(tsEntry, {
+					isNewIdentifierLocation: completionContext.isNewIdentifierLocation,
+					isInValidCommitCharacterContext: isInValidCommitCharacterContext(document, position, ts.version),
+					enableCallCompletions: true, // TODO: suggest.completeFunctionCalls
+				});
+				item.insertText = tsEntry.insertText;
+				item.insertTextFormat = isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText;
+				item.filterText = getFilterText(tsEntry, wordRange, line, tsEntry.insertText);
+
+				if (completionContext.isMemberCompletion && dotAccessorContext && !isSnippet) {
+					item.filterText = dotAccessorContext.text + (item.insertText || item.label);
+					if (!range) {
+						const replacementRange = wordRange;
+						if (replacementRange) {
+							range = {
+								inserting: dotAccessorContext.range,
+								replacing: rangeUnion(dotAccessorContext.range, replacementRange),
+							};
+						} else {
+							range = dotAccessorContext.range;
+						}
+						item.insertText = item.filterText;
+					}
+				}
+
+				handleKindModifiers(item, tsEntry);
+
+				if (!range && wordRange) {
+					range = {
+						inserting: vscode.Range.create(wordRange.start, position),
+						replacing: wordRange,
+					}
+				}
+
+				if (range) {
+					if (vscode.Range.is(range)) {
+						item.textEdit = vscode.TextEdit.replace(range, item.insertText || item.label);
+					}
+					else {
+						item.textEdit = vscode.InsertReplaceEdit.create(item.insertText || item.label, range.inserting, range.replacing);
+					}
+				}
+
 				const data: Data = {
 					uri,
 					fileName,
 					offset,
-					source: entry.source,
-					name: entry.name,
-					tsData: entry.data,
+					source: tsEntry.source,
+					name: tsEntry.name,
+					tsData: tsEntry.data,
 				};
-				let item: vscode.CompletionItem = {
-					label: entry.name,
-					labelDetails: {
-						description: ts.displayPartsToString(entry.sourceDisplay),
-					},
-					kind: convertKind(entry.kind),
-					sortText: entry.sortText,
-					insertText: entry.insertText,
-					insertTextFormat: entry.isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText,
-					preselect: entry.isRecommended,
-					commitCharacters: getCommitCharacters(entry, info.isNewIdentifierLocation),
-					data,
-				};
-
-				handleKindModifiers(item, entry);
-				item = fuzzyCompletionItem(info, document, entry, item);
+				item.data = data;
 
 				return item;
 			});
 
 		return {
-			isIncomplete: !!info.isIncomplete,
+			isIncomplete: !!completionContext.isIncomplete,
 			items: entries,
 		};
 
-		// from vscode typescript
-		function fuzzyCompletionItem(info: ts.CompletionInfo, document: TextDocument, entry: ts.CompletionEntry, item: vscode.CompletionItem) {
-			if (info.isNewIdentifierLocation && entry.replacementSpan) {
-				const replaceRange = vscode.Range.create(
-					document.positionAt(entry.replacementSpan.start),
-					document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
-				);
-				item.textEdit = vscode.TextEdit.replace(replaceRange, item.insertText ?? item.label);
-			}
-			else {
-				if (entry.replacementSpan) {
-					/**
-					 * @before
-					 * foo. + ['a/b/c'] => foo.['a/b/c']
-					 * @after
-					 * foo. + ['a/b/c'] => foo['a/b/c']
-					 */
-					const replaceRange = !wordRange2
-						? vscode.Range.create(
-							document.positionAt(entry.replacementSpan.start),
-							document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
-						)
-						: entry.replacementSpan.start <= wordRange2.start
-							? vscode.Range.create(
-								document.positionAt(entry.replacementSpan.start),
-								document.positionAt(Math.min(entry.replacementSpan.start + entry.replacementSpan.length, wordRange2.start)),
-							)
-							: vscode.Range.create(
-								document.positionAt(Math.max(entry.replacementSpan.start, wordRange2.end)),
-								document.positionAt(entry.replacementSpan.start + entry.replacementSpan.length),
-							);
-					item.additionalTextEdits = [vscode.TextEdit.del(replaceRange)];
-				}
-				if (wordRange) {
-					/**
-					 * @before
-					 * $f + $foo => $$foo
-					 * @after
-					 * $f + $foo => $foo
-					 */
-					item.textEdit = vscode.TextEdit.replace(wordRange, item.insertText ?? item.label);
+		function getDotAccessorContext(tsVersion: string, document: TextDocument) {
+			let dotAccessorContext: {
+				range: vscode.Range;
+				text: string;
+			} | undefined;
+
+			if (semver.gte(tsVersion, '3.0.0')) {
+
+				if (!completionContext)
+					return;
+
+				const isMemberCompletion = completionContext.isMemberCompletion;
+				if (isMemberCompletion) {
+					const dotMatch = line.slice(0, position.character).match(/\??\.\s*$/) || undefined;
+					if (dotMatch) {
+						const range = vscode.Range.create({ line: position.line, character: position.character - dotMatch[0].length }, position);
+						const text = document.getText(range);
+						dotAccessorContext = { range, text };
+					}
 				}
 			}
 
-			return item;
+			return dotAccessorContext;
 		}
+
+		// from vscode typescript
+		function getRangeFromReplacementSpan(tsEntry: ts.CompletionEntry, document: TextDocument) {
+			if (!tsEntry.replacementSpan) {
+				return;
+			}
+
+			let replaceRange = vscode.Range.create(
+				document.positionAt(tsEntry.replacementSpan.start),
+				document.positionAt(tsEntry.replacementSpan.start + tsEntry.replacementSpan.length),
+			);
+			// Make sure we only replace a single line at most
+			if (replaceRange.start.line !== replaceRange.end.line) {
+				replaceRange = vscode.Range.create(
+					replaceRange.start.line,
+					replaceRange.start.character,
+					replaceRange.start.line,
+					document.positionAt(document.offsetAt({ line: replaceRange.start.line + 1, character: 0 }) - 1).character,
+				);
+			}
+
+			// If TS returns an explicit replacement range, we should use it for both types of completion
+			return {
+				inserting: replaceRange,
+				replacing: replaceRange,
+			};
+		}
+
+		function getFilterText(tsEntry: ts.CompletionEntry, wordRange: vscode.Range | undefined, line: string, insertText: string | undefined): string | undefined {
+			// Handle private field completions
+			if (tsEntry.name.startsWith('#')) {
+				const wordStart = wordRange ? line.charAt(wordRange.start.character) : undefined;
+				if (insertText) {
+					if (insertText.startsWith('this.#')) {
+						return wordStart === '#' ? insertText : insertText.replace(/^this\.#/, '');
+					} else {
+						return insertText;
+					}
+				} else {
+					return wordStart === '#' ? undefined : tsEntry.name.replace(/^#/, '');
+				}
+			}
+
+			// For `this.` completions, generally don't set the filter text since we don't want them to be overly prioritized. #74164
+			if (insertText?.startsWith('this.')) {
+				return undefined;
+			}
+
+			// Handle the case:
+			// ```
+			// const xyz = { 'ab c': 1 };
+			// xyz.ab|
+			// ```
+			// In which case we want to insert a bracket accessor but should use `.abc` as the filter text instead of
+			// the bracketed insert text.
+			else if (insertText?.startsWith('[')) {
+				return insertText.replace(/^\[['"](.+)[['"]\]$/, '.$1');
+			}
+
+			// In all other cases, fallback to using the insertText
+			return insertText;
+		}
+
 		function convertKind(kind: string): vscode.CompletionItemKind {
 			switch (kind) {
 				case PConst.Kind.primitiveType:
@@ -200,50 +295,54 @@ export function register(
 					return vscode.CompletionItemKind.Property;
 			}
 		}
-		function getCommitCharacters(entry: ts.CompletionEntry, isNewIdentifierLocation: boolean): string[] | undefined {
-			if (isNewIdentifierLocation) {
+
+		function getCommitCharacters(entry: ts.CompletionEntry, context: {
+			isNewIdentifierLocation: boolean,
+			isInValidCommitCharacterContext: boolean,
+			enableCallCompletions: boolean,
+		}): string[] | undefined {
+			if (entry.kind === PConst.Kind.warning) { // Ambient JS word based suggestion
 				return undefined;
 			}
 
-			const commitCharacters: string[] = [];
-			switch (entry.kind) {
-				case PConst.Kind.memberGetAccessor:
-				case PConst.Kind.memberSetAccessor:
-				case PConst.Kind.constructSignature:
-				case PConst.Kind.callSignature:
-				case PConst.Kind.indexSignature:
-				case PConst.Kind.enum:
-				case PConst.Kind.interface:
-					commitCharacters.push('.', ';');
-					break;
-
-				case PConst.Kind.module:
-				case PConst.Kind.alias:
-				case PConst.Kind.const:
-				case PConst.Kind.let:
-				case PConst.Kind.variable:
-				case PConst.Kind.localVariable:
-				case PConst.Kind.memberVariable:
-				case PConst.Kind.class:
-				case PConst.Kind.function:
-				case PConst.Kind.method:
-				case PConst.Kind.keyword:
-				case PConst.Kind.parameter:
-					commitCharacters.push('.', ',', ';');
-					// if (context.enableCallCompletions) {
-					commitCharacters.push('(');
-					// }
-					break;
+			if (context.isNewIdentifierLocation || !context.isInValidCommitCharacterContext) {
+				return undefined;
 			}
-			return commitCharacters.length === 0 ? undefined : commitCharacters;
+
+			const commitCharacters: string[] = ['.', ',', ';'];
+			if (context.enableCallCompletions) {
+				commitCharacters.push('(');
+			}
+
+			return commitCharacters;
+		}
+
+		function isInValidCommitCharacterContext(
+			document: TextDocument,
+			position: vscode.Position,
+			tsVersion: string,
+		): boolean {
+			if (semver.lt(tsVersion, '3.2.0')) {
+				// Workaround for https://github.com/microsoft/TypeScript/issues/27742
+				// Only enable dot completions when previous character not a dot preceded by whitespace.
+				// Prevents incorrectly completing while typing spread operators.
+				if (position.character > 1) {
+					const preText = document.getText(vscode.Range.create(
+						position.line, 0,
+						position.line, position.character));
+					return preText.match(/(\s|^)\.$/ig) === null;
+				}
+			}
+
+			return true;
 		}
 	}
 }
 
-export function handleKindModifiers(item: vscode.CompletionItem, entry: ts.CompletionEntry | ts.CompletionEntryDetails) {
-	if (entry.kindModifiers) {
-		const kindModifiers = entry.kindModifiers.split(/,|\s+/g);
-		if (kindModifiers.includes(PConst.KindModifiers.optional)) {
+export function handleKindModifiers(item: vscode.CompletionItem, tsEntry: ts.CompletionEntry | ts.CompletionEntryDetails) {
+	if (tsEntry.kindModifiers) {
+		const kindModifiers = parseKindModifier(tsEntry.kindModifiers);
+		if (kindModifiers.has(PConst.KindModifiers.optional)) {
 			if (!item.insertText) {
 				item.insertText = item.label;
 			}
@@ -253,22 +352,31 @@ export function handleKindModifiers(item: vscode.CompletionItem, entry: ts.Compl
 			}
 			item.label += '?';
 		}
+		if (kindModifiers.has(PConst.KindModifiers.deprecated)) {
+			item.tags = [vscode.CompletionItemTag.Deprecated];
+		}
 
-		if (kindModifiers.includes(PConst.KindModifiers.color)) {
+		if (kindModifiers.has(PConst.KindModifiers.color)) {
 			item.kind = vscode.CompletionItemKind.Color;
 		}
 
-		if (entry.kind === PConst.Kind.script) {
+		if (tsEntry.kind === PConst.Kind.script) {
 			for (const extModifier of PConst.KindModifiers.fileExtensionKindModifiers) {
-				if (kindModifiers.includes(extModifier)) {
-					if (entry.name.toLowerCase().endsWith(extModifier)) {
-						item.detail = entry.name;
+				if (kindModifiers.has(extModifier)) {
+					if (tsEntry.name.toLowerCase().endsWith(extModifier)) {
+						item.detail = tsEntry.name;
 					} else {
-						item.detail = entry.name + extModifier;
+						item.detail = tsEntry.name + extModifier;
 					}
 					break;
 				}
 			}
 		}
 	}
+}
+
+function rangeUnion(a: vscode.Range, b: vscode.Range): vscode.Range {
+	const start = (a.start.line < b.start.line || (a.start.line === b.start.line && a.start.character < b.start.character)) ? a.start : b.start;
+	const end = (a.end.line > b.end.line || (a.end.line === b.end.line && a.end.character > b.end.character)) ? a.end : b.end;
+	return { start, end };
 }

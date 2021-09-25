@@ -58,7 +58,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					selectionRange);
 
 				const kindModifiers = parseKindModifier(item.kindModifiers);
-				if (kindModifiers.has(PConst.KindModifiers.depreacted)) {
+				if (kindModifiers.has(PConst.KindModifiers.deprecated)) {
 					symbolInfo.deprecated = true;
 				}
 

@@ -77,7 +77,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		};
 
 		const kindModifiers = item.kindModifiers ? parseKindModifier(item.kindModifiers) : undefined;
-		if (kindModifiers?.has(PConst.KindModifiers.depreacted)) {
+		if (kindModifiers?.has(PConst.KindModifiers.deprecated)) {
 			result.tags = [vscode.SymbolTag.Deprecated];
 		}
 		return result;
