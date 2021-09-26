@@ -102,7 +102,7 @@
 				},
 				"volar.codeLens.pugTools": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "[pug ☐] code lens."
 				},
 				"volar.formatting.printWidth": {
@@ -127,7 +127,7 @@
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "[ref sugar ☐] code lens."
 				},
 				"volar.autoCompleteRefs": {
