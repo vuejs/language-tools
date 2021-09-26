@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.25
+
+- feat: add open VSCode settings json button in takeover mode prompt
+- feat: disable code convert codeLens by default
+- perf: use VSCode's file watcher instead of TS file watcher to reduce cpu usage ([#523](https://github.com/johnsoncodehk/volar/issues/523))
+- perf: remove redundant fileExists logic
+- fix: fixed zero length TS diagnostics missing ([#527](https://github.com/johnsoncodehk/volar/pull/527))
+- fix: import statements auto-complete not working in latest VSCode
+
 ## 0.27.24
 
 - feat: support TS annotation on v-model ([#518](https://github.com/johnsoncodehk/volar/issues/518))
