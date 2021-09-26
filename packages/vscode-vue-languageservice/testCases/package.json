@@ -1,5 +1,5 @@
 {
     "devDependencies": {
-        "@vue/runtime-dom": "^3.2.14"
+        "@vue/runtime-dom": "^3.2.19"
     }
 }

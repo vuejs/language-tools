@@ -71,35 +71,35 @@
     vscode-nls "^5.0.0"
     vscode-uri "^2.1.2"
 
-"@vue/compiler-core@3.2.14":
-  version "3.2.14"
-  resolved "https://registry.yarnpkg.com/@vue/compiler-core/-/compiler-core-3.2.14.tgz#093bf572ee2a6c7edeb3a15b1301b910375ee4fc"
-  integrity sha512-dPxxBthVMBvUKDP/ppaQa+Lod6gUbpEJUov10Uwl/sRI8qHcMLK7CJocCd7Ic1BbjgLGISJ4KTw+JRgSdkOFQg==
+"@vue/compiler-core@3.2.19":
+  version "3.2.19"
+  resolved "https://registry.yarnpkg.com/@vue/compiler-core/-/compiler-core-3.2.19.tgz#b537dd377ce51fdb64e9b30ebfbff7cd70a64cb9"
+  integrity sha512-8dOPX0YOtaXol0Zf2cfLQ4NU/yHYl2H7DCKsLEZ7gdvPK6ZSEwGLJ7IdghhY2YEshEpC5RB9QKdC5I07z8Dtjg==
   dependencies:
     "@babel/parser" "^7.15.0"
-    "@vue/shared" "3.2.14"
+    "@vue/shared" "3.2.19"
     estree-walker "^2.0.2"
     source-map "^0.6.1"
 
-"@vue/compiler-dom@^3.2.14":
-  version "3.2.14"
-  resolved "https://registry.yarnpkg.com/@vue/compiler-dom/-/compiler-dom-3.2.14.tgz#acddabae94704df543448e2ac31fe476a70d8307"
-  integrity sha512-AEfQPdvVvwy+U5WnvmVHKjQwaR3vWhALe/40swnu/AH/fQ4/wKrNf2e3ACMseAF0x8XdBQJJe+kZ+OaT0phc4Q==
+"@vue/compiler-dom@^3.2.19":
+  version "3.2.19"
+  resolved "https://registry.yarnpkg.com/@vue/compiler-dom/-/compiler-dom-3.2.19.tgz#0607bc90de6af55fde73b09b3c4d0bf8cb597ed8"
+  integrity sha512-WzQoE8rfkFjPtIioc7SSgTsnz9g2oG61DU8KHnzPrRS7fW/lji6H2uCYJfp4Z6kZE8GjnHc1Ljwl3/gxDes0cw==
   dependencies:
-    "@vue/compiler-core" "3.2.14"
-    "@vue/shared" "3.2.14"
+    "@vue/compiler-core" "3.2.19"
+    "@vue/shared" "3.2.19"
 
-"@vue/reactivity@^3.2.14":
-  version "3.2.14"
-  resolved "https://registry.yarnpkg.com/@vue/reactivity/-/reactivity-3.2.14.tgz#5cb15209ee9313cb50ed9b20fdd108ea2a904f77"
-  integrity sha512-dBUeNJTY5xmyY6fxoS3Zo82hFMo2xSCh9KoTz9PRWtgZzcCS556ZidmbsZpRcRw/bgWFFsfEUI+KeYSOCtasAA==
+"@vue/reactivity@^3.2.19":
+  version "3.2.19"
+  resolved "https://registry.yarnpkg.com/@vue/reactivity/-/reactivity-3.2.19.tgz#fc6e0f0106f295226835cfed5ff5f84d927bea65"
+  integrity sha512-FtachoYs2SnyrWup5UikP54xDX6ZJ1s5VgHcJp4rkGoutU3Ry61jhs+nCX7J64zjX992Mh9gGUC0LqTs8q9vCA==
   dependencies:
-    "@vue/shared" "3.2.14"
+    "@vue/shared" "3.2.19"
 
-"@vue/shared@3.2.14", "@vue/shared@^3.2.14":
-  version "3.2.14"
-  resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.14.tgz#9b882098a004b995124b7577b357135a66d922ef"
-  integrity sha512-Yndg5Q99hbP76oU0UXQ9V4O0oQ/xjIToJJjmv1BHPUoaebv40vt0YGahNCb6v9WRRXZIMJOQ+4DmqsGhXRi70w==
+"@vue/shared@3.2.19", "@vue/shared@^3.2.19":
+  version "3.2.19"
+  resolved "https://registry.yarnpkg.com/@vue/shared/-/shared-3.2.19.tgz#111ec3da18337d86274446984c49925b1b2b2dd7"
+  integrity sha512-Knqhx7WieLdVgwCAZgTVrDCXZ50uItuecLh9JdLC8O+a5ayaSyIQYveUK3hCRNC7ws5zalHmZwfdLMGaS8r4Ew==
 
 acorn@^7.1.1:
   version "7.4.1"
