@@ -1,6 +1,6 @@
 {
 	"name": "vscode-vue-languageservice",
-	"version": "0.27.24",
+	"version": "0.27.25",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -33,6 +33,6 @@
 		"vscode-languageserver": "^8.0.0-next.2",
 		"vscode-languageserver-textdocument": "^1.0.1",
 		"vscode-pug-languageservice": "^0.27.24",
-		"vscode-typescript-languageservice": "^0.27.24"
+		"vscode-typescript-languageservice": "^0.27.25"
 	}
 }
