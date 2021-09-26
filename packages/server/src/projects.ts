@@ -22,7 +22,6 @@ export function createProjects(
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
 
-	const updatedWorkspaceFiles = new Set<string>();
 	const updatedUris = new Set<string>();
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const projects = new Map<string, Project>();
@@ -34,13 +33,10 @@ export function createProjects(
 	initProjects();
 
 	documents.onDidChangeContent(async change => {
-		let sendedUpdate = false;
 		for (const [_, service] of [...projects, ...inferredProjects]) {
-			sendedUpdate = await service.onDocumentUpdated(change.document) || sendedUpdate;
+			await service.onDocumentUpdated(change.document);
 		}
-		if (!sendedUpdate) {
-			updateDiagnostics(change.document.uri);
-		}
+		updateDiagnostics(change.document.uri);
 	});
 	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
 	connection.onDidChangeWatchedFiles(async handler => {
@@ -75,15 +71,25 @@ export function createProjects(
 					setProject(tsConfig, projectProgress[tsConfig]);
 				}
 			}
-
-			updateDiagnostics(undefined);
 		}
 
 		if (scriptChanges.length) {
-			for (const [_, project] of [...projects, ...inferredProjects]) {
-				project.onWorkspaceFilesChanged(scriptChanges);
+
+			// fix sometime vscode file watcher missing tsconfigs delete changes
+			for (const tsConfig of projects.keys()) {
+				if (!ts.sys.fileExists(tsConfig)) {
+					projects.get(tsConfig)?.dispose();
+					projects.delete(tsConfig);
+				}
 			}
+
+			for (const [_, project] of [...projects, ...inferredProjects]) {
+				await project.onWorkspaceFilesChanged(scriptChanges);
+			}
+
 		}
+
+		onDriveFileUpdated(undefined);
 	});
 
 	return {
@@ -256,7 +262,6 @@ export function createProjects(
 			tsConfig,
 			tsLocalized,
 			documents,
-			onDriveFileUpdated,
 			progress,
 			connection,
 			lsConfigs,
@@ -276,7 +281,6 @@ export function createProjects(
 				inferredCompilerOptions,
 				tsLocalized,
 				documents,
-				onDriveFileUpdated,
 				inferredProjectProgress[inferredTsConfig],
 				connection,
 				lsConfigs,

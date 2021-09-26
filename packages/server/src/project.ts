@@ -17,23 +17,20 @@ export function createProject(
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
-	onUpdated: (changedFileName: string | undefined) => any,
 	workDoneProgress: vscode.WorkDoneProgressServerReporter,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs>,
 ) {
 
+	let typeRootVersion = 0;
 	let tsProjectVersion = 0;
 	let vueProjectVersion = 0;
 	let parsedCommandLine: ts.ParsedCommandLine;
 	let vueLs: vue.LanguageService | undefined;
-	const snapshots = new shared.FsPathMap<{
-		version: string,
-		snapshot: ts.IScriptSnapshot,
-	}>();
 	const scripts = new shared.FsPathMap<{
 		version: number,
-		fileName: string,
+		snapshot: ts.IScriptSnapshot | undefined,
+		snapshotVersion: number | undefined,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
 	const disposables: vscode.Disposable[] = [];
@@ -78,27 +75,6 @@ export function createProject(
 
 		await Promise.all([...fileRenamings]);
 
-		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
-		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
-		const changedFileNames: string[] = [];
-		let changed = false;
-
-		if (creates.length || deletes.length) {
-			parsedCommandLine = createParsedCommandLine();
-		}
-
-		for (const change of creates) {
-			const fileName = shared.uriToFsPath(change.uri);
-			if (parsedCommandLine.fileNames.includes(fileName)) {
-				scripts.set(fileName, {
-					fileName,
-					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
-				});
-				onFileChanged(fileName);
-				changed = true;
-			}
-		}
-
 		for (const change of changes) {
 
 			const fileName = shared.uriToFsPath(change.uri);
@@ -106,81 +82,39 @@ export function createProject(
 
 			if (script && change.type === vscode.FileChangeType.Changed) {
 				script.version++;
-				onFileChanged(fileName);
-				changedFileNames.push(fileName);
-				changed = true;
 			}
 			else if (script && change.type === vscode.FileChangeType.Deleted) {
 				scripts.delete(fileName);
-				onFileChanged(fileName);
-				changed = true;
 			}
+
+			updateProjectVersion(fileName);
 		}
 
-		if (changed) {
-			onUpdated(changedFileNames.length === 1 ? changedFileNames[0] : undefined);
+		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
+		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
+
+		if (creates.length || deletes.length) {
+			parsedCommandLine = createParsedCommandLine();
+			typeRootVersion++; // TODO: check changed in node_modules?
 		}
 	}
 	async function init() {
-
 		await Promise.all([...fileRenamings]);
-
 		parsedCommandLine = createParsedCommandLine();
-
-		const fileNames = new shared.FsPathSet(parsedCommandLine.fileNames);
-		let changed = false;
-
-		const removeKeys: string[] = [];
-		for (const [key, { fileName }] of scripts) {
-			if (!fileNames.has(fileName)) {
-				removeKeys.push(key);
-				changed = true;
-			}
-		}
-		for (const removeKey of removeKeys) {
-			scripts.delete(removeKey);
-		}
-		for (const fileName of parsedCommandLine.fileNames) {
-			if (!scripts.has(fileName)) {
-				scripts.set(fileName, {
-					fileName,
-					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
-				});
-				changed = true;
-			}
-		}
-		if (changed) {
-			onUpdated(undefined);
-		}
 	}
 	async function onDocumentUpdated(document: TextDocument) {
 
 		await Promise.all([...fileRenamings]);
 
 		const fileName = shared.uriToFsPath(document.uri);
-		const snapshot = snapshots.get(fileName);
-		if (snapshot) {
-			const snapshotLength = snapshot.snapshot.getLength();
-			const documentText = document.getText();
-			if (
-				snapshotLength === documentText.length
-				&& snapshot.snapshot.getText(0, snapshotLength) === documentText
-			) {
-				return false;
-			}
-		}
 		const script = scripts.get(fileName);
 		if (script) {
 			script.version = document.version;
 		}
-		if (!!script) {
-			onFileChanged(fileName);
-			onUpdated(fileName);
-			return true;
-		}
-		return false;
+
+		updateProjectVersion(fileName);
 	}
-	function onFileChanged(changedFileName: string) {
+	function updateProjectVersion(changedFileName: string) {
 		if (changedFileName.endsWith('.vue')) {
 			vueProjectVersion++;
 		}
@@ -210,11 +144,12 @@ export function createProject(
 			getDirectories: ts.sys.getDirectories,
 			readDirectory: ts.sys.readDirectory,
 			realpath: ts.sys.realpath,
+			fileExists: ts.sys.fileExists,
 			// custom
-			fileExists,
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 			getProjectVersion: () => tsProjectVersion.toString(),
 			getVueProjectVersion: () => vueProjectVersion.toString(),
+			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,
@@ -228,37 +163,29 @@ export function createProject(
 
 		return host;
 
-		function fileExists(fileName: string) {
-			fileName = shared.normalizeFileName(ts.sys.realpath?.(fileName) ?? fileName);
-			const fileExists = !!ts.sys.fileExists?.(fileName);
-			if (
-				fileExists
-				&& !scripts.has(fileName)
-			) {
-				scripts.set(fileName, {
-					fileName: fileName,
-					version: documents.get(shared.fsPathToUri(fileName))?.version ?? 0,
-				});
-			}
-			return fileExists;
-		}
 		function getScriptVersion(fileName: string) {
 			return scripts.get(fileName)?.version.toString()
 				?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
-			const version = getScriptVersion(fileName);
-			const cache = snapshots.get(fileName);
-			if (cache && cache.version === version) {
-				return cache.snapshot;
+			const script = scripts.get(fileName);
+			if (script && script.snapshotVersion === script.version) {
+				return script.snapshot;
 			}
 			const text = getScriptText(ts, documents, fileName);
 			if (text !== undefined) {
 				const snapshot = ts.ScriptSnapshot.fromString(text);
-				snapshots.set(fileName, {
-					version: version.toString(),
-					snapshot,
-				});
+				if (script) {
+					script.snapshot = snapshot;
+					script.snapshotVersion = script.version;
+				}
+				else {
+					scripts.set(fileName, {
+						version: -1,
+						snapshot: snapshot,
+						snapshotVersion: -1,
+					});
+				}
 				return snapshot;
 			}
 		}
