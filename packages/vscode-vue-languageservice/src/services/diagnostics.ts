@@ -10,7 +10,7 @@ import * as dedupe from '../utils/dedupe';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -43,6 +43,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 	function useDiagnostics_ts(uri: string) {
 
 		const scriptTsProjectVersion = ref<string>();
+		const docVersion = ref<number>();
 
 		let all: [ReturnType<typeof useScriptValidation>, number, vscode.Diagnostic[]][] = [
 			[useScriptValidation(1), 0, []],
@@ -53,6 +54,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		return async (response?: (diags: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 			scriptTsProjectVersion.value = scriptTsLs.__internal__.host.getProjectVersion?.();
+			docVersion.value = getTextDocument(uri)?.version;
 
 			// sort by cost
 			all = all.sort((a, b) => a[1] - b[1]);
@@ -105,8 +107,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		function useScriptValidation(mode: 1 | 2 | 3 | 4) {
 			const errors = computed(() => {
-				if (mode === 1) { // watching
-					scriptTsProjectVersion.value;
+				{ // watching
+					docVersion.value
+					if (mode === 1) {
+						scriptTsProjectVersion.value;
+					}
 				}
 				if (mode === 1) {
 					return scriptTsLs.doValidation(uri, { semantic: true });
@@ -484,7 +489,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: errors,
 			};
 		}
-		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4, onlyUnusedCheck = false) {
+		function useScriptValidation(document: Ref<TextDocument | undefined>, mode: 1 | 2 | 3 | 4) {
 			const errors = computed(() => {
 				if (mode === 1) { // watching
 					scriptTsProjectVersion.value;
@@ -513,11 +518,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				let result = toTsSourceDiags('script', errors_cache.value, doc.uri, templateLsSourceMaps.value);
-				if (onlyUnusedCheck) {
-					result = result.filter(error => error.tags?.includes(vscode.DiagnosticTag.Unnecessary));
-				}
-				return result;
+				return toTsSourceDiags('script', errors_cache.value, doc.uri, templateLsSourceMaps.value);
 			});
 			return {
 				result,

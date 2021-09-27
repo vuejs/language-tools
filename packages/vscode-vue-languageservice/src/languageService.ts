@@ -217,6 +217,7 @@ export function createLanguageService(
 		scriptTsLs,
 		documentContext,
 		getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs : scriptTsLs,
+		getTextDocument: getHostDocument,
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findDefinition = definitions.register(context);

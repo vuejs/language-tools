@@ -79,5 +79,6 @@ export type ApiLanguageServiceContext = LanguageServiceContextBase & {
 	scriptTsLs: ts2.LanguageService;
 	templateTsLs: ts2.LanguageService;
 	getTsLs: (lsType: 'template' | 'script') => ts2.LanguageService;
+	getTextDocument(uri: string): TextDocument | undefined;
 }
 export type LanguageServiceContext = ApiLanguageServiceContext | HtmlLanguageServiceContext;
