@@ -81,7 +81,12 @@ export function createProject(
 			const script = scripts.get(fileName);
 
 			if (script && change.type === vscode.FileChangeType.Changed) {
-				script.version++;
+				if (script.version >= 0) {
+					script.version = -1;
+				}
+				else {
+					script.version--;
+				}
 			}
 			else if (script && change.type === vscode.FileChangeType.Deleted) {
 				scripts.delete(fileName);
