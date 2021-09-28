@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.27.26
+
+- fix: variables unused report can't update in *.ts in take over mode
+- fix: when save file, next document changes diagnostics, semantic tokens incorrect
+
 ## 0.27.25
 
 - feat: add open VSCode settings json button in takeover mode prompt
