@@ -75,6 +75,7 @@ export function generate(
 		}>,
 	}> = {};
 	const tagResolves: Record<string, {
+		name: string,
 		baseProps: string,
 		props: string,
 		emit: string,
@@ -213,6 +214,7 @@ export function generate(
 		}
 
 		tagResolves[tag] = {
+			name: var_correctTagName,
 			baseProps: var_baseProps,
 			props: var_props,
 			emit: var_emit,
@@ -1119,7 +1121,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_wrapComponents['' as __VLS_GetComponentName<typeof __VLS_wrapComponents, '${parentEl.tag}'>].__VLS_slots`);
+				tsCodeGen.addText(`({ ...__VLS_getTemplateSlots(__VLS_wrapComponents[${tagResolves[parentEl.tag].name}]), ...__VLS_getScriptSlots(__VLS_rawComponents[${tagResolves[parentEl.tag].name}])})`);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
