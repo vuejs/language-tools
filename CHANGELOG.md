@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.27.27
+
+- feat: support slots type-checking by `$slots` property ([#539](https://github.com/johnsoncodehk/volar/issues/539))
+- fix: generic props type-check not working
+- fix: `Map` index type incorrect in v-for ([#544](https://github.com/johnsoncodehk/volar/issues/544))
+
 ## 0.27.26
 
 - fix: variables unused report can't update in *.ts in take over mode
