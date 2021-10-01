@@ -79,11 +79,13 @@ declare global {
 	function __VLS_directiveFunction<T>(dir: T): T extends ObjectDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void
 		: T extends FunctionDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void : T;
 
-	function __VLS_getTemplateSlots<T>(t: T): T extends { __VLS_slots: infer S } ? S : {};
-	type __VLS_SlotScopeType<T> = T extends vue_3.Slot ? Parameters<T>[0] : undefined;
-	function __VLS_getScriptSlots<T>(t: T): T extends new (...args: any) => { $slots?: infer S }
-		? S extends vue_3.Slots ? Record<keyof S, __VLS_SlotScopeType<S[keyof S]>> : {}
+	type __VLS_TemplateSlots<T> = T extends { __VLS_slots: infer S } ? S : {};
+	type __VLS_ScriptSlots<T> = T extends new (...args: any) => { $slots?: infer S }
+		? { [K in keyof S]: S[K] extends (obj: infer O) => any ? O : S[K] }
 		: {};
+	type __VLS_DefaultSlots<W, R> = W extends { __VLS_slots: infer _ }
+		? {} : R extends new (...args: any) => { $slots?: infer _ }
+		? {} : Record<string, any>;
 
 	type __VLS_GetComponentName<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : __VLS_GetComponentName_CamelCase<T, CamelCase<K>> : __VLS_GetComponentName_CamelCase<T, CamelCase<K>>;
 	type __VLS_GetComponentName_CamelCase<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : __VLS_GetComponentName_CapitalCase<T, Capitalize<K>> : __VLS_GetComponentName_CapitalCase<T, Capitalize<K>>;

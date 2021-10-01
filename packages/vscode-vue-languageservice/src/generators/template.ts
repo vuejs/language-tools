@@ -75,10 +75,10 @@ export function generate(
 		}>,
 	}> = {};
 	const tagResolves: Record<string, {
-		name: string,
 		rawComponent: string,
 		baseProps: string,
 		emit: string,
+		slots: string,
 		events: Record<string, string>,
 		offsets: number[],
 	}> = {};
@@ -94,6 +94,7 @@ export function generate(
 		const var_rawComponent = `__VLS_${elementIndex++}`;
 		const var_baseProps = `__VLS_${elementIndex++}`;
 		const var_emit = `__VLS_${elementIndex++}`;
+		const var_slots = `__VLS_${elementIndex++}`;
 		const var_events: Record<string, string> = {};
 
 		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
@@ -101,6 +102,10 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
 		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_ExtractEmit2<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_slots}: 
+			__VLS_TemplateSlots<typeof ${var_wrapComponent}>
+			& __VLS_ScriptSlots<typeof ${var_rawComponent}>
+			& __VLS_DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
 
 		const resolvedTag = tags[tag];
 		const tagRanges = resolvedTag.offsets.map(offset => ({ start: offset, end: offset + tag.length }));
@@ -212,10 +217,10 @@ export function generate(
 		}
 
 		tagResolves[tag] = {
-			name: var_correctTagName,
 			rawComponent: var_rawComponent,
 			baseProps: var_baseProps,
 			emit: var_emit,
+			slots: var_slots,
 			events: var_events,
 			offsets: tags[tag].offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
 		};
@@ -1123,7 +1128,7 @@ export function generate(
 					slotName = prop.arg.content;
 				}
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`({ ...__VLS_getTemplateSlots(__VLS_wrapComponents[${tagResolves[parentEl.tag].name}]), ...__VLS_getScriptSlots(__VLS_rawComponents[${tagResolves[parentEl.tag].name}])})`);
+				tsCodeGen.addText(tagResolves[parentEl.tag].slots);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
