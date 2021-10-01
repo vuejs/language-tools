@@ -8,7 +8,6 @@ import * as templateGen from '../generators/template';
 import * as cssClasses from '../parsers/cssClasses';
 import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import type { parseScriptRanges } from '../parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
 export function useSfcTemplateScript(
@@ -416,12 +415,16 @@ export function useSfcTemplateScript(
 		};
 	}
 	function update() {
-		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== shared.syntaxToLanguageId(scriptLang.value))) {
+
+		const newLang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
+		const newLangId = shared.syntaxToLanguageId(newLang);
+
+		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== newLangId)) {
 			if (data.value) {
 				const _version = version++;
-				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + scriptLang.value, shared.syntaxToLanguageId(scriptLang.value), _version, data.value.getText());
+				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + newLang, newLangId, _version, data.value.getText());
 				formatTextDoc.value = templateCodeGens.value
-					? TextDocument.create(vueUri + '.__VLS_template.format.' + scriptLang.value, shared.syntaxToLanguageId(scriptLang.value), _version, templateCodeGens.value.formatCodeGen.getText())
+					? TextDocument.create(vueUri + '.__VLS_template.format.' + newLang, newLangId, _version, templateCodeGens.value.formatCodeGen.getText())
 					: undefined;
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);

@@ -10,7 +10,7 @@ const camelCaseText = [
 	': S',
 ].join('\n');
 
-export function createGlobalDefineDocument(root: string) {
+export function createGlobalDefineDocument(root: string, lsType: 'script' | 'template') {
 	let code = `
 import type * as vue_1 from '@vue/runtime-dom';
 import type * as vue_2 from 'vue';
@@ -42,7 +42,21 @@ type FunctionDirective<T, V> = PickNotAny<vue_1.FunctionDirective<T, V>, vue_2.F
 
 const throwIfAny: IsAny<HTMLAttributes> = false;
 
+${lsType === 'template' ? `
+declare module '@vue/runtime-dom' {
+	export interface HTMLAttributes extends Record<string, unknown> { }
+	export interface SVGAttributes extends Record<string, unknown> { }
+}
+` : ``}
+
 declare global {
+
+	${lsType === 'template' ? `
+	namespace JSX {
+		interface IntrinsicAttributes extends Record<string, unknown> { }
+	}
+	` : ``}
+
 	interface __VLS_GlobalComponents extends Pick<PickNotAny<typeof vue_1, typeof vue_2>,
 		'Transition'
 		| 'TransitionGroup'
@@ -72,8 +86,6 @@ declare global {
 	type __VLS_GetComponentName_CamelCase<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : __VLS_GetComponentName_CapitalCase<T, Capitalize<K>> : __VLS_GetComponentName_CapitalCase<T, Capitalize<K>>;
 	type __VLS_GetComponentName_CapitalCase<T, K> = K extends keyof T ? K : never;
 
-	type __VLS_ConstAttrType_Props<C> = (C extends (payload: infer P) => any ? P : {}) & Record<string, unknown>;
-	type __VLS_ConstAttrType<C, K extends string> = true extends __VLS_ConstAttrType_Props<C>[K] ? true : "";
 	type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 	type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 	type __VLS_PickNotAny<A, B> = PickNotAny<A, B>;
