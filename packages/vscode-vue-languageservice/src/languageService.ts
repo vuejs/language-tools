@@ -154,7 +154,8 @@ export function createLanguageService(
 	const scriptTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(scriptTsHost) : ts.createLanguageService(scriptTsHost);
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
-	const globalDoc = createGlobalDefineDocument(vueHost.getCurrentDirectory());
+	const scriptLsGlobalDoc = createGlobalDefineDocument(vueHost.getCurrentDirectory(), 'script');
+	const templateLsGlobalDoc = createGlobalDefineDocument(vueHost.getCurrentDirectory(), 'template');
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
@@ -276,10 +277,10 @@ export function createLanguageService(
 				initProgressCallback.push(cb);
 			},
 			checkProject: publicApiHook(() => {
-				const vueImportErrors = scriptTsLs.doValidation(globalDoc.uri, { semantic: true });
+				const vueImportErrors = scriptTsLs.doValidation(scriptLsGlobalDoc.uri, { semantic: true });
 				return !vueImportErrors.find(error => error.code === 2322); // Type 'false' is not assignable to type 'true'.ts(2322)
 			}, false),
-			getGlobalDocs: () => [globalDoc],
+			getGlobalDoc,
 			getContext: publicApiHook(() => context),
 			getD3: publicApiHook(d3.register(context)),
 			executeCommand: publicApiHook(executeCommand.register(context), true, false),
@@ -288,6 +289,9 @@ export function createLanguageService(
 		},
 	};
 
+	function getGlobalDoc(lsType: 'script' | 'template') {
+		return lsType === 'script' ? scriptLsGlobalDoc : templateLsGlobalDoc;
+	}
 	function createTsPluginProxy() {
 
 		// ts plugin proxy
@@ -532,11 +536,18 @@ export function createLanguageService(
 			},
 		};
 
+		if (lsType === 'template') {
+			tsHost.getCompilationSettings = () => ({
+				...vueHost.getCompilationSettings(),
+				jsx: ts.JsxEmit.Preserve,
+			});
+		}
+
 		return tsHost;
 
 		function getScriptFileNames() {
 			const tsFileNames: string[] = [];
-			tsFileNames.push(shared.uriToFsPath(globalDoc.uri));
+			tsFileNames.push(shared.uriToFsPath(getGlobalDoc(lsType).uri));
 			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
 				tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts
 			}
@@ -552,8 +563,8 @@ export function createLanguageService(
 		}
 		function getScriptVersion(fileName: string) {
 			const uri = shared.fsPathToUri(fileName);
-			if (uri === globalDoc.uri) {
-				return globalDoc.version.toString();
+			if (uri === getGlobalDoc(lsType).uri) {
+				return getGlobalDoc(lsType).version.toString();
 			}
 			let doc = sourceFiles.getTsDocuments(lsType).get(uri);
 			if (doc) {
@@ -568,8 +579,8 @@ export function createLanguageService(
 				return cache[1];
 			}
 			const uri = shared.fsPathToUri(fileName);
-			if (uri === globalDoc.uri) {
-				const text = globalDoc.getText();
+			if (uri === getGlobalDoc(lsType).uri) {
+				const text = getGlobalDoc(lsType).getText();
 				const snapshot = ts.ScriptSnapshot.fromString(text);
 				scriptSnapshots.set(fileName, [version, snapshot]);
 				return snapshot;

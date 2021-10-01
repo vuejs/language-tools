@@ -28,10 +28,8 @@ export function register(
 		for (const [_, service] of projects.projects.size ? projects.projects : projects.inferredProjects) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
-			const globalDocs = ls.__internal__.getGlobalDocs();
-			for (const globalDoc of globalDocs) {
-				fs.writeFile(shared.uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
-			}
+			const globalDoc = ls.__internal__.getGlobalDoc(lsType);
+			fs.writeFile(shared.uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
 			const { sourceFiles } = await ls.__internal__.getContext();
 			for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
 				fs.writeFile(shared.uriToFsPath(doc.uri), doc.getText(), () => { });
