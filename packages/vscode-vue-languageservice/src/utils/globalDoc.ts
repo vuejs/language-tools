@@ -80,9 +80,11 @@ declare global {
 		: T extends FunctionDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void : T;
 
 	type __VLS_TemplateSlots<T> = T extends { __VLS_slots: infer S } ? S : {};
-	type __VLS_DefaultSlots<W, R> = W extends { __VLS_slots: infer _ }
-		? {} : R extends new (...args: any) => { $slots?: infer _ }
-		? {} : Record<string, any>;
+	type __VLS_HasTemplateSlotsType<T> = T extends { __VLS_slots: infer _ } ? true : false;
+	type __VLS_HasScriptSlotsType<T> = T extends new (...args: any) => { $slots?: infer _ } ? true : false;
+	type __VLS_DefaultSlots<W, R> = __VLS_HasTemplateSlotsType<W> extends true ? {}
+		: __VLS_HasScriptSlotsType<R> extends true ? {}
+		: Record<string, any>;
 	type __VLS_SlotsComponent<T> = T extends new (...args: any) => { $slots?: infer S } ? T : new (...args: any) => { $slots: {} };
 	type __VLS_ScriptSlots<T> = T extends { $slots?: infer S }
 		? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
