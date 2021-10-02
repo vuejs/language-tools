@@ -10,3 +10,4 @@ import './renames/scriptSetup_element';
 import './renames/scriptSetup';
 
 import './typeChecks/emit';
+import './typeChecks/v_for';
