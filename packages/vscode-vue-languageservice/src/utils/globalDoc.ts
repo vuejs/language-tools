@@ -81,7 +81,7 @@ declare global {
 
 	type __VLS_TemplateSlots<T> = T extends { __VLS_slots: infer S } ? S : {};
 	type __VLS_ScriptSlots<T> = T extends new (...args: any) => { $slots?: infer S }
-		? { [K in keyof S]: S[K] extends (obj: infer O) => any ? O : S[K] }
+		? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
 		: {};
 	type __VLS_DefaultSlots<W, R> = W extends { __VLS_slots: infer _ }
 		? {} : R extends new (...args: any) => { $slots?: infer _ }
