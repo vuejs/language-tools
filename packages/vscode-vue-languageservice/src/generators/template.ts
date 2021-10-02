@@ -786,171 +786,208 @@ export function generate(
 			}
 		}
 	}
-		function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, mode: 'props' | 'slots') {
+	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, mode: 'props' | 'slots') {
 
-			let styleCount = 0;
-			let classCount = 0;
+		let styleCount = 0;
+		let classCount = 0;
 
-			for (const prop of node.props) {
-				if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& (prop.name === 'bind' || prop.name === 'model')
-					&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
-					&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
-				) {
+		for (const prop of node.props) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& (prop.name === 'bind' || prop.name === 'model')
+				&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+			) {
 
-					const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
-					let propName_1 =
-						prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-							? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
-								? prop.arg.content
-								: prop.arg.loc.source
-							: getModelValuePropName(node, isVue2);
+				const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
+				let propName_1 =
+					prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
+							? prop.arg.content
+							: prop.arg.loc.source
+						: getModelValuePropName(node, isVue2);
 
-					if (prop.modifiers.some(m => m === 'prop')) {
-						propName_1 = propName_1.substr(1);
-					}
-
-					const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
-					const propValue = prop.exp?.content ?? 'undefined';
-
-					if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
-						continue;
-
-					if (propName_2 === 'style' || propName_2 === 'class') {
-						const index = propName_2 === 'style' ? styleCount++ : classCount++;
-						if (index >= 1 !== forRemainStyleOrClass)
-							continue;
-					}
-
-					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						attrNames.add(prop.arg.content);
-					}
-
-					// camelize name
-					const diagStart = tsCodeGen.getText().length;
-					if (!prop.arg) {
-						writePropName(
-							propName_1,
-							{
-								start: prop.loc.start.offset,
-								end: prop.loc.start.offset + 'v-model'.length,
-							},
-							{
-								vueTag: 'template',
-								capabilities: getCaps(capabilitiesSet.attr),
-							},
-						);
-					}
-					else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-						writePropName(
-							propName_2,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
-							},
-							{
-								vueTag: 'template',
-								capabilities: getCaps(capabilitiesSet.attr),
-								beforeRename: camelize,
-								doRename: keepHyphenateName,
-							},
-						);
-					}
-					else {
-						writePropName(
-							propName_2,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							{
-								vueTag: 'template',
-								capabilities: getCaps(capabilitiesSet.attr),
-								beforeRename: camelize,
-								doRename: keepHyphenateName,
-							},
-						);
-					}
-					writePropValuePrefix();
-					if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
-						writeCode(
-							propValue,
-							{
-								start: prop.exp.loc.start.offset,
-								end: prop.exp.loc.end.offset,
-							},
-							SourceMaps.Mode.Offset,
-							{
-								vueTag: 'template',
-								capabilities: getCaps(capabilitiesSet.all),
-							},
-							getFormatBrackets(formatBrackets.round),
-						);
-					}
-					else {
-						tsCodeGen.addText(propValue);
-					}
-					writePropValueSuffix();
-					addMapping(tsCodeGen, {
-						sourceRange: {
-							start: prop.loc.start.offset,
-							end: prop.loc.end.offset,
-						},
-						mappedRange: {
-							start: diagStart,
-							end: tsCodeGen.getText().length,
-						},
-						mode: SourceMaps.Mode.Totally,
-						data: {
-							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.diagnosticOnly),
-						},
-					});
-					writePropEnd();
-					// original name
-					if (prop.arg && propName_1 !== propName_2) {
-						writePropName(
-							propName_1,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							{
-								vueTag: 'template',
-								capabilities: getCaps(capabilitiesSet.attr),
-								beforeRename: camelize,
-								doRename: keepHyphenateName,
-							},
-						);
-						writePropValuePrefix();
-						tsCodeGen.addText(propValue);
-						writePropValueSuffix();
-						writePropEnd();
-					}
+				if (prop.modifiers.some(m => m === 'prop')) {
+					propName_1 = propName_1.substr(1);
 				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-				) {
 
-					const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-					const propName2 = prop.name;
+				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
+				const propValue = prop.exp?.content ?? 'undefined';
 
-					if (forRemainStyleOrClass && propName !== 'style' && propName !== 'class')
+				if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
+					continue;
+
+				if (propName_2 === 'style' || propName_2 === 'class') {
+					const index = propName_2 === 'style' ? styleCount++ : classCount++;
+					if (index >= 1 !== forRemainStyleOrClass)
 						continue;
+				}
 
-					if (propName === 'style' || propName === 'class') {
-						const index = propName === 'style' ? styleCount++ : classCount++;
-						if (index >= 1 !== forRemainStyleOrClass)
-							continue;
-					}
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					attrNames.add(prop.arg.content);
+				}
 
-					attrNames.add(prop.name);
-
-					// camelize name
-					const diagStart = tsCodeGen.getText().length;
+				// camelize name
+				const diagStart = tsCodeGen.getText().length;
+				if (!prop.arg) {
 					writePropName(
-						propName,
+						propName_1,
+						{
+							start: prop.loc.start.offset,
+							end: prop.loc.start.offset + 'v-model'.length,
+						},
+						{
+							vueTag: 'template',
+							capabilities: getCaps(capabilitiesSet.attr),
+						},
+					);
+				}
+				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
+					writePropName(
+						propName_2,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
+						},
+						{
+							vueTag: 'template',
+							capabilities: getCaps(capabilitiesSet.attr),
+							beforeRename: camelize,
+							doRename: keepHyphenateName,
+						},
+					);
+				}
+				else {
+					writePropName(
+						propName_2,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						{
+							vueTag: 'template',
+							capabilities: getCaps(capabilitiesSet.attr),
+							beforeRename: camelize,
+							doRename: keepHyphenateName,
+						},
+					);
+				}
+				writePropValuePrefix();
+				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+					writeCode(
+						propValue,
+						{
+							start: prop.exp.loc.start.offset,
+							end: prop.exp.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: getCaps(capabilitiesSet.all),
+						},
+						getFormatBrackets(formatBrackets.round),
+					);
+				}
+				else {
+					tsCodeGen.addText(propValue);
+				}
+				writePropValueSuffix();
+				addMapping(tsCodeGen, {
+					sourceRange: {
+						start: prop.loc.start.offset,
+						end: prop.loc.end.offset,
+					},
+					mappedRange: {
+						start: diagStart,
+						end: tsCodeGen.getText().length,
+					},
+					mode: SourceMaps.Mode.Totally,
+					data: {
+						vueTag: 'template',
+						capabilities: getCaps(capabilitiesSet.diagnosticOnly),
+					},
+				});
+				writePropEnd();
+				// original name
+				if (prop.arg && propName_1 !== propName_2) {
+					writePropName(
+						propName_1,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						{
+							vueTag: 'template',
+							capabilities: getCaps(capabilitiesSet.attr),
+							beforeRename: camelize,
+							doRename: keepHyphenateName,
+						},
+					);
+					writePropValuePrefix();
+					tsCodeGen.addText(propValue);
+					writePropValueSuffix();
+					writePropEnd();
+				}
+			}
+			else if (
+				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+			) {
+
+				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
+				const propName2 = prop.name;
+
+				if (forRemainStyleOrClass && propName !== 'style' && propName !== 'class')
+					continue;
+
+				if (propName === 'style' || propName === 'class') {
+					const index = propName === 'style' ? styleCount++ : classCount++;
+					if (index >= 1 !== forRemainStyleOrClass)
+						continue;
+				}
+
+				attrNames.add(prop.name);
+
+				// camelize name
+				const diagStart = tsCodeGen.getText().length;
+				writePropName(
+					propName,
+					{
+						start: prop.loc.start.offset,
+						end: prop.loc.start.offset + propName2.length,
+					},
+					{
+						vueTag: 'template',
+						capabilities: getCaps(capabilitiesSet.attr),
+						beforeRename: camelize,
+						doRename: keepHyphenateName,
+					},
+				);
+				if (prop.value) {
+					writePropValuePrefix();
+					writeAttrValue(prop.value);
+					writePropValueSuffix();
+				}
+				writePropEnd();
+				const diagEnd = tsCodeGen.getText().length;
+				addMapping(tsCodeGen, {
+					sourceRange: {
+						start: prop.loc.start.offset,
+						end: prop.loc.end.offset,
+					},
+					mappedRange: {
+						start: diagStart,
+						end: diagEnd,
+					},
+					mode: SourceMaps.Mode.Totally,
+					data: {
+						vueTag: 'template',
+						capabilities: getCaps(capabilitiesSet.diagnosticOnly),
+					},
+				});
+				// original name
+				if (propName2 !== propName) {
+					writePropName(
+						propName2,
 						{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
@@ -968,166 +1005,129 @@ export function generate(
 						writePropValueSuffix();
 					}
 					writePropEnd();
-					const diagEnd = tsCodeGen.getText().length;
-					addMapping(tsCodeGen, {
-						sourceRange: {
-							start: prop.loc.start.offset,
-							end: prop.loc.end.offset,
-						},
-						mappedRange: {
-							start: diagStart,
-							end: diagEnd,
-						},
-						mode: SourceMaps.Mode.Totally,
-						data: {
-							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.diagnosticOnly),
-						},
-					});
-					// original name
-					if (propName2 !== propName) {
-						writePropName(
-							propName2,
-							{
-								start: prop.loc.start.offset,
-								end: prop.loc.start.offset + propName2.length,
-							},
-							{
-								vueTag: 'template',
-								capabilities: getCaps(capabilitiesSet.attr),
-								beforeRename: camelize,
-								doRename: keepHyphenateName,
-							},
-						);
-						if (prop.value) {
-							writePropValuePrefix();
-							writeAttrValue(prop.value);
-							writePropValueSuffix();
-						}
-						writePropEnd();
-					}
-				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.name === 'bind'
-					&& !prop.arg
-					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				) {
-					if (forRemainStyleOrClass) {
-						continue;
-					}
-					if (mode === 'props')
-						tsCodeGen.addText('{...');
-					else 
-						tsCodeGen.addText('...(');
-					writeCode(
-						prop.exp.content,
-						{
-							start: prop.exp.loc.start.offset,
-							end: prop.exp.loc.end.offset,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.all),
-						},
-						getFormatBrackets(formatBrackets.round),
-					);
-					if (mode === 'props')
-						tsCodeGen.addText('} ');
-					else 
-						tsCodeGen.addText('), ');
-				}
-				else {
-					if (forRemainStyleOrClass) {
-						continue;
-					}
-					tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 				}
 			}
-
-			return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
-
-			function writePropName(name: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
-				if (mode === 'props') {
-					writeCode(
-						name,
-						sourceRange,
-						SourceMaps.Mode.Offset,
-						data,
-					);
+			else if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'bind'
+				&& !prop.arg
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				if (forRemainStyleOrClass) {
+					continue;
 				}
-				else {
-					writeObjectProperty(
-						name,
-						sourceRange,
-						data,
-					);
-				}
-			}
-			function writePropValuePrefix() {
-				if (mode === 'props') {
-					tsCodeGen.addText('={');
-				}
-				else {
-					tsCodeGen.addText(': (');
-				}
-			}
-			function writePropValueSuffix() {
-				if (mode === 'props') {
-					tsCodeGen.addText('}');
-				}
-				else {
-					tsCodeGen.addText(')');
-				}
-			}
-			function writePropEnd() {
-				if (mode === 'props') {
-					tsCodeGen.addText(' ');
-				}
-				else {
-					tsCodeGen.addText(', ');
-				}
-			}
-			function getCaps(caps: SourceMaps.TsMappingData['capabilities']): SourceMaps.TsMappingData['capabilities'] {
-				if (mode === 'props') {
-					return caps;
-				}
-				else {
-					return {
-						references: caps.references,
-						rename: caps.rename,
-					};
-				}
-			}
-			function getFormatBrackets(b: [string, string]) {
-				if (mode === 'props') {
-					return b;
-				}
-				else {
-					return undefined;
-				}
-			}
-			function writeAttrValue(attrNode: CompilerDOM.TextNode) {
-				tsCodeGen.addText('"');
-				let start = attrNode.loc.start.offset;
-				let end = attrNode.loc.end.offset;
-				if (end - start > attrNode.content.length) {
-					start++;
-					end--;
-				}
+				if (mode === 'props')
+					tsCodeGen.addText('{...');
+				else
+					tsCodeGen.addText('...(');
 				writeCode(
-					toUnicode(attrNode.content),
-					{ start, end },
+					prop.exp.content,
+					{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					},
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: getCaps(capabilitiesSet.all)
+						capabilities: getCaps(capabilitiesSet.all),
 					},
+					getFormatBrackets(formatBrackets.round),
 				);
-				tsCodeGen.addText('"');
+				if (mode === 'props')
+					tsCodeGen.addText('} ');
+				else
+					tsCodeGen.addText('), ');
+			}
+			else {
+				if (forRemainStyleOrClass) {
+					continue;
+				}
+				tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 			}
 		}
+
+		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
+
+		function writePropName(name: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+			if (mode === 'props') {
+				writeCode(
+					name,
+					sourceRange,
+					SourceMaps.Mode.Offset,
+					data,
+				);
+			}
+			else {
+				writeObjectProperty(
+					name,
+					sourceRange,
+					data,
+				);
+			}
+		}
+		function writePropValuePrefix() {
+			if (mode === 'props') {
+				tsCodeGen.addText('={');
+			}
+			else {
+				tsCodeGen.addText(': (');
+			}
+		}
+		function writePropValueSuffix() {
+			if (mode === 'props') {
+				tsCodeGen.addText('}');
+			}
+			else {
+				tsCodeGen.addText(')');
+			}
+		}
+		function writePropEnd() {
+			if (mode === 'props') {
+				tsCodeGen.addText(' ');
+			}
+			else {
+				tsCodeGen.addText(', ');
+			}
+		}
+		function getCaps(caps: SourceMaps.TsMappingData['capabilities']): SourceMaps.TsMappingData['capabilities'] {
+			if (mode === 'props') {
+				return caps;
+			}
+			else {
+				return {
+					references: caps.references,
+					rename: caps.rename,
+				};
+			}
+		}
+		function getFormatBrackets(b: [string, string]) {
+			if (mode === 'props') {
+				return b;
+			}
+			else {
+				return undefined;
+			}
+		}
+		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
+			tsCodeGen.addText('"');
+			let start = attrNode.loc.start.offset;
+			let end = attrNode.loc.end.offset;
+			if (end - start > attrNode.content.length) {
+				start++;
+				end--;
+			}
+			writeCode(
+				toUnicode(attrNode.content),
+				{ start, end },
+				SourceMaps.Mode.Offset,
+				{
+					vueTag: 'template',
+					capabilities: getCaps(capabilitiesSet.all)
+				},
+			);
+			tsCodeGen.addText('"');
+		}
+	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
