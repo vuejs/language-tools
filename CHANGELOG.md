@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.28
+
+- feat: support generic `$slots` types
+- feat: improve `v-for` typing [#546](https://github.com/johnsoncodehk/volar/pull/546)
+- feat: support vue project isn't root folder ([#541](https://github.com/johnsoncodehk/volar/issues/541))
+- fix: slots type of any type component incorrect ([#547](https://github.com/johnsoncodehk/volar/issues/547))
+- fix: optional `$slots` type incorrect
+- fix: ignore union type component to avoid error in template ([vue-tsc#80](https://github.com/johnsoncodehk/vue-tsc/issues/80))
+
 ## 0.27.27
 
 - feat: support slots type-checking by `$slots` property ([#539](https://github.com/johnsoncodehk/volar/issues/539))
