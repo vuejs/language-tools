@@ -67,10 +67,10 @@ declare global {
 	interface __VLS_GlobalComponents extends GlobalComponents { }
 	var __VLS_defineComponent: PickNotAny<typeof vue_1.defineComponent, typeof vue_2.defineComponent>;
 	function __VLS_getVforSourceType<T>(source: T): T extends number ? number[] : T;
-	function __VLS_getVforKeyType<T>(source: T): typeof Symbol.iterator extends keyof T ? number : keyof T;
+	function __VLS_getVforKeyType<T>(source: T): typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never; // use "T extends T" support for union
 	function __VLS_getVforIndexType<T>(source: T): typeof Symbol.iterator extends keyof T ? undefined : number;
 	function __VLS_getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
-	function __VLS_pickForItem<S, T2>(source: S, forInItem: T2): S extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T2;
+	function __VLS_pickForItem<T>(source: T): T extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T[keyof T];
 	function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
 		[K in keyof P]: K extends keyof D ? P[K] & {
 			default: D[K]

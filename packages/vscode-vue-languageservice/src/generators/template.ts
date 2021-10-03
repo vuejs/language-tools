@@ -105,7 +105,7 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_SlotsComponent<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_ExtractEmit2<typeof ${var_rawComponent}>;\n`);
-		tsCodeGen.addText(`declare const ${var_slots}: 
+		tsCodeGen.addText(`declare const ${var_slots}:
 			__VLS_TemplateSlots<typeof ${var_wrapComponent}>
 			& __VLS_DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
 
@@ -579,7 +579,7 @@ export function generate(
 					},
 					formatBrackets.empty,
 				);
-				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName}, ${sourceVarName}[__VLS_getVforKeyType(${sourceVarName})]);\n`);
+				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName});\n`);
 
 				if (key && key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
