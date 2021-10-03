@@ -210,7 +210,7 @@ export function generate(
 	function writeExportComponent() {
 		if (shouldAddExportDefault) {
 			const start = codeGen.getText().length;
-			codeGen.addText(`export default __VLS_defineComponent({\n`);
+			codeGen.addText(`export default (await import('./__VLS_types')).defineComponent({\n`);
 			overlapMapRanges.push({
 				start,
 				end: codeGen.getText().length,
@@ -218,7 +218,7 @@ export function generate(
 		}
 		else {
 			codeGen.addText(`\n`);
-			codeGen.addText(`export const __VLS_component = __VLS_defineComponent({\n`);
+			codeGen.addText(`export const __VLS_component = (await import('./__VLS_types')).defineComponent({\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
@@ -229,10 +229,10 @@ export function generate(
 		if (scriptSetup && scriptSetupRanges) {
 			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
 				codeGen.addText(`props: (`);
-				if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`__VLS_mergePropDefaults(`);
+				if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`(await import('./__VLS_types')).mergePropDefaults(`);
 				if (scriptSetupRanges.propsRuntimeArg) mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 				else if (scriptSetupRanges.propsTypeArg) {
-					codeGen.addText(`{} as __VLS_DefinePropsToOptions<`);
+					codeGen.addText(`{} as import('./__VLS_types').DefinePropsToOptions<`);
 					mapSubText('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 					codeGen.addText(`>`);
 				}
@@ -249,7 +249,7 @@ export function generate(
 				codeGen.addText(`),\n`);
 			}
 			else if (scriptSetupRanges.emitsTypeArg) {
-				codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
+				codeGen.addText(`emits: ({} as import('./__VLS_types').ConstructorOverloads<`);
 				mapSubText('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codeGen.addText(`>),\n`);
 			}
@@ -454,7 +454,7 @@ export function generate(
 		codeGen.addText(`\n`);
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`export const __VLS_name = __VLS_getNameOption(`);
+			codeGen.addText(`export const __VLS_name = (await import('./__VLS_types')).getNameOption(`);
 			codeGen.addText(`${script.content.substring(args.start, args.end)} as const`);
 			codeGen.addText(`);\n`);
 		}

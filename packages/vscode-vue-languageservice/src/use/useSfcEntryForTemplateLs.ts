@@ -20,6 +20,7 @@ export function useSfcEntryForTemplateLs(
 		const tsScriptFileName = hasTsDoc.value ? '__VLS_script_ts' : '__VLS_script';
 		let content = '';
 		content += '// @ts-nocheck\n';
+		content += `import * as __VLS_types from './__VLS_types';\n`;
 		if (scriptSetup.value || script.value) {
 			content += `import { __VLS_options as __VLS_options_ts, __VLS_name as __VLS_name_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
 			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
@@ -36,24 +37,24 @@ export function useSfcEntryForTemplateLs(
 				content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
 				content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
 				content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
-				content += `declare var __VLS_component_ts: __VLS_SelectComponent<typeof __VLS_component_1_ts, typeof __VLS_component_2_ts>;\n`;
-				content += `export declare var __VLS_component: __VLS_SelectComponent<typeof __VLS_component_1, typeof __VLS_component_2>;\n`;
+				content += `declare var __VLS_component_ts: __VLS_types.SelectComponent<typeof __VLS_component_1_ts, typeof __VLS_component_2_ts>;\n`;
+				content += `export declare var __VLS_component: __VLS_types.SelectComponent<typeof __VLS_component_1, typeof __VLS_component_2>;\n`;
 			}
 		}
 		else {
 			content += `export var __VLS_options = {};\n`;
 			content += `export var __VLS_name = undefined;\n`;
-			content += `var __VLS_component_ts = __VLS_defineComponent({});\n`;
-			content += `export var __VLS_component = __VLS_defineComponent({});\n`;
+			content += `var __VLS_component_ts = __VLS_types.defineComponent({});\n`;
+			content += `export var __VLS_component = __VLS_types.defineComponent({});\n`;
 		}
-		content += `declare var __VLS_ctx: __VLS_ComponentContext<typeof __VLS_component_ts>;\n`;
+		content += `declare var __VLS_ctx: __VLS_types.ComponentContext<typeof __VLS_component_ts>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;
-		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_GlobalComponents & __VLS_PickComponents<typeof __VLS_ctx> & __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
+		content += `declare var __VLS_Components: typeof __VLS_ComponentsWrap.components & __VLS_types.GlobalComponents & __VLS_types.PickComponents<typeof __VLS_ctx> & __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
-		content += `({} as __VLS_OptionsSetupReturns<typeof __VLS_options_ts>).${SearchTexts.SetupReturns};\n`;
-		content += `({} as __VLS_OptionsProps<typeof __VLS_options_ts>).${SearchTexts.Props};\n`;
-		content += `({} as __VLS_GlobalAttrs).${SearchTexts.GlobalAttrs};`;
+		content += `({} as __VLS_types.OptionsSetupReturns<typeof __VLS_options_ts>).${SearchTexts.SetupReturns};\n`;
+		content += `({} as __VLS_types.OptionsProps<typeof __VLS_options_ts>).${SearchTexts.Props};\n`;
+		content += `({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};`;
 		content += `\n`;
 		content += `export default {} as typeof __VLS_component & {\n`;
 		content += `__VLS_raw: typeof __VLS_component\n`;

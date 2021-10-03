@@ -70,19 +70,20 @@ export function useSfcTemplateScript(
 
 		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
 
+		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
 
 		writeImportTypes();
 
 		codeGen.addText(`declare var __VLS_ctxRaw: InstanceType<typeof __VLS_component>;\n`);
-		codeGen.addText(`declare var __VLS_ctx: __VLS_ExtractRawComponents<typeof __VLS_ctxRaw>;\n`);
+		codeGen.addText(`declare var __VLS_ctx: __VLS_types.ExtractRawComponents<typeof __VLS_ctxRaw>;\n`);
 		codeGen.addText(`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
 
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('declare var __VLS_ownComponent: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_component & { __VLS_raw: typeof __VLS_component, __VLS_options: typeof __VLS_options, __VLS_slots: typeof __VLS_slots }>;\n');
-		codeGen.addText('declare var __VLS_wrapComponents: __VLS_GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_PickComponents<typeof __VLS_ctxRaw> & typeof __VLS_ownComponent;\n'); // has __VLS_options
-		codeGen.addText('declare var __VLS_rawComponents: __VLS_ExtractRawComponents<typeof __VLS_wrapComponents> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & { __VLS_raw: typeof __VLS_component, __VLS_options: typeof __VLS_options, __VLS_slots: typeof __VLS_slots }>;\n');
+		codeGen.addText('declare var __VLS_wrapComponents: __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctxRaw> & typeof __VLS_ownComponent;\n'); // has __VLS_options
+		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ExtractRawComponents<typeof __VLS_wrapComponents> & JSX.IntrinsicElements;\n'); // sort by priority
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');

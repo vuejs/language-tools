@@ -99,15 +99,15 @@ export function generate(
 		const var_slots = `__VLS_${elementIndex++}`;
 		const var_events: Record<string, string> = {};
 
-		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
-		tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
-		tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
-		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_SlotsComponent<typeof ${var_rawComponent}>;\n`);
-		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
-		tsCodeGen.addText(`declare const ${var_emit}: __VLS_ExtractEmit2<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
+		tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_types.GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
+		tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
+		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_types.ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_slots}:
-			__VLS_TemplateSlots<typeof ${var_wrapComponent}>
-			& __VLS_DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
+			__VLS_types.TemplateSlots<typeof ${var_wrapComponent}>
+			& __VLS_types.DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
 
 		const resolvedTag = tags[tag];
 		const tagRanges = resolvedTag.offsets.map(offset => ({ start: offset, end: offset + tag.length }));
@@ -122,17 +122,17 @@ export function generate(
 
 			tsCodeGen.addText(`declare let ${var_on}: { `);
 			tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-			tsCodeGen.addText(`: __VLS_FillingEventArg<__VLS_FirstFunction<\n`);
+			tsCodeGen.addText(`: __VLS_types.FillingEventArg<__VLS_types.FirstFunction<\n`);
 			if (key_1 !== key_3) {
-				tsCodeGen.addText(`__VLS_FirstFunction<\n`);
-				tsCodeGen.addText(`__VLS_EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
-				tsCodeGen.addText(`__VLS_EmitEvent<typeof ${var_rawComponent}, '${key_3}'>\n`);
+				tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
+				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
+				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_3}'>\n`);
 				tsCodeGen.addText(`>,\n`);
 			}
 			else {
-				tsCodeGen.addText(`__VLS_EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
+				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
 			}
-			tsCodeGen.addText(`(typeof ${var_baseProps} & Omit<__VLS_GlobalAttrs, keyof typeof ${var_baseProps}> & Record<string, unknown>)[`);
+			tsCodeGen.addText(`(typeof ${var_baseProps} & Omit<__VLS_types.GlobalAttrs, keyof typeof ${var_baseProps}> & Record<string, unknown>)[`);
 			writeCodeWithQuotes(
 				key_2,
 				event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
@@ -182,7 +182,7 @@ export function generate(
 			},
 		);
 		tsCodeGen.addText(`: {} as `);
-		tsCodeGen.addText(`__VLS_PickNotAny<`.repeat(componentNames.size - 1));
+		tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
 		const names = [...componentNames];
 		for (let i = 0; i < names.length; i++) {
 			if (i > 0) {
@@ -535,7 +535,7 @@ export function generate(
 				const sourceVarName = `__VLS_${elementIndex++}`;
 				// const __VLS_100 = 123;
 				// const __VLS_100 = vmValue;
-				tsCodeGen.addText(`const ${sourceVarName} = __VLS_getVforSourceType(`);
+				tsCodeGen.addText(`const ${sourceVarName} = __VLS_types.getVforSourceType(`);
 				writeCode(
 					source.content,
 					{
@@ -579,7 +579,7 @@ export function generate(
 					},
 					formatBrackets.empty,
 				);
-				tsCodeGen.addText(` = __VLS_pickForItem(${sourceVarName});\n`);
+				tsCodeGen.addText(` = __VLS_types.pickForItem(${sourceVarName});\n`);
 
 				if (key && key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start_key = key.loc.start.offset;
@@ -597,7 +597,7 @@ export function generate(
 						},
 						formatBrackets.empty,
 					);
-					tsCodeGen.addText(` = __VLS_getVforKeyType(${sourceVarName});\n`);
+					tsCodeGen.addText(` = __VLS_types.getVforKeyType(${sourceVarName});\n`);
 				}
 				if (index && index.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start_index = index.loc.start.offset;
@@ -615,7 +615,7 @@ export function generate(
 						},
 						formatBrackets.empty,
 					);
-					tsCodeGen.addText(` = __VLS_getVforIndexType(${sourceVarName});\n`);
+					tsCodeGen.addText(` = __VLS_types.getVforIndexType(${sourceVarName});\n`);
 				}
 				for (const childNode of node.children) {
 					visitNode(childNode, parentEl);
@@ -1178,7 +1178,7 @@ export function generate(
 				writeProps(parentEl, false, 'slots');
 				tsCodeGen.addText(`});\n`);
 
-				tsCodeGen.addText(`declare const ${varSlots}: typeof ${tagResolves[parentEl.tag].slots} & __VLS_ScriptSlots<typeof ${varComponentInstance}>;\n`);
+				tsCodeGen.addText(`declare const ${varSlots}: typeof ${tagResolves[parentEl.tag].slots} & __VLS_types.ScriptSlots<typeof ${varComponentInstance}>;\n`);
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(`const `);

@@ -4,6 +4,8 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
 import type { CssSourceMap, HtmlSourceMap, TeleportSourceMap, TsSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
+import * as shared from '@volar/shared';
+import * as path from 'upath';
 
 export type SourceFiles = ReturnType<typeof createSourceFiles>;
 
@@ -118,9 +120,11 @@ export function createSourceFiles() {
 			}),
 		},
 	};
+	const dirs = computed(() => [...new Set(uris.value.map(shared.uriToFsPath).map(path.dirname))]);
 
 	return {
 		getUris: untrack(() => uris.value),
+		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
 		get: untrack((uri: string): SourceFile | undefined => sourceFiles[uri.toLowerCase()]),
 		set: untrack((uri: string, sourceFile: SourceFile) => sourceFiles[uri.toLowerCase()] = sourceFile),

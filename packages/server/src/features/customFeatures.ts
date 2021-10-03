@@ -29,7 +29,13 @@ export function register(
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
 			const globalDoc = ls.__internal__.getGlobalDoc(lsType);
-			fs.writeFile(shared.uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
+			if (globalDoc) {
+				fs.writeFile(shared.uriToFsPath(globalDoc.uri), globalDoc.getText(), () => { });
+			}
+			const localTypes = ls.__internal__.getLocalTypesFiles();
+			for (const fileName of localTypes.fileNames) {
+				fs.writeFile(fileName, localTypes.code, () => { });
+			}
 			const { sourceFiles } = await ls.__internal__.getContext();
 			for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
 				fs.writeFile(shared.uriToFsPath(doc.uri), doc.getText(), () => { });

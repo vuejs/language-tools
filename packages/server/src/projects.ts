@@ -26,7 +26,6 @@ export function createProjects(
 	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 	const projects = new Map<string, Project>();
 	const inferredProjects = new Map<string, Project>();
-	const checkedProjects = new Set<string>();
 	const progressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
 	const inferredProgressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
 
@@ -239,16 +238,6 @@ export function createProjects(
 			send = true;
 			connection.sendDiagnostics({ uri: uri, diagnostics: result });
 		}, isCancel);
-
-		if (send && !checkedProjects.has(match.tsConfig)) {
-			checkedProjects.add(match.tsConfig);
-			const projectValid = match.service.__internal__.checkProject();
-			if (!projectValid) {
-				connection.window.showWarningMessage(
-					"Cannot import Vue 3 types from @vue/runtime-dom. If you are using Vue 2, you may need to install @vue/runtime-dom in additionally."
-				);
-			}
-		}
 	}
 	function setProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
 		if (projects.has(tsConfig)) {
