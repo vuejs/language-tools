@@ -828,10 +828,12 @@ export function generate(
 				}
 
 				// camelize name
+				writePropStart(isStatic);
 				const diagStart = tsCodeGen.getText().length;
 				if (!prop.arg) {
 					writePropName(
 						propName_1,
+						isStatic,
 						{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + 'v-model'.length,
@@ -845,6 +847,7 @@ export function generate(
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					writePropName(
 						propName_2,
+						isStatic,
 						{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.start.offset + propName_1.length, // patch style attr
@@ -860,6 +863,7 @@ export function generate(
 				else {
 					writePropName(
 						propName_2,
+						isStatic,
 						{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
@@ -872,7 +876,7 @@ export function generate(
 						},
 					);
 				}
-				writePropValuePrefix();
+				writePropValuePrefix(isStatic);
 				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 					writeCode(
 						propValue,
@@ -891,7 +895,7 @@ export function generate(
 				else {
 					tsCodeGen.addText(propValue);
 				}
-				writePropValueSuffix();
+				writePropValueSuffix(isStatic);
 				addMapping(tsCodeGen, {
 					sourceRange: {
 						start: prop.loc.start.offset,
@@ -907,11 +911,13 @@ export function generate(
 						capabilities: getCaps(capabilitiesSet.diagnosticOnly),
 					},
 				});
-				writePropEnd();
+				writePropEnd(isStatic);
 				// original name
 				if (prop.arg && propName_1 !== propName_2) {
+					writePropStart(isStatic);
 					writePropName(
 						propName_1,
+						isStatic,
 						{
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
@@ -923,10 +929,10 @@ export function generate(
 							doRename: keepHyphenateName,
 						},
 					);
-					writePropValuePrefix();
+					writePropValuePrefix(isStatic);
 					tsCodeGen.addText(propValue);
-					writePropValueSuffix();
-					writePropEnd();
+					writePropValueSuffix(isStatic);
+					writePropEnd(isStatic);
 				}
 			}
 			else if (
@@ -948,9 +954,11 @@ export function generate(
 				attrNames.add(prop.name);
 
 				// camelize name
+				writePropStart(true);
 				const diagStart = tsCodeGen.getText().length;
 				writePropName(
 					propName,
+					true,
 					{
 						start: prop.loc.start.offset,
 						end: prop.loc.start.offset + propName2.length,
@@ -963,11 +971,11 @@ export function generate(
 					},
 				);
 				if (prop.value) {
-					writePropValuePrefix();
+					writePropValuePrefix(true);
 					writeAttrValue(prop.value);
-					writePropValueSuffix();
+					writePropValueSuffix(true);
 				}
-				writePropEnd();
+				writePropEnd(true);
 				const diagEnd = tsCodeGen.getText().length;
 				addMapping(tsCodeGen, {
 					sourceRange: {
@@ -986,8 +994,10 @@ export function generate(
 				});
 				// original name
 				if (propName2 !== propName) {
+					writePropStart(true);
 					writePropName(
 						propName2,
+						true,
 						{
 							start: prop.loc.start.offset,
 							end: prop.loc.start.offset + propName2.length,
@@ -1000,11 +1010,11 @@ export function generate(
 						},
 					);
 					if (prop.value) {
-						writePropValuePrefix();
+						writePropValuePrefix(true);
 						writeAttrValue(prop.value);
-						writePropValueSuffix();
+						writePropValueSuffix(true);
 					}
-					writePropEnd();
+					writePropEnd(true);
 				}
 			}
 			else if (
@@ -1048,8 +1058,8 @@ export function generate(
 
 		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
 
-		function writePropName(name: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
-			if (mode === 'props') {
+		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+			if (mode === 'props' && isStatic) {
 				writeCode(
 					name,
 					sourceRange,
@@ -1065,25 +1075,33 @@ export function generate(
 				);
 			}
 		}
-		function writePropValuePrefix() {
-			if (mode === 'props') {
+		function writePropValuePrefix(isStatic: boolean) {
+			if (mode === 'props' && isStatic) {
 				tsCodeGen.addText('={');
 			}
 			else {
 				tsCodeGen.addText(': (');
 			}
 		}
-		function writePropValueSuffix() {
-			if (mode === 'props') {
+		function writePropValueSuffix(isStatic: boolean) {
+			if (mode === 'props' && isStatic) {
 				tsCodeGen.addText('}');
 			}
 			else {
 				tsCodeGen.addText(')');
 			}
 		}
-		function writePropEnd() {
-			if (mode === 'props') {
+		function writePropStart(isStatic: boolean) {
+			if (mode === 'props' && !isStatic) {
+				tsCodeGen.addText('{...{');
+			}
+		}
+		function writePropEnd(isStatic: boolean) {
+			if (mode === 'props' && isStatic) {
 				tsCodeGen.addText(' ');
+			}
+			else if (mode === 'props' && !isStatic) {
+				tsCodeGen.addText('}} ');
 			}
 			else {
 				tsCodeGen.addText(', ');
