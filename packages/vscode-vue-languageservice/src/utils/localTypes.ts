@@ -136,6 +136,7 @@ export type GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 export type GlobalAttrs = GlobalAttrsBase & HTMLAttributes;
 export type DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: PropType<NonUndefinedable<T[K]>> } : { type: PropType<T[K]>, required: true } };
 export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;
+export type ConvertInvalidComponents<T> = { [K in keyof T]: IsComponent<T[K]> extends true ? T[K] : any };
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 
 export ${genConstructorOverloads()}

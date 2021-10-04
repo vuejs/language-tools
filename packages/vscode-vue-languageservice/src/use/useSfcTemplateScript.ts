@@ -83,7 +83,7 @@ export function useSfcTemplateScript(
 		codeGen.addText('/* Components */\n');
 		codeGen.addText('declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & { __VLS_raw: typeof __VLS_component, __VLS_options: typeof __VLS_options, __VLS_slots: typeof __VLS_slots }>;\n');
 		codeGen.addText('declare var __VLS_wrapComponents: __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctxRaw> & typeof __VLS_ownComponent;\n'); // has __VLS_options
-		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ExtractRawComponents<typeof __VLS_wrapComponents> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<__VLS_types.ExtractRawComponents<typeof __VLS_wrapComponents>> & JSX.IntrinsicElements;\n'); // sort by priority
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');
