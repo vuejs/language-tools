@@ -178,6 +178,9 @@ export function createSourceFiles() {
 		}),
 		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: vscode.Position, end?: vscode.Position) {
 
+			if (uri.endsWith('/__VLS_types.ts') || uri.endsWith('/__VLS_globals.ts'))
+				return;
+
 			if (end === undefined)
 				end = start;
 
@@ -204,6 +207,9 @@ export function createSourceFiles() {
 			}
 		}),
 		fromTsLocation2: untrack(function* (lsType: 'script' | 'template', uri: string, start: number, end?: number) {
+
+			if (uri.endsWith('/__VLS_types.ts') || uri.endsWith('/__VLS_globals.ts'))
+				return;
 
 			if (end === undefined)
 				end = start;
