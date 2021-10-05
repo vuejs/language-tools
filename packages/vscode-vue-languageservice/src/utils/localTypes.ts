@@ -55,8 +55,10 @@ export declare function mergePropDefaults<P, D>(props: P, defaults: D): {
 		default: D[K]
 	} : P[K]
 }
-export declare function directiveFunction<T>(dir: T): T extends ObjectDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void
-	: T extends FunctionDirective<infer E, infer V> ? V extends { value: infer V_2 } ? (value: V_2) => void : (value: V) => void : T;
+export declare function directiveFunction<T>(dir: T):
+	T extends ObjectDirective<infer E, infer V> ? (value: V) => void
+	: T extends FunctionDirective<infer E, infer V> ? (value: V) => void
+	: T;
 
 export type TemplateSlots<T> = T extends { slots: infer S } ? S : {};
 export type HasTemplateSlotsType<T> = T extends { slots: infer _ } ? true : false;

@@ -1285,7 +1285,7 @@ export function generate(
 			) {
 
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_directiveFunction(`);
+				tsCodeGen.addText(`__VLS_types.directiveFunction(`);
 				writeCode(
 					camelize('v-' + prop.name),
 					{
