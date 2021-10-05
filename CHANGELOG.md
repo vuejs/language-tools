@@ -1,9 +1,20 @@
 # Changelog
 
+## 0.27.29
+
+- fix: don't pass unsupport component type to JSX ([#553](https://github.com/johnsoncodehk/volar/issues/553))
+- fix: dynamic props borken ([#555](https://github.com/johnsoncodehk/volar/issues/555))
+- fix: don't show virtual files in find references result
+- fix: directives type-check broken
+
+**Breaking changes since 0.27.27**
+
+- If your project includes Storybook or `@types/react`, you need to config tsconfig `types` option to avoid `@types/react` affect to template type-checking. See [#552](https://github.com/johnsoncodehk/volar/issues/552).
+
 ## 0.27.28
 
 - feat: support generic `$slots` types
-- feat: improve `v-for` typing [#546](https://github.com/johnsoncodehk/volar/pull/546)
+- feat: improve `v-for` typing ([#546](https://github.com/johnsoncodehk/volar/pull/546))
 - feat: support vue project isn't root folder ([#541](https://github.com/johnsoncodehk/volar/issues/541))
 - fix: slots type of any type component incorrect ([#547](https://github.com/johnsoncodehk/volar/issues/547))
 - fix: optional `$slots` type incorrect
