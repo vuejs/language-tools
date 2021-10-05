@@ -9,7 +9,6 @@ const camelCaseText = [
 export const code = `
 import type * as vue_1 from '@vue/runtime-dom';
 import type * as vue_2 from 'vue';
-import type * as vue_3 from '@vue/runtime-core';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsFunctionalComponent<T> = T extends FunctionalComponent<infer _> ? true : false;
@@ -31,7 +30,7 @@ type DefineComponent_1<P, E extends EmitsOptions> = PickNotAny<vue_1.DefineCompo
 type DefineComponent_2<P, E extends EmitsOptions> = DefineComponent_1<P, E>; // fix check extends failed if have no defineProps
 type DefineComponent_3<P, E extends EmitsOptions> = PickNotAny<vue_1.DefineComponent<P, any, any, any, any, any, any, E, any, any, any, any>, vue_2.DefineComponent<P, any, any, any, any, any, any, E, any, any, any, any>>; // fix https://github.com/johnsoncodehk/volar/issues/495
 type DefineComponent_4<P, E extends EmitsOptions> = DefineComponent_3<P, E>;
-type GlobalComponents_0 = PickNotAny<PickNotAny<PickNotAny<vue_1.GlobalComponents, vue_2.GlobalComponents>, vue_3.GlobalComponents>, {}>;
+type GlobalComponents_0 = PickNotAny<PickNotAny<vue_1.GlobalComponents, vue_2.GlobalComponents>, {}>;
 type SetupContext<T> = PickNotAny<vue_1.SetupContext<T>, vue_2.SetupContext<T>>;
 type ObjectDirective<T, V> = PickNotAny<vue_1.ObjectDirective<T, V>, vue_2.ObjectDirective<T, V>>;
 type FunctionDirective<T, V> = PickNotAny<vue_1.FunctionDirective<T, V>, vue_2.FunctionDirective<T, V>>;
