@@ -812,7 +812,6 @@ export function generate(
 				}
 
 				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
-				const propValue = prop.exp?.content ?? 'undefined';
 
 				if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
 					continue;
@@ -879,7 +878,7 @@ export function generate(
 				writePropValuePrefix(isStatic);
 				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 					writeCode(
-						propValue,
+						prop.exp.loc.source,
 						{
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
@@ -893,7 +892,7 @@ export function generate(
 					);
 				}
 				else {
-					tsCodeGen.addText(propValue);
+					tsCodeGen.addText('undefined');
 				}
 				writePropValueSuffix(isStatic);
 				addMapping(tsCodeGen, {
@@ -930,7 +929,7 @@ export function generate(
 						},
 					);
 					writePropValuePrefix(isStatic);
-					tsCodeGen.addText(propValue);
+					tsCodeGen.addText(prop.exp?.loc.source ?? 'undefined');
 					writePropValueSuffix(isStatic);
 					writePropEnd(isStatic);
 				}
@@ -970,11 +969,14 @@ export function generate(
 						doRename: keepHyphenateName,
 					},
 				);
+				writePropValuePrefix(true);
 				if (prop.value) {
-					writePropValuePrefix(true);
 					writeAttrValue(prop.value);
-					writePropValueSuffix(true);
 				}
+				else {
+					tsCodeGen.addText('true');
+				}
+				writePropValueSuffix(true);
 				writePropEnd(true);
 				const diagEnd = tsCodeGen.getText().length;
 				addMapping(tsCodeGen, {
@@ -1009,11 +1011,14 @@ export function generate(
 							doRename: keepHyphenateName,
 						},
 					);
+					writePropValuePrefix(true);
 					if (prop.value) {
-						writePropValuePrefix(true);
 						writeAttrValue(prop.value);
-						writePropValueSuffix(true);
 					}
+					else {
+						tsCodeGen.addText('true');
+					}
+					writePropValueSuffix(true);
 					writePropEnd(true);
 				}
 			}
