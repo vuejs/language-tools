@@ -46,6 +46,94 @@
 					".vue"
 				],
 				"configuration": "./languages/vue-language-configuration.json"
+			},
+			{
+				"id": "vue-injection-markdown"
+			},
+			{
+				"id": "vue-directives"
+			},
+			{
+				"id": "vue-interpolations"
+			}
+		],
+		"grammars": [
+			{
+				"language": "vue",
+				"scopeName": "source.vue",
+				"path": "./syntaxes/vue.tmLanguage.json",
+				"embeddedLanguages": {
+					"source.vue": "vue",
+					"text": "plaintext",
+					"text.html.derivative": "html",
+					"text.html.markdown": "markdown",
+					"text.pug": "jade",
+					"source.css": "css",
+					"source.css.scss": "scss",
+					"source.css.less": "less",
+					"source.sass": "sass",
+					"source.stylus": "stylus",
+					"source.postcss": "postcss",
+					"source.js": "javascript",
+					"source.ts": "typescript",
+					"source.jsx": "javascriptreact",
+					"source.tsx": "typescriptreact",
+					"source.json": "json",
+					"source.json.comments": "jsonc",
+					"source.yaml": "yaml",
+					"source.graphql": "graphql"
+				}
+			},
+			{
+				"language": "vue-injection-markdown",
+				"scopeName": "markdown.vue.codeblock",
+				"path": "./syntaxes/markdown-vue.json",
+				"injectTo": [
+					"text.html.markdown"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.block.vue": "vue",
+					"source.vue": "vue",
+					"text": "plaintext",
+					"text.html.derivative": "html",
+					"text.html.markdown": "markdown",
+					"text.pug": "jade",
+					"source.css": "css",
+					"source.css.scss": "scss",
+					"source.css.less": "less",
+					"source.sass": "sass",
+					"source.stylus": "stylus",
+					"source.postcss": "postcss",
+					"source.js": "javascript",
+					"source.ts": "typescript",
+					"source.jsx": "javascriptreact",
+					"source.tsx": "typescriptreact",
+					"source.json": "json",
+					"source.json.comments": "jsonc",
+					"source.yaml": "yaml",
+					"source.graphql": "graphql"
+				}
+			},
+			{
+				"language": "vue-directives",
+				"scopeName": "vue.directives",
+				"path": "./syntaxes/vue-directives.json",
+				"injectTo": [
+					"source.vue",
+					"text.html.derivative",
+					"text.html.markdown",
+					"text.pug"
+				]
+			},
+			{
+				"language": "vue-interpolations",
+				"scopeName": "vue.interpolations",
+				"path": "./syntaxes/vue-interpolations.json",
+				"injectTo": [
+					"source.vue",
+					"text.html.markdown",
+					"text.pug"
+				]
 			}
 		],
 		"breakpoints": [
@@ -201,34 +289,6 @@
 				}
 			}
 		},
-		"grammars": [
-			{
-				"language": "vue",
-				"scopeName": "source.vue",
-				"path": "./syntaxes/vue.tmLanguage.json",
-				"embeddedLanguages": {
-					"source.vue": "vue",
-					"text": "plaintext",
-					"text.html.derivative": "html",
-					"text.html.markdown": "markdown",
-					"text.pug": "jade",
-					"source.css": "css",
-					"source.css.scss": "scss",
-					"source.css.less": "less",
-					"source.sass": "sass",
-					"source.stylus": "stylus",
-					"source.postcss": "postcss",
-					"source.js": "javascript",
-					"source.ts": "typescript",
-					"source.jsx": "javascriptreact",
-					"source.tsx": "typescriptreact",
-					"source.json": "json",
-					"source.json.comments": "jsonc",
-					"source.yaml": "yaml",
-					"source.graphql": "graphql"
-				}
-			}
-		],
 		"semanticTokenScopes": [
 			{
 				"language": "vue",

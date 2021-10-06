@@ -1,0 +1,10 @@
+{
+	"fileTypes": [],
+	"injectionSelector": "L:text.pug -comment -string.comment",
+	"patterns": [
+		{
+			"include": "source.vue#vue-interpolations"
+		}
+	],
+	"scopeName": "vue.interpolations"
+}
