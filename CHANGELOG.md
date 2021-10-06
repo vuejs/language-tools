@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.27.30
+
+- feat: support syntax highlight for vue blocks in markdown
+- feat: support vue directives, interpolations syntax highlight for html / pug code outside vue script
+- fix: template type-checking incorrectly reports error when using pnpm
+- fix: template slots type-check broken
+- fix: allow component type that missing `$props` property
+- fix: slots type broken by expression-less attributes
+
 ## 0.27.29
 
 - fix: don't pass unsupport component type to JSX ([#553](https://github.com/johnsoncodehk/volar/issues/553))
