@@ -86,10 +86,6 @@ export type ExtractComponentProps<T> =
 	T extends new (...args: any) => { $props?: infer P1 } ? P1
 	: T extends FunctionalComponent<infer P2> ? P2
 	: T
-export type ExtractCompleteComponentProps<T> =
-	T extends new (...args: any) => { $props?: infer P1 } ? P1 & Omit<GlobalAttrs, keyof P1> & Record<string, unknown>
-	: T extends FunctionalComponent<infer P2> ? P2 & JSX.IntrinsicAttributes & Record<string, unknown>
-	: T & Omit<GlobalAttrs, keyof T> & Record<string, unknown>
 
 export type ExtractRawComponents<T> = { [K in keyof T]: ExtractRawComponent<T[K]> };
 export type ExtractRawComponent<T> = T extends { raw: infer C } ? C : T;

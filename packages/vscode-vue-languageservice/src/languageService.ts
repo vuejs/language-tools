@@ -2,7 +2,6 @@ import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
-import * as globalTypes from './utils/globalTypes';
 import * as localTypes from './utils/localTypes';
 import * as upath from 'upath';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -157,7 +156,6 @@ export function createLanguageService(
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
 	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.code);
 	const localTypesScriptName = '__VLS_types.ts';
-	const templateLsGlobalDoc = TextDocument.create(shared.fsPathToUri(upath.join(vueHost.getCurrentDirectory(), '__VLS_globals.ts')), 'typescript', 0, globalTypes.code);
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
@@ -278,7 +276,6 @@ export function createLanguageService(
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
 			},
-			getGlobalDoc,
 			getLocalTypesFiles: () => {
 				const fileNames = getLocalTypesFiles();
 				const code = localTypes.code;
@@ -297,9 +294,6 @@ export function createLanguageService(
 
 	function getLocalTypesFiles() {
 		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypesScriptName));
-	}
-	function getGlobalDoc(lsType: 'script' | 'template') {
-		return lsType === 'template' ? templateLsGlobalDoc : undefined;
 	}
 	function createTsPluginProxy() {
 
@@ -557,9 +551,6 @@ export function createLanguageService(
 		function getScriptFileNames() {
 			const tsFileNames = getLocalTypesFiles();
 
-			const globalDoc = getGlobalDoc(lsType);
-			if (globalDoc) tsFileNames.push(shared.uriToFsPath(globalDoc.uri));
-
 			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
 				tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts
 			}
@@ -575,9 +566,6 @@ export function createLanguageService(
 		}
 		function getScriptVersion(fileName: string) {
 			const uri = shared.fsPathToUri(fileName);
-			if (uri === templateLsGlobalDoc.uri) {
-				return templateLsGlobalDoc.version.toString();
-			}
 			if (upath.basename(fileName) === localTypesScriptName) {
 				return '0';
 			}
@@ -593,16 +581,11 @@ export function createLanguageService(
 			if (cache && cache[0] === version) {
 				return cache[1];
 			}
-			const uri = shared.fsPathToUri(fileName);
-			if (uri === templateLsGlobalDoc.uri) {
-				const text = templateLsGlobalDoc.getText();
-				const snapshot = ts.ScriptSnapshot.fromString(text);
-				scriptSnapshots.set(fileName, [version, snapshot]);
-				return snapshot;
-			}
-			if (upath.basename(fileName) === localTypesScriptName) {
+			const basename = upath.basename(fileName);
+			if (basename === localTypesScriptName) {
 				return localTypesScript;
 			}
+			const uri = shared.fsPathToUri(fileName);
 			const doc = sourceFiles.getTsDocuments(lsType).get(uri);
 			if (doc) {
 				const text = doc.getText();
@@ -612,6 +595,14 @@ export function createLanguageService(
 			}
 			let tsScript = vueHost.getScriptSnapshot(fileName);
 			if (tsScript) {
+				if (lsType === 'template' && basename === 'runtime-dom.d.ts') {
+					// allow arbitrary attributes
+					const extraTypes = [
+						'interface AriaAttributes extends Record<string, unknown> { }',
+						'declare global { namespace JSX { interface IntrinsicAttributes extends Record<string, unknown> {} } }',
+					];
+					tsScript = ts.ScriptSnapshot.fromString(tsScript.getText(0, tsScript.getLength()) + '\n' + extraTypes.join('\n'));
+				}
 				scriptSnapshots.set(fileName, [version, tsScript]);
 				return tsScript;
 			}
