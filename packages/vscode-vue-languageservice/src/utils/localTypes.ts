@@ -12,7 +12,7 @@ import type * as vue_2 from 'vue';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsFunctionalComponent<T> = T extends FunctionalComponent<infer _> ? true : false;
-type IsConstructorComponent<T> = T extends new (...args: any) => any ? true : false;
+type IsConstructorComponent<T> = T extends new (...args: any) => JSX.ElementClass ? true : false;
 type IsComponent<T> = IsConstructorComponent<T> extends true ? true : IsFunctionalComponent<T> extends true ? true : false;
 type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true ? K : never]: any };
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
