@@ -105,7 +105,7 @@ export {}
 
 > If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/guide/snippet.html#customizable-scaffold-snippets), recommend use [Snippet Generator](https://marketplace.visualstudio.com/items?itemName=wenfangdu.snippet-generator) convert to VSCode Snippets.
 
-> If your project included Storebook or `@types/react`, make sure you have config tsconfig `types` option to avoid template type-checking affect by react types.
+> If your project included Storybook or `@types/react`, make sure you have config tsconfig `types` option to avoid template type-checking affect by react types.
 > 
 > It should like this:
 > ```json
