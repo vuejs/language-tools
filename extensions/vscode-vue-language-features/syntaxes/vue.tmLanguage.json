@@ -875,7 +875,7 @@
 									"name": "punctuation.separator.key-value.css"
 								}
 							},
-							"end": "\\s*(;)|\\s*(?=\")",
+							"end": "\\s*(;)|\\s*(?='|\")",
 							"endCaptures": {
 								"1": {
 									"name": "punctuation.terminator.rule.css"
