@@ -1,6 +1,6 @@
 {
 	"fileTypes": [],
-	"injectionSelector": "L:text.pug -comment -string.comment",
+	"injectionSelector": "L:text.pug -comment -string.comment, L:text.html.derivative, L:text.html.markdown",
 	"patterns": [
 		{
 			"include": "source.vue#vue-interpolations"

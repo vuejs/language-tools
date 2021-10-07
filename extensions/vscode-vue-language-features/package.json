@@ -121,8 +121,8 @@
 				"path": "./syntaxes/vue-directives.json",
 				"injectTo": [
 					"source.vue",
-					"text.html.derivative",
 					"text.html.markdown",
+					"text.html.derivative",
 					"text.pug"
 				]
 			},
@@ -133,6 +133,7 @@
 				"injectTo": [
 					"source.vue",
 					"text.html.markdown",
+					"text.html.derivative",
 					"text.pug"
 				]
 			}

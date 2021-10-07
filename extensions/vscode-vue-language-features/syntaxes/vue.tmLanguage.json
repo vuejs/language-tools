@@ -681,9 +681,6 @@
 		"html-stuff": {
 			"patterns": [
 				{
-					"include": "#vue-interpolations"
-				},
-				{
 					"include": "#template-tag"
 				},
 				{
