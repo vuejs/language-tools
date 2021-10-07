@@ -4,7 +4,7 @@
   "license": "MIT",
   "files": [
     "bin",
-    "proxy.js"
+    "out/proxy.js"
   ],
   "repository": {
     "type": "git",

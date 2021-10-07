@@ -17,7 +17,7 @@ fs.readFileSync = (...args) => {
         );
         tsc = tsc.replace(
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) {`,
-            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require('vue-tsc/proxy').createProgramProxy(...arguments);`,
+            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require('vue-tsc/out/proxy').createProgramProxy(...arguments);`,
         );
         return tsc;
     }
