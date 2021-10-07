@@ -11,3 +11,11 @@ Roadmap:
 - [x] Make `typescript` as peerDependencies
 - [x] Cleaner dependencies (remove `prettyhtml`, `prettier` etc.) (with `vscode-vue-languageservice` version >= 0.26.4)
 - [ ] Watch mode support
+
+## Sponsors
+
+This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
+
+<a href="https://github.com/Leniolabs">
+  <img itemprop="image" src="https://github.com/Leniolabs.png" width="100" height="100">
+</a>
