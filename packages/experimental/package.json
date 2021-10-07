@@ -1,6 +1,6 @@
 {
 	"name": "@volar/experimental",
-	"version": "0.27.25",
+	"version": "0.28.0",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
