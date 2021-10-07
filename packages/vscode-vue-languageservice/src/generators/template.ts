@@ -1244,6 +1244,7 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.slotName,
 						},
+						false,
 					);
 				}
 				else {
@@ -1649,8 +1650,8 @@ export function generate(
 			}
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
-		if (validTsVar.test(mapCode)) {
+	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData, checkValid = true) {
+		if (checkValid && validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
 				writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
