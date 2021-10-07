@@ -229,11 +229,6 @@
 					"default": true,
 					"description": "If built-in VSCode TypeScript Extension disabled, take over language support for *.ts."
 				},
-				"volar.tsPlugin": {
-					"type": "boolean",
-					"default": false,
-					"description": "(Deprecated) Show TS plugin deprecated message."
-				},
 				"volar.preferredTagNameCase": {
 					"type": "string",
 					"enum": [

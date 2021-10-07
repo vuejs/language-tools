@@ -14,7 +14,6 @@ import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
 import * as tagClosing from './features/tagClosing';
 import * as tagNameCase from './features/tagNameCase';
-import * as tsPlugin from './features/tsPlugin';
 import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
@@ -109,7 +108,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	verifyAll.activate(context, docClient ?? apiClient);
 	virtualFiles.activate(context, docClient ?? apiClient);
 	tagClosing.activate(context, htmlClient, apiClient);
-	tsPlugin.activate(context);
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	whitelist.activate(context, clients);
 
