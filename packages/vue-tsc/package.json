@@ -1,0 +1,23 @@
+{
+  "name": "vue-tsc",
+  "version": "0.3.0",
+  "license": "MIT",
+  "files": [
+    "bin",
+    "out/proxy.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnsoncodehk/volar.git",
+    "directory": "packages/vue-tsc"
+  },
+  "bin": {
+    "vue-tsc": "./bin/vue-tsc.js"
+  },
+  "dependencies": {
+    "vscode-vue-languageservice": "^0.27.0"
+  },
+  "peerDependencies": {
+    "typescript": "*"
+  }
+}
