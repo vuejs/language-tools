@@ -13,9 +13,10 @@ export function register(
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	lsConfigs: ReturnType<typeof createLsConfigs>,
+	params: vscode.InitializeParams,
 ) {
 	connection.onCompletion(async handler => {
-		return await getProjects()
+		const list = await getProjects()
 			?.get(handler.textDocument.uri)?.service
 			.doComplete(
 				handler.textDocument.uri,
@@ -31,6 +32,15 @@ export function register(
 					};
 				},
 			);
+		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
+		if (!insertReplaceSupport && list) {
+			for (const item of list.items) {
+				if (item.textEdit && vscode.InsertReplaceEdit.is(item.textEdit)) {
+					item.textEdit = vscode.TextEdit.replace(item.textEdit.insert, item.textEdit.newText);
+				}
+			}
+		}
+		return list;
 	});
 	connection.onCompletionResolve(async item => {
 		const uri: string | undefined = item.data?.uri;

@@ -77,7 +77,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 		const ts = loadTypescript(options.typescript.serverPath);
 
 		(await import('./features/customFeatures')).register(connection, documents, () => projects);
-		(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, lsConfigs);
+		(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, lsConfigs, params);
 		(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, ts.version);
 
 		connection.onInitialized(async () => {
