@@ -1374,17 +1374,21 @@ export function generate(
 				&& prop.name === 'class'
 				&& prop.value
 			) {
-				let startOffset = prop.value.loc.start.offset + 1; // +1 is "
+
+				let startOffset = prop.value.loc.start.offset;
 				let tempClassName = '';
 
-				for (const char of (prop.value.content + ' ')) {
-					if (char.trim() !== '') {
-						tempClassName += char;
+				for (const char of (prop.value.loc.source + ' ')) {
+					if (char.trim() === '' || char === '"' || char === "'") {
+						if (tempClassName !== '') {
+							addClass(tempClassName, startOffset);
+							startOffset += tempClassName.length;
+							tempClassName = '';
+						}
+						startOffset += char.length;
 					}
-					else if (tempClassName !== '') {
-						addClass(tempClassName, startOffset);
-						startOffset += tempClassName.length + 1;
-						tempClassName = '';
+					else {
+						tempClassName += char;
 					}
 				}
 
