@@ -19,6 +19,6 @@
 	},
 	"devDependencies": {
 		"typescript": "latest",
-		"vscode-html-languageservice": "^4.0.7"
+		"vscode-html-languageservice": "^4.1.0"
 	}
 }

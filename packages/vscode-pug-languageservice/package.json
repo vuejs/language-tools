@@ -14,7 +14,7 @@
 	},
 	"devDependencies": {
 		"@types/pug": "^2.0.5",
-		"vscode-html-languageservice": "^4.0.7"
+		"vscode-html-languageservice": "^4.1.0"
 	},
 	"dependencies": {
 		"@volar/code-gen": "0.28.0",
