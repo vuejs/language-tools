@@ -6,9 +6,29 @@ const camelCaseText = [
 	': S',
 ].join('\n');
 
-export const code = `
-import type * as vue_1 from '@vue/runtime-dom';
-import type * as vue_2 from 'vue';
+export const vueFileName = '__VLS_vue.ts';
+export const typesFileName = '__VLS_types.ts';
+
+export const vueCode = `
+export * from '@vue/runtime-dom';
+export * from 'vue';
+`.trim();
+
+export const typesCode = `
+import * as vue from './__VLS_vue';
+import type {
+	FunctionalComponent,
+	HTMLAttributes,
+	VNodeProps,
+	AllowedComponentProps,
+	PropType,
+	EmitsOptions,
+	DefineComponent,
+	SetupContext,
+	ObjectDirective,
+	FunctionDirective,
+	GlobalComponents as GlobalComponents_0,
+} from './__VLS_vue';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsFunctionalComponent<T> = T extends (...args: any) => JSX.Element ? true : false;
@@ -20,22 +40,7 @@ type AnyArray<T = any> = T[] | readonly T[];
 type NonUndefinedable<T> = T extends undefined ? never : T;
 ${camelCaseText};
 
-type FunctionalComponent<P = {}, E extends EmitsOptions = {}> = PickNotAny<vue_1.FunctionalComponent<P, E>, vue_2.FunctionalComponent<P, E>>;
-type HTMLAttributes = PickNotAny<vue_1.HTMLAttributes, vue_2.HTMLAttributes>;
-type VNodeProps = PickNotAny<vue_1.VNodeProps, vue_2.VNodeProps>;
-type AllowedComponentProps = PickNotAny<vue_1.AllowedComponentProps, vue_2.AllowedComponentProps>;
-type PropType<T> = PickNotAny<vue_1.PropType<T>, vue_2.PropType<T>>;
-type EmitsOptions = PickNotAny<vue_1.EmitsOptions, vue_2.EmitsOptions>;
-type DefineComponent_1<P, E extends EmitsOptions> = PickNotAny<vue_1.DefineComponent<P, any, any, any, any, any, any, E>, vue_2.DefineComponent<P, any, any, any, any, any, any, E>>;
-type DefineComponent_2<P, E extends EmitsOptions> = DefineComponent_1<P, E>; // fix check extends failed if have no defineProps
-type DefineComponent_3<P, E extends EmitsOptions> = PickNotAny<vue_1.DefineComponent<P, any, any, any, any, any, any, E, any, any, any, any>, vue_2.DefineComponent<P, any, any, any, any, any, any, E, any, any, any, any>>; // fix https://github.com/johnsoncodehk/volar/issues/495
-type DefineComponent_4<P, E extends EmitsOptions> = DefineComponent_3<P, E>;
-type GlobalComponents_0 = PickNotAny<PickNotAny<vue_1.GlobalComponents, vue_2.GlobalComponents>, {}>;
-type SetupContext<T> = PickNotAny<vue_1.SetupContext<T>, vue_2.SetupContext<T>>;
-type ObjectDirective<T, V> = PickNotAny<vue_1.ObjectDirective<T, V>, vue_2.ObjectDirective<T, V>>;
-type FunctionDirective<T, V> = PickNotAny<vue_1.FunctionDirective<T, V>, vue_2.FunctionDirective<T, V>>;
-
-export type GlobalComponents = GlobalComponents_0 & Pick<PickNotAny<typeof vue_1, typeof vue_2>,
+export type GlobalComponents = PickNotAny<GlobalComponents_0, {}> & Pick<typeof vue,
 	'Transition'
 	| 'TransitionGroup'
 	| 'KeepAlive'
@@ -43,7 +48,6 @@ export type GlobalComponents = GlobalComponents_0 & Pick<PickNotAny<typeof vue_1
 	| 'Teleport'
 >;
 
-export var defineComponent: PickNotAny<typeof vue_1.defineComponent, typeof vue_2.defineComponent>;
 export declare function getVforSourceType<T>(source: T): T extends number ? number[] : T;
 export declare function getVforKeyType<T>(source: T): typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never; // use "T extends T" support for union
 export declare function getVforIndexType<T>(source: T): typeof Symbol.iterator extends keyof T ? undefined : number;
@@ -115,10 +119,7 @@ export type EmitEvent2<F, E> =
 	} ? (...payload: P) => R
 	: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 export type EmitEvent<T, E> =
-	T extends DefineComponent_1<infer _, infer E2> ? EmitEvent_3<E2, E>
-	: T extends DefineComponent_2<infer _, infer E2> ? EmitEvent_3<E2, E>
-	: T extends DefineComponent_3<infer _, infer E2> ? EmitEvent_3<E2, E>
-	: T extends DefineComponent_4<infer _, infer E2> ? EmitEvent_3<E2, E>
+	T extends DefineComponent<infer _, any, any, any, any, any, any, infer E2> ? EmitEvent_3<E2, E>
 	: T extends FunctionalComponent<infer _, infer E2> ? EmitEvent_3<E2, E>
 	: EmitEvent2<ExtractEmit2<T>, E>;
 export type EmitEvent_3<E2, E> =

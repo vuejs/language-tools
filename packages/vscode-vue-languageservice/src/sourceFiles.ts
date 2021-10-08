@@ -6,6 +6,7 @@ import type { CssSourceMap, HtmlSourceMap, TeleportSourceMap, TsSourceMap } from
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
+import * as localTypes from './utils/localTypes';
 
 export type SourceFiles = ReturnType<typeof createSourceFiles>;
 
@@ -178,7 +179,7 @@ export function createSourceFiles() {
 		}),
 		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: vscode.Position, end?: vscode.Position) {
 
-			if (uri.endsWith('/__VLS_types.ts') || uri.endsWith('/__VLS_globals.ts'))
+			if (uri.endsWith(`/${localTypes.typesFileName}`) || uri.endsWith(`/${localTypes.vueFileName}`))
 				return;
 
 			if (end === undefined)
@@ -208,7 +209,7 @@ export function createSourceFiles() {
 		}),
 		fromTsLocation2: untrack(function* (lsType: 'script' | 'template', uri: string, start: number, end?: number) {
 
-			if (uri.endsWith('/__VLS_types.ts') || uri.endsWith('/__VLS_globals.ts'))
+			if (uri.endsWith(`/${localTypes.typesFileName}`) || uri.endsWith(`/${localTypes.vueFileName}`))
 				return;
 
 			if (end === undefined)

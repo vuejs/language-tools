@@ -20,6 +20,7 @@ export function useSfcEntryForTemplateLs(
 		const tsScriptFileName = hasTsDoc.value ? '__VLS_script_ts' : '__VLS_script';
 		let content = '';
 		content += '// @ts-nocheck\n';
+		content += `import * as __VLS_vue from './__VLS_types';\n`;
 		content += `import * as __VLS_types from './__VLS_types';\n`;
 		if (scriptSetup.value || script.value) {
 			content += `import { __VLS_options as __VLS_options_ts, __VLS_name as __VLS_name_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
@@ -44,8 +45,8 @@ export function useSfcEntryForTemplateLs(
 		else {
 			content += `export var __VLS_options = {};\n`;
 			content += `export var __VLS_name = undefined;\n`;
-			content += `var __VLS_component_ts = __VLS_types.defineComponent({});\n`;
-			content += `export var __VLS_component = __VLS_types.defineComponent({});\n`;
+			content += `var __VLS_component_ts = __VLS_vue.defineComponent({});\n`;
+			content += `export var __VLS_component = __VLS_vue.defineComponent({});\n`;
 		}
 		content += `declare var __VLS_ctx: __VLS_types.ComponentContext<typeof __VLS_component_ts>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;

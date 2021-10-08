@@ -154,8 +154,8 @@ export function createLanguageService(
 	const scriptTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(scriptTsHost) : ts.createLanguageService(scriptTsHost);
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
-	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.code);
-	const localTypesScriptName = '__VLS_types.ts';
+	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.typesCode);
+	const localVueScript = ts.ScriptSnapshot.fromString(localTypes.vueCode);
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
@@ -278,7 +278,15 @@ export function createLanguageService(
 			},
 			getLocalTypesFiles: () => {
 				const fileNames = getLocalTypesFiles();
-				const code = localTypes.code;
+				const code = localTypes.typesCode;
+				return {
+					fileNames,
+					code,
+				};
+			},
+			getLocalVueFiles: () => {
+				const fileNames = getLocalVueFiles();
+				const code = localTypes.vueCode;
 				return {
 					fileNames,
 					code,
@@ -293,7 +301,10 @@ export function createLanguageService(
 	};
 
 	function getLocalTypesFiles() {
-		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypesScriptName));
+		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
+	}
+	function getLocalVueFiles() {
+		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypes.vueFileName));
 	}
 	function createTsPluginProxy() {
 
@@ -549,7 +560,10 @@ export function createLanguageService(
 		return tsHost;
 
 		function getScriptFileNames() {
-			const tsFileNames = getLocalTypesFiles();
+			const tsFileNames = [
+				...getLocalTypesFiles(),
+				...getLocalVueFiles(),
+			];
 
 			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
 				tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts
@@ -566,7 +580,8 @@ export function createLanguageService(
 		}
 		function getScriptVersion(fileName: string) {
 			const uri = shared.fsPathToUri(fileName);
-			if (upath.basename(fileName) === localTypesScriptName) {
+			const basename = upath.basename(fileName);
+			if (basename === localTypes.typesFileName || basename === localTypes.vueFileName) {
 				return '0';
 			}
 			let doc = sourceFiles.getTsDocuments(lsType).get(uri);
@@ -582,8 +597,11 @@ export function createLanguageService(
 				return cache[1];
 			}
 			const basename = upath.basename(fileName);
-			if (basename === localTypesScriptName) {
+			if (basename === localTypes.typesFileName) {
 				return localTypesScript;
+			}
+			if (basename === localTypes.vueFileName) {
+				return localVueScript;
 			}
 			const uri = shared.fsPathToUri(fileName);
 			const doc = sourceFiles.getTsDocuments(lsType).get(uri);

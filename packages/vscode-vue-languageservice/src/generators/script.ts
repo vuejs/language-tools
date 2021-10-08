@@ -210,7 +210,7 @@ export function generate(
 	function writeExportComponent() {
 		if (shouldAddExportDefault) {
 			const start = codeGen.getText().length;
-			codeGen.addText(`export default (await import('./__VLS_types')).defineComponent({\n`);
+			codeGen.addText(`export default (await import('./__VLS_vue')).defineComponent({\n`);
 			overlapMapRanges.push({
 				start,
 				end: codeGen.getText().length,
@@ -218,7 +218,7 @@ export function generate(
 		}
 		else {
 			codeGen.addText(`\n`);
-			codeGen.addText(`export const __VLS_component = (await import('./__VLS_types')).defineComponent({\n`);
+			codeGen.addText(`export const __VLS_component = (await import('./__VLS_vue')).defineComponent({\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;

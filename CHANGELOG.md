@@ -3,6 +3,7 @@
 ## Not yet released
 
 - fix: don't report error `Its return type 'xxx' is not a valid JSX element.` to invalid functional component type ([#574](https://github.com/johnsoncodehk/volar/issues/574))
+- fix: improve `$emit` types extract for events type-checking ([#567](https://github.com/johnsoncodehk/volar/issues/567))
 
 ## 0.28.0
 

@@ -32,6 +32,10 @@ export function register(
 			for (const fileName of localTypes.fileNames) {
 				fs.writeFile(fileName, localTypes.code, () => { });
 			}
+			const localVues = ls.__internal__.getLocalVueFiles();
+			for (const fileName of localVues.fileNames) {
+				fs.writeFile(fileName, localVues.code, () => { });
+			}
 			const { sourceFiles } = await ls.__internal__.getContext();
 			for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
 				fs.writeFile(shared.uriToFsPath(doc.uri), doc.getText(), () => { });
