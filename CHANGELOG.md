@@ -1,11 +1,15 @@
 # Changelog
 
+## Not yet released
+
+- fix: don't report error `Its return type 'xxx' is not a valid JSX element.` to invalid functional component type ([#574](https://github.com/johnsoncodehk/volar/issues/574))
+
 ## 0.28.0
 
 - feat: make vue-tsc version consistency to volar ([vue-tsc#72](https://github.com/johnsoncodehk/vue-tsc/issues/72))
 - feat: remove tsPlugin prompt
 - feat: remove vue-tsc version checking
-- fix: avoid `noPropertyAccessFromIndexSignature` effect to slots (#561)
+- fix: avoid `noPropertyAccessFromIndexSignature` effect to slots ([#561](https://github.com/johnsoncodehk/volar/issues/561))
 - fix: interpolations syntax highlight not working in html ([#562](https://github.com/johnsoncodehk/volar/issues/562))
 - fix: style attr can't end with `'` ([#563](https://github.com/johnsoncodehk/volar/issues/563))
 - refactor: rewrite vue-tsc by TS
