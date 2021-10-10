@@ -101,22 +101,22 @@ export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload
 export type EmitEvent2<F, E> =
 	F extends {
 		(event: E, ...payload: infer P): infer R
+	} ? (...payload: P) => void
+	: F extends {
+		(event: E, ...payload: infer P): infer R
 		(...args: any): any
-		(...args: any): any
-		(...args: any): any
-	} ? (...payload: P) => R
+	} ? (...payload: P) => void
 	: F extends {
 		(event: E, ...payload: infer P): infer R
 		(...args: any): any
 		(...args: any): any
-	} ? (...payload: P) => R
+	} ? (...payload: P) => void
 	: F extends {
 		(event: E, ...payload: infer P): infer R
 		(...args: any): any
-	} ? (...payload: P) => R
-	: F extends {
-		(event: E, ...payload: infer P): infer R
-	} ? (...payload: P) => R
+		(...args: any): any
+		(...args: any): any
+	} ? (...payload: P) => void
 	: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 export type EmitEvent<T, E> =
 	T extends DefineComponent<infer _, any, any, any, any, any, any, infer E2> ? EmitEvent_3<E2, E>
@@ -144,7 +144,7 @@ export ${genConstructorOverloads()}
 // see: https://github.com/johnsoncodehk/volar/issues/60
 function genConstructorOverloads() {
 	let code = `type ConstructorOverloads<T> =\n`;
-	for (let i = 8; i >= 1; i--) {
+	for (let i = 1; i <= 8; i++) {
 		code += `// ${i}\n`;
 		code += `T extends {\n`;
 		for (let j = 1; j <= i; j++) {
