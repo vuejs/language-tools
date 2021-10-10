@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.28.2
+
+- fix: args-less events type incorrect ([#575](https://github.com/johnsoncodehk/volar/issues/575))
+- fix: `@vue/composition-api` events type incorrect ([#576](https://github.com/johnsoncodehk/volar/issues/576))
+
 ## 0.28.1
 
 - fix: don't report error `Its return type 'xxx' is not a valid JSX element.` to invalid functional component type ([#574](https://github.com/johnsoncodehk/volar/issues/574))
