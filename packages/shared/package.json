@@ -1,6 +1,6 @@
 {
 	"name": "@volar/shared",
-	"version": "0.28.1",
+	"version": "0.28.2",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
