@@ -1,5 +1,9 @@
 # Changelog
 
+## Not release yet
+
+- fix: only the last typed event of defineEmits gets recognized ([#578](https://github.com/johnsoncodehk/volar/issues/578))
+
 ## 0.28.2
 
 - fix: args-less events type incorrect ([#575](https://github.com/johnsoncodehk/volar/issues/575))

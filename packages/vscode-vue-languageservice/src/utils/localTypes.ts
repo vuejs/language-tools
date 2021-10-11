@@ -144,7 +144,7 @@ export ${genConstructorOverloads()}
 // see: https://github.com/johnsoncodehk/volar/issues/60
 function genConstructorOverloads() {
 	let code = `type ConstructorOverloads<T> =\n`;
-	for (let i = 1; i <= 8; i++) {
+	for (let i = 8; i >= 1; i--) {
 		code += `// ${i}\n`;
 		code += `T extends {\n`;
 		for (let j = 1; j <= i; j++) {
