@@ -1,6 +1,6 @@
 # Changelog
 
-## Not release yet
+## 0.28.3
 
 - feat: add option to disable component auto import ([#440](https://github.com/johnsoncodehk/volar/issues/440))
 - feat: add `volar.takeOverMode.enabled` setting to allow enable take over mode even TS extension active
