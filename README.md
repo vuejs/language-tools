@@ -46,6 +46,22 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 See https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#using
 
+## Limitations
+
+- Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
+
+## Credits
+
+- [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.
+- [angular](https://github.com/angular/angular) shows how TS server plugin working with language service.
+- Syntax highlight is rewritten by [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
+- https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example shows how to inject vue syntax highlight to markdown.
+- Out of the box formatting working by:
+  - [prettyhtml](https://github.com/Prettyhtml/prettyhtml): html
+  - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
+  - [prettier](https://github.com/prettier/prettier): css, less, scss, postcss
+  - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
+
 ## By-product
 
 - [@volar/server](https://www.npmjs.com/package/@volar/server): Bridging module for LSP <-> vscode-vue-languageservice.
