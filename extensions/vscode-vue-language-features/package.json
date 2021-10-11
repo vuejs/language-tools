@@ -264,6 +264,11 @@
 					"default": "auto-kebab",
 					"description": "Preferred attr name case."
 				},
+				"volar.completion.autoImportComponent": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enabled auto-import for component with tag completion."
+				},
 				"volar.preview.port": {
 					"type": "number",
 					"default": 3333,

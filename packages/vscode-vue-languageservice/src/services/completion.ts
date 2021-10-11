@@ -110,6 +110,8 @@ export function register(
 		position: vscode.Position,
 		context?: vscode.CompletionContext,
 		/** internal */
+		isEnabledComponentAutoImport?: () => Promise<boolean>,
+		/** internal */
 		getNameCases?: (uri: string) => Promise<{
 			tagNameCase: 'both' | 'kebabCase' | 'pascalCase',
 			attrNameCase: 'kebabCase' | 'camelCase',
@@ -365,7 +367,8 @@ export function register(
 					}
 				}
 				const descriptor = sourceFile.getDescriptor();
-				if (descriptor.script || descriptor.scriptSetup) {
+				const enabledComponentAutoImport = (isEnabledComponentAutoImport ? await isEnabledComponentAutoImport() : undefined) ?? true;
+				if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 					for (const vueFile of sourceFiles.getAll()) {
 						let baseName = path.basename(vueFile.uri, '.vue');
 						if (baseName.toLowerCase() === 'index') {

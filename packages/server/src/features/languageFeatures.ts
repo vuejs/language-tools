@@ -22,6 +22,7 @@ export function register(
 				handler.textDocument.uri,
 				handler.position,
 				handler.context,
+				() => connection.workspace.getConfiguration('volar.completion.autoImportComponent'),
 				async (uri) => {
 					if (features.completion?.getDocumentNameCasesRequest) {
 						return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
