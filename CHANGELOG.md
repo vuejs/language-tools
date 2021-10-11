@@ -6,6 +6,7 @@
 - fix: only the last typed event of defineEmits gets recognized ([#578](https://github.com/johnsoncodehk/volar/issues/578))
 - fix: syntax highlight incorrect if event name has number
 - fix: dynamic slot syntax highlight incorrect
+- fix: multi-line event expression formatting indent incorrect ([#579](https://github.com/johnsoncodehk/volar/issues/579))
 
 ## 0.28.2
 

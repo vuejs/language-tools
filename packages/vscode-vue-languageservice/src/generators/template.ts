@@ -732,7 +732,7 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
-						formatBrackets.empty,
+						formatBrackets.round,
 					);
 					tsCodeGen.addText(`\n)};\n`);
 				}
@@ -776,7 +776,7 @@ export function generate(
 								vueTag: 'template',
 								capabilities: capabilitiesSet.all,
 							},
-							formatBrackets.empty,
+							formatBrackets.round,
 						);
 					}
 					else {
