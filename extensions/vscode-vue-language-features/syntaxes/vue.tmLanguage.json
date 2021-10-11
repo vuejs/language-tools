@@ -720,7 +720,7 @@
 			]
 		},
 		"vue-directives-original": {
-			"begin": "(?:\\b(v-)|(:|@|#))([a-zA-Z0-9\\-_]*)(\\:([a-zA-Z0-9\\-_]+))?(?:\\.([a-zA-Z0-9\\-_]+))*\\s*(=)",
+			"begin": "(?:\\b(v-)|(:|@|#))(\\[?)([a-zA-Z0-9\\-_]*)(\\]?)(\\:([a-zA-Z0-9\\-_]+))?(?:\\.([a-zA-Z0-9\\-_]+))*\\s*(=)",
 			"captures": {
 				"1": {
 					"name": "entity.other.attribute-name.html.vue"
@@ -729,18 +729,24 @@
 					"name": "punctuation.separator.key-value.html.vue"
 				},
 				"3": {
-					"name": "entity.other.attribute-name.html.vue"
+					"name": "punctuation.separator.key-value.html.vue"
 				},
 				"4": {
 					"name": "entity.other.attribute-name.html.vue"
 				},
 				"5": {
-					"name": "entity.other.attribute-name.html.vue"
+					"name": "punctuation.separator.key-value.html.vue"
 				},
 				"6": {
 					"name": "entity.other.attribute-name.html.vue"
 				},
 				"7": {
+					"name": "entity.other.attribute-name.html.vue"
+				},
+				"8": {
+					"name": "entity.other.attribute-name.html.vue"
+				},
+				"9`": {
 					"name": "punctuation.separator.key-value.html.vue"
 				}
 			},
