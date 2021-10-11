@@ -164,7 +164,11 @@ export function deactivate(): Thenable<any> | undefined {
 }
 
 export function takeOverModeEnabled() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('takeOverBuiltinTsExtension') && !vscode.extensions.getExtension('vscode.typescript-language-features');
+	const status = vscode.workspace.getConfiguration('volar').get<boolean | 'auto'>('takeOverMode.enabled');
+	if (status === 'auto') {
+		return !vscode.extensions.getExtension('vscode.typescript-language-features');
+	}
+	return status;
 }
 
 function lowPowerModeEnabled() {

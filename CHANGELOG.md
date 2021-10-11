@@ -3,6 +3,7 @@
 ## Not release yet
 
 - feat: add option to disable component auto import ([#440](https://github.com/johnsoncodehk/volar/issues/440))
+- feat: add `volar.takeOverMode.enabled` setting to allow enable take over mode even TS extension active
 - fix: only the last typed event of defineEmits gets recognized ([#578](https://github.com/johnsoncodehk/volar/issues/578))
 - fix: syntax highlight incorrect if event name has number
 - fix: dynamic slot syntax highlight incorrect
