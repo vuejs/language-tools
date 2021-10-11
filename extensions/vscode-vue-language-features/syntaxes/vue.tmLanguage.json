@@ -720,7 +720,7 @@
 			]
 		},
 		"vue-directives-original": {
-			"begin": "(?:\\b(v-)|(:|@|#))([a-zA-Z0-9\\-_]*)(?:\\:([a-zA-Z\\-_]+))?(?:\\.([a-zA-Z\\-_]+))*\\s*(=)",
+			"begin": "(?:\\b(v-)|(:|@|#))([a-zA-Z0-9\\-_]*)(\\:([a-zA-Z0-9\\-_]+))?(?:\\.([a-zA-Z0-9\\-_]+))*\\s*(=)",
 			"captures": {
 				"1": {
 					"name": "entity.other.attribute-name.html.vue"
