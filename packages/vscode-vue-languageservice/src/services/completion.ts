@@ -154,24 +154,24 @@ export function register(
 
 		const tsResult = await getTsResult();
 		cache = { uri, tsResult, emmetResult };
-		if (tsResult) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
+		if (tsResult?.items.length) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
 
 		// precede html for support inline css service
 		const cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
 		cache = { uri, cssResult, emmetResult };
-		if (cssResult) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
+		if (cssResult?.items.length) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
 
 		const jsonResult = sourceFile ? await getJsonResult(sourceFile) : undefined;
 		cache = { uri, jsonResult, emmetResult };
-		if (jsonResult) return emmetResult ? combineResults(jsonResult, emmetResult) : jsonResult;
+		if (jsonResult?.items.length) return emmetResult ? combineResults(jsonResult, emmetResult) : jsonResult;
 
 		const htmlResult = sourceFile ? await getHtmlResult(sourceFile) : undefined;
 		cache = { uri, htmlResult, emmetResult };
-		if (htmlResult) return emmetResult ? combineResults(htmlResult, emmetResult) : htmlResult;
+		if (htmlResult?.items.length) return emmetResult ? combineResults(htmlResult, emmetResult) : htmlResult;
 
 		const vueResult = sourceFile ? await getVueResult(sourceFile) : undefined;
 		cache = { uri, vueResult, emmetResult };
-		if (vueResult) return emmetResult ? combineResults(vueResult, emmetResult) : vueResult;
+		if (vueResult?.items.length) return emmetResult ? combineResults(vueResult, emmetResult) : vueResult;
 
 		cache = { uri, emmetResult };
 		return emmetResult;
