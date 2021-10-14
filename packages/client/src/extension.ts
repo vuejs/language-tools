@@ -31,8 +31,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	function tryActivate() {
 
-		if (!vscode.window.activeTextEditor)
+		if (!vscode.window.activeTextEditor) {
+			// onWebviewPanel:preview
+			doActivate(context);
+			stopCheck.dispose();
 			return;
+		}
 
 		const currentlangId = vscode.window.activeTextEditor.document.languageId;
 		if (currentlangId === 'vue') {
