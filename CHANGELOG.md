@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.28.4
+
+- feat: support for open `*.ts` to enable take over mode
+- fix: `any` type component should not show red color
+- fix: auto-import should not from virtual file `__VLS_vue` ([#584](https://github.com/johnsoncodehk/volar/issues/584))
+- fix: path auto-complete not working in template ([#589](https://github.com/johnsoncodehk/volar/issues/589))
+
 ## 0.28.3
 
 - feat: add option to disable component auto import ([#440](https://github.com/johnsoncodehk/volar/issues/440))
