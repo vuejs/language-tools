@@ -125,6 +125,7 @@ export function createSourceFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
+		context.isVue2Mode,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -136,11 +137,11 @@ export function createSourceFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
+		context.isVue2Mode,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,
 		document,
-		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
 		computed(() => descriptor.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),

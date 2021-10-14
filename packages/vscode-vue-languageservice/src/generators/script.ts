@@ -5,6 +5,7 @@ import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { TextRange } from '../parsers/types';
+import { getVueLibraryName } from '../utils/localTypes';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function generate(
@@ -21,6 +22,7 @@ export function generate(
 	scriptSetupRanges: ScriptSetupRanges | undefined,
 	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
 	getSfcStyles: () => ReturnType<(typeof import('../use/useSfcStyles'))['useSfcStyles']>['textDocuments']['value'],
+	isVue2: boolean,
 ) {
 
 	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
@@ -210,7 +212,7 @@ export function generate(
 	function writeExportComponent() {
 		if (shouldAddExportDefault) {
 			const start = codeGen.getText().length;
-			codeGen.addText(`export default (await import('./__VLS_vue')).defineComponent({\n`);
+			codeGen.addText(`export default (await import('${getVueLibraryName(isVue2)}')).defineComponent({\n`);
 			overlapMapRanges.push({
 				start,
 				end: codeGen.getText().length,
@@ -218,7 +220,7 @@ export function generate(
 		}
 		else {
 			codeGen.addText(`\n`);
-			codeGen.addText(`export const __VLS_component = (await import('./__VLS_vue')).defineComponent({\n`);
+			codeGen.addText(`export const __VLS_component = (await import('${getVueLibraryName(isVue2)}')).defineComponent({\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;

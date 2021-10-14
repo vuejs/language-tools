@@ -6,16 +6,16 @@ const camelCaseText = [
 	': S',
 ].join('\n');
 
-export const vueFileName = '__VLS_vue.ts';
+export function getVueLibraryName(isVue2: boolean) {
+	return isVue2 ? '@vue/runtime-dom' : 'vue';
+}
+
 export const typesFileName = '__VLS_types.ts';
 
-export const vueCode = `
-export * from '@vue/runtime-dom';
-export * from 'vue';
-`.trim();
-
-export const typesCode = `
-import * as vue from './__VLS_vue';
+export function getTypesCode(isVue2: boolean) {
+	const libName = getVueLibraryName(isVue2);
+	return `
+import * as vue from '${libName}';
 import type {
 	FunctionalComponent,
 	HTMLAttributes,
@@ -28,7 +28,7 @@ import type {
 	ObjectDirective,
 	FunctionDirective,
 	GlobalComponents as GlobalComponents_0,
-} from './__VLS_vue';
+} from '${libName}';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsFunctionalComponent<T> = T extends (...args: any) => JSX.Element ? true : false;
@@ -139,6 +139,7 @@ export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [
 
 export ${genConstructorOverloads()}
 `;
+}
 
 // TODO: not working for overloads > n (n = 8)
 // see: https://github.com/johnsoncodehk/volar/issues/60

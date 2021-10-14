@@ -17,6 +17,7 @@ export function useSfcScriptGen(
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
+	isVue2: boolean,
 ) {
 
 	let version = 0;
@@ -36,6 +37,7 @@ export function useSfcScriptGen(
 			scriptSetupRanges.value,
 			() => htmlGen.value,
 			() => sfcStyles.value,
+			isVue2,
 		)
 	);
 	const lang = computed(() => {
@@ -53,16 +55,14 @@ export function useSfcScriptGen(
 		);
 	});
 	const textDocumentTs = computed(() => {
-		if (lsType === 'template') {
-			if (lang.value === 'js' || lang.value === 'jsx') {
-				const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
-				return TextDocument.create(
-					`${vueUri}.__VLS_script_ts.${tsLang}`,
-					shared.syntaxToLanguageId(tsLang),
-					textDocument.value.version,
-					textDocument.value.getText(),
-				);
-			}
+		if (lsType === 'template' && ['js', 'jsx'].includes(lang.value)) {
+			const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
+			return TextDocument.create(
+				`${vueUri}.__VLS_script_ts.${tsLang}`,
+				shared.syntaxToLanguageId(tsLang),
+				textDocument.value.version,
+				textDocument.value.getText(),
+			);
 		}
 	});
 	const sourceMap = computed(() => {

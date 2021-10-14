@@ -179,7 +179,7 @@ export function createSourceFiles() {
 		}),
 		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: vscode.Position, end?: vscode.Position) {
 
-			if (uri.endsWith(`/${localTypes.typesFileName}`) || uri.endsWith(`/${localTypes.vueFileName}`))
+			if (uri.endsWith(`/${localTypes.typesFileName}`))
 				return;
 
 			if (end === undefined)
@@ -209,7 +209,7 @@ export function createSourceFiles() {
 		}),
 		fromTsLocation2: untrack(function* (lsType: 'script' | 'template', uri: string, start: number, end?: number) {
 
-			if (uri.endsWith(`/${localTypes.typesFileName}`) || uri.endsWith(`/${localTypes.vueFileName}`))
+			if (uri.endsWith(`/${localTypes.typesFileName}`))
 				return;
 
 			if (end === undefined)

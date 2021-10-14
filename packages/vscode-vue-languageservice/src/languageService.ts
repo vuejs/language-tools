@@ -137,6 +137,13 @@ export function createLanguageService(
 
 	const { typescript: ts } = modules;
 
+	// TODO: not working for vue-tsc --project flag
+	const tsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'tsconfig.json');
+	const jsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'jsconfig.json');
+	const configFile = ts.sys.fileExists(tsconfigFile) ? tsconfigFile : ts.sys.fileExists(jsconfigFile) ? jsconfigFile : undefined;
+	const config = configFile ? shared.createParsedCommandLine(ts, ts.sys, configFile) : undefined;
+	const isVue2 = config?.raw.vueCompilerOptions?.experimentalCompatMode === 2;
+
 	let vueProjectVersion: string | undefined;
 	let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
 	let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
@@ -154,8 +161,7 @@ export function createLanguageService(
 	const scriptTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(scriptTsHost) : ts.createLanguageService(scriptTsHost);
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
-	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.typesCode);
-	const localVueScript = ts.ScriptSnapshot.fromString(localTypes.vueCode);
+	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
 	const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
@@ -190,14 +196,8 @@ export function createLanguageService(
 		},
 	}
 
-	// TODO: not working for vue-tsc --project flag
-	const tsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'tsconfig.json');
-	const jsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'jsconfig.json');
-	const configFile = ts.sys.fileExists(tsconfigFile) ? tsconfigFile : ts.sys.fileExists(jsconfigFile) ? jsconfigFile : undefined;
-	const config = configFile ? shared.createParsedCommandLine(ts, ts.sys, configFile) : undefined;
-
 	const context: ApiLanguageServiceContext = {
-		isVue2Mode: config?.raw.vueCompilerOptions?.experimentalCompatMode === 2,
+		isVue2Mode: isVue2,
 		modules: {
 			typescript: modules.typescript,
 			emmet,
@@ -278,15 +278,7 @@ export function createLanguageService(
 			},
 			getLocalTypesFiles: () => {
 				const fileNames = getLocalTypesFiles();
-				const code = localTypes.typesCode;
-				return {
-					fileNames,
-					code,
-				};
-			},
-			getLocalVueFiles: () => {
-				const fileNames = getLocalVueFiles();
-				const code = localTypes.vueCode;
+				const code = localTypes.getTypesCode(isVue2);
 				return {
 					fileNames,
 					code,
@@ -302,9 +294,6 @@ export function createLanguageService(
 
 	function getLocalTypesFiles() {
 		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
-	}
-	function getLocalVueFiles() {
-		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypes.vueFileName));
 	}
 	function createTsPluginProxy() {
 
@@ -560,10 +549,7 @@ export function createLanguageService(
 		return tsHost;
 
 		function getScriptFileNames() {
-			const tsFileNames = [
-				...getLocalTypesFiles(),
-				...getLocalVueFiles(),
-			];
+			const tsFileNames = getLocalTypesFiles();
 
 			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
 				tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts
@@ -581,7 +567,7 @@ export function createLanguageService(
 		function getScriptVersion(fileName: string) {
 			const uri = shared.fsPathToUri(fileName);
 			const basename = upath.basename(fileName);
-			if (basename === localTypes.typesFileName || basename === localTypes.vueFileName) {
+			if (basename === localTypes.typesFileName) {
 				return '0';
 			}
 			let doc = sourceFiles.getTsDocuments(lsType).get(uri);
@@ -599,9 +585,6 @@ export function createLanguageService(
 			const basename = upath.basename(fileName);
 			if (basename === localTypes.typesFileName) {
 				return localTypesScript;
-			}
-			if (basename === localTypes.vueFileName) {
-				return localVueScript;
 			}
 			const uri = shared.fsPathToUri(fileName);
 			const doc = sourceFiles.getTsDocuments(lsType).get(uri);
