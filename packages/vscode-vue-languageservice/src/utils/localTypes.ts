@@ -33,7 +33,7 @@ import type {
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsFunctionalComponent<T> = T extends (...args: any) => JSX.Element ? true : false;
 type IsConstructorComponent<T> = T extends new (...args: any) => JSX.ElementClass ? true : false;
-type IsComponent<T> = IsConstructorComponent<T> extends true ? true : IsFunctionalComponent<T> extends true ? true : false;
+type IsComponent<T> = IsConstructorComponent<T> extends false ? IsFunctionalComponent<T> extends false ? false : true : true; // extends false first to support any type component
 type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true ? K : never]: any };
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
