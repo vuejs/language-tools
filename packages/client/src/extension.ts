@@ -135,8 +135,6 @@ async function doActivate(context: vscode.ExtensionContext) {
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	whitelist.activate(context, clients);
 
-	startEmbeddedLanguageServices();
-
 	async function registarLowPowerModeChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
 			const nowIsLowPowerMode = lowPowerModeEnabled();
@@ -269,14 +267,4 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 	context.subscriptions.push(client.start());
 
 	return client;
-}
-
-function startEmbeddedLanguageServices() {
-
-	// track https://github.com/microsoft/vscode/issues/125748
-	const ts = vscode.extensions.getExtension('vscode.typescript-language-features');
-
-	if (ts && !ts.isActive) {
-		ts.activate();
-	}
 }
