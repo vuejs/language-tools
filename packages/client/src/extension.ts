@@ -26,6 +26,30 @@ let lowPowerMode = false;
 
 export async function activate(context: vscode.ExtensionContext) {
 
+	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
+	tryActivate();
+
+	function tryActivate() {
+
+		if (!vscode.window.activeTextEditor)
+			return;
+
+		const currentlangId = vscode.window.activeTextEditor.document.languageId;
+		if (currentlangId === 'vue') {
+			doActivate(context);
+			stopCheck.dispose();
+		}
+
+		const takeOverMode = takeOverModeEnabled();
+		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentlangId)) {
+			doActivate(context);
+			stopCheck.dispose();
+		}
+	}
+}
+
+async function doActivate(context: vscode.ExtensionContext) {
+
 	lowPowerMode = lowPowerModeEnabled();
 	if (lowPowerMode) {
 		vscode.window

@@ -25,6 +25,10 @@
 	],
 	"activationEvents": [
 		"onLanguage:vue",
+		"onLanguage:javascript",
+		"onLanguage:typescript",
+		"onLanguage:javascriptreact",
+		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
 	"main": "node_modules/@volar/client/out/extension.js",
