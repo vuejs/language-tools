@@ -39,7 +39,7 @@
   resolved "https://registry.yarnpkg.com/@emmetio/scanner/-/scanner-1.0.0.tgz#065b2af6233fe7474d44823e3deb89724af42b5f"
   integrity sha512-8HqW8EVqjnCmWXVpqAOZf+EGESdkR27odcMMMGefgKXtar00SoYNSryGv//TELI4T3QFsECo78p+0lmalk/CFA==
 
-"@types/pug@^2.0.5":
+"@types/pug@^2.0.5", "@types/pug@latest":
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/@types/pug/-/pug-2.0.5.tgz#69bc700934dd473c7ab97270bd2dbacefe562231"
   integrity sha512-LOnASQoeNZMkzexRuyqcBBDZ6rS+rQxUMkmj5A0PkhhiSZivLIuz6Hxyr1mkGoEZEkk66faROmpMi4fFkrKsBA==
@@ -48,16 +48,6 @@
   version "7.3.8"
   resolved "https://registry.yarnpkg.com/@types/semver/-/semver-7.3.8.tgz#508a27995498d7586dcecd77c25e289bfaf90c59"
   integrity sha512-D/2EJvAlCEtYFEYmmlGwbGXuK886HzyCc3nZX/tkFTQdEU8jZDAgiv08P162yB17y4ZXZoq7yFAnW4GDBb9Now==
-
-"@volar/html2pug@0.28.1":
-  version "0.28.1"
-  resolved "https://registry.yarnpkg.com/@volar/html2pug/-/html2pug-0.28.1.tgz#6eb5d6a44bacc0f9e8cdc4ae8426e28f30437459"
-  integrity sha512-8gwAhsdc2hZ5dM4KJHiLnIReeGoXRMFUzotJiUOvjRb2E4PCC5SsWq0h6KcEbhZoO2piKm28QiFWB4TAn0w/hg==
-  dependencies:
-    domelementtype "^2.2.0"
-    domhandler "^4.2.2"
-    htmlparser2 "^7.1.2"
-    pug "^3.0.2"
 
 "@vscode/emmet-helper@^2.8.0":
   version "2.8.0"

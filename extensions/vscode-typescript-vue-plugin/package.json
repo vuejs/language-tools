@@ -28,6 +28,7 @@
 	},
 	"workspaces": [
 		"../../packages/code-gen",
+		"../../packages/html2pug",
 		"../../packages/shared",
 		"../../packages/source-map",
 		"../../packages/transforms",
