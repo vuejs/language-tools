@@ -50,7 +50,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),
-		findWorkspaceSymbols: workspaceSymbols.register(languageService, getValidTextDocument),
+		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
 		doComplete: completions2.register(languageService, getValidTextDocument, host, ts),
 		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, host),
 		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),

@@ -40,6 +40,7 @@ export interface ServerInitializationOptions {
 		}
 		documentHighlight?: boolean
 		documentLink?: boolean
+		workspaceSymbol?: boolean
 		codeLens?: boolean | {
 			/**
 			 * {@link __requests.ShowReferencesNotification}

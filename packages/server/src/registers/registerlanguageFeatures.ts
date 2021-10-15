@@ -72,6 +72,9 @@ export function register(
 			resolveProvider: false, // TODO
 		};
 	}
+	if (features.workspaceSymbol) {
+		server.workspaceSymbolProvider = true;
+	}
 	if (features.codeLens) {
 		server.codeLensProvider = {
 			resolveProvider: true,

@@ -138,6 +138,24 @@ export function register(
 			?.get(handler.textDocument.uri)?.service
 			.findDocumentLinks(handler.textDocument.uri);
 	});
+	connection.onWorkspaceSymbol(async (handler, token) => {
+		const projects = getProjects();
+		if (projects) {
+
+			const _projects = projects.projects.size ? projects.projects : projects.inferredProjects;
+			let results: vscode.SymbolInformation[] = [];
+
+			for (const [_, project] of _projects) {
+
+				if (token.isCancellationRequested)
+					return;
+
+				results = results.concat(await project.getLanguageService().findWorkspaceSymbols(handler.query));
+			}
+
+			return results;
+		}
+	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
 		const items = await getProjects()
 			?.get(handler.textDocument.uri)?.service

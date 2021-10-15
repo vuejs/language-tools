@@ -5,9 +5,8 @@ import { parseKindModifier } from '../utils/modifiers';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-function getSymbolKind(item: ts.NavigationBarItem): vscode.SymbolKind {
+function getSymbolKind(item: ts.NavigateToItem): vscode.SymbolKind {
 	switch (item.kind) {
-		case PConst.Kind.module: return vscode.SymbolKind.Module;
 		case PConst.Kind.method: return vscode.SymbolKind.Method;
 		case PConst.Kind.enum: return vscode.SymbolKind.Enum;
 		case PConst.Kind.enumMember: return vscode.SymbolKind.EnumMember;
@@ -23,47 +22,37 @@ function getSymbolKind(item: ts.NavigationBarItem): vscode.SymbolKind {
 	}
 }
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string): vscode.SymbolInformation[] => {
-		const document = getTextDocument(uri);
-		if (!document) return [];
+export function register(languageService: ts.LanguageService, getTextDocument2: (uri: string) => TextDocument | undefined) {
+	return (query: string): vscode.SymbolInformation[] => {
 
-		const fileName = shared.uriToFsPath(document.uri);
-		const barItems = languageService.getNavigationBarItems(fileName);
-		const output: vscode.SymbolInformation[] = [];
-		barItemsWorker(document, barItems);
+		return languageService.getNavigateToItems(query)
+			.filter(item => item.containerName || item.kind !== 'alias')
+			.map(toSymbolInformation)
+			.filter(shared.notEmpty);
 
-		return output;
-
-		function barItemsWorker(document: TextDocument, barItems: ts.NavigationBarItem[], parentName?: string) {
-			for (const barItem of barItems) {
-				barItemWorker(document, barItem, parentName);
-			}
-		}
-		function barItemWorker(document: TextDocument, barItem: ts.NavigationBarItem, parentName?: string) {
-			for (const span of barItem.spans) {
-				const item = toSymbolInformation(document, barItem, span, parentName);
-				output.push(item);
-				barItemsWorker(document, barItem.childItems, barItem.text);
-			}
-		}
-		function toSymbolInformation(document: TextDocument, item: ts.NavigationBarItem, span: ts.TextSpan, containerName?: string) {
+		function toSymbolInformation(item: ts.NavigateToItem) {
 			const label = getLabel(item);
-			const info = vscode.SymbolInformation.create(
-				label,
-				getSymbolKind(item),
-				vscode.Range.create(document.positionAt(span.start), document.positionAt(span.start + span.length)),
-				document.uri,
-				containerName,
-			);
-			const kindModifiers = item.kindModifiers ? parseKindModifier(item.kindModifiers) : undefined;
-			if (kindModifiers?.has(PConst.KindModifiers.deprecated)) {
-				info.deprecated = true;
+			const uri = shared.fsPathToUri(item.fileName);
+			const document = getTextDocument2(uri);
+			if (document) {
+				const range = vscode.Range.create(document.positionAt(item.textSpan.start), document.positionAt(item.textSpan.start + item.textSpan.length));
+				const info = vscode.SymbolInformation.create(
+					label,
+					getSymbolKind(item),
+					range,
+					uri,
+					item.containerName || '',
+				);
+				const kindModifiers = item.kindModifiers ? parseKindModifier(item.kindModifiers) : undefined;
+				if (kindModifiers?.has(PConst.KindModifiers.deprecated)) {
+					info.tags = [vscode.SymbolTag.Deprecated];
+				}
+				return info;
 			}
-			return info;
 		}
-		function getLabel(item: ts.NavigationBarItem) {
-			const label = item.text;
+
+		function getLabel(item: ts.NavigateToItem) {
+			const label = item.name;
 			if (item.kind === 'method' || item.kind === 'function') {
 				return label + '()';
 			}

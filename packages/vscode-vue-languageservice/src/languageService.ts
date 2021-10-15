@@ -36,6 +36,7 @@ import * as executeCommand from './services/executeCommand';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
+import * as workspaceSymbol from './services/workspaceSymbol';
 import * as d3 from './services/d3';
 // context
 import * as fs from 'fs';
@@ -254,6 +255,7 @@ export function createLanguageService(
 		getCodeLens: publicApiHook(codeLens.register(context), false),
 		findDocumentHighlights: publicApiHook(documentHighlight.register(context), false),
 		findDocumentLinks: publicApiHook(documentLink.register(context), false),
+		findWorkspaceSymbols: publicApiHook(workspaceSymbol.register(context), false),
 		dispose: () => {
 			scriptTsLs.dispose();
 			templateTsLs.dispose();

@@ -237,6 +237,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 			...((mode === 'doc' || (mode === 'api' && lowPowerMode)) ? {
 				documentHighlight: true,
 				documentLink: true,
+				workspaceSymbol: true,
 				codeLens: { showReferencesNotification: true },
 				semanticTokens: true,
 				diagnostics: { getDocumentVersionRequest: true },
