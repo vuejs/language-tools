@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.28.6
+
+- feat: support for emit SFC dts by vue-tsc (See https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc#using)
+
 ## 0.28.5
 
 - feat: support search workspace symbols (command / ctrl + T) ([#549](https://github.com/johnsoncodehk/volar/issues/549))

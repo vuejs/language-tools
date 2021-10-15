@@ -10,7 +10,7 @@ Roadmap:
 - [x] Use released LSP module
 - [x] Make `typescript` as peerDependencies
 - [x] Cleaner dependencies (remove `prettyhtml`, `prettier` etc.) (with `vscode-vue-languageservice` version >= 0.26.4)
-- [x] *.vue.d.ts build support
+- [x] dts emit support
 - [ ] Watch mode support
 
 ## Using
