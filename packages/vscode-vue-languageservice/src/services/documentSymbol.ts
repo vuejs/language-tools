@@ -22,7 +22,7 @@ export function register(
 		if (!sourceFile) {
 			// take over mode
 			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
-			return dummyTsLs.findWorkspaceSymbols(document.uri);
+			return dummyTsLs.findDocumentSymbols(document.uri);
 		}
 
 		const vueResult = getVueResult(sourceFile);
@@ -100,7 +100,7 @@ export function register(
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
 				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
-				let symbols = dummyTsLs.findWorkspaceSymbols(sourceMap.mappedDocument.uri);
+				const symbols = dummyTsLs.findDocumentSymbols(sourceMap.mappedDocument.uri);
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end);
 					return vueRange ? vscode.Location.create(document.uri, vueRange) : undefined;

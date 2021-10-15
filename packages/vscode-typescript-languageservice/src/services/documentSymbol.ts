@@ -27,20 +27,27 @@ const getSymbolKind = (kind: string): vscode.SymbolKind => {
 };
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
-	return (uri: string): vscode.DocumentSymbol[] => {
+	return (uri: string): vscode.SymbolInformation[] => {
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const barItems = languageService.getNavigationTree(fileName);
-		const result: vscode.DocumentSymbol[] = [];
-		convertNavTree(document, barItems);
+
+		// The root represents the file. Ignore this when showing in the UI
+		const result: vscode.SymbolInformation[] = [];
+		if (barItems.childItems) {
+			for (const item of barItems.childItems) {
+				convertNavTree(document, item, undefined);
+			}
+		}
 
 		return result;
 
 		function convertNavTree(
 			document: TextDocument,
 			item: ts.NavigationTree,
+			parent: ts.NavigationTree | undefined,
 		): boolean {
 			let shouldInclude = shouldInclueEntry(item);
 			if (!shouldInclude && !item.childItems?.length) {
@@ -49,13 +56,19 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 			for (const span of item.spans) {
 				const range = vscode.Range.create(document.positionAt(span.start), document.positionAt(span.start + span.length));
-				const selectionRange = item.nameSpan ? vscode.Range.create(document.positionAt(item.nameSpan.start), document.positionAt(item.nameSpan.start + item.nameSpan.length)) : range;
-				const symbolInfo = vscode.DocumentSymbol.create(
+				const symbolInfo = vscode.SymbolInformation.create(
 					item.text,
-					'',
 					getSymbolKind(item.kind),
 					range,
-					selectionRange);
+					undefined,
+					parent?.text,
+				);
+
+				if (item.childItems) {
+					for (const child of item.childItems) {
+						convertNavTree(document, child, item);
+					}
+				}
 
 				const kindModifiers = parseKindModifier(item.kindModifiers);
 				if (kindModifiers.has(PConst.KindModifiers.deprecated)) {
