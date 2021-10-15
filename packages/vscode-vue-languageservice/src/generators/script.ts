@@ -5,7 +5,7 @@ import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { TextRange } from '../parsers/types';
-import { getVueLibraryName } from '../utils/localTypes';
+import { genConstructorOverloads, getVueLibraryName } from '../utils/localTypes';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function generate(
@@ -29,6 +29,11 @@ export function generate(
 	const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
 	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
 	const overlapMapRanges: SourceMaps.Range[] = [];
+	const usedTypes = {
+		DefinePropsToOptions: false,
+		mergePropDefaults: false,
+		ConstructorOverloads: false,
+	};
 
 	if (lsType === 'template') {
 		codeGen.addText('// @ts-nocheck\n');
@@ -55,6 +60,25 @@ export function generate(
 
 	if (lsType === 'template' || shouldAddExportDefault)
 		writeExportComponent();
+
+	if (usedTypes.DefinePropsToOptions) {
+		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('vue').PropType<T[K] extends undefined ? never : T[K]> } : { type: import('vue').PropType<T[K]>, required: true } };\n`);
+	}
+	if (usedTypes.mergePropDefaults) {
+		codeGen.addText(`declare function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
+			[K in keyof P]: K extends keyof D ? P[K] & {
+				default: D[K]
+			} : P[K]
+		}\n`);
+	}
+	if (usedTypes.ConstructorOverloads) {
+		if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
+			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
+		}
+		else {
+			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', 8));
+		}
+	}
 
 	if (lsType === 'template') {
 		writeExportOptions();
@@ -231,10 +255,16 @@ export function generate(
 		if (scriptSetup && scriptSetupRanges) {
 			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
 				codeGen.addText(`props: (`);
-				if (scriptSetupRanges.withDefaultsArg) codeGen.addText(`(await import('./__VLS_types')).mergePropDefaults(`);
-				if (scriptSetupRanges.propsRuntimeArg) mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				if (scriptSetupRanges.withDefaultsArg) {
+					usedTypes.mergePropDefaults = true;
+					codeGen.addText(`__VLS_mergePropDefaults(`);
+				}
+				if (scriptSetupRanges.propsRuntimeArg) {
+					mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				}
 				else if (scriptSetupRanges.propsTypeArg) {
-					codeGen.addText(`{} as import('./__VLS_types').DefinePropsToOptions<`);
+					usedTypes.DefinePropsToOptions = true;
+					codeGen.addText(`{} as __VLS_DefinePropsToOptions<`);
 					mapSubText('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 					codeGen.addText(`>`);
 				}
@@ -251,7 +281,8 @@ export function generate(
 				codeGen.addText(`),\n`);
 			}
 			else if (scriptSetupRanges.emitsTypeArg) {
-				codeGen.addText(`emits: ({} as import('./__VLS_types').ConstructorOverloads<`);
+				usedTypes.ConstructorOverloads = true;
+				codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
 				mapSubText('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codeGen.addText(`>),\n`);
 			}

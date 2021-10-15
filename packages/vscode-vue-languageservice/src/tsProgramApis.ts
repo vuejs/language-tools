@@ -30,9 +30,9 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
 		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getGlobalDiagnostics(cancellationToken))).flat();
 	}
-	function emit(targetSourceFile?: ts.SourceFile, writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram('script').emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
-		const templateResult = getProgram('template').emit(targetSourceFile, writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
+	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
+		const scriptResult = getProgram('script').emit(targetSourceFile, ts.sys.writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const templateResult = getProgram('template').emit(targetSourceFile, undefined, cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,

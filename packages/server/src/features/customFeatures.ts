@@ -28,7 +28,7 @@ export function register(
 		for (const [_, service] of projects.projects.size ? projects.projects : projects.inferredProjects) {
 			const ls = service.getLanguageServiceDontCreate();
 			if (!ls) continue;
-			const localTypes = ls.__internal__.getLocalTypesFiles();
+			const localTypes = ls.__internal__.getLocalTypesFiles(lsType);
 			for (const fileName of localTypes.fileNames) {
 				fs.writeFile(fileName, localTypes.code, () => { });
 			}

@@ -38,7 +38,6 @@ type IsComponent_Strict<T> = IsConstructorComponent<T> extends true ? true : IsF
 type ComponentKeys<T> = keyof { [K in keyof T as IsComponent_Loose<T[K]> extends true ? K : never]: any };
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
-type NonUndefinedable<T> = T extends undefined ? never : T;
 ${camelCaseText};
 
 export type GlobalComponents = PickNotAny<GlobalComponents_0, {}> & Pick<typeof vue,
@@ -54,11 +53,6 @@ export declare function getVforKeyType<T>(source: T): typeof Symbol.iterator ext
 export declare function getVforIndexType<T>(source: T): typeof Symbol.iterator extends keyof T ? undefined : number;
 export declare function getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 export declare function pickForItem<T>(source: T): T extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T[keyof T];
-export declare function mergePropDefaults<P, D>(props: P, defaults: D): {
-	[K in keyof P]: K extends keyof D ? P[K] & {
-		default: D[K]
-	} : P[K]
-}
 export declare function directiveFunction<T>(dir: T):
 	T extends ObjectDirective<infer E, infer V> ? (value: V) => void
 	: T extends FunctionDirective<infer E, infer V> ? (value: V) => void
@@ -133,20 +127,29 @@ export type FirstFunction<F0, F1> =
 	NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 : unknown;
 export type GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 export type GlobalAttrs = GlobalAttrsBase & HTMLAttributes;
-export type DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: PropType<NonUndefinedable<T[K]>> } : { type: PropType<T[K]>, required: true } };
 export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;
 export type ConvertInvalidComponents<T> = { [K in keyof T]: IsComponent_Strict<T[K]> extends true ? T[K] : any };
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-
-export ${genConstructorOverloads()}
 `;
 }
 
 // TODO: not working for overloads > n (n = 8)
 // see: https://github.com/johnsoncodehk/volar/issues/60
-function genConstructorOverloads() {
-	let code = `type ConstructorOverloads<T> =\n`;
-	for (let i = 8; i >= 1; i--) {
+export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
+	let code = `type ${name}<T> =\n`;
+	if (nums === undefined) {
+		for (let i = 8; i >= 1; i--) {
+			gen(i);
+		}
+	}
+	else {
+		gen(nums);
+	}
+	code += `// 0\n`
+	code += `unknown;\n`
+	return code;
+
+	function gen(i: number) {
 		code += `// ${i}\n`;
 		code += `T extends {\n`;
 		for (let j = 1; j <= i; j++) {
@@ -159,7 +162,4 @@ function genConstructorOverloads() {
 		}
 		code += `) :\n`;
 	}
-	code += `// 0\n`
-	code += `unknown;\n`
-	return code;
 }

@@ -279,8 +279,8 @@ export function createLanguageService(
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
 			},
-			getLocalTypesFiles: () => {
-				const fileNames = getLocalTypesFiles();
+			getLocalTypesFiles: (lsType: 'script' | 'template') => {
+				const fileNames = getLocalTypesFiles(lsType);
 				const code = localTypes.getTypesCode(isVue2);
 				return {
 					fileNames,
@@ -295,7 +295,9 @@ export function createLanguageService(
 		},
 	};
 
-	function getLocalTypesFiles() {
+	function getLocalTypesFiles(lsType: 'script' | 'template') {
+		if (lsType === 'script')
+			return [];
 		return sourceFiles.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
 	}
 	function createTsPluginProxy() {
@@ -552,7 +554,7 @@ export function createLanguageService(
 		return tsHost;
 
 		function getScriptFileNames() {
-			const tsFileNames = getLocalTypesFiles();
+			const tsFileNames = getLocalTypesFiles(lsType);
 
 			for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
 				tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts

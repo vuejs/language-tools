@@ -10,6 +10,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	let propsTypeArg: TextRange | undefined;
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
+	let emitsTypeNums = -1;
 
 	const bindings = parseBindingRanges(ts, ast, false);
 	const typeBindings = parseBindingRanges(ts, ast, true);
@@ -26,6 +27,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 		propsTypeArg,
 		emitsRuntimeArg,
 		emitsTypeArg,
+		emitsTypeNums,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -54,6 +56,9 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 					}
 					else {
 						emitsTypeArg = _getStartEnd(typeArg);
+						if (ts.isTypeLiteralNode(typeArg)) {
+							emitsTypeNums = typeArg.members.length;
+						}
 					}
 				}
 			}

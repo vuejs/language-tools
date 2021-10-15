@@ -4,17 +4,17 @@ import * as path from 'path';
 
 export function createProgramProxy(options: ts.CreateProgramOptions) {
 
-	if (!options.options.noEmit)
-		throw 'emit mode is not yet support';
+	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
+		return doThrow('js emit is not support');
 
 	if (!options.host)
-		throw '!options.host';
+		return doThrow('!options.host');
 
 	if (!options.host.realpath)
-		throw '!options.host.realpath';
+		return doThrow('!options.host.realpath');
 
 	if (!options.host.readDirectory)
-		throw '!options.host.readDirectory';
+		return doThrow('!options.host.readDirectory');
 
 	const host = options.host;
 	const realpath = options.host.realpath;
@@ -70,4 +70,9 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 			}
 		}
 	}
+}
+
+function doThrow(msg: string) {
+	console.error(msg);
+	throw msg;
 }
