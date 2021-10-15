@@ -172,8 +172,9 @@ export function createLanguageService(
 
 			for (const failed of failedLookupLocations) {
 				let path = failed;
-				if (path.endsWith('index.d.ts')) {
-					dirs.add(path.substr(0, path.length - '/index.d.ts'.length));
+				const fileName = upath.basename(path);
+				if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
+					dirs.add(upath.dirname(path));
 				}
 				if (path.endsWith('.d.ts')) {
 					path = upath.trimExt(path);
