@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.28.5
+
+- feat: support search workspace symbom (command / ctrl + T) ([#549](https://github.com/johnsoncodehk/volar/issues/549))
+- fix: alias path completion not working in root segment ([#589](https://github.com/johnsoncodehk/volar/issues/589))
+- fix: can't convert invalid component type to `any` ([#594](https://github.com/johnsoncodehk/volar/issues/594))
+- fix: `<script>` document symbols result inconsistent to TS
+
 ## 0.28.4
 
 - feat: support for open `*.ts` to enable take over mode
