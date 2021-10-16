@@ -1,14 +1,14 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import { computed, Ref } from '@vue/reactivity';
+import { computed, Ref, ComputedRef } from '@vue/reactivity';
 import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
 import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template_scriptSetup';
 import type { parseScriptRanges } from '../parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
-export function useSfcScriptGen(
-	lsType: 'template' | 'script',
+export function useSfcScriptGen<T extends 'template' | 'script'>(
+	lsType: T,
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	script: Ref<shared.Sfc['script']>,
@@ -47,15 +47,25 @@ export function useSfcScriptGen(
 					: 'js'
 	});
 	const textDocument = computed(() => {
-		return TextDocument.create(
-			lsType === 'template' ? `${vueUri}.__VLS_script.${lang.value}` : `${vueUri}.${lang.value}`,
-			shared.syntaxToLanguageId(lang.value),
-			version++,
-			codeGen.value.getText(),
-		);
+		if (lsType === 'script') {
+			return TextDocument.create(
+				`${vueUri}.${lang.value}`,
+				shared.syntaxToLanguageId(lang.value),
+				version++,
+				codeGen.value.getText(),
+			);
+		}
+		else if (script.value || scriptSetup.value) {
+			return TextDocument.create(
+				`${vueUri}.__VLS_script.${lang.value}`,
+				shared.syntaxToLanguageId(lang.value),
+				version++,
+				codeGen.value.getText(),
+			);
+		}
 	});
 	const textDocumentTs = computed(() => {
-		if (lsType === 'template' && ['js', 'jsx'].includes(lang.value)) {
+		if (lsType === 'template' && textDocument.value && ['js', 'jsx'].includes(lang.value)) {
 			const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
 			return TextDocument.create(
 				`${vueUri}.__VLS_script_ts.${tsLang}`,
@@ -66,38 +76,41 @@ export function useSfcScriptGen(
 		}
 	});
 	const sourceMap = computed(() => {
-		const sourceMap = new TsSourceMap(
-			vueDoc.value,
-			textDocument.value,
-			lsType,
-			false,
-			{
-				foldingRanges: false,
-				formatting: false,
-				documentSymbol: lsType === 'script',
-				codeActions: !script.value?.src && lsType === 'script',
-			},
-			codeGen.value.getMappings(parseMappingSourceRange),
-		);
+		if (textDocument.value) {
+			const sourceMap = new TsSourceMap(
+				vueDoc.value,
+				textDocument.value,
+				lsType,
+				false,
+				{
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: lsType === 'script',
+					codeActions: !script.value?.src && lsType === 'script',
+				},
+				codeGen.value.getMappings(parseMappingSourceRange),
+			);
 
-		return sourceMap;
+			return sourceMap;
+		}
 	});
 	const teleportSourceMap = computed(() => {
-		const doc = textDocument.value;
-		const sourceMap = new TeleportSourceMap(doc, false);
-		for (const teleport of codeGen.value.teleports) {
-			sourceMap.add(teleport);
-		}
+		if (textDocument.value) {
+			const sourceMap = new TeleportSourceMap(textDocument.value, false);
+			for (const teleport of codeGen.value.teleports) {
+				sourceMap.add(teleport);
+			}
 
-		return sourceMap;
+			return sourceMap;
+		}
 	});
 
 	return {
 		lang,
-		textDocument,
+		textDocument: textDocument as T extends 'script' ? ComputedRef<TextDocument> : ComputedRef<TextDocument | undefined>,
 		textDocumentTs,
-		sourceMap,
-		teleportSourceMap,
+		sourceMap: sourceMap as T extends 'script' ? ComputedRef<TsSourceMap> : ComputedRef<TsSourceMap | undefined>,
+		teleportSourceMap: teleportSourceMap as T extends 'script' ? ComputedRef<TeleportSourceMap> : ComputedRef<TeleportSourceMap | undefined>,
 	};
 
 	function parseMappingSourceRange(data: TsMappingData, sourceRange: Range) {

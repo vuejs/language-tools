@@ -4,13 +4,16 @@ import * as SourceMaps from '../utils/sourceMaps';
 import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
 import * as shared from '@volar/shared';
+import { getVueLibraryName } from '../utils/localTypes';
 
 export function useSfcEntryForTemplateLs(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
+	script: Ref<shared.Sfc['script']>,
 	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
 	template: Ref<shared.Sfc['template']>,
 	hasTsDoc: Ref<boolean>,
+	isVue2: boolean,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
@@ -20,23 +23,32 @@ export function useSfcEntryForTemplateLs(
 		let content = '';
 		content += '// @ts-nocheck\n';
 		content += `import * as __VLS_types from './__VLS_types';\n`;
-		content += `import { __VLS_options as __VLS_options_ts, __VLS_name as __VLS_name_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
-		content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
-		content += `export { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
-		content += `export * from './${vueFileName}.__VLS_script';\n`;
+		if (script.value || scriptSetup.value) {
+			content += `import { __VLS_options as __VLS_options_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
+			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
+			content += `export { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
+			content += `export * from './${vueFileName}.__VLS_script';\n`;
 
-		if (scriptSetup.value) {
-			content += `import { __VLS_component as __VLS_component_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
-			content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
-			content += `export { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+			if (scriptSetup.value) {
+				content += `import { __VLS_component as __VLS_component_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
+				content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+				content += `export { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+			}
+			else {
+				content += `import __VLS_component_1_ts from './${vueFileName}.${tsScriptFileName}';\n`;
+				content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
+				content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
+				content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
+				content += `declare var __VLS_component_ts: __VLS_types.SelectComponent<typeof __VLS_component_1_ts, typeof __VLS_component_2_ts>;\n`;
+				content += `export declare var __VLS_component: __VLS_types.SelectComponent<typeof __VLS_component_1, typeof __VLS_component_2>;\n`;
+			}
 		}
 		else {
-			content += `import __VLS_component_1_ts from './${vueFileName}.${tsScriptFileName}';\n`;
-			content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
-			content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
-			content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
-			content += `declare var __VLS_component_ts: __VLS_types.SelectComponent<typeof __VLS_component_1_ts, typeof __VLS_component_2_ts>;\n`;
-			content += `export declare var __VLS_component: __VLS_types.SelectComponent<typeof __VLS_component_1, typeof __VLS_component_2>;\n`;
+			content += `export var __VLS_name = undefined;\n`;
+			content += `export var __VLS_options = {};\n`;
+			content += `export var __VLS_component = (await import('${getVueLibraryName(isVue2)}')).defineComponent({});\n`;
+			content += `var __VLS_options_ts = {};\n`;
+			content += `var __VLS_component_ts = (await import('${getVueLibraryName(isVue2)}')).defineComponent({});\n`;
 		}
 		content += `declare var __VLS_ctx: __VLS_types.ComponentContext<typeof __VLS_component_ts>;\n`;
 		content += `declare var __VLS_ComponentsWrap: typeof __VLS_options & { components: { } };\n`;

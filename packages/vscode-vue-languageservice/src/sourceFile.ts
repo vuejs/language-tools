@@ -142,9 +142,11 @@ export function createSourceFile(
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,
 		document,
+		computed(() => descriptor.script),
 		computed(() => descriptor.scriptSetup),
 		computed(() => descriptor.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
+		context.isVue2Mode,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		uri,

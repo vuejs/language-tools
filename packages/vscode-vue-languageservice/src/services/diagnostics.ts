@@ -559,7 +559,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						if (propRight.data.isAdditionalReference) continue;
 						const definitions = templateTsLs.findDefinition(sfcTemplateScript.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
-							if (definition.targetUri !== sfcScriptForTemplateLs.textDocument.value.uri) continue;
+							if (definition.targetUri !== sfcScriptForTemplateLs.textDocument.value?.uri) continue;
 							result.push({
 								...diag,
 								range: definition.targetSelectionRange,

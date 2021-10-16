@@ -21,7 +21,6 @@ import type {
 	HTMLAttributes,
 	VNodeProps,
 	AllowedComponentProps,
-	PropType,
 	EmitsOptions,
 	DefineComponent,
 	SetupContext,
