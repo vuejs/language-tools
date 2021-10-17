@@ -11,7 +11,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 ## Community Language Client Implements
 
 - coc.nvim: https://github.com/yaegassy/coc-volar ⚡ 🤝
-- nvim: https://github.com/neovim/nvim-lspconfig
+- nvim: https://github.com/neovim/nvim-lspconfig 🤝
 - vim-lsp: https://github.com/mattn/vim-lsp-settings ⚡
 - Sublime: https://github.com/sublimelsp/LSP-volar
 
