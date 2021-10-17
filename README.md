@@ -16,8 +16,9 @@ Discord: https://discord.gg/5bnSSSSBbK
 [coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
 *Vue language support for coc.nvim*
 
-[nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) 🤝 \
-*Vue language server configuration for Neovim*
+[nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
+*Vue language server configuration for Neovim* \
+[[Multiple servers set up tutorial](https://github.com/johnsoncodehk/volar/discussions/606)]
 
 [vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
