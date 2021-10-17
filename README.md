@@ -1,22 +1,32 @@
 # Volar
 
-> Explore high-performance Vue language support in some aspects
+> ⚡ Explore high-performance tooling for Vue
 
-- VSCode Extension: [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features)
-- TS Server Plugin: [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin)
-- CLI Interface: [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc)
+- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
+*Vue language support extension for VSCode*
+- [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
+*VSCode extension to support Vue in TS server*
+- [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
+*Type-check and dts build command line tool*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
-## Community Language Client Implements
+## IDE Supports by Community
 
-- coc.nvim: https://github.com/yaegassy/coc-volar ⚡ 🤝
-- nvim: https://github.com/neovim/nvim-lspconfig 🤝
-- vim-lsp: https://github.com/mattn/vim-lsp-settings ⚡
-- Sublime: https://github.com/sublimelsp/LSP-volar
+[coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
+*Vue language support for coc.nvim*
 
-⚡ This implement supported [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
-🤝 This implement supported [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
+[nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) 🤝 \
+*Vue language server configuration for Neovim*
+
+[vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
+*Vue language server auto configuration for vim-lsp*
+
+[sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) \
+*Vue language client for Sublime*
+
+\* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
+\* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
 
 ## Sponsors
 
@@ -43,20 +53,12 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
   </tr>
 </table>
 
-## Using
-
-See https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#using
-
-## Limitations
-
-- Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
-
 ## Credits
 
 - [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.
 - [angular](https://github.com/angular/angular) shows how TS server plugin working with language service.
-- Syntax highlight is rewritten by [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
-- https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example shows how to inject vue syntax highlight to markdown.
+- Syntax highlight is rewritten base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
+- [vscode-fenced-code-block-grammar-injection-example](https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example) shows how to inject vue syntax highlight to markdown.
 - Out of the box formatting working by:
   - [prettyhtml](https://github.com/Prettyhtml/prettyhtml): html
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
