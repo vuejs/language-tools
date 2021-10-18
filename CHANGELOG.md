@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.28.7
+
+- fix: can't access `$slots`, `$props`... in template if no script block ([#601](https://github.com/johnsoncodehk/volar/issues/601))
+- fix: defineEmit not working with type alias ([#607](https://github.com/johnsoncodehk/volar/issues/607))
+- fix: `GlobalComponents` working for vue2 ([#609](https://github.com/johnsoncodehk/volar/issues/609))
+
 ## 0.28.6
 
 - feat: support for emit SFC dts by vue-tsc (See https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc#using)
