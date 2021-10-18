@@ -26,7 +26,6 @@ import type {
 	SetupContext,
 	ObjectDirective,
 	FunctionDirective,
-	GlobalComponents as GlobalComponents_0,
 } from '${libName}';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
@@ -39,13 +38,16 @@ export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 ${camelCaseText};
 
-export type GlobalComponents = PickNotAny<GlobalComponents_0, {}> & Pick<typeof vue,
-	'Transition'
-	| 'TransitionGroup'
-	| 'KeepAlive'
-	| 'Suspense'
-	| 'Teleport'
->;
+export type GlobalComponents =
+	PickNotAny<import('vue').GlobalComponents, {}>
+	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
+	& Pick<typeof vue,
+		'Transition'
+		| 'TransitionGroup'
+		| 'KeepAlive'
+		| 'Suspense'
+		| 'Teleport'
+	>;
 
 export declare function getVforSourceType<T>(source: T): T extends number ? number[] : T;
 export declare function getVforKeyType<T>(source: T): typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never; // use "T extends T" support for union
