@@ -76,7 +76,7 @@ export function generate(
 			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 		}
 		else {
-			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', 8));
+			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
 		}
 	}
 

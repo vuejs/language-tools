@@ -145,7 +145,7 @@ export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: nu
 		gen(nums);
 	}
 	code += `// 0\n`
-	code += `unknown;\n`
+	code += `{};\n`
 	return code;
 
 	function gen(i: number) {
