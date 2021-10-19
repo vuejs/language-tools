@@ -138,10 +138,21 @@ export function createLanguageService(
 
 	const { typescript: ts } = modules;
 
-	// TODO: not working for vue-tsc --project flag
+	const tsconfigFileFromHost = vueHost.getCompilationSettings?.()?.configFilePath;
 	const tsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'tsconfig.json');
 	const jsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'jsconfig.json');
-	const configFile = ts.sys.fileExists(tsconfigFile) ? tsconfigFile : ts.sys.fileExists(jsconfigFile) ? jsconfigFile : undefined;
+	const configFileCandidates: string[] = [tsconfigFile, jsconfigFile];
+	if (tsconfigFileFromHost && 'string' === typeof tsconfigFileFromHost) {
+		// vue-tsc --project takes priority
+		configFileCandidates.unshift(tsconfigFileFromHost);
+	}
+	let configFile: string | undefined = undefined;
+	for (const configFileCandidate of configFileCandidates) {
+		if (configFileCandidate && ts.sys.fileExists(configFileCandidate)) {
+			configFile = configFileCandidate
+			break;
+		}
+	}
 	const config = configFile ? shared.createParsedCommandLine(ts, ts.sys, configFile) : undefined;
 	const isVue2 = config?.raw.vueCompilerOptions?.experimentalCompatMode === 2;
 
