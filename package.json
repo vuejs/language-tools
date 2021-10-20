@@ -18,7 +18,8 @@
 		"jest": "latest",
 		"lerna": "latest",
 		"ts-jest": "latest",
-		"typescript": "latest"
+		"typescript": "latest",
+		"yarn": "^1.22.17"
 	},
 	"resolutions": {
 		"to-vfile": "7.1.0"
