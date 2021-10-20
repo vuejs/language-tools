@@ -87,10 +87,6 @@ export {}
 
 </details>
 
-## Limitations
-
-- Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
-
 ## Note
 
 > You need to disable Vetur to avoid conflicts.
