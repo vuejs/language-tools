@@ -13,6 +13,7 @@ export function register(htmlLs: html.LanguageService) {
 			docDoc.sourceMap.mappedDocument,
 			htmlRange.start,
 			docDoc.htmlDocument,
+			// {references: false}
 		);
 		if (!htmlResult) return;
 
@@ -22,3 +23,4 @@ export function register(htmlLs: html.LanguageService) {
 		);
 	}
 }
+
