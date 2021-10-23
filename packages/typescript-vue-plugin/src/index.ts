@@ -73,6 +73,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		realpath: ts.sys.realpath,
 
 		getCompilationSettings: () => info.project.getCompilationSettings(),
+		getVueCompilationSettings: () => parsedCommandLine?.raw?.vueCompilerOptions ?? {},
 		getCurrentDirectory: () => info.project.getCurrentDirectory(),
 		getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
 		getProjectVersion: () => info.project.getProjectVersion(),
@@ -86,12 +87,17 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	update();
 
 	const directoryWatcher = info.serverHost.watchDirectory(info.project.getCurrentDirectory(), onAnyDriveFileUpdated, true);
+	const projectName = info.project.projectName;
 
-	let tsconfigWatcher = info.project.fileExists(info.project.projectName)
-		? info.serverHost.watchFile(info.project.projectName, () => {
+	let tsconfigWatcher = info.project.fileExists(projectName)
+		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
+			parsedCommandLine = shared.createParsedCommandLine(ts, ts.sys, projectName);
 		})
+		: undefined;
+	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
+		? shared.createParsedCommandLine(ts, ts.sys, projectName)
 		: undefined;
 
 	return {

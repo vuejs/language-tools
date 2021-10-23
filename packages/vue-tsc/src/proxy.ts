@@ -1,6 +1,7 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from 'vscode-vue-languageservice';
 import * as path from 'path';
+import * as shared from '@volar/shared';
 
 export function createProgramProxy(options: ts.CreateProgramOptions) {
 
@@ -32,15 +33,18 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		...options.rootNames.map(rootName => realpath(rootName)),
 		...getVueFileNames(),
 	];
+	const vueCompilerOptions = getVueCompilerOptions();
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const vueLsHost: vue.LanguageServiceHost = {
 		...host,
 		writeFile: undefined,
 		getCompilationSettings: () => options.options,
+		getVueCompilationSettings: () => vueCompilerOptions,
 		getScriptFileNames: () => fileNames,
 		getScriptVersion: () => '',
 		getScriptSnapshot,
 		getProjectVersion: () => '',
+		getVueProjectVersion: () => '',
 	};
 	const vueLs = vue.createLanguageService({ typescript: ts }, vueLsHost);
 	const program = vueLs.__internal__.tsProgramProxy;
@@ -55,6 +59,13 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 			return fileNames;
 		}
 		return [];
+	}
+	function getVueCompilerOptions(): vue.VueCompilerOptions {
+		const tsConfig = options.options.configFilePath;
+		if (typeof tsConfig === 'string') {
+			return shared.createParsedCommandLine(ts, ts.sys, tsConfig).raw?.vueCompilerOptions ?? {};
+		}
+		return {};
 	}
 	function getScriptSnapshot(fileName: string) {
 		const scriptSnapshot = scriptSnapshots.get(fileName);

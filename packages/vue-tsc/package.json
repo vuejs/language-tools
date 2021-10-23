@@ -15,6 +15,7 @@
     "vue-tsc": "./bin/vue-tsc.js"
   },
   "dependencies": {
+    "@volar/shared": "0.28.7",
     "vscode-vue-languageservice": "0.28.7"
   },
   "peerDependencies": {
