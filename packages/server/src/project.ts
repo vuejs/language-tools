@@ -141,6 +141,7 @@ export function createProject(
 			getParsedCommandLine: () => parsedCommandLine,
 			getCssLanguageSettings: lsConfigs.getCssLanguageSettings,
 			// ts
+			getHtmlHoverSettings: lsConfigs.getHtmlHoverSettings,
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 			readFile: ts.sys.readFile,

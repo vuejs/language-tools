@@ -3,6 +3,7 @@ import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as tsConfigs from './tsConfigs';
 import * as css from 'vscode-css-languageservice';
+import * as html from 'vscode-html-languageservice'
 
 export function createLsConfigs(connection: vscode.Connection) {
 
@@ -10,6 +11,7 @@ export function createLsConfigs(connection: vscode.Connection) {
 	let tsPreferences: Record<string, Promise<ts.UserPreferences>> = {};
 	let tsFormatOptions: Record<string, Promise<ts.FormatCodeSettings>> = {};
 	let cssLanguageSettings: Record<string, Promise<css.LanguageSettings>> = {};
+	let htmlHoverSettings: Record<string, Promise<html.HoverSettings>> = {};
 	let codeLensConfigs: {
 		references: boolean,
 		pugTool: boolean,
@@ -22,6 +24,7 @@ export function createLsConfigs(connection: vscode.Connection) {
 		tsPreferences = {};
 		tsFormatOptions = {};
 		cssLanguageSettings = {};
+		htmlHoverSettings = {}
 	});
 
 	return {
@@ -30,8 +33,13 @@ export function createLsConfigs(connection: vscode.Connection) {
 		getCssLanguageSettings,
 		getTsPreferences,
 		getTsFormatOptions,
+		getHtmlHoverSettings
 	};
 
+	function getHtmlHoverSettings(textDocument: TextDocument) {
+		return htmlHoverSettings[textDocument.uri]
+			?? (htmlHoverSettings[textDocument.uri] = connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }));
+	}
 	function getTsPreferences(textDocument: TextDocument) {
 		return tsPreferences[textDocument.uri]
 			?? (tsPreferences[textDocument.uri] = tsConfigs.getPreferences(connection, textDocument));

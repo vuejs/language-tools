@@ -11,7 +11,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 	return async (uri: string, position: vscode.Position) => {
 
 		const tsResult = onTs(uri, position);
-		const htmlResult = onHtml(uri, position);
+		const htmlResult = await onHtml(uri, position);
 		const cssResult = await onCss(uri, position);
 
 		if (!tsResult && !htmlResult && !cssResult) return;
@@ -84,7 +84,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 
 		return result;
 	}
-	function onHtml(uri: string, position: vscode.Position) {
+	async function onHtml(uri: string, position: vscode.Position) {
 
 		let result: vscode.Hover | undefined;
 
@@ -97,12 +97,14 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			...sourceFile.getHtmlSourceMaps(),
 			...sourceFile.getPugSourceMaps(),
 		]) {
+			const settings = await vueHost.getHtmlHoverSettings?.(sourceMap.mappedDocument);
 			for (const htmlRange of sourceMap.getMappedRanges(position)) {
 				const htmlHover = sourceMap instanceof HtmlSourceMap
 					? htmlLs.doHover(
 						sourceMap.mappedDocument,
 						htmlRange.start,
 						sourceMap.htmlDocument,
+						settings
 					)
 					: pugLs.doHover(
 						sourceMap.pugDocument,
