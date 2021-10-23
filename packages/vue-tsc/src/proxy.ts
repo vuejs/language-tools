@@ -45,6 +45,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		getScriptSnapshot,
 		getProjectVersion: () => '',
 		getVueProjectVersion: () => '',
+		getProjectReferences: () => options.projectReferences,
 	};
 	const vueLs = vue.createLanguageService({ typescript: ts }, vueLsHost);
 	const program = vueLs.__internal__.tsProgramProxy;

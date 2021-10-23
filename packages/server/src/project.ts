@@ -151,6 +151,7 @@ export function createProject(
 			readDirectory: ts.sys.readDirectory,
 			realpath: ts.sys.realpath,
 			fileExists: ts.sys.fileExists,
+			getProjectReferences: () => parsedCommandLine.projectReferences,
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 			getProjectVersion: () => tsProjectVersion.toString(),

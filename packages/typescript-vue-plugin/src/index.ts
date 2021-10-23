@@ -78,6 +78,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
 		getProjectVersion: () => info.project.getProjectVersion(),
 		getVueProjectVersion: () => projectVersion.toString(),
+		getProjectReferences: () => info.project.getProjectReferences(),
 
 		getScriptFileNames,
 		getScriptVersion,
