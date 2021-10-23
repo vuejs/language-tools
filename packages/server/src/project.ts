@@ -158,6 +158,7 @@ export function createProject(
 			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,
+			getVueCompilationSettings: () => parsedCommandLine.raw?.vueCompilerOptions ?? {},
 			getScriptVersion,
 			getScriptSnapshot,
 		};

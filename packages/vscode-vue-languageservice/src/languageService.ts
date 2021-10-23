@@ -48,9 +48,14 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
 
+export interface VueCompilerOptions {
+	experimentalCompatMode?: number;
+}
+
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
+	getVueCompilationSettings?(): VueCompilerOptions,
 	getVueProjectVersion?(): string;
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
@@ -137,13 +142,7 @@ export function createLanguageService(
 ) {
 
 	const { typescript: ts } = modules;
-
-	// TODO: not working for vue-tsc --project flag
-	const tsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'tsconfig.json');
-	const jsconfigFile = upath.join(vueHost.getCurrentDirectory(), 'jsconfig.json');
-	const configFile = ts.sys.fileExists(tsconfigFile) ? tsconfigFile : ts.sys.fileExists(jsconfigFile) ? jsconfigFile : undefined;
-	const config = configFile ? shared.createParsedCommandLine(ts, ts.sys, configFile) : undefined;
-	const isVue2 = config?.raw.vueCompilerOptions?.experimentalCompatMode === 2;
+	const isVue2 = vueHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
 	let vueProjectVersion: string | undefined;
 	let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content

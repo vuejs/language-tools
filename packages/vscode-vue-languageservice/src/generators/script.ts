@@ -63,7 +63,7 @@ export function generate(
 
 	if (usedTypes.DefinePropsToOptions) {
 		codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('vue').PropType<T[K]>, required: true } };\n`);
+		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${getVueLibraryName(isVue2)}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${getVueLibraryName(isVue2)}').PropType<T[K]>, required: true } };\n`);
 	}
 	if (usedTypes.mergePropDefaults) {
 		codeGen.addText(`declare function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
