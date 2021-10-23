@@ -19,7 +19,7 @@ export function createProject(
 	documents: vscode.TextDocuments<TextDocument>,
 	workDoneProgress: vscode.WorkDoneProgressServerReporter,
 	connection: vscode.Connection,
-	lsConfigs: ReturnType<typeof createLsConfigs>,
+	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 ) {
 
 	let typeRootVersion = 0;
@@ -134,14 +134,14 @@ export function createProject(
 			createTsLanguageService(host) {
 				return shared.createTsLanguageService(ts, host);
 			},
-			getEmmetConfig: lsConfigs.getEmmetConfiguration,
+			getEmmetConfig: lsConfigs?.getEmmetConfiguration,
 			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,
-			getPreferences: lsConfigs.getTsPreferences,
-			getFormatOptions: lsConfigs.getTsFormatOptions,
+			getPreferences: lsConfigs?.getTsPreferences,
+			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getParsedCommandLine: () => parsedCommandLine,
-			getCssLanguageSettings: lsConfigs.getCssLanguageSettings,
+			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
 			// ts
-			getHtmlHoverSettings: lsConfigs.getHtmlHoverSettings,
+			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 			readFile: ts.sys.readFile,

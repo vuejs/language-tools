@@ -16,7 +16,7 @@ export function createProjects(
 	documents: vscode.TextDocuments<TextDocument>,
 	rootPaths: string[],
 	inferredCompilerOptions: ts.CompilerOptions,
-	lsConfigs: ReturnType<typeof createLsConfigs>,
+	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 ) {
 
 	let semanticTokensReq = 0;

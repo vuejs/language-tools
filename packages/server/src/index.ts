@@ -72,7 +72,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 	if (options.languageFeatures) {
 
 		let projects: ReturnType<typeof createProjects> | undefined;
-		const lsConfigs = createLsConfigs(connection);
+		const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(connection) : undefined;
 
 		const ts = loadTypescript(options.typescript.serverPath);
 

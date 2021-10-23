@@ -12,7 +12,7 @@ export function register(
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
-	lsConfigs: ReturnType<typeof createLsConfigs>,
+	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	params: vscode.InitializeParams,
 ) {
 	connection.onCompletion(async handler => {
@@ -75,7 +75,7 @@ export function register(
 	connection.onCodeLens(async handler => {
 		return getProjects()
 			?.get(handler.textDocument.uri)?.service
-			.getCodeLens(handler.textDocument.uri, await lsConfigs.getCodeLensConfigs());
+			.getCodeLens(handler.textDocument.uri, await lsConfigs?.getCodeLensConfigs());
 	});
 	connection.onCodeLensResolve(codeLens => {
 		const uri = codeLens.data?.uri;
