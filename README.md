@@ -54,6 +54,18 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
   </tr>
 </table>
 
+## Using
+
+See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#using)
+
+## Note
+
+See [Vue Language Features#Note](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#note)
+
+## Limitations
+
+- Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
+
 ## Credits
 
 - [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.

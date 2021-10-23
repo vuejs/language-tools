@@ -1,5 +1,9 @@
 # Changelog
 
+## Not publish yet
+
+- fix: `withDefaults` can't narrowing props undefined ([#611](https://github.com/johnsoncodehk/volar/issues/611)) ([#614](https://github.com/johnsoncodehk/volar/issues/614))
+
 ## 0.28.7
 
 - fix: can't access `$slots`, `$props`... in template if no script block ([#601](https://github.com/johnsoncodehk/volar/issues/601))
