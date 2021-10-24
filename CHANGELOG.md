@@ -1,8 +1,12 @@
 # Changelog
 
-## Not publish yet
+## 0.28.8
 
+- feat: support html hover settings ([#627](https://github.com/johnsoncodehk/volar/issues/627)) ([#615](https://github.com/johnsoncodehk/volar/pull/628))
 - fix: `withDefaults` can't narrowing props undefined ([#611](https://github.com/johnsoncodehk/volar/issues/611)) ([#614](https://github.com/johnsoncodehk/volar/issues/614))
+- fix: vueCompilerOptions not working with vue-tsc --project flag ([#613](https://github.com/johnsoncodehk/volar/issues/613)) ([#615](https://github.com/johnsoncodehk/volar/pull/615))
+- fix: LSP workspace configuration option not supported ([#626](https://github.com/johnsoncodehk/volar/issues/626))
+- fix: tsconfig project references are not respected ([#525](https://github.com/johnsoncodehk/volar/issues/525))
 
 ## 0.28.7
 
