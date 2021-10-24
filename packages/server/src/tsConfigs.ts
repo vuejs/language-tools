@@ -1,13 +1,15 @@
 import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
 
 export async function getFormatOptions(
-	connection: vscode.Connection,
+	configuration: Configuration | undefined,
 	document: TextDocument,
 	options?: vscode.FormattingOptions
 ): Promise<ts.FormatCodeSettings> {
-	let config = await connection.workspace.getConfiguration({
+
+	let config = await configuration?.getConfiguration({
 		section: isTypeScriptDocument(document) ? 'typescript.format' : 'javascript.format',
 		scopeUri: document.uri
 	});
@@ -41,10 +43,10 @@ export async function getFormatOptions(
 }
 
 export async function getPreferences(
-	connection: vscode.Connection,
+	configuration: Configuration | undefined,
 	document: TextDocument
 ): Promise<ts.UserPreferences> {
-	let [config, preferencesConfig] = await connection.workspace.getConfiguration([
+	let [config, preferencesConfig] = await configuration?.getConfiguration([
 		{
 			section: isTypeScriptDocument(document) ? 'typescript' : 'javascript',
 			scopeUri: document.uri
@@ -53,7 +55,7 @@ export async function getPreferences(
 			section: isTypeScriptDocument(document) ? 'typescript.preferences' : 'javascript.preferences',
 			scopeUri: document.uri
 		}
-	]);
+	]) ?? [undefined, undefined];
 
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};

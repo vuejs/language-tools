@@ -1,15 +1,15 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type * as vscode from 'vscode-languageserver/node';
+import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
 
 export async function getInferredCompilerOptions(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	connection: vscode.Connection,
+	configuration: Configuration | undefined,
 ) {
 
-	let [implicitProjectConfig_1, implicitProjectConfig_2] = (await connection.workspace.getConfiguration([
+	let [implicitProjectConfig_1, implicitProjectConfig_2] = await configuration?.getConfiguration([
 		{ section: 'js/ts.implicitProjectConfig' },
 		{ section: 'javascript.implicitProjectConfig' },
-	]));
+	]) ?? [undefined, undefined];
 
 	implicitProjectConfig_1 = implicitProjectConfig_1 ?? {};
 	implicitProjectConfig_2 = implicitProjectConfig_2 ?? {};

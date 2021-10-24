@@ -42,11 +42,11 @@ export function createLsConfigs(connection: vscode.Connection) {
 	}
 	function getTsPreferences(textDocument: TextDocument) {
 		return tsPreferences[textDocument.uri]
-			?? (tsPreferences[textDocument.uri] = tsConfigs.getPreferences(connection, textDocument));
+			?? (tsPreferences[textDocument.uri] = tsConfigs.getPreferences(connection.workspace, textDocument));
 	}
 	function getTsFormatOptions(textDocument: TextDocument, options?: vscode.FormattingOptions) {
 		return tsFormatOptions[textDocument.uri]
-			?? (tsFormatOptions[textDocument.uri] = tsConfigs.getFormatOptions(connection, textDocument, options));
+			?? (tsFormatOptions[textDocument.uri] = tsConfigs.getFormatOptions(connection.workspace, textDocument, options));
 	}
 	function getCssLanguageSettings(textDocument: TextDocument): Promise<css.LanguageSettings> {
 		return cssLanguageSettings[textDocument.uri]

@@ -45,6 +45,7 @@ async function onInitialize(params: vscode.InitializeParams) {
 			textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
 		},
 	};
+	const configuration = params.capabilities.workspace?.configuration ? connection.workspace : undefined;
 
 	if (options.documentFeatures) {
 
@@ -52,8 +53,8 @@ async function onInitialize(params: vscode.InitializeParams) {
 		const formatters = await import('./formatters');
 		const noStateLs = vue.getDocumentLanguageService(
 			{ typescript: ts },
-			(document) => tsConfigs.getPreferences(connection, document),
-			(document, options) => tsConfigs.getFormatOptions(connection, document, options),
+			(document) => tsConfigs.getPreferences(configuration, document),
+			(document, options) => tsConfigs.getFormatOptions(configuration, document, options),
 			formatters.getFormatters(async (uri) => {
 				if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
 					const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
@@ -77,12 +78,12 @@ async function onInitialize(params: vscode.InitializeParams) {
 		const ts = loadTypescript(options.typescript.serverPath);
 
 		(await import('./features/customFeatures')).register(connection, documents, () => projects);
-		(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, lsConfigs, params);
+		(await import('./features/languageFeatures')).register(ts, connection, configuration, documents, () => projects, options.languageFeatures, lsConfigs, params);
 		(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, ts.version);
 
 		connection.onInitialized(async () => {
 
-			const inferredCompilerOptions = await getInferredCompilerOptions(ts, connection);
+			const inferredCompilerOptions = await getInferredCompilerOptions(ts, configuration);
 			const tsLocalized = options.typescript.localizedPath ? loadTypescriptLocalized(options.typescript.localizedPath) : undefined;
 
 			if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO

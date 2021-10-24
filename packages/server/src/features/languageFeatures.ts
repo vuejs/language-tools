@@ -5,10 +5,12 @@ import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 import type { createLsConfigs } from '../configs';
+import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
 
 export function register(
 	ts: vue.Modules['typescript'],
 	connection: vscode.Connection,
+	configuration: Configuration | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
@@ -22,7 +24,7 @@ export function register(
 				handler.textDocument.uri,
 				handler.position,
 				handler.context,
-				() => connection.workspace.getConfiguration('volar.completion.autoImportComponent'),
+				async () => await configuration?.getConfiguration('volar.completion.autoImportComponent') ?? true,
 				async (uri) => {
 					if (features.completion?.getDocumentNameCasesRequest) {
 						return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
