@@ -107,7 +107,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		if (newDoc?.languageId === 'vue') {
 			let tagCase = tagCases.get(newDoc.uri.toString());
 			if (!tagCase) {
-				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto' | 'both' | 'kebab' | 'pascal'>('preferredTagNameCase');
+				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto' | 'both' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
 				if (tagMode === 'both') {
 					tagCase = 'both';
 				}

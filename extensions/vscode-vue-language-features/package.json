@@ -244,7 +244,7 @@
 					"default": "auto",
 					"description": "Take over language support for *.ts."
 				},
-				"volar.preferredTagNameCase": {
+				"volar.completion.preferredTagNameCase": {
 					"type": "string",
 					"enum": [
 						"auto",
@@ -261,7 +261,7 @@
 					"default": "auto",
 					"description": "Preferred tag name case."
 				},
-				"volar.preferredAttrNameCase": {
+				"volar.completion.preferredAttrNameCase": {
 					"type": "string",
 					"enum": [
 						"auto-kebab",

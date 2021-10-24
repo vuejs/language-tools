@@ -76,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		if (newDoc?.languageId === 'vue') {
 			let attrCase = attrCases.get(newDoc.uri.toString());
 			if (!attrCase) {
-				const attrMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('preferredAttrNameCase');
+				const attrMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');
 				if (attrMode === 'kebab') {
 					attrCase = 'kebabCase';
 				}
@@ -110,7 +110,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	}
 	function getValidAttrCase(attrCase: 'both' | 'kebabCase' | 'camelCase' | 'unsure' | undefined): 'kebabCase' | 'camelCase' {
 		if (attrCase === 'both' || attrCase === 'unsure') {
-			const attrMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('preferredAttrNameCase');
+			const attrMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');
 			if (attrMode === 'auto-kebab') {
 				return 'kebabCase';
 			}
