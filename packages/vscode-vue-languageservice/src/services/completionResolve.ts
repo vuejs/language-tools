@@ -136,7 +136,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 						'\n' + insertText,
 					),
 				];
-				const scriptRanges = parseScriptRanges(ts, scriptAst, true, true);
+				const scriptRanges = parseScriptRanges(ts, scriptAst, !!descriptor.scriptSetup, true, true);
 				const exportDefault = scriptRanges.exportDefault;
 				if (exportDefault) {
 					// https://github.com/microsoft/TypeScript/issues/36174

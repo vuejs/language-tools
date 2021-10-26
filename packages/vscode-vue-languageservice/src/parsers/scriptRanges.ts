@@ -4,7 +4,7 @@ import type { TextRange } from './types';
 
 export type ScriptRanges = ReturnType<typeof parseScriptRanges>;
 
-export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, hasScriptSetup: boolean, withComponentOption = false, withNode = false) {
+export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, hasScriptSetup: boolean, withComponentOption: boolean, withNode: boolean) {
 
 	let exportDefault: (TextRange & {
 		expression: TextRange,

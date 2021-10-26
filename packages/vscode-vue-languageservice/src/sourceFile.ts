@@ -107,7 +107,7 @@ export function createSourceFile(
 	);
 	const scriptRanges = computed(() =>
 		sfcScript.ast.value
-			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup)
+			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
