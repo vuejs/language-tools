@@ -436,7 +436,7 @@
 			"editor/title": [
 				{
 					"command": "volar.action.splitEditors",
-					"when": "editorLangId == vue && config.volar.icon.splitEditors",
+					"when": "resourceLangId == vue && config.volar.icon.splitEditors",
 					"group": "navigation"
 				},
 				{
