@@ -138,7 +138,6 @@ export function createProject(
 			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,
 			getPreferences: lsConfigs?.getTsPreferences,
 			getFormatOptions: lsConfigs?.getTsFormatOptions,
-			getParsedCommandLine: () => parsedCommandLine,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
 			// ts
 			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
@@ -151,7 +150,7 @@ export function createProject(
 			readDirectory: ts.sys.readDirectory,
 			realpath: ts.sys.realpath,
 			fileExists: ts.sys.fileExists,
-			getProjectReferences: () => parsedCommandLine.projectReferences,
+			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 			getProjectVersion: () => tsProjectVersion.toString(),
