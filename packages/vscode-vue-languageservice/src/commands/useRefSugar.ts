@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver';
 import { parseDeclarationRanges, parseDotValueRanges } from '../parsers/refSugarRanges';
 import * as definition from '../services/definition';

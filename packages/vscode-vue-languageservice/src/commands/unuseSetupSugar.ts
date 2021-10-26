@@ -5,13 +5,11 @@ import type { TextRange } from '../parsers/types';
 import type { ApiLanguageServiceContext } from '../types';
 import * as codeAction from '../services/codeAction';
 import * as codeActionResolve from '../services/codeActionResolve';
-import * as diagnostics from '../services/diagnostics';
 import { parseUseScriptSetupRanges } from '../parsers/scriptSetupConvertRanges';
 
 export function register(context: ApiLanguageServiceContext) {
 
 	const { sourceFiles, modules: { typescript: ts } } = context;
-	const getDiagnostics = diagnostics.register(context, () => { });
 	const getCodeActions = codeAction.register(context);
 	const resolveCodeAction = codeActionResolve.register(context);
 
