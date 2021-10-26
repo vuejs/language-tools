@@ -1,11 +1,21 @@
 # Changelog
 
+## 0.28.9
+
+- feat: use VSCode 1.61 `Split Editor In Group` instead of create new editor ([#608](https://github.com/johnsoncodehk/volar/issues/608))
+- feat: split editors layout change from `script | template | style` to `script + style | template`
+- feat: tag name conversion work done progress
+- fix: language server broken by circular tsconfig project references ([#525](https://github.com/johnsoncodehk/volar/issues/525)) ([#631](https://github.com/johnsoncodehk/volar/issues/631)) ([#632](https://github.com/johnsoncodehk/volar/issues/632))
+- fix: vue-tsc can't don't show "incremental mode / watch mode not support" error message ([#630](https://github.com/johnsoncodehk/volar/issues/630))
+- fix: tag name kebab case -> pascal case conversion not working
+- fix: LSP workspace configuration option not supported ([#626](https://github.com/johnsoncodehk/volar/issues/626))
+- fix: no edit to `components` option when component auto-import ([#634](https://github.com/johnsoncodehk/volar/issues/634))
+
 ## 0.28.8
 
 - feat: support html hover settings ([#627](https://github.com/johnsoncodehk/volar/issues/627)) ([#615](https://github.com/johnsoncodehk/volar/pull/628))
 - fix: `withDefaults` can't narrowing props undefined ([#611](https://github.com/johnsoncodehk/volar/issues/611)) ([#614](https://github.com/johnsoncodehk/volar/issues/614))
 - fix: vueCompilerOptions not working with vue-tsc --project flag ([#613](https://github.com/johnsoncodehk/volar/issues/613)) ([#615](https://github.com/johnsoncodehk/volar/pull/615))
-- fix: LSP workspace configuration option not supported ([#626](https://github.com/johnsoncodehk/volar/issues/626))
 - fix: tsconfig project references are not respected ([#525](https://github.com/johnsoncodehk/volar/issues/525))
 
 ## 0.28.7
