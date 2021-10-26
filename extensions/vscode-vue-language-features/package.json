@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.28.8",
+	"version": "0.28.9",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -475,7 +475,7 @@
 		"../../packages/*"
 	],
 	"dependencies": {
-		"@volar/client": "0.28.8"
+		"@volar/client": "0.28.9"
 	},
 	"devDependencies": {
 		"vsce": "latest"
