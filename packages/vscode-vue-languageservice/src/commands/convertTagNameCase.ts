@@ -4,7 +4,7 @@ import type { ApiLanguageServiceContext } from '../types';
 
 export async function execute(
 	connection: vscode.Connection,
-	{ sourceFiles, templateTsLs }: ApiLanguageServiceContext,
+	{ sourceFiles }: ApiLanguageServiceContext,
 	uri: string,
 	_findReferences: (uri: string, position: vscode.Position) => vscode.Location[],
 	mode: 'kebab' | 'pascal',
@@ -24,7 +24,7 @@ export async function execute(
 	const components = new Set(sourceFile.getTemplateScriptData().components);
 	const resolvedTags = sourceFile.refs.sfcTemplateScript.templateCodeGens.value?.tagNames ?? {};
 
-	for (const tagName of components) {
+	for (const tagName in resolvedTags) {
 		const resolvedTag = resolvedTags[tagName];
 		if (resolvedTag?.offsets.length > 0) {
 
