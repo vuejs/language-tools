@@ -98,8 +98,7 @@ export function register(
 					for (let j = i + 1; j < lines.length; j++) {
 						const offset_2 = lineOffsets[j];
 						const indent_2 = lineIndents[j];
-						if (indent_2 === undefined) continue;
-						if (indent_2.length <= indent.length) {
+						if (indent_2 === undefined || indent_2.length <= indent.length) {
 							const endPos = sourceMap.mappedDocument.positionAt(offset_2);
 							const foldingRange = vscode.FoldingRange.create(
 								startPos.line,
