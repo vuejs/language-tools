@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.28.10
+
+- feat: improve pug folding range ([#636](https://github.com/johnsoncodehk/volar/issues/636))
+- feat: improve pug tag, attr auto-complete ([#638](https://github.com/johnsoncodehk/volar/issues/638))
+- fix: if trigger component auto-import multiple times, import edit text accumulate ([#639](https://github.com/johnsoncodehk/volar/issues/639))
+- fix: filter current component from component auto-import list
+- fix: normalize request uri for Sublime / Atom ([#637](https://github.com/johnsoncodehk/volar/issues/637))
+
 ## 0.28.9
 
 - feat: use VSCode 1.61 `Split Editor In Group` instead of create new editor ([#608](https://github.com/johnsoncodehk/volar/issues/608))
