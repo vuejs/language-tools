@@ -142,8 +142,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 					// https://github.com/microsoft/TypeScript/issues/36174
 					const printer = ts.createPrinter();
 					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
-						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptAst);
+						const newNode: typeof exportDefault.componentsOptionNode = {
+							...exportDefault.componentsOptionNode,
+							properties: [
+								...exportDefault.componentsOptionNode.properties,
+								ts.factory.createShorthandPropertyAssignment(componentName),
+							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+						};
+						const printText = printer.printNode(ts.EmitHint.Expression, newNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
@@ -153,8 +159,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 						));
 					}
 					else if (exportDefault.args && exportDefault.argsNode) {
-						(exportDefault.argsNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`));
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptAst);
+						const newNode: typeof exportDefault.argsNode = {
+							...exportDefault.argsNode,
+							properties: [
+								...exportDefault.argsNode.properties,
+								ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+						};
+						const printText = printer.printNode(ts.EmitHint.Expression, newNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),
