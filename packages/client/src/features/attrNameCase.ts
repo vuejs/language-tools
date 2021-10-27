@@ -11,7 +11,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		await shared.sleep(100);
 	}
 
-	const attrCases = new shared.UriMap<'kebabCase' | 'camelCase'>();
+	const attrCases = shared.createPathMap<'kebabCase' | 'camelCase'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.attrNameCase';
 
@@ -20,14 +20,14 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		onChangeDocument(e?.document);
 	});
 	const d_2 = vscode.workspace.onDidCloseTextDocument((doc) => {
-		attrCases.delete(doc.uri.toString());
+		attrCases.uriDelete(doc.uri.toString());
 	});
 	const d_3 = vscode.commands.registerCommand('volar.action.attrNameCase', async () => {
 
 		const crtDoc = vscode.window.activeTextEditor?.document;
 		if (!crtDoc) return;
 
-		const attrCase = attrCases.get(crtDoc.uri.toString());
+		const attrCase = attrCases.uriGet(crtDoc.uri.toString());
 		const options: Record<string, vscode.QuickPickItem> = {};
 
 		options[4] = { label: (attrCase === 'kebabCase' ? '• ' : '') + 'Prop Using kebab-case' };
@@ -39,17 +39,17 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			return; // cancle
 
 		if (select === '4') {
-			attrCases.set(crtDoc.uri.toString(), 'kebabCase');
+			attrCases.uriSet(crtDoc.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
 		if (select === '5') {
-			attrCases.set(crtDoc.uri.toString(), 'camelCase');
+			attrCases.uriSet(crtDoc.uri.toString(), 'camelCase');
 			updateStatusBarText('camelCase');
 		}
 		if (select === '6') {
 			const detects = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
-				attrCases.set(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
+				attrCases.uriSet(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
 				updateStatusBarText(getValidAttrCase(detects.attr));
 			}
 		}
@@ -65,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	});
 
 	return (uri: string) => {
-		let attrCase = attrCases.get(uri);
+		let attrCase = attrCases.uriGet(uri);
 		if (uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
 			updateStatusBarText(attrCase);
 		}
@@ -74,7 +74,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
 		if (newDoc?.languageId === 'vue') {
-			let attrCase = attrCases.get(newDoc.uri.toString());
+			let attrCase = attrCases.uriGet(newDoc.uri.toString());
 			if (!attrCase) {
 				const attrMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');
 				if (attrMode === 'kebab') {
@@ -99,7 +99,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 				}
 			}
 			if (attrCase) {
-				attrCases.set(newDoc.uri.toString(), attrCase ?? 'unsure');
+				attrCases.uriSet(newDoc.uri.toString(), attrCase ?? 'unsure');
 			}
 			updateStatusBarText(attrCase);
 			statusBar.show();

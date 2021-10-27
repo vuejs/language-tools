@@ -150,7 +150,7 @@ export function createLanguageService(
 	let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
 	let templateProjectVersion = 0;
 	let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
-	const documents = new shared.UriMap<TextDocument>();
+	const documents = shared.createPathMap<TextDocument>();
 	const sourceFiles = createSourceFiles();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
@@ -617,16 +617,16 @@ export function createLanguageService(
 	function getHostDocument(uri: string): TextDocument | undefined {
 		const fileName = shared.uriToFsPath(uri);
 		const version = Number(vueHost.getScriptVersion(fileName));
-		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
+		if (!documents.uriHas(uri) || documents.uriGet(uri)!.version !== version) {
 			const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 				const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', version, scriptText);
-				documents.set(uri, document);
+				documents.uriSet(uri, document);
 			}
 		}
-		if (documents.has(uri)) {
-			return documents.get(uri);
+		if (documents.uriHas(uri)) {
+			return documents.uriGet(uri);
 		}
 	}
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {

@@ -447,7 +447,7 @@ export function register(
 					}
 					for (const vueItem of vueItems) {
 						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
-						const importFile = documentation ? sourceFiles.get(documentation) : undefined;
+						const importFile = documentation?.startsWith('file://') ? sourceFiles.get(documentation) : undefined;
 						if (importFile) {
 							const filePath = shared.uriToFsPath(importFile.uri);
 							const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);

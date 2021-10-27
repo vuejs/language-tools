@@ -11,7 +11,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		await shared.sleep(100);
 	}
 
-	const tagCases = new shared.UriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
+	const tagCases = shared.createPathMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.tagNameCase';
 
@@ -21,15 +21,14 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		onChangeDocument(e?.document);
 	});
 	const d_2 = vscode.workspace.onDidCloseTextDocument((doc) => {
-		tagCases.delete(doc.uri.toString());
+		tagCases.uriDelete(doc.uri.toString());
 	});
 	const d_3 = vscode.commands.registerCommand('volar.action.tagNameCase', async () => {
 
 		const crtDoc = vscode.window.activeTextEditor?.document;
 		if (!crtDoc) return;
 
-		const tagCase = tagCases.get(crtDoc.uri.toString());
-
+		const tagCase = tagCases.uriGet(crtDoc.uri.toString());
 		const options: Record<string, vscode.QuickPickItem> = {};
 
 		options[0] = { label: (tagCase === 'both' ? '• ' : '') + 'Component Using kebab-case and PascalCase (Both)' };
@@ -44,21 +43,21 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			return; // cancle
 
 		if (select === '0') {
-			tagCases.set(crtDoc.uri.toString(), 'both');
+			tagCases.uriSet(crtDoc.uri.toString(), 'both');
 			updateStatusBarText('both');
 		}
 		if (select === '1') {
-			tagCases.set(crtDoc.uri.toString(), 'kebabCase');
+			tagCases.uriSet(crtDoc.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
 		if (select === '2') {
-			tagCases.set(crtDoc.uri.toString(), 'pascalCase');
+			tagCases.uriSet(crtDoc.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}
 		if (select === '3') {
 			const detects = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
-				tagCases.set(crtDoc.uri.toString(), detects.tag);
+				tagCases.uriSet(crtDoc.uri.toString(), detects.tag);
 				updateStatusBarText(detects.tag);
 			}
 		}
@@ -72,14 +71,14 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	const d_4 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToKebabCase', async () => {
 		if (vscode.window.activeTextEditor) {
 			await vscode.commands.executeCommand('volar.server.executeConvertToKebabCase', vscode.window.activeTextEditor.document.uri.toString());
-			tagCases.set(vscode.window.activeTextEditor.document.uri.toString(), 'kebabCase');
+			tagCases.uriSet(vscode.window.activeTextEditor.document.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
 	});
 	const d_5 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToPascalCase', async () => {
 		if (vscode.window.activeTextEditor) {
 			await vscode.commands.executeCommand('volar.server.executeConvertToPascalCase', vscode.window.activeTextEditor.document.uri.toString());
-			tagCases.set(vscode.window.activeTextEditor.document.uri.toString(), 'pascalCase');
+			tagCases.uriSet(vscode.window.activeTextEditor.document.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}
 	});
@@ -96,7 +95,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	});
 
 	return (uri: string) => {
-		let tagCase = tagCases.get(uri);
+		let tagCase = tagCases.uriGet(uri);
 		if (uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
 			updateStatusBarText(tagCase);
 		}
@@ -105,7 +104,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
 		if (newDoc?.languageId === 'vue') {
-			let tagCase = tagCases.get(newDoc.uri.toString());
+			let tagCase = tagCases.uriGet(newDoc.uri.toString());
 			if (!tagCase) {
 				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto' | 'both' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
 				if (tagMode === 'both') {
@@ -123,7 +122,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 				}
 			}
 			if (tagCase) {
-				tagCases.set(newDoc.uri.toString(), tagCase);
+				tagCases.uriSet(newDoc.uri.toString(), tagCase);
 			}
 			updateStatusBarText(tagCase);
 			statusBar.show();

@@ -27,7 +27,7 @@ export function createProject(
 	let vueProjectVersion = 0;
 	let parsedCommandLine: ts.ParsedCommandLine;
 	let vueLs: vue.LanguageService | undefined;
-	const scripts = new shared.FsPathMap<{
+	const scripts = shared.createPathMap<{
 		version: number,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
@@ -77,8 +77,7 @@ export function createProject(
 
 		for (const change of changes) {
 
-			const fileName = shared.uriToFsPath(change.uri);
-			const script = scripts.get(fileName);
+			const script = scripts.uriGet(change.uri);
 
 			if (script && change.type === vscode.FileChangeType.Changed) {
 				if (script.version >= 0) {
@@ -89,10 +88,10 @@ export function createProject(
 				}
 			}
 			else if (script && change.type === vscode.FileChangeType.Deleted) {
-				scripts.delete(fileName);
+				scripts.uriDelete(change.uri);
 			}
 
-			updateProjectVersion(fileName);
+			updateProjectVersion(change.uri.endsWith('.vue'));
 		}
 
 		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
@@ -111,16 +110,15 @@ export function createProject(
 
 		await Promise.all([...fileRenamings]);
 
-		const fileName = shared.uriToFsPath(document.uri);
-		const script = scripts.get(fileName);
+		const script = scripts.uriGet(document.uri);
 		if (script) {
 			script.version = document.version;
 		}
 
-		updateProjectVersion(fileName);
+		updateProjectVersion(document.uri.endsWith('.vue'));
 	}
-	function updateProjectVersion(changedFileName: string) {
-		if (changedFileName.endsWith('.vue')) {
+	function updateProjectVersion(isVueFile: boolean) {
+		if (isVueFile) {
 			vueProjectVersion++;
 		}
 		else {
@@ -171,11 +169,11 @@ export function createProject(
 		return host;
 
 		function getScriptVersion(fileName: string) {
-			return scripts.get(fileName)?.version.toString()
+			return scripts.fsPathGet(fileName)?.version.toString()
 				?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
-			const script = scripts.get(fileName);
+			const script = scripts.fsPathGet(fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
@@ -187,7 +185,7 @@ export function createProject(
 					script.snapshotVersion = script.version;
 				}
 				else {
-					scripts.set(fileName, {
+					scripts.fsPathSet(fileName, {
 						version: -1,
 						snapshot: snapshot,
 						snapshotVersion: -1,
