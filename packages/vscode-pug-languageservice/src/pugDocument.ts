@@ -4,8 +4,8 @@ import * as path from 'path';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createCodeGen } from '@volar/code-gen';
+import * as pugLex from 'pug-lexer';
 
-const pugLex = require('pug-lexer');
 const pugParser = require('pug-parser');
 
 export type PugDocument = ReturnType<typeof parsePugDocument>;
@@ -27,8 +27,25 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
+		const emptyLineEnds = collectEmptyLineEnds(tokens);
 		const ast = pugParser(tokens, { filename: fileName, src: pugCode });
 		visitNode(ast, undefined);
+
+		// support auto-complete for empty lines
+		for (const emptyLineEnd of emptyLineEnds) {
+			codeGen.addText('<');
+			codeGen.addCode(
+				'x__VLS_',
+				{
+					start: emptyLineEnd,
+					end: emptyLineEnd,
+				},
+				SourceMap.Mode.Totally,
+				undefined,
+			);
+			codeGen.addText(' />');
+		}
+
 		codeGen.addCode(
 			'',
 			{
@@ -217,6 +234,33 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			}
 		}
 		codeGen.addText('"');
+	}
+	function collectEmptyLineEnds(tokens: pugLex.Token[]) {
+
+		const ends: number[] = [];
+
+		for (const token of tokens) {
+			if (token.type === 'newline' || token.type === 'outdent') {
+				let currentLine = token.loc.start.line - 2;
+				let prevLine = getLineText(currentLine);
+				while (prevLine.trim() === '') {
+					ends.push(pugTextDoc.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
+					if (currentLine <= 0) break;
+					currentLine--;
+					prevLine = getLineText(currentLine);
+				}
+			}
+		}
+
+		return ends;
+
+		function getLineText(line: number) {
+			const text = pugTextDoc.getText({
+				start: { line: line, character: 0 },
+				end: { line: line + 1, character: 0 },
+			});
+			return text.substr(0, text.length - 1);
+		}
 	}
 	function getDocOffset(pugLine: number, pugColumn: number) {
 		return pugTextDoc.offsetAt({ line: pugLine - 1, character: pugColumn - 1 });
