@@ -4,8 +4,8 @@ import * as path from 'path';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createCodeGen } from '@volar/code-gen';
+import * as pugLex from 'pug-lexer';
 
-const pugLex = require('pug-lexer');
 const pugParser = require('pug-parser');
 
 export type PugDocument = ReturnType<typeof parsePugDocument>;
@@ -24,11 +24,31 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		filename: string,
 	} | undefined;
 	let fullPugTagEnd: number;
+	let attrsBlocks: ReturnType<typeof collectAttrsBlocks>;
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
+
+		const emptyLineEnds = collectEmptyLineEnds(tokens);
+		attrsBlocks = collectAttrsBlocks(tokens);
 		const ast = pugParser(tokens, { filename: fileName, src: pugCode });
 		visitNode(ast, undefined);
+
+		// support tag auto-complete in empty lines
+		for (const emptyLineEnd of emptyLineEnds) {
+			codeGen.addText('<');
+			codeGen.addCode(
+				'x__VLS_',
+				{
+					start: emptyLineEnd,
+					end: emptyLineEnd,
+				},
+				SourceMap.Mode.Totally,
+				undefined,
+			);
+			codeGen.addText(' />');
+		}
+
 		codeGen.addCode(
 			'',
 			{
@@ -124,44 +144,42 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		else {
 			codeGen.addText(node.name);
 		}
-		addClassesOrStyles(node.attrs.filter(attr => attr.name === 'class'), 'class');
-		for (const attr of node.attrs.filter(attr => attr.name !== 'class')) {
-			addAttr(attr);
+
+		const noTitleAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name !== 'class');
+		const noTitleClassAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name === 'class');
+		const attrsBlock = attrsBlocks.get(node.line - 1); // support attr auto-complete in empty space
+
+		addClassesOrStyles(noTitleClassAttrs, 'class');
+
+		for (const attr of noTitleAttrs) {
+			codeGen.addText(' ');
+			codeGen.addText(attr.name);
+			if (typeof attr.val !== 'boolean') {
+				codeGen.addText('=');
+				codeGen.addCode(
+					attr.val,
+					getDocRange(attr.line, attr.column, attr.val.length),
+					SourceMap.Mode.Offset,
+					undefined
+				);
+			}
 		}
+
+		if (attrsBlock) {
+			codeGen.addText(' ');
+			codeGen.addCode(
+				attrsBlock.text,
+				{ start: attrsBlock.offset, end: attrsBlock.offset + attrsBlock.text.length },
+				SourceMap.Mode.Offset,
+				undefined,
+			);
+		}
+
 		if (selfClosing) {
 			codeGen.addText(' />');
 		}
 		else {
 			codeGen.addText('>');
-		}
-	}
-	function addAttr(attr: TagNode['attrs'][number]) {
-		codeGen.addText(' ');
-		if (attr.mustEscape) {
-			codeGen.addCode(
-				attr.name,
-				getDocRange(attr.line, attr.column, attr.name.length),
-				SourceMap.Mode.Offset,
-				undefined
-			);
-		}
-		else {
-			codeGen.addText(attr.name);
-		}
-		if (typeof attr.val !== 'boolean') {
-			codeGen.addText('=');
-			const escapeLength = attr.mustEscape ? `${attr.name}=`.length : 0;
-			let val = attr.val;
-			if (val.startsWith('`') && val.endsWith('`')) {
-				val = `"${val.substr(1, val.length - 2)}"`;
-			}
-			val = val.replace(/ \\\n/g, '//\n'); // TODO: required a space for now
-			codeGen.addCode(
-				val,
-				getDocRange(attr.line, attr.column, val.length, escapeLength),
-				SourceMap.Mode.Offset,
-				undefined
-			);
 		}
 	}
 	function addEndTag(node: TagNode, next: Node | undefined) {
@@ -189,28 +207,15 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	function addClassesOrStyles(attrs: TagNode['attrs'], attrName: string) {
 		if (!attrs.length) return;
 		codeGen.addText(' ');
-		const escapeAttrs = attrs.filter(attr => attr.mustEscape);
-		if (escapeAttrs.length) {
-			codeGen.addCode(
-				attrName,
-				getDocRange(escapeAttrs[0].line, escapeAttrs[0].column, attrName.length),
-				SourceMap.Mode.Offset,
-				undefined,
-				escapeAttrs.slice(1).map(attr => getDocRange(attr.line, attr.column, attrName.length)),
-			);
-		}
-		else {
-			codeGen.addText(attrName);
-		}
+		codeGen.addText(attrName);
 		codeGen.addText('=');
 		codeGen.addText('"');
 		for (const attr of attrs) {
 			if (typeof attr.val !== 'boolean') {
 				codeGen.addText(' ');
-				const escapeLength = attr.mustEscape ? `${attrName}=`.length : 0;
 				codeGen.addCode(
 					attr.val.substr(1, attr.val.length - 2), // remove "
-					getDocRange(attr.line, attr.column + 1, attr.val.length - 2, escapeLength),
+					getDocRange(attr.line, attr.column + 1, attr.val.length - 2),
 					SourceMap.Mode.Offset,
 					undefined
 				);
@@ -218,11 +223,93 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		}
 		codeGen.addText('"');
 	}
+	function collectEmptyLineEnds(tokens: pugLex.Token[]) {
+
+		const ends: number[] = [];
+
+		for (const token of tokens) {
+			if (token.type === 'newline' || token.type === 'outdent') {
+				let currentLine = token.loc.start.line - 2;
+				let prevLine = getLineText(currentLine);
+				while (prevLine.trim() === '') {
+					ends.push(pugTextDoc.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
+					if (currentLine <= 0) break;
+					currentLine--;
+					prevLine = getLineText(currentLine);
+				}
+			}
+		}
+
+		return ends;
+
+		function getLineText(line: number) {
+			const text = pugTextDoc.getText({
+				start: { line: line, character: 0 },
+				end: { line: line + 1, character: 0 },
+			});
+			return text.substr(0, text.length - 1);
+		}
+	}
+	function collectAttrsBlocks(tokens: pugLex.Token[]) {
+
+		const blocks = new Map<number, { offset: number, text: string }>();
+
+		for (let i = 0; i < tokens.length; i++) {
+			const startToken = tokens[i];
+			if (startToken.type === 'start-attributes') {
+
+				let prevToken: pugLex.Token = startToken;
+				let text = '';
+
+				for (i++; i < tokens.length; i++) {
+
+					const attrToken = tokens[i];
+					addPrevSpace(attrToken);
+
+					if (attrToken.type === 'attribute') {
+						let attrText = pugCode.substring(
+							getDocOffset(attrToken.loc.start.line, attrToken.loc.start.column),
+							getDocOffset(attrToken.loc.end.line, attrToken.loc.end.column),
+						);
+						if (typeof attrToken.val === 'string' && attrText.indexOf('=') >= 0) {
+							let valText = attrToken.val;
+							if (valText.startsWith('`') && valText.endsWith('`')) {
+								valText = `"${valText.substr(1, valText.length - 2)}"`;
+							}
+							valText = valText.replace(/ \\\n/g, '//\n');
+							text += attrText.substring(0, attrText.lastIndexOf(attrToken.val)) + valText;
+						}
+						else {
+							text += attrText;
+						}
+					}
+					else if (attrToken.type === 'end-attributes') {
+						blocks.set(startToken.loc.end.line - 1, {
+							offset: getDocOffset(startToken.loc.end.line, startToken.loc.end.column),
+							text,
+						});
+						break;
+					}
+
+					prevToken = attrToken;
+				}
+
+				function addPrevSpace(currentToken: pugLex.Token) {
+					text += pugCode.substring(
+						getDocOffset(prevToken.loc.end.line, prevToken.loc.end.column),
+						getDocOffset(currentToken.loc.start.line, currentToken.loc.start.column),
+					).replace(/,/g, '\n');
+				}
+			}
+		}
+
+		return blocks;
+	}
 	function getDocOffset(pugLine: number, pugColumn: number) {
 		return pugTextDoc.offsetAt({ line: pugLine - 1, character: pugColumn - 1 });
 	}
-	function getDocRange(pugLine: number, pugColumn: number, length: number, offset = 0) {
-		const start = pugTextDoc.offsetAt({ line: pugLine - 1, character: pugColumn - 1 }) + offset;
+	function getDocRange(pugLine: number, pugColumn: number, length: number) {
+		const start = pugTextDoc.offsetAt({ line: pugLine - 1, character: pugColumn - 1 });
 		const end = start + length;
 		return {
 			start,
