@@ -507,10 +507,14 @@ export function register(
 							vueItem.data = data;
 						}
 					}
-					{ // filter HTMLAttributes
+					{
 						const temp = new Map<string, vscode.CompletionItem>();
 						for (const item of vueItems) {
-							if (!temp.get(item.label)?.documentation) {
+							const data: CompletionData | undefined = item.data;
+							if (data?.mode === 'autoImport' && data.importUri === sourceFile.uri) { // don't import itself
+								continue;
+							}
+							if (!temp.get(item.label)?.documentation) { // filter HTMLAttributes
 								temp.set(item.label, item);
 							}
 						}
