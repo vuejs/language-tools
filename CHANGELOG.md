@@ -8,6 +8,10 @@
 - fix: filter current component from component auto-import list
 - fix: normalize request uri for Sublime / Atom ([#637](https://github.com/johnsoncodehk/volar/issues/637))
 
+**Known regressions**
+
+- semantic tokens not working in pug template
+
 ## 0.28.9
 
 - feat: use VSCode 1.61 `Split Editor In Group` instead of create new editor ([#608](https://github.com/johnsoncodehk/volar/issues/608))

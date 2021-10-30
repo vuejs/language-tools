@@ -24,30 +24,20 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		filename: string,
 	} | undefined;
 	let fullPugTagEnd: number;
+	let emptyLineEnds: ReturnType<typeof collectEmptyLineEnds>;
 	let attrsBlocks: ReturnType<typeof collectAttrsBlocks>;
+	let consumedIndex = 0;
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
 
-		const emptyLineEnds = collectEmptyLineEnds(tokens);
+		emptyLineEnds = collectEmptyLineEnds(tokens);
 		attrsBlocks = collectAttrsBlocks(tokens);
+
 		const ast = pugParser(tokens, { filename: fileName, src: pugCode });
 		visitNode(ast, undefined);
 
-		// support tag auto-complete in empty lines
-		for (const emptyLineEnd of emptyLineEnds) {
-			codeGen.addText('<');
-			codeGen.addCode(
-				'x__VLS_',
-				{
-					start: emptyLineEnd,
-					end: emptyLineEnd,
-				},
-				SourceMap.Mode.Totally,
-				undefined,
-			);
-			codeGen.addText(' />');
-		}
+		consumeEmptyLines(pugCode.length);
 
 		codeGen.addCode(
 			'',
@@ -90,9 +80,11 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		}
 		else if (node.type === 'Tag') {
 
-			const fullHtmlStart = codeGen.getText().length;
 			const pugTagRange = getDocRange(node.line, node.column, node.name.length);
-			const fullPugStart = pugTagRange.start;
+
+			consumeEmptyLines(pugTagRange.start);
+
+			const fullHtmlStart = codeGen.getText().length;
 			fullPugTagEnd = pugTagRange.end;
 
 			const selfClosing = node.block.nodes.length === 0;
@@ -105,7 +97,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			codeGen.addMapping2({
 				data: undefined,
 				sourceRange: {
-					start: fullPugStart,
+					start: pugTagRange.start,
 					end: fullPugTagEnd,
 				},
 				mappedRange: {
@@ -223,6 +215,28 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		}
 		codeGen.addText('"');
 	}
+	// support tag auto-complete in empty lines
+	function consumeEmptyLines(offset: number) {
+		for (; consumedIndex < emptyLineEnds.length; consumedIndex++) {
+
+			const emptyLineEnd = emptyLineEnds[consumedIndex];
+
+			if (emptyLineEnd > offset)
+				break;
+
+			codeGen.addText('<');
+			codeGen.addCode(
+				'x__VLS_',
+				{
+					start: emptyLineEnd,
+					end: emptyLineEnd,
+				},
+				SourceMap.Mode.Totally,
+				undefined,
+			);
+			codeGen.addText(' />');
+		}
+	}
 	function collectEmptyLineEnds(tokens: pugLex.Token[]) {
 
 		const ends: number[] = [];
@@ -240,7 +254,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			}
 		}
 
-		return ends;
+		return ends.sort((a, b) => a - b);
 
 		function getLineText(line: number) {
 			const text = pugTextDoc.getText({
