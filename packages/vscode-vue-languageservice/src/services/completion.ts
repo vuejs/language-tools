@@ -661,19 +661,31 @@ export function register(
 				projectVersion.value;
 				usedTags.value;
 			}
-			const data = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
+			const result = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
+
 			pauseTracking();
 			const doc = sfcTemplateScript.textDocument.value;
+			const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
 			const entryDoc = sfcEntryForTemplateLs.textDocument.value;
 			resetTracking();
+
 			if (doc && entryDoc) {
+
 				const text = doc.getText();
-				for (const tag of templateScriptData.componentItems) {
-					const tagName = (tag.data as TsCompletionData).name;
+				const tags_1 = templateScriptData.componentItems.map(item => ({ item, name: (item.data as TsCompletionData).name }));
+				const tags_2 = templateTagNames
+					.filter(tag => tag.indexOf('.') >= 0 || tag.indexOf('[') >= 0)
+					.map(tag => ({ name: tag, item: undefined }));
+
+				for (const tag of [...tags_1, ...tags_2]) {
+
+					if (result.has(tag.name))
+						continue;
+
 					let bind: vscode.CompletionItem[] = [];
 					let on: vscode.CompletionItem[] = [];
 					{
-						const searchText = SearchTexts.PropsCompletion(tagName);
+						const searchText = SearchTexts.PropsCompletion(tag.name);
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
@@ -681,19 +693,19 @@ export function register(
 						}
 					}
 					{
-						const searchText = SearchTexts.EmitCompletion(tagName);
+						const searchText = SearchTexts.EmitCompletion(tag.name);
 						let offset = text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							on = templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset))?.items ?? [];
 						}
 					}
-					data.set(tagName, { item: tag, bind, on });
+					result.set(tag.name, { item: tag.item, bind, on });
 				}
 				const globalBind = templateTsLs.__internal__.doCompleteSync(entryDoc.uri, entryDoc.positionAt(entryDoc.getText().indexOf(SearchTexts.GlobalAttrs)))?.items ?? [];
-				data.set('*', { item: undefined, bind: globalBind, on: [] });
+				result.set('*', { item: undefined, bind: globalBind, on: [] });
 			}
-			return data;
+			return result;
 		});
 		return () => {
 			projectVersion.value = getScriptContentVersion();

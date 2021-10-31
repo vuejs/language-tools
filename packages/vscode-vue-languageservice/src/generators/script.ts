@@ -524,13 +524,20 @@ export function generate(
 			bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
 		}
 
+		// fix import components unused report
 		for (const varName of bindingNames) {
 			if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
-				// fix import components unused report
 				codeGen.addText('// @ts-ignore\n');
 				codeGen.addText(varName + ';\n');
 			}
 		}
+		for (const tag of htmlGen.tags) {
+			if (tag.indexOf('.') >= 0 || tag.indexOf('[') >= 0) {
+				codeGen.addText('// @ts-ignore\n');
+				codeGen.addText(tag + ';\n');
+			}
+		}
+
 		codeGen.addText(htmlGen.text);
 	}
 }
