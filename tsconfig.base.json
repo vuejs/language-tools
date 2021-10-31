@@ -11,6 +11,7 @@
 		"composite": true,
 		"declaration": true,
 		"strict": true,
+		"resolveJsonModule": true,
 		"baseUrl": "./",
 		"paths": {
 			"vscode-pug-languageservice": [

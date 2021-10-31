@@ -233,9 +233,7 @@ export function createProjects(
 		const match = get(uri);
 		if (!match) return;
 
-		let send = false; // is vue document
 		await match.service.doValidation(uri, async result => {
-			send = true;
 			connection.sendDiagnostics({ uri: uri, diagnostics: result });
 		}, isCancel);
 	}

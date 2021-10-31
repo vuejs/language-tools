@@ -18,6 +18,7 @@ import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as whitelist from './features/whitelist';
+import { getRandomTipsMessage } from './features/tips';
 
 let apiClient: lsp.LanguageClient;
 let docClient: lsp.LanguageClient | undefined;
@@ -105,6 +106,7 @@ async function doActivate(context: vscode.ExtensionContext) {
 		'Volar - API',
 		6009,
 		languageFeaturesDocumentSelector,
+		getRandomTipsMessage(),
 	);
 	docClient = !lowPowerMode ? createLanguageService(
 		context,
@@ -113,7 +115,8 @@ async function doActivate(context: vscode.ExtensionContext) {
 		'Volar - Document',
 		6010,
 		languageFeaturesDocumentSelector,
-	) : undefined;
+		getRandomTipsMessage(),
+		) : undefined;
 	htmlClient = createLanguageService(
 		context,
 		'html',
@@ -121,6 +124,7 @@ async function doActivate(context: vscode.ExtensionContext) {
 		'Volar - HTML',
 		6011,
 		documentFeaturesDocumentSelector,
+		undefined,
 	);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
@@ -201,7 +205,15 @@ function lowPowerModeEnabled() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('lowPowerMode');
 }
 
-function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | 'doc' | 'html', id: string, name: string, port: number, documentSelector: lsp.DocumentSelector) {
+function createLanguageService(
+	context: vscode.ExtensionContext,
+	mode: 'api' | 'doc' | 'html',
+	id: string,
+	name: string,
+	port: number,
+	documentSelector: lsp.DocumentSelector,
+	initMessage: string | undefined,
+) {
 
 	const serverModule = context.asAbsolutePath(path.join('node_modules', '@volar', 'server', 'out', 'index.js'));
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
@@ -255,6 +267,7 @@ function createLanguageService(context: vscode.ExtensionContext, mode: 'api' | '
 				getDocumentPrintWidthRequest: true,
 			},
 		} : undefined,
+		initializationMessage: initMessage,
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector,

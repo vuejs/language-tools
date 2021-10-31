@@ -48,18 +48,10 @@ export function createProject(
 
 	function getLanguageService() {
 		if (!vueLs) {
-			let numOfFeatures = 0;
-			if (options.languageFeatures) {
-				for (let feature in options.languageFeatures) {
-					if (!!options.languageFeatures[feature as keyof typeof options.languageFeatures]) {
-						numOfFeatures++;
-					}
-				}
-			}
 			vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
 			vueLs.__internal__.onInitProgress(p => {
 				if (p === 0) {
-					workDoneProgress.begin(`Initializing Vue language features (${numOfFeatures} features)`);
+					workDoneProgress.begin(getMessageText());
 				}
 				if (p < 1) {
 					workDoneProgress.report(p * 100);
@@ -70,6 +62,21 @@ export function createProject(
 			});
 		}
 		return vueLs;
+	}
+	function getMessageText() {
+		let messageText = options.initializationMessage;
+		if (!messageText) {
+			let numOfFeatures = 0;
+			if (options.languageFeatures) {
+				for (let feature in options.languageFeatures) {
+					if (!!options.languageFeatures[feature as keyof typeof options.languageFeatures]) {
+						numOfFeatures++;
+					}
+				}
+			}
+			messageText = `Initializing Vue language features (${numOfFeatures} features)`;
+		}
+		return messageText;
 	}
 	async function onWorkspaceFilesChanged(changes: vscode.FileEvent[]) {
 

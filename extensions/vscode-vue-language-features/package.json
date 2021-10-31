@@ -283,6 +283,16 @@
 					"default": true,
 					"description": "Enabled auto-import for component with tag completion."
 				},
+				"volar.initializationMessage.tips": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show tips on initializing."
+				},
+				"volar.initializationMessage.news": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show news on initializing."
+				},
 				"volar.preview.port": {
 					"type": "number",
 					"default": 3333,
