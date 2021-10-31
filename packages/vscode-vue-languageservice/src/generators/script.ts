@@ -532,7 +532,7 @@ export function generate(
 			}
 		}
 		for (const tag of htmlGen.tags) {
-			if (tag.indexOf('.') >= 0 || tag.indexOf('[') >= 0) {
+			if (tag.indexOf('.') >= 0) {
 				codeGen.addText('// @ts-ignore\n');
 				codeGen.addText(tag + ';\n');
 			}

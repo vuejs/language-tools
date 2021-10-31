@@ -12,6 +12,7 @@ export function getSemanticTokenLegend() {
 	const tokenTypesLegend = [
 		...tsLegend.types,
 		'componentTag',
+		'operator', // namespaced component accessor: '.'
 	];
 	const semanticTokenLegend: vscode.SemanticTokensLegend = {
 		tokenTypes: tokenTypesLegend,
@@ -150,7 +151,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 				while (token !== html.TokenType.EOS) {
 					if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
 						const tokenText = scanner.getTokenText();
-						if (components.has(tokenText)) {
+						if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
 							const tokenOffset = scanner.getTokenOffset();
 							const tokenLength = scanner.getTokenLength();
 							const vueRange = sourceMap.getSourceRange2(tokenOffset);
@@ -158,7 +159,17 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 								const vueOffset = vueRange.start;
 								if (vueOffset > offsetRange.end) break; // TODO: fix source map perf and break in while condition
 								const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
+
+								if (components.has(tokenText)) {
+									result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
+								}
+								else if (tokenText.indexOf('.') >= 0) {
+									for (let i = 0; i < tokenText.length; i++) {
+										if (tokenText[i] === '.') {
+											result.push([vuePos.line, vuePos.character + i, 1, tokenTypes.get('operator') ?? -1, undefined]);
+										}
+									}
+								}
 							}
 						}
 					}

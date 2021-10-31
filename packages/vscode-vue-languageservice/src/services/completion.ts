@@ -674,7 +674,7 @@ export function register(
 				const text = doc.getText();
 				const tags_1 = templateScriptData.componentItems.map(item => ({ item, name: (item.data as TsCompletionData).name }));
 				const tags_2 = templateTagNames
-					.filter(tag => tag.indexOf('.') >= 0 || tag.indexOf('[') >= 0)
+					.filter(tag => tag.indexOf('.') >= 0)
 					.map(tag => ({ name: tag, item: undefined }));
 
 				for (const tag of [...tags_1, ...tags_2]) {

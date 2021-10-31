@@ -93,7 +93,7 @@ export function generate(
 
 		const tag = tags[tagName];
 		const tagRanges = tag.offsets.map(offset => ({ start: offset, end: offset + tagName.length }));
-		const isNamespacedTag = tagName.indexOf('.') >= 0 || tagName.indexOf('[') >= 0;
+		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
 		const var_correctTagName = `__VLS_${elementIndex++}`;
 		const var_wrapComponent = `__VLS_${elementIndex++}`;
