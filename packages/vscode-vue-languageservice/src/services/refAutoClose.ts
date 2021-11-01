@@ -70,6 +70,9 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 	else if (ts.isLiteralTypeNode(node)) {
 		return true;
 	}
+	else if (ts.isPropertyAccessExpression(node) && node.name.text === 'value') {
+		return true;
+	}
 	else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
