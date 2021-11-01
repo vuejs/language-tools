@@ -13,18 +13,21 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 ## IDE Supports by Community
 
-[coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
-*Vue language support for coc.nvim*
+[yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
+*Vue language client for coc.nvim*
 
-[nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
+[neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
 *Vue language server configuration for Neovim* \
 [[Multiple servers set up tutorial](https://github.com/johnsoncodehk/volar/discussions/606)]
 
-[vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
+[mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
 
 [sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) \
 *Vue language client for Sublime*
+
+[KailumAB/atom-ide-volar](https://github.com/KailumAB/atom-ide-volar) (WIP) \
+*Vue language client for Atom*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
