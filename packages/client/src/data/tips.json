@@ -69,11 +69,11 @@
 		}
 	},
 	{
-		"message": "If ESLint `@typescript-eslint/no-unused-vars` doesn't work as expected, try setup tsconfig `compilerOptions.noUnusedLocals` instead of.",
+		"message": "You may want to use `compilerOptions.noUnusedLocals` instead of `@typescript-eslint/no-unused-vars`.",
 		"when": "vscode.extensions.getExtension('dbaeumer.vscode-eslint')",
 		"locales": {
-			"zh-cn": "如果ESLint的`@typescript-eslint/no-unused-vars`规则不符合预期，尝试设置tsconfig的`compilerOptions.noUnusedLocals`来代替",
-			"zh-tw": "如果ESLint的`@typescript-eslint/no-unused-vars`規則不符合預期，嘗試設置tsconfig的`compilerOptions.noUnusedLocals`來代替"
+			"zh-cn": "你可能想用`compilerOptions.noUnusedLocals`代替`@typescript-eslint/no-unused-vars`",
+			"zh-tw": "你可能想用`compilerOptions.noUnusedLocals`代替`@typescript-eslint/no-unused-vars`"
 		}
 	},
 	{
@@ -126,24 +126,24 @@
 		}
 	},
 	{
-		"message": "If your component tags alway show red color or invalid color, you may need to config `editor.semanticHighlighting.enabled`, check out #522 for the reason.",
+		"message": "If your component tags alway show red color or invalid color, check out #522.",
 		"locales": {
-			"zh-cn": "如果你的组件标籤始终显示红色或无效色，你可能需要设置`editor.semanticHighlighting.enabled`，看看#522以暸解原因",
-			"zh-tw": "如果你的組件標籤始終顯示紅色或無效色，你可能需要設置`editor.semanticHighlighting.enabled`，看看#522以暸解原因"
+			"zh-cn": "如果你的组件标籤始终显示红色或无效色，看看#522",
+			"zh-tw": "如果你的組件標籤始終顯示紅色或無效色，看看#522"
 		}
 	},
 	{
-		"message": "If ref variable is `Ref<...>` type in template, you may need to reinstall node_modules, check out #322 for the reason.",
+		"message": "If ref variable is `Ref<...>` type in template, check out #322.",
 		"locales": {
-			"zh-cn": "如果ref变量在模版中是`Ref<...>`类型，你可能需要重新安装node_modules，看看#322以暸解原因",
-			"zh-tw": "如果ref變量在模版中是`Ref<...>`類型，你可能需要重新安裝node_modules，看看#322以暸解原因"
+			"zh-cn": "如果ref变量在模版中是`Ref<...>`类型，看看#322",
+			"zh-tw": "如果ref變量在模版中是`Ref<...>`類型，看看#322"
 		}
 	},
 	{
-		"message": "For Vitepress project, you may need to config `\"include\": [\"src/.vitepress/**/*\"]` in tsconfig",
+		"message": "For Vitepress project, you may need to config `\"include\": [\"src/.vitepress/**/*\"]`",
 		"locales": {
-			"zh-cn": "对于Vitepress项目，你可能需要在tsconfig中设置`\"include\": [\"src/.vitepress/**/*\"]`",
-			"zh-tw": "對於Vitepress項目，你可能需要在tsconfig中設置`\"include\": [\"src/.vitepress/**/*\"]`"
+			"zh-cn": "对于Vitepress项目，你可能需要设置`\"include\": [\"src/.vitepress/**/*\"]`",
+			"zh-tw": "對於Vitepress項目，你可能需要設置`\"include\": [\"src/.vitepress/**/*\"]`"
 		}
 	}
 ]
