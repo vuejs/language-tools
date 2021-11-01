@@ -4,6 +4,7 @@ import * as vscode from 'vscode-languageserver';
 import * as shared from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { hyphenate } from '@vue/shared';
 
 export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
@@ -73,6 +74,14 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 	else if (ts.isPropertyAccessExpression(node) && node.name.text === 'value') {
 		return true;
 	}
+	else if (
+		ts.isCallExpression(node)
+		&& ts.isIdentifier(node.expression)
+		&& isWatchOrUseFunction(node.expression.text)
+		&& isTopLevelArgOrArrayTopLevelItemItem(node)
+	) {
+		return true;
+	}
 	else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
@@ -84,6 +93,27 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 			}
 		});
 		return _isBlacklistNode;
+	}
+
+	function isWatchOrUseFunction(fnName: string) {
+		return fnName === 'watch' || hyphenate(fnName).startsWith('use-');
+	}
+	function isTopLevelArgOrArrayTopLevelItemItem(node: ts.CallExpression) {
+		for (const arg of node.arguments) {
+			if (pos >= arg.getFullStart() && pos <= arg.getEnd()) {
+				if (ts.isIdentifier(arg)) {
+					return true;
+				}
+				if (ts.isArrayLiteralExpression(arg)) {
+					for (const el of arg.elements) {
+						if (pos >= el.getFullStart() && pos <= el.getEnd()) {
+							return ts.isIdentifier(el);
+						}
+					}
+				}
+				return false;
+			}
+		}
 	}
 }
 export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageService) {
