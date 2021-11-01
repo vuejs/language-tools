@@ -23,6 +23,8 @@ Build dts:
 
 `vue-tsc --declaration --emitDeclarationOnly`
 
+Check out https://github.com/johnsoncodehk/volar/discussions/640#discussioncomment-1555479 for example repo.
+
 ## Sponsors
 
 This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
