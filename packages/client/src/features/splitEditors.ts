@@ -29,10 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
 			...descriptor.customBlocks,
 		].filter(shared.notEmpty);
 
-		const startViewColumn = vscode.window.activeTextEditor?.viewColumn;
-		if (startViewColumn === undefined)
-			return;
-
 		await foldingBlocks(leftBlocks);
 		await vscode.commands.executeCommand('workbench.action.toggleSplitEditorInGroup');
 		await foldingBlocks(rightBlocks);
