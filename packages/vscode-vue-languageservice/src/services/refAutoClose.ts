@@ -96,7 +96,11 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 	}
 
 	function isWatchOrUseFunction(fnName: string) {
-		return fnName === 'watch' || hyphenate(fnName).startsWith('use-');
+		return fnName === 'watch'
+			|| fnName === 'unref'
+			|| fnName === 'triggerRef'
+			|| fnName === 'isRef'
+			|| hyphenate(fnName).startsWith('use-');
 	}
 	function isTopLevelArgOrArrayTopLevelItemItem(node: ts.CallExpression) {
 		for (const arg of node.arguments) {
