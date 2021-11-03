@@ -80,7 +80,7 @@ export function createSourceFile(
 				},
 			};
 		}
-		if (descriptor.template && sfcTemplate.textDocument.value) {
+		if (descriptor.template && sfcTemplate.textDocument.value && descriptor.template.lang === 'html') {
 			return {
 				sourceLang: 'html',
 				html: descriptor.template.content,
