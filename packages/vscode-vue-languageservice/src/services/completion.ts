@@ -207,7 +207,7 @@ export function register(
 					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					triggerKind: context?.triggerKind,
 					includeCompletionsForModuleExports: true,
-					includeCompletionsWithInsertText: true, // TODO: not sure what is this
+					includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 					...(inTemplate ? {
 						quotePreference: 'single',
 						includeCompletionsForModuleExports: false,
