@@ -316,9 +316,9 @@ export function useSfcTemplateScript(
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
 					for (const cssRange of maped.cssRanges) {
-						const vueRange = cssSourceMap.getSourceRange2(cssRange.start, cssRange.end);
+						const vueRange = cssSourceMap.getSourceRange(cssRange.start, cssRange.end);
 						if (!vueRange) continue;
-						sourceMap.add({
+						sourceMap.mappings.push({
 							data: {
 								vueTag: 'style',
 								capabilities: {
@@ -430,7 +430,7 @@ export function useSfcTemplateScript(
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {
-					sourceMap.add(maped);
+					sourceMap.mappings.push(maped);
 				}
 				teleportSourceMap.value = sourceMap;
 			}

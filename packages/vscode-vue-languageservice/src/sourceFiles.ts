@@ -225,7 +225,7 @@ export function createSourceFiles() {
 
 			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
 			if (sourceMap) {
-				for (const vueRange of sourceMap.getSourceRanges2(start, end)) {
+				for (const vueRange of sourceMap.getSourceRanges(start, end)) {
 					yield {
 						type: 'embedded-ts' as const,
 						sourceMap,

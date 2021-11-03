@@ -30,7 +30,7 @@ export function useSfcScript(
 				documentSymbol: false,
 				codeActions: false,
 			});
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: {
 					vueTag: 'script',
 					capabilities: {

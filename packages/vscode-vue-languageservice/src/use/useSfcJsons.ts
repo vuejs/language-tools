@@ -43,7 +43,7 @@ export function useSfcJsons(
 				doc.textDocument,
 				doc.jsonDocument,
 			);
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {

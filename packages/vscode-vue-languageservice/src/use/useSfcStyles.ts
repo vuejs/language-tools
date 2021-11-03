@@ -95,7 +95,7 @@ export function useSfcStyles(
 				cssData.links,
 				{ foldingRanges: true, formatting: true },
 			);
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {

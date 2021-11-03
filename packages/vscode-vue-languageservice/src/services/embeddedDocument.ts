@@ -9,7 +9,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		language: string,
 		document: TextDocument | undefined,
 		range: vscode.Range,
-		sourceMap: SourceMap | undefined,
+		sourceMap: SourceMap<any> | undefined,
 	} | undefined => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;

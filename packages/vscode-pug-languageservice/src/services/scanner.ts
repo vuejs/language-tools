@@ -4,10 +4,10 @@ import type { PugDocument } from '../pugDocument';
 export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, initialOffset = 0) => {
 
-		let htmlRange = pugDoc.sourceMap.getMappedRange2(initialOffset);
+		let htmlRange = pugDoc.sourceMap.getMappedRange(initialOffset);
 		while (!htmlRange && initialOffset < pugDoc.pugCode.length) {
 			initialOffset++;
-			htmlRange = pugDoc.sourceMap.getMappedRange2(initialOffset);
+			htmlRange = pugDoc.sourceMap.getMappedRange(initialOffset);
 		}
 		if (!htmlRange) return;
 
@@ -40,7 +40,7 @@ export function register(htmlLs: html.LanguageService) {
 			if (offset === undefined || end === undefined) {
 				const htmlOffset = htmlScanner.getTokenOffset();
 				const htmlEnd = htmlScanner.getTokenEnd();
-				const pugRange = pugDoc.sourceMap.getSourceRange2(htmlOffset, htmlEnd);
+				const pugRange = pugDoc.sourceMap.getSourceRange(htmlOffset, htmlEnd);
 				if (pugRange) {
 					offset = pugRange.start;
 					end = pugRange.end;

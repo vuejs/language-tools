@@ -93,7 +93,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 				const tsLs = getTsLs(sourceMap.lsType);
 
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 					if (
 						maped.data.capabilities.semanticTokens
 						&& maped.sourceRange.end > offsetRange.start
@@ -111,7 +111,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 						for (const token of tokens) {
 							const tsStart = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] });
 							const tsEnd = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
-							const vueRange = sourceMap.getSourceRange2(tsStart, tsEnd);
+							const vueRange = sourceMap.getSourceRange(tsStart, tsEnd);
 							if (!vueRange || !vueRange.data.capabilities.semanticTokens)
 								continue;
 							const vuePos = document.positionAt(vueRange.start);
@@ -133,14 +133,14 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 
-				const inSourceMap = [...sourceMap].some(mapping =>
+				const inSourceMap = [...sourceMap.mappings].some(mapping =>
 					(mapping.sourceRange.start >= offsetRange.start && mapping.sourceRange.start <= offsetRange.end)
 					|| (mapping.sourceRange.end >= offsetRange.start && mapping.sourceRange.end <= offsetRange.end)
 				);
 				if (!inSourceMap)
 					continue;
 
-				const htmlStart = sourceMap.getMappedRange2(offsetRange.start)?.start ?? 0;
+				const htmlStart = sourceMap.getMappedRange(offsetRange.start)?.start ?? 0;
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
 					? htmlLs.createScanner(docText, htmlStart)
@@ -154,7 +154,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 						if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
 							const tokenOffset = scanner.getTokenOffset();
 							const tokenLength = scanner.getTokenLength();
-							const vueRange = sourceMap.getSourceRange2(tokenOffset);
+							const vueRange = sourceMap.getSourceRange(tokenOffset);
 							if (vueRange) {
 								const vueOffset = vueRange.start;
 								if (vueOffset > offsetRange.end) break; // TODO: fix source map perf and break in while condition

@@ -150,13 +150,13 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 			start: number,
 			end: number,
 		}[] = [];
-		for (const teleRange of this.getMappedRanges2(start, end)) {
+		for (const teleRange of this.getMappedRanges(start, end)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toTarget,
 			});
 		}
-		for (const teleRange of this.getSourceRanges2(start, end)) {
+		for (const teleRange of this.getSourceRanges(start, end)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toSource,

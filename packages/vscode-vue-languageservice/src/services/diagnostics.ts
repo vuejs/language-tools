@@ -463,7 +463,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					&& sfcTemplateScript.sourceMapForFormatting.value
 					&& !templateTsLs.__internal__.getValidTextDocument(sfcTemplateScript.textDocument.value.uri)
 				) {
-					for (const maped of sfcTemplateScript.sourceMapForFormatting.value) {
+					for (const maped of sfcTemplateScript.sourceMapForFormatting.value.mappings) {
 						const error = vscode.Diagnostic.create(
 							{
 								start: document.value.positionAt(maped.sourceRange.start),

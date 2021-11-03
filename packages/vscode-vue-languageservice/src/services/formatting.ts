@@ -70,7 +70,7 @@ export function register(
 		if (!tsSourceMap) return indentTextEdits;
 
 		const document = sourceFile.getTextDocument();
-		for (const maped of tsSourceMap) {
+		for (const maped of tsSourceMap.mappings) {
 			if (!maped.data.capabilities.formatting)
 				continue;
 

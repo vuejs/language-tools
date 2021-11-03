@@ -75,7 +75,7 @@ export function useSfcEntryForTemplateLs(
 				documentSymbol: false,
 				codeActions: false,
 			});
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: {
 					vueTag: 'sfc',
 					capabilities: {},

@@ -32,7 +32,7 @@ export function useSfcTemplate(
 				textDocument.value,
 				htmlDocument.value,
 			);
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
@@ -59,7 +59,7 @@ export function useSfcTemplate(
 				textDocument.value,
 				pugDocument.value,
 			);
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {

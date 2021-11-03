@@ -47,7 +47,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		function getTsResult(sourceFile: SourceFile) {
 			const result: vscode.CodeLens[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 					if (!maped.data.capabilities.referencesCodeLens) continue;
 					const data: TsCodeLensData = {
 						lsType: sourceMap.lsType,
@@ -125,7 +125,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		function getHtmlResult(sourceFile: SourceFile) {
 			const sourceMaps = sourceFile.getHtmlSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 					return getPugHtmlConvertCodeLens(
 						'html',
 						{
@@ -140,7 +140,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		function getPugResult(sourceFile: SourceFile) {
 			const sourceMaps = sourceFile.getPugSourceMaps();
 			for (const sourceMap of sourceMaps) {
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 					return getPugHtmlConvertCodeLens(
 						'pug',
 						{

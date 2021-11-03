@@ -22,7 +22,7 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 
 					if (!maped.data.capabilities.displayWithLink)
 						continue;
