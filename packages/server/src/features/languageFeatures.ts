@@ -224,7 +224,7 @@ export function register(
 								for (const file of handler.files) {
 									if (change.textDocument.uri === file.oldUri) {
 										change.textDocument.uri = file.newUri;
-										change.textDocument.version = documents.get(file.newUri)?.version ?? change.textDocument.version;
+										change.textDocument.version = shared.getDocumentSafely(documents, file.newUri)?.version ?? change.textDocument.version;
 									}
 								}
 							}

@@ -169,7 +169,7 @@ export function createProjects(
 		if (req !== documentUpdatedReq)
 			return;
 
-		const changeDocs = [...updatedUris].map(uri => documents.get(uri)).filter(shared.notEmpty);
+		const changeDocs = [...updatedUris].map(uri => shared.getDocumentSafely(documents, uri)).filter(shared.notEmpty);
 		const otherDocs = documents.all().filter(doc => !updatedUris.has(doc.uri));
 
 		for (const changeDoc of changeDocs) {
@@ -197,7 +197,7 @@ export function createProjects(
 			if (req !== documentUpdatedReq)
 				return;
 
-			const changeDoc = docUri ? documents.get(docUri) : undefined;
+			const changeDoc = docUri ? shared.getDocumentSafely(documents, docUri) : undefined;
 			const isDocCancel = changeDoc ? getCancelChecker(changeDoc.uri, changeDoc.version) : async () => {
 				await shared.sleep(0);
 				return false;

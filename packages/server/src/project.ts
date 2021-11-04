@@ -242,7 +242,8 @@ export function getScriptText(
 	documents: vscode.TextDocuments<TextDocument>,
 	fileName: string,
 ) {
-	const doc = documents.get(shared.fsPathToUri(fileName));
+	const uri = shared.fsPathToUri(fileName);
+	const doc = shared.getDocumentSafely(documents, uri);
 	if (doc) {
 		return doc.getText();
 	}
