@@ -129,8 +129,8 @@ export class SourceMap<Data = undefined> {
 			yield getMaped(maped);
 		}
 
-		for (; result.index < this.mappings.length; result.index++) {
-			const mapping = this.mappings[result.index];
+		while (result.index < this.mappings.length) {
+			const mapping = this.mappings[result.index++];
 			const maped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
 			if (maped) {
 				result.mapeds.push(maped);
