@@ -5,6 +5,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { getSchemaRequestService } from './schemaRequestService';
 import type { createLsConfigs } from './configs';
+import * as path from 'upath';
 
 export type Project = ReturnType<typeof createProject>;
 export const fileRenamings = new Set<Promise<void>>();
@@ -148,13 +149,13 @@ export function createProject(
 			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
 			getNewLine: () => ts.sys.newLine,
 			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
-			readFile: ts.sys.readFile,
-			writeFile: ts.sys.writeFile,
-			directoryExists: ts.sys.directoryExists,
-			getDirectories: ts.sys.getDirectories,
-			readDirectory: ts.sys.readDirectory,
-			realpath: ts.sys.realpath,
-			fileExists: ts.sys.fileExists,
+			readFile: (path, encoding) => ts.sys.readFile(resolveAbsolutePath(path), encoding),
+			writeFile: (path, content) => ts.sys.writeFile(resolveAbsolutePath(path), content),
+			directoryExists: path => ts.sys.directoryExists(resolveAbsolutePath(path)),
+			getDirectories: path => ts.sys.getDirectories(resolveAbsolutePath(path)),
+			readDirectory: (path, extensions, exclude, include, depth) => ts.sys.readDirectory(resolveAbsolutePath(path), extensions, exclude, include, depth),
+			realpath: ts.sys.realpath ? path => ts.sys.realpath!(resolveAbsolutePath(path)) : undefined,
+			fileExists: path => ts.sys.fileExists(resolveAbsolutePath(path)),
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
@@ -175,6 +176,9 @@ export function createProject(
 
 		return host;
 
+		function resolveAbsolutePath(_path: string) {
+			return !path.isAbsolute(_path) ? path.join(rootPath, _path) : _path;
+		}
 		function getScriptVersion(fileName: string) {
 			return scripts.fsPathGet(fileName)?.version.toString()
 				?? '';
@@ -214,10 +218,12 @@ export function createProject(
 	}
 	function createParsedCommandLine() {
 		const parseConfigHost: ts.ParseConfigHost = {
-			...ts.sys,
+			useCaseSensitiveFileNames: languageServiceHost.useCaseSensitiveFileNames?.() ?? ts.sys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
+				return (languageServiceHost.readDirectory ?? ts.sys.readDirectory)(path, [...extensions, '.vue'], exclude, include, depth);
 			},
+			fileExists: languageServiceHost.fileExists ?? ts.sys.fileExists,
+			readFile: languageServiceHost.readFile ?? ts.sys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
 			return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);

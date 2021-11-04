@@ -14,8 +14,14 @@ export function useSfcStyles(
 	vueDoc: Ref<TextDocument>,
 	styles: Ref<shared.Sfc['styles']>,
 ) {
+
 	const { modules: { typescript: ts } } = context;
+	const vueHost = 'vueHost' in context ? context.vueHost : undefined;
+	const fileExists = vueHost?.fileExists ?? ts.sys.fileExists;
+	const readFile = vueHost?.readFile ?? ts.sys.readFile;
+
 	let version = 0;
+
 	const textDocuments = computed(() => {
 		const documents: {
 			textDocument: TextDocument,
@@ -58,10 +64,10 @@ export function useSfcStyles(
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
-					if (!ts.sys.fileExists(shared.uriToFsPath(link.target))) continue;
+					if (!fileExists(shared.uriToFsPath(link.target))) continue;
 					if (linkStyles.find(l => l.textDocument.uri === link.target)) continue; // Loop
 
-					const text = ts.sys.readFile(shared.uriToFsPath(link.target));
+					const text = readFile(shared.uriToFsPath(link.target));
 					if (text === undefined) continue;
 
 					const lang = upath.extname(link.target).substr(1);

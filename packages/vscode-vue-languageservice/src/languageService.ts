@@ -171,6 +171,9 @@ export function createLanguageService(
 			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
 
+			const fileExists = vueHost.fileExists ?? ts.sys.fileExists;
+			const directoryExists = vueHost.directoryExists ?? ts.sys.directoryExists;
+
 			for (const failed of failedLookupLocations) {
 				let path = failed;
 				const fileName = upath.basename(path);
@@ -184,12 +187,12 @@ export function createLanguageService(
 				else {
 					path = upath.trimExt(path);
 				}
-				if (ts.sys.fileExists(path) || ts.sys.fileExists(shared.uriToFsPath(path))) {
+				if (fileExists(path) || fileExists(shared.uriToFsPath(path))) {
 					return path;
 				}
 			}
 			for (const dir of dirs) {
-				if (ts.sys.directoryExists(dir) || ts.sys.directoryExists(shared.uriToFsPath(dir))) {
+				if (directoryExists(dir) || directoryExists(shared.uriToFsPath(dir))) {
 					return dir;
 				}
 			}
