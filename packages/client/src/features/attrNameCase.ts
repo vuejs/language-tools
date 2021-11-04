@@ -6,10 +6,7 @@ import * as shared from '@volar/shared';
 export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
 
 	await languageClient.onReady();
-
-	while (await languageClient.sendRequest(shared.PingRequest.type) !== 'pong') {
-		await shared.sleep(100);
-	}
+	await languageClient.sendRequest(shared.InitDoneRequest.type);
 
 	const attrCases = shared.createPathMap<'kebabCase' | 'camelCase'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);

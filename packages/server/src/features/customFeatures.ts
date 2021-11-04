@@ -20,6 +20,12 @@ export function register(
 		if (!document) return;
 		return await getProjects()?.get(document.uri)?.service.__internal__.getD3(document);
 	});
+	connection.onRequest(shared.GetMatchTsConfigRequest.type, async handler => {
+		const tsConfigs = getProjects()?.getTsConfigs(handler.uri);
+		if (tsConfigs?.length) {
+			return tsConfigs[0];
+		}
+	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async ({ lsType }) => {
 
 		const projects = getProjects();

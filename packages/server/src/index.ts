@@ -18,7 +18,13 @@ connection.listen();
 const documents = new vscode.TextDocuments(TextDocument);
 documents.listen(connection);
 
-connection.onRequest(shared.PingRequest.type, () => 'pong' as const);
+let inited = false;
+connection.onRequest(shared.InitDoneRequest.type, async () => {
+	while (!inited) {
+		await shared.sleep(100);
+	}
+	return undefined;
+});
 connection.onRequest(shared.DepsRequest.type, () => Object.keys(require.cache));
 
 async function onInitialize(params: vscode.InitializeParams) {
@@ -99,8 +105,12 @@ async function onInitialize(params: vscode.InitializeParams) {
 				folders,
 				inferredCompilerOptions,
 				lsConfigs,
+				() => inited = true,
 			);
 		});
+	}
+	else {
+		inited = true;
 	}
 
 	return result;

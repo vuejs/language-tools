@@ -17,6 +17,7 @@ export function createProjects(
 	rootPaths: string[],
 	inferredCompilerOptions: ts.CompilerOptions,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
+	onInited: () => void,
 ) {
 
 	let semanticTokensReq = 0;
@@ -95,6 +96,7 @@ export function createProjects(
 		projects,
 		inferredProjects,
 		get,
+		getTsConfigs: (tsConfig: string) => getMatchTsConfigs(tsConfig, projects),
 	};
 
 	async function initProjects() {
@@ -108,6 +110,8 @@ export function createProjects(
 
 		updateInferredProjects();
 		updateDiagnostics(undefined);
+
+		onInited();
 	}
 	function searchTsConfigs() {
 		const tsConfigSet = new Set(rootPaths

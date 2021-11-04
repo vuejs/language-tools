@@ -19,6 +19,7 @@ import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as whitelist from './features/whitelist';
 import { getRandomTipsMessage } from './features/tips';
+import * as tsconfig from './features/tsconfig';
 
 let apiClient: lsp.LanguageClient;
 let docClient: lsp.LanguageClient | undefined;
@@ -141,6 +142,7 @@ async function doActivate(context: vscode.ExtensionContext) {
 	virtualFiles.activate(context, docClient ?? apiClient);
 	tagClosing.activate(context, htmlClient, apiClient);
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
+	tsconfig.activate(context, docClient ?? apiClient);
 	whitelist.activate(context, clients);
 
 	async function registarLowPowerModeChange() {
