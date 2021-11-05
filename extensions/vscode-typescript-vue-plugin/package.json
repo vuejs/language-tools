@@ -23,8 +23,9 @@
 		]
 	},
 	"scripts": {
-		"prerelease": "vsce package --out typescript-vue-plugin.vsix --yarn",
-		"release": "vsce publish --packagePath typescript-vue-plugin.vsix --yarn"
+		"vscode:prepublish": "cd ../.. && npm run build",
+		"pack": "vsce package",
+		"publish": "vsce publish --yarn"
 	},
 	"workspaces": [
 		"../../packages/code-gen",

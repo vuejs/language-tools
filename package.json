@@ -1,15 +1,16 @@
 {
 	"private": true,
 	"scripts": {
-		"install": "yarn install:vue-language-features && yarn install:typescript-vue-plugin",
+		"install": "npm run install:vue-language-features && npm run install:typescript-vue-plugin",
 		"install:vue-language-features": "cd extensions/vscode-vue-language-features && yarn",
 		"install:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn",
-		"compile": "tsc -b tsconfig.build.json",
+		"build": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
-		"prerelease": "yarn && yarn compile && yarn test",
-		"release": "lerna publish --exact --force-publish --yes && yarn release:vue-language-features && yarn release:typescript-vue-plugin",
-		"release:vue-language-features": "cd extensions/vscode-vue-language-features && yarn release",
-		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn release",
+		"prepublish": "npm run build && npm run test",
+		"publish": "npm run publish:packages && npm run publish:vue-language-features && npm run publish:typescript-vue-plugin",
+		"publish:packages": "lerna publish --exact --force-publish --yes",
+		"publish:vue-language-features": "cd extensions/vscode-vue-language-features && npm run publish",
+		"publish:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && npm run publish",
 		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
 		"test": "jest"
 	},
