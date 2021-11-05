@@ -6,7 +6,7 @@
 		"install:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn",
 		"build": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
-		"prepublish": "npm run build && npm run test",
+		"prepublishOnly": "npm run build && npm run test",
 		"publish": "npm run publish:packages && npm run publish:vue-language-features && npm run publish:typescript-vue-plugin",
 		"publish:packages": "lerna publish --exact --force-publish --yes",
 		"publish:vue-language-features": "cd extensions/vscode-vue-language-features && npm run publish",
