@@ -9,6 +9,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 import type { LanguageServiceHost } from './languageService';
 import type { SourceFile } from './sourceFile';
 import type { SourceFiles } from './sourceFiles';
+import * as CompilerDOM from '@vue/compiler-dom';
 
 export interface TsCompletionData {
 	lsType: 'template' | 'script',
@@ -56,8 +57,13 @@ export type Modules = {
 	emmet: typeof import('@vscode/emmet-helper'),
 };
 
+export interface VueCompilerOptions {
+	experimentalCompatMode?: 2 | 3;
+	experimentalTemplateCompilerOptions?: CompilerDOM.CompilerOptions;
+}
+
 export type LanguageServiceContextBase = {
-	isVue2Mode: boolean,
+	compilerOptions: VueCompilerOptions,
 	modules: Modules,
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,

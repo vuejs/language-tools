@@ -57,8 +57,11 @@ Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different
     ...
   },
   "vueCompilerOptions": {
-    "experimentalCompatMode": 2
-  },
+    "experimentalCompatMode": 2,
+    "experimentalTemplateCompilerOptions": {
+      "compatConfig": { "Mode": 2 } // optional
+    }
+  }
 }
 ```
 

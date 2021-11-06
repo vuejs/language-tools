@@ -61,7 +61,7 @@ export function useSfcTemplateScript(
 		return templateGen.generate(
 			templateData.value.sourceLang,
 			sfcTemplateCompileResult.value.ast,
-			context.isVue2Mode,
+			context.compilerOptions.experimentalCompatMode === 2,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 			!!scriptSetup.value,

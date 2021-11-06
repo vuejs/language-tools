@@ -5,7 +5,7 @@ import { createSourceFile, SourceFile } from './sourceFile';
 import * as localTypes from './utils/localTypes';
 import * as upath from 'upath';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules } from './types';
+import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules, VueCompilerOptions } from './types';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
 // vue services
@@ -48,10 +48,6 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
 
-export interface VueCompilerOptions {
-	experimentalCompatMode?: number;
-}
-
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
@@ -73,7 +69,7 @@ export function getDocumentLanguageService(
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const context: HtmlLanguageServiceContext = {
-		isVue2Mode: false,
+		compilerOptions: {},
 		modules: {
 			typescript: modules.typescript,
 			emmet,
@@ -202,7 +198,7 @@ export function createLanguageService(
 	}
 
 	const context: ApiLanguageServiceContext = {
-		isVue2Mode: isVue2,
+		compilerOptions: vueHost.getVueCompilationSettings?.() ?? {},
 		modules: {
 			typescript: modules.typescript,
 			emmet,
