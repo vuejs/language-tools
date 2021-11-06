@@ -13,8 +13,7 @@
 		"directory": "packages/vue-code-gen"
 	},
 	"devDependencies": {
-		"typescript": "latest",
-		"vscode-css-languageservice": "^5.1.7"
+		"typescript": "latest"
 	},
 	"dependencies": {
 		"@volar/code-gen": "0.28.10",

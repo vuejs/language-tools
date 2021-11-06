@@ -6,7 +6,38 @@ import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
 import { TextRange } from '@volar/vue-code-gen/out/types';
-import { parseCssBindRanges } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
+import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
+
+type StylesheetNode = {
+	children: StylesheetNode[] | undefined,
+	end: number,
+	length: number,
+	offset: number,
+	parent: Node | null,
+	type: number,
+};
+
+function findStylesheetVBindRanges(docText: string, ss: css.Stylesheet) {
+	const result: TextRange[] = [];
+	visChild(ss as StylesheetNode);
+	function visChild(node: StylesheetNode) {
+		if (node.type === 22) {
+			const nodeText = docText.substring(node.offset, node.end);
+			for (const textRange of getMatchBindTexts(nodeText)) {
+				result.push({
+					start: textRange.start + node.offset,
+					end: textRange.end + node.offset,
+				});
+			}
+		}
+		else if (node.children) {
+			for (let i = 0; i < node.children.length; i++) {
+				visChild(node.children[i]);
+			}
+		}
+	}
+	return result;
+}
 
 export function useSfcStyles(
 	context: LanguageServiceContext,
@@ -53,7 +84,7 @@ export function useSfcStyles(
 			documents.push({
 				textDocument: document,
 				stylesheet,
-				binds: stylesheet ? parseCssBindRanges(content, stylesheet) : [],
+				binds: stylesheet ? findStylesheetVBindRanges(content, stylesheet) : [],
 				links: linkStyles,
 				module: style.module,
 				scoped: style.scoped,

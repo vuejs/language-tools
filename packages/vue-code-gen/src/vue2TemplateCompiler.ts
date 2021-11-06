@@ -6,9 +6,6 @@ export function compile(
 	options: CompilerDom.CompilerOptions = {}
 ): CompilerDom.CodegenResult {
 
-	// force to vue 2
-	options.compatConfig = { MODE: 2 }
-
 	const onError = options.onError;
 	options.onError = (error) => {
 		if (error.code === CompilerCore.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT)

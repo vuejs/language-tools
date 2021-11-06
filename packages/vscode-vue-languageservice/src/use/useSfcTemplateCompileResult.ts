@@ -1,8 +1,7 @@
 import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerVue2 from '@volar/vue-code-gen/out/vue2TemplateCompiler';
+import { compileSFCTemplate } from '@volar/vue-code-gen';
 
 export function useSfcTemplateCompileResult(
 	htmlDocument: Ref<TextDocument | undefined>,
@@ -14,50 +13,35 @@ export function useSfcTemplateCompileResult(
 			return;
 
 		const errors: vscode.Diagnostic[] = [];
-		let ast: CompilerDOM.RootNode | undefined;
+		const compiled = compileSFCTemplate(
+			htmlDocument.value.getText(),
+			isVue2Mode ? { compatConfig: { MODE: 2 } } : {},
+			isVue2Mode ? 2 : 3,
+		);
 
-		try {
-			ast = (isVue2Mode ? CompilerVue2 : CompilerDOM).compile(htmlDocument.value.getText(), {
-				onError: err => onCompilerError(err, vscode.DiagnosticSeverity.Error),
-				onWarn: err => onCompilerError(err, vscode.DiagnosticSeverity.Warning),
-				expressionPlugins: ['typescript'],
-			}).ast;
-
-			function onCompilerError(err: CompilerDOM.CompilerError, severity: vscode.DiagnosticSeverity) {
-				
-				if (!err.loc) return;
-
-				const diagnostic: vscode.Diagnostic = {
-					range: {
-						start: htmlDocument.value!.positionAt(err.loc.start.offset),
-						end: htmlDocument.value!.positionAt(err.loc.end.offset),
-					},
-					severity,
-					code: err.code,
-					source: 'vue',
-					message: err.message,
-				};
-				errors.push(diagnostic);
-			}
+		for (const error of compiled.errors) {
+			onCompilerError(error, vscode.DiagnosticSeverity.Error);
 		}
-		catch (e) {
-			const err = e as CompilerDOM.CompilerError;
-			const diagnostic: vscode.Diagnostic = {
-				range: {
-					start: htmlDocument.value.positionAt(0),
-					end: htmlDocument.value.positionAt(htmlDocument.value.getText().length),
-				},
-				severity: vscode.DiagnosticSeverity.Error,
-				code: err.code,
-				source: 'vue',
-				message: err.message,
-			};
-			errors.push(diagnostic);
+		for (const error of compiled.warnings) {
+			onCompilerError(error, vscode.DiagnosticSeverity.Warning);
 		}
 
 		return {
+			ast: compiled.ast,
 			errors,
-			ast,
 		};
+
+		function onCompilerError(err: typeof compiled['errors'][number], severity: vscode.DiagnosticSeverity) {
+			errors.push({
+				range: {
+					start: htmlDocument.value!.positionAt(err.loc?.start.offset ?? 0),
+					end: htmlDocument.value!.positionAt(err.loc?.end.offset ?? 0),
+				},
+				severity,
+				code: err.code,
+				source: 'vue',
+				message: err.message,
+			});
+		}
 	});
 }

@@ -3,62 +3,41 @@ import { generate as generateTemplateScript } from './generators/template_script
 import { parseScriptRanges } from './parsers/scriptRanges';
 import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import * as CompilerDOM from '@vue/compiler-dom';
-
-interface ScriptBlock {
-	lang: 'js' | 'jsx' | 'ts' | 'tsx',
-	content: string,
-}
-
-interface ScriptSetupBlock {
-	lang: 'js' | 'jsx' | 'ts' | 'tsx',
-	content: string,
-	/**
-	 * Template code AST generate by `@vue/compiler-dom`
-	 * 
-	 * Provide to resolve variables unused in script setup
-	 */
-	templateAst?: CompilerDOM.RootNode,
-	/**
-	 * `v-bind(...)` texts from script blocks
-	 * 
-	 * Provide to resolve variables unused in script setup
-	 */
-	styleBindTexts?: string[],
-}
+import * as CompilerVue2 from './vue2TemplateCompiler';
 
 /**
- * Public API to resolve https://github.com/TypeStrong/fork-ts-checker-webpack-plugin/issues/668
- * @param ts typescript mmodule import from `typescript` or `typescript/lib/tsserverlibrary`
- * @param script `<script>` block
- * @param scriptSetup `<script setup>` block
- * @param vueLibName If use script setup, where should `defineComponent` and `PropType` import from? (`vue`, `@vue/runtime-dom`, `@vue/composition-api`)
- * @returns generated code and mappings
+ * @param templateAst Use `require('@vue/compiler-dom').compile` or `require('@volar/vue-code-gen').compileTemplate`, provide to resolve variables unused in script setup
+ * @param cssVars Use `require('@vue/compiler-sfc').parseCssVars`, provide to resolve variables unused in script setup
+ * @param vueLibName Where should `defineComponent` and `PropType` import from? (For example: `vue`, `@vue/runtime-dom`, `@vue/composition-api`)
  */
-export function generateScriptTypeCheckCode(
+export function generateSFCScriptTypeCheckCode(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	script: ScriptBlock | undefined,
-	scriptSetup: ScriptSetupBlock | undefined,
+	scriptLang: 'js' | 'jsx' | 'ts' | 'tsx',
+	scriptCode: string | undefined,
+	scriptSetupCode: string | undefined,
+	templateAst?: CompilerDOM.RootNode,
+	cssVars?: string[],
 	vueLibName = 'vue',
 ) {
 
 	const generated = generateScript(
 		'script',
 		'',
-		script,
-		scriptSetup,
-		script ? parseScriptRanges(
+		scriptCode !== undefined ? { content: scriptCode } : undefined,
+		scriptSetupCode !== undefined ? { content: scriptSetupCode } : undefined,
+		scriptCode !== undefined ? parseScriptRanges(
 			ts,
-			ts.createSourceFile('dummy.' + script.lang, script.content, ts.ScriptTarget.ESNext),
-			!!scriptSetup,
+			ts.createSourceFile('dummy.' + scriptLang, scriptCode, ts.ScriptTarget.ESNext),
+			scriptSetupCode !== undefined,
 			false,
 			false,
 		) : undefined,
-		scriptSetup ? parseScriptSetupRanges(
+		scriptSetupCode !== undefined ? parseScriptSetupRanges(
 			ts,
-			ts.createSourceFile('dummy.' + scriptSetup.lang, scriptSetup.content, ts.ScriptTarget.ESNext)
+			ts.createSourceFile('dummy.' + scriptLang, scriptSetupCode, ts.ScriptTarget.ESNext)
 		) : undefined,
-		() => scriptSetup?.templateAst ? generateTemplateScript(scriptSetup.templateAst) : undefined,
-		() => scriptSetup?.styleBindTexts ?? [],
+		() => templateAst ? generateTemplateScript(templateAst) : undefined,
+		() => cssVars ?? [],
 		vueLibName,
 	);
 
@@ -75,8 +54,37 @@ export function generateScriptTypeCheckCode(
 				&& mapping.data.capabilities.diagnostic
 			)
 			.map(mapping => ({
-				originalTextRange: mapping.sourceRange,
+				sourceTextRange: mapping.sourceRange,
 				generatedTextRange: mapping.mappedRange,
 			}));
 	}
+}
+
+/**
+ * A wrapper function of `require('@vue/compiler-dom').compile`
+ */
+export function compileSFCTemplate(htmlCode: string, options: CompilerDOM.CompilerOptions = {}, vueVersion: 2 | 3 = 3) {
+
+	const errors: CompilerDOM.CompilerError[] = [];
+	const warnings: CompilerDOM.CompilerError[] = [];
+	let ast: CompilerDOM.RootNode | undefined;
+
+	try {
+		ast = (vueVersion === 2 ? CompilerVue2 : CompilerDOM).compile(htmlCode, {
+			onError: (err: CompilerDOM.CompilerError) => errors.push(err),
+			onWarn: (err: CompilerDOM.CompilerError) => warnings.push(err),
+			expressionPlugins: ['typescript'],
+			...options,
+		}).ast;
+	}
+	catch (e) {
+		const err = e as CompilerDOM.CompilerError;
+		errors.push(err);
+	}
+
+	return {
+		errors,
+		warnings,
+		ast,
+	};
 }
