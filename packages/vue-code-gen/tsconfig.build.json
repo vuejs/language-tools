@@ -16,25 +16,10 @@
 			"path": "../shared/tsconfig.build.json"
 		},
 		{
-			"path": "../html2pug/tsconfig.build.json"
-		},
-		{
 			"path": "../source-map/tsconfig.build.json"
 		},
 		{
-			"path": "../transforms/tsconfig.build.json"
-		},
-		{
 			"path": "../code-gen/tsconfig.build.json"
-		},
-		{
-			"path": "../vscode-pug-languageservice/tsconfig.build.json"
-		},
-		{
-			"path": "../vscode-typescript-languageservice/tsconfig.build.json"
-		},
-		{
-			"path": "../vue-code-gen/tsconfig.build.json"
 		},
 	],
 }

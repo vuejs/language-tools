@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
-import type { TextRange } from './types';
+import type { TextRange } from '../types';
 
 export type ScriptSetupRanges = ReturnType<typeof parseUnuseScriptSetupRanges>;
 

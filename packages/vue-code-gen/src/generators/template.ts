@@ -1,10 +1,10 @@
-import * as SourceMaps from '../utils/sourceMaps';
+import * as SourceMaps from '@volar/source-map';
 import { createCodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
-import { SearchTexts } from '../utils/string';
 import * as shared from '@volar/shared';
+import { TsMappingData } from '../types';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -49,10 +49,14 @@ export function generate(
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
 	isScriptSetup: boolean,
+	searchTexts: {
+		getEmitCompletion(tag: string): string,
+		getPropsCompletion(tag: string): string,
+	},
 ) {
 
-	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
-	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
+	const tsCodeGen = createCodeGen<TsMappingData>();
+	const tsFormatCodeGen = createCodeGen<TsMappingData>();
 	const cssCodeGen = createCodeGen<undefined>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
@@ -246,11 +250,11 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Emits */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`${var_emit}('${SearchTexts.EmitCompletion(name)}');\n`);
+			tsCodeGen.addText(`${var_emit}('${searchTexts.getEmitCompletion(name)}');\n`);
 		}
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
-			tsCodeGen.addText(`${var_baseProps}.${SearchTexts.PropsCompletion(name)};\n`);
+			tsCodeGen.addText(`${var_baseProps}.${searchTexts.getPropsCompletion(name)};\n`);
 		}
 
 		tagResolves[tagName] = {
@@ -1098,7 +1102,7 @@ export function generate(
 
 		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: TsMappingData) {
 			if (mode === 'props' && isStatic) {
 				writeCode(
 					name,
@@ -1147,7 +1151,7 @@ export function generate(
 				tsCodeGen.addText(', ');
 			}
 		}
-		function getCaps(caps: SourceMaps.TsMappingData['capabilities']): SourceMaps.TsMappingData['capabilities'] {
+		function getCaps(caps: TsMappingData['capabilities']): TsMappingData['capabilities'] {
 			if (mode === 'props') {
 				return caps;
 			}
@@ -1599,7 +1603,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writeObjectProperty(mapCode, sourceRange, data);
 
@@ -1639,7 +1643,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData) {
 		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
 			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 			return 1;
@@ -1649,7 +1653,7 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writePropertyAccess(mapCode, sourceRange, data);
 
@@ -1689,7 +1693,7 @@ export function generate(
 			}
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData, checkValid = true) {
+	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData, checkValid = true) {
 		if (checkValid && validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
@@ -1711,7 +1715,7 @@ export function generate(
 			return 3;
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: TsMappingData) {
 		const addText = `'${mapCode}'`;
 		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
 			addMapping(tsCodeGen, {
@@ -1736,7 +1740,7 @@ export function generate(
 		}
 		tsCodeGen.addText(addText);
 	}
-	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: SourceMaps.TsMappingData, formatWrapper?: [string, string]) {
+	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: TsMappingData, formatWrapper?: [string, string]) {
 		if (formatWrapper) {
 			tsFormatCodeGen.addText(formatWrapper[0]);
 			const targetRange = tsFormatCodeGen.addText(mapCode);
@@ -1762,7 +1766,7 @@ export function generate(
 			data,
 		});
 	}
-	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<SourceMaps.TsMappingData>) {
+	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<TsMappingData>) {
 		const newMapping = { ...mapping };
 
 		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);

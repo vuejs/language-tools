@@ -1,14 +1,15 @@
 import { CodeGen, createCodeGen, margeCodeGen } from '@volar/code-gen';
 import * as shared from '@volar/shared';
+import * as templateGen from '@volar/vue-code-gen/out/generators/template';
+import * as cssClasses from '../parsers/cssClasses';
+import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as templateGen from '../generators/template';
-import * as cssClasses from '../parsers/cssClasses';
 import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import { SearchTexts } from '../utils/string';
 
 export function useSfcTemplateScript(
 	vueUri: string,
@@ -64,6 +65,10 @@ export function useSfcTemplateScript(
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 			!!scriptSetup.value,
+			{
+				getEmitCompletion: SearchTexts.EmitCompletion,
+				getPropsCompletion: SearchTexts.PropsCompletion,
+			}
 		);
 	});
 	const data = computed(() => {

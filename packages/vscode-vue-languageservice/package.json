@@ -21,6 +21,7 @@
 		"@volar/shared": "0.28.10",
 		"@volar/source-map": "0.28.10",
 		"@volar/transforms": "0.28.10",
+		"@volar/vue-code-gen": "0.28.10",
 		"@vscode/emmet-helper": "^2.8.0",
 		"@vue/compiler-dom": "^3.2.20",
 		"@vue/reactivity": "^3.2.20",

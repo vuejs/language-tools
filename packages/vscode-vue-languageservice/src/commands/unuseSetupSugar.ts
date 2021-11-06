@@ -1,11 +1,10 @@
 import * as shared from '@volar/shared';
+import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
+import type { TextRange } from '@volar/vue-code-gen/out/parsers/types';
 import * as vscode from 'vscode-languageserver';
-import { parseUnuseScriptSetupRanges } from '../parsers/scriptSetupConvertRanges';
-import type { TextRange } from '../parsers/types';
-import type { ApiLanguageServiceContext } from '../types';
 import * as codeAction from '../services/codeAction';
 import * as codeActionResolve from '../services/codeActionResolve';
-import { parseUseScriptSetupRanges } from '../parsers/scriptSetupConvertRanges';
+import type { ApiLanguageServiceContext } from '../types';
 
 export function register(context: ApiLanguageServiceContext) {
 

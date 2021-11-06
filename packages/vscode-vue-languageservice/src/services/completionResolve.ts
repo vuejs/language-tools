@@ -6,7 +6,7 @@ import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportCompone
 import * as path from 'upath';
 import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
-import { parseScriptRanges } from '../parsers/scriptRanges';
+import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 
 export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost, scriptTsLs }: ApiLanguageServiceContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {

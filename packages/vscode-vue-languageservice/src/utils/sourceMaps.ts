@@ -5,45 +5,7 @@ import type { Stylesheet } from 'vscode-css-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
 import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
-
-export interface TsMappingData {
-	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style',
-	vueTagIndex?: number,
-	beforeRename?: (newName: string) => string,
-	doRename?: (oldName: string, newName: string) => string,
-	capabilities: {
-		basic?: boolean,
-		extraHoverInfo?: boolean,
-		references?: boolean,
-		definitions?: boolean,
-		diagnostic?: boolean,
-		formatting?: boolean,
-		rename?: boolean | {
-			in: boolean,
-			out: boolean,
-		},
-		completion?: boolean,
-		semanticTokens?: boolean,
-		foldingRanges?: boolean,
-		referencesCodeLens?: boolean,
-		displayWithLink?: boolean,
-	},
-}
-
-export interface TeleportSideData {
-	editRenameText?: (newName: string) => string,
-	capabilities: {
-		references?: boolean,
-		definitions?: boolean,
-		rename?: boolean,
-	},
-}
-
-export interface TeleportMappingData {
-	isAdditionalReference?: boolean;
-	toSource: TeleportSideData,
-	toTarget: TeleportSideData,
-}
+import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
 
 export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 	constructor(
@@ -167,3 +129,4 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 }
 
 export * from '@volar/source-map';
+export * from '@volar/vue-code-gen/out/types';

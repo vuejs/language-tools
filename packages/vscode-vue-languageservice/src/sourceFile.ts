@@ -1,9 +1,11 @@
 import * as shared from '@volar/shared';
+import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
+import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
 import { ITemplateScriptData, LanguageServiceContext } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
@@ -15,8 +17,6 @@ import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import { parseScriptRanges } from './parsers/scriptRanges';
-import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 

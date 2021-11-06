@@ -68,19 +68,18 @@ export type Mapping<T> = MappingBase & {
 	additional?: MappingBase[],
 }
 
-export class SourceMap<Data = undefined> {
+export class SourceMapBase<Data = undefined> {
 
 	mappings: Mapping<Data>[];
 
 	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public _mappings?: Mapping<Data>[],
+		_mappings?: Mapping<Data>[],
+
 	) {
 		this.mappings = _mappings ?? [];
 	}
 
-	cache = new Map<string, {
+	private cache = new Map<string, {
 		index: number,
 		mapeds: {
 			data: Data;
@@ -89,31 +88,25 @@ export class SourceMap<Data = undefined> {
 		}[],
 	}>();
 
-	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T) {
+	public getSourceRange(start: number, end?: number) {
 		for (const maped of this.getRanges(start, end ?? start, false)) {
 			return maped;
 		}
 	}
-	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T) {
+	public getMappedRange(start: number, end?: number) {
 		for (const maped of this.getRanges(start, end ?? start, true)) {
 			return maped;
 		}
 	}
-	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T) {
+	public getSourceRanges(start: number, end?: number) {
 		return this.getRanges(start, end ?? start, false);
 	}
-	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T) {
+	public getMappedRanges(start: number, end?: number) {
 		return this.getRanges(start, end ?? start, true);
 	}
-	private * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean) {
 
-		const startIsNumber = typeof start === 'number';
-		const endIsNumber = typeof end === 'number';
+	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean) {
 
-		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
-		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
-		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
-		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
 		const key = startOffset + ':' + endOffset + ':' + sourceToTarget;
 
 		let result = this.cache.get(key);
@@ -153,18 +146,11 @@ export class SourceMap<Data = undefined> {
 			start: number;
 			end: number;
 		}) {
-			if (startIsNumber) {
-				return maped as {
-					data: Data;
-					start: T;
-					end: T;
-				};
-			}
-			return {
-				data: maped.data,
-				start: toDoc.positionAt(maped.start) as T,
-				end: toDoc.positionAt(maped.end) as T,
-			}
+			return maped as {
+				data: Data;
+				start: number;
+				end: number;
+			};
 		}
 	}
 
@@ -218,6 +204,68 @@ export class SourceMap<Data = undefined> {
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
 				};
+			}
+		}
+	}
+}
+
+export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
+
+	constructor(
+		public sourceDocument: TextDocument,
+		public mappedDocument: TextDocument,
+		public _mappings?: Mapping<Data>[],
+	) {
+		super(_mappings);
+	}
+
+	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T) {
+		for (const maped of this.getRanges(start, end ?? start, false)) {
+			return maped;
+		}
+	}
+	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T) {
+		for (const maped of this.getRanges(start, end ?? start, true)) {
+			return maped;
+		}
+	}
+	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T) {
+		return this.getRanges(start, end ?? start, false);
+	}
+	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T) {
+		return this.getRanges(start, end ?? start, true);
+	}
+
+	protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean) {
+
+		const startIsNumber = typeof start === 'number';
+		const endIsNumber = typeof end === 'number';
+
+		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
+		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
+		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
+		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
+
+		for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget)) {
+			yield getMaped(maped);
+		}
+
+		function getMaped(maped: {
+			data: Data;
+			start: number;
+			end: number;
+		}) {
+			if (startIsNumber) {
+				return maped as {
+					data: Data;
+					start: T;
+					end: T;
+				};
+			}
+			return {
+				data: maped.data,
+				start: toDoc.positionAt(maped.start) as T,
+				end: toDoc.positionAt(maped.end) as T,
 			}
 		}
 	}

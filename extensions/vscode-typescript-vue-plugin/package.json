@@ -36,7 +36,8 @@
 		"../../packages/typescript-vue-plugin",
 		"../../packages/vscode-pug-languageservice",
 		"../../packages/vscode-typescript-languageservice",
-		"../../packages/vscode-vue-languageservice"
+		"../../packages/vscode-vue-languageservice",
+		"../../packages/vue-code-gen"
 	],
 	"dependencies": {
 		"typescript-vue-plugin": "0.28.10"

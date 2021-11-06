@@ -5,8 +5,8 @@ import * as SourceMaps from '../utils/sourceMaps';
 import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
-import { TextRange } from '../parsers/types';
-import { parse as parseCssBinds } from '../parsers/cssBinds';
+import { TextRange } from '@volar/vue-code-gen/out/parsers/types';
+import { parseCssBindRanges } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
 
 export function useSfcStyles(
 	context: LanguageServiceContext,
@@ -53,7 +53,7 @@ export function useSfcStyles(
 			documents.push({
 				textDocument: document,
 				stylesheet,
-				binds: stylesheet ? parseCssBinds(content, stylesheet) : [],
+				binds: stylesheet ? parseCssBindRanges(content, stylesheet) : [],
 				links: linkStyles,
 				module: style.module,
 				scoped: style.scoped,
