@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
-import type { TextRange } from '@volar/vue-code-gen/out/parsers/types';
+import type { TextRange } from '@volar/vue-code-gen/out/types';
 import * as vscode from 'vscode-languageserver';
 import * as codeAction from '../services/codeAction';
 import * as codeActionResolve from '../services/codeActionResolve';

@@ -5,7 +5,7 @@ import * as SourceMaps from '../utils/sourceMaps';
 import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
-import { TextRange } from '@volar/vue-code-gen/out/parsers/types';
+import { TextRange } from '@volar/vue-code-gen/out/types';
 import { parseCssBindRanges } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
 
 export function useSfcStyles(
