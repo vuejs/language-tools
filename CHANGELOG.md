@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.29.0
+
+- feat: support namespaced component ([#372](https://github.com/johnsoncodehk/volar/issues/372))
+- feat: more strict `.value` auto-complete condition
+- feat: show current tsconfig on status bar
+- feat: provide public api to generate script setup type-check code ([#650](https://github.com/johnsoncodehk/volar/issues/650))
+- feat: add sass formatter
+- fix: can't exit split editors by click icon edge cases
+- fix: semantic tokens not working in pug template
+- fix: script setup component name not recognized edge cases
+- fix: ignore template language support if not `html` or `pug` ([#659](https://github.com/johnsoncodehk/volar/pull/659))
+- fix: tsconfig `types` paths resolve incorrect in monorepo ([#661](https://github.com/johnsoncodehk/volar/issues/661))
+- fix: can't update diagnostics on windows + atom
+- fix: project finding logic incorrect with tsconfig `referencecs` option ([#649](https://github.com/johnsoncodehk/volar/issues/649))
+- fix: `{{ }}` colorized bracket pairs not working
+- fix: documentSymbol, foldingRanges not working to some *.ts files on take over mode
+
+**Breaking changes**
+
+- experimentalCompatMode behavior changed ([#576](https://github.com/johnsoncodehk/volar/issues/576))\
+do not force config `compatConfig: { Mode: 2 }` to template compiler with `"experimentalCompatMode": 2`
+
 ## 0.28.10
 
 - feat: improve pug folding range ([#636](https://github.com/johnsoncodehk/volar/issues/636))
