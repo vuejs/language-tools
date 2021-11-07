@@ -18,7 +18,6 @@ import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as whitelist from './features/whitelist';
-import { getRandomTipsMessage } from './features/tips';
 import * as tsconfig from './features/tsconfig';
 
 let apiClient: lsp.LanguageClient;
@@ -107,7 +106,7 @@ async function doActivate(context: vscode.ExtensionContext) {
 		'Volar - API',
 		6009,
 		languageFeaturesDocumentSelector,
-		getRandomTipsMessage(),
+		undefined,
 	);
 	docClient = !lowPowerMode ? createLanguageService(
 		context,
@@ -116,8 +115,8 @@ async function doActivate(context: vscode.ExtensionContext) {
 		'Volar - Document',
 		6010,
 		languageFeaturesDocumentSelector,
-		getRandomTipsMessage(),
-		) : undefined;
+		undefined,
+	) : undefined;
 	htmlClient = createLanguageService(
 		context,
 		'html',
