@@ -19,4 +19,4 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm i -g yarn
     - run: yarn
-    - run: npm run prepublishOnly
+    - run: npm run prerelease

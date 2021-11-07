@@ -482,7 +482,7 @@
 	"scripts": {
 		"vscode:prepublish": "cd ../.. && npm run build",
 		"pack": "vsce package",
-		"publish": "vsce publish --yarn"
+		"release": "vsce publish --yarn"
 	},
 	"workspaces": [
 		"../../packages/*"
