@@ -28,17 +28,7 @@
 		{ "open": "(", "close": ")" },
 		{ "open": "<", "close": ">" }
 	],
-	"colorizedBracketPairs": [
-		// vue
-		["{{", "}}"],
-		// html
-		["{", "}"],
-		["(", ")"],
-		// javascript
-		["{", "}"],
-		["[", "]"],
-		["(", ")"]
-	],
+	"colorizedBracketPairs": [],
 	"folding": {
 		"markers": {
 			"start": "^\\s*<!--\\s*#region\\b.*-->",

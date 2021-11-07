@@ -53,6 +53,18 @@
 				"configuration": "./languages/vue-language-configuration.json"
 			},
 			{
+				"id": "html",
+				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
+				"id": "jade",
+				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
+				"id": "plaintext",
+				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
 				"id": "vue-injection-markdown"
 			},
 			{
