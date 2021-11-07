@@ -25,6 +25,7 @@ export function createSourceFiles() {
 				}
 			}
 		},
+		values: () => new Set(Object.values(_sourceFiles)).values(),
 	});
 
 	const all = computed(() => Object.values(_sourceFiles));

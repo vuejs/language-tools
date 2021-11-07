@@ -7,12 +7,14 @@ interface Options<T> {
 	has(key: string): boolean;
 	set(key: string, value: T): void;
 	clear(): void;
+	values(): IterableIterator<T>;
 }
 
 export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 
 	return {
 		clear,
+		values,
 		uriDelete,
 		uriGet,
 		uriHas,
@@ -25,6 +27,9 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 
 	function clear() {
 		return map.clear();
+	}
+	function values() {
+		return map.values();
 	}
 
 	function uriDelete(_uri: string) {

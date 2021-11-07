@@ -97,16 +97,17 @@ async function onInitialize(params: vscode.InitializeParams) {
 			}
 
 			projects = createProjects(
-				options,
+				folders,
 				ts,
 				tsLocalized,
-				connection,
+				options,
 				documents,
-				folders,
-				inferredCompilerOptions,
+				connection,
 				lsConfigs,
-				() => inited = true,
+				inferredCompilerOptions,
 			);
+
+			inited = true;
 		});
 	}
 	else {

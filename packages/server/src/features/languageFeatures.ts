@@ -18,23 +18,22 @@ export function register(
 	params: vscode.InitializeParams,
 ) {
 	connection.onCompletion(async handler => {
-		const list = await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.doComplete(
-				handler.textDocument.uri,
-				handler.position,
-				handler.context,
-				async () => await configuration?.getConfiguration('volar.completion.autoImportComponent') ?? true,
-				async (uri) => {
-					if (features.completion?.getDocumentNameCasesRequest) {
-						return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
-					}
-					return {
-						tagNameCase: features.completion!.defaultTagNameCase,
-						attrNameCase: features.completion!.defaultAttrNameCase,
-					};
-				},
-			);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		const list = await languageService?.doComplete(
+			handler.textDocument.uri,
+			handler.position,
+			handler.context,
+			async () => await configuration?.getConfiguration('volar.completion.autoImportComponent') ?? true,
+			async (uri) => {
+				if (features.completion?.getDocumentNameCasesRequest) {
+					return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
+				}
+				return {
+					tagNameCase: features.completion!.defaultTagNameCase,
+					attrNameCase: features.completion!.defaultAttrNameCase,
+				};
+			},
+		);
 		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
 		if (!insertReplaceSupport && list) {
 			for (const item of list.items) {
@@ -52,50 +51,44 @@ export function register(
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
-		return getProjects()?.get(uri)?.service.doCompletionResolve(item, newPosition) ?? item;
+		const languageService = await getLanguageService(uri);
+		return languageService?.doCompletionResolve(item, newPosition) ?? item;
 	});
 	connection.onHover(async handler => {
-		return await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.doHover(handler.textDocument.uri, handler.position);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.doHover(handler.textDocument.uri, handler.position);
 	});
-	connection.onSignatureHelp(handler => {
-		return getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
+	connection.onSignatureHelp(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
 	});
-	connection.onPrepareRename(handler => {
-		return getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.prepareRename(handler.textDocument.uri, handler.position);
+	connection.onPrepareRename(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.prepareRename(handler.textDocument.uri, handler.position);
 	});
 	connection.onRenameRequest(async handler => {
-		return await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.doRename(handler.textDocument.uri, handler.position, handler.newName);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
 	connection.onCodeLens(async handler => {
-		return getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.getCodeLens(handler.textDocument.uri, await lsConfigs?.getCodeLensConfigs());
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.getCodeLens(handler.textDocument.uri, await lsConfigs?.getCodeLensConfigs());
 	});
-	connection.onCodeLensResolve(codeLens => {
+	connection.onCodeLensResolve(async codeLens => {
 		const uri = codeLens.data?.uri;
-		return getProjects()
-			?.get(uri)?.service
-			.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
+		const languageService = await getLanguageService(uri);
+		return languageService?.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
 	});
-	connection.onExecuteCommand(handler => {
+	connection.onExecuteCommand(async handler => {
 		const uri = handler.arguments?.[0];
-		return getProjects()
-			?.get(uri)?.service
-			.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
+		const languageService = await getLanguageService(uri);
+		languageService?.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
 	});
 	connection.onCodeAction(async handler => {
 		const uri = handler.textDocument.uri;
-		const project = getProjects()?.get(uri);
-		if (project) {
-			const codeActions = await project.service.getCodeActions(uri, handler.range, handler.context);
+		const languageService = await getLanguageService(uri);
+		if (languageService) {
+			const codeActions = await languageService.getCodeActions(uri, handler.range, handler.context);
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
 					(codeAction.data as any).uri = uri;
@@ -109,59 +102,60 @@ export function register(
 	});
 	connection.onCodeActionResolve(async codeAction => {
 		const uri: string | undefined = (codeAction.data as any)?.uri;
-		const project = uri ? getProjects()?.get(uri) : undefined;
-		if (project) {
-			return await project.service.doCodeActionResolve(codeAction);
+		if (uri) {
+			const languageService = await getLanguageService(uri);
+			if (languageService) {
+				return languageService.doCodeActionResolve(codeAction);
+			}
 		}
 		return codeAction;
 	});
 	connection.onReferences(async handler => {
-		return await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.findReferences(handler.textDocument.uri, handler.position);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findReferences(handler.textDocument.uri, handler.position);
 	});
 	connection.onDefinition(async handler => {
-		return await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.findDefinition(handler.textDocument.uri, handler.position);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findDefinition(handler.textDocument.uri, handler.position);
 	});
-	connection.onTypeDefinition(handler => {
-		return getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.findTypeDefinition(handler.textDocument.uri, handler.position);
+	connection.onTypeDefinition(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findTypeDefinition(handler.textDocument.uri, handler.position);
 	});
-	connection.onDocumentHighlight(handler => {
-		return getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.findDocumentHighlights(handler.textDocument.uri, handler.position);
+	connection.onDocumentHighlight(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findDocumentHighlights(handler.textDocument.uri, handler.position);
 	});
 	connection.onDocumentLinks(async handler => {
-		return await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.findDocumentLinks(handler.textDocument.uri);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findDocumentLinks(handler.textDocument.uri);
 	});
 	connection.onWorkspaceSymbol(async (handler, token) => {
 		const projects = getProjects();
 		if (projects) {
 
-			const _projects = projects.projects.size ? projects.projects : projects.inferredProjects;
 			let results: vscode.SymbolInformation[] = [];
 
-			for (const [_, project] of _projects) {
+			for (const workspace of projects.workspaces.values()) {
+				let projects = [...workspace.projects.values()];
+				projects = projects.length ? projects : [workspace.getInferredProject()];
+				for (const project of projects) {
 
-				if (token.isCancellationRequested)
-					return;
+					if (token.isCancellationRequested)
+						return;
 
-				results = results.concat(await project.getLanguageService().findWorkspaceSymbols(handler.query));
+					const languageService = await (await project).getLanguageService();
+
+					results = results.concat(await languageService.findWorkspaceSymbols(handler.query));
+				}
 			}
 
 			return results;
 		}
 	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
-		const items = await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		const items = await languageService?.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
 		if (items) {
 			for (const item of items) {
 				if (typeof item.data !== 'object') item.data = {};
@@ -170,33 +164,29 @@ export function register(
 		}
 		return items?.length ? items : null;
 	});
-	connection.languages.callHierarchy.onIncomingCalls(handler => {
+	connection.languages.callHierarchy.onIncomingCalls(async handler => {
 		const data = handler.item.data as { __uri?: string } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		return getProjects()
-			?.get(uri)?.service
-			.callHierarchy.getIncomingCalls(handler.item) ?? [];
+		const languageService = await getLanguageService(uri);
+		return languageService?.callHierarchy.getIncomingCalls(handler.item) ?? [];
 	});
-	connection.languages.callHierarchy.onOutgoingCalls(handler => {
+	connection.languages.callHierarchy.onOutgoingCalls(async handler => {
 		const data = handler.item.data as { __uri?: string } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		return getProjects()
-			?.get(uri)?.service
-			.callHierarchy.getOutgoingCalls(handler.item) ?? [];
+		const languageService = await getLanguageService(uri);
+		return languageService?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
-		const result = await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		const result = await languageService?.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
 		return {
 			resultId: result?.resultId,
 			data: result?.data ?? [],
 		};
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
-		const result = await getProjects()
-			?.get(handler.textDocument.uri)?.service
-			.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		const result = await languageService?.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
 		return {
 			resultId: result?.resultId,
 			data: result?.data ?? [],
@@ -210,7 +200,7 @@ export function register(
 		if (config === 'always') {
 			const renaming = new Promise<void>(async resolve => {
 				for (const file of handler.files) {
-					const renameFileContent = getScriptText(ts, documents, shared.uriToFsPath(file.oldUri));
+					const renameFileContent = getScriptText(documents, shared.uriToFsPath(file.oldUri), ts.sys);
 					if (renameFileContent) {
 						renameFileContentCache.set(file.oldUri, renameFileContent);
 					}
@@ -250,7 +240,8 @@ export function register(
 		async function worker() {
 			const edits = (await Promise.all(handler.files
 				.map(async file => {
-					return await getProjects()?.get(file.oldUri)?.service.getEditsForFileRename(file.oldUri, file.newUri);
+					const languageService = await getLanguageService(file.oldUri);
+					return languageService?.getEditsForFileRename(file.oldUri, file.newUri);
 				}))).filter(shared.notEmpty);
 			if (edits.length) {
 				const result = edits[0];
@@ -260,4 +251,10 @@ export function register(
 			return null;
 		}
 	});
+
+	async function getLanguageService(uri: string) {
+		const projects = await getProjects();
+		const project = (await projects?.getProject(uri))?.project;
+		return project?.getLanguageService();
+	}
 }

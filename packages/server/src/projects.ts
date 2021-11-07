@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as upath from 'upath';
+import * as path from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
@@ -8,33 +8,44 @@ import type { createLsConfigs } from './configs';
 
 export type Projects = ReturnType<typeof createProjects>;
 
+const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
+
 export function createProjects(
-	options: shared.ServerInitializationOptions,
+	rootPaths: string[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	connection: vscode.Connection,
+	options: shared.ServerInitializationOptions,
 	documents: vscode.TextDocuments<TextDocument>,
-	rootPaths: string[],
-	inferredCompilerOptions: ts.CompilerOptions,
+	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
-	onInited: () => void,
+	inferredCompilerOptions: ts.CompilerOptions,
 ) {
 
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
 
 	const updatedUris = new Set<string>();
-	const tsConfigNames = ['tsconfig.json', 'jsconfig.json'];
-	const projects = new Map<string, Project>();
-	const inferredProjects = new Map<string, Project>();
-	const progressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
-	const inferredProgressMap = new Map<string, Promise<vscode.WorkDoneProgressServerReporter>>();
+	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
-	initProjects();
+	for (const rootPath of rootPaths) {
+		workspaces.set(rootPath, createWorkspace(
+			rootPath,
+			ts,
+			tsLocalized,
+			options,
+			documents,
+			connection,
+			lsConfigs,
+			inferredCompilerOptions,
+		));
+	}
 
 	documents.onDidChangeContent(async change => {
-		for (const [_, service] of [...projects, ...inferredProjects]) {
-			await service.onDocumentUpdated(change.document);
+		console.log(change);
+		for (const workspace of workspaces.values()) {
+			for (const project of workspace.projects.values()) {
+				(await project).onDocumentUpdated(change.document);
+			}
 		}
 		updateDiagnostics(change.document.uri);
 	});
@@ -44,118 +55,64 @@ export function createProjects(
 		const tsConfigChanges: vscode.FileEvent[] = [];
 		const scriptChanges: vscode.FileEvent[] = [];
 
-		for (const change of handler.changes) {
-			const fileName = shared.uriToFsPath(change.uri);
-			if (tsConfigNames.includes(upath.basename(fileName))) {
-				tsConfigChanges.push(change);
-			}
-			else {
-				scriptChanges.push(change);
-			}
-		}
+		for (const workspace of workspaces.values()) {
 
-		if (tsConfigChanges.length) {
-
-			clearDiagnostics();
-			const { projectProgress } = await getProjectProgress(tsConfigChanges.map(change => shared.uriToFsPath(change.uri)), []);
-
-			for (const tsConfigChange of tsConfigChanges) {
-				const tsConfig = shared.uriToFsPath(tsConfigChange.uri);
-				if (tsConfigChange.type === vscode.FileChangeType.Deleted) {
-					if (projects.has(tsConfig)) {
-						projects.get(tsConfig)?.dispose();
-						projects.delete(tsConfig);
-					}
+			for (const change of handler.changes) {
+				const fileName = shared.uriToFsPath(change.uri);
+				if (rootTsConfigNames.includes(path.basename(fileName)) || workspace.projects.fsPathHas(fileName)) {
+					tsConfigChanges.push(change);
 				}
 				else {
-					setProject(tsConfig, projectProgress[tsConfig]);
-				}
-			}
-		}
-
-		if (scriptChanges.length) {
-
-			// fix sometime vscode file watcher missing tsconfigs delete changes
-			for (const tsConfig of projects.keys()) {
-				if (!ts.sys.fileExists(tsConfig)) {
-					projects.get(tsConfig)?.dispose();
-					projects.delete(tsConfig);
+					scriptChanges.push(change);
 				}
 			}
 
-			for (const [_, project] of [...projects, ...inferredProjects]) {
-				await project.onWorkspaceFilesChanged(scriptChanges);
+			if (tsConfigChanges.length) {
+
+				clearDiagnostics();
+
+				for (const tsConfigChange of tsConfigChanges) {
+					const tsConfig = shared.uriToFsPath(tsConfigChange.uri);
+					if (workspace.projects.fsPathHas(tsConfig)) {
+						workspace.projects.fsPathDelete(tsConfig);
+						(async () => (await workspace.projects.fsPathGet(tsConfig))?.dispose())();
+					}
+					if (tsConfigChange.type !== vscode.FileChangeType.Deleted) {
+						workspace.getProjectByCreate(tsConfig); // create new project
+					}
+				}
 			}
 
-		}
+			if (scriptChanges.length) {
+				for (const project of workspace.projects.values()) {
+					await (await project).onWorkspaceFilesChanged(scriptChanges);
+				}
+			}
 
-		onDriveFileUpdated(undefined);
+			onDriveFileUpdated(undefined);
+		}
 	});
 
+	updateDiagnostics(undefined);
+
 	return {
-		projects,
-		inferredProjects,
-		get,
-		getTsConfigs: (tsConfig: string) => getMatchTsConfigs(tsConfig, projects),
+		workspaces,
+		getProject,
 	};
 
-	async function initProjects() {
+	async function onDriveFileUpdated(driveFileName: string | undefined) {
 
-		const tsConfigs = searchTsConfigs();
-		const { projectProgress } = await getProjectProgress(tsConfigs, []);
+		const req = ++semanticTokensReq;
 
-		for (const tsConfig of tsConfigs) {
-			setProject(tsConfig, projectProgress[tsConfig]);
-		}
+		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
 
-		updateInferredProjects();
-		updateDiagnostics(undefined);
+		await shared.sleep(100);
 
-		onInited();
-	}
-	function searchTsConfigs() {
-		const tsConfigSet = new Set(rootPaths
-			.map(rootPath => ts.sys.readDirectory(rootPath, tsConfigNames, undefined, ['**/*']))
-			.flat()
-			.filter(tsConfig => tsConfigNames.includes(upath.basename(tsConfig)))
-		);
-		const tsConfigs = [...tsConfigSet];
-
-		return tsConfigs;
-	}
-	async function getProjectProgress(tsconfigs: string[], inferredTsconfigs: string[]) {
-
-		for (const tsconfig of tsconfigs) {
-			if (!progressMap.has(tsconfig)) {
-				progressMap.set(tsconfig, connection.window.createWorkDoneProgress());
+		if (req === semanticTokensReq) {
+			if (options.languageFeatures?.semanticTokens) {
+				connection.languages.semanticTokens.refresh();
 			}
 		}
-		for (const tsconfig of inferredTsconfigs) {
-			if (!inferredProgressMap.has(tsconfig)) {
-				inferredProgressMap.set(tsconfig, connection.window.createWorkDoneProgress());
-			}
-		}
-
-		const projectProgress: Record<string, vscode.WorkDoneProgressServerReporter> = {};
-		const inferredProjectProgress: Record<string, vscode.WorkDoneProgressServerReporter> = {};
-
-		for (const tsconfig of tsconfigs) {
-			const progress = progressMap.get(tsconfig);
-			if (progress) {
-				projectProgress[tsconfig] = await progress;
-			}
-		}
-		for (const tsconfig of inferredTsconfigs) {
-			const progress = inferredProgressMap.get(tsconfig);
-			if (progress) {
-				inferredProjectProgress[tsconfig] = await progress;
-			}
-		}
-
-		return {
-			projectProgress,
-			inferredProjectProgress,
-		};
 	}
 	async function updateDiagnostics(docUri?: string) {
 
@@ -210,86 +167,59 @@ export function createProjects(
 
 			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}
-	}
-	function getCancelChecker(uri: string, version: number) {
-		let _isCancel = false;
-		let lastResultAt = Date.now();
-		return async () => {
-			if (_isCancel) {
-				return true;
-			}
-			if (
-				typeof options.languageFeatures?.diagnostics === 'object'
-				&& options.languageFeatures.diagnostics.getDocumentVersionRequest
-				&& Date.now() - lastResultAt >= 1 // 1ms
-			) {
-				const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
-				if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
-					_isCancel = true;
+
+		function getCancelChecker(uri: string, version: number) {
+			let _isCancel = false;
+			let lastResultAt = Date.now();
+			return async () => {
+				if (_isCancel) {
+					return true;
 				}
-				lastResultAt = Date.now();
-			}
-			return _isCancel;
-		};
-	}
-	async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
-
-		const match = get(uri);
-		if (!match) return;
-
-		await match.service.doValidation(uri, async result => {
-			connection.sendDiagnostics({ uri: uri, diagnostics: result });
-		}, isCancel);
-	}
-	function setProject(tsConfig: string, progress: vscode.WorkDoneProgressServerReporter) {
-		if (projects.has(tsConfig)) {
-			projects.get(tsConfig)?.dispose();
-			projects.delete(tsConfig);
+				if (
+					typeof options.languageFeatures?.diagnostics === 'object'
+					&& options.languageFeatures.diagnostics.getDocumentVersionRequest
+					&& Date.now() - lastResultAt >= 1 // 1ms
+				) {
+					const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
+					if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
+						_isCancel = true;
+					}
+					lastResultAt = Date.now();
+				}
+				return _isCancel;
+			};
 		}
-		projects.set(tsConfig, createProject(
-			ts,
-			options,
-			upath.dirname(tsConfig),
-			tsConfig,
-			tsLocalized,
-			documents,
-			progress,
-			connection,
-			lsConfigs,
-		));
-	}
-	async function updateInferredProjects() {
+		async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
 
-		const inferredTsConfigs = rootPaths.map(rootPath => upath.join(rootPath, 'tsconfig.json'));
-		const inferredTsConfigsToCreate = inferredTsConfigs.filter(tsConfig => !inferredProjects.has(tsConfig));
-		const { inferredProjectProgress } = await getProjectProgress([], inferredTsConfigsToCreate);
+			const project = (await getProject(uri))?.project;
+			if (!project) return;
 
-		for (const inferredTsConfig of inferredTsConfigsToCreate) {
-			inferredProjects.set(inferredTsConfig, createProject(
-				ts,
-				options,
-				upath.dirname(inferredTsConfig),
-				inferredCompilerOptions,
-				tsLocalized,
-				documents,
-				inferredProjectProgress[inferredTsConfig],
-				connection,
-				lsConfigs,
-			));
+			const languageService = await project.getLanguageService();
+			await languageService.doValidation(uri, async result => {
+				connection.sendDiagnostics({ uri: uri, diagnostics: result });
+			}, isCancel);
 		}
 	}
-	async function onDriveFileUpdated(driveFileName: string | undefined) {
+	async function getProject(uri: string) {
 
-		const req = ++semanticTokensReq;
+		const fileName = shared.uriToFsPath(uri);
+		const rootPaths = [...workspaces.keys()]
+			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
+			.sort(sortPaths);
 
-		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
-
-		await shared.sleep(100);
-
-		if (req === semanticTokensReq) {
-			if (options.languageFeatures?.semanticTokens) {
-				connection.languages.semanticTokens.refresh();
+		for (const rootPath of rootPaths) {
+			const workspace = workspaces.get(rootPath);
+			const project = workspace?.getProjectAndTsConfig(uri);
+			if (project) {
+				return project;
 			}
+		}
+
+		if (rootPaths.length) {
+			return {
+				tsconfig: undefined,
+				project: await workspaces.get(rootPaths[0])?.getInferredProject(),
+			};
 		}
 	}
 	function clearDiagnostics() {
@@ -297,70 +227,182 @@ export function createProjects(
 			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 		}
 	}
-	function get(uri: string) {
-		const tsConfigs = getMatchTsConfigs(uri, projects);
-		if (tsConfigs.length) {
-			const service = projects.get(tsConfigs[0]);
-			if (service) {
-				return {
-					tsConfig: tsConfigs[0],
-					service: service.getLanguageService(),
-				};
-			}
-		}
-		const inferredTsConfigs = getMatchTsConfigs(uri, inferredProjects);
-		if (inferredTsConfigs.length) {
-			const service = inferredProjects.get(inferredTsConfigs[0]);
-			if (service) {
-				return {
-					tsConfig: inferredTsConfigs[0],
-					service: service.getLanguageService(),
-				};
-			}
+}
+
+function createWorkspace(
+	rootPath: string,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLocalized: ts.MapLike<string> | undefined,
+	options: shared.ServerInitializationOptions,
+	documents: vscode.TextDocuments<TextDocument>,
+	connection: vscode.Connection,
+	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
+	inferredCompilerOptions: ts.CompilerOptions,
+) {
+
+	const rootTsConfigs = ts.sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+	const projects = shared.createPathMap<Project>();
+	let inferredProject: Project | undefined;
+
+	return {
+		projects,
+		getProject,
+		getProjectAndTsConfig,
+		getProjectByCreate,
+		getInferredProject,
+	};
+
+	async function getProject(uri: string) {
+		return (await getProjectAndTsConfig(uri))?.project;
+	}
+	async function getProjectAndTsConfig(uri: string) {
+		const tsconfig = await findMatchConfigs(uri);
+		if (tsconfig) {
+			const project = await getProjectByCreate(tsconfig);
+			return {
+				tsconfig: tsconfig,
+				project,
+			};
 		}
 	}
-	function getMatchTsConfigs(uri: string, services: Map<string, Project>) {
+	function getInferredProject() {
+		if (!inferredProject) {
+			inferredProject = createProject(
+				ts,
+				options,
+				rootPath,
+				inferredCompilerOptions,
+				tsLocalized,
+				documents,
+				connection,
+				lsConfigs,
+			);
+		}
+		return inferredProject;
+	}
+	async function findMatchConfigs(uri: string) {
 
 		const fileName = shared.uriToFsPath(uri);
 
-		let firstMatchTsConfigs: string[] = [];
-		let secondMatchTsConfigs: string[] = [];
+		prepareClosestootParsedCommandLine();
+		return await findDirectIncludeTsconfig() ?? await findIndirectReferenceTsconfig();
 
-		for (const kvp of services) {
-			const tsConfig = upath.resolve(kvp[0]);
-			const parsedCommandLine = kvp[1].getParsedCommandLine();
-			const fileNames = new Set(parsedCommandLine.fileNames);
-			if (fileNames.has(fileName) || kvp[1].getLanguageServiceDontCreate()?.__internal__.context.scriptTsLs.__internal__.getValidTextDocument(uri)) {
-				const tsConfigDir = upath.dirname(tsConfig);
-				if (!upath.relative(tsConfigDir, fileName).startsWith('..')) { // is file under tsconfig.json folder
-					firstMatchTsConfigs.push(tsConfig);
+		function prepareClosestootParsedCommandLine() {
+
+			let matches: string[] = [];
+
+			for (const rootTsConfig of rootTsConfigs) {
+				if (shared.isFileInDir(shared.uriToFsPath(uri), path.dirname(rootTsConfig))) {
+					matches.push(rootTsConfig);
 				}
-				else {
-					secondMatchTsConfigs.push(tsConfig);
+			}
+
+			matches = matches.sort(sortPaths);
+
+			if (matches.length) {
+				getParsedCommandLine(matches[0]);
+			}
+		}
+		function findDirectIncludeTsconfig() {
+			return findTsconfig(async tsconfig => {
+				const parsedCommandLine = await getParsedCommandLine(tsconfig);
+				const fileNames = new Set(parsedCommandLine.fileNames);
+				return fileNames.has(fileName);
+			});
+		}
+		function findIndirectReferenceTsconfig() {
+			return findTsconfig(async tsconfig => {
+				const project = await projects.fsPathGet(tsconfig);
+				const ls = await project?.getLanguageServiceDontCreate();
+				const validDoc = ls?.__internal__.context.scriptTsLs.__internal__.getValidTextDocument(uri);
+				return !!validDoc;
+			});
+		}
+		async function findTsconfig(match: (tsconfig: string) => Promise<boolean> | boolean) {
+
+			const checked = new Set<string>();
+
+			for (const rootTsConfig of rootTsConfigs.sort(sortPaths)) {
+				const project = await projects.fsPathGet(rootTsConfig);
+				if (project) {
+
+					const chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
+
+					for (const chain of chains) {
+						for (let i = chain.length - 1; i >= 0; i--) {
+							const tsconfig = chain[i];
+
+							if (checked.has(tsconfig))
+								continue;
+							checked.add(tsconfig);
+
+							if (await match(tsconfig)) {
+								return tsconfig;
+							}
+						}
+					}
 				}
 			}
 		}
+		async function getReferencesChains(parsedCommandLine: ts.ParsedCommandLine, tsConfig: string, before: string[]) {
 
-		firstMatchTsConfigs = firstMatchTsConfigs.sort(sortPaths);
-		secondMatchTsConfigs = secondMatchTsConfigs.sort(sortPaths);
+			if (parsedCommandLine.projectReferences?.length) {
 
-		return [
-			...firstMatchTsConfigs,
-			...secondMatchTsConfigs,
-		];
+				const newChains: string[][] = [];
 
-		function sortPaths(a: string, b: string) {
+				for (const projectReference of parsedCommandLine.projectReferences) {
+					const beforeIndex = before.indexOf(projectReference.path); // cycle
+					if (beforeIndex >= 0) {
+						newChains.push(before.slice(0, Math.max(beforeIndex, 1)));
+					}
+					else {
+						const referenceParsedCommandLine = await getParsedCommandLine(projectReference.path);
+						for (const chain of await getReferencesChains(referenceParsedCommandLine, projectReference.path, [...before, tsConfig])) {
+							newChains.push(chain);
+						}
+					}
+				}
 
-			const aLength = a.split('/').length;
-			const bLength = b.split('/').length;
-
-			if (aLength === bLength) {
-				const aWeight = upath.basename(a) === 'tsconfig.json' ? 1 : 0;
-				const bWeight = upath.basename(b) === 'tsconfig.json' ? 1 : 0;
-				return bWeight - aWeight;
+				return newChains;
 			}
-
-			return bLength - aLength;
+			else {
+				return [[...before, tsConfig]];
+			}
+		}
+		async function getParsedCommandLine(tsConfig: string) {
+			const project = await getProjectByCreate(tsConfig);
+			return project.getParsedCommandLine();
 		}
 	}
+	function getProjectByCreate(tsConfig: string) {
+		let project = projects.fsPathGet(tsConfig);
+		if (!project) {
+			project = createProject(
+				ts,
+				options,
+				path.dirname(tsConfig),
+				tsConfig,
+				tsLocalized,
+				documents,
+				connection,
+				lsConfigs,
+			);
+			projects.fsPathSet(tsConfig, project);
+		}
+		return project;
+	}
+}
+
+function sortPaths(a: string, b: string) {
+
+	const aLength = a.split('/').length;
+	const bLength = b.split('/').length;
+
+	if (aLength === bLength) {
+		const aWeight = path.basename(a) === 'tsconfig.json' ? 1 : 0;
+		const bWeight = path.basename(b) === 'tsconfig.json' ? 1 : 0;
+		return bWeight - aWeight;
+	}
+
+	return bLength - aLength;
 }
