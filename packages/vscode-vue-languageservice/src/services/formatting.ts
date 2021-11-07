@@ -13,14 +13,7 @@ export function register(
 	context: HtmlLanguageServiceContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
-	formatters: {
-		html(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		pug(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		css(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		less(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		scss(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		postcss(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-	},
+	formatters: { [lang: string]: (document: TextDocument, options: vscode.FormattingOptions) => Promiseable<vscode.TextEdit[]> },
 ) {
 	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
@@ -117,15 +110,10 @@ export function register(
 
 			if (!sourceMap.capabilities.formatting) continue;
 
-			const languageId = sourceMap.mappedDocument.languageId;
-			if (
-				languageId !== 'css'
-				&& languageId !== 'less'
-				&& languageId !== 'scss'
-				&& languageId !== 'postcss'
-			) continue;
+			const formatter = formatters[sourceMap.mappedDocument.languageId];
+			if (!formatter) continue;
 
-			const cssEdits = await formatters[languageId](sourceMap.mappedDocument, options);
+			const cssEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const cssEdit of cssEdits) {
 				const vueEdit = transformTextEdit(cssEdit, cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end));
 				if (vueEdit) {
@@ -139,7 +127,11 @@ export function register(
 	async function getHtmlFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
 		const result: vscode.TextEdit[] = [];
 		for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-			const htmlEdits = await formatters.html(sourceMap.mappedDocument, options);
+
+			const formatter = formatters['html'];
+			if (!formatter) continue;
+
+			const htmlEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const htmlEdit of htmlEdits) {
 				const vueEdit = transformTextEdit(htmlEdit, htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end));
 				if (vueEdit) {
@@ -153,7 +145,11 @@ export function register(
 	async function getPugFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
 		const result: vscode.TextEdit[] = [];
 		for (const sourceMap of sourceFile.getPugSourceMaps()) {
-			const pugEdits = await formatters.pug(sourceMap.mappedDocument, options);
+
+			const formatter = formatters['pug'];
+			if (!formatter) continue;
+
+			const pugEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const pugEdit of pugEdits) {
 				const vueEdit = transformTextEdit(pugEdit, pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end));
 				if (vueEdit) {

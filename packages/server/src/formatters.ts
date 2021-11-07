@@ -1,5 +1,6 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import * as prettier from 'prettier';
+import { SassFormatter } from 'sass-formatter';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver/node';
 
@@ -13,7 +14,8 @@ export function getFormatters(getPrintWidth: (uri: string) => number | Promise<n
 		less,
 		scss,
 		postcss,
-	}
+		sass,
+	};
 }
 
 async function html(document: TextDocument, options: vscode.FormattingOptions, getPrintWidth: (uri: string) => number | Promise<number>) {
@@ -28,6 +30,9 @@ async function html(document: TextDocument, options: vscode.FormattingOptions, g
 	}).contents;
 	newHtml = newHtml.trim();
 	newHtml = newHtml.substring(prefixes.length, newHtml.length - suffixes.length);
+
+	if (newHtml === document.getText())
+		return [];
 
 	const htmlEdit = vscode.TextEdit.replace(
 		vscode.Range.create(
@@ -55,6 +60,10 @@ function pug(document: TextDocument, options: vscode.FormattingOptions): vscode.
 		tab_size: options.tabSize,
 		fill_tab: !options.insertSpaces,
 	});
+
+	if (newPugCode === document.getText())
+		return [];
+
 	const pugEdit = vscode.TextEdit.replace(
 		vscode.Range.create(
 			document.positionAt(0),
@@ -89,6 +98,35 @@ function _css(document: TextDocument, options: vscode.FormattingOptions, languag
 		useTabs: !options.insertSpaces,
 		parser: languageId,
 	});
+
+	if (newStyleText === document.getText())
+		return [];
+
+	const cssEdit = vscode.TextEdit.replace(
+		vscode.Range.create(
+			document.positionAt(0),
+			document.positionAt(document.getText().length),
+		),
+		'\n' + newStyleText
+	);
+
+	return [cssEdit];
+}
+
+function sass(document: TextDocument, options: vscode.FormattingOptions): vscode.TextEdit[] {
+
+	const _options: Parameters<typeof SassFormatter.Format>[1] = {
+		insertSpaces: options.insertSpaces,
+	};
+
+	if (options.insertSpaces)
+		_options.tabSize = options.tabSize; // move tabSize here to fix sass-formatter judge
+
+	const newStyleText = SassFormatter.Format(document.getText(), _options);
+
+	if (newStyleText === document.getText())
+		return [];
+
 	const cssEdit = vscode.TextEdit.replace(
 		vscode.Range.create(
 			document.positionAt(0),

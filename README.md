@@ -79,6 +79,7 @@ See [Vue Language Features#Note](https://github.com/johnsoncodehk/volar/tree/mas
   - [prettyhtml](https://github.com/Prettyhtml/prettyhtml): html
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
   - [prettier](https://github.com/prettier/prettier): css, less, scss, postcss
+  - [sass-formatter](https://github.com/TheRealSyler/sass-formatter): sass
   - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
 
 ## By-product
