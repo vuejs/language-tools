@@ -26,7 +26,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 [sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) \
 *Vue language client for Sublime*
 
-[KailumAB/atom-ide-volar](https://github.com/KailumAB/atom-ide-volar) (WIP) \
+[kabiaa/atom-ide-volar](https://github.com/kabiaa/atom-ide-volar) \
 *Vue language client for Atom*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
