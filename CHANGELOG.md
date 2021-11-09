@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.29.2
+
+- fix: document server created multi time
+- fix: html hover not working in some non-VSCode clients ([#678](https://github.com/johnsoncodehk/volar/issues/678))
+
 ## 0.29.1
 
 - fix: template AST broken by empty line in pug ([#676](https://github.com/johnsoncodehk/volar/issues/676))
