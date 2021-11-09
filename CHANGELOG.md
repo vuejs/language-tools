@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.29.1
+
+- fix: template AST broken by empty line in pug ([#676](https://github.com/johnsoncodehk/volar/issues/676))
+- fix: intellisense not working if project have no jsconfig / tsconfig ([#680](https://github.com/johnsoncodehk/volar/issues/680)) ([#681](https://github.com/johnsoncodehk/volar/issues/681))
+
 ## 0.29.0
 
 - feat: support namespaced component ([#372](https://github.com/johnsoncodehk/volar/issues/372))
