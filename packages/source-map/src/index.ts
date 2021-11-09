@@ -88,24 +88,24 @@ export class SourceMapBase<Data = undefined> {
 		}[],
 	}>();
 
-	public getSourceRange(start: number, end?: number) {
-		for (const maped of this.getRanges(start, end ?? start, false)) {
+	public getSourceRange(start: number, end?: number, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
 			return maped;
 		}
 	}
-	public getMappedRange(start: number, end?: number) {
-		for (const maped of this.getRanges(start, end ?? start, true)) {
+	public getMappedRange(start: number, end?: number, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
 			return maped;
 		}
 	}
-	public getSourceRanges(start: number, end?: number) {
-		return this.getRanges(start, end ?? start, false);
+	public getSourceRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, false, filter);
 	}
-	public getMappedRanges(start: number, end?: number) {
-		return this.getRanges(start, end ?? start, true);
+	public getMappedRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, true, filter);
 	}
 
-	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean) {
+	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
 		const key = startOffset + ':' + endOffset + ':' + sourceToTarget;
 
@@ -119,7 +119,9 @@ export class SourceMapBase<Data = undefined> {
 		}
 
 		for (const maped of result.mapeds) {
-			yield getMaped(maped);
+			if (!filter || filter(maped.data)) {
+				yield getMaped(maped);
+			}
 		}
 
 		while (result.index < this.mappings.length) {
@@ -127,14 +129,16 @@ export class SourceMapBase<Data = undefined> {
 			const maped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
 			if (maped) {
 				result.mapeds.push(maped);
-				yield getMaped(maped);
+				if (!filter || filter(maped.data))
+					yield getMaped(maped);
 			}
 			else if (mapping.additional) {
 				for (const other of mapping.additional) {
 					const maped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
 					if (maped) {
 						result.mapeds.push(maped);
-						yield getMaped(maped);
+						if (!filter || filter(maped.data))
+							yield getMaped(maped);
 						break; // only return first match additional range
 					}
 				}
@@ -219,24 +223,24 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		super(_mappings);
 	}
 
-	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T) {
-		for (const maped of this.getRanges(start, end ?? start, false)) {
+	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
 			return maped;
 		}
 	}
-	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T) {
-		for (const maped of this.getRanges(start, end ?? start, true)) {
+	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
 			return maped;
 		}
 	}
-	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T) {
-		return this.getRanges(start, end ?? start, false);
+	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, false, filter);
 	}
-	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T) {
-		return this.getRanges(start, end ?? start, true);
+	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, true, filter);
 	}
 
-	protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean) {
+	protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
 		const startIsNumber = typeof start === 'number';
 		const endIsNumber = typeof end === 'number';
@@ -246,7 +250,7 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
 		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
 
-		for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget)) {
+		for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
 			yield getMaped(maped);
 		}
 

@@ -8,7 +8,7 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, posArr: vscode.Position[]): vscode.SelectionRange[] => {
 
 		const htmlPosArr = posArr
-			.map(position => pugDoc.sourceMap.getMappedRange(position)?.start)
+			.map(position => pugDoc.sourceMap.getMappedRange(position, position, data => !data?.isEmptyTagCompletion)?.start)
 			.filter(shared.notEmpty);
 
 		const htmlResult = htmlLs.getSelectionRanges(

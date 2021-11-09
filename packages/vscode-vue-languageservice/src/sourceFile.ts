@@ -73,7 +73,7 @@ export function createSourceFile(
 				html: pugDoc.htmlCode,
 				htmlTextDocument: pugDoc.htmlTextDocument,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-					const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd);
+					const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion);
 					if (pugRange) {
 						return pugRange.start;
 					}

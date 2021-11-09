@@ -15,7 +15,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	const fsPath = shared.uriToFsPath(pugTextDoc.uri);
 	const fileName = path.basename(fsPath);
 	const pugCode = pugTextDoc.getText();
-	const codeGen = createCodeGen<undefined>();
+	const codeGen = createCodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
 	let error: {
 		code: string,
 		msg: string,
@@ -26,7 +26,6 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	let fullPugTagEnd: number;
 	let emptyLineEnds: ReturnType<typeof collectEmptyLineEnds>;
 	let attrsBlocks: ReturnType<typeof collectAttrsBlocks>;
-	let consumedIndex = 0;
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
@@ -37,7 +36,20 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		const ast = pugParser(tokens, { filename: fileName, src: pugCode });
 		visitNode(ast, undefined);
 
-		consumeEmptyLines(pugCode.length);
+		// support tag auto-complete in empty lines
+		for (const emptyLineEnd of emptyLineEnds) {
+			codeGen.addText('<');
+			codeGen.addCode(
+				'x__VLS_',
+				{
+					start: emptyLineEnd,
+					end: emptyLineEnd,
+				},
+				SourceMap.Mode.Totally,
+				{ isEmptyTagCompletion: true },
+			);
+			codeGen.addText(' />');
+		}
 
 		codeGen.addCode(
 			'',
@@ -81,8 +93,6 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		else if (node.type === 'Tag') {
 
 			const pugTagRange = getDocRange(node.line, node.column, node.name.length);
-
-			consumeEmptyLines(pugTagRange.start);
 
 			const fullHtmlStart = codeGen.getText().length;
 			fullPugTagEnd = pugTagRange.end;
@@ -214,28 +224,6 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			}
 		}
 		codeGen.addText('"');
-	}
-	// support tag auto-complete in empty lines
-	function consumeEmptyLines(offset: number) {
-		for (; consumedIndex < emptyLineEnds.length; consumedIndex++) {
-
-			const emptyLineEnd = emptyLineEnds[consumedIndex];
-
-			if (emptyLineEnd > offset)
-				break;
-
-			codeGen.addText('<');
-			codeGen.addCode(
-				'x__VLS_',
-				{
-					start: emptyLineEnd,
-					end: emptyLineEnd,
-				},
-				SourceMap.Mode.Totally,
-				undefined,
-			);
-			codeGen.addText(' />');
-		}
 	}
 	function collectEmptyLineEnds(tokens: pugLex.Token[]) {
 

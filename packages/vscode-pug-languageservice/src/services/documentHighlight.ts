@@ -6,7 +6,7 @@ import type { PugDocument } from '../pugDocument';
 export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, pos: vscode.Position) => {
 
-		const htmlRange = pugDoc.sourceMap.getMappedRange(pos);
+		const htmlRange = pugDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion);
 		if (!htmlRange) return;
 
 		const htmlResult = htmlLs.findDocumentHighlights(
