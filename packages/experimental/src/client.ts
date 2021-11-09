@@ -111,7 +111,7 @@ function installPreview(app: App) {
 				const props = computed(() => {
 					const _props: Record<string, any> = {};
 					url.value.searchParams.forEach((value, key) => {
-						_props[key] = JSON.parse(value);
+						eval('_props[key] = ' + value);
 					});
 					return _props;
 				});
