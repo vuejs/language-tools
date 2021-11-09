@@ -208,7 +208,7 @@ export function createProjects(
 
 		for (const rootPath of rootPaths) {
 			const workspace = workspaces.get(rootPath);
-			const project = workspace?.getProjectAndTsConfig(uri);
+			const project = await workspace?.getProjectAndTsConfig(uri);
 			if (project) {
 				return project;
 			}
