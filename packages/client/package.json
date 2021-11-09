@@ -1,15 +1,15 @@
 {
 	"private": true,
 	"name": "@volar/client",
-	"version": "0.29.0",
+	"version": "0.29.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "packages/client"
 	},
 	"dependencies": {
-		"@volar/server": "0.29.0",
-		"@volar/shared": "0.29.0",
+		"@volar/server": "0.29.1",
+		"@volar/shared": "0.29.1",
 		"@vue/reactivity": "^3.2.21",
 		"upath": "^2.0.1",
 		"vscode-html-languageservice": "^4.1.0",
