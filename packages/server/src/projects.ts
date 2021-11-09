@@ -41,7 +41,6 @@ export function createProjects(
 	}
 
 	documents.onDidChangeContent(async change => {
-		console.log(change);
 		for (const workspace of workspaces.values()) {
 			for (const project of workspace.projects.values()) {
 				(await project).onDocumentUpdated(change.document);
