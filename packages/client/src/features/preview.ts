@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.dispose();
 		});
 
-		const port = await shared.getAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
+		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-finder');
 		const viteDir = getViteDir(fileName);
 		if (viteDir) {
@@ -117,8 +117,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		terminal.sendText(`npx vite --port=${port} --mode=volar`);
 
 		const start = Date.now();
-		while (Date.now() - start < 10000 && await shared.isAvailablePort(port)) {
-			await shared.sleep(10);
+		while (Date.now() - start < 10000 && !(await shared.isLocalHostPortUsing(port))) {
+			await shared.sleep(100);
 		}
 
 		finderPanel = _panel;
@@ -168,7 +168,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			terminal.dispose();
 		});
 
-		const port = await shared.getAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
+		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-previewer');
 		const viteDir = getViteDir(fileName);
 		if (viteDir) {
@@ -179,8 +179,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		lastPreviewPort = port;
 
 		const start = Date.now();
-		while (Date.now() - start < 10000 && await shared.isAvailablePort(port)) {
-			await shared.sleep(10);
+		while (Date.now() - start < 10000 && !(await shared.isLocalHostPortUsing(port))) {
+			await shared.sleep(100);
 		}
 
 		previewPanel = _panel;
