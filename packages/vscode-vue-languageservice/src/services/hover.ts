@@ -104,7 +104,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 						sourceMap.mappedDocument,
 						htmlRange.start,
 						sourceMap.htmlDocument,
-						settings ?? {}
+						settings,
 					)
 					: pugLs.doHover(
 						sourceMap.pugDocument,

@@ -36,9 +36,11 @@ export function createLsConfigs(connection: vscode.Connection) {
 		getHtmlHoverSettings
 	};
 
-	function getHtmlHoverSettings(textDocument: TextDocument) {
-		return htmlHoverSettings[textDocument.uri]
-			?? (htmlHoverSettings[textDocument.uri] = connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }));
+	async function getHtmlHoverSettings(textDocument: TextDocument) {
+		if (!htmlHoverSettings[textDocument.uri]) {
+			htmlHoverSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }) ?? {})();
+		}
+		return htmlHoverSettings[textDocument.uri];
 	}
 	function getTsPreferences(textDocument: TextDocument) {
 		return tsPreferences[textDocument.uri]
@@ -49,8 +51,10 @@ export function createLsConfigs(connection: vscode.Connection) {
 			?? (tsFormatOptions[textDocument.uri] = tsConfigs.getFormatOptions(connection.workspace, textDocument, options));
 	}
 	function getCssLanguageSettings(textDocument: TextDocument): Promise<css.LanguageSettings> {
-		return cssLanguageSettings[textDocument.uri]
-			?? (cssLanguageSettings[textDocument.uri] = connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId }));
+		if (!cssLanguageSettings[textDocument.uri]) {
+			cssLanguageSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId }))();
+		}
+		return cssLanguageSettings[textDocument.uri];
 	}
 	async function getCodeLensConfigs() {
 		if (!codeLensConfigs) {
@@ -58,15 +62,15 @@ export function createLsConfigs(connection: vscode.Connection) {
 				codeLensReferences,
 				codeLensPugTool,
 				codeLensRefScriptSetupTool,
-			] = await Promise.all([
+			]: (boolean | null | undefined)[] = await Promise.all([
 				connection.workspace.getConfiguration('volar.codeLens.references'),
 				connection.workspace.getConfiguration('volar.codeLens.pugTools'),
 				connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
 			]);
 			codeLensConfigs = {
-				references: codeLensReferences,
-				pugTool: codeLensPugTool,
-				scriptSetupTool: codeLensRefScriptSetupTool,
+				references: !!codeLensReferences,
+				pugTool: !!codeLensPugTool,
+				scriptSetupTool: !!codeLensRefScriptSetupTool,
 			};
 		}
 		return codeLensConfigs;
