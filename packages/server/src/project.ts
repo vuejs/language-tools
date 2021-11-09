@@ -38,8 +38,7 @@ export async function createProject(
 	let typeRootVersion = 0;
 	let tsProjectVersion = 0;
 	let vueProjectVersion = 0;
-	let vueLs: vue.LanguageService | undefined;
-	let creating: Promise<vue.LanguageService> | undefined;
+	let vueLs: Promise<vue.LanguageService> | undefined;
 	let parsedCommandLine = createParsedCommandLine();
 	const scripts = shared.createPathMap<{
 		version: number,
@@ -53,10 +52,7 @@ export async function createProject(
 		onWorkspaceFilesChanged,
 		onDocumentUpdated,
 		getLanguageService,
-		getLanguageServiceDontCreate: async () => {
-			await creating;
-			return vueLs;
-		},
+		getLanguageServiceDontCreate: () => vueLs,
 		getParsedCommandLine: () => parsedCommandLine,
 		dispose,
 	};
@@ -66,9 +62,9 @@ export async function createProject(
 	}
 	async function getLanguageService() {
 		if (!vueLs) {
-			creating = (async () => {
+			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
-				vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
+				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
 				vueLs.__internal__.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());
@@ -82,7 +78,6 @@ export async function createProject(
 				});
 				return vueLs;
 			})();
-			return creating;
 		}
 		return vueLs;
 	}
@@ -221,9 +216,9 @@ export async function createProject(
 			}
 		}
 	}
-	function dispose() {
+	async function dispose() {
 		if (vueLs) {
-			vueLs.dispose();
+			(await vueLs).dispose();
 		}
 		for (const disposable of disposables) {
 			disposable.dispose();
