@@ -1,5 +1,5 @@
 import type { Plugin, App } from '@vue/runtime-core';
-import { defineComponent, defineAsyncComponent, h, ref, computed } from 'vue';
+import { defineComponent, defineAsyncComponent, h, ref, computed, Suspense } from 'vue';
 
 export const vuePlugin: Plugin = app => {
 	installFinder(app);
@@ -115,7 +115,9 @@ function installPreview(app: App) {
 					});
 					return _props;
 				});
-				return () => h(target.value, props.value);
+				return () => h(Suspense, undefined, [
+					h(target.value, props.value)
+				]);
 			},
 		});
 		// TODO: fix preview not working is preview component is root component
