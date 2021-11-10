@@ -1,8 +1,9 @@
 # Changelog
 
-## Not release yet
+## 0.29.3
 
 - feat: support syntax highlighting for `lang="toml"` ([#684](https://github.com/johnsoncodehk/volar/pull/684))
+- fix: subfolder path resolve logic cause to TS crash edge case ([#679](https://github.com/johnsoncodehk/volar/issues/679))
 
 ## 0.29.2
 
