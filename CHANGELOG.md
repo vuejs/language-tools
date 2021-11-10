@@ -1,5 +1,9 @@
 # Changelog
 
+## Not release yet
+
+- feat: support syntax highlighting for `lang="toml"` ([#684](https://github.com/johnsoncodehk/volar/pull/684))
+
 ## 0.29.2
 
 - fix: document server created multi time
