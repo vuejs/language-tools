@@ -646,7 +646,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 ## 0.25.5
 
 - feat: improve UX for TS plugin status bar
-- feat: support syntax highlighting for `lang="json"`, `lang="jsonc"`, `lang="yaml"`, `lang="md"` ([#127](https://github.com/johnsoncodehk/volar/issues/127))
+- feat: support syntax highlighting for `lang="json"`, `lang="jsonc"`, `lang="yaml"`,`lang="toml"`, `lang="md"` ([#127](https://github.com/johnsoncodehk/volar/issues/127))
 - feat: support validation for `lang="json"`, `lang="jsonc"`
 - feat: support emmet for JSX, TSX ([#184](https://github.com/johnsoncodehk/volar/issues/184))
 - fix: fix template syntax highlighting broken edge cases

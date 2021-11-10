@@ -98,6 +98,7 @@
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
+                    "source.toml": "toml",
 					"source.graphql": "graphql"
 				}
 			},
@@ -128,6 +129,7 @@
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
+                    "source.toml": "toml",
 					"source.graphql": "graphql"
 				}
 			},
