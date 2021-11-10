@@ -28,11 +28,26 @@ export async function createProject(
 		...ts.sys,
 		readFile: (path, encoding) => ts.sys.readFile(resolveAbsolutePath(path), encoding),
 		writeFile: (path, content) => ts.sys.writeFile(resolveAbsolutePath(path), content),
-		directoryExists: path => ts.sys.directoryExists(resolveAbsolutePath(path)),
+		directoryExists: path => {
+			if (path === '') {
+				// fix https://github.com/johnsoncodehk/volar/issues/679
+				return ts.sys.directoryExists(path);
+			}
+			return ts.sys.directoryExists(resolveAbsolutePath(path));
+		},
 		getDirectories: path => ts.sys.getDirectories(resolveAbsolutePath(path)),
 		readDirectory: (path, extensions, exclude, include, depth) => ts.sys.readDirectory(resolveAbsolutePath(path), extensions, exclude, include, depth),
-		realpath: ts.sys.realpath ? path => ts.sys.realpath!(resolveAbsolutePath(path)) : undefined,
+		realpath: ts.sys.realpath ? path => {
+			const resolvedPath = resolveAbsolutePath(path);
+			const realPath = ts.sys.realpath!(resolvedPath);
+			if (realPath === resolvedPath) {
+				// rollback if failed
+				return path;
+			}
+			return realPath;
+		} : undefined,
 		fileExists: path => ts.sys.fileExists(resolveAbsolutePath(path)),
+		getCurrentDirectory: () => rootPath,
 	};
 
 	let typeRootVersion = 0;
@@ -58,7 +73,10 @@ export async function createProject(
 	};
 
 	function resolveAbsolutePath(_path: string) {
-		return !path.isAbsolute(_path) ? path.join(rootPath, _path) : _path;
+		const relativePath = path.relative(ts.sys.getCurrentDirectory(), rootPath);
+		if (relativePath === '') return _path;
+		if (_path === '') return relativePath;
+		return !path.isAbsolute(_path) ? relativePath + '/' + _path : _path;
 	}
 	async function getLanguageService() {
 		if (!vueLs) {
@@ -169,6 +187,7 @@ export async function createProject(
 			readDirectory: projectSys.readDirectory,
 			realpath: projectSys.realpath,
 			fileExists: projectSys.fileExists,
+			getCurrentDirectory: projectSys.getCurrentDirectory,
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
@@ -176,7 +195,6 @@ export async function createProject(
 			getVueProjectVersion: () => vueProjectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => parsedCommandLine.fileNames,
-			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,
 			getVueCompilationSettings: () => parsedCommandLine.raw?.vueCompilerOptions ?? {},
 			getScriptVersion,

@@ -183,12 +183,12 @@ export function createLanguageService(
 				else {
 					path = upath.trimExt(path);
 				}
-				if (fileExists(path) || fileExists(shared.uriToFsPath(path))) {
+				if (fileExists(path.indexOf('://') >= 0 ? shared.uriToFsPath(path) : path)) {
 					return path;
 				}
 			}
 			for (const dir of dirs) {
-				if (directoryExists(dir) || directoryExists(shared.uriToFsPath(dir))) {
+				if (directoryExists(dir.indexOf('://') >= 0 ? shared.uriToFsPath(dir) : dir)) {
 					return dir;
 				}
 			}
