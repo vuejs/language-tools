@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.29.4
+
+- feat: syntax highlight support for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
+- fix: semantic highlight can't update if project have no tsconfig or jsconfig ([#685](https://github.com/johnsoncodehk/volar/issues/685))
+
 ## 0.29.3
 
 - feat: support syntax highlighting for `lang="toml"` ([#684](https://github.com/johnsoncodehk/volar/pull/684))
