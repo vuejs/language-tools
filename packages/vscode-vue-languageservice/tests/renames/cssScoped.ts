@@ -1,5 +1,5 @@
 import * as path from 'upath';
-import { Position } from 'vscode-languageserver/node';
+import { Position } from 'vscode-languageserver';
 import { defineRename } from '../utils/defineRename';
 
 const file = path.resolve(__dirname, '../../testCases/renames/cssScoped.vue');

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
-import { LanguageClient, State } from 'vscode-languageclient/node';
+import { CommonLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 
-export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
+export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
 
 	await languageClient.onReady();
 	await languageClient.sendRequest(shared.InitDoneRequest.type);

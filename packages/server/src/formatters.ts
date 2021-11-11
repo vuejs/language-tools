@@ -2,7 +2,7 @@ import * as prettyhtml from '@starptech/prettyhtml';
 import * as prettier from 'prettier';
 import { SassFormatter } from 'sass-formatter';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as vscode from 'vscode-languageserver/node';
+import * as vscode from 'vscode-languageserver';
 
 const pugBeautify = require('pug-beautify');
 

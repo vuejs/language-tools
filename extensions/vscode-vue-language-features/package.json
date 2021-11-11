@@ -31,7 +31,8 @@
 		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
-	"main": "node_modules/@volar/client/out/extension.js",
+	"main": "node_modules/@volar/client/out/nodeClientMain",
+	"browser": "node_modules/@volar/client/out/browserClientMain",
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",

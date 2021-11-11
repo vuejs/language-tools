@@ -90,6 +90,7 @@ node_modules/**/*.js
 !node_modules/@volar/client/out/features/*.js
 !node_modules/@volar/code-gen/out/*.js
 !node_modules/@volar/html2pug/out/*.js
+!node_modules/@volar/server/*.js
 !node_modules/@volar/server/out/*.js
 !node_modules/@volar/server/out/features/*.js
 !node_modules/@volar/server/out/registers/*.js

@@ -12,7 +12,7 @@
 			"path": "./packages/vue-tsc/tsconfig.build.json"
 		},
 		{
-			"path": "./packages/experimental/tsconfig.build.json"
+			"path": "./packages/experimental/tsconfig.json"
 		},
 	]
 }

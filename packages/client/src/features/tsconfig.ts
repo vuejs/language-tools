@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { LanguageClient } from 'vscode-languageclient/node';
+import { CommonLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 
-export async function activate(context: vscode.ExtensionContext, languageClient: LanguageClient) {
+export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
 
 	await languageClient.onReady();
 	await languageClient.sendRequest(shared.InitDoneRequest.type);

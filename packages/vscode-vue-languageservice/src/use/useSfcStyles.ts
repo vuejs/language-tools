@@ -13,7 +13,7 @@ type StylesheetNode = {
 	end: number,
 	length: number,
 	offset: number,
-	parent: Node | null,
+	parent: StylesheetNode | null,
 	type: number,
 };
 
