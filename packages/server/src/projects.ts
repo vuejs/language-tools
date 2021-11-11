@@ -42,7 +42,8 @@ export function createProjects(
 
 	documents.onDidChangeContent(async change => {
 		for (const workspace of workspaces.values()) {
-			for (const project of workspace.projects.values()) {
+			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
+			for (const project of projects) {
 				(await project).onDocumentUpdated(change.document);
 			}
 		}
@@ -83,7 +84,8 @@ export function createProjects(
 			}
 
 			if (scriptChanges.length) {
-				for (const project of workspace.projects.values()) {
+				const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
+				for (const project of projects) {
 					await (await project).onWorkspaceFilesChanged(scriptChanges);
 				}
 			}
@@ -249,6 +251,7 @@ function createWorkspace(
 		getProjectAndTsConfig,
 		getProjectByCreate,
 		getInferredProject,
+		getInferredProjectDontCreate: () => inferredProject,
 	};
 
 	async function getProject(uri: string) {
