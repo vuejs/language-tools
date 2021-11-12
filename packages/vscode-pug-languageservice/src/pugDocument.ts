@@ -26,6 +26,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	let fullPugTagEnd: number;
 	let emptyLineEnds: ReturnType<typeof collectEmptyLineEnds>;
 	let attrsBlocks: ReturnType<typeof collectAttrsBlocks>;
+	let ast: Node | undefined;
 
 	try {
 		const tokens = pugLex(pugCode, { filename: fileName });
@@ -33,7 +34,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		emptyLineEnds = collectEmptyLineEnds(tokens);
 		attrsBlocks = collectAttrsBlocks(tokens);
 
-		const ast = pugParser(tokens, { filename: fileName, src: pugCode });
+		ast = pugParser(tokens, { filename: fileName, src: pugCode }) as Node;
 		visitNode(ast, undefined);
 
 		// support tag auto-complete in empty lines
@@ -82,6 +83,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		htmlCode,
 		sourceMap,
 		error,
+		ast,
 	};
 
 	function visitNode(node: Node, next: Node | undefined) {
@@ -320,15 +322,15 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	}
 }
 
-type Node = BlockNode | TagNode | TextNode;
+export type Node = BlockNode | TagNode | TextNode | CommentNode | BlockCommentNode;
 
-type BlockNode = {
+export type BlockNode = {
 	type: 'Block',
 	nodes: Node[],
 	line: number,
 }
 
-type TagNode = {
+export type TagNode = {
 	type: 'Tag',
 	name: string,
 	selfClosing: boolean,
@@ -347,9 +349,27 @@ type TagNode = {
 	line: number,
 	column: number,
 }
-type TextNode = {
+
+export type TextNode = {
 	type: 'Text',
 	val: string,
+	line: number,
+	column: number,
+}
+
+export type CommentNode = {
+	type: 'Comment',
+	val: string,
+	buffer: boolean,
+	line: number,
+	column: number,
+}
+
+export type BlockCommentNode = {
+	type: 'BlockComment',
+	block: BlockNode,
+	val: string,
+	buffer: boolean,
 	line: number,
 	column: number,
 }

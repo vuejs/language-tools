@@ -13,7 +13,7 @@ export function register(
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
-	const { htmlLs, getCssLs, modules } = context;
+	const { htmlLs, pugLs, getCssLs, modules } = context;
 	return (document: TextDocument) => {
 
 		const sourceFile = context.getVueDocument(document);
@@ -78,76 +78,12 @@ export function register(
 			return result;
 		}
 		function getPugResult(sourceFile: SourceFile) {
-
 			let result: vscode.FoldingRange[] = [];
-
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-
-				const text = sourceMap.mappedDocument.getText();
-				const lines = text.split('\n');
-				const lineIndents = getLineIndents(lines);
-				const foldingRanges: vscode.FoldingRange[] = [];
-
-				for (let startLine = 0; startLine < lines.length; startLine++) {
-
-					const line = lines[startLine];
-					const indent = lineIndents[startLine];
-
-					if (indent === undefined)
-						continue; // empty line
-
-					const kind = getFoldingRangeKind(line);
-
-					let endLine = lines.length - 1;
-
-					for (let nextLine = startLine + 1; nextLine < lines.length; nextLine++) {
-						const indent_2 = lineIndents[nextLine];
-						if (indent_2 !== undefined && indent_2.length <= indent.length) {
-							endLine = nextLine;
-							break;
-						}
-					}
-
-					while (endLine > 0 && lineIndents[endLine - 1] === undefined)
-						endLine--;
-
-					if (startLine !== endLine - 1) {
-						const foldingRange = vscode.FoldingRange.create(
-							startLine,
-							endLine - 1,
-							undefined,
-							undefined,
-							kind,
-						);
-						foldingRanges.push(foldingRange);
-					}
-				}
-
+				const foldingRanges = pugLs.getFoldingRanges(sourceMap.pugDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
-
 			return result;
-
-			function getLineIndents(lines: string[]) {
-				const indents: (string | undefined)[] = [];
-				for (const line of lines) {
-					const line2 = line.trimStart();
-					if (line2 === '') {
-						indents.push(undefined);
-					}
-					else {
-						const offset = line.length - line2.length;
-						const indent = line.substr(0, offset);
-						indents.push(indent);
-					}
-				}
-				return indents;
-			}
-			function getFoldingRangeKind(line: string) {
-				if (line.trimStart().startsWith('//')) {
-					return FoldingRangeKind.Comment;
-				}
-			}
 		}
 	}
 }
