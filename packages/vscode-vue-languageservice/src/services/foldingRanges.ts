@@ -78,47 +78,43 @@ export function register(
 			return result;
 		}
 		function getPugResult(sourceFile: SourceFile) {
+
 			let result: vscode.FoldingRange[] = [];
+
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
+
 				const text = sourceMap.mappedDocument.getText();
 				const lines = text.split('\n');
-				const lineOffsets = getLineOffsets(lines);
 				const lineIndents = getLineIndents(lines);
 				const foldingRanges: vscode.FoldingRange[] = [];
 
-				for (let i = 0; i < lines.length; i++) {
-					const line = lines[i];
-					const offset = lineOffsets[i];
-					const indent = lineIndents[i];
-					if (indent === undefined) continue;
-					const startPos = sourceMap.mappedDocument.positionAt(offset);
-					const kind = getFoldingRangeKind(line);
-					let found = false;
+				for (let startLine = 0; startLine < lines.length; startLine++) {
 
-					for (let j = i + 1; j < lines.length; j++) {
-						const offset_2 = lineOffsets[j];
-						const indent_2 = lineIndents[j];
-						if (indent_2 === undefined || indent_2.length <= indent.length) {
-							const endPos = sourceMap.mappedDocument.positionAt(offset_2);
-							const foldingRange = vscode.FoldingRange.create(
-								startPos.line,
-								endPos.line - 1,
-								undefined,
-								undefined,
-								kind,
-							);
-							foldingRanges.push(foldingRange);
-							found = true;
+					const line = lines[startLine];
+					const indent = lineIndents[startLine];
+
+					if (indent === undefined)
+						continue; // empty line
+
+					const kind = getFoldingRangeKind(line);
+
+					let endLine = lines.length - 1;
+
+					for (let nextLine = startLine + 1; nextLine < lines.length; nextLine++) {
+						const indent_2 = lineIndents[nextLine];
+						if (indent_2 !== undefined && indent_2.length <= indent.length) {
+							endLine = nextLine;
 							break;
 						}
 					}
 
-					if (!found) {
-						const offset_2 = text.length;
-						const endPos = sourceMap.mappedDocument.positionAt(offset_2);
+					while (endLine > 0 && lineIndents[endLine - 1] === undefined)
+						endLine--;
+
+					if (startLine !== endLine - 1) {
 						const foldingRange = vscode.FoldingRange.create(
-							startPos.line,
-							endPos.line - 1,
+							startLine,
+							endLine - 1,
 							undefined,
 							undefined,
 							kind,
@@ -129,17 +125,9 @@ export function register(
 
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
+
 			return result;
 
-			function getLineOffsets(lines: string[]) {
-				const offsets: number[] = [];
-				let currentOffset = 0;
-				for (const line of lines) {
-					offsets.push(currentOffset);
-					currentOffset += line.length + 1;
-				}
-				return offsets;
-			}
 			function getLineIndents(lines: string[]) {
 				const indents: (string | undefined)[] = [];
 				for (const line of lines) {
