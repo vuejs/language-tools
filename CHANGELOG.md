@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.29.5
+
+- feat: open tsconfig when click in status bar
+- feat: add `experimentalTemplateCompilerOptionsRequirePath` option to allow import compiler options from js file ([#698](https://github.com/johnsoncodehk/volar/issues/698))
+- fix: pug folding ranges break by empty line ([#688](https://github.com/johnsoncodehk/volar/issues/688))
+- fix: reduce the intrusiveness of template type-check hacks ([#689](https://github.com/johnsoncodehk/volar/issues/689))
+- fix: `@volar/server` entry files missing in npm publish ([#695](https://github.com/johnsoncodehk/volar/issues/695))
+- fix: language server immediately crashes when trigger request at incomplete TS code ([#699](https://github.com/johnsoncodehk/volar/issues/699))
+- fix: html / css path resolve incorrect on windows edge cases ([#694](https://github.com/johnsoncodehk/volar/issues/694))
+- doc: fix incorrect `experimentalTemplateCompilerOptions` example: `"compatConfig": { "Mode": 2 }` -> `"compatConfig": { "MODE": 2 }`
+
 ## 0.29.4
 
 - feat: syntax highlight support for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
