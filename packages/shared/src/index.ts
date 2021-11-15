@@ -10,6 +10,7 @@ import type * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { promisify } from 'util';
+import * as path from 'path';
 
 export const sleep = promisify(setTimeout);
 
@@ -93,4 +94,24 @@ export function getDocumentSafely(documents: vscode.TextDocuments<TextDocument>,
 			return document;
 		}
 	}
+}
+
+export function resolveVueCompilerOptions(rawOptions: {
+	[key: string]: any,
+	experimentalTemplateCompilerOptionsRequirePath?: string,
+}, rootPath: string) {
+	const result = { ...rawOptions };
+	let templateOptionsPath = rawOptions.experimentalTemplateCompilerOptionsRequirePath;
+	if (templateOptionsPath) {
+		if (!path.isAbsolute(templateOptionsPath)) {
+			templateOptionsPath = require.resolve(templateOptionsPath, { paths: [rootPath] });
+		}
+		try {
+			result.experimentalTemplateCompilerOptions = require(templateOptionsPath).default;
+		} catch (error) {
+			console.log('Failed to require "experimentalTemplateCompilerOptionsRequirePath":', templateOptionsPath);
+			console.error(error);
+		}
+	}
+	return result;
 }

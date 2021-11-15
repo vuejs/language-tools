@@ -60,6 +60,7 @@ export type Modules = {
 export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
 	experimentalTemplateCompilerOptions?: CompilerDOM.CompilerOptions;
+	experimentalTemplateCompilerOptionsRequirePath?: string;
 }
 
 export type LanguageServiceContextBase = {

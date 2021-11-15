@@ -37,7 +37,6 @@ export function register() {
 		}
 		function findMinimalEndLine(endLine: number) {
 			while (endLine > 0 && getLineText(endLine).trim() === '') {
-				console.log(endLine, getLineText(endLine));
 				endLine--;
 			}
 			return endLine;

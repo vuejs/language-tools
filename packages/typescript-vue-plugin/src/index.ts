@@ -73,7 +73,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		realpath: info.project.realpath ? path => info.project.realpath!(path) : undefined,
 
 		getCompilationSettings: () => info.project.getCompilationSettings(),
-		getVueCompilationSettings: () => parsedCommandLine?.raw?.vueCompilerOptions ?? {},
+		getVueCompilationSettings: () => shared.resolveVueCompilerOptions(parsedCommandLine?.raw?.vueCompilerOptions ?? {}, info.project.getCurrentDirectory()),
 		getCurrentDirectory: () => info.project.getCurrentDirectory(),
 		getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
 		getProjectVersion: () => info.project.getProjectVersion(),

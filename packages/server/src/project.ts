@@ -196,7 +196,7 @@ export async function createProject(
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCompilationSettings: () => parsedCommandLine.options,
-			getVueCompilationSettings: () => parsedCommandLine.raw?.vueCompilerOptions ?? {},
+			getVueCompilationSettings: () => shared.resolveVueCompilerOptions(parsedCommandLine.raw?.vueCompilerOptions ?? {}, projectSys.getCurrentDirectory()),
 			getScriptVersion,
 			getScriptSnapshot,
 		};

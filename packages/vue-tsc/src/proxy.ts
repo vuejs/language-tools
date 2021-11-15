@@ -39,7 +39,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		...host,
 		writeFile: undefined,
 		getCompilationSettings: () => options.options,
-		getVueCompilationSettings: () => vueCompilerOptions,
+		getVueCompilationSettings: () => shared.resolveVueCompilerOptions(vueCompilerOptions, host.getCurrentDirectory()),
 		getScriptFileNames: () => fileNames,
 		getScriptVersion: () => '',
 		getScriptSnapshot,
