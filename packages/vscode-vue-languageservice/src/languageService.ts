@@ -163,7 +163,13 @@ export function createLanguageService(
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
 
-			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
+			const isUri = base.indexOf('://') >= 0;
+			const resolveResult = ts.resolveModuleName(
+				ref,
+				isUri ? shared.uriToFsPath(base) : base,
+				vueHost.getCompilationSettings(),
+				compilerHost,
+			);
 			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
 
@@ -177,19 +183,18 @@ export function createLanguageService(
 					dirs.add(upath.dirname(path));
 				}
 				if (path.endsWith('.d.ts')) {
-					path = upath.trimExt(path);
-					path = upath.trimExt(path);
+					path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
 				}
 				else {
-					path = upath.trimExt(path);
+					continue;
 				}
-				if (fileExists(path.indexOf('://') >= 0 ? shared.uriToFsPath(path) : path)) {
-					return path;
+				if (fileExists(path)) {
+					return isUri ? shared.fsPathToUri(path) : path;
 				}
 			}
 			for (const dir of dirs) {
-				if (directoryExists(dir.indexOf('://') >= 0 ? shared.uriToFsPath(dir) : dir)) {
-					return dir;
+				if (directoryExists(dir)) {
+					return isUri ? shared.fsPathToUri(dir) : dir;
 				}
 			}
 

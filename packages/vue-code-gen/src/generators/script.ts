@@ -134,7 +134,7 @@ export function generate(
 
 		let src = script.src;
 
-		if (src.endsWith('.d.ts')) src = path.removeExt(src, '.d.ts');
+		if (src.endsWith('.d.ts')) src = path.removeExt(path.removeExt(src, '.ts'), '.d');
 		else if (src.endsWith('.ts')) src = path.removeExt(src, '.ts');
 		else if (src.endsWith('.tsx')) src = path.removeExt(src, '.tsx');
 
