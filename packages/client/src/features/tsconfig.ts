@@ -9,9 +9,15 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	await languageClient.sendRequest(shared.InitDoneRequest.type);
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+	let currentTsconfig = '';
 
 	updateStatusBar();
+
 	vscode.window.onDidChangeActiveTextEditor(updateStatusBar, undefined, context.subscriptions);
+	vscode.commands.registerCommand('volar.openTsconfig', async () => {
+		const document = await vscode.workspace.openTextDocument(currentTsconfig);
+		await vscode.window.showTextDocument(document);
+	});
 
 	async function updateStatusBar() {
 		if (vscode.window.activeTextEditor?.document.languageId !== 'vue') {
@@ -24,9 +30,12 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			);
 			if (tsconfig) {
 				statusBar.text = path.relative(vscode.workspace.rootPath!, tsconfig);
+				statusBar.command = 'volar.openTsconfig';
+				currentTsconfig = tsconfig;
 			}
 			else {
 				statusBar.text = 'No tsconfig';
+				statusBar.command = undefined;
 			}
 			statusBar.show();
 		}
