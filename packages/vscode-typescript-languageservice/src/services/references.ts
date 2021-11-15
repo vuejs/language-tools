@@ -15,7 +15,9 @@ export function register(
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const entries = languageService.getReferencesAtPosition(fileName, offset);
+
+		let entries: ReturnType<typeof languageService.getReferencesAtPosition>;
+		try { entries = languageService.getReferencesAtPosition(fileName, offset); } catch { }
 		if (!entries) return [];
 
 		return entriesToLocations([...entries], getTextDocument2);

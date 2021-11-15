@@ -20,8 +20,11 @@ export function register(
 
 		const fileToRename = shared.uriToFsPath(oldUri);
 		const newFilePath = shared.uriToFsPath(newUri);
-		const response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences);
-		if (!response.length) return;
+
+		let response: ReturnType<typeof languageService.getEditsForFileRename> | undefined;
+		try { response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences); } catch { }
+		if (!response?.length) return;
+
 		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);
 		return edits;
 	};

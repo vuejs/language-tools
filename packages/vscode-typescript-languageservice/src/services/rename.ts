@@ -19,9 +19,9 @@ export function register(
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
-		const renameInfo = languageService.getRenameInfo(fileName, offset, renameInfoOptions);
-		if (!renameInfo.canRename)
-			return;
+		let renameInfo: ReturnType<typeof languageService.getRenameInfo> | undefined;
+		try { renameInfo = languageService.getRenameInfo(fileName, offset, renameInfoOptions); } catch { }
+		if (!renameInfo?.canRename) return;
 
 		if (renameInfo.fileToRename) {
 			const [formatOptions, preferences] = await Promise.all([

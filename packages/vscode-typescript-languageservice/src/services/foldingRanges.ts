@@ -5,11 +5,16 @@ import * as shared from '@volar/shared';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
 	return (uri: string) => {
+
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = shared.uriToFsPath(document.uri);
-		const outliningSpans = languageService.getOutliningSpans(fileName);
+
+		let outliningSpans: ReturnType<typeof languageService.getOutliningSpans> | undefined;
+		try { outliningSpans = languageService.getOutliningSpans(fileName); } catch { }
+		if (!outliningSpans) return [];
+
 		const foldingRanges: vscode.FoldingRange[] = [];
 
 		for (const outliningSpan of outliningSpans) {

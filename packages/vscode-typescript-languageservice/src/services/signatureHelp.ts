@@ -29,7 +29,9 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const helpItems = languageService.getSignatureHelpItems(fileName, offset, options);
+
+		let helpItems: ReturnType<typeof languageService.getSignatureHelpItems> | undefined;
+		try { helpItems = languageService.getSignatureHelpItems(fileName, offset, options); } catch { }
 		if (!helpItems) return;
 
 		return {

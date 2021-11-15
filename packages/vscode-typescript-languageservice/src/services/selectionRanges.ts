@@ -14,7 +14,11 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		for (const position of positions) {
 			const fileName = shared.uriToFsPath(document.uri);
 			const offset = document.offsetAt(position);
-			const range = languageService.getSmartSelectionRange(fileName, offset);
+
+			let range: ReturnType<typeof languageService.getSmartSelectionRange> | undefined;
+			try { range = languageService.getSmartSelectionRange(fileName, offset); } catch { }
+			if (!range) continue;
+
 			result.push(transformSelectionRange(range, document));
 		}
 

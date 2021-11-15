@@ -46,7 +46,8 @@ export function register(
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
-		const completionContext = languageService.getCompletionsAtPosition(fileName, offset, options);
+		let completionContext: ReturnType<typeof languageService.getCompletionsAtPosition> | undefined;
+		try { completionContext = languageService.getCompletionsAtPosition(fileName, offset, options); } catch { }
 		if (completionContext === undefined) return;
 
 		const wordRange = completionContext.optionalReplacementSpan ? vscode.Range.create(
@@ -86,7 +87,7 @@ export function register(
 
 				let range: vscode.Range | ReturnType<typeof getRangeFromReplacementSpan> = getRangeFromReplacementSpan(tsEntry, document);
 				item.commitCharacters = getCommitCharacters(tsEntry, {
-					isNewIdentifierLocation: completionContext.isNewIdentifierLocation,
+					isNewIdentifierLocation: completionContext!.isNewIdentifierLocation,
 					isInValidCommitCharacterContext: isInValidCommitCharacterContext(document, position, ts.version),
 					enableCallCompletions: true, // TODO: suggest.completeFunctionCalls
 				});
@@ -94,7 +95,7 @@ export function register(
 				item.insertTextFormat = isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText;
 				item.filterText = getFilterText(tsEntry, wordRange, line, tsEntry.insertText);
 
-				if (completionContext.isMemberCompletion && dotAccessorContext && !isSnippet) {
+				if (completionContext!.isMemberCompletion && dotAccessorContext && !isSnippet) {
 					item.filterText = dotAccessorContext.text + (item.insertText || item.label);
 					if (!range) {
 						const replacementRange = wordRange;

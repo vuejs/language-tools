@@ -16,7 +16,9 @@ export function register(
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const info = languageService.getQuickInfoAtPosition(fileName, offset);
+
+		let info: ReturnType<typeof languageService.getQuickInfoAtPosition> | undefined;
+		try { info = languageService.getQuickInfoAtPosition(fileName, offset); } catch { }
 		if (!info) return;
 
 		const parts: string[] = [];

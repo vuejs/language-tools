@@ -10,12 +10,15 @@ export function register(
 	getTextDocument2: (uri: string) => TextDocument | undefined,
 ) {
 	return (uri: string, position: vscode.Position) => {
+
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const info = languageService.getDefinitionAndBoundSpan(fileName, offset);
+
+		let info: ReturnType<typeof languageService.getDefinitionAndBoundSpan> | undefined;
+		try { info = languageService.getDefinitionAndBoundSpan(fileName, offset); } catch { }
 		if (!info) return [];
 
 		return boundSpanToLocationLinks(info, document, getTextDocument2);

@@ -15,9 +15,15 @@ export function register(
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const tsOptions = await host.getFormatOptions?.(document, options) ?? options;
-		const scriptEdits = range
-			? languageService.getFormattingEditsForRange(fileName, document.offsetAt(range.start), document.offsetAt(range.end), tsOptions)
-			: languageService.getFormattingEditsForDocument(fileName, tsOptions)
+
+		let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
+		try {
+			scriptEdits = range
+				? languageService.getFormattingEditsForRange(fileName, document.offsetAt(range.start), document.offsetAt(range.end), tsOptions)
+				: languageService.getFormattingEditsForDocument(fileName, tsOptions);
+		} catch { }
+		if (!scriptEdits) return [];
+
 		const result: vscode.TextEdit[] = [];
 
 		for (const textEdit of scriptEdits) {
