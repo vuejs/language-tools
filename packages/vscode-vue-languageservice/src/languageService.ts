@@ -602,11 +602,9 @@ export function createLanguageService(
 			if (tsScript) {
 				if (lsType === 'template' && basename === 'runtime-dom.d.ts') {
 					// allow arbitrary attributes
-					const extraTypes = [
-						'interface AriaAttributes extends Record<string, unknown> { }',
-						'declare global { namespace JSX { interface IntrinsicAttributes extends Record<string, unknown> {} } }',
-					];
-					tsScript = ts.ScriptSnapshot.fromString(tsScript.getText(0, tsScript.getLength()) + '\n' + extraTypes.join('\n'));
+					let tsScriptText = tsScript.getText(0, tsScript.getLength());
+					tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any')
+					tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
 				}
 				scriptSnapshots.set(fileName, [version, tsScript]);
 				return tsScript;
