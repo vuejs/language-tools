@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.29.6
+
+- fix: attrs show unexpected "not exist" error ([#710](https://github.com/johnsoncodehk/volar/issues/710))
+- fix: verify all scripts not working if no jsconfig / tsconfig
+- fix: organize import edit text range incorrect ([#714](https://github.com/johnsoncodehk/volar/issues/714))
+- fix: class component props type-check not working with multiple props ([#705](https://github.com/johnsoncodehk/volar/issues/705))
+- fix: emmet should not active in template interpolations
+- fix: TS semantic highlight not working
+
 ## 0.29.5
 
 - feat: open tsconfig when click in status bar
