@@ -103,26 +103,6 @@ export function generate(
 		);
 	}
 
-	/**
-	 * support find definition for <script> block less with:
-	 * import Foo from './foo.vue'
-	 *        ^^^      ^^^^^^^^^^^
-	 */
-	for (const overlapMapRange of overlapMapRanges) {
-		codeGen.addMapping2({
-			data: {
-				vueTag: 'sfc',
-				capabilities: {},
-			},
-			mode: SourceMaps.Mode.Overlap,
-			sourceRange: {
-				start: 0,
-				end: 0,
-			},
-			mappedRange: overlapMapRange,
-		});
-	}
-
 	return {
 		...codeGen,
 		teleports,
