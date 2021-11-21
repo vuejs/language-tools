@@ -680,6 +680,8 @@ export function generate(
 		{
 
 			const tagText = isHTMLTag(node.tag) || isSVGTag(node.tag) ? node.tag : tagResolves[node.tag].rawComponent;
+			const fullTagStart = tsCodeGen.getText().length;
+
 			tsCodeGen.addText(`<`);
 			writeCode(
 				tagText,
@@ -695,7 +697,35 @@ export function generate(
 			);
 			tsCodeGen.addText(` `);
 			const { hasRemainStyleOrClass } = writeProps(node, false, 'props');
-			tsCodeGen.addText(`/>\n`);
+			tsCodeGen.addText(`/>`);
+
+			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
+			let startTagEnd: number;
+			if (node.loc.source.endsWith('/>')) {
+				startTagEnd = node.loc.end.offset;
+			}
+			else if (node.children.length) {
+				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.children[0].loc.start.offset - node.loc.start.offset).lastIndexOf('>') + 1;
+			}
+			else {
+				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
+			}
+			addMapping(tsCodeGen, {
+				sourceRange: {
+					start: node.loc.start.offset,
+					end: startTagEnd,
+				},
+				mappedRange: {
+					start: fullTagStart,
+					end: tsCodeGen.getText().length,
+				},
+				mode: SourceMaps.Mode.Totally,
+				data: {
+					vueTag: 'template',
+					capabilities: capabilitiesSet.diagnosticOnly,
+				},
+			});
+			tsCodeGen.addText(`\n`);
 
 			if (hasRemainStyleOrClass) {
 				tsCodeGen.addText(`<${tagText} `);
