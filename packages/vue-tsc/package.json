@@ -1,6 +1,6 @@
 {
   "name": "vue-tsc",
-  "version": "0.29.5",
+  "version": "0.29.6",
   "license": "MIT",
   "files": [
     "bin",
@@ -15,8 +15,8 @@
     "vue-tsc": "./bin/vue-tsc.js"
   },
   "dependencies": {
-    "@volar/shared": "0.29.5",
-    "vscode-vue-languageservice": "0.29.5"
+    "@volar/shared": "0.29.6",
+    "vscode-vue-languageservice": "0.29.6"
   },
   "peerDependencies": {
     "typescript": "*"
