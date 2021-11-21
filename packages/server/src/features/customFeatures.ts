@@ -32,7 +32,7 @@ export function register(
 		if (!projects) return;
 
 		for (const workspace of projects.workspaces.values()) {
-			for (const project of workspace.projects.values()) {
+			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
 				const localTypes = ls.__internal__.getLocalTypesFiles(lsType);
@@ -58,7 +58,7 @@ export function register(
 		progress.begin('Verify', 0, '', true);
 
 		for (const workspace of projects.workspaces.values()) {
-			for (const project of workspace.projects.values()) {
+			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
 				const { sourceFiles } = await ls.__internal__.getContext();
