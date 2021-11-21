@@ -14,6 +14,7 @@ const capabilitiesSet = {
 	event: { basic: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: true, },
 	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	attrReference: { references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
@@ -287,8 +288,7 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
+								...capabilitiesSet.attrReference,
 								rename: propName === prop.argName,
 							},
 							beforeRename: camelize,
@@ -316,11 +316,7 @@ export function generate(
 						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
 						{
 							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
-								rename: true,
-							},
+							capabilities: capabilitiesSet.attrReference,
 							beforeRename: camelize,
 							doRename: keepHyphenateName,
 						},
@@ -336,11 +332,7 @@ export function generate(
 						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
 						{
 							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
-								rename: true,
-							},
+							capabilities: capabilitiesSet.attrReference,
 							beforeRename(newName) {
 								return camelize('on-' + newName);
 							},
