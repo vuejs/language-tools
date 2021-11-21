@@ -15,6 +15,7 @@ import { CompletionData } from '../types';
 import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
+import { TsSourceMap } from '../utils/sourceMaps';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {
@@ -619,7 +620,7 @@ export function register(
 		async function getEmmetResult(sourceFile: SourceFile) {
 			if (!vueHost.getEmmetConfig) return;
 			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
-			if (embededDoc) {
+			if (embededDoc && !(embededDoc.sourceMap instanceof TsSourceMap && embededDoc.sourceMap.lsType === 'template')) {
 				const emmetConfig = await vueHost.getEmmetConfig(embededDoc.language);
 				if (emmetConfig) {
 					let mode = emmet.getEmmetMode(embededDoc.language === 'vue' ? 'html' : embededDoc.language);
