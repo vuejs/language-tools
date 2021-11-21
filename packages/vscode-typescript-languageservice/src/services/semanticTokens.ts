@@ -34,7 +34,7 @@ export function register(
 
 		if (cancle?.isCancellationRequested) return;
 		let response1: ReturnType<typeof languageService.getEncodedSemanticClassifications> | undefined;
-		try { response1 = languageService.getEncodedSemanticClassifications(file, { start, length }); } catch { }
+		try { response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty); } catch { }
 		if (!response1) return;
 
 		const tokenSpan = [...response1.spans, ...response2.spans];
