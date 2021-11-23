@@ -64,12 +64,10 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 					shared.fsPathToUri(fileName),
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
+					data => !!data.capabilities.diagnostic,
 				)) {
 
 					if (!vueHost.fileExists?.(shared.uriToFsPath(tsOrVueLoc.uri)))
-						continue;
-
-					if (tsOrVueLoc.type === 'embedded-ts' && !tsOrVueLoc.range.data.capabilities.diagnostic)
 						continue;
 
 					if (tsOrVueLoc.type === 'source-ts' && lsType !== 'script')

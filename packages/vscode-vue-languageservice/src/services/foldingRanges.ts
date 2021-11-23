@@ -94,7 +94,7 @@ function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceM
 		const vueRange = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
-		);
+		)?.[0];
 		if (vueRange) {
 			foldingRange.startLine = vueRange.start.line;
 			foldingRange.endLine = vueRange.end.line;
@@ -113,8 +113,9 @@ function toVueFoldingRangesTs(virtualFoldingRanges: vscode.FoldingRange[], sourc
 		const vueLoc = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
-		);
-		if (vueLoc && vueLoc.data.capabilities.foldingRanges) {
+			data => !!data.capabilities.foldingRanges,
+		)?.[0];
+		if (vueLoc) {
 			foldingRange.startLine = vueLoc.start.line;
 			foldingRange.endLine = vueLoc.end.line;
 			if (foldingRange.startCharacter !== undefined)

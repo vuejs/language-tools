@@ -122,7 +122,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, location.targetUri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
 					) continue;
 
-					for (const teleRange of teleport.findTeleports(
+					for (const [teleRange] of teleport.findTeleports(
 						location.targetSelectionRange.start,
 						location.targetSelectionRange.end,
 						sideData => !!sideData.capabilities.definitions,
@@ -156,7 +156,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!cssLs)
 				continue;
 
-			for (const cssRange of sourceMap.getMappedRanges(position)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const cssLoc = cssLs.findDefinition(
 					sourceMap.mappedDocument,
 					cssRange.start,
@@ -175,7 +175,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!sourceMap)
 				continue;
 
-			for (const vueRange of sourceMap.getSourceRanges(cssLoc.range.start, cssLoc.range.end)) {
+			for (const [vueRange] of sourceMap.getSourceRanges(cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
 					uri: sourceMap.sourceDocument.uri,
 					range: vueRange,

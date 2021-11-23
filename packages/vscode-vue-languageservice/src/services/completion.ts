@@ -205,7 +205,7 @@ export function register(
 					};
 				}
 
-				const inTemplate = tsLoc.type === 'embedded-ts' && tsLoc.range.data.vueTag === 'template';
+				const inTemplate = tsLoc.type === 'embedded-ts' && tsLoc.data.vueTag === 'template';
 				const options: ts.GetCompletionsAtPositionOptions = {
 					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					triggerKind: context?.triggerKind,
@@ -400,7 +400,7 @@ export function register(
 				});
 				htmlLs.setDataProviders(true, [dataProvider]);
 
-				for (const htmlRange of sourceMap.getMappedRanges(position)) {
+				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 					if (!result) {
 						result = {
 							isIncomplete: false,
@@ -442,7 +442,7 @@ export function register(
 
 					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(
 						htmlItem,
-						htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+						htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
 					));
 					const htmlItemsMap = new Map<string, html.CompletionItem>();
 					for (const entry of htmlResult.items) {
@@ -536,8 +536,7 @@ export function register(
 				return;
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssRanges = sourceMap.getMappedRanges(position);
-				for (const cssRange of cssRanges) {
+				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 					if (!result) {
 						result = {
 							isIncomplete: false,
@@ -564,7 +563,7 @@ export function register(
 						cssItem.textEdit = vscode.TextEdit.replace(wordRange, newText);
 						const vueItem = transformCompletionItem(
 							cssItem,
-							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end),
+							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0],
 						);
 						vueItem.data = data;
 						return vueItem;
@@ -580,8 +579,7 @@ export function register(
 				return;
 			}
 			for (const sourceMap of sourceFile.getJsonSourceMaps()) {
-				const jsonRanges = sourceMap.getMappedRanges(position);
-				for (const cssRange of jsonRanges) {
+				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 					if (!result) {
 						result = {
 							isIncomplete: false,
@@ -596,7 +594,7 @@ export function register(
 					const vueItems: vscode.CompletionItem[] = jsonResult.items.map(jsonItem => {
 						const vueItem = transformCompletionItem(
 							jsonItem,
-							jsonRange => sourceMap.getSourceRange(jsonRange.start, jsonRange.end),
+							jsonRange => sourceMap.getSourceRange(jsonRange.start, jsonRange.end)?.[0],
 						);
 						return vueItem;
 					});
@@ -632,7 +630,7 @@ export function register(
 					if (emmetResult && embededDoc.sourceMap) {
 						return transformCompletionList(
 							emmetResult,
-							emmetRange => embededDoc.sourceMap!.getSourceRange(emmetRange.start, emmetRange.end),
+							emmetRange => embededDoc.sourceMap!.getSourceRange(emmetRange.start, emmetRange.end)?.[0],
 						);
 					}
 					return emmetResult;

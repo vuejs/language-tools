@@ -34,7 +34,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			const tsContext: vscode.CodeActionContext = {
 				diagnostics: transformLocations(
 					context.diagnostics,
-					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end) : vueRange,
+					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end)?.[0] : vueRange,
 				),
 				only: context.only,
 			};
@@ -84,11 +84,11 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!cssLs)
 				continue;
 
-			for (const cssRange of sourceMap.getMappedRanges(range.start, range.end)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 				const cssContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
 						context.diagnostics,
-						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end),
+						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end)?.[0],
 					),
 					only: context.only,
 				};
@@ -108,7 +108,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 								}
 								vueEdit.changes[uri] = transformLocations(
 									vueEdit.changes[cssUri],
-									cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+									cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end)?.[0],
 								);
 							}
 						}
@@ -124,7 +124,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 									};
 									cssDocChange.edits = transformLocations(
 										cssDocChange.edits,
-										cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+										cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end)?.[0],
 									);
 									vueEdit.documentChanges.push(cssDocChange);
 								}
@@ -135,7 +135,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					if (codeAction.diagnostics) {
 						codeAction.diagnostics = transformLocations(
 							codeAction.diagnostics,
-							cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+							cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end)?.[0],
 						);
 					}
 

@@ -8,7 +8,7 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, posArr: vscode.Position[]): vscode.SelectionRange[] => {
 
 		const htmlPosArr = posArr
-			.map(position => pugDoc.sourceMap.getMappedRange(position, position, data => !data?.isEmptyTagCompletion)?.start)
+			.map(position => pugDoc.sourceMap.getMappedRange(position, position, data => !data?.isEmptyTagCompletion)?.[0].start)
 			.filter(shared.notEmpty);
 
 		const htmlResult = htmlLs.getSelectionRanges(
@@ -18,7 +18,7 @@ export function register(htmlLs: html.LanguageService) {
 
 		return transformLocations(
 			htmlResult,
-			htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+			htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
 		);
 	}
 }

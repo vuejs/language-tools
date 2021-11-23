@@ -101,8 +101,8 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 			let newName_2 = newName;
 
-			if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
-				newName_2 = tsLoc.range.data.beforeRename(newName);
+			if (tsLoc.type === 'embedded-ts' && tsLoc.data.beforeRename)
+				newName_2 = tsLoc.data.beforeRename(newName);
 
 			const tsResult = await doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
 			if (tsResult) {
@@ -147,15 +147,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 						&& sourceFiles.getSourceFileByTsUri(lsType, editUri) !== sourceFiles.getSourceFileByTsUri(lsType, tsUri)
 					) continue;
 
-					for (const teleRange of teleport.findTeleports(
+					for (const [teleRange, sideData] of teleport.findTeleports(
 						textEdit.range.start,
 						textEdit.range.end,
 						sideData => !!sideData.capabilities.rename,
 					)) {
 						if (loopChecker.has({ uri: editUri, range: teleRange }))
 							continue;
-						const newName_2 = teleRange.sideData.editRenameText
-							? teleRange.sideData.editRenameText(newName)
+						const newName_2 = sideData.editRenameText
+							? sideData.editRenameText(newName)
 							: newName;
 						const tsResult_2 = await doTsRenameWorker(lsType, editUri, teleRange.start, newName_2, loopChecker);
 						if (tsResult_2) {
@@ -175,11 +175,11 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 			return;
 
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
-			for (const cssRange of sourceMap.getMappedRanges(position)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 				const wordRange = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument);
 				if (wordRange) {
-					for (const vueRange of sourceMap.getSourceRanges(wordRange.start, wordRange.end)) {
+					for (const [vueRange] of sourceMap.getSourceRanges(wordRange.start, wordRange.end)) {
 						return vueRange as vscode.Range;
 					}
 				}
@@ -206,7 +206,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 			if (!cssLs)
 				continue;
 
-			for (const cssRange of sourceMap.getMappedRanges(position)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const cssWorkspaceEdit = cssLs.doRename(
 					sourceMap.mappedDocument,
 					cssRange.start,
@@ -232,7 +232,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 			const cssEdits = cssResult.changes[cssUri];
 			for (const cssEdit of cssEdits) {
-				for (const vueRange of sourceMap.getSourceRanges(cssEdit.range.start, cssEdit.range.end)) {
+				for (const [vueRange] of sourceMap.getSourceRanges(cssEdit.range.start, cssEdit.range.end)) {
 					if (!vueResult.changes) {
 						vueResult.changes = {};
 					}
@@ -310,9 +310,9 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: vscode.
 
 				let newText_2 = tsEdit.newText;
 
-				if (vueLoc.type === 'embedded-ts' && vueLoc.range.data.doRename) {
+				if (vueLoc.type === 'embedded-ts' && vueLoc.data.doRename) {
 					const vueDoc = vueLoc.sourceMap.sourceDocument;
-					newText_2 = vueLoc.range.data.doRename(vueDoc.getText(vueLoc.range), tsEdit.newText);
+					newText_2 = vueLoc.data.doRename(vueDoc.getText(vueLoc.range), tsEdit.newText);
 				}
 				if (!vueResult.changes) {
 					vueResult.changes = {};
@@ -343,14 +343,12 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: vscode.
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const vueRange of sourceMap.getSourceRanges(tsEdit.range.start, tsEdit.range.end)) {
-							if (isValidRange(vueRange.data)) {
-								vueDocEdit.edits.push({
-									annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
-									newText: tsEdit.newText,
-									range: vueRange,
-								});
-							}
+						for (const [vueRange] of sourceMap.getSourceRanges(tsEdit.range.start, tsEdit.range.end, isValidRange)) {
+							vueDocEdit.edits.push({
+								annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
+								newText: tsEdit.newText,
+								range: vueRange,
+							});
 						}
 					}
 					if (!vueDocEdit.edits.length) {

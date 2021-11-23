@@ -115,7 +115,7 @@ export function register(
 
 			const cssEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const cssEdit of cssEdits) {
-				const vueEdit = transformTextEdit(cssEdit, cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end));
+				const vueEdit = transformTextEdit(cssEdit, cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0]);
 				if (vueEdit) {
 					result.push(vueEdit);
 				}
@@ -133,7 +133,7 @@ export function register(
 
 			const htmlEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const htmlEdit of htmlEdits) {
-				const vueEdit = transformTextEdit(htmlEdit, htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end));
+				const vueEdit = transformTextEdit(htmlEdit, htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0]);
 				if (vueEdit) {
 					result.push(vueEdit);
 				}
@@ -151,7 +151,7 @@ export function register(
 
 			const pugEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const pugEdit of pugEdits) {
-				const vueEdit = transformTextEdit(pugEdit, pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end));
+				const vueEdit = transformTextEdit(pugEdit, pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end)?.[0]);
 				if (vueEdit) {
 					result.push(vueEdit);
 				}
@@ -172,8 +172,11 @@ export function register(
 			const dummyTsLs = sharedServices.getDummyTsLs(context.modules.typescript, context.modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 			const textEdits = await dummyTsLs.doFormatting(sourceMap.mappedDocument.uri, options);
 			for (const textEdit of textEdits) {
-				for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
-					if (!vueRange.data.capabilities.formatting) continue;
+				for (const [vueRange] of sourceMap.getSourceRanges(
+					textEdit.range.start,
+					textEdit.range.end,
+					data => !!data.capabilities.formatting,
+				)) {
 					result.push({
 						newText: textEdit.newText,
 						range: vueRange,

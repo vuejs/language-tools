@@ -106,7 +106,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		if (!sourceMap)
 			return;
 
-		let vueRange: vscode.Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end);
+		let vueRange: vscode.Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end)?.[0];
 		if (!vueRange) {
 			// TODO: <script> range
 			vueRange = {
@@ -115,11 +115,11 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 			};
 		}
 
-		const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end);
+		const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end)?.[0];
 		if (!vueSelectionRange)
 			return;
 
-		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)).filter(shared.notEmpty);
+		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0]).filter(shared.notEmpty);
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
 			name: tsItem.name === upath.basename(shared.uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(shared.uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,

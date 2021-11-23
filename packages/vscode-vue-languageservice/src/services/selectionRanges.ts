@@ -85,9 +85,12 @@ export function register(
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
 				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
-				const tsStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
+				const tsStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
 				const tsSelectRange = dummyTsLs.getSelectionRanges(sourceMap.mappedDocument.uri, tsStarts);
-				result = result.concat(transformSelectionRanges(tsSelectRange, range => sourceMap.getSourceRange(range.start, range.end)));
+				result = result.concat(transformSelectionRanges(
+					tsSelectRange,
+					range => sourceMap.getSourceRange(range.start, range.end)?.[0],
+				));
 			}
 			return result;
 		}
@@ -97,11 +100,14 @@ export function register(
 				...sourceFile.getHtmlSourceMaps(),
 				...sourceFile.getPugSourceMaps()
 			]) {
-				const htmlStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
+				const htmlStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
 				const selectRanges = sourceMap.language === 'html'
 					? htmlLs.getSelectionRanges(sourceMap.mappedDocument, htmlStarts)
 					: pugLs.getSelectionRanges(sourceMap.pugDocument, htmlStarts)
-				result = result.concat(transformSelectionRanges(selectRanges, range => sourceMap.getSourceRange(range.start, range.end)));
+				result = result.concat(transformSelectionRanges(
+					selectRanges,
+					range => sourceMap.getSourceRange(range.start, range.end)?.[0],
+				));
 			}
 			return result;
 		}
@@ -110,9 +116,12 @@ export function register(
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;
-				const cssStarts = positions.map(position => sourceMap.getMappedRange(position)?.start).filter(shared.notEmpty);
+				const cssStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
 				const cssSelectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, cssStarts, sourceMap.stylesheet);
-				result = result.concat(transformSelectionRanges(cssSelectRanges, range => sourceMap.getSourceRange(range.start, range.end)));
+				result = result.concat(transformSelectionRanges(
+					cssSelectRanges,
+					range => sourceMap.getSourceRange(range.start, range.end)?.[0],
+				));
 			}
 			return result;
 		}

@@ -38,7 +38,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 
 			let newPosition_2: vscode.Position | undefined;
 			if (newPosition) {
-				for (const tsRange of sourceMap.getMappedRanges(newPosition, newPosition, data => !!data.capabilities.completion)) {
+				for (const [tsRange] of sourceMap.getMappedRanges(newPosition, newPosition, data => !!data.capabilities.completion)) {
 					newPosition_2 = tsRange.start;
 					break;
 				}
@@ -46,7 +46,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
 			const newVueItem = transformCompletionItem(
 				data.tsItem,
-				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
+				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0],
 			);
 			newVueItem.data = data;
 			// TODO: this is a patch for import ts file icon

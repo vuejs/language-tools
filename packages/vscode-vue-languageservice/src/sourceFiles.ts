@@ -179,7 +179,8 @@ export function createSourceFiles() {
 								type: 'embedded-ts' as const,
 								sourceMap,
 								uri: sourceMap.mappedDocument.uri,
-								range: tsRange,
+								range: tsRange[0],
+								data: tsRange[1],
 							};
 						}
 					}
@@ -223,7 +224,8 @@ export function createSourceFiles() {
 						type: 'embedded-ts' as const,
 						sourceMap,
 						uri: sourceMap.sourceDocument.uri,
-						range: vueRange,
+						range: vueRange[0],
+						data: vueRange[1],
 					};
 				}
 			}
@@ -238,7 +240,14 @@ export function createSourceFiles() {
 				};
 			}
 		}),
-		fromTsLocation2: untrack(function* (lsType: 'script' | 'template', uri: string, start: number, end?: number) {
+		fromTsLocation2: untrack(function* (
+			lsType: 'script' | 'template',
+			uri: string,
+			start: number,
+			end?: number,
+			filter?: (data: TsMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
 				return;
@@ -248,12 +257,17 @@ export function createSourceFiles() {
 
 			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
 			if (sourceMap) {
-				for (const vueRange of sourceMap.getSourceRanges(start, end)) {
+
+				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+					return;
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
 						type: 'embedded-ts' as const,
 						sourceMap,
 						uri: sourceMap.sourceDocument.uri,
-						range: vueRange,
+						range: vueRange[0],
+						data: vueRange[1],
 					};
 				}
 			}

@@ -43,7 +43,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentHighlight[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-				for (const htmlRange of sourceMap.getMappedRanges(position)) {
+				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 
 					const highlights = sourceMap.language === 'html'
 						? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
@@ -51,7 +51,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {
-						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
+						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end)?.[0];
 						if (vueRange) {
 							result.push({
 								...highlight,
@@ -68,10 +68,10 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
 				if (!cssLs || !sourceMap.stylesheet) continue;
-				for (const cssRange of sourceMap.getMappedRanges(position)) {
+				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 					const highlights = cssLs.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
 					for (const highlight of highlights) {
-						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end);
+						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end)?.[0];
 						if (vueRange) {
 							result.push({
 								...highlight,

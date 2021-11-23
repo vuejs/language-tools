@@ -102,7 +102,7 @@ export function register(
 				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const symbols = dummyTsLs.findDocumentSymbols(sourceMap.mappedDocument.uri);
 				result = result.concat(transformSymbolInformations(symbols, loc => {
-					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end);
+					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];
 					return vueRange ? vscode.Location.create(document.uri, vueRange) : undefined;
 				}));
 			}
@@ -129,7 +129,7 @@ export function register(
 					: pugLs.findDocumentSymbols(sourceMap.pugDocument)
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
-					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end);
+					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];
 					return vueRange ? vscode.Location.create(document.uri, vueRange) : undefined;
 				}));
 			}
@@ -143,7 +143,7 @@ export function register(
 				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
-					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end);
+					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];
 					return vueRange ? vscode.Location.create(document.uri, vueRange) : undefined;
 				}));
 			}

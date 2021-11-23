@@ -321,7 +321,7 @@ export function useSfcTemplateScript(
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
 					for (const cssRange of maped.cssRanges) {
-						const vueRange = cssSourceMap.getSourceRange(cssRange.start, cssRange.end);
+						const vueRange = cssSourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0];
 						if (!vueRange) continue;
 						sourceMap.mappings.push({
 							data: {

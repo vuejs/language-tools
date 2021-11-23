@@ -6,7 +6,7 @@ import type { PugDocument } from '../pugDocument';
 export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, pos: vscode.Position) => {
 
-		const htmlRange = pugDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion);
+		const htmlRange = pugDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion)?.[0];
 		if (!htmlRange) return;
 
 		const htmlResult = htmlLs.findDocumentHighlights(
@@ -17,7 +17,7 @@ export function register(htmlLs: html.LanguageService) {
 
 		return transformLocations(
 			htmlResult,
-			htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+			htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
 		);
 	}
 }

@@ -72,16 +72,16 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 						const range = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.name.getStart(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
-						);
+						)?.[0];
 						const _argRange = getArgRanges(node.initializer, scriptAst);
 						const argsStartRange = _argRange ? sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(_argRange.start),
 							sourceMap.mappedDocument.positionAt(_argRange.start),
-						) : undefined;
+						)?.[0] : undefined;
 						const argsEndRange = _argRange ? sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(_argRange.end),
 							sourceMap.mappedDocument.positionAt(_argRange.end),
-						) : undefined;
+						)?.[0] : undefined;
 						if (range && argsStartRange && argsEndRange) {
 							refs.push({
 								type: 'ref',
@@ -106,15 +106,15 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 						const range = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.name.getStart(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
-						);
+						)?.[0];
 						const blockStartRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.body.getStart(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.body.getStart(scriptAst)),
-						);
+						)?.[0];
 						const blockEndRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.body.getStart(scriptAst) + node.body.getWidth(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.body.getStart(scriptAst) + node.body.getWidth(scriptAst)),
-						);
+						)?.[0];
 						if (range && blockStartRange && blockEndRange) {
 							funcs.push({
 								type: 'func',
@@ -138,23 +138,23 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 						const nameRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.name.getStart(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.name.getStart(scriptAst) + node.name.getWidth(scriptAst)),
-						);
+						)?.[0];
 						const startRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.initializer.getStart(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.initializer.getStart(scriptAst)),
-						);
+						)?.[0];
 						const endRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.initializer.getStart(scriptAst) + node.initializer.getWidth(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.initializer.getStart(scriptAst) + node.initializer.getWidth(scriptAst)),
-						);
+						)?.[0];
 						const blockStartRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.initializer.body.getStart(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.initializer.body.getStart(scriptAst)),
-						);
+						)?.[0];
 						const blockEndRange = sourceMap.getSourceRange(
 							sourceMap.mappedDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
 							sourceMap.mappedDocument.positionAt(node.initializer.body.getStart(scriptAst) + node.initializer.body.getWidth(scriptAst)),
-						);
+						)?.[0];
 						if (nameRange && startRange && endRange && blockStartRange && blockEndRange) {
 							funcs.push({
 								type: 'func',
@@ -177,7 +177,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 							const range = sourceMap.getSourceRange(
 								sourceMap.mappedDocument.positionAt(name.getStart(scriptAst)),
 								sourceMap.mappedDocument.positionAt(name.getStart(scriptAst) + name.getWidth(scriptAst)),
-							);
+							)?.[0];
 							const _argRange = getArgRanges(node, scriptAst);
 							const argsRange = _argRange ? sourceMap.getSourceRange(
 								sourceMap.mappedDocument.positionAt(_argRange.start),

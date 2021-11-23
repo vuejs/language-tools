@@ -36,8 +36,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 
 		function getTsResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
-				const tsRanges = sourceMap.getMappedRanges(range.start, range.end);
-				for (const tsRange of tsRanges) {
+				for (const [tsRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 					return {
 						sourceMap,
 						language: sourceMap.mappedDocument.languageId,
@@ -49,8 +48,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				const htmlRanges = sourceMap.getMappedRanges(range.start, range.end);
-				for (const htmlRange of htmlRanges) {
+				for (const [htmlRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 					return {
 						sourceMap,
 						language: sourceMap.mappedDocument.languageId,
@@ -62,8 +60,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		}
 		function getPugResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const pugRanges = sourceMap.getMappedRanges(range.start, range.end);
-				for (const pugRange of pugRanges) {
+				for (const [pugRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 					return {
 						sourceMap,
 						language: sourceMap.mappedDocument.languageId,
@@ -75,8 +72,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		}
 		function getCssResult(sourceFile: SourceFile) {
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
-				for (const cssRange of cssRanges) {
+				for (const [cssRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 					return {
 						sourceMap,
 						language: sourceMap.mappedDocument.languageId,

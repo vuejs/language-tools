@@ -298,10 +298,10 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						const htmlDoc = pugDoc.sourceMap.mappedDocument;
 						const vueCompileErrors = sfcTemplateCompileResult.value.errors;
 						for (const vueCompileError of vueCompileErrors) {
-							let pugRange: vscode.Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end);
+							let pugRange: vscode.Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end)?.[0];
 							if (!pugRange) {
-								const pugStart = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.start)?.start;
-								const pugEnd = pugDoc.sourceMap.getSourceRange(vueCompileError.range.end, vueCompileError.range.end)?.end;
+								const pugStart = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.start)?.[0].start;
+								const pugEnd = pugDoc.sourceMap.getSourceRange(vueCompileError.range.end, vueCompileError.range.end)?.[0].end;
 								if (pugStart && pugEnd) {
 									pugRange = {
 										start: pugStart,
@@ -554,9 +554,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				for (const diag of errors_1.value) {
 					const spanText = sfcTemplateScript.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = sfcTemplateScript.teleportSourceMap.value.getSourceRanges(diag.range.start, diag.range.end);
-					for (const propRight of propRights) {
-						if (propRight.data.isAdditionalReference) continue;
+					for (const [propRight] of sfcTemplateScript.teleportSourceMap.value.getSourceRanges(
+						diag.range.start,
+						diag.range.end,
+						sideData => !sideData.isAdditionalReference,
+					)) {
 						const definitions = templateTsLs.findDefinition(sfcTemplateScript.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
 							if (definition.targetUri !== sfcScriptForTemplateLs.textDocument.value?.uri) continue;
@@ -649,8 +651,12 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				for (const sourceMap of sourceMaps) {
 					if (sourceMap.mappedDocument.uri === virtualUri) {
 
-						const vueRange = sourceMap.getSourceRange(virtualRange.start, virtualRange.end);
-						if (vueRange && vueRange.data.capabilities.diagnostic) {
+						const vueRange = sourceMap.getSourceRange(
+							virtualRange.start,
+							virtualRange.end,
+							data => !!data.capabilities.diagnostic,
+						)?.[0];
+						if (vueRange) {
 							return {
 								uri: sourceFile.uri,
 								start: vueRange.start,

@@ -82,7 +82,7 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
 					) continue;
 
-					for (const teleRange of teleport.findTeleports2(
+					for (const [teleRange] of teleport.findTeleports2(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
 						sideData => {
@@ -144,7 +144,7 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
 					) continue;
 
-					for (const teleRange of teleport.findTeleports2(
+					for (const [teleRange] of teleport.findTeleports2(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
 						sideData => !!sideData.capabilities.definitions,
@@ -195,7 +195,7 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 							&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
 						) continue;
 
-						for (const teleRange of teleport.findTeleports2(
+						for (const [teleRange] of teleport.findTeleports2(
 							ref.textSpan.start,
 							ref.textSpan.start + ref.textSpan.length,
 							sideData => !!sideData.capabilities.references,

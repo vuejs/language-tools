@@ -84,47 +84,21 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 	) {
 		super(document, document);
 	}
-	findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
-		const result: {
-			data: TeleportMappingData;
-			sideData: TeleportSideData;
-			start: vscode.Position,
-			end: vscode.Position,
-		}[] = [];
-		for (const teleRange of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toTarget,
-			});
+	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
+		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
+			yield [teleRange, data.toTarget] as const;
 		}
-		for (const teleRange of this.getSourceRanges(start, end, filter ? data => filter(data.toSource) : undefined)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toSource,
-			});
+		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toSource) : undefined)) {
+			yield [teleRange, data.toSource] as const;
 		}
-		return result;
 	}
-	findTeleports2(start: number, end?: number, filter?: (data: TeleportSideData) => boolean) {
-		const result: {
-			data: TeleportMappingData;
-			sideData: TeleportSideData;
-			start: number,
-			end: number,
-		}[] = [];
-		for (const teleRange of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toTarget,
-			});
+	*findTeleports2(start: number, end?: number, filter?: (data: TeleportSideData) => boolean) {
+		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
+			yield [teleRange, data.toTarget] as const;
 		}
-		for (const teleRange of this.getSourceRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toSource,
-			});
+		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
+			yield [teleRange, data.toTarget] as const;
 		}
-		return result;
 	}
 }
 

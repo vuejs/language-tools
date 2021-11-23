@@ -106,53 +106,42 @@ export class SourceMapBase<Data = undefined> {
 			}
 		}
 
-		function getMaped(maped: {
-			data: Data;
-			start: number;
-			end: number;
-		}) {
-			return maped as {
-				data: Data;
-				start: number;
-				end: number;
-			};
+		function getMaped(maped: [{ start: number, end: number }, Data]) {
+			return maped;
 		}
 	}
 
-	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data) {
+	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number }, Data] | undefined {
 		const mapedToRange = sourceToTarget ? targetRange : sourceRange;
 		const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
 		if (mode === Mode.Totally) {
 			if (start === mapedFromRange.start && end === mapedFromRange.end) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
-				return {
-					data: data,
+				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
-				};
+				}, data];
 			}
 		}
 		else if (mode === Mode.Offset) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 				const _start = mapedToRange.start + start - mapedFromRange.start;
 				const _end = mapedToRange.end + end - mapedFromRange.end;
-				return {
-					data: data,
+				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
-				};
+				}, data];
 			}
 		}
 		else if (mode === Mode.Expand) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
-				return {
-					data: data,
+				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
-				};
+				}, data];
 			}
 		}
 	}
@@ -199,23 +188,14 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 			yield getMaped(maped);
 		}
 
-		function getMaped(maped: {
-			data: Data;
-			start: number;
-			end: number;
-		}) {
+		function getMaped(maped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
 			if (startIsNumber) {
-				return maped as {
-					data: Data;
-					start: T;
-					end: T;
-				};
+				return maped as [{ start: T, end: T }, Data];
 			}
-			return {
-				data: maped.data,
-				start: toDoc.positionAt(maped.start) as T,
-				end: toDoc.positionAt(maped.end) as T,
-			}
+			return [{
+				start: toDoc.positionAt(maped[0].start) as T,
+				end: toDoc.positionAt(maped[0].end) as T,
+			}, maped[1]];
 		}
 	}
 }

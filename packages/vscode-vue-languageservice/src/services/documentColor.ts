@@ -25,7 +25,7 @@ export function register(context: HtmlLanguageServiceContext) {
 				if (!cssLs || !sourceMap.stylesheet) continue;
 				let colors = cssLs.findDocumentColors(sourceMap.mappedDocument, sourceMap.stylesheet);
 				for (const color of colors) {
-					const vueRange = sourceMap.getSourceRange(color.range.start, color.range.end);
+					const vueRange = sourceMap.getSourceRange(color.range.start, color.range.end)?.[0];
 					if (vueRange) {
 						result.push({
 							...color,

@@ -52,7 +52,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			);
 			if (!tsHover) continue;
 
-			if (!isExtra && tsLoc.type === 'embedded-ts' && tsLoc.range.data.capabilities.extraHoverInfo) {
+			if (!isExtra && tsLoc.type === 'embedded-ts' && tsLoc.data.capabilities.extraHoverInfo) {
 				const definitions = findDefinitions.on(uri, position) as vscode.LocationLink[];
 				for (const definition of definitions) {
 					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, true);
@@ -100,7 +100,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			...sourceFile.getPugSourceMaps(),
 		]) {
 			const settings = await vueHost.getHtmlHoverSettings?.(sourceMap.mappedDocument);
-			for (const htmlRange of sourceMap.getMappedRanges(position)) {
+			for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 				const htmlHover = sourceMap instanceof HtmlSourceMap
 					? htmlLs.doHover(
 						sourceMap.mappedDocument,
@@ -119,7 +119,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 					continue;
 				}
 				// html -> vue
-				for (const vueRange of sourceMap.getSourceRanges(htmlHover.range.start, htmlHover.range.end)) {
+				for (const [vueRange] of sourceMap.getSourceRanges(htmlHover.range.start, htmlHover.range.end)) {
 					result = {
 						...htmlHover,
 						range: vueRange,
@@ -148,7 +148,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			if (!cssLs)
 				continue;
 
-			for (const cssRange of sourceMap.getMappedRanges(position)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
 				const cssHover = cssLs.doHover(
 					sourceMap.mappedDocument,
@@ -163,7 +163,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 					continue;
 				}
 				// css -> vue
-				for (const vueRange of sourceMap.getSourceRanges(cssHover.range.start, cssHover.range.end)) {
+				for (const [vueRange] of sourceMap.getSourceRanges(cssHover.range.start, cssHover.range.end)) {
 					result = {
 						...cssHover,
 						range: vueRange,
