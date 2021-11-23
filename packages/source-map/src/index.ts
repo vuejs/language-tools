@@ -67,15 +67,6 @@ export class SourceMapBase<Data = undefined> {
 		this.mappings = _mappings ?? [];
 	}
 
-	private cache = new Map<string, {
-		index: number,
-		mapeds: {
-			data: Data;
-			start: number;
-			end: number;
-		}[],
-	}>();
-
 	public getSourceRange(start: number, end?: number, filter?: (data: Data) => boolean) {
 		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
 			return maped;
@@ -95,38 +86,20 @@ export class SourceMapBase<Data = undefined> {
 
 	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
-		const key = startOffset + ':' + endOffset + ':' + sourceToTarget;
+		for (const mapping of this.mappings) {
 
-		let result = this.cache.get(key);
-		if (!result) {
-			result = {
-				index: 0,
-				mapeds: [],
-			};
-			this.cache.set(key, result);
-		}
+			if (filter && !filter(mapping.data))
+				continue;
 
-		for (const maped of result.mapeds) {
-			if (!filter || filter(maped.data)) {
-				yield getMaped(maped);
-			}
-		}
-
-		while (result.index < this.mappings.length) {
-			const mapping = this.mappings[result.index++];
 			const maped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
 			if (maped) {
-				result.mapeds.push(maped);
-				if (!filter || filter(maped.data))
-					yield getMaped(maped);
+				yield getMaped(maped);
 			}
 			else if (mapping.additional) {
 				for (const other of mapping.additional) {
 					const maped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
 					if (maped) {
-						result.mapeds.push(maped);
-						if (!filter || filter(maped.data))
-							yield getMaped(maped);
+						yield getMaped(maped);
 						break; // only return first match additional range
 					}
 				}

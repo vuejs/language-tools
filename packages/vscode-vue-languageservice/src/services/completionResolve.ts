@@ -38,8 +38,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 
 			let newPosition_2: vscode.Position | undefined;
 			if (newPosition) {
-				for (const tsRange of sourceMap.getMappedRanges(newPosition)) {
-					if (!tsRange.data.capabilities.completion) continue;
+				for (const tsRange of sourceMap.getMappedRanges(newPosition, newPosition, data => !!data.capabilities.completion)) {
 					newPosition_2 = tsRange.start;
 					break;
 				}

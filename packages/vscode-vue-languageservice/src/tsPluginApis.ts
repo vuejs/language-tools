@@ -82,13 +82,19 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
 					) continue;
 
-					for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !teleRange.sideData.capabilities.definitions)
-							continue;
-						if ((mode === 'references') && !teleRange.sideData.capabilities.references)
-							continue;
-						if ((mode === 'rename') && !teleRange.sideData.capabilities.rename)
-							continue;
+					for (const teleRange of teleport.findTeleports2(
+						ref.textSpan.start,
+						ref.textSpan.start + ref.textSpan.length,
+						sideData => {
+							if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !sideData.capabilities.definitions)
+								return false;
+							if ((mode === 'references') && !sideData.capabilities.references)
+								return false;
+							if ((mode === 'rename') && !sideData.capabilities.rename)
+								return false;
+							return true;
+						},
+					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;
 						withTeleports(ref.fileName, teleRange.start);
@@ -126,9 +132,10 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 				if (!_symbols.definitions) return;
 				symbols = symbols.concat(_symbols.definitions);
 				for (const ref of _symbols.definitions) {
-					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 
+					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
+
+					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 					if (!teleport)
 						continue;
 
@@ -137,9 +144,11 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
 					) continue;
 
-					for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-						if (!teleRange.sideData.capabilities.definitions)
-							continue;
+					for (const teleRange of teleport.findTeleports2(
+						ref.textSpan.start,
+						ref.textSpan.start + ref.textSpan.length,
+						sideData => !!sideData.capabilities.definitions,
+					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;
 						withTeleports(ref.fileName, teleRange.start);
@@ -174,9 +183,10 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 				symbols = symbols.concat(_symbols);
 				for (const symbol of _symbols) {
 					for (const ref of symbol.references) {
-						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-						const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 
+						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
+
+						const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 						if (!teleport)
 							continue;
 
@@ -185,9 +195,11 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 							&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
 						) continue;
 
-						for (const teleRange of teleport.findTeleports2(ref.textSpan.start, ref.textSpan.start + ref.textSpan.length)) {
-							if (!teleRange.sideData.capabilities.references)
-								continue;
+						for (const teleRange of teleport.findTeleports2(
+							ref.textSpan.start,
+							ref.textSpan.start + ref.textSpan.length,
+							sideData => !!sideData.capabilities.references,
+						)) {
 							if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 								continue;
 							withTeleports(ref.fileName, teleRange.start);

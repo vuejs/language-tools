@@ -20,10 +20,12 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		let vueResult: vscode.Location[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.references)
-				continue;
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			position,
+			position,
+			data => !!data.capabilities.references,
+		)) {
 
 			const loopChecker = dedupe.createLocationSet();
 			const tsLs = getTsLs(tsLoc.lsType);
@@ -32,11 +34,13 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 			// ts -> vue
 			for (const tsLoc_2 of tsResult) {
-				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.uri, tsLoc_2.range.start, tsLoc_2.range.end)) {
-
-					if (vueLoc.type === 'embedded-ts' && !vueLoc.range.data.capabilities.references)
-						continue;
-
+				for (const vueLoc of sourceFiles.fromTsLocation(
+					tsLoc.lsType,
+					tsLoc_2.uri,
+					tsLoc_2.range.start,
+					tsLoc_2.range.end,
+					data => !!data.capabilities.references,
+				)) {
 					vueResult.push({
 						uri: vueLoc.uri,
 						range: vueLoc.range,
@@ -68,9 +72,11 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.uri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
 					) continue;
 
-					for (const teleRange of teleport.findTeleports(tsLoc_2.range.start, tsLoc_2.range.end)) {
-						if (!teleRange.sideData.capabilities.references)
-							continue;
+					for (const teleRange of teleport.findTeleports(
+						tsLoc_2.range.start,
+						tsLoc_2.range.end,
+						sideData => !!sideData.capabilities.references,
+					)) {
 						if (loopChecker.has({ uri: tsLoc_2.uri, range: teleRange }))
 							continue;
 						withTeleports(tsLoc_2.uri, teleRange.start);

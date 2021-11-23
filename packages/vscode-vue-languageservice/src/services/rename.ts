@@ -50,28 +50,28 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 		let error: vscode.ResponseError | undefined;
 
-		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			position,
+			position,
+			data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.in),
+		)) {
+
 			const tsLs = getTsLs(tsLoc.lsType);
-			if (
-				tsLoc.type === 'source-ts'
-				|| tsLoc.range.data.capabilities.rename === true
-				|| (typeof tsLoc.range.data.capabilities.rename === 'object' && tsLoc.range.data.capabilities.rename.in)
-			) {
-				const tsPrepare = tsLs.prepareRename(
-					tsLoc.uri,
-					tsLoc.range.start,
-				);
-				if (!tsPrepare)
-					continue;
+			const tsPrepare = tsLs.prepareRename(
+				tsLoc.uri,
+				tsLoc.range.start,
+			);
+			if (!tsPrepare)
+				continue;
 
-				if (tsPrepare instanceof vscode.ResponseError) {
-					error = tsPrepare;
-					continue;
-				}
-
-				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
-					return vueLoc.range;
+			if (tsPrepare instanceof vscode.ResponseError) {
+				error = tsPrepare;
+				continue;
 			}
+
+			for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
+				return vueLoc.range;
 		}
 
 		return error;
@@ -92,15 +92,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 
 		let result: vscode.WorkspaceEdit | undefined;
 
-		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.rename)
-				continue;
-
-			if (tsLoc.type === 'embedded-ts' && typeof tsLoc.range.data.capabilities.rename === 'object' && !tsLoc.range.data.capabilities.rename.in)
-				continue;
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			position,
+			position,
+			data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.in),
+		)) {
 
 			let newName_2 = newName;
+
 			if (tsLoc.type === 'embedded-ts' && tsLoc.range.data.beforeRename)
 				newName_2 = tsLoc.range.data.beforeRename(newName);
 
@@ -139,7 +139,6 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 					loopChecker.add({ uri: editUri, range: textEdit.range });
 
 					const teleport = sourceFiles.getTsTeleports(lsType).get(editUri);
-
 					if (!teleport)
 						continue;
 
@@ -148,9 +147,11 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 						&& sourceFiles.getSourceFileByTsUri(lsType, editUri) !== sourceFiles.getSourceFileByTsUri(lsType, tsUri)
 					) continue;
 
-					for (const teleRange of teleport.findTeleports(textEdit.range.start, textEdit.range.end)) {
-						if (!teleRange.sideData.capabilities.rename)
-							continue;
+					for (const teleRange of teleport.findTeleports(
+						textEdit.range.start,
+						textEdit.range.end,
+						sideData => !!sideData.capabilities.rename,
+					)) {
 						if (loopChecker.has({ uri: editUri, range: teleRange }))
 							continue;
 						const newName_2 = teleRange.sideData.editRenameText
@@ -299,26 +300,27 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', tsResult: vscode.
 	for (const tsUri in tsResult.changes) {
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of sourceFiles.fromTsLocation(lsType, tsUri, tsEdit.range.start, tsEdit.range.end)) {
-
-				if (vueLoc.type === 'embedded-ts' && !vueLoc.range.data.capabilities.rename)
-					continue;
-
-				if (vueLoc.type === 'embedded-ts' && typeof vueLoc.range.data.capabilities.rename === 'object' && !vueLoc.range.data.capabilities.rename.out)
-					continue;
+			for (const vueLoc of sourceFiles.fromTsLocation(
+				lsType,
+				tsUri,
+				tsEdit.range.start,
+				tsEdit.range.end,
+				data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.out),
+			)) {
 
 				let newText_2 = tsEdit.newText;
+
 				if (vueLoc.type === 'embedded-ts' && vueLoc.range.data.doRename) {
 					const vueDoc = vueLoc.sourceMap.sourceDocument;
 					newText_2 = vueLoc.range.data.doRename(vueDoc.getText(vueLoc.range), tsEdit.newText);
 				}
-
 				if (!vueResult.changes) {
 					vueResult.changes = {};
 				}
 				if (!vueResult.changes[vueLoc.uri]) {
 					vueResult.changes[vueLoc.uri] = [];
 				}
+
 				vueResult.changes[vueLoc.uri].push({
 					newText: newText_2,
 					range: vueLoc.range,

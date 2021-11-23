@@ -7,6 +7,7 @@ import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
+import { TsMappingData } from 'packages/vue-code-gen/src/types';
 
 export type SourceFiles = ReturnType<typeof createSourceFiles>;
 
@@ -153,7 +154,13 @@ export function createSourceFiles() {
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
 		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
 
-		toTsLocations: untrack(function* (uri: string, start: vscode.Position, end?: vscode.Position) {
+		toTsLocations: untrack(function* (
+			uri: string,
+			start: vscode.Position,
+			end?: vscode.Position,
+			filter?: (data: TsMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+		) {
 
 			if (end === undefined)
 				end = start;
@@ -162,7 +169,11 @@ export function createSourceFiles() {
 				const sourceFile = sourceFiles.uriGet(uri);
 				if (sourceFile) {
 					for (const sourceMap of lsType === 'script' ? sourceFile.refs.scriptLsSourceMaps.value : sourceFile.refs.templateLsSourceMaps.value) {
-						for (const tsRange of sourceMap.getMappedRanges(start, end)) {
+
+						if (sourceMapFilter && !sourceMapFilter(sourceMap))
+							continue;
+
+						for (const tsRange of sourceMap.getMappedRanges(start, end, filter)) {
 							yield {
 								lsType,
 								type: 'embedded-ts' as const,
@@ -186,7 +197,14 @@ export function createSourceFiles() {
 				}
 			}
 		}),
-		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: vscode.Position, end?: vscode.Position) {
+		fromTsLocation: untrack(function* (
+			lsType: 'script' | 'template',
+			uri: string,
+			start: vscode.Position,
+			end?: vscode.Position,
+			filter?: (data: TsMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
 				return;
@@ -196,7 +214,11 @@ export function createSourceFiles() {
 
 			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
 			if (sourceMap) {
-				for (const vueRange of sourceMap.getSourceRanges(start, end)) {
+
+				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+					return;
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
 						type: 'embedded-ts' as const,
 						sourceMap,

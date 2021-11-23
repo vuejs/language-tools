@@ -188,10 +188,12 @@ export function register(
 			if (context?.triggerCharacter && !triggerCharacters.typescript.includes(context.triggerCharacter)) {
 				return result;
 			}
-			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
-					continue;
+			for (const tsLoc of sourceFiles.toTsLocations(
+				uri,
+				position,
+				position,
+				data => !!data.capabilities.completion,
+			)) {
 
 				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;

@@ -374,10 +374,8 @@ export function createLanguageService(
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
 			if (sourceMap.lsType === 'script')
 				continue;
-			for (const tsRange of sourceMap.getMappedRanges(pos)) {
-				if (tsRange.data.vueTag === 'template') {
-					return true;
-				}
+			for (const _ of sourceMap.getMappedRanges(pos, pos, data => data.vueTag === 'template')) {
+				return true;
 			}
 		}
 

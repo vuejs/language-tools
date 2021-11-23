@@ -12,12 +12,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: 
 
 	return (document: TextDocument, position: vscode.Position): string | undefined | null => {
 
-		for (const tsLoc of sourceFiles.toTsLocations(document.uri, position)) {
+		for (const tsLoc of sourceFiles.toTsLocations(
+			document.uri,
+			position,
+			position,
+			data => !!data.capabilities.completion,
+		)) {
 
 			if (tsLoc.lsType === 'template')
-				continue;
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.completion)
 				continue;
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')

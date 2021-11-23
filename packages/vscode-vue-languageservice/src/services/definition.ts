@@ -35,10 +35,12 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		let vueResult: vscode.LocationLink[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.definitions)
-				continue;
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			position,
+			position,
+			data => !!data.capabilities.definitions,
+		)) {
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
@@ -120,9 +122,11 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, location.targetUri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
 					) continue;
 
-					for (const teleRange of teleport.findTeleports(location.targetSelectionRange.start, location.targetSelectionRange.end)) {
-						if (!teleRange.sideData.capabilities.definitions)
-							continue;
+					for (const teleRange of teleport.findTeleports(
+						location.targetSelectionRange.start,
+						location.targetSelectionRange.end,
+						sideData => !!sideData.capabilities.definitions,
+					)) {
 						if (loopChecker.has({ uri: location.targetUri, range: teleRange }))
 							continue;
 						withTeleports(location.targetUri, teleRange.start, false);

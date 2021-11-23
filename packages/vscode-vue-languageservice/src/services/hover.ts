@@ -34,10 +34,12 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 		let result: vscode.Hover | undefined;
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
-				continue;
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			position,
+			position,
+			data => !!data.capabilities.basic
+		)) {
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;

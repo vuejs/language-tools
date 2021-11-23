@@ -84,20 +84,20 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 	) {
 		super(document, document);
 	}
-	findTeleports(start: vscode.Position, end?: vscode.Position) {
+	findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
 		const result: {
 			data: TeleportMappingData;
 			sideData: TeleportSideData;
 			start: vscode.Position,
 			end: vscode.Position,
 		}[] = [];
-		for (const teleRange of this.getMappedRanges(start, end)) {
+		for (const teleRange of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toTarget,
 			});
 		}
-		for (const teleRange of this.getSourceRanges(start, end)) {
+		for (const teleRange of this.getSourceRanges(start, end, filter ? data => filter(data.toSource) : undefined)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toSource,
@@ -105,20 +105,20 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 		}
 		return result;
 	}
-	findTeleports2(start: number, end?: number) {
+	findTeleports2(start: number, end?: number, filter?: (data: TeleportSideData) => boolean) {
 		const result: {
 			data: TeleportMappingData;
 			sideData: TeleportSideData;
 			start: number,
 			end: number,
 		}[] = [];
-		for (const teleRange of this.getMappedRanges(start, end)) {
+		for (const teleRange of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toTarget,
 			});
 		}
-		for (const teleRange of this.getSourceRanges(start, end)) {
+		for (const teleRange of this.getSourceRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
 			result.push({
 				...teleRange,
 				sideData: teleRange.data.toSource,

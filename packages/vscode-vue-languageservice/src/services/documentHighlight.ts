@@ -18,10 +18,12 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 
 		function getTsResult() {
 			const result: vscode.DocumentHighlight[] = [];
-			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
-					continue;
+			for (const tsLoc of sourceFiles.toTsLocations(
+				uri,
+				position,
+				position,
+				data => !!data.capabilities.basic,
+			)) {
 
 				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;

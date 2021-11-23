@@ -22,7 +22,13 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 		let result: vscode.CodeAction[] = [];
 
-		for (const tsLoc of sourceFiles.toTsLocations(uri, range.start, range.end)) {
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			range.start,
+			range.end,
+			undefined,
+			sourceMap => !!sourceMap.capabilities.codeActions,
+		)) {
 
 			const tsLs = getTsLs(tsLoc.lsType);
 			const tsContext: vscode.CodeActionContext = {
@@ -32,9 +38,6 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 				),
 				only: context.only,
 			};
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.codeActions)
-				continue;
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;

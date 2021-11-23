@@ -659,14 +659,18 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						}
 					}
 				}
-				for (const vueLoc of sourceFiles.fromTsLocation(lsType, virtualUri, virtualRange.start, virtualRange.end)) {
-					if (vueLoc.type === 'source-ts' || vueLoc.range.data.capabilities.diagnostic) {
-						return {
-							uri: vueLoc.uri,
-							start: vueLoc.range.start,
-							end: vueLoc.range.end,
-						};
-					}
+				for (const vueLoc of sourceFiles.fromTsLocation(
+					lsType,
+					virtualUri,
+					virtualRange.start,
+					virtualRange.end,
+					data => !!data.capabilities.diagnostic,
+				)) {
+					return {
+						uri: vueLoc.uri,
+						start: vueLoc.range.start,
+						end: vueLoc.range.end,
+					};
 				}
 			}
 		}
