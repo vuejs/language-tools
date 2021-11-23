@@ -80,7 +80,7 @@ export function useSfcEntryForTemplateLs(
 					vueTag: 'sfc',
 					capabilities: {},
 				},
-				mode: SourceMaps.Mode.Overlap,
+				mode: SourceMaps.Mode.Expand,
 				sourceRange: {
 					start: 0,
 					end: 0,
