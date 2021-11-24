@@ -102,6 +102,14 @@ export {}
 > - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 > - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
 
+> If Auto-formatting of `<style>` in SFC doesn’t work, please check `.vscode/settings.json` is not set or set as :
+
+```json
+{
+  "[vue]": {"editor.defaultFormatter": "johnsoncodehk.volar"}
+}
+```
+
 > Please check https://vuejs.org/v2/guide/typescript.html#Recommended-Configuration for recommended tsconfig options.
 
 > Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
