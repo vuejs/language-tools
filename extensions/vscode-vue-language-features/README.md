@@ -20,6 +20,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 - [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
 - [Vitesse](https://github.com/antfu/vitesse)
+- [vue3-eslint-stylelint-demo](https://github.com/sethidden/vue3-eslint-stylelint-demo) (Volar + ESLint + stylelint + husky)
 - [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
 ## Using

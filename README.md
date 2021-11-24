@@ -57,6 +57,10 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
   </tr>
 </table>
 
+## Quick Start
+
+See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#quick-start)
+
 ## Using
 
 See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#using)
