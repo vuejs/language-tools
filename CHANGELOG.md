@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.29.7
+
+- feat: support html, css custom data ([#707](https://github.com/johnsoncodehk/volar/issues/707))
+- feat: support extends tsconfig `vueCompilerOptions` ([#731](https://github.com/johnsoncodehk/volar/issues/731))
+- fix: cannot config project reference by directory path ([#712](https://github.com/johnsoncodehk/volar/issues/712))
+- fix: pug attrs type-check borken by nested tags ([#721](https://github.com/johnsoncodehk/volar/issues/721))
+- fix: import path rename result incorrect ([#723](https://github.com/johnsoncodehk/volar/issues/723))
+- fix: `editor.codeActionsOnSave: ["source.organizeImports"]` not working ([#726](https://github.com/johnsoncodehk/volar/issues/726))
+- fix: goto definition not working with some component import statement ([#728](https://github.com/johnsoncodehk/volar/issues/728))
+- fix: don't show volar commands in non-vue document ([#733](https://github.com/johnsoncodehk/volar/issues/733))
+- fix: vue-tsc not working with symlink ([#738](https://github.com/johnsoncodehk/volar/issues/738))
+
 ## 0.29.6
 
 - fix: attrs show unexpected "not exist" error ([#710](https://github.com/johnsoncodehk/volar/issues/710))
