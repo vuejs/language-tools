@@ -11,14 +11,10 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 	if (!options.host)
 		return doThrow('!options.host');
 
-	if (!options.host.realpath)
-		return doThrow('!options.host.realpath');
-
 	if (!options.host.readDirectory)
 		return doThrow('!options.host.readDirectory');
 
 	const host = options.host;
-	const realpath = options.host.realpath;
 	const readDirectory = options.host.readDirectory;
 	const parseConfigHost: ts.ParseConfigHost = {
 		useCaseSensitiveFileNames: host.useCaseSensitiveFileNames(),
@@ -30,7 +26,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 	};
 
 	const fileNames = [
-		...options.rootNames.map(rootName => realpath(rootName)),
+		...options.rootNames,
 		...getVueFileNames(),
 	];
 	const vueCompilerOptions = getVueCompilerOptions();

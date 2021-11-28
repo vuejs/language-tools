@@ -58,7 +58,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 				&& diagnostic.start !== undefined
 				&& diagnostic.length !== undefined
 			) {
-				const fileName = shared.normalizeFileName(tsLsHost.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
+				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
 				for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
 					lsType,
 					shared.fsPathToUri(fileName),
