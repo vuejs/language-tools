@@ -56,8 +56,8 @@ export type LanguageServiceHost = ts2.LanguageServiceHost & {
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
 	schemaRequestService?: json.SchemaRequestService,
-	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>;
-	getHtmlHoverSettings?(document: TextDocument): Promise<html.HoverSettings>
+	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
+	getHtmlHoverSettings?(document: TextDocument): Promise<html.HoverSettings>,
 };
 
 export function getDocumentLanguageService(
@@ -68,6 +68,7 @@ export function getDocumentLanguageService(
 ) {
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
+	const services = createServices(modules.typescript);
 	const context: HtmlLanguageServiceContext = {
 		compilerOptions: {},
 		modules: {
@@ -79,7 +80,7 @@ export function getDocumentLanguageService(
 			ts: ts2,
 			pug
 		},
-		...createContext(modules.typescript),
+		...services,
 		getHtmlDocument,
 		getVueDocument,
 	};
@@ -202,6 +203,7 @@ export function createLanguageService(
 		},
 	}
 
+	const services = createServices(modules.typescript, vueHost);
 	const context: ApiLanguageServiceContext = {
 		compilerOptions: vueHost.getVueCompilationSettings?.() ?? {},
 		modules: {
@@ -213,7 +215,7 @@ export function createLanguageService(
 			ts: ts2,
 			pug
 		},
-		...createContext(modules.typescript, vueHost),
+		...services,
 		vueHost,
 		sourceFiles,
 		templateTsHost,
@@ -264,6 +266,8 @@ export function createLanguageService(
 			scriptTsLs.dispose();
 			templateTsLs.dispose();
 		},
+		updateHtmlCustomData: services.updateHtmlCustomData,
+		updateCssCustomData: services.updateCssCustomData,
 
 		__internal__: {
 			rootPath: vueHost.getCurrentDirectory(),
@@ -705,7 +709,7 @@ export function createLanguageService(
 		}
 	}
 }
-function createContext(
+function createServices(
 	ts: Modules['typescript'],
 	vueHost?: LanguageServiceHost,
 ) {
@@ -759,6 +763,7 @@ function createContext(
 			return errors;
 		},
 	};
+	let htmlDataProviders: html.IHTMLDataProvider[] = [];
 
 	return {
 		ts,
@@ -767,8 +772,24 @@ function createContext(
 		jsonLs,
 		getCssLs,
 		vueHost,
+		updateHtmlCustomData,
+		updateCssCustomData,
+		getHtmlDataProviders: () => htmlDataProviders,
 	};
 
+	function updateHtmlCustomData(customData: { [id: string]: html.HTMLDataV1 }) {
+		htmlDataProviders = [];
+		for (const id in customData) {
+			htmlDataProviders.push(html.newHTMLDataProvider(id, customData[id]));
+		}
+		htmlLs.setDataProviders(true, htmlDataProviders);
+	}
+	function updateCssCustomData(customData: css.CSSDataV1[]) {
+		const data = customData.map(data => css.newCSSDataProvider(data));
+		cssLs.setDataProviders(true, data);
+		scssLs.setDataProviders(true, data);
+		lessLs.setDataProviders(true, data);
+	}
 	function getCssLs(lang: string) {
 		switch (lang) {
 			case 'css': return cssLs;

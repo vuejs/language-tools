@@ -94,6 +94,7 @@ export async function createProject(
 						workDoneProgress.done();
 					}
 				});
+				lsConfigs?.registerCustomData(vueLs);
 				return vueLs;
 			})();
 		}
@@ -176,8 +177,8 @@ export async function createProject(
 			getPreferences: lsConfigs?.getTsPreferences,
 			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
-			// ts
 			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
+			// ts
 			getNewLine: () => projectSys.newLine,
 			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,
 			readFile: projectSys.readFile,

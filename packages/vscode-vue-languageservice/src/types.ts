@@ -70,6 +70,7 @@ export type LanguageServiceContextBase = {
 	pugLs: pug.LanguageService,
 	jsonLs: json.LanguageService,
 	getCssLs: (lang: string) => css.LanguageService | undefined,
+	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {
 	getHtmlDocument(document: TextDocument): HTMLDocument | undefined;

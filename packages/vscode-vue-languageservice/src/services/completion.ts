@@ -90,7 +90,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs }: ApiLanguageServiceContext,
+	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders }: ApiLanguageServiceContext,
 	getScriptContentVersion: () => number,
 ) {
 
@@ -398,7 +398,7 @@ export function register(
 					tags,
 					globalAttributes,
 				});
-				htmlLs.setDataProviders(true, [dataProvider]);
+				htmlLs.setDataProviders(true, [...getHtmlDataProviders(), dataProvider]);
 
 				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 					if (!result) {
@@ -526,7 +526,7 @@ export function register(
 					result.items = result.items.concat(vueItems);
 				}
 
-				htmlLs.setDataProviders(true, []);
+				htmlLs.setDataProviders(true, getHtmlDataProviders());
 			}
 			return result;
 		}
@@ -613,7 +613,9 @@ export function register(
 						tags: vueTags,
 					});
 					htmlLs.setDataProviders(false, [dataProvider]);
-					return await htmlLs.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
+					const result = await htmlLs.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
+					htmlLs.setDataProviders(true, getHtmlDataProviders());
+					return result;
 				}
 			}
 		}

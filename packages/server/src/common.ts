@@ -80,7 +80,7 @@ export function createLanguageServer(connection: vscode.Connection) {
 		if (options.languageFeatures) {
 
 			let projects: ReturnType<typeof createProjects> | undefined;
-			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(connection) : undefined;
+			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
 
 			const ts = loadTypescript(options.typescript.serverPath);
 
