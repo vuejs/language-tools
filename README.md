@@ -23,7 +23,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
 
-[sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) \
+[sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) 🤝 \
 *Vue language client for Sublime*
 
 [kabiaa/atom-ide-volar](https://github.com/kabiaa/atom-ide-volar) \
