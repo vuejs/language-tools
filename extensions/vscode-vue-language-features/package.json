@@ -448,6 +448,76 @@
 			}
 		],
 		"menus": {
+			"commandPalette": [
+				{
+					"command": "volar.action.restartServer",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.verifyAllScripts",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.writeTemplateLsVirtualFiles",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.writeScriptLsVirtualFiles",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.genWhitelist",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.showCallGraph",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.splitEditors",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.finder",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.preview",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.tagNameCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.tagNameCase.convertToKebabCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.tagNameCase.convertToPascalCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.attrNameCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.createWorkspaceSnippets",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.selectElement",
+					"when": "activeEditor == WebviewEditor && volar.showSelectElement"
+				},
+				{
+					"command": "volar.action.showInBrowser",
+					"when": "activeEditor == WebviewEditor"
+				},
+				{
+					"command": "volar.selectTypeScriptVersion",
+					"when": "editorLangId == vue"
+				}
+			],
 			"editor/title": [
 				{
 					"command": "volar.action.splitEditors",
