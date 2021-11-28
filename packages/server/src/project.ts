@@ -197,7 +197,7 @@ export async function createProject(
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCompilationSettings: () => parsedCommandLine.options,
-			getVueCompilationSettings: () => shared.resolveVueCompilerOptions(parsedCommandLine.raw?.vueCompilerOptions ?? {}, projectSys.getCurrentDirectory()),
+			getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 			getScriptVersion,
 			getScriptSnapshot,
 		};
@@ -245,7 +245,7 @@ export async function createProject(
 		scripts.clear();
 		disposables.length = 0;
 	}
-	function createParsedCommandLine() {
+	function createParsedCommandLine(): ReturnType<typeof shared.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
@@ -261,7 +261,7 @@ export async function createProject(
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 			content.fileNames = content.fileNames.map(shared.normalizeFileName);
-			return content;
+			return { ...content, vueOptions: {} };
 		}
 	}
 }

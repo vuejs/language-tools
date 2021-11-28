@@ -171,11 +171,62 @@ export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfig: string,
-) {
+	extendsSet = new Set<string>(),
+): ts.ParsedCommandLine & {
+	vueOptions: {
+		experimentalCompatMode?: 2 | 3;
+		experimentalTemplateCompilerOptions?: any;
+		experimentalTemplateCompilerOptionsRequirePath?: string;
+	}
+} {
+
 	const realTsConfig = ts.sys.realpath!(tsConfig);
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
 	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 	content.fileNames = content.fileNames.map(normalizeFileName);
-	return content;
+
+	let baseVueOptions = {};
+	const folder = path.dirname(tsConfig);
+
+	extendsSet.add(tsConfig);
+
+	if (content.raw.extends) {
+		const extendsPath = path.isAbsolute(content.raw.extends) ? content.raw.extends : path.resolve(folder, content.raw.extends);
+		if (!extendsSet.has(extendsPath)) {
+			baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extendsSet).vueOptions;
+			console.log(baseVueOptions);
+		}
+	}
+
+	return {
+		...content,
+		vueOptions: {
+			...baseVueOptions,
+			...resolveVueCompilerOptions(content.raw.vueCompilerOptions ?? {}, folder),
+		},
+	};
+}
+
+function resolveVueCompilerOptions(rawOptions: {
+	[key: string]: any,
+	experimentalTemplateCompilerOptionsRequirePath?: string,
+}, rootPath: string) {
+
+	const result = { ...rawOptions };
+
+	let templateOptionsPath = rawOptions.experimentalTemplateCompilerOptionsRequirePath;
+	if (templateOptionsPath) {
+		if (!path.isAbsolute(templateOptionsPath)) {
+			templateOptionsPath = require.resolve(templateOptionsPath, { paths: [rootPath] });
+		}
+		try {
+			result.experimentalTemplateCompilerOptions = require(templateOptionsPath).default;
+		} catch (error) {
+			console.log('Failed to require "experimentalTemplateCompilerOptionsRequirePath":', templateOptionsPath);
+			console.error(error);
+		}
+	}
+
+	return result;
 }

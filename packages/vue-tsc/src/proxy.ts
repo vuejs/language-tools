@@ -39,7 +39,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		...host,
 		writeFile: undefined,
 		getCompilationSettings: () => options.options,
-		getVueCompilationSettings: () => shared.resolveVueCompilerOptions(vueCompilerOptions, host.getCurrentDirectory()),
+		getVueCompilationSettings: () => vueCompilerOptions,
 		getScriptFileNames: () => fileNames,
 		getScriptVersion: () => '',
 		getScriptSnapshot,
@@ -64,7 +64,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
 		const tsConfig = options.options.configFilePath;
 		if (typeof tsConfig === 'string') {
-			return shared.createParsedCommandLine(ts, ts.sys, tsConfig).raw?.vueCompilerOptions ?? {};
+			return shared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 		}
 		return {};
 	}

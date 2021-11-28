@@ -92,7 +92,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						originSelectionRange,
 					});
 				}
-				else {
+				else if (tsLoc.lsType === 'script' && (tsLoc.type === 'source-ts' || tsLoc.data.vueTag === 'script' || tsLoc.data.vueTag === 'scriptSetup')) {
 					// fix https://github.com/johnsoncodehk/volar/issues/728
 					const targetSourceFile = sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.targetUri);
 					if (targetSourceFile) {
