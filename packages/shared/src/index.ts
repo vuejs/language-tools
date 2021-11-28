@@ -74,6 +74,26 @@ export function getWordRange(wordPattern: RegExp, position: vscode.Position, doc
 	return undefined;
 }
 
+export function getOverlapRange(range1: vscode.Range, range2: vscode.Range): vscode.Range | undefined {
+
+	const start: vscode.Position = {
+		line: Math.max(range1.start.line, range2.start.line),
+		character: range1.start.line === range2.start.line ? Math.max(range1.start.character, range2.start.character) : range1.start.line > range2.start.line ? range1.start.character : range2.start.character,
+	};
+	const end: vscode.Position = {
+		line: Math.min(range1.end.line, range2.end.line),
+		character: range1.end.line === range2.end.line ? Math.min(range1.end.character, range2.end.character) : range1.end.line < range2.end.line ? range1.end.character : range2.end.character,
+	};
+
+	if (start.line > end.line || (start.line === end.line && start.character > end.line))
+		return undefined;
+
+	return {
+		start,
+		end,
+	};
+}
+
 export function eqSet<T>(as: Set<T>, bs: Set<T>) {
 	if (as.size !== bs.size) return false;
 	for (const a of as) if (!bs.has(a)) return false;

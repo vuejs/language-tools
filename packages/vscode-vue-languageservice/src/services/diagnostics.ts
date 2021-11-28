@@ -598,8 +598,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function toSourceDiags<T = vscode.Diagnostic | vscode.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
-			const result: T[] = [];
+		function toSourceDiags(errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+			const result: vscode.Diagnostic[] = [];
 			for (const error of errors) {
 				if (vscode.Diagnostic.is(error)) {
 					for (const sourceMap of sourceMaps) {
@@ -610,7 +610,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 							continue;
 						result.push({
 							...error,
-							range: vueRange,
+							range: vueRange[0],
 						});
 					}
 				}

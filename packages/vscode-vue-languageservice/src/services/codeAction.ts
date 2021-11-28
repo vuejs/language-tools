@@ -4,10 +4,44 @@ import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
 import type { Data } from './callHierarchy';
+import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
 	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
+
+		const sourceFile = sourceFiles.get(uri);
+		if (sourceFile) {
+
+			const descriptor = sourceFile.getDescriptor();
+			const document = sourceFile.getTextDocument();
+
+			const scripts = [descriptor.script, descriptor.scriptSetup].filter(shared.notEmpty);
+			const styles = descriptor.styles;
+
+			const scriptRanges = scripts
+				.map(script => ({
+					start: document.positionAt(script.startTagEnd),
+					end: document.positionAt(script.startTagEnd + script.content.length),
+				}))
+				.map(scriptRange => shared.getOverlapRange(scriptRange, range))
+				.filter(shared.notEmpty);
+			const styleRanges = styles
+				.map(script => ({
+					start: document.positionAt(script.startTagEnd),
+					end: document.positionAt(script.startTagEnd + script.content.length),
+				}))
+				.map(scriptRange => shared.getOverlapRange(scriptRange, range))
+				.filter(shared.notEmpty);
+
+			const tsResult = (await Promise.all(scriptRanges.map(scriptRange => onTs(uri, scriptRange, context)))).flat();
+			const cssResult = (await Promise.all(styleRanges.map(styleRange => onCss(uri, styleRange, context)))).flat();
+
+			return dedupe.withCodeAction([
+				...tsResult,
+				...cssResult,
+			]);
+		}
 
 		const tsResult = await onTs(uri, range, context);
 		const cssResult = onCss(uri, range, context);
