@@ -151,7 +151,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 
 		const noTitleAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name !== 'class');
 		const noTitleClassAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name === 'class');
-		const attrsBlock = attrsBlocks.get(node.line - 1); // support attr auto-complete in empty space
+		const attrsBlock = attrsBlocks.get(getDocOffset(node.line, node.column)); // support attr auto-complete in empty space
 
 		addClassesOrStyles(noTitleClassAttrs, 'class');
 
@@ -257,10 +257,14 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
 
 		const blocks = new Map<number, { offset: number, text: string }>();
+		let lastTag: pugLex.Token | undefined;
 
 		for (let i = 0; i < tokens.length; i++) {
 			const startToken = tokens[i];
-			if (startToken.type === 'start-attributes') {
+			if (startToken.type === 'tag') {
+				lastTag = startToken;
+			}
+			else if (startToken.type === 'start-attributes') {
 
 				let prevToken: pugLex.Token = startToken;
 				let text = '';
@@ -288,10 +292,12 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 						}
 					}
 					else if (attrToken.type === 'end-attributes') {
-						blocks.set(startToken.loc.end.line - 1, {
-							offset: getDocOffset(startToken.loc.end.line, startToken.loc.end.column),
-							text,
-						});
+						if (lastTag) {
+							blocks.set(getDocOffset(lastTag.loc.start.line, lastTag.loc.start.column), {
+								offset: getDocOffset(startToken.loc.end.line, startToken.loc.end.column),
+								text,
+							});
+						}
 						break;
 					}
 
