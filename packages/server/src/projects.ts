@@ -353,13 +353,28 @@ function createWorkspace(
 				const newChains: string[][] = [];
 
 				for (const projectReference of parsedCommandLine.projectReferences) {
-					const beforeIndex = before.indexOf(projectReference.path); // cycle
+
+					let tsConfigPath = projectReference.path;
+
+					// fix https://github.com/johnsoncodehk/volar/issues/712
+					if (!ts.sys.fileExists(tsConfigPath) && ts.sys.directoryExists(tsConfigPath)) {
+						const newTsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
+						const newJsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
+						if (ts.sys.fileExists(newTsConfigPath)) {
+							tsConfigPath = newTsConfigPath;
+						}
+						else if (ts.sys.fileExists(newJsConfigPath)) {
+							tsConfigPath = newJsConfigPath;
+						}
+					}
+
+					const beforeIndex = before.indexOf(tsConfigPath); // cycle
 					if (beforeIndex >= 0) {
 						newChains.push(before.slice(0, Math.max(beforeIndex, 1)));
 					}
 					else {
-						const referenceParsedCommandLine = await getParsedCommandLine(projectReference.path);
-						for (const chain of await getReferencesChains(referenceParsedCommandLine, projectReference.path, [...before, tsConfig])) {
+						const referenceParsedCommandLine = await getParsedCommandLine(tsConfigPath);
+						for (const chain of await getReferencesChains(referenceParsedCommandLine, tsConfigPath, [...before, tsConfig])) {
 							newChains.push(chain);
 						}
 					}
