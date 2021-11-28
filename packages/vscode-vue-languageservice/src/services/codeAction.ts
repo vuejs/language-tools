@@ -49,7 +49,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, tsCodeAction.edit, sourceFiles, () => true) : undefined;
+				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, false, tsCodeAction.edit, sourceFiles, () => true) : undefined;
 				if (tsCodeAction.edit && !vueEdit) continue;
 
 				const data: Data = {

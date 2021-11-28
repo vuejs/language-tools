@@ -12,7 +12,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		};
 		codeAction = await getTsLs(data.lsType).doCodeActionResolve(tsCodeAction);
 		if (codeAction.edit) {
-			codeAction.edit = tsEditToVueEdit(data.lsType, codeAction.edit, sourceFiles, () => true);
+			codeAction.edit = tsEditToVueEdit(data.lsType, false, codeAction.edit, sourceFiles, () => true);
 		}
 		return codeAction;
 	}
