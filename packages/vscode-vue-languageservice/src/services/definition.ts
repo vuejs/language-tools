@@ -92,6 +92,23 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						originSelectionRange,
 					});
 				}
+				else {
+					// fix https://github.com/johnsoncodehk/volar/issues/728
+					const targetSourceFile = sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.targetUri);
+					if (targetSourceFile) {
+						const targetDocument = targetSourceFile.getTextDocument();
+						const targetRange = {
+							start: targetDocument.positionAt(0),
+							end: targetDocument.positionAt(targetDocument.getText().length),
+						};
+						vueResult.push({
+							targetUri: targetSourceFile.uri,
+							targetRange: targetRange,
+							targetSelectionRange: targetRange,
+							originSelectionRange,
+						});
+					}
+				}
 			}
 
 			function withTeleports(uri: string, position: vscode.Position, isOriginal: boolean) {

@@ -27,7 +27,6 @@ export function generate(
 	const codeGen = createCodeGen<TsMappingData>();
 	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
 	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
-	const overlapMapRanges: SourceMaps.Range[] = [];
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -140,12 +139,6 @@ export function generate(
 		);
 		codeGen.addText(`;\n`);
 		codeGen.addText(`export { default } from '${src}';\n`);
-
-		overlapMapRanges.push({
-			start: 0,
-			end: codeGen.getText().length
-		});
-
 	}
 	function writeScript() {
 		if (!script)
@@ -216,12 +209,7 @@ export function generate(
 	}
 	function writeExportComponent() {
 		if (shouldAddExportDefault) {
-			const start = codeGen.getText().length;
 			codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
-			overlapMapRanges.push({
-				start,
-				end: codeGen.getText().length,
-			});
 		}
 		else {
 			codeGen.addText(`\n`);
