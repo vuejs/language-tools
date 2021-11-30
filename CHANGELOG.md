@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.29.8
+
+- perf: cache `URI.file`, `URI.parse` results
+- fix: pug template type-check broken with omit tag name
+- fix: language server broken with tsconfig extends a non-relative path ([#747](https://github.com/johnsoncodehk/volar/issues/747)) ([#749](https://github.com/johnsoncodehk/volar/issues/749))
+
 ## 0.29.7
 
 - feat: support html, css custom data ([#707](https://github.com/johnsoncodehk/volar/issues/707))
