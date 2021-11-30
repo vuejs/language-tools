@@ -12,6 +12,9 @@ interface Options<T> {
 
 export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 
+	const uriToUriKeys: Record<string, string> = {};
+	const fsPathToUriKeys: Record<string, string> = {};
+
 	return {
 		clear,
 		values,
@@ -25,6 +28,17 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 		fsPathSet,
 	};
 
+	function getUriByUri(uri: string) {
+		if (uriToUriKeys[uri] === undefined)
+			uriToUriKeys[uri] = normalizeUri(uri).toLowerCase();
+		return uriToUriKeys[uri];
+	}
+	function getUriByFsPath(fsPath: string) {
+		if (fsPathToUriKeys[fsPath] === undefined)
+			fsPathToUriKeys[fsPath] = fsPathToUri(fsPath).toLowerCase();
+		return fsPathToUriKeys[fsPath];
+	}
+
 	function clear() {
 		return map.clear();
 	}
@@ -33,29 +47,29 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 	}
 
 	function uriDelete(_uri: string) {
-		return map.delete(normalizeUri(_uri).toLowerCase());
+		return map.delete(getUriByUri(_uri));
 	}
 	function uriGet(_uri: string) {
-		return map.get(normalizeUri(_uri).toLowerCase());
+		return map.get(getUriByUri(_uri));
 	}
 	function uriHas(_uri: string) {
-		return map.has(normalizeUri(_uri).toLowerCase());
+		return map.has(getUriByUri(_uri));
 	}
 	function uriSet(_uri: string, item: T) {
-		return map.set(normalizeUri(_uri).toLowerCase(), item);
+		return map.set(getUriByUri(_uri), item);
 	}
 
 	function fsPathDelete(_fsPath: string) {
-		return map.delete(fsPathToUri(_fsPath).toLowerCase());
+		return map.delete(getUriByFsPath(_fsPath));
 	}
 	function fsPathGet(_fsPath: string) {
-		return map.get(fsPathToUri(_fsPath).toLowerCase());
+		return map.get(getUriByFsPath(_fsPath));
 	}
 	function fsPathHas(_fsPath: string) {
-		return map.has(fsPathToUri(_fsPath).toLowerCase());
+		return map.has(getUriByFsPath(_fsPath));
 	}
 	function fsPathSet(_fsPath: string, item: T) {
-		return map.set(fsPathToUri(_fsPath).toLowerCase(), item);
+		return map.set(getUriByFsPath(_fsPath), item);
 	}
 }
 
