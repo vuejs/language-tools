@@ -257,16 +257,31 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
 
 		const blocks = new Map<number, { offset: number, text: string }>();
-		let lastTag: pugLex.Token | undefined;
 
 		for (let i = 0; i < tokens.length; i++) {
-			const startToken = tokens[i];
-			if (startToken.type === 'tag') {
-				lastTag = startToken;
-			}
-			else if (startToken.type === 'start-attributes') {
+			const token = tokens[i];
+			if (token.type === 'start-attributes') {
 
-				let prevToken: pugLex.Token = startToken;
+				let tagStart: pugLex.Token = token;
+
+				for (let j = i - 1; j >= 0; j--) {
+
+					const prevToken = tokens[j];
+
+					if (
+						prevToken.type === 'newline'
+						|| prevToken.type === 'indent'
+						|| prevToken.type === 'outdent'
+						|| prevToken.type === ':'
+					) break;
+
+					tagStart = prevToken;
+
+					if (prevToken.type === 'tag')
+						break;
+				}
+
+				let prevToken: pugLex.Token = token;
 				let text = '';
 
 				for (i++; i < tokens.length; i++) {
@@ -292,12 +307,10 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 						}
 					}
 					else if (attrToken.type === 'end-attributes') {
-						if (lastTag) {
-							blocks.set(getDocOffset(lastTag.loc.start.line, lastTag.loc.start.column), {
-								offset: getDocOffset(startToken.loc.end.line, startToken.loc.end.column),
-								text,
-							});
-						}
+						blocks.set(getDocOffset(tagStart.loc.start.line, tagStart.loc.start.column), {
+							offset: getDocOffset(token.loc.end.line, token.loc.end.column),
+							text,
+						});
 						break;
 					}
 
