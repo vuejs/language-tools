@@ -30,9 +30,9 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 1. Add `@vue/runtime-dom`
 
-This extension required Vue 3 types from the `@vue/runtime-dom`.
+This extension requires Vue 3 types from the `@vue/runtime-dom`.
 
-Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have to install this package yourself:
+Vue 3 itself includes the `@vue/runtime-dom` package. For Vue 2 you will have to install it yourself:
 
 ```jsonc
 // package.json
@@ -43,19 +43,35 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 }
 ```
 
-2. Remove `Vue.extend`
+2. Wrap components with `Vue.extend`
 
-Template type-checking do not support with `Vue.extend`, you can use [composition-api](https://github.com/vuejs/composition-api), [vue-class-component](https://github.com/vuejs/vue-class-component), or `export default { ... }` instead of `export default Vue.extend`.
+When using the Options API, for the types to be inferred properly, you need to explicitly wrap the exported component with `Vue.extend`, for example:
+
+```vue
+<script>
+import Vue from 'vue'
+
+export default Vue.extend({
+  data() {
+    return {
+      foo: 'abc'
+    }
+  }
+})
+</script>
+```
+
+When using the [composition-api](https://github.com/vuejs/composition-api) or [vue-class-component](https://github.com/vuejs/vue-class-component) this issue doesn't apply.
 
 3. Support Vue 2 template
 
-Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different. You need to set the `experimentalCompatMode` option to support Vue 2 template.
+Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differences. You need to set the `experimentalCompatMode` option to support the Vue 2 templates.
 
 ```jsonc
 // tsconfig.json
 {
   "compilerOptions": {
-    ...
+    // ...
   },
   "vueCompilerOptions": {
     "experimentalCompatMode": 2,
