@@ -192,9 +192,14 @@ export function createParsedCommandLine(
 	extendsSet.add(tsConfig);
 
 	if (content.raw.extends) {
-		const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
-		if (!extendsSet.has(extendsPath)) {
-			baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extendsSet).vueOptions;
+		try {
+			const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
+			if (!extendsSet.has(extendsPath)) {
+				baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extendsSet).vueOptions;
+			}
+		}
+		catch (error) {
+			console.error(error);
 		}
 	}
 
