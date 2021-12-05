@@ -13,14 +13,7 @@ export function register(
 	context: HtmlLanguageServiceContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
-	formatters: {
-		html(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		pug(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		css(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		less(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		scss(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-		postcss(document: TextDocument, options: vscode.FormattingOptions): Promiseable<vscode.TextEdit[]>,
-	},
+	formatters: { [lang: string]: (document: TextDocument, options: vscode.FormattingOptions) => Promiseable<vscode.TextEdit[]> },
 ) {
 	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
@@ -70,7 +63,7 @@ export function register(
 		if (!tsSourceMap) return indentTextEdits;
 
 		const document = sourceFile.getTextDocument();
-		for (const maped of tsSourceMap) {
+		for (const maped of tsSourceMap.mappings) {
 			if (!maped.data.capabilities.formatting)
 				continue;
 
@@ -117,17 +110,12 @@ export function register(
 
 			if (!sourceMap.capabilities.formatting) continue;
 
-			const languageId = sourceMap.mappedDocument.languageId;
-			if (
-				languageId !== 'css'
-				&& languageId !== 'less'
-				&& languageId !== 'scss'
-				&& languageId !== 'postcss'
-			) continue;
+			const formatter = formatters[sourceMap.mappedDocument.languageId];
+			if (!formatter) continue;
 
-			const cssEdits = await formatters[languageId](sourceMap.mappedDocument, options);
+			const cssEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const cssEdit of cssEdits) {
-				const vueEdit = transformTextEdit(cssEdit, cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end));
+				const vueEdit = transformTextEdit(cssEdit, cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0]);
 				if (vueEdit) {
 					result.push(vueEdit);
 				}
@@ -139,9 +127,13 @@ export function register(
 	async function getHtmlFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
 		const result: vscode.TextEdit[] = [];
 		for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-			const htmlEdits = await formatters.html(sourceMap.mappedDocument, options);
+
+			const formatter = formatters['html'];
+			if (!formatter) continue;
+
+			const htmlEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const htmlEdit of htmlEdits) {
-				const vueEdit = transformTextEdit(htmlEdit, htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end));
+				const vueEdit = transformTextEdit(htmlEdit, htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0]);
 				if (vueEdit) {
 					result.push(vueEdit);
 				}
@@ -153,9 +145,13 @@ export function register(
 	async function getPugFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
 		const result: vscode.TextEdit[] = [];
 		for (const sourceMap of sourceFile.getPugSourceMaps()) {
-			const pugEdits = await formatters.pug(sourceMap.mappedDocument, options);
+
+			const formatter = formatters['pug'];
+			if (!formatter) continue;
+
+			const pugEdits = await formatter(sourceMap.mappedDocument, options);
 			for (const pugEdit of pugEdits) {
-				const vueEdit = transformTextEdit(pugEdit, pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end));
+				const vueEdit = transformTextEdit(pugEdit, pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end)?.[0]);
 				if (vueEdit) {
 					result.push(vueEdit);
 				}
@@ -176,8 +172,11 @@ export function register(
 			const dummyTsLs = sharedServices.getDummyTsLs(context.modules.typescript, context.modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 			const textEdits = await dummyTsLs.doFormatting(sourceMap.mappedDocument.uri, options);
 			for (const textEdit of textEdits) {
-				for (const vueRange of sourceMap.getSourceRanges(textEdit.range.start, textEdit.range.end)) {
-					if (!vueRange.data.capabilities.formatting) continue;
+				for (const [vueRange] of sourceMap.getSourceRanges(
+					textEdit.range.start,
+					textEdit.range.end,
+					data => !!data.capabilities.formatting,
+				)) {
 					result.push({
 						newText: textEdit.newText,
 						range: vueRange,

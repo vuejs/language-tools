@@ -25,7 +25,11 @@ function getSymbolKind(item: ts.NavigateToItem): vscode.SymbolKind {
 export function register(languageService: ts.LanguageService, getTextDocument2: (uri: string) => TextDocument | undefined) {
 	return (query: string): vscode.SymbolInformation[] => {
 
-		return languageService.getNavigateToItems(query)
+		let items: ReturnType<typeof languageService.getNavigateToItems> | undefined;
+		try { items = languageService.getNavigateToItems(query) } catch { }
+		if (!items) return [];
+
+		return items
 			.filter(item => item.containerName || item.kind !== 'alias')
 			.map(toSymbolInformation)
 			.filter(shared.notEmpty);

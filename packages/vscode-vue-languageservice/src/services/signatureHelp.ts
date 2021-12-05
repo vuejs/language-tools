@@ -8,10 +8,12 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 		if (tsResult) return tsResult;
 
 		function getTsResult() {
-			for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-				if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.basic)
-					continue;
+			for (const tsLoc of sourceFiles.toTsLocations(
+				uri,
+				position,
+				position,
+				data => !!data.capabilities.basic,
+			)) {
 
 				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;

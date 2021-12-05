@@ -1,5 +1,5 @@
 import * as path from 'upath';
-import { Position } from 'vscode-languageserver/node';
+import { Position } from 'vscode-languageserver';
 import { defineRename } from '../utils/defineRename';
 
 const file_from = path.resolve(__dirname, '../../testCases/renames/prop_from.vue');

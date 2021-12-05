@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver';
-import { parseDeclarationRanges, parseDotValueRanges } from '../parsers/refSugarRanges';
+import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import * as definition from '../services/definition';
 import { isBlacklistNode, isRefType } from '../services/refAutoClose';
 import * as references from '../services/references';

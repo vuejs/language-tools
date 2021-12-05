@@ -79,4 +79,5 @@ export interface ServerInitializationOptions {
 			getDocumentPrintWidthRequest?: boolean,
 		},
 	}
+	initializationMessage?: string
 }

@@ -1,20 +1,22 @@
 {
 	"private": true,
 	"scripts": {
-		"install": "yarn install:vue-language-features && yarn install:typescript-vue-plugin",
+		"install": "npm run install:vue-language-features && npm run install:typescript-vue-plugin",
 		"install:vue-language-features": "cd extensions/vscode-vue-language-features && yarn",
 		"install:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn",
-		"compile": "tsc -b tsconfig.build.json",
+		"build": "tsc -b tsconfig.build.json",
 		"watch": "tsc -b tsconfig.build.json -w",
-		"prerelease": "yarn && yarn compile && yarn test",
-		"release": "lerna publish --exact --force-publish --yes && yarn release:vue-language-features && yarn release:typescript-vue-plugin",
-		"release:vue-language-features": "cd extensions/vscode-vue-language-features && yarn release",
-		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && yarn release",
+		"prerelease": "npm run build && npm run test",
+		"release": "lerna publish --exact --force-publish --yes && npm run release:vue-language-features && npm run release:typescript-vue-plugin",
+		"release:vue-language-features": "cd extensions/vscode-vue-language-features && npm run release",
+		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && npm run release",
 		"pretest": "cd packages/vscode-vue-languageservice/testCases && yarn",
-		"test": "jest"
+		"test": "jest",
+		"chrome": "npm run build && vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
 	},
 	"devDependencies": {
 		"@types/jest": "latest",
+		"@vscode/test-web": "latest",
 		"jest": "latest",
 		"lerna": "latest",
 		"ts-jest": "latest",

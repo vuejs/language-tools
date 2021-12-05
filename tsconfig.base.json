@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "es2019",
 		"lib": [
-			"DOM",
+			"WebWorker",
 			"ES2020"
 		],
 		"module": "commonjs",
@@ -11,6 +11,8 @@
 		"composite": true,
 		"declaration": true,
 		"strict": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
 		"baseUrl": "./",
 		"paths": {
 			"vscode-pug-languageservice": [

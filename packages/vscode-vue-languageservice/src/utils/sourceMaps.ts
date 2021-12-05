@@ -5,45 +5,7 @@ import type { Stylesheet } from 'vscode-css-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
 import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
-
-export interface TsMappingData {
-	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style',
-	vueTagIndex?: number,
-	beforeRename?: (newName: string) => string,
-	doRename?: (oldName: string, newName: string) => string,
-	capabilities: {
-		basic?: boolean,
-		extraHoverInfo?: boolean,
-		references?: boolean,
-		definitions?: boolean,
-		diagnostic?: boolean,
-		formatting?: boolean,
-		rename?: boolean | {
-			in: boolean,
-			out: boolean,
-		},
-		completion?: boolean,
-		semanticTokens?: boolean,
-		foldingRanges?: boolean,
-		referencesCodeLens?: boolean,
-		displayWithLink?: boolean,
-	},
-}
-
-export interface TeleportSideData {
-	editRenameText?: (newName: string) => string,
-	capabilities: {
-		references?: boolean,
-		definitions?: boolean,
-		rename?: boolean,
-	},
-}
-
-export interface TeleportMappingData {
-	isAdditionalReference?: boolean;
-	toSource: TeleportSideData,
-	toTarget: TeleportSideData,
-}
+import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
 
 export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 	constructor(
@@ -122,48 +84,23 @@ export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData>
 	) {
 		super(document, document);
 	}
-	findTeleports(start: vscode.Position, end?: vscode.Position) {
-		const result: {
-			data: TeleportMappingData;
-			sideData: TeleportSideData;
-			start: vscode.Position,
-			end: vscode.Position,
-		}[] = [];
-		for (const teleRange of this.getMappedRanges(start, end)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toTarget,
-			});
+	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
+		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
+			yield [teleRange, data.toTarget] as const;
 		}
-		for (const teleRange of this.getSourceRanges(start, end)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toSource,
-			});
+		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toSource) : undefined)) {
+			yield [teleRange, data.toSource] as const;
 		}
-		return result;
 	}
-	findTeleports2(start: number, end?: number) {
-		const result: {
-			data: TeleportMappingData;
-			sideData: TeleportSideData;
-			start: number,
-			end: number,
-		}[] = [];
-		for (const teleRange of this.getMappedRanges2(start, end)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toTarget,
-			});
+	*findTeleports2(start: number, end?: number, filter?: (data: TeleportSideData) => boolean) {
+		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
+			yield [teleRange, data.toTarget] as const;
 		}
-		for (const teleRange of this.getSourceRanges2(start, end)) {
-			result.push({
-				...teleRange,
-				sideData: teleRange.data.toSource,
-			});
+		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
+			yield [teleRange, data.toTarget] as const;
 		}
-		return result;
 	}
 }
 
 export * from '@volar/source-map';
+export * from '@volar/vue-code-gen/out/types';

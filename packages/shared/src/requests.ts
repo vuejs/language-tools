@@ -51,16 +51,23 @@ export namespace GetEditorSelectionRequest {
  * Server Requests
  */
 
-export namespace PingRequest {
-	export type ResponseType = 'pong' | null | undefined;
+export namespace InitDoneRequest {
+	export type ResponseType = null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/ping');
+	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/init');
 }
 
 export namespace DepsRequest {
 	export type ResponseType = string[];
 	export type ErrorType = never;
 	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/depFiles');
+}
+
+export namespace GetMatchTsConfigRequest {
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = string | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/tsconfig');
 }
 
 export namespace D3Request {

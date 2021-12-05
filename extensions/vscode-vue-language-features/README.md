@@ -20,6 +20,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 
 - [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
 - [Vitesse](https://github.com/antfu/vitesse)
+- [vue3-eslint-stylelint-demo](https://github.com/sethidden/vue3-eslint-stylelint-demo) (Volar + ESLint + stylelint + husky)
 - [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
 ## Using
@@ -57,8 +58,11 @@ Volar preferentially supports Vue 3. Vue 3 and Vue 2 template has some different
     ...
   },
   "vueCompilerOptions": {
-    "experimentalCompatMode": 2
-  },
+    "experimentalCompatMode": 2,
+    "experimentalTemplateCompilerOptions": {
+      "compatConfig": { "MODE": 2 } // optional
+    }
+  }
 }
 ```
 
@@ -98,6 +102,14 @@ export {}
 > - postcss: [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss).
 > - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 > - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
+
+> If Auto-formatting of `<style>` in SFC doesn’t work, please check `.vscode/settings.json` is not set or set as :
+
+```json
+{
+  "[vue]": {"editor.defaultFormatter": "johnsoncodehk.volar"}
+}
+```
 
 > Please check https://vuejs.org/v2/guide/typescript.html#Recommended-Configuration for recommended tsconfig options.
 

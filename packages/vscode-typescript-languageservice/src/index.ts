@@ -36,7 +36,7 @@ export type LanguageServiceHost = ts.LanguageServiceHost & {
 
 export function createLanguageService(ts: typeof import('typescript/lib/tsserverlibrary'), host: LanguageServiceHost, languageService: ts.LanguageService) {
 
-	const documents = new Map<string, [string, TextDocument]>();
+	const documents = shared.createPathMap<[string, TextDocument]>();
 
 	return {
 		findDefinition: definitions.register(languageService, getValidTextDocument, getTextDocument),
@@ -84,16 +84,16 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 	function getTextDocument(uri: string) {
 		const fileName = shared.uriToFsPath(uri);
 		const version = host.getScriptVersion(fileName);
-		const oldDoc = documents.get(uri);
+		const oldDoc = documents.uriGet(uri);
 		if (!oldDoc || oldDoc[0] !== version) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 				const document = TextDocument.create(uri, shared.syntaxToLanguageId(path.extname(uri).substr(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
-				documents.set(uri, [version, document]);
+				documents.uriSet(uri, [version, document]);
 			}
 		}
-		return documents.get(uri)?.[1];
+		return documents.uriGet(uri)?.[1];
 	}
 
 	function dispose() {

@@ -10,8 +10,12 @@ export function fsPathToUri(fsPath: string): DocumentUri {
 	return URI.file(fsPath).toString();
 }
 
-export function normalizeFileName(fileName: string) {
-	return uriToFsPath(fsPathToUri(fileName));
+export function normalizeFileName(fsPath: string) {
+	return upath.toUnix(URI.file(fsPath).fsPath);
+}
+
+export function normalizeUri(uri: string) {
+	return URI.parse(uri).toString();
 }
 
 export function isFileInDir(fileName: string, dir: string) {

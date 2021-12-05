@@ -31,7 +31,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getGlobalDiagnostics(cancellationToken))).flat();
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram('script').emit(targetSourceFile, ts.sys.writeFile, cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram('script').emit(targetSourceFile, (vueHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		const templateResult = getProgram('template').emit(targetSourceFile, undefined, cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
@@ -58,18 +58,16 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 				&& diagnostic.start !== undefined
 				&& diagnostic.length !== undefined
 			) {
-				const fileName = shared.normalizeFileName(tsLsHost.realpath?.(diagnostic.file.fileName) ?? diagnostic.file.fileName);
+				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
 				for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
 					lsType,
 					shared.fsPathToUri(fileName),
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
+					data => !!data.capabilities.diagnostic,
 				)) {
 
 					if (!vueHost.fileExists?.(shared.uriToFsPath(tsOrVueLoc.uri)))
-						continue;
-
-					if (tsOrVueLoc.type === 'embedded-ts' && !tsOrVueLoc.range.data.capabilities.diagnostic)
 						continue;
 
 					if (tsOrVueLoc.type === 'source-ts' && lsType !== 'script')

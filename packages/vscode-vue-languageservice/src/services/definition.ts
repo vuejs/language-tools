@@ -35,10 +35,12 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		let vueResult: vscode.LocationLink[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toTsLocations(uri, position)) {
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.range.data.capabilities.definitions)
-				continue;
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			position,
+			position,
+			data => !!data.capabilities.definitions,
+		)) {
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
@@ -90,6 +92,23 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						originSelectionRange,
 					});
 				}
+				else if (tsLoc.lsType === 'script' && (tsLoc.type === 'source-ts' || tsLoc.data.vueTag === 'script' || tsLoc.data.vueTag === 'scriptSetup')) {
+					// fix https://github.com/johnsoncodehk/volar/issues/728
+					const targetSourceFile = sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.targetUri);
+					if (targetSourceFile) {
+						const targetDocument = targetSourceFile.getTextDocument();
+						const targetRange = {
+							start: targetDocument.positionAt(0),
+							end: targetDocument.positionAt(targetDocument.getText().length),
+						};
+						vueResult.push({
+							targetUri: targetSourceFile.uri,
+							targetRange: targetRange,
+							targetSelectionRange: targetRange,
+							originSelectionRange,
+						});
+					}
+				}
 			}
 
 			function withTeleports(uri: string, position: vscode.Position, isOriginal: boolean) {
@@ -120,9 +139,11 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, location.targetUri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
 					) continue;
 
-					for (const teleRange of teleport.findTeleports(location.targetSelectionRange.start, location.targetSelectionRange.end)) {
-						if (!teleRange.sideData.capabilities.definitions)
-							continue;
+					for (const [teleRange] of teleport.findTeleports(
+						location.targetSelectionRange.start,
+						location.targetSelectionRange.end,
+						sideData => !!sideData.capabilities.definitions,
+					)) {
 						if (loopChecker.has({ uri: location.targetUri, range: teleRange }))
 							continue;
 						withTeleports(location.targetUri, teleRange.start, false);
@@ -152,7 +173,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!cssLs)
 				continue;
 
-			for (const cssRange of sourceMap.getMappedRanges(position)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const cssLoc = cssLs.findDefinition(
 					sourceMap.mappedDocument,
 					cssRange.start,
@@ -171,7 +192,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!sourceMap)
 				continue;
 
-			for (const vueRange of sourceMap.getSourceRanges(cssLoc.range.start, cssLoc.range.end)) {
+			for (const [vueRange] of sourceMap.getSourceRanges(cssLoc.range.start, cssLoc.range.end)) {
 				vueResult.push({
 					uri: sourceMap.sourceDocument.uri,
 					range: vueRange,

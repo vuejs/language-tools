@@ -43,18 +43,6 @@ export enum Mode {
 	 *   ^^      ^    ^
 	 */
 	Expand,
-	/**
-	 * @case1
-	 * 123456 -> abcdef
-	 * ^     ^   ^    ^
-	 * @case2
-	 * 123456 -> abcdef
-	 *      ^^   ^    ^
-	 * @case3
-	 * 123456 -> abcdef
-	 *       ^^  NOT_MATCH
-	 */
-	Overlap,
 }
 
 export type MappingBase = {
@@ -68,170 +56,146 @@ export type Mapping<T> = MappingBase & {
 	additional?: MappingBase[],
 }
 
-export class SourceMap<Data = unknown> extends Set<Mapping<Data>> {
+export class SourceMapBase<Data = undefined> {
+
+	mappings: Mapping<Data>[];
 
 	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		mappings?: Mapping<Data>[],
+		_mappings?: Mapping<Data>[],
+
 	) {
-		super(mappings);
+		this.mappings = _mappings ?? [];
 	}
 
-	cache = new Map<string, {
-		data: Data;
-		start: vscode.Position;
-		end: vscode.Position;
-	}[]>();
-	cache2 = new Map<string, {
-		data: Data;
-		start: number;
-		end: number;
-	}[]>();
-
-	// Range
-	public isSourceRange(start: vscode.Position, end?: vscode.Position) {
-		return this.getRanges(start, end ?? start, true, true).length > 0;
+	public getSourceRange(start: number, end?: number, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
+			return maped;
+		}
 	}
-	public isMappedRange(start: vscode.Position, end?: vscode.Position) {
-		return this.getRanges(start, end ?? start, false, true).length > 0;
+	public getMappedRange(start: number, end?: number, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
+			return maped;
+		}
 	}
-	public getSourceRange(start: vscode.Position, end?: vscode.Position) {
-		const result = this.getRanges(start, end ?? start, false, true);
-		if (result.length) return result[0];
+	public getSourceRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, false, filter);
 	}
-	public getMappedRange(start: vscode.Position, end?: vscode.Position) {
-		const result = this.getRanges(start, end ?? start, true, true);
-		if (result.length) return result[0];
-	}
-	public getSourceRanges(start: vscode.Position, end?: vscode.Position) {
-		return this.getRanges(start, end ?? start, false);
-	}
-	public getMappedRanges(start: vscode.Position, end?: vscode.Position) {
-		return this.getRanges(start, end ?? start, true);
-	}
-	private getRanges(start: vscode.Position, end: vscode.Position, sourceToTarget: boolean, returnFirstResult?: boolean) {
-		const key = start.line + ':' + start.character + ':' + end.line + ':' + end.character + ':' + sourceToTarget + ':' + returnFirstResult;
-		if (this.cache.has(key)) return this.cache.get(key)!;
-
-		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
-		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
-		const startOffset = fromDoc.offsetAt(start);
-		const endOffset = fromDoc.offsetAt(end);
-		const result = this
-			.getRanges2(startOffset, endOffset, sourceToTarget, returnFirstResult)
-			.map(result => ({
-				data: result.data,
-				start: toDoc.positionAt(result.start),
-				end: toDoc.positionAt(result.end),
-			}));
-		this.cache.set(key, result);
-		return result;
+	public getMappedRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, true, filter);
 	}
 
-	// MapedRange
-	public isSourceRange2(start: number, end?: number) {
-		return this.getRanges2(start, end ?? start, true, true).length > 0;
-	}
-	public isMappedRange2(start: number, end?: number) {
-		return this.getRanges2(start, end ?? start, false, true).length > 0;
-	}
-	public getSourceRange2(start: number, end?: number) {
-		const result = this.getRanges2(start, end ?? start, false, true);
-		if (result.length) return result[0];
-	}
-	public getMappedRange2(start: number, end?: number) {
-		const result = this.getRanges2(start, end ?? start, true, true);
-		if (result.length) return result[0];
-	}
-	public getSourceRanges2(start: number, end?: number) {
-		return this.getRanges2(start, end ?? start, false);
-	}
-	public getMappedRanges2(start: number, end?: number) {
-		return this.getRanges2(start, end ?? start, true);
-	}
-	private getRanges2(start: number, end: number, sourceToTarget: boolean, returnFirstResult?: boolean) {
-		const key = start + ':' + end + ':' + sourceToTarget + ':' + returnFirstResult;
-		if (this.cache2.has(key)) return this.cache2.get(key)!;
+	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
-		let result: {
-			data: Data,
-			start: number,
-			end: number,
-		}[] = [];
+		for (const mapping of this.mappings) {
 
-		for (const mapping of this) {
-			const maped = this.getRange(start, end, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
+			if (filter && !filter(mapping.data))
+				continue;
+
+			const maped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
 			if (maped) {
-				result.push(maped);
-				if (returnFirstResult) return result;
+				yield getMaped(maped);
 			}
-			if (mapping.additional) {
+			else if (mapping.additional) {
 				for (const other of mapping.additional) {
-					const maped = this.getRange(start, end, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
+					const maped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
 					if (maped) {
-						result.push(maped);
-						if (returnFirstResult) return result;
+						yield getMaped(maped);
+						break; // only return first match additional range
 					}
 				}
 			}
 		}
-		this.cache2.set(key, result);
 
-		return result;
+		function getMaped(maped: [{ start: number, end: number }, Data]) {
+			return maped;
+		}
 	}
 
-	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data) {
+	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number }, Data] | undefined {
 		const mapedToRange = sourceToTarget ? targetRange : sourceRange;
 		const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
 		if (mode === Mode.Totally) {
 			if (start === mapedFromRange.start && end === mapedFromRange.end) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
-				return {
-					data: data,
+				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
-				};
+				}, data];
 			}
 		}
 		else if (mode === Mode.Offset) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 				const _start = mapedToRange.start + start - mapedFromRange.start;
 				const _end = mapedToRange.end + end - mapedFromRange.end;
-				return {
-					data: data,
+				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
-				};
+				}, data];
 			}
 		}
 		else if (mode === Mode.Expand) {
 			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
 				const _start = mapedToRange.start;
 				const _end = mapedToRange.end;
-				return {
-					data: data,
+				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
-				};
+				}, data];
 			}
 		}
-		else if (mode === Mode.Overlap) {
-			if (
-				(start >= mapedFromRange.start && start <= mapedFromRange.end)
-				|| (end >= mapedFromRange.start && end <= mapedFromRange.end)
-				|| (mapedFromRange.start >= start && mapedFromRange.start <= end)
-				|| (mapedFromRange.end >= start && mapedFromRange.end <= end)
-			) {
-				const _start = mapedToRange.start;
-				const _end = mapedToRange.end;
-				return {
-					data: data,
-					start: Math.min(_start, _end),
-					end: Math.max(_start, _end),
-				};
+	}
+}
+
+export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
+
+	constructor(
+		public sourceDocument: TextDocument,
+		public mappedDocument: TextDocument,
+		public _mappings?: Mapping<Data>[],
+	) {
+		super(_mappings);
+	}
+
+	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
+			return maped;
+		}
+	}
+	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
+			return maped;
+		}
+	}
+	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, false, filter);
+	}
+	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+		return this.getRanges(start, end ?? start, true, filter);
+	}
+
+	protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
+
+		const startIsNumber = typeof start === 'number';
+		const endIsNumber = typeof end === 'number';
+
+		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
+		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
+		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
+		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
+
+		for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
+			yield getMaped(maped);
+		}
+
+		function getMaped(maped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
+			if (startIsNumber) {
+				return maped as [{ start: T, end: T }, Data];
 			}
+			return [{
+				start: toDoc.positionAt(maped[0].start) as T,
+				end: toDoc.positionAt(maped[0].end) as T,
+			}, maped[1]];
 		}
 	}
 }

@@ -7,18 +7,34 @@ import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
+import { TsMappingData } from 'packages/vue-code-gen/src/types';
 
 export type SourceFiles = ReturnType<typeof createSourceFiles>;
 
 export function createSourceFiles() {
 
-	const sourceFiles = shallowReactive<Record<string, SourceFile>>({});
-	const all = computed(() => Object.values(sourceFiles));
+	const _sourceFiles = shallowReactive<Record<string, SourceFile>>({});
+	const sourceFiles = shared.createPathMap<SourceFile>({
+		delete: key => delete _sourceFiles[key],
+		get: key => _sourceFiles[key],
+		has: key => !!_sourceFiles[key],
+		set: (key, value) => _sourceFiles[key] = value,
+		clear: () => {
+			for (var key in _sourceFiles) {
+				if (_sourceFiles.hasOwnProperty(key)) {
+					delete _sourceFiles[key];
+				}
+			}
+		},
+		values: () => new Set(Object.values(_sourceFiles)).values(),
+	});
+
+	const all = computed(() => Object.values(_sourceFiles));
 	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
 	const cssSourceMaps = computed(() => {
 		const map = new Map<string, CssSourceMap>();
-		for (const key in sourceFiles) {
-			const sourceFile = sourceFiles[key]!;
+		for (const key in _sourceFiles) {
+			const sourceFile = _sourceFiles[key]!;
 			for (const sourceMap of sourceFile.refs.cssLsSourceMaps.value) {
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
 			}
@@ -27,8 +43,8 @@ export function createSourceFiles() {
 	});
 	const htmlSourceMaps = computed(() => {
 		const map = new Map<string, HtmlSourceMap>();
-		for (const key in sourceFiles) {
-			const sourceFile = sourceFiles[key]!;
+		for (const key in _sourceFiles) {
+			const sourceFile = _sourceFiles[key]!;
 			if (sourceFile.refs.sfcTemplate.htmlSourceMap.value) {
 				const sourceMap = sourceFile.refs.sfcTemplate.htmlSourceMap.value;
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
@@ -40,8 +56,8 @@ export function createSourceFiles() {
 		template: {
 			documents: computed(() => {
 				const map = new Map<string, TextDocument>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const tsDoc of sourceFile.refs.templateLsDocuments.value) {
 						map.set(tsDoc.uri, tsDoc);
 					}
@@ -50,8 +66,8 @@ export function createSourceFiles() {
 			}),
 			teleports: computed(() => {
 				const map = new Map<string, TeleportSourceMap>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.templateLsTeleports.value) {
 						map.set(sourceMap.mappedDocument.uri, sourceMap);
 					}
@@ -60,8 +76,8 @@ export function createSourceFiles() {
 			}),
 			sourceMaps: computed(() => {
 				const map = new Map<string, TsSourceMap>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.templateLsSourceMaps.value) {
 						map.set(sourceMap.mappedDocument.uri, sourceMap);
 					}
@@ -70,8 +86,8 @@ export function createSourceFiles() {
 			}),
 			urisMapSourceFiles: computed(() => {
 				const map = new Map<string, SourceFile>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const tsDoc of sourceFile.refs.templateLsDocuments.value) {
 						map.set(tsDoc.uri, sourceFile);
 					}
@@ -82,8 +98,8 @@ export function createSourceFiles() {
 		script: {
 			documents: computed(() => {
 				const map = new Map<string, TextDocument>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const tsDoc of sourceFile.refs.scriptLsDocuments.value) {
 						map.set(tsDoc.uri, tsDoc);
 					}
@@ -92,8 +108,8 @@ export function createSourceFiles() {
 			}),
 			teleports: computed(() => {
 				const map = new Map<string, TeleportSourceMap>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
 					map.set(sourceMap.mappedDocument.uri, sourceMap);
 				}
@@ -101,8 +117,8 @@ export function createSourceFiles() {
 			}),
 			sourceMaps: computed(() => {
 				const map = new Map<string, TsSourceMap>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.scriptLsSourceMaps.value) {
 						map.set(sourceMap.mappedDocument.uri, sourceMap);
 					}
@@ -111,8 +127,8 @@ export function createSourceFiles() {
 			}),
 			urisMapSourceFiles: computed(() => {
 				const map = new Map<string, SourceFile>();
-				for (const key in sourceFiles) {
-					const sourceFile = sourceFiles[key]!;
+				for (const key in _sourceFiles) {
+					const sourceFile = _sourceFiles[key]!;
 					for (const tsDoc of sourceFile.refs.scriptLsDocuments.value) {
 						map.set(tsDoc.uri, sourceFile);
 					}
@@ -127,15 +143,9 @@ export function createSourceFiles() {
 		getUris: untrack(() => uris.value),
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
-		get: untrack((uri: string): SourceFile | undefined => sourceFiles[uri.toLowerCase()]),
-		set: untrack((uri: string, sourceFile: SourceFile) => sourceFiles[uri.toLowerCase()] = sourceFile),
-		delete: untrack((uri: string) => {
-			if (sourceFiles[uri.toLowerCase()]) {
-				delete sourceFiles[uri.toLowerCase()];
-				return true;
-			}
-			return false;
-		}),
+		get: untrack(sourceFiles.uriGet),
+		set: untrack(sourceFiles.uriSet),
+		delete: untrack(sourceFiles.uriDelete),
 
 		getTsTeleports: untrack((lsType: 'script' | 'template') => tsRefs[lsType].teleports.value),
 		getTsDocuments: untrack((lsType: 'script' | 'template') => tsRefs[lsType].documents.value),
@@ -144,22 +154,33 @@ export function createSourceFiles() {
 		getCssSourceMaps: untrack(() => cssSourceMaps.value),
 		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
 
-		toTsLocations: untrack(function* (uri: string, start: vscode.Position, end?: vscode.Position) {
+		toTsLocations: untrack(function* (
+			uri: string,
+			start: vscode.Position,
+			end?: vscode.Position,
+			filter?: (data: TsMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+		) {
 
 			if (end === undefined)
 				end = start;
 
 			for (const lsType of ['script', 'template'] as const) {
-				const sourceFile = sourceFiles[uri.toLowerCase()];
+				const sourceFile = sourceFiles.uriGet(uri);
 				if (sourceFile) {
 					for (const sourceMap of lsType === 'script' ? sourceFile.refs.scriptLsSourceMaps.value : sourceFile.refs.templateLsSourceMaps.value) {
-						for (const tsRange of sourceMap.getMappedRanges(start, end)) {
+
+						if (sourceMapFilter && !sourceMapFilter(sourceMap))
+							continue;
+
+						for (const tsRange of sourceMap.getMappedRanges(start, end, filter)) {
 							yield {
 								lsType,
 								type: 'embedded-ts' as const,
 								sourceMap,
 								uri: sourceMap.mappedDocument.uri,
-								range: tsRange,
+								range: tsRange[0],
+								data: tsRange[1],
 							};
 						}
 					}
@@ -177,7 +198,14 @@ export function createSourceFiles() {
 				}
 			}
 		}),
-		fromTsLocation: untrack(function* (lsType: 'script' | 'template', uri: string, start: vscode.Position, end?: vscode.Position) {
+		fromTsLocation: untrack(function* (
+			lsType: 'script' | 'template',
+			uri: string,
+			start: vscode.Position,
+			end?: vscode.Position,
+			filter?: (data: TsMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
 				return;
@@ -187,12 +215,17 @@ export function createSourceFiles() {
 
 			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
 			if (sourceMap) {
-				for (const vueRange of sourceMap.getSourceRanges(start, end)) {
+
+				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+					return;
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
 						type: 'embedded-ts' as const,
 						sourceMap,
 						uri: sourceMap.sourceDocument.uri,
-						range: vueRange,
+						range: vueRange[0],
+						data: vueRange[1],
 					};
 				}
 			}
@@ -207,7 +240,14 @@ export function createSourceFiles() {
 				};
 			}
 		}),
-		fromTsLocation2: untrack(function* (lsType: 'script' | 'template', uri: string, start: number, end?: number) {
+		fromTsLocation2: untrack(function* (
+			lsType: 'script' | 'template',
+			uri: string,
+			start: number,
+			end?: number,
+			filter?: (data: TsMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
 				return;
@@ -217,12 +257,17 @@ export function createSourceFiles() {
 
 			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
 			if (sourceMap) {
-				for (const vueRange of sourceMap.getSourceRanges2(start, end)) {
+
+				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+					return;
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
 						type: 'embedded-ts' as const,
 						sourceMap,
 						uri: sourceMap.sourceDocument.uri,
-						range: vueRange,
+						range: vueRange[0],
+						data: vueRange[1],
 					};
 				}
 			}

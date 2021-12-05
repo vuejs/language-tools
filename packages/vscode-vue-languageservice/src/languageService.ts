@@ -5,7 +5,7 @@ import { createSourceFile, SourceFile } from './sourceFile';
 import * as localTypes from './utils/localTypes';
 import * as upath from 'upath';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules } from './types';
+import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules, VueCompilerOptions } from './types';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
 // vue services
@@ -48,10 +48,6 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
 
-export interface VueCompilerOptions {
-	experimentalCompatMode?: number;
-}
-
 export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
 export type LanguageService = ReturnType<typeof createLanguageService>;
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
@@ -60,8 +56,8 @@ export type LanguageServiceHost = ts2.LanguageServiceHost & {
 	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
 	schemaRequestService?: json.SchemaRequestService,
-	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>;
-	getHtmlHoverSettings?(document: TextDocument): Promise<html.HoverSettings>
+	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
+	getHtmlHoverSettings?(document: TextDocument): Promise<html.HoverSettings>,
 };
 
 export function getDocumentLanguageService(
@@ -72,8 +68,9 @@ export function getDocumentLanguageService(
 ) {
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
+	const services = createServices(modules.typescript);
 	const context: HtmlLanguageServiceContext = {
-		isVue2Mode: false,
+		compilerOptions: {},
 		modules: {
 			typescript: modules.typescript,
 			emmet,
@@ -83,7 +80,7 @@ export function getDocumentLanguageService(
 			ts: ts2,
 			pug
 		},
-		...createContext(modules.typescript),
+		...services,
 		getHtmlDocument,
 		getVueDocument,
 	};
@@ -150,7 +147,7 @@ export function createLanguageService(
 	let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
 	let templateProjectVersion = 0;
 	let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
-	const documents = new shared.UriMap<TextDocument>();
+	const documents = shared.createPathMap<TextDocument>();
 	const sourceFiles = createSourceFiles();
 	const templateScriptUpdateUris = new Set<string>();
 	const initProgressCallback: ((p: number) => void)[] = [];
@@ -167,9 +164,18 @@ export function createLanguageService(
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
 
-			const resolveResult = ts.resolveModuleName(ref, base, vueHost.getCompilationSettings(), compilerHost);
+			const isUri = base.indexOf('://') >= 0;
+			const resolveResult = ts.resolveModuleName(
+				ref,
+				isUri ? shared.uriToFsPath(base) : base,
+				vueHost.getCompilationSettings(),
+				compilerHost,
+			);
 			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
+
+			const fileExists = vueHost.fileExists ?? ts.sys.fileExists;
+			const directoryExists = vueHost.directoryExists ?? ts.sys.directoryExists;
 
 			for (const failed of failedLookupLocations) {
 				let path = failed;
@@ -178,19 +184,18 @@ export function createLanguageService(
 					dirs.add(upath.dirname(path));
 				}
 				if (path.endsWith('.d.ts')) {
-					path = upath.trimExt(path);
-					path = upath.trimExt(path);
+					path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
 				}
 				else {
-					path = upath.trimExt(path);
+					continue;
 				}
-				if (ts.sys.fileExists(path) || ts.sys.fileExists(shared.uriToFsPath(path))) {
-					return path;
+				if (fileExists(path)) {
+					return isUri ? shared.fsPathToUri(path) : path;
 				}
 			}
 			for (const dir of dirs) {
-				if (ts.sys.directoryExists(dir) || ts.sys.directoryExists(shared.uriToFsPath(dir))) {
-					return dir;
+				if (directoryExists(dir)) {
+					return isUri ? shared.fsPathToUri(dir) : dir;
 				}
 			}
 
@@ -198,8 +203,9 @@ export function createLanguageService(
 		},
 	}
 
+	const services = createServices(modules.typescript, vueHost);
 	const context: ApiLanguageServiceContext = {
-		isVue2Mode: isVue2,
+		compilerOptions: vueHost.getVueCompilationSettings?.() ?? {},
 		modules: {
 			typescript: modules.typescript,
 			emmet,
@@ -209,7 +215,7 @@ export function createLanguageService(
 			ts: ts2,
 			pug
 		},
-		...createContext(modules.typescript, vueHost),
+		...services,
 		vueHost,
 		sourceFiles,
 		templateTsHost,
@@ -260,6 +266,8 @@ export function createLanguageService(
 			scriptTsLs.dispose();
 			templateTsLs.dispose();
 		},
+		updateHtmlCustomData: services.updateHtmlCustomData,
+		updateCssCustomData: services.updateCssCustomData,
 
 		__internal__: {
 			rootPath: vueHost.getCurrentDirectory(),
@@ -370,10 +378,8 @@ export function createLanguageService(
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
 			if (sourceMap.lsType === 'script')
 				continue;
-			for (const tsRange of sourceMap.getMappedRanges(pos)) {
-				if (tsRange.data.vueTag === 'template') {
-					return true;
-				}
+			for (const _ of sourceMap.getMappedRanges(pos, pos, data => data.vueTag === 'template')) {
+				return true;
 			}
 		}
 
@@ -603,11 +609,9 @@ export function createLanguageService(
 			if (tsScript) {
 				if (lsType === 'template' && basename === 'runtime-dom.d.ts') {
 					// allow arbitrary attributes
-					const extraTypes = [
-						'interface AriaAttributes extends Record<string, unknown> { }',
-						'declare global { namespace JSX { interface IntrinsicAttributes extends Record<string, unknown> {} } }',
-					];
-					tsScript = ts.ScriptSnapshot.fromString(tsScript.getText(0, tsScript.getLength()) + '\n' + extraTypes.join('\n'));
+					let tsScriptText = tsScript.getText(0, tsScript.getLength());
+					tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any')
+					tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
 				}
 				scriptSnapshots.set(fileName, [version, tsScript]);
 				return tsScript;
@@ -617,16 +621,16 @@ export function createLanguageService(
 	function getHostDocument(uri: string): TextDocument | undefined {
 		const fileName = shared.uriToFsPath(uri);
 		const version = Number(vueHost.getScriptVersion(fileName));
-		if (!documents.has(uri) || documents.get(uri)!.version !== version) {
+		if (!documents.uriHas(uri) || documents.uriGet(uri)!.version !== version) {
 			const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 				const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', version, scriptText);
-				documents.set(uri, document);
+				documents.uriSet(uri, document);
 			}
 		}
-		if (documents.has(uri)) {
-			return documents.get(uri);
+		if (documents.uriHas(uri)) {
+			return documents.uriGet(uri);
 		}
 	}
 	function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
@@ -705,7 +709,7 @@ export function createLanguageService(
 		}
 	}
 }
-function createContext(
+function createServices(
 	ts: Modules['typescript'],
 	vueHost?: LanguageServiceHost,
 ) {
@@ -759,6 +763,7 @@ function createContext(
 			return errors;
 		},
 	};
+	let htmlDataProviders: html.IHTMLDataProvider[] = [];
 
 	return {
 		ts,
@@ -767,8 +772,24 @@ function createContext(
 		jsonLs,
 		getCssLs,
 		vueHost,
+		updateHtmlCustomData,
+		updateCssCustomData,
+		getHtmlDataProviders: () => htmlDataProviders,
 	};
 
+	function updateHtmlCustomData(customData: { [id: string]: html.HTMLDataV1 }) {
+		htmlDataProviders = [];
+		for (const id in customData) {
+			htmlDataProviders.push(html.newHTMLDataProvider(id, customData[id]));
+		}
+		htmlLs.setDataProviders(true, htmlDataProviders);
+	}
+	function updateCssCustomData(customData: css.CSSDataV1[]) {
+		const data = customData.map(data => css.newCSSDataProvider(data));
+		cssLs.setDataProviders(true, data);
+		scssLs.setDataProviders(true, data);
+		lessLs.setDataProviders(true, data);
+	}
 	function getCssLs(lang: string) {
 		switch (lang) {
 			case 'css': return cssLs;

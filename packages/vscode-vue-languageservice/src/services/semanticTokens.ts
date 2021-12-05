@@ -12,6 +12,7 @@ export function getSemanticTokenLegend() {
 	const tokenTypesLegend = [
 		...tsLegend.types,
 		'componentTag',
+		'operator', // namespaced component accessor: '.'
 	];
 	const semanticTokenLegend: vscode.SemanticTokensLegend = {
 		tokenTypes: tokenTypesLegend,
@@ -92,7 +93,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 				const tsLs = getTsLs(sourceMap.lsType);
 
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 					if (
 						maped.data.capabilities.semanticTokens
 						&& maped.sourceRange.end > offsetRange.start
@@ -110,8 +111,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 						for (const token of tokens) {
 							const tsStart = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] });
 							const tsEnd = sourceMap.mappedDocument.offsetAt({ line: token[0], character: token[1] + token[2] });
-							const vueRange = sourceMap.getSourceRange2(tsStart, tsEnd);
-							if (!vueRange || !vueRange.data.capabilities.semanticTokens)
+							const vueRange = sourceMap.getSourceRange(tsStart, tsEnd, data => !!data.capabilities.semanticTokens)?.[0];
+							if (!vueRange)
 								continue;
 							const vuePos = document.positionAt(vueRange.start);
 							result.push([vuePos.line, vuePos.character, vueRange.end - vueRange.start, token[3], token[4]]);
@@ -132,14 +133,14 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 
-				const inSourceMap = [...sourceMap].some(mapping =>
+				const inSourceMap = [...sourceMap.mappings].some(mapping =>
 					(mapping.sourceRange.start >= offsetRange.start && mapping.sourceRange.start <= offsetRange.end)
 					|| (mapping.sourceRange.end >= offsetRange.start && mapping.sourceRange.end <= offsetRange.end)
 				);
 				if (!inSourceMap)
 					continue;
 
-				const htmlStart = sourceMap.getMappedRange2(offsetRange.start)?.start ?? 0;
+				const htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start ?? 0;
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
 					? htmlLs.createScanner(docText, htmlStart)
@@ -150,15 +151,25 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 				while (token !== html.TokenType.EOS) {
 					if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
 						const tokenText = scanner.getTokenText();
-						if (components.has(tokenText)) {
+						if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
 							const tokenOffset = scanner.getTokenOffset();
 							const tokenLength = scanner.getTokenLength();
-							const vueRange = sourceMap.getSourceRange2(tokenOffset);
+							const vueRange = sourceMap.getSourceRange(tokenOffset)?.[0];
 							if (vueRange) {
 								const vueOffset = vueRange.start;
 								if (vueOffset > offsetRange.end) break; // TODO: fix source map perf and break in while condition
 								const vuePos = sourceMap.sourceDocument.positionAt(vueOffset);
-								result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
+
+								if (components.has(tokenText)) {
+									result.push([vuePos.line, vuePos.character, tokenLength, tokenTypes.get('componentTag') ?? -1, undefined]);
+								}
+								else if (tokenText.indexOf('.') >= 0) {
+									for (let i = 0; i < tokenText.length; i++) {
+										if (tokenText[i] === '.') {
+											result.push([vuePos.line, vuePos.character + i, 1, tokenTypes.get('operator') ?? -1, undefined]);
+										}
+									}
+								}
 							}
 						}
 					}

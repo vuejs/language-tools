@@ -6,6 +6,7 @@ export interface SfcBlock {
 	lang: string;
 	content: string;
 	startTagEnd: number;
+	attrs: Record<string, string>,
 }
 
 export interface Sfc {
@@ -61,6 +62,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 				startTagEnd: node.startTagEnd,
 				start: node.start,
 				end: node.end,
+				attrs: parseAttrs(node.attributes),
 			};
 		}
 		else if (node.tag === 'script' && node.startTagEnd !== undefined) {
@@ -75,6 +77,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 					startTagEnd: node.startTagEnd,
 					start: node.start,
 					end: node.end,
+					attrs: parseAttrs(node.attributes),
 				};
 			}
 			else {
@@ -84,6 +87,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 					startTagEnd: node.startTagEnd,
 					start: node.start,
 					end: node.end,
+					attrs: parseAttrs(node.attributes),
 				};
 			}
 		}
@@ -100,6 +104,7 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 				end: node.end,
 				module: module !== undefined ? parseAttr(module, '$style') : undefined,
 				scoped: scoped !== undefined,
+				attrs: parseAttrs(node.attributes),
 			});
 		}
 		else {
@@ -110,13 +115,23 @@ export function parseSfc(text: string, doc: html.HTMLDocument) {
 				startTagEnd: node.startTagEnd ?? node.end,
 				start: node.start,
 				end: node.end,
+				attrs: parseAttrs(node.attributes),
 			});
+		}
+
+		function parseAttrs(attrs: typeof node.attributes) {
+			const obj: Record<string, string> = {};
+			if (attrs) {
+				for (let key in attrs) {
+					obj[key] = parseAttr(attrs[key], '');
+				}
+			}
+			return obj;
 		}
 	}
 
 	return sfc;
 }
-
 function parseAttr(attr: string | null, _default: string): string {
 	if (attr === null) {
 		return _default;

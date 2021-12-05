@@ -1,34 +1,32 @@
 import { createCodeGen } from '@volar/code-gen';
+import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import * as path from 'upath';
 import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import type { TextRange } from '../parsers/types';
-import { genConstructorOverloads, getVueLibraryName } from '../utils/localTypes';
-import * as SourceMaps from '../utils/sourceMaps';
+import type { TeleportMappingData, TextRange, TsMappingData } from '../types';
 
 export function generate(
 	lsType: 'template' | 'script',
-	uri: string,
-	script: null | {
+	fileName: string,
+	script: undefined | {
 		src?: string,
 		content: string,
 	},
-	scriptSetup: null | {
+	scriptSetup: undefined | {
 		content: string,
 	},
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
 	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
-	getSfcStyles: () => ReturnType<(typeof import('../use/useSfcStyles'))['useSfcStyles']>['textDocuments']['value'],
-	isVue2: boolean,
+	getStyleBindTexts: () => string[],
+	vueLibName: string,
 ) {
 
-	const codeGen = createCodeGen<SourceMaps.TsMappingData>();
-	const teleports: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
+	const codeGen = createCodeGen<TsMappingData>();
+	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
 	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
-	const overlapMapRanges: SourceMaps.Range[] = [];
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -63,7 +61,7 @@ export function generate(
 
 	if (usedTypes.DefinePropsToOptions) {
 		codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${getVueLibraryName(isVue2)}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${getVueLibraryName(isVue2)}').PropType<T[K]>, required: true } };\n`);
+		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
 	}
 	if (usedTypes.mergePropDefaults) {
 		codeGen.addText(`declare function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
@@ -77,7 +75,8 @@ export function generate(
 			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 		}
 		else {
-			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
+			codeGen.addText(
+				genConstructorOverloads('__VLS_ConstructorOverloads'));
 		}
 	}
 
@@ -103,26 +102,6 @@ export function generate(
 		);
 	}
 
-	/**
-	 * support find definition for <script> block less with:
-	 * import Foo from './foo.vue'
-	 *        ^^^      ^^^^^^^^^^^
-	 */
-	for (const overlapMapRange of overlapMapRanges) {
-		codeGen.addMapping2({
-			data: {
-				vueTag: 'sfc',
-				capabilities: {},
-			},
-			mode: SourceMaps.Mode.Overlap,
-			sourceRange: {
-				start: 0,
-				end: 0,
-			},
-			mappedRange: overlapMapRange,
-		});
-	}
-
 	return {
 		...codeGen,
 		teleports,
@@ -134,7 +113,7 @@ export function generate(
 
 		let src = script.src;
 
-		if (src.endsWith('.d.ts')) src = path.removeExt(src, '.d.ts');
+		if (src.endsWith('.d.ts')) src = path.removeExt(path.removeExt(src, '.ts'), '.d');
 		else if (src.endsWith('.ts')) src = path.removeExt(src, '.ts');
 		else if (src.endsWith('.tsx')) src = path.removeExt(src, '.tsx');
 
@@ -160,12 +139,6 @@ export function generate(
 		);
 		codeGen.addText(`;\n`);
 		codeGen.addText(`export { default } from '${src}';\n`);
-
-		overlapMapRanges.push({
-			start: 0,
-			end: codeGen.getText().length
-		});
-
 	}
 	function writeScript() {
 		if (!script)
@@ -236,16 +209,11 @@ export function generate(
 	}
 	function writeExportComponent() {
 		if (shouldAddExportDefault) {
-			const start = codeGen.getText().length;
-			codeGen.addText(`export default (await import('${getVueLibraryName(isVue2)}')).defineComponent({\n`);
-			overlapMapRanges.push({
-				start,
-				end: codeGen.getText().length,
-			});
+			codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
 		}
 		else {
 			codeGen.addText(`\n`);
-			codeGen.addText(`export const __VLS_component = (await import('${getVueLibraryName(isVue2)}')).defineComponent({\n`);
+			codeGen.addText(`export const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
@@ -309,7 +277,10 @@ export function generate(
 			codeGen.addText(`setup() {\n`);
 			if (lsType === 'script') {
 				codeGen.addText(`return () => {\n`);
-				withCssBinds();
+				for (const bindText of getStyleBindTexts()) {
+					codeGen.addText('// @ts-ignore\n');
+					codeGen.addText(bindText + ';\n');
+				}
 				writeTemplate();
 				codeGen.addText(`};\n`);
 			}
@@ -492,21 +463,11 @@ export function generate(
 			codeGen.addText(`${script.content.substring(args.start, args.end)} as const`);
 			codeGen.addText(`);\n`);
 		}
-		else if (scriptSetup && path.extname(uri) === '.vue') {
-			codeGen.addText(`export declare const __VLS_name: '${path.basename(path.trimExt(uri))}';\n`);
+		else if (scriptSetup) {
+			codeGen.addText(`export declare const __VLS_name: '${path.basename(path.removeExt(fileName, '.vue'))}';\n`);
 		}
 		else {
 			codeGen.addText(`export const __VLS_name = undefined;\n`);
-		}
-	}
-	function withCssBinds() {
-		for (const style of getSfcStyles()) {
-			const docText = style.textDocument.getText();
-			for (const cssBind of style.binds) {
-				const bindText = docText.substring(cssBind.start, cssBind.end);
-				codeGen.addText('// @ts-ignore\n');
-				codeGen.addText(bindText + ';\n');
-			}
 		}
 	}
 	function writeTemplate() {
@@ -524,13 +485,51 @@ export function generate(
 			bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
 		}
 
+		// fix import components unused report
 		for (const varName of bindingNames) {
 			if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
-				// fix import components unused report
 				codeGen.addText('// @ts-ignore\n');
 				codeGen.addText(varName + ';\n');
 			}
 		}
+		for (const tag of htmlGen.tags) {
+			if (tag.indexOf('.') >= 0) {
+				codeGen.addText('// @ts-ignore\n');
+				codeGen.addText(tag + ';\n');
+			}
+		}
+
 		codeGen.addText(htmlGen.text);
+	}
+}
+
+// TODO: not working for overloads > n (n = 8)
+// see: https://github.com/johnsoncodehk/volar/issues/60
+export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
+	let code = `type ${name}<T> =\n`;
+	if (nums === undefined) {
+		for (let i = 8; i >= 1; i--) {
+			gen(i);
+		}
+	}
+	else {
+		gen(nums);
+	}
+	code += `// 0\n`
+	code += `{};\n`
+	return code;
+
+	function gen(i: number) {
+		code += `// ${i}\n`;
+		code += `T extends {\n`;
+		for (let j = 1; j <= i; j++) {
+			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`
+		}
+		code += `} ? (\n`
+		for (let j = 1; j <= i; j++) {
+			if (j > 1) code += '& ';
+			code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
+		}
+		code += `) :\n`;
 	}
 }

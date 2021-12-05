@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as lsp from 'vscode-languageclient/node';
+import * as lsp from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 
-export async function activate(context: vscode.ExtensionContext, clients: lsp.LanguageClient[]) {
+export async function activate(context: vscode.ExtensionContext, clients: lsp.CommonLanguageClient[]) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.genWhitelist', async () => {
 

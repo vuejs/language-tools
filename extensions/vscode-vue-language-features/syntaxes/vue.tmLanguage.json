@@ -439,6 +439,32 @@
 					]
 				},
 				{
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]toml['\"])",
+					"beginCaptures": {
+						"1": {
+							"name": "entity.name.tag.$1.html.vue"
+						}
+					},
+					"end": "(</)(\\1)\\s*(?=>)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html.vue"
+						},
+						"2": {
+							"name": "entity.name.tag.$2.html.vue"
+						}
+					},
+					"name": "source.toml",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"include": "source.toml"
+						}
+					]
+				},
+				{
 					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"](gql|graphql)['\"])",
 					"beginCaptures": {
 						"1": {

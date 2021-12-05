@@ -28,10 +28,14 @@ export function register(
 		const length = range ? (document.offsetAt(range.end) - start) : document.getText().length;
 
 		if (cancle?.isCancellationRequested) return;
-		const response2 = languageService.getEncodedSyntacticClassifications(file, { start, length });
+		let response2: ReturnType<typeof languageService.getEncodedSyntacticClassifications> | undefined;
+		try { response2 = languageService.getEncodedSyntacticClassifications(file, { start, length }); } catch { }
+		if (!response2) return;
 
 		if (cancle?.isCancellationRequested) return;
-		const response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty);
+		let response1: ReturnType<typeof languageService.getEncodedSemanticClassifications> | undefined;
+		try { response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty); } catch { }
+		if (!response1) return;
 
 		const tokenSpan = [...response1.spans, ...response2.spans];
 

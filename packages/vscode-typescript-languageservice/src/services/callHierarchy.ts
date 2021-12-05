@@ -10,35 +10,45 @@ import * as upath from 'upath';
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	function doPrepare(uri: string, position: vscode.Position) {
+
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
-		const calls = languageService.prepareCallHierarchy(fileName, offset);
+
+		let calls: ReturnType<typeof languageService.prepareCallHierarchy> | undefined;
+		try { calls = languageService.prepareCallHierarchy(fileName, offset); } catch { }
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];
 		return items.map(item => fromProtocolCallHierarchyItem(item));
 	}
 	function getIncomingCalls(item: vscode.CallHierarchyItem) {
+
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
+
 		const fileName = shared.uriToFsPath(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
-		const calls = languageService.provideCallHierarchyIncomingCalls(fileName, offset);
+
+		let calls: ReturnType<typeof languageService.provideCallHierarchyIncomingCalls> | undefined;
+		try { calls = languageService.provideCallHierarchyIncomingCalls(fileName, offset); } catch { }
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];
 		return items.map(item => fromProtocolCallHierchyIncomingCall(item));
 	}
 	function getOutgoingCalls(item: vscode.CallHierarchyItem) {
+
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
+
 		const fileName = shared.uriToFsPath(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
-		const calls = languageService.provideCallHierarchyOutgoingCalls(fileName, offset);
 
+		let calls: ReturnType<typeof languageService.provideCallHierarchyOutgoingCalls> | undefined;
+		try { calls = languageService.provideCallHierarchyOutgoingCalls(fileName, offset); } catch { }
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.28.8",
+	"version": "0.29.8",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -31,7 +31,8 @@
 		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
-	"main": "node_modules/@volar/client/out/extension.js",
+	"main": "node_modules/@volar/client/out/nodeClientMain",
+	"browser": "node_modules/@volar/client/out/browserClientMain",
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
@@ -51,6 +52,18 @@
 					".vue"
 				],
 				"configuration": "./languages/vue-language-configuration.json"
+			},
+			{
+				"id": "html",
+				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
+				"id": "jade",
+				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
+				"id": "plaintext",
+				"configuration": "./languages/sfc-template-language-configuration.json"
 			},
 			{
 				"id": "vue-injection-markdown"
@@ -86,6 +99,7 @@
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
+					"source.toml": "toml",
 					"source.graphql": "graphql"
 				}
 			},
@@ -116,6 +130,7 @@
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
+					"source.toml": "toml",
 					"source.graphql": "graphql"
 				}
 			},
@@ -433,10 +448,80 @@
 			}
 		],
 		"menus": {
+			"commandPalette": [
+				{
+					"command": "volar.action.restartServer",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.verifyAllScripts",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.writeTemplateLsVirtualFiles",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.writeScriptLsVirtualFiles",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.genWhitelist",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.showCallGraph",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.splitEditors",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.finder",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.preview",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.tagNameCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.tagNameCase.convertToKebabCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.tagNameCase.convertToPascalCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.attrNameCase",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.createWorkspaceSnippets",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.selectElement",
+					"when": "activeEditor == WebviewEditor && volar.showSelectElement"
+				},
+				{
+					"command": "volar.action.showInBrowser",
+					"when": "activeEditor == WebviewEditor"
+				},
+				{
+					"command": "volar.selectTypeScriptVersion",
+					"when": "editorLangId == vue"
+				}
+			],
 			"editor/title": [
 				{
 					"command": "volar.action.splitEditors",
-					"when": "editorLangId == vue && config.volar.icon.splitEditors",
+					"when": "resourceLangId == vue && config.volar.icon.splitEditors",
 					"group": "navigation"
 				},
 				{
@@ -468,14 +553,15 @@
 		}
 	},
 	"scripts": {
-		"prerelease": "vsce package --out vue-language-features.vsix --yarn",
-		"release": "vsce publish --packagePath vue-language-features.vsix --yarn"
+		"vscode:prepublish": "cd ../.. && npm run build",
+		"pack": "vsce package",
+		"release": "vsce publish --yarn"
 	},
 	"workspaces": [
 		"../../packages/*"
 	],
 	"dependencies": {
-		"@volar/client": "0.28.8"
+		"@volar/client": "0.29.8"
 	},
 	"devDependencies": {
 		"vsce": "latest"

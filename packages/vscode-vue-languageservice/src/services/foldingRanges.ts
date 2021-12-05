@@ -13,7 +13,7 @@ export function register(
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
-	const { htmlLs, getCssLs, modules } = context;
+	const { htmlLs, pugLs, getCssLs, modules } = context;
 	return (document: TextDocument) => {
 
 		const sourceFile = context.getVueDocument(document);
@@ -80,87 +80,10 @@ export function register(
 		function getPugResult(sourceFile: SourceFile) {
 			let result: vscode.FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const text = sourceMap.mappedDocument.getText();
-				const lines = text.split('\n');
-				const lineOffsets = getLineOffsets(lines);
-				const lineIndents = getLineIndents(lines);
-				const foldingRanges: vscode.FoldingRange[] = [];
-
-				for (let i = 0; i < lines.length; i++) {
-					const line = lines[i];
-					const offset = lineOffsets[i];
-					const indent = lineIndents[i];
-					if (indent === undefined) continue;
-					const startPos = sourceMap.mappedDocument.positionAt(offset);
-					const kind = getFoldingRangeKind(line);
-					let found = false;
-
-					for (let j = i + 1; j < lines.length; j++) {
-						const offset_2 = lineOffsets[j];
-						const indent_2 = lineIndents[j];
-						if (indent_2 === undefined) continue;
-						if (indent_2.length <= indent.length) {
-							const endPos = sourceMap.mappedDocument.positionAt(offset_2);
-							const foldingRange = vscode.FoldingRange.create(
-								startPos.line,
-								endPos.line - 1,
-								undefined,
-								undefined,
-								kind,
-							);
-							foldingRanges.push(foldingRange);
-							found = true;
-							break;
-						}
-					}
-
-					if (!found) {
-						const offset_2 = text.length;
-						const endPos = sourceMap.mappedDocument.positionAt(offset_2);
-						const foldingRange = vscode.FoldingRange.create(
-							startPos.line,
-							endPos.line - 1,
-							undefined,
-							undefined,
-							kind,
-						);
-						foldingRanges.push(foldingRange);
-					}
-				}
-
+				const foldingRanges = pugLs.getFoldingRanges(sourceMap.pugDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
 			return result;
-
-			function getLineOffsets(lines: string[]) {
-				const offsets: number[] = [];
-				let currentOffset = 0;
-				for (const line of lines) {
-					offsets.push(currentOffset);
-					currentOffset += line.length + 1;
-				}
-				return offsets;
-			}
-			function getLineIndents(lines: string[]) {
-				const indents: (string | undefined)[] = [];
-				for (const line of lines) {
-					const line2 = line.trimStart();
-					if (line2 === '') {
-						indents.push(undefined);
-					}
-					else {
-						const offset = line.length - line2.length;
-						const indent = line.substr(0, offset);
-						indents.push(indent);
-					}
-				}
-				return indents;
-			}
-			function getFoldingRangeKind(line: string) {
-				if (line.trimStart().startsWith('//')) {
-					return FoldingRangeKind.Comment;
-				}
-			}
 		}
 	}
 }
@@ -171,7 +94,7 @@ function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceM
 		const vueRange = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
-		);
+		)?.[0];
 		if (vueRange) {
 			foldingRange.startLine = vueRange.start.line;
 			foldingRange.endLine = vueRange.end.line;
@@ -190,8 +113,9 @@ function toVueFoldingRangesTs(virtualFoldingRanges: vscode.FoldingRange[], sourc
 		const vueLoc = sourceMap.getSourceRange(
 			{ line: foldingRange.startLine, character: foldingRange.startCharacter ?? 0 },
 			{ line: foldingRange.endLine, character: foldingRange.endCharacter ?? 0 },
-		);
-		if (vueLoc && vueLoc.data.capabilities.foldingRanges) {
+			data => !!data.capabilities.foldingRanges,
+		)?.[0];
+		if (vueLoc) {
 			foldingRange.startLine = vueLoc.start.line;
 			foldingRange.endLine = vueLoc.end.line;
 			if (foldingRange.startCharacter !== undefined)

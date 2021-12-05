@@ -28,11 +28,15 @@ const getSymbolKind = (kind: string): vscode.SymbolKind => {
 
 export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined) {
 	return (uri: string): vscode.SymbolInformation[] => {
+
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
 		const fileName = shared.uriToFsPath(document.uri);
-		const barItems = languageService.getNavigationTree(fileName);
+
+		let barItems: ReturnType<typeof languageService.getNavigationTree> | undefined;
+		try { barItems = languageService.getNavigationTree(fileName); } catch { }
+		if (!barItems) return [];
 
 		// The root represents the file. Ignore this when showing in the UI
 		const result: vscode.SymbolInformation[] = [];

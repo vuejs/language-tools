@@ -1,6 +1,6 @@
 {
 	"name": "@volar/experimental",
-	"version": "0.28.8",
+	"version": "0.29.8",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -17,9 +17,9 @@
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^1.9.3",
-		"@vue/compiler-sfc": "^3.2.20",
-		"@vue/runtime-core": "^3.2.20",
+		"@vue/compiler-sfc": "^3.2.21",
+		"@vue/runtime-core": "^3.2.21",
 		"vite": "^2.6.5",
-		"vue": "^3.2.20"
+		"vue": "^3.2.21"
 	}
 }

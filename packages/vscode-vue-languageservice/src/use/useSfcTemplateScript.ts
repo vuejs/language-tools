@@ -1,14 +1,15 @@
 import { CodeGen, createCodeGen, margeCodeGen } from '@volar/code-gen';
 import * as shared from '@volar/shared';
+import * as templateGen from '@volar/vue-code-gen/out/generators/template';
+import * as cssClasses from '../parsers/cssClasses';
+import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
 import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as templateGen from '../generators/template';
-import * as cssClasses from '../parsers/cssClasses';
 import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
-import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import { SearchTexts } from '../utils/string';
 
 export function useSfcTemplateScript(
 	vueUri: string,
@@ -60,10 +61,14 @@ export function useSfcTemplateScript(
 		return templateGen.generate(
 			templateData.value.sourceLang,
 			sfcTemplateCompileResult.value.ast,
-			context.isVue2Mode,
+			context.compilerOptions.experimentalCompatMode === 2,
 			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
 			templateData.value.htmlToTemplate,
 			!!scriptSetup.value,
+			{
+				getEmitCompletion: SearchTexts.EmitCompletion,
+				getPropsCompletion: SearchTexts.PropsCompletion,
+			}
 		);
 	});
 	const data = computed(() => {
@@ -316,9 +321,9 @@ export function useSfcTemplateScript(
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
 					for (const cssRange of maped.cssRanges) {
-						const vueRange = cssSourceMap.getSourceRange2(cssRange.start, cssRange.end);
+						const vueRange = cssSourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0];
 						if (!vueRange) continue;
-						sourceMap.add({
+						sourceMap.mappings.push({
 							data: {
 								vueTag: 'style',
 								capabilities: {
@@ -430,7 +435,7 @@ export function useSfcTemplateScript(
 
 				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
 				for (const maped of data.value.ctxMappings) {
-					sourceMap.add(maped);
+					sourceMap.mappings.push(maped);
 				}
 				teleportSourceMap.value = sourceMap;
 			}

@@ -1,0 +1,27 @@
+{
+	"name": "@volar/vue-code-gen",
+	"version": "0.29.8",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vue-code-gen"
+	},
+	"devDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@volar/code-gen": "0.29.8",
+		"@volar/shared": "0.29.8",
+		"@volar/source-map": "0.29.8",
+		"@vue/compiler-core": "^3.2.21",
+		"@vue/compiler-dom": "^3.2.21",
+		"@vue/shared": "^3.2.21",
+		"upath": "^2.0.1"
+	}
+}

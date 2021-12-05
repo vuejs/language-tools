@@ -6,6 +6,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 let dummyProjectVersion = 0;
 let dummyTsLs: ts2.LanguageService | undefined;
 let doc: TextDocument;
+
 export function getDummyTsLs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ts2: typeof import('vscode-typescript-languageservice'),
@@ -20,15 +21,15 @@ export function getDummyTsLs(
 			getFormatOptions,
 			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),
 			getScriptFileNames: () => [shared.uriToFsPath(doc.uri)],
-			getScriptVersion: () => doc.version.toString(),
-			getScriptSnapshot: () => ts.ScriptSnapshot.fromString(doc.getText()),
-			getScriptKind: () => {
-				switch (doc.languageId) {
-					case 'javascript': return ts.ScriptKind.JS;
-					case 'typescript': return ts.ScriptKind.TS;
-					case 'javascriptreact': return ts.ScriptKind.JSX;
-					case 'typescriptreact': return ts.ScriptKind.TSX;
-					default: return ts.ScriptKind.TS;
+			getScriptVersion: (fileName) => {
+				if (shared.fsPathToUri(fileName) === doc.uri) {
+					return doc.version.toString();
+				}
+				return '';
+			},
+			getScriptSnapshot: fileName => {
+				if (shared.fsPathToUri(fileName) === shared.normalizeUri(doc.uri)) {
+					return ts.ScriptSnapshot.fromString(doc.getText());
 				}
 			},
 			getCurrentDirectory: () => '',

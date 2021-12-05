@@ -1,9 +1,11 @@
 import * as shared from '@volar/shared';
+import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
+import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
 import { ITemplateScriptData, LanguageServiceContext } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
@@ -15,8 +17,6 @@ import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import { parseScriptRanges } from './parsers/scriptRanges';
-import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 
 export type SourceFile = ReturnType<typeof createSourceFile>;
 
@@ -73,14 +73,14 @@ export function createSourceFile(
 				html: pugDoc.htmlCode,
 				htmlTextDocument: pugDoc.htmlTextDocument,
 				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-					const pugRange = pugDoc.sourceMap.getSourceRange2(htmlStart, htmlEnd);
+					const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
 					if (pugRange) {
 						return pugRange.start;
 					}
 				},
 			};
 		}
-		if (descriptor.template && sfcTemplate.textDocument.value) {
+		if (descriptor.template && sfcTemplate.textDocument.value && descriptor.template.lang === 'html') {
 			return {
 				sourceLang: 'html',
 				html: descriptor.template.content,
@@ -91,7 +91,7 @@ export function createSourceFile(
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
 		computed(() => sfcTemplateData.value?.htmlTextDocument),
-		context.isVue2Mode,
+		context.compilerOptions,
 	);
 	const sfcScript = useSfcScript(
 		uri,
@@ -107,7 +107,7 @@ export function createSourceFile(
 	);
 	const scriptRanges = computed(() =>
 		sfcScript.ast.value
-			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup)
+			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
@@ -125,7 +125,7 @@ export function createSourceFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
-		context.isVue2Mode,
+		context.compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -137,7 +137,7 @@ export function createSourceFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
-		context.isVue2Mode,
+		context.compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,
@@ -146,7 +146,7 @@ export function createSourceFile(
 		computed(() => descriptor.scriptSetup),
 		computed(() => descriptor.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
-		context.isVue2Mode,
+		context.compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		uri,
@@ -368,12 +368,16 @@ export function createSourceFile(
 		}
 		templateScriptData.projectVersion = newVersion;
 
+		const options: ts.GetCompletionsAtPositionOptions = {
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+		};
+
 		const doc = sfcEntryForTemplateLs.textDocument.value;
 		const docText = doc.getText();
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context)))?.items ?? [] : [];
-		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components)))?.items ?? [] : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props)))?.items ?? [] : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns)))?.items ?? [] : [];
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context)), options)?.items ?? [] : [];
+		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components)), options)?.items ?? [] : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props)), options)?.items ?? [] : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns)), options)?.items ?? [] : [];
 
 		components = components.filter(entry => {
 			const name = (entry.data as TsCompletionData).name;

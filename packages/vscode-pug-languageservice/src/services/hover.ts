@@ -6,7 +6,7 @@ import type { PugDocument } from '../pugDocument';
 export function register(htmlLs: html.LanguageService) {
 	return (docDoc: PugDocument, pos: vscode.Position) => {
 
-		const htmlRange = docDoc.sourceMap.getMappedRange(pos);
+		const htmlRange = docDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion)?.[0];
 		if (!htmlRange) return;
 
 		const htmlResult = htmlLs.doHover(
@@ -19,8 +19,7 @@ export function register(htmlLs: html.LanguageService) {
 
 		return transformHover(
 			htmlResult,
-			htmlRange => docDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end),
+			htmlRange => docDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
 		);
 	}
 }
-

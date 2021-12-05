@@ -2,10 +2,12 @@ import type * as emmet from '@vscode/emmet-helper';
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as tsConfigs from './tsConfigs';
-import * as css from 'vscode-css-languageservice';
-import * as html from 'vscode-html-languageservice'
+import type * as css from 'vscode-css-languageservice';
+import type * as html from 'vscode-html-languageservice'
+import type * as vue from 'vscode-vue-languageservice';
+import * as shared from '@volar/shared';
 
-export function createLsConfigs(connection: vscode.Connection) {
+export function createLsConfigs(rootFolders: string[], connection: vscode.Connection) {
 
 	let emmetConfig: any | undefined;
 	let tsPreferences: Record<string, Promise<ts.UserPreferences>> = {};
@@ -17,14 +19,25 @@ export function createLsConfigs(connection: vscode.Connection) {
 		pugTool: boolean,
 		scriptSetupTool: boolean,
 	} | undefined;
+	let htmlCustomData: { [id: string]: html.HTMLDataV1 } | undefined;
+	let cssCustomData: css.CSSDataV1[] | undefined;
 
-	connection.onDidChangeConfiguration(() => {
+	const vueLsArr: vue.LanguageService[] = [];
+
+	connection.onDidChangeConfiguration(async () => {
 		emmetConfig = undefined;
 		codeLensConfigs = undefined;
 		tsPreferences = {};
 		tsFormatOptions = {};
 		cssLanguageSettings = {};
-		htmlHoverSettings = {}
+		htmlHoverSettings = {};
+		htmlCustomData = undefined;
+		cssCustomData = undefined;
+
+		for (const vueLs of vueLsArr) {
+			vueLs.updateHtmlCustomData(await getHtmlCustomData());
+			vueLs.updateCssCustomData(await getCssCustomData());
+		}
 	});
 
 	return {
@@ -33,12 +46,80 @@ export function createLsConfigs(connection: vscode.Connection) {
 		getCssLanguageSettings,
 		getTsPreferences,
 		getTsFormatOptions,
-		getHtmlHoverSettings
+		getHtmlHoverSettings,
+		registerCustomData,
 	};
 
-	function getHtmlHoverSettings(textDocument: TextDocument) {
-		return htmlHoverSettings[textDocument.uri]
-			?? (htmlHoverSettings[textDocument.uri] = connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }));
+	async function registerCustomData(vueLs: vue.LanguageService) {
+		vueLsArr.push(vueLs);
+		vueLs.updateHtmlCustomData(await getHtmlCustomData());
+		vueLs.updateCssCustomData(await getCssCustomData());
+	}
+	async function getHtmlCustomData() {
+		if (!htmlCustomData) {
+
+			const paths = new Set<string>();
+			const customData: string[] = await connection.workspace.getConfiguration({ section: 'html.customData' }) ?? [];
+			const rootPaths = rootFolders.map(shared.uriToFsPath);
+
+			for (const customDataPath of customData) {
+				try {
+					const jsonPath = require.resolve(customDataPath, { paths: rootPaths });
+					paths.add(jsonPath);
+				}
+				catch (error) {
+					console.error(error);
+				}
+			}
+
+			htmlCustomData = {};
+
+			for (const path of paths) {
+				try {
+					htmlCustomData[path] = require(path);
+				}
+				catch (error) {
+					console.error(error);
+				}
+			}
+		}
+		return htmlCustomData;
+	}
+	async function getCssCustomData() {
+		if (!cssCustomData) {
+
+			const paths = new Set<string>();
+			const customData: string[] = await connection.workspace.getConfiguration({ section: 'css.customData' }) ?? [];
+			const rootPaths = rootFolders.map(shared.uriToFsPath);
+
+			for (const customDataPath of customData) {
+				try {
+					const jsonPath = require.resolve(customDataPath, { paths: rootPaths });
+					paths.add(jsonPath);
+				}
+				catch (error) {
+					console.error(error);
+				}
+			}
+
+			cssCustomData = [];
+
+			for (const path of paths) {
+				try {
+					cssCustomData.push(require(path));
+				}
+				catch (error) {
+					console.error(error);
+				}
+			}
+		}
+		return cssCustomData;
+	}
+	async function getHtmlHoverSettings(textDocument: TextDocument) {
+		if (!htmlHoverSettings[textDocument.uri]) {
+			htmlHoverSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }) ?? {})();
+		}
+		return htmlHoverSettings[textDocument.uri];
 	}
 	function getTsPreferences(textDocument: TextDocument) {
 		return tsPreferences[textDocument.uri]
@@ -49,8 +130,10 @@ export function createLsConfigs(connection: vscode.Connection) {
 			?? (tsFormatOptions[textDocument.uri] = tsConfigs.getFormatOptions(connection.workspace, textDocument, options));
 	}
 	function getCssLanguageSettings(textDocument: TextDocument): Promise<css.LanguageSettings> {
-		return cssLanguageSettings[textDocument.uri]
-			?? (cssLanguageSettings[textDocument.uri] = connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId }));
+		if (!cssLanguageSettings[textDocument.uri]) {
+			cssLanguageSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId }))();
+		}
+		return cssLanguageSettings[textDocument.uri];
 	}
 	async function getCodeLensConfigs() {
 		if (!codeLensConfigs) {
@@ -58,15 +141,15 @@ export function createLsConfigs(connection: vscode.Connection) {
 				codeLensReferences,
 				codeLensPugTool,
 				codeLensRefScriptSetupTool,
-			] = await Promise.all([
+			]: (boolean | null | undefined)[] = await Promise.all([
 				connection.workspace.getConfiguration('volar.codeLens.references'),
 				connection.workspace.getConfiguration('volar.codeLens.pugTools'),
 				connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
 			]);
 			codeLensConfigs = {
-				references: codeLensReferences,
-				pugTool: codeLensPugTool,
-				scriptSetupTool: codeLensRefScriptSetupTool,
+				references: !!codeLensReferences,
+				pugTool: !!codeLensPugTool,
+				scriptSetupTool: !!codeLensRefScriptSetupTool,
 			};
 		}
 		return codeLensConfigs;

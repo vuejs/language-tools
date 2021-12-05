@@ -1,11 +1,113 @@
 # Changelog
 
+## 0.29.8
+
+- perf: cache `URI.file`, `URI.parse` results
+- fix: pug template type-check broken with omit tag name
+- fix: language server broken with tsconfig extends a non-relative path ([#747](https://github.com/johnsoncodehk/volar/issues/747)) ([#749](https://github.com/johnsoncodehk/volar/issues/749))
+
+## 0.29.7
+
+- feat: support html, css custom data ([#707](https://github.com/johnsoncodehk/volar/issues/707))
+- feat: support extends tsconfig `vueCompilerOptions` ([#731](https://github.com/johnsoncodehk/volar/issues/731))
+- fix: cannot config project reference by directory path ([#712](https://github.com/johnsoncodehk/volar/issues/712))
+- fix: pug attrs type-check borken by nested tags ([#721](https://github.com/johnsoncodehk/volar/issues/721))
+- fix: import path rename result incorrect ([#723](https://github.com/johnsoncodehk/volar/issues/723))
+- fix: `editor.codeActionsOnSave: ["source.organizeImports"]` not working ([#726](https://github.com/johnsoncodehk/volar/issues/726))
+- fix: goto definition not working with some component import statement ([#728](https://github.com/johnsoncodehk/volar/issues/728))
+- fix: don't show volar commands in non-vue document ([#733](https://github.com/johnsoncodehk/volar/issues/733))
+- fix: vue-tsc not working with symlink ([#738](https://github.com/johnsoncodehk/volar/issues/738))
+
+## 0.29.6
+
+- fix: attrs show unexpected "not exist" error ([#710](https://github.com/johnsoncodehk/volar/issues/710))
+- fix: verify all scripts not working if no jsconfig / tsconfig
+- fix: organize import edit text range incorrect ([#714](https://github.com/johnsoncodehk/volar/issues/714))
+- fix: class component props type-check not working with multiple props ([#705](https://github.com/johnsoncodehk/volar/issues/705))
+- fix: emmet should not active in template interpolations
+- fix: TS semantic highlight not working
+
+## 0.29.5
+
+- feat: open tsconfig when click in status bar
+- feat: add `experimentalTemplateCompilerOptionsRequirePath` option to allow import compiler options from js file ([#698](https://github.com/johnsoncodehk/volar/issues/698))
+- fix: pug folding ranges break by empty line ([#688](https://github.com/johnsoncodehk/volar/issues/688))
+- fix: reduce the intrusiveness of template type-check hacks ([#689](https://github.com/johnsoncodehk/volar/issues/689))
+- fix: `@volar/server` entry files missing in npm publish ([#695](https://github.com/johnsoncodehk/volar/issues/695))
+- fix: language server immediately crashes when trigger request at incomplete TS code ([#699](https://github.com/johnsoncodehk/volar/issues/699))
+- fix: html / css path resolve incorrect on windows edge cases ([#694](https://github.com/johnsoncodehk/volar/issues/694))
+- doc: fix incorrect `experimentalTemplateCompilerOptions` example: `"compatConfig": { "Mode": 2 }` -> `"compatConfig": { "MODE": 2 }`
+
+## 0.29.4
+
+- feat: syntax highlight support for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
+- fix: semantic highlight can't update if project have no tsconfig or jsconfig ([#685](https://github.com/johnsoncodehk/volar/issues/685))
+
+## 0.29.3
+
+- feat: support syntax highlighting for `lang="toml"` ([#684](https://github.com/johnsoncodehk/volar/pull/684))
+- fix: subfolder path resolve logic cause to TS crash edge case ([#679](https://github.com/johnsoncodehk/volar/issues/679))
+
+## 0.29.2
+
+- fix: document server created multi time
+- fix: html hover not working in some non-VSCode clients ([#678](https://github.com/johnsoncodehk/volar/issues/678))
+
+## 0.29.1
+
+- fix: template AST broken by empty line in pug ([#676](https://github.com/johnsoncodehk/volar/issues/676))
+- fix: intellisense not working if project have no jsconfig / tsconfig ([#680](https://github.com/johnsoncodehk/volar/issues/680)) ([#681](https://github.com/johnsoncodehk/volar/issues/681))
+
+## 0.29.0
+
+- feat: support namespaced component ([#372](https://github.com/johnsoncodehk/volar/issues/372))
+- feat: more strict `.value` auto-complete condition
+- feat: show current tsconfig on status bar
+- feat: provide public api to generate script setup type-check code ([#650](https://github.com/johnsoncodehk/volar/issues/650))
+- feat: add sass formatter
+- fix: can't exit split editors by click icon edge cases
+- fix: semantic tokens not working in pug template
+- fix: script setup component name not recognized edge cases
+- fix: ignore template language support if not `html` or `pug` ([#659](https://github.com/johnsoncodehk/volar/pull/659))
+- fix: tsconfig `types` paths resolve incorrect in monorepo ([#661](https://github.com/johnsoncodehk/volar/issues/661))
+- fix: can't update diagnostics on windows + atom
+- fix: project finding logic incorrect with tsconfig `referencecs` option ([#649](https://github.com/johnsoncodehk/volar/issues/649))
+- fix: `{{ }}` colorized bracket pairs not working
+- fix: documentSymbol, foldingRanges not working to some *.ts files on take over mode
+
+**Breaking changes**
+
+- experimentalCompatMode behavior changed ([#576](https://github.com/johnsoncodehk/volar/issues/576))\
+do not force config `compatConfig: { Mode: 2 }` to template compiler with `"experimentalCompatMode": 2`
+
+## 0.28.10
+
+- feat: improve pug folding range ([#636](https://github.com/johnsoncodehk/volar/issues/636))
+- feat: improve pug tag, attr auto-complete ([#638](https://github.com/johnsoncodehk/volar/issues/638))
+- fix: if trigger component auto-import multiple times, import edit text accumulate ([#639](https://github.com/johnsoncodehk/volar/issues/639))
+- fix: filter current component from component auto-import list
+- fix: normalize request uri for Sublime / Atom ([#637](https://github.com/johnsoncodehk/volar/issues/637))
+
+**Known regressions**
+
+- semantic tokens not working in pug template
+
+## 0.28.9
+
+- feat: use VSCode 1.61 `Split Editor In Group` instead of create new editor ([#608](https://github.com/johnsoncodehk/volar/issues/608))
+- feat: split editors layout change from `script | template | style` to `script + style | template`
+- feat: tag name conversion work done progress
+- fix: language server broken by circular tsconfig project references ([#525](https://github.com/johnsoncodehk/volar/issues/525)) ([#631](https://github.com/johnsoncodehk/volar/issues/631)) ([#632](https://github.com/johnsoncodehk/volar/issues/632))
+- fix: vue-tsc can't show "incremental mode / watch mode not support" error message ([#630](https://github.com/johnsoncodehk/volar/issues/630))
+- fix: tag name kebab case -> pascal case conversion not working
+- fix: LSP workspace configuration option not supported ([#626](https://github.com/johnsoncodehk/volar/issues/626))
+- fix: no edit to `components` option when component auto-import ([#634](https://github.com/johnsoncodehk/volar/issues/634))
+
 ## 0.28.8
 
 - feat: support html hover settings ([#627](https://github.com/johnsoncodehk/volar/issues/627)) ([#615](https://github.com/johnsoncodehk/volar/pull/628))
 - fix: `withDefaults` can't narrowing props undefined ([#611](https://github.com/johnsoncodehk/volar/issues/611)) ([#614](https://github.com/johnsoncodehk/volar/issues/614))
 - fix: vueCompilerOptions not working with vue-tsc --project flag ([#613](https://github.com/johnsoncodehk/volar/issues/613)) ([#615](https://github.com/johnsoncodehk/volar/pull/615))
-- fix: LSP workspace configuration option not supported ([#626](https://github.com/johnsoncodehk/volar/issues/626))
 - fix: tsconfig project references are not respected ([#525](https://github.com/johnsoncodehk/volar/issues/525))
 
 ## 0.28.7

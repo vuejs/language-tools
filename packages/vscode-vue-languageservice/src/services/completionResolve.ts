@@ -6,7 +6,7 @@ import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportCompone
 import * as path from 'upath';
 import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
-import { parseScriptRanges } from '../parsers/scriptRanges';
+import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 
 export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost, scriptTsLs }: ApiLanguageServiceContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
@@ -38,8 +38,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 
 			let newPosition_2: vscode.Position | undefined;
 			if (newPosition) {
-				for (const tsRange of sourceMap.getMappedRanges(newPosition)) {
-					if (!tsRange.data.capabilities.completion) continue;
+				for (const [tsRange] of sourceMap.getMappedRanges(newPosition, newPosition, data => !!data.capabilities.completion)) {
 					newPosition_2 = tsRange.start;
 					break;
 				}
@@ -47,7 +46,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
 			const newVueItem = transformCompletionItem(
 				data.tsItem,
-				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end),
+				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0],
 			);
 			newVueItem.data = data;
 			// TODO: this is a patch for import ts file icon
@@ -136,14 +135,20 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 						'\n' + insertText,
 					),
 				];
-				const scriptRanges = parseScriptRanges(ts, scriptAst, true, true);
+				const scriptRanges = parseScriptRanges(ts, scriptAst, !!descriptor.scriptSetup, true, true);
 				const exportDefault = scriptRanges.exportDefault;
 				if (exportDefault) {
 					// https://github.com/microsoft/TypeScript/issues/36174
 					const printer = ts.createPrinter();
 					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
-						(exportDefault.componentsOptionNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(componentName))
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.componentsOptionNode, scriptAst);
+						const newNode: typeof exportDefault.componentsOptionNode = {
+							...exportDefault.componentsOptionNode,
+							properties: [
+								...exportDefault.componentsOptionNode.properties,
+								ts.factory.createShorthandPropertyAssignment(componentName),
+							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+						};
+						const printText = printer.printNode(ts.EmitHint.Expression, newNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
@@ -153,8 +158,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 						));
 					}
 					else if (exportDefault.args && exportDefault.argsNode) {
-						(exportDefault.argsNode.properties as any as ts.ObjectLiteralElementLike[]).push(ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`));
-						const printText = printer.printNode(ts.EmitHint.Expression, exportDefault.argsNode, scriptAst);
+						const newNode: typeof exportDefault.argsNode = {
+							...exportDefault.argsNode,
+							properties: [
+								...exportDefault.argsNode.properties,
+								ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+						};
+						const printText = printer.printNode(ts.EmitHint.Expression, newNode, scriptAst);
 						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),

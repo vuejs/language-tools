@@ -28,7 +28,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 			if (sourceFile) {
 				let isCssLocation = false;
 				for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-					if (cssSourceMap.isSourceRange(pos)) {
+					if (cssSourceMap.getMappedRange(pos)) {
 						isCssLocation = true;
 					}
 				}
@@ -36,7 +36,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 					references = vueReferences?.filter(ref => {
 						if (ref.uri === uri) {
 							for (const cssSourceMap of sourceFile.getCssSourceMaps()) {
-								if (cssSourceMap.isSourceRange(ref.range.start, ref.range.end)) {
+								if (cssSourceMap.getMappedRange(ref.range.start, ref.range.end)) {
 									return false;
 								}
 							}

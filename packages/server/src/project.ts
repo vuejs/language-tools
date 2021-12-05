@@ -5,37 +5,63 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { getSchemaRequestService } from './schemaRequestService';
 import type { createLsConfigs } from './configs';
+import * as path from 'upath';
 
 export type Project = ReturnType<typeof createProject>;
 export const fileRenamings = new Set<Promise<void>>();
 export const renameFileContentCache = new Map<string, string>();
 
-export function createProject(
+export async function createProject(
 	ts: vue.Modules['typescript'],
 	options: shared.ServerInitializationOptions,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
-	workDoneProgress: vscode.WorkDoneProgressServerReporter,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 ) {
 
+	await Promise.all([...fileRenamings]);
+
+	const projectSys: typeof ts.sys = {
+		...ts.sys,
+		readFile: (path, encoding) => ts.sys.readFile(resolveAbsolutePath(path), encoding),
+		writeFile: (path, content) => ts.sys.writeFile(resolveAbsolutePath(path), content),
+		directoryExists: path => {
+			if (path === '') {
+				// fix https://github.com/johnsoncodehk/volar/issues/679
+				return ts.sys.directoryExists(path);
+			}
+			return ts.sys.directoryExists(resolveAbsolutePath(path));
+		},
+		getDirectories: path => ts.sys.getDirectories(resolveAbsolutePath(path)),
+		readDirectory: (path, extensions, exclude, include, depth) => ts.sys.readDirectory(resolveAbsolutePath(path), extensions, exclude, include, depth),
+		realpath: ts.sys.realpath ? path => {
+			const resolvedPath = resolveAbsolutePath(path);
+			const realPath = ts.sys.realpath!(resolvedPath);
+			if (realPath === resolvedPath) {
+				// rollback if failed
+				return path;
+			}
+			return realPath;
+		} : undefined,
+		fileExists: path => ts.sys.fileExists(resolveAbsolutePath(path)),
+		getCurrentDirectory: () => rootPath,
+	};
+
 	let typeRootVersion = 0;
 	let tsProjectVersion = 0;
 	let vueProjectVersion = 0;
-	let parsedCommandLine: ts.ParsedCommandLine;
-	let vueLs: vue.LanguageService | undefined;
-	const scripts = new shared.FsPathMap<{
+	let vueLs: Promise<vue.LanguageService> | undefined;
+	let parsedCommandLine = createParsedCommandLine();
+	const scripts = shared.createPathMap<{
 		version: number,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
 	const disposables: vscode.Disposable[] = [];
-
-	init();
 
 	return {
 		onWorkspaceFilesChanged,
@@ -46,8 +72,37 @@ export function createProject(
 		dispose,
 	};
 
-	function getLanguageService() {
+	function resolveAbsolutePath(_path: string) {
+		const relativePath = path.relative(ts.sys.getCurrentDirectory(), rootPath);
+		if (relativePath === '') return _path;
+		if (_path === '') return relativePath;
+		return !path.isAbsolute(_path) ? relativePath + '/' + _path : _path;
+	}
+	async function getLanguageService() {
 		if (!vueLs) {
+			vueLs = (async () => {
+				const workDoneProgress = await connection.window.createWorkDoneProgress();
+				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
+				vueLs.__internal__.onInitProgress(p => {
+					if (p === 0) {
+						workDoneProgress.begin(getMessageText());
+					}
+					if (p < 1) {
+						workDoneProgress.report(p * 100);
+					}
+					else {
+						workDoneProgress.done();
+					}
+				});
+				lsConfigs?.registerCustomData(vueLs);
+				return vueLs;
+			})();
+		}
+		return vueLs;
+	}
+	function getMessageText() {
+		let messageText = options.initializationMessage;
+		if (!messageText) {
 			let numOfFeatures = 0;
 			if (options.languageFeatures) {
 				for (let feature in options.languageFeatures) {
@@ -56,20 +111,9 @@ export function createProject(
 					}
 				}
 			}
-			vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
-			vueLs.__internal__.onInitProgress(p => {
-				if (p === 0) {
-					workDoneProgress.begin(`Initializing Vue language features (${numOfFeatures} features)`);
-				}
-				if (p < 1) {
-					workDoneProgress.report(p * 100);
-				}
-				else {
-					workDoneProgress.done();
-				}
-			});
+			messageText = `Initializing Vue language features (${numOfFeatures} features)`;
 		}
-		return vueLs;
+		return messageText;
 	}
 	async function onWorkspaceFilesChanged(changes: vscode.FileEvent[]) {
 
@@ -77,8 +121,7 @@ export function createProject(
 
 		for (const change of changes) {
 
-			const fileName = shared.uriToFsPath(change.uri);
-			const script = scripts.get(fileName);
+			const script = scripts.uriGet(change.uri);
 
 			if (script && change.type === vscode.FileChangeType.Changed) {
 				if (script.version >= 0) {
@@ -89,10 +132,10 @@ export function createProject(
 				}
 			}
 			else if (script && change.type === vscode.FileChangeType.Deleted) {
-				scripts.delete(fileName);
+				scripts.uriDelete(change.uri);
 			}
 
-			updateProjectVersion(fileName);
+			updateProjectVersion(change.uri.endsWith('.vue'));
 		}
 
 		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
@@ -103,24 +146,19 @@ export function createProject(
 			typeRootVersion++; // TODO: check changed in node_modules?
 		}
 	}
-	async function init() {
-		await Promise.all([...fileRenamings]);
-		parsedCommandLine = createParsedCommandLine();
-	}
 	async function onDocumentUpdated(document: TextDocument) {
 
 		await Promise.all([...fileRenamings]);
 
-		const fileName = shared.uriToFsPath(document.uri);
-		const script = scripts.get(fileName);
+		const script = scripts.uriGet(document.uri);
 		if (script) {
 			script.version = document.version;
 		}
 
-		updateProjectVersion(fileName);
+		updateProjectVersion(document.uri.endsWith('.vue'));
 	}
-	function updateProjectVersion(changedFileName: string) {
-		if (changedFileName.endsWith('.vue')) {
+	function updateProjectVersion(isVueFile: boolean) {
+		if (isVueFile) {
 			vueProjectVersion++;
 		}
 		else {
@@ -139,17 +177,18 @@ export function createProject(
 			getPreferences: lsConfigs?.getTsPreferences,
 			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
-			// ts
 			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
-			getNewLine: () => ts.sys.newLine,
-			useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
-			readFile: ts.sys.readFile,
-			writeFile: ts.sys.writeFile,
-			directoryExists: ts.sys.directoryExists,
-			getDirectories: ts.sys.getDirectories,
-			readDirectory: ts.sys.readDirectory,
-			realpath: ts.sys.realpath,
-			fileExists: ts.sys.fileExists,
+			// ts
+			getNewLine: () => projectSys.newLine,
+			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,
+			readFile: projectSys.readFile,
+			writeFile: projectSys.writeFile,
+			directoryExists: projectSys.directoryExists,
+			getDirectories: projectSys.getDirectories,
+			readDirectory: projectSys.readDirectory,
+			realpath: projectSys.realpath,
+			fileExists: projectSys.fileExists,
+			getCurrentDirectory: projectSys.getCurrentDirectory,
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
@@ -157,9 +196,8 @@ export function createProject(
 			getVueProjectVersion: () => vueProjectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => parsedCommandLine.fileNames,
-			getCurrentDirectory: () => rootPath,
 			getCompilationSettings: () => parsedCommandLine.options,
-			getVueCompilationSettings: () => parsedCommandLine.raw?.vueCompilerOptions ?? {},
+			getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 			getScriptVersion,
 			getScriptSnapshot,
 		};
@@ -171,15 +209,15 @@ export function createProject(
 		return host;
 
 		function getScriptVersion(fileName: string) {
-			return scripts.get(fileName)?.version.toString()
+			return scripts.fsPathGet(fileName)?.version.toString()
 				?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
-			const script = scripts.get(fileName);
+			const script = scripts.fsPathGet(fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
-			const text = getScriptText(ts, documents, fileName);
+			const text = getScriptText(documents, fileName, projectSys);
 			if (text !== undefined) {
 				const snapshot = ts.ScriptSnapshot.fromString(text);
 				if (script) {
@@ -187,7 +225,7 @@ export function createProject(
 					script.snapshotVersion = script.version;
 				}
 				else {
-					scripts.set(fileName, {
+					scripts.fsPathSet(fileName, {
 						version: -1,
 						snapshot: snapshot,
 						snapshotVersion: -1,
@@ -197,9 +235,9 @@ export function createProject(
 			}
 		}
 	}
-	function dispose() {
+	async function dispose() {
 		if (vueLs) {
-			vueLs.dispose();
+			(await vueLs).dispose();
 		}
 		for (const disposable of disposables) {
 			disposable.dispose();
@@ -207,12 +245,14 @@ export function createProject(
 		scripts.clear();
 		disposables.length = 0;
 	}
-	function createParsedCommandLine() {
+	function createParsedCommandLine(): ReturnType<typeof shared.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {
-			...ts.sys,
+			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
+				return projectSys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
 			},
+			fileExists: projectSys.fileExists,
+			readFile: projectSys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
 			return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
@@ -221,22 +261,23 @@ export function createProject(
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 			content.fileNames = content.fileNames.map(shared.normalizeFileName);
-			return content;
+			return { ...content, vueOptions: {} };
 		}
 	}
 }
 
 export function getScriptText(
-	ts: vue.Modules['typescript'],
 	documents: vscode.TextDocuments<TextDocument>,
 	fileName: string,
+	sys: vue.Modules['typescript']['sys'],
 ) {
-	const doc = documents.get(shared.fsPathToUri(fileName));
+	const uri = shared.fsPathToUri(fileName);
+	const doc = shared.getDocumentSafely(documents, uri);
 	if (doc) {
 		return doc.getText();
 	}
-	if (ts.sys.fileExists(fileName)) {
-		return ts.sys.readFile(fileName, 'utf8');
+	if (sys.fileExists(fileName)) {
+		return sys.readFile(fileName, 'utf8');
 	}
 	return renameFileContentCache.get(shared.fsPathToUri(fileName));
 }

@@ -4,10 +4,44 @@ import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
 import type { Data } from './callHierarchy';
+import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
 
 	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
+
+		const sourceFile = sourceFiles.get(uri);
+		if (sourceFile) {
+
+			const descriptor = sourceFile.getDescriptor();
+			const document = sourceFile.getTextDocument();
+
+			const scripts = [descriptor.script, descriptor.scriptSetup].filter(shared.notEmpty);
+			const styles = descriptor.styles;
+
+			const scriptRanges = scripts
+				.map(script => ({
+					start: document.positionAt(script.startTagEnd),
+					end: document.positionAt(script.startTagEnd + script.content.length),
+				}))
+				.map(scriptRange => shared.getOverlapRange(scriptRange, range))
+				.filter(shared.notEmpty);
+			const styleRanges = styles
+				.map(script => ({
+					start: document.positionAt(script.startTagEnd),
+					end: document.positionAt(script.startTagEnd + script.content.length),
+				}))
+				.map(scriptRange => shared.getOverlapRange(scriptRange, range))
+				.filter(shared.notEmpty);
+
+			const tsResult = (await Promise.all(scriptRanges.map(scriptRange => onTs(uri, scriptRange, context)))).flat();
+			const cssResult = (await Promise.all(styleRanges.map(styleRange => onCss(uri, styleRange, context)))).flat();
+
+			return dedupe.withCodeAction([
+				...tsResult,
+				...cssResult,
+			]);
+		}
 
 		const tsResult = await onTs(uri, range, context);
 		const cssResult = onCss(uri, range, context);
@@ -22,19 +56,22 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 		let result: vscode.CodeAction[] = [];
 
-		for (const tsLoc of sourceFiles.toTsLocations(uri, range.start, range.end)) {
+		for (const tsLoc of sourceFiles.toTsLocations(
+			uri,
+			range.start,
+			range.end,
+			undefined,
+			sourceMap => !!sourceMap.capabilities.codeActions,
+		)) {
 
 			const tsLs = getTsLs(tsLoc.lsType);
 			const tsContext: vscode.CodeActionContext = {
 				diagnostics: transformLocations(
 					context.diagnostics,
-					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end) : vueRange,
+					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end)?.[0] : vueRange,
 				),
 				only: context.only,
 			};
-
-			if (tsLoc.type === 'embedded-ts' && !tsLoc.sourceMap.capabilities.codeActions)
-				continue;
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
@@ -46,7 +83,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, tsCodeAction.edit, sourceFiles, () => true) : undefined;
+				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, false, tsCodeAction.edit, sourceFiles, () => true) : undefined;
 				if (tsCodeAction.edit && !vueEdit) continue;
 
 				const data: Data = {
@@ -81,11 +118,11 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 			if (!cssLs)
 				continue;
 
-			for (const cssRange of sourceMap.getMappedRanges(range.start, range.end)) {
+			for (const [cssRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 				const cssContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
 						context.diagnostics,
-						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end),
+						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end)?.[0],
 					),
 					only: context.only,
 				};
@@ -105,7 +142,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 								}
 								vueEdit.changes[uri] = transformLocations(
 									vueEdit.changes[cssUri],
-									cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+									cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end)?.[0],
 								);
 							}
 						}
@@ -121,7 +158,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 									};
 									cssDocChange.edits = transformLocations(
 										cssDocChange.edits,
-										cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+										cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end)?.[0],
 									);
 									vueEdit.documentChanges.push(cssDocChange);
 								}
@@ -132,7 +169,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					if (codeAction.diagnostics) {
 						codeAction.diagnostics = transformLocations(
 							codeAction.diagnostics,
-							cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end),
+							cssRange_2 => sourceMap.getSourceRange(cssRange_2.start, cssRange_2.end)?.[0],
 						);
 					}
 

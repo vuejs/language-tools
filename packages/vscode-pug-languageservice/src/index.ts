@@ -8,6 +8,7 @@ import { register as registerDocumentSymbols } from './services/documentSymbol';
 import { register as registerHover } from './services/hover';
 import { register as registerScanner } from './services/scanner';
 import { register as registerSelectRanges } from './services/selectionRanges';
+import { register as registerFoldingRanges } from './services/foldingRanges';
 
 // fix TS2742
 export type {
@@ -32,5 +33,6 @@ export function getLanguageService(htmlLs: html.LanguageService) {
 		doHover: registerHover(htmlLs),
 		createScanner: registerScanner(htmlLs),
 		getSelectionRanges: registerSelectRanges(htmlLs),
+		getFoldingRanges: registerFoldingRanges(),
 	};
 }

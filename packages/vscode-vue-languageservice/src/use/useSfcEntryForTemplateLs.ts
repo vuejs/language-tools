@@ -75,12 +75,12 @@ export function useSfcEntryForTemplateLs(
 				documentSymbol: false,
 				codeActions: false,
 			});
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: {
 					vueTag: 'sfc',
 					capabilities: {},
 				},
-				mode: SourceMaps.Mode.Overlap,
+				mode: SourceMaps.Mode.Expand,
 				sourceRange: {
 					start: 0,
 					end: 0,

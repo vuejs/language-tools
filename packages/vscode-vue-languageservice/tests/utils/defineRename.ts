@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver/node';
+import type * as vscode from 'vscode-languageserver';
 import * as path from 'upath';
 import { createTester } from './createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';

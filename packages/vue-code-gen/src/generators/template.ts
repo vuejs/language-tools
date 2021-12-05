@@ -1,10 +1,10 @@
-import * as SourceMaps from '../utils/sourceMaps';
+import * as SourceMaps from '@volar/source-map';
 import { createCodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
-import { SearchTexts } from '../utils/string';
 import * as shared from '@volar/shared';
+import { TsMappingData } from '../types';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -14,6 +14,7 @@ const capabilitiesSet = {
 	event: { basic: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: true, },
 	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	attrReference: { references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
@@ -49,10 +50,14 @@ export function generate(
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
 	isScriptSetup: boolean,
+	searchTexts: {
+		getEmitCompletion(tag: string): string,
+		getPropsCompletion(tag: string): string,
+	},
 ) {
 
-	const tsCodeGen = createCodeGen<SourceMaps.TsMappingData>();
-	const tsFormatCodeGen = createCodeGen<SourceMaps.TsMappingData>();
+	const tsCodeGen = createCodeGen<TsMappingData>();
+	const tsFormatCodeGen = createCodeGen<TsMappingData>();
 	const cssCodeGen = createCodeGen<undefined>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
@@ -89,7 +94,12 @@ export function generate(
 	for (const childNode of templateAst.children) {
 		collectTags(childNode);
 	}
-	for (const tag in tags) {
+	for (const tagName in tags) {
+
+		const tag = tags[tagName];
+		const tagRanges = tag.offsets.map(offset => ({ start: offset, end: offset + tagName.length }));
+		const isNamespacedTag = tagName.indexOf('.') >= 0;
+
 		const var_correctTagName = `__VLS_${elementIndex++}`;
 		const var_wrapComponent = `__VLS_${elementIndex++}`;
 		const var_rawComponent = `__VLS_${elementIndex++}`;
@@ -99,23 +109,51 @@ export function generate(
 		const var_slots = `__VLS_${elementIndex++}`;
 		const var_events: Record<string, string> = {};
 
-		tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_rawComponents, '${tag}'>;\n`);
-		tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_types.GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
-		tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
+		if (isNamespacedTag) {
+			for (let i = 0; i < tagRanges.length; i++) {
+				const tagRange = tagRanges[i];
+				if (i === 0) {
+					tsCodeGen.addText(`declare const ${var_rawComponent}: typeof `);
+				}
+				else {
+					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof `);
+				}
+				writeCode(
+					tagName,
+					tagRange,
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+				);
+				tsCodeGen.addText(`;\n`);
+			}
+		}
+		else {
+			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_rawComponents, '${tagName}'>;\n`);
+			tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_types.GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
+			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
+		}
 		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_types.ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
-		tsCodeGen.addText(`declare const ${var_slots}:
-			__VLS_types.TemplateSlots<typeof ${var_wrapComponent}>
-			& __VLS_types.DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
 
-		const resolvedTag = tags[tag];
-		const tagRanges = resolvedTag.offsets.map(offset => ({ start: offset, end: offset + tag.length }));
+		if (isNamespacedTag) {
+			tsCodeGen.addText(`declare const ${var_slots}:
+				__VLS_types.TemplateSlots<typeof ${var_rawComponent}>
+				& __VLS_types.DefaultSlots<typeof ${var_rawComponent}, typeof ${var_rawComponent}>;\n`);
+		}
+		else {
+			tsCodeGen.addText(`declare const ${var_slots}:
+				__VLS_types.TemplateSlots<typeof ${var_wrapComponent}>
+				& __VLS_types.DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
+		}
 
-		for (const eventName in resolvedTag.events) {
+		for (const eventName in tag.events) {
 
 			const var_on = `__VLS_${elementIndex++}`;
-			const event = resolvedTag.events[eventName];
+			const event = tag.events[eventName];
 			const key_1 = eventName; // click-outside
 			const key_2 = camelize('on-' + key_1); // onClickOutside
 			const key_3 = camelize(key_1); // clickOutside
@@ -156,8 +194,8 @@ export function generate(
 			var_events[eventName] = var_on;
 		}
 
-		const name1 = tag; // hello-world
-		const name2 = camelize(tag); // helloWorld
+		const name1 = tagName; // hello-world
+		const name2 = camelize(tagName); // helloWorld
 		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
@@ -171,39 +209,41 @@ export function generate(
 			tsCodeGen.addText(`// ignore unused in setup returns\n`)
 		}
 
-		tsCodeGen.addText(`// @ts-ignore\n`);
-		tsCodeGen.addText(`({ `);
-		writeObjectProperty2(
-			tag,
-			tagRanges,
-			{
-				vueTag: 'template',
-				capabilities: capabilitiesSet.tagHover,
-			},
-		);
-		tsCodeGen.addText(`: {} as `);
-		tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
-		const names = [...componentNames];
-		for (let i = 0; i < names.length; i++) {
-			if (i > 0) {
-				tsCodeGen.addText(', ');
-			}
-			tsCodeGen.addText(`typeof __VLS_rawComponents`);
-			writePropertyAccess2(
-				names[i],
+		if (!isNamespacedTag) {
+			tsCodeGen.addText(`// @ts-ignore\n`);
+			tsCodeGen.addText(`({ `);
+			writeObjectProperty2(
+				tagName,
 				tagRanges,
 				{
 					vueTag: 'template',
-					capabilities: capabilitiesSet.tagReference,
-					beforeRename: tag === names[i] ? undefined : unHyphenatComponentName,
-					doRename: keepHyphenateName,
+					capabilities: capabilitiesSet.tagHover,
 				},
 			);
-			if (i > 0) {
-				tsCodeGen.addText('>');
+			tsCodeGen.addText(`: {} as `);
+			tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
+			const names = [...componentNames];
+			for (let i = 0; i < names.length; i++) {
+				if (i > 0) {
+					tsCodeGen.addText(', ');
+				}
+				tsCodeGen.addText(`typeof __VLS_rawComponents`);
+				writePropertyAccess2(
+					names[i],
+					tagRanges,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.tagReference,
+						beforeRename: tagName === names[i] ? undefined : unHyphenatComponentName,
+						doRename: keepHyphenateName,
+					},
+				);
+				if (i > 0) {
+					tsCodeGen.addText('>');
+				}
 			}
+			tsCodeGen.addText(` });\n`);
 		}
-		tsCodeGen.addText(` });\n`);
 
 		writeOptionReferences();
 
@@ -211,29 +251,29 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Emits */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`${var_emit}('${SearchTexts.EmitCompletion(name)}');\n`);
+			tsCodeGen.addText(`${var_emit}('${searchTexts.getEmitCompletion(name)}');\n`);
 		}
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
-			tsCodeGen.addText(`${var_baseProps}.${SearchTexts.PropsCompletion(name)};\n`);
+			tsCodeGen.addText(`${var_baseProps}.${searchTexts.getPropsCompletion(name)};\n`);
 		}
 
-		tagResolves[tag] = {
+		tagResolves[tagName] = {
 			rawComponent: var_rawComponent,
 			slotsComponent: var_slotsComponent,
 			baseProps: var_baseProps,
 			emit: var_emit,
 			slots: var_slots,
 			events: var_events,
-			offsets: tags[tag].offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
+			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
 		};
 
 		function writeOptionReferences() {
 			// fix find references not work if prop has default value
 			// fix emits references not work
-			for (const propName in resolvedTag.props) {
+			for (const propName in tag.props) {
 
-				const prop = resolvedTag.props[propName];
+				const prop = tag.props[propName];
 				const propNames = new Set<string>();
 				propNames.add(propName);
 				propNames.add(camelize(propName));
@@ -248,8 +288,7 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
+								...capabilitiesSet.attrReference,
 								rename: propName === prop.argName,
 							},
 							beforeRename: camelize,
@@ -259,9 +298,9 @@ export function generate(
 					tsCodeGen.addText(`;\n`);
 				}
 			}
-			for (const eventName in resolvedTag.events) {
+			for (const eventName in tag.events) {
 
-				const event = resolvedTag.events[eventName];
+				const event = tag.events[eventName];
 				const eventNames = new Set<string>();
 				const propNames = new Set<string>();
 				eventNames.add(eventName);
@@ -277,11 +316,7 @@ export function generate(
 						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
 						{
 							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
-								rename: true,
-							},
+							capabilities: capabilitiesSet.attrReference,
 							beforeRename: camelize,
 							doRename: keepHyphenateName,
 						},
@@ -297,11 +332,7 @@ export function generate(
 						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
 						{
 							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attr,
-								basic: false,
-								rename: true,
-							},
+							capabilities: capabilitiesSet.attrReference,
 							beforeRename(newName) {
 								return camelize('on-' + newName);
 							},
@@ -649,6 +680,8 @@ export function generate(
 		{
 
 			const tagText = isHTMLTag(node.tag) || isSVGTag(node.tag) ? node.tag : tagResolves[node.tag].rawComponent;
+			const fullTagStart = tsCodeGen.getText().length;
+
 			tsCodeGen.addText(`<`);
 			writeCode(
 				tagText,
@@ -664,7 +697,35 @@ export function generate(
 			);
 			tsCodeGen.addText(` `);
 			const { hasRemainStyleOrClass } = writeProps(node, false, 'props');
-			tsCodeGen.addText(`/>\n`);
+			tsCodeGen.addText(`/>`);
+
+			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
+			let startTagEnd: number;
+			if (node.loc.source.endsWith('/>')) {
+				startTagEnd = node.loc.end.offset;
+			}
+			else if (node.children.length) {
+				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.children[0].loc.start.offset - node.loc.start.offset).lastIndexOf('>') + 1;
+			}
+			else {
+				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
+			}
+			addMapping(tsCodeGen, {
+				sourceRange: {
+					start: node.loc.start.offset,
+					end: startTagEnd,
+				},
+				mappedRange: {
+					start: fullTagStart,
+					end: tsCodeGen.getText().length,
+				},
+				mode: SourceMaps.Mode.Totally,
+				data: {
+					vueTag: 'template',
+					capabilities: capabilitiesSet.diagnosticOnly,
+				},
+			});
+			tsCodeGen.addText(`\n`);
 
 			if (hasRemainStyleOrClass) {
 				tsCodeGen.addText(`<${tagText} `);
@@ -1063,7 +1124,7 @@ export function generate(
 
 		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: TsMappingData) {
 			if (mode === 'props' && isStatic) {
 				writeCode(
 					name,
@@ -1112,7 +1173,7 @@ export function generate(
 				tsCodeGen.addText(', ');
 			}
 		}
-		function getCaps(caps: SourceMaps.TsMappingData['capabilities']): SourceMaps.TsMappingData['capabilities'] {
+		function getCaps(caps: TsMappingData['capabilities']): TsMappingData['capabilities'] {
 			if (mode === 'props') {
 				return caps;
 			}
@@ -1564,7 +1625,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writeObjectProperty(mapCode, sourceRange, data);
 
@@ -1604,7 +1665,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData) {
 		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
 			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 			return 1;
@@ -1614,7 +1675,7 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writePropertyAccess(mapCode, sourceRange, data);
 
@@ -1654,7 +1715,7 @@ export function generate(
 			}
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: SourceMaps.TsMappingData, checkValid = true) {
+	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData, checkValid = true) {
 		if (checkValid && validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
@@ -1676,7 +1737,7 @@ export function generate(
 			return 3;
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: SourceMaps.TsMappingData) {
+	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: TsMappingData) {
 		const addText = `'${mapCode}'`;
 		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
 			addMapping(tsCodeGen, {
@@ -1701,7 +1762,7 @@ export function generate(
 		}
 		tsCodeGen.addText(addText);
 	}
-	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: SourceMaps.TsMappingData, formatWrapper?: [string, string]) {
+	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: TsMappingData, formatWrapper?: [string, string]) {
 		if (formatWrapper) {
 			tsFormatCodeGen.addText(formatWrapper[0]);
 			const targetRange = tsFormatCodeGen.addText(mapCode);
@@ -1727,7 +1788,7 @@ export function generate(
 			data,
 		});
 	}
-	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<SourceMaps.TsMappingData>) {
+	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<TsMappingData>) {
 		const newMapping = { ...mapping };
 
 		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);

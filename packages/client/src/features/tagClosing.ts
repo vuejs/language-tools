@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as shared from '@volar/shared';
-import type { LanguageClient } from 'vscode-languageclient/node';
+import type { CommonLanguageClient } from 'vscode-languageclient';
 
-export async function activate(context: vscode.ExtensionContext, htmlClient: LanguageClient, tsClient: LanguageClient) {
+export async function activate(context: vscode.ExtensionContext, htmlClient: CommonLanguageClient, tsClient: CommonLanguageClient) {
 	await htmlClient.onReady();
 	context.subscriptions.push(activateTagClosing(
 		(document, position) => {

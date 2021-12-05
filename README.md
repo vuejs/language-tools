@@ -13,18 +13,21 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 ## IDE Supports by Community
 
-[coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
-*Vue language support for coc.nvim*
+[yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
+*Vue language client for coc.nvim*
 
-[nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
+[neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
 *Vue language server configuration for Neovim* \
 [[Multiple servers set up tutorial](https://github.com/johnsoncodehk/volar/discussions/606)]
 
-[vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
+[mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
 
-[sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) \
+[sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) 🤝 \
 *Vue language client for Sublime*
+
+[kabiaa/atom-ide-volar](https://github.com/kabiaa/atom-ide-volar) \
+*Vue language client for Atom*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
@@ -54,6 +57,10 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
   </tr>
 </table>
 
+## Quick Start
+
+See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#quick-start)
+
 ## Using
 
 See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#using)
@@ -76,6 +83,7 @@ See [Vue Language Features#Note](https://github.com/johnsoncodehk/volar/tree/mas
   - [prettyhtml](https://github.com/Prettyhtml/prettyhtml): html
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
   - [prettier](https://github.com/prettier/prettier): css, less, scss, postcss
+  - [sass-formatter](https://github.com/TheRealSyler/sass-formatter): sass
   - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
 
 ## By-product

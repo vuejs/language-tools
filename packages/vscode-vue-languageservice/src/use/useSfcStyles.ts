@@ -5,8 +5,39 @@ import * as SourceMaps from '../utils/sourceMaps';
 import type * as css from 'vscode-css-languageservice';
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
-import { TextRange } from '../parsers/types';
-import { parse as parseCssBinds } from '../parsers/cssBinds';
+import { TextRange } from '@volar/vue-code-gen/out/types';
+import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
+
+type StylesheetNode = {
+	children: StylesheetNode[] | undefined,
+	end: number,
+	length: number,
+	offset: number,
+	parent: StylesheetNode | null,
+	type: number,
+};
+
+function findStylesheetVBindRanges(docText: string, ss: css.Stylesheet) {
+	const result: TextRange[] = [];
+	visChild(ss as StylesheetNode);
+	function visChild(node: StylesheetNode) {
+		if (node.type === 22) {
+			const nodeText = docText.substring(node.offset, node.end);
+			for (const textRange of getMatchBindTexts(nodeText)) {
+				result.push({
+					start: textRange.start + node.offset,
+					end: textRange.end + node.offset,
+				});
+			}
+		}
+		else if (node.children) {
+			for (let i = 0; i < node.children.length; i++) {
+				visChild(node.children[i]);
+			}
+		}
+	}
+	return result;
+}
 
 export function useSfcStyles(
 	context: LanguageServiceContext,
@@ -14,8 +45,14 @@ export function useSfcStyles(
 	vueDoc: Ref<TextDocument>,
 	styles: Ref<shared.Sfc['styles']>,
 ) {
+
 	const { modules: { typescript: ts } } = context;
+	const vueHost = 'vueHost' in context ? context.vueHost : undefined;
+	const fileExists = vueHost?.fileExists ?? ts.sys.fileExists;
+	const readFile = vueHost?.readFile ?? ts.sys.readFile;
+
 	let version = 0;
+
 	const textDocuments = computed(() => {
 		const documents: {
 			textDocument: TextDocument,
@@ -47,7 +84,7 @@ export function useSfcStyles(
 			documents.push({
 				textDocument: document,
 				stylesheet,
-				binds: stylesheet ? parseCssBinds(content, stylesheet) : [],
+				binds: stylesheet ? findStylesheetVBindRanges(content, stylesheet) : [],
 				links: linkStyles,
 				module: style.module,
 				scoped: style.scoped,
@@ -58,10 +95,10 @@ export function useSfcStyles(
 				for (const link of links) {
 					if (!link.target) continue;
 					if (!link.target.endsWith('.css') && !link.target.endsWith('.scss') && !link.target.endsWith('.less')) continue;
-					if (!ts.sys.fileExists(shared.uriToFsPath(link.target))) continue;
+					if (!fileExists(shared.uriToFsPath(link.target))) continue;
 					if (linkStyles.find(l => l.textDocument.uri === link.target)) continue; // Loop
 
-					const text = ts.sys.readFile(shared.uriToFsPath(link.target));
+					const text = readFile(shared.uriToFsPath(link.target));
 					if (text === undefined) continue;
 
 					const lang = upath.extname(link.target).substr(1);
@@ -95,7 +132,7 @@ export function useSfcStyles(
 				cssData.links,
 				{ foldingRanges: true, formatting: true },
 			);
-			sourceMap.add({
+			sourceMap.mappings.push({
 				data: undefined,
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {

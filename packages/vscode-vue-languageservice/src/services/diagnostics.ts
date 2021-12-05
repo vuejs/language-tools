@@ -298,10 +298,10 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						const htmlDoc = pugDoc.sourceMap.mappedDocument;
 						const vueCompileErrors = sfcTemplateCompileResult.value.errors;
 						for (const vueCompileError of vueCompileErrors) {
-							let pugRange: vscode.Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end);
+							let pugRange: vscode.Range | undefined = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.end)?.[0];
 							if (!pugRange) {
-								const pugStart = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.start)?.start;
-								const pugEnd = pugDoc.sourceMap.getSourceRange(vueCompileError.range.end, vueCompileError.range.end)?.end;
+								const pugStart = pugDoc.sourceMap.getSourceRange(vueCompileError.range.start, vueCompileError.range.start)?.[0].start;
+								const pugEnd = pugDoc.sourceMap.getSourceRange(vueCompileError.range.end, vueCompileError.range.end)?.[0].end;
 								if (pugStart && pugEnd) {
 									pugRange = {
 										start: pugStart,
@@ -463,7 +463,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					&& sfcTemplateScript.sourceMapForFormatting.value
 					&& !templateTsLs.__internal__.getValidTextDocument(sfcTemplateScript.textDocument.value.uri)
 				) {
-					for (const maped of sfcTemplateScript.sourceMapForFormatting.value) {
+					for (const maped of sfcTemplateScript.sourceMapForFormatting.value.mappings) {
 						const error = vscode.Diagnostic.create(
 							{
 								start: document.value.positionAt(maped.sourceRange.start),
@@ -554,9 +554,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				for (const diag of errors_1.value) {
 					const spanText = sfcTemplateScript.textDocument.value.getText(diag.range);
 					if (!templateScriptData.setupReturns.includes(spanText)) continue;
-					const propRights = sfcTemplateScript.teleportSourceMap.value.getSourceRanges(diag.range.start, diag.range.end);
-					for (const propRight of propRights) {
-						if (propRight.data.isAdditionalReference) continue;
+					for (const [propRight] of sfcTemplateScript.teleportSourceMap.value.getSourceRanges(
+						diag.range.start,
+						diag.range.end,
+						sideData => !sideData.isAdditionalReference,
+					)) {
 						const definitions = templateTsLs.findDefinition(sfcTemplateScript.textDocument.value.uri, propRight.start);
 						for (const definition of definitions) {
 							if (definition.targetUri !== sfcScriptForTemplateLs.textDocument.value?.uri) continue;
@@ -596,8 +598,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function toSourceDiags<T = vscode.Diagnostic | vscode.Diagnostic>(errors: T[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
-			const result: T[] = [];
+		function toSourceDiags(errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+			const result: vscode.Diagnostic[] = [];
 			for (const error of errors) {
 				if (vscode.Diagnostic.is(error)) {
 					for (const sourceMap of sourceMaps) {
@@ -608,7 +610,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 							continue;
 						result.push({
 							...error,
-							range: vueRange,
+							range: vueRange[0],
 						});
 					}
 				}
@@ -649,8 +651,12 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				for (const sourceMap of sourceMaps) {
 					if (sourceMap.mappedDocument.uri === virtualUri) {
 
-						const vueRange = sourceMap.getSourceRange(virtualRange.start, virtualRange.end);
-						if (vueRange && vueRange.data.capabilities.diagnostic) {
+						const vueRange = sourceMap.getSourceRange(
+							virtualRange.start,
+							virtualRange.end,
+							data => !!data.capabilities.diagnostic,
+						)?.[0];
+						if (vueRange) {
 							return {
 								uri: sourceFile.uri,
 								start: vueRange.start,
@@ -659,14 +665,18 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						}
 					}
 				}
-				for (const vueLoc of sourceFiles.fromTsLocation(lsType, virtualUri, virtualRange.start, virtualRange.end)) {
-					if (vueLoc.type === 'source-ts' || vueLoc.range.data.capabilities.diagnostic) {
-						return {
-							uri: vueLoc.uri,
-							start: vueLoc.range.start,
-							end: vueLoc.range.end,
-						};
-					}
+				for (const vueLoc of sourceFiles.fromTsLocation(
+					lsType,
+					virtualUri,
+					virtualRange.start,
+					virtualRange.end,
+					data => !!data.capabilities.diagnostic,
+				)) {
+					return {
+						uri: vueLoc.uri,
+						start: vueLoc.range.start,
+						end: vueLoc.range.end,
+					};
 				}
 			}
 		}

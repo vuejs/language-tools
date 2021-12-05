@@ -2,10 +2,11 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref, ComputedRef } from '@vue/reactivity';
 import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
-import { generate as genScript } from '../generators/script';
-import * as templateGen from '../generators/template_scriptSetup';
-import type { parseScriptRanges } from '../parsers/scriptRanges';
-import type { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
+import * as templateGen from '@volar/vue-code-gen/out/generators/template_scriptSetup';
+import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
+import { getVueLibraryName } from '../utils/localTypes';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
@@ -31,13 +32,23 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		genScript(
 			lsType,
 			vueUri,
-			script.value,
-			scriptSetup.value,
+			script.value ?? undefined,
+			scriptSetup.value ?? undefined,
 			scriptRanges.value,
 			scriptSetupRanges.value,
 			() => htmlGen.value,
-			() => sfcStyles.value,
-			isVue2,
+			() => {
+				const bindTexts: string[] = [];
+				for (const style of sfcStyles.value) {
+					const docText = style.textDocument.getText();
+					for (const cssBind of style.binds) {
+						const bindText = docText.substring(cssBind.start, cssBind.end);
+						bindTexts.push(bindText);
+					}
+				}
+				return bindTexts;
+			},
+			getVueLibraryName(isVue2),
 		)
 	);
 	const lang = computed(() => {
@@ -98,7 +109,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		if (textDocument.value) {
 			const sourceMap = new TeleportSourceMap(textDocument.value, false);
 			for (const teleport of codeGen.value.teleports) {
-				sourceMap.add(teleport);
+				sourceMap.mappings.push(teleport);
 			}
 
 			return sourceMap;

@@ -22,7 +22,7 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 
-				for (const maped of sourceMap) {
+				for (const maped of sourceMap.mappings) {
 
 					if (!maped.data.capabilities.displayWithLink)
 						continue;
@@ -45,7 +45,7 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 					? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
 					: pugLs.findDocumentLinks(sourceMap.pugDocument, documentContext)
 				for (const link of links) {
-					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
+					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 					if (vueRange) {
 						result.push({
 							...link,
@@ -64,7 +64,7 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 				if (!cssLs || !sourceMap.stylesheet) continue;
 				const links = await cssLs.findDocumentLinks2(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
 				for (const link of links) {
-					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end);
+					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 					if (vueRange) {
 						result.push({
 							...link,
