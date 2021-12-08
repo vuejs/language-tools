@@ -69,6 +69,23 @@ See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/ma
 
 See [Vue Language Features#Note](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#note)
 
+## FAQ
+
+Q) VSCode gives an error for `class` and `slot` with Volar, is Volar broken?
+
+<kbd><img width="483" src="https://user-images.githubusercontent.com/3253920/145134536-7bb090e9-9dcd-4a61-8096-3c47d6c1a699.png" /></kbd>
+
+A) This is because one of the packages installed in your project uses `@types/react` which breaks some parts of Volar. It can however easily be solved like so:
+
+1. in your project (or monorepo) root folder add a folder called `stub/types__react`
+2. in there create a file called `index.d.ts`
+3. save this as the content of the file: `export {}`
+4. add this to your project (or monorepo) root `package.json`:
+```
+  "@types/react": "file:stub/types__react",
+```
+5. Now install dependencies (`npm i` / `yarn`) and restart VSCode, and the problem should be fixed. 🎉
+
 ## Limitations
 
 - Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
