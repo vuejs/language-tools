@@ -17,7 +17,7 @@
 		"directory": "packages/server"
 	},
 	"devDependencies": {
-		"@types/prettier": "^1.16.4"
+		"@types/prettier": "^2.4.2"
 	},
 	"dependencies": {
 		"@volar/shared": "0.29.8",
