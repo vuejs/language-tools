@@ -1,4 +1,3 @@
-import * as prettyhtml from '@starptech/prettyhtml';
 import * as prettier from 'prettier';
 import { SassFormatter } from 'sass-formatter';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -19,15 +18,14 @@ export function getFormatters(getPrintWidth: (uri: string) => number | Promise<n
 }
 
 async function html(document: TextDocument, options: vscode.FormattingOptions, getPrintWidth: (uri: string) => number | Promise<number>) {
-
 	const prefixes = '<template>';
 	const suffixes = '</template>';
-
-	let newHtml = prettyhtml(prefixes + document.getText() + suffixes, {
+	let newHtml = prettier.format(prefixes + document.getText() + suffixes, {
+		parser: 'vue',
 		tabWidth: options.tabSize,
 		useTabs: !options.insertSpaces,
 		printWidth: await getPrintWidth(document.uri),
-	}).contents;
+	});
 	newHtml = newHtml.trim();
 	newHtml = newHtml.substring(prefixes.length, newHtml.length - suffixes.length);
 

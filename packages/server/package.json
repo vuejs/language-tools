@@ -20,9 +20,8 @@
 		"@types/prettier": "^1.16.4"
 	},
 	"dependencies": {
-		"@starptech/prettyhtml": "^0.10.0",
 		"@volar/shared": "0.29.8",
-		"prettier": "^1.16.4",
+		"prettier": "^2.5.1",
 		"pug-beautify": "^0.1.1",
 		"sass-formatter": "^0.7.2",
 		"upath": "^2.0.1",
