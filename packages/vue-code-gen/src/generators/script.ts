@@ -26,7 +26,6 @@ export function generate(
 
 	const codeGen = createCodeGen<TsMappingData>();
 	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
-	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -56,7 +55,7 @@ export function generate(
 		);
 	}
 
-	if (lsType === 'template' || shouldAddExportDefault)
+	if (!!scriptSetup)
 		writeExportComponent();
 
 	if (usedTypes.DefinePropsToOptions) {
@@ -146,7 +145,7 @@ export function generate(
 
 		const sections: (TextRange | string)[] = [];
 
-		if (shouldAddExportDefault && scriptRanges?.exportDefault) {
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			sections.push({ start: 0, end: scriptRanges.exportDefault.start });
 			sections.push('await' + ' '.repeat(scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start - 'await'.length));
 			sections.push({ start: scriptRanges.exportDefault.expression.start, end: script.content.length });
@@ -208,13 +207,9 @@ export function generate(
 		);
 	}
 	function writeExportComponent() {
-		if (shouldAddExportDefault) {
-			codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
-		}
-		else {
-			codeGen.addText(`\n`);
-			codeGen.addText(`export const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
-		}
+
+		codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
+
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
 			codeGen.addText(`...(`);

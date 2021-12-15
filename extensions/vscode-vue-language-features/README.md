@@ -45,7 +45,7 @@ Vue 3 in itself includes the package `@vue/runtime-dom`. For Vue 2 you will have
 
 2. Remove `Vue.extend`
 
-Template type-checking do not support with `Vue.extend`, you can use [composition-api](https://github.com/vuejs/composition-api), [vue-class-component](https://github.com/vuejs/vue-class-component), or `export default { ... }` instead of `export default Vue.extend`.
+Template type-checking do not support with `Vue.extend`, you can use [composition-api](https://github.com/vuejs/composition-api), [vue-class-component](https://github.com/vuejs/vue-class-component), or instead of `export default Vue.extend`.
 
 3. Support Vue 2 template
 

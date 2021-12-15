@@ -28,20 +28,9 @@ export function useSfcEntryForTemplateLs(
 			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
 			content += `export { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
 			content += `export * from './${vueFileName}.__VLS_script';\n`;
-
-			if (scriptSetup.value) {
-				content += `import { __VLS_component as __VLS_component_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
-				content += `import { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
-				content += `export { __VLS_component } from './${vueFileName}.__VLS_script';\n`;
-			}
-			else {
-				content += `import __VLS_component_1_ts from './${vueFileName}.${tsScriptFileName}';\n`;
-				content += `import __VLS_component_1 from './${vueFileName}.__VLS_script';\n`;
-				content += `import { __VLS_component as __VLS_component_2_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
-				content += `import { __VLS_component as __VLS_component_2 } from './${vueFileName}.__VLS_script';\n`;
-				content += `declare var __VLS_component_ts: __VLS_types.SelectComponent<typeof __VLS_component_1_ts, typeof __VLS_component_2_ts>;\n`;
-				content += `export declare var __VLS_component: __VLS_types.SelectComponent<typeof __VLS_component_1, typeof __VLS_component_2>;\n`;
-			}
+				content += `import __VLS_component_ts from './${vueFileName}.${tsScriptFileName}';\n`;
+				content += `import __VLS_component from './${vueFileName}.__VLS_script';\n`;
+				content += `export { default as __VLS_component } from './${vueFileName}.__VLS_script';\n`;
 		}
 		else {
 			content += `export var __VLS_name = undefined;\n`;
