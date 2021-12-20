@@ -359,7 +359,7 @@ function createWorkspace(
 					// fix https://github.com/johnsoncodehk/volar/issues/712
 					if (!ts.sys.fileExists(tsConfigPath) && ts.sys.directoryExists(tsConfigPath)) {
 						const newTsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
-						const newJsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
+						const newJsConfigPath = path.join(tsConfigPath, 'jsconfig.json');
 						if (ts.sys.fileExists(newTsConfigPath)) {
 							tsConfigPath = newTsConfigPath;
 						}
