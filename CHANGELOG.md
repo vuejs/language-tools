@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.30.0
+
+- feat: support components type-check by `static components` for class-base component ([#753](https://github.com/johnsoncodehk/volar/issues/753))
+- feat: support `vueCompilerOptions.experimentalExposeScriptSetupContext` option for jest ([#805](https://github.com/johnsoncodehk/volar/issues/805))
+- feat: support `typescript.suggest.autoImports` setting ([#746](https://github.com/johnsoncodehk/volar/issues/746))
+- fix: `@vue/composition-api` defineComponent types incorrect in template ([#780](https://github.com/johnsoncodehk/volar/issues/780))
+- fix: directives syntax highlight incorrect in svg tag ([#776](https://github.com/johnsoncodehk/volar/issues/776))
+- fix: project references ignored jsconfig ([#756](https://github.com/johnsoncodehk/volar/issues/756))
+- fix: html semantic tokens range incorrect in long template code ([#801](https://github.com/johnsoncodehk/volar/issues/801))
+- fix: `typescript.preferences.importModuleSpecifier` setting not working for component auto import ([#793](https://github.com/johnsoncodehk/volar/issues/793))
+- fix: `Organize Imports` commmand not always working ([#798](https://github.com/johnsoncodehk/volar/issues/798))
+- fix: css variable injection virtual code cannot update ([#777](https://github.com/johnsoncodehk/volar/issues/777))
+- fix: should not initializes new language service when create a new file ([#802](https://github.com/johnsoncodehk/volar/issues/802))
+- fix: new file first diagnostics incorrect 
+
+**Breaking changes**
+
+- Do not support component context types in template for `export default { ... }` without `Vue.extend` or `defineComponent` ([#750](https://github.com/johnsoncodehk/volar/pull/750))
+
 ## 0.29.8
 
 - perf: cache `URI.file`, `URI.parse` results
