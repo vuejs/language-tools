@@ -85,7 +85,7 @@ export function getOverlapRange(range1: vscode.Range, range2: vscode.Range): vsc
 		character: range1.end.line === range2.end.line ? Math.min(range1.end.character, range2.end.character) : range1.end.line < range2.end.line ? range1.end.character : range2.end.character,
 	};
 
-	if (start.line > end.line || (start.line === end.line && start.character > end.line))
+	if (start.line > end.line || (start.line === end.line && start.character > end.character))
 		return undefined;
 
 	return {
