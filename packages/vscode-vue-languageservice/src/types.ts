@@ -61,6 +61,7 @@ export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
 	experimentalTemplateCompilerOptions?: CompilerDOM.CompilerOptions;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
+	experimentalExposeScriptSetupContext?: boolean;
 }
 
 export type LanguageServiceContextBase = {

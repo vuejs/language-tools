@@ -15,6 +15,7 @@ export function generateSFCScriptTypeCheckCode(
 	scriptLang: 'js' | 'jsx' | 'ts' | 'tsx',
 	scriptCode: string | undefined,
 	scriptSetupCode: string | undefined,
+	exposeScriptSetupContext: boolean,
 	templateAst?: CompilerDOM.RootNode,
 	cssVars?: string[],
 	vueLibName = 'vue',
@@ -24,7 +25,7 @@ export function generateSFCScriptTypeCheckCode(
 		'script',
 		'',
 		scriptCode !== undefined ? { content: scriptCode } : undefined,
-		scriptSetupCode !== undefined ? { content: scriptSetupCode } : undefined,
+		scriptSetupCode !== undefined ? { content: scriptSetupCode, exposeContext: exposeScriptSetupContext } : undefined,
 		scriptCode !== undefined ? parseScriptRanges(
 			ts,
 			ts.createSourceFile('dummy.' + scriptLang, scriptCode, ts.ScriptTarget.ESNext),

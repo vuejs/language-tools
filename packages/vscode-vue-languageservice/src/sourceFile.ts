@@ -126,6 +126,7 @@ export function createSourceFile(
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		context.compilerOptions.experimentalCompatMode === 2,
+		!!context.compilerOptions.experimentalExposeScriptSetupContext,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -138,6 +139,7 @@ export function createSourceFile(
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		context.compilerOptions.experimentalCompatMode === 2,
+		!!context.compilerOptions.experimentalExposeScriptSetupContext,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,

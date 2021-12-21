@@ -16,6 +16,7 @@ export function generate(
 	},
 	scriptSetup: undefined | {
 		content: string,
+		exposeContext: boolean,
 	},
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
@@ -270,7 +271,7 @@ export function generate(
 				});
 			}
 			codeGen.addText(`setup() {\n`);
-			if (lsType === 'script') {
+			if (lsType === 'script' && !scriptSetup.exposeContext) {
 				codeGen.addText(`return () => {\n`);
 				for (const bindText of getStyleBindTexts()) {
 					codeGen.addText('// @ts-ignore\n');
@@ -279,7 +280,7 @@ export function generate(
 				writeTemplate();
 				codeGen.addText(`};\n`);
 			}
-			else if (lsType === 'template') {
+			else {
 				codeGen.addText(`return {\n`);
 				for (const { bindings, content } of bindingsArr) {
 					for (const expose of bindings) {
