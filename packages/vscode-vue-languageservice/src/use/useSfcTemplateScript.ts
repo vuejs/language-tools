@@ -433,7 +433,7 @@ export function useSfcTemplateScript(
 					? TextDocument.create(vueUri + '.__VLS_template.format.' + newLang, newLangId, _version, templateCodeGens.value.formatCodeGen.getText())
 					: undefined;
 
-				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value, true);
+				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value);
 				for (const maped of data.value.ctxMappings) {
 					sourceMap.mappings.push(maped);
 				}

@@ -77,11 +77,6 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 					if (!teleport)
 						continue;
 
-					if (
-						!teleport.allowCrossFile
-						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
-					) continue;
-
 					for (const [teleRange] of teleport.findTeleports2(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
@@ -139,11 +134,6 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 					if (!teleport)
 						continue;
 
-					if (
-						!teleport.allowCrossFile
-						&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
-					) continue;
-
 					for (const [teleRange] of teleport.findTeleports2(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
@@ -189,11 +179,6 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLan
 						const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 						if (!teleport)
 							continue;
-
-						if (
-							!teleport.allowCrossFile
-							&& sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(ref.fileName)) !== sourceFiles.getSourceFileByTsUri(lsType, shared.fsPathToUri(fileName))
-						) continue;
 
 						for (const [teleRange] of teleport.findTeleports2(
 							ref.textSpan.start,

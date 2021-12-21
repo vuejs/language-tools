@@ -108,7 +108,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	});
 	const teleportSourceMap = computed(() => {
 		if (textDocument.value) {
-			const sourceMap = new TeleportSourceMap(textDocument.value, false);
+			const sourceMap = new TeleportSourceMap(textDocument.value);
 			for (const teleport of codeGen.value.teleports) {
 				sourceMap.mappings.push(teleport);
 			}
