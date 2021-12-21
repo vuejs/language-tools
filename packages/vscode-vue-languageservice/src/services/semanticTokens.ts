@@ -123,8 +123,8 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: TokenData[] = [];
 
+			const result: TokenData[] = [];
 			const templateScriptData = sourceFile.getTemplateScriptData();
 			const components = new Set([
 				...templateScriptData.components,
@@ -133,14 +133,19 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 
-				const inSourceMap = [...sourceMap.mappings].some(mapping =>
-					(mapping.sourceRange.start >= offsetRange.start && mapping.sourceRange.start <= offsetRange.end)
-					|| (mapping.sourceRange.end >= offsetRange.start && mapping.sourceRange.end <= offsetRange.end)
-				);
-				if (!inSourceMap)
+				let htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start;
+				if (htmlStart === undefined) {
+					for (const mapping of sourceMap.mappings) {
+						if (mapping.sourceRange.end >= offsetRange.start) {
+							if (htmlStart === undefined || mapping.mappedRange.start < htmlStart) {
+								htmlStart = mapping.mappedRange.start;
+							}
+						}
+					}
+				}
+				if (htmlStart === undefined)
 					continue;
 
-				const htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start ?? 0;
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
 					? htmlLs.createScanner(docText, htmlStart)
