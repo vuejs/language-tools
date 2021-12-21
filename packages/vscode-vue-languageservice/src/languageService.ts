@@ -378,7 +378,10 @@ export function createLanguageService(
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
 			if (sourceMap.lsType === 'script')
 				continue;
-			for (const _ of sourceMap.getMappedRanges(pos, pos, data => data.vueTag === 'template')) {
+			for (const _ of sourceMap.getMappedRanges(pos, pos, data =>
+				data.vueTag === 'template'
+				|| data.vueTag === 'style' // handle CSS variable injection to fix https://github.com/johnsoncodehk/volar/issues/777
+			)) {
 				return true;
 			}
 		}
