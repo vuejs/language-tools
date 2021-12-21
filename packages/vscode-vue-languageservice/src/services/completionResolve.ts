@@ -23,7 +23,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			return await getHtmlResult(item, data);
 		}
 		if (data.mode === 'autoImport' && sourceFile) {
-			return getAutoImportResult(sourceFile, item, data);
+			return await getAutoImportResult(sourceFile, item, data);
 		}
 
 		return item;
@@ -82,7 +82,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 
 			return vueItem;
 		}
-		function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
+		async function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
 
 			const importFile = shared.uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
@@ -111,7 +111,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			const componentName = capitalize(camelize(vueItem.label));
 			const textDoc = sourceFile.getTextDocument();
 			let insertText = '';
-			const planAResult = planAInsertText();
+			const planAResult = await planAInsertText();
 			if (planAResult) {
 				insertText = planAResult.insertText;
 				vueItem.detail = planAResult.description + '\n\n' + rPath;
@@ -178,10 +178,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			}
 			return vueItem;
 
-			function planAInsertText() {
-				const scriptUrl = sourceFile.getScriptTsDocument().uri;
+			async function planAInsertText() {
+				const scriptDoc = sourceFile.getScriptTsDocument();
 				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
+				const [formatOptions, preferences] = await Promise.all([
+					vueHost.getFormatOptions?.(scriptDoc) ?? {},
+					vueHost.getPreferences?.(scriptDoc) ?? {},
+				]);
+				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptDoc.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 				if (tsDetail?.codeActions) {
 					for (const action of tsDetail.codeActions) {
 						for (const change of action.changes) {
