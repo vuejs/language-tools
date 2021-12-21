@@ -23,6 +23,10 @@ export function createProjects(
 
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
+	let lastOpenDoc: {
+		uri: string,
+		time: number,
+	} | undefined;
 
 	const updatedUris = new Set<string>();
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
@@ -40,16 +44,28 @@ export function createProjects(
 		));
 	}
 
+	documents.onDidOpen(async change => {
+		lastOpenDoc = {
+			uri: change.document.uri,
+			time: Date.now(),
+		};
+	});
 	documents.onDidChangeContent(async change => {
+
+		await waitForOnDidChangeWatchedFiles(change.document.uri);
+
 		for (const workspace of workspaces.values()) {
 			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
 			for (const project of projects) {
 				(await project).onDocumentUpdated(change.document);
 			}
 		}
+
 		updateDiagnostics(change.document.uri);
 	});
-	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
+	documents.onDidClose(change => {
+		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
+	});
 	connection.onDidChangeWatchedFiles(async handler => {
 
 		const tsConfigChanges: vscode.FileEvent[] = [];
@@ -203,6 +219,8 @@ export function createProjects(
 	}
 	async function getProject(uri: string) {
 
+		await waitForOnDidChangeWatchedFiles(uri);
+
 		const fileName = shared.uriToFsPath(uri);
 		const rootPaths = [...workspaces.keys()]
 			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
@@ -221,6 +239,14 @@ export function createProjects(
 				tsconfig: undefined,
 				project: await workspaces.get(rootPaths[0])?.getInferredProject(),
 			};
+		}
+	}
+	async function waitForOnDidChangeWatchedFiles(uri: string) {
+		if (lastOpenDoc?.uri === uri) {
+			const dt = lastOpenDoc.time + 2000 - Date.now();
+			if (dt > 0) {
+				await shared.sleep(dt);
+			}
 		}
 	}
 	function clearDiagnostics() {
