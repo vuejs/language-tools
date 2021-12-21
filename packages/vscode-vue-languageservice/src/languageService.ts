@@ -653,6 +653,7 @@ export function createLanguageService(
 			if (!doc) continue;
 			if (!sourceFile) {
 				sourceFiles.set(uri, createSourceFile(doc.uri, doc.getText(), doc.version.toString(), context));
+				vueScriptContentsUpdate = true;
 				vueScriptsUpdated = true;
 			}
 			else {
