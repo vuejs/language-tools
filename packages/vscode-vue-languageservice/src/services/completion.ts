@@ -209,7 +209,7 @@ export function register(
 				const options: ts.GetCompletionsAtPositionOptions = {
 					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 					triggerKind: context?.triggerKind,
-					includeCompletionsForModuleExports: true,
+					// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 					includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 					...(inTemplate ? {
 						quotePreference: 'single',
