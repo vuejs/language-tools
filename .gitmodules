@@ -1,0 +1,3 @@
+[submodule "packages/coc-volar"]
+	path = packages/coc-volar
+	url = https://github.com/yaegassy/coc-volar.git

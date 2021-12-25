@@ -9,6 +9,9 @@
 			"path": "./extensions/vscode-typescript-vue-plugin/tsconfig.build.json"
 		},
 		{
+			"path": "./packages/coc-volar/tsconfig.build.json"
+		},
+		{
 			"path": "./packages/vue-tsc/tsconfig.build.json"
 		},
 		{
