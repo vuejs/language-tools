@@ -1,6 +1,6 @@
 {
 	"name": "@volar/server",
-	"version": "0.30.0",
+	"version": "0.30.1",
 	"license": "MIT",
 	"files": [
 		"*.js",
@@ -21,13 +21,13 @@
 	},
 	"dependencies": {
 		"@starptech/prettyhtml": "^0.10.0",
-		"@volar/shared": "0.30.0",
+		"@volar/shared": "0.30.1",
 		"prettier": "^1.16.4",
 		"pug-beautify": "^0.1.1",
 		"sass-formatter": "^0.7.2",
 		"upath": "^2.0.1",
 		"vscode-languageserver": "^8.0.0-next.2",
 		"vscode-languageserver-textdocument": "^1.0.1",
-		"vscode-vue-languageservice": "0.30.0"
+		"vscode-vue-languageservice": "0.30.1"
 	}
 }
