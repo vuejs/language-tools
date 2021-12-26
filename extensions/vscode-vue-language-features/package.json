@@ -558,7 +558,17 @@
 		"release": "vsce publish --yarn"
 	},
 	"workspaces": [
-		"../../packages/*"
+		"../../packages/client",
+		"../../packages/code-gen",
+		"../../packages/html2pug",
+		"../../packages/server",
+		"../../packages/shared",
+		"../../packages/source-map",
+		"../../packages/transforms",
+		"../../packages/vscode-pug-languageservice",
+		"../../packages/vscode-typescript-languageservice",
+		"../../packages/vscode-vue-languageservice",
+		"../../packages/vue-code-gen"
 	],
 	"dependencies": {
 		"@volar/client": "0.30.0"
