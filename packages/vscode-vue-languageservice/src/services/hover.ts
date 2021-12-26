@@ -1,12 +1,9 @@
 import * as vscode from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import { HtmlSourceMap } from '../utils/sourceMaps';
-import { register as registerFindDefinitions } from './definition';
 import * as shared from '@volar/shared';
 
 export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost }: ApiLanguageServiceContext) {
-
-	const findDefinitions = registerFindDefinitions(arguments[0]);
 
 	return async (uri: string, position: vscode.Position) => {
 

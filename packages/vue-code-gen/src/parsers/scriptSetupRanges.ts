@@ -10,14 +10,13 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	let propsTypeArg: TextRange | undefined;
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
+	let exposeRuntimeArg: TextRange | undefined;
 	let emitsTypeNums = -1;
 
 	const bindings = parseBindingRanges(ts, ast, false);
 	const typeBindings = parseBindingRanges(ts, ast, true);
 
-	ast.forEachChild(node => {
-		visitNode(node);
-	});
+	ast.forEachChild(visitNode);
 
 	return {
 		bindings,
@@ -28,6 +27,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 		emitsRuntimeArg,
 		emitsTypeArg,
 		emitsTypeNums,
+		exposeRuntimeArg,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -39,14 +39,17 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineProps' || callText === 'defineEmits') {
+			if (callText === 'defineProps' || callText === 'defineEmits' || callText === 'defineExpose') {
 				if (node.arguments.length) {
 					const runtimeArg = node.arguments[0];
 					if (callText === 'defineProps') {
 						propsRuntimeArg = _getStartEnd(runtimeArg);
 					}
-					else {
+					else if (callText === 'defineEmits') {
 						emitsRuntimeArg = _getStartEnd(runtimeArg);
+					}
+					else if (callText === 'defineExpose') {
+						exposeRuntimeArg = _getStartEnd(runtimeArg);
 					}
 				}
 				else if (node.typeArguments?.length) {
@@ -54,7 +57,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 					if (callText === 'defineProps') {
 						propsTypeArg = _getStartEnd(typeArg);
 					}
-					else {
+					else if (callText === 'defineEmits') {
 						emitsTypeArg = _getStartEnd(typeArg);
 						if (ts.isTypeLiteralNode(typeArg)) {
 							emitsTypeNums = typeArg.members.length;

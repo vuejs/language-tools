@@ -19,7 +19,6 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	isVue2: boolean,
-	exposeScriptSetupContext: boolean,
 ) {
 
 	let version = 0;
@@ -34,7 +33,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			lsType,
 			vueUri,
 			script.value ?? undefined,
-			scriptSetup.value ? { content: scriptSetup.value.content, exposeContext: exposeScriptSetupContext } : undefined,
+			scriptSetup.value ?? undefined,
 			scriptRanges.value,
 			scriptSetupRanges.value,
 			() => htmlGen.value,

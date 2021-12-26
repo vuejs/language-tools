@@ -16,7 +16,6 @@ export function generate(
 	},
 	scriptSetup: undefined | {
 		content: string,
-		exposeContext: boolean,
 	},
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
@@ -270,17 +269,29 @@ export function generate(
 					vueTag: 'script',
 				});
 			}
+
 			codeGen.addText(`setup() {\n`);
-			if (lsType === 'script' && !scriptSetup.exposeContext) {
-				codeGen.addText(`return () => {\n`);
+
+			if (lsType === 'script') {
+				codeGen.addText(`() => {\n`);
 				for (const bindText of getStyleBindTexts()) {
 					codeGen.addText('// @ts-ignore\n');
 					codeGen.addText(bindText + ';\n');
 				}
 				writeTemplate();
 				codeGen.addText(`};\n`);
+
+				if (scriptSetupRanges.exposeRuntimeArg) {
+					codeGen.addText(`return `);
+					mapSubText('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+					codeGen.addText(`;\n`);
+				}
+				else {
+					codeGen.addText(`return { };\n`);
+				};
 			}
-			else {
+
+			if (lsType === 'template') {
 				codeGen.addText(`return {\n`);
 				for (const { bindings, content } of bindingsArr) {
 					for (const expose of bindings) {
