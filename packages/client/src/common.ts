@@ -61,6 +61,8 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
+	vscode.commands.executeCommand('setContext', 'volar.activated', true);
+
 	const lowPowerMode = lowPowerModeEnabled();
 	if (lowPowerMode) {
 		vscode.window

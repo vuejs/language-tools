@@ -451,23 +451,23 @@
 			"commandPalette": [
 				{
 					"command": "volar.action.restartServer",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.verifyAllScripts",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.writeTemplateLsVirtualFiles",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.writeScriptLsVirtualFiles",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.genWhitelist",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.showCallGraph",
@@ -503,7 +503,7 @@
 				},
 				{
 					"command": "volar.action.createWorkspaceSnippets",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.selectElement",
@@ -515,7 +515,7 @@
 				},
 				{
 					"command": "volar.selectTypeScriptVersion",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				}
 			],
 			"editor/title": [
