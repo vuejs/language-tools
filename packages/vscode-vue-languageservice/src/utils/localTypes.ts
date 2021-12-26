@@ -10,10 +10,15 @@ export function getVueLibraryName(isVue2: boolean) {
 	return isVue2 ? '@vue/runtime-dom' : 'vue';
 }
 
+export function getSlotsPropertyName(isVue2: boolean) {
+	return isVue2 ? '$scopedSlots' : '$slots';
+}
+
 export const typesFileName = '__VLS_types.ts';
 
 export function getTypesCode(isVue2: boolean) {
 	const libName = getVueLibraryName(isVue2);
+	const slots = getSlotsPropertyName(isVue2);
 	return `
 import * as vue from '${libName}';
 import type {
@@ -61,12 +66,12 @@ export declare function directiveFunction<T>(dir: T):
 
 export type TemplateSlots<T> = T extends { __VLS_slots: infer S } ? S : {};
 export type HasTemplateSlotsType<T> = T extends { __VLS_slots: infer _ } ? true : false;
-export type HasScriptSlotsType<T> = T extends new (...args: any) => { $slots?: infer _ } ? true : false;
+export type HasScriptSlotsType<T> = T extends new (...args: any) => { ${slots}?: infer _ } ? true : false;
 export type DefaultSlots<W, R> = HasTemplateSlotsType<W> extends true ? {}
 	: HasScriptSlotsType<R> extends true ? {}
 	: Record<string, any>;
-export type SlotsComponent<T> = T extends new (...args: any) => { $slots?: infer S } ? T : new (...args: any) => { $slots: {} };
-export type ScriptSlots<T> = T extends { $slots?: infer S }
+export type SlotsComponent<T> = T extends new (...args: any) => { ${slots}?: infer S } ? T : new (...args: any) => { ${slots}: {} };
+export type ScriptSlots<T> = T extends { ${slots}?: infer S }
 	? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
 	: {};
 
