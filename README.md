@@ -2,7 +2,7 @@
 
 > ⚡ Explore high-performance tooling for Vue
 
-- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
+- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) (👈 The Main VSCode Extension)\
 *Vue language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
@@ -56,57 +56,3 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
     </td>
   </tr>
 </table>
-
-## Quick Start
-
-See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#quick-start)
-
-## Using
-
-See [Vue Language Features#Using](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#using)
-
-## Note
-
-See [Vue Language Features#Note](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features#note)
-
-## FAQ
-
-Q) VSCode gives an error for `class` and `slot` with Volar, is Volar broken?
-
-<kbd><img width="483" src="https://user-images.githubusercontent.com/3253920/145134536-7bb090e9-9dcd-4a61-8096-3c47d6c1a699.png" /></kbd>
-
-A) This is because one of the packages installed in your project uses `@types/react` which breaks some parts of Volar. It can however easily be solved like so:
-
-1. in your project (or monorepo) root folder add a folder called `stub/types__react`
-2. in there create a file called `index.d.ts`
-3. save this as the content of the file: `export {}`
-4. add this to your project (or monorepo) root `package.json`:
-```
-  "@types/react": "file:stub/types__react",
-```
-5. Now install dependencies (`npm i` / `yarn`) and restart VSCode, and the problem should be fixed. 🎉
-
-## Limitations
-
-- Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
-
-## Credits
-
-- [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.
-- [angular](https://github.com/angular/angular) shows how TS server plugin working with language service.
-- Syntax highlight is rewritten base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
-- [vscode-fenced-code-block-grammar-injection-example](https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example) shows how to inject vue syntax highlight to markdown.
-- Out of the box formatting working by:
-  - [prettyhtml](https://github.com/Prettyhtml/prettyhtml): html
-  - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
-  - [prettier](https://github.com/prettier/prettier): css, less, scss, postcss
-  - [sass-formatter](https://github.com/TheRealSyler/sass-formatter): sass
-  - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
-
-## By-product
-
-- [@volar/server](https://www.npmjs.com/package/@volar/server): Bridging module for LSP <-> vscode-vue-languageservice.
-- [typescript-vue-plugin](https://www.npmjs.com/package/typescript-vue-plugin): See [#169](https://github.com/johnsoncodehk/volar/issues/169#issuecomment-832377254).
-- [vscode-vue-languageservice](https://www.npmjs.com/package/vscode-vue-languageservice) : Generic language server module for Vue
-- [vscode-pug-languageservice](https://www.npmjs.com/package/vscode-pug-languageservice): Generic language server module for Pug
-- [vscode-typescript-languageservice](https://www.npmjs.com/package/vscode-typescript-languageservice): Generic language server module for TypeScript

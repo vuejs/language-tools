@@ -23,7 +23,7 @@ This company is [sponsoring this project](https://github.com/sponsors/johnsoncod
 - [vue3-eslint-stylelint-demo](https://github.com/sethidden/vue3-eslint-stylelint-demo) (Volar + ESLint + stylelint + husky)
 - [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
-## Using
+## Usage
 
 <details>
 <summary>Setup for Vue 2</summary>
@@ -99,6 +99,10 @@ export {}
 
 </details>
 
+## Limitations
+
+- Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
+
 ## Note
 
 > You need to disable Vetur to avoid conflicts.
@@ -111,29 +115,29 @@ export {}
 > - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
 > - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
 
-> If Auto-formatting of `<style>` in SFC doesn’t work, please check `.vscode/settings.json` is not set or set as :
-
-```json
-{
-  "[vue]": {"editor.defaultFormatter": "johnsoncodehk.volar"}
-}
-```
-
-> Please check https://vuejs.org/v2/guide/typescript.html#Recommended-Configuration for recommended tsconfig options.
-
 > Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
 
 > If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/guide/snippet.html#customizable-scaffold-snippets), recommend use [Snippet Generator](https://marketplace.visualstudio.com/items?itemName=wenfangdu.snippet-generator) convert to VSCode Snippets.
 
-> If your project included Storybook or `@types/react`, make sure you have config tsconfig `types` option to avoid template type-checking affect by react types.
+> If VSCode gives an error for `class` and `slot` like this:
 > 
-> It should like this:
-> ```json
-> // tsconfig.json
-> {
->   "compilerOptions": {
->     ...
->     "types": ["vite/client", ...]
->   }
-> }
-> ```
+> <kbd><img width="483" src="https://user-images.githubusercontent.com/3253920/145134536-7bb090e9-9dcd-4a61-8096-3c47d6c1a699.png" /></kbd>
+>
+> This is because one of the packages installed in your project uses `@types/react` which breaks some parts of Volar.
+> 
+> Please see the following solutions:
+> - https://github.com/johnsoncodehk/volar/discussions/592
+> - https://github.com/johnsoncodehk/volar/discussions/592#discussioncomment-1763880
+
+## Credits
+
+- [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.
+- [angular](https://github.com/angular/angular) shows how TS server plugin working with language service.
+- Syntax highlight is rewritten base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
+- [vscode-fenced-code-block-grammar-injection-example](https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example) shows how to inject vue syntax highlight to markdown.
+- Out of the box formatting working by:
+  - [prettyhtml](https://github.com/Prettyhtml/prettyhtml): html
+  - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
+  - [prettier](https://github.com/prettier/prettier): css, less, scss, postcss
+  - [sass-formatter](https://github.com/TheRealSyler/sass-formatter): sass
+  - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
