@@ -15,7 +15,7 @@ const capabilitiesSet = {
 	tagReference: { references: true, definitions: true, rename: true, },
 	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	attrReference: { references: true, definitions: true, rename: true, },
-	scopedClassName: { references: true, definitions: true, rename: true, },
+	scopedClassName: { references: true, definitions: true, rename: true, completion: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	refAttr: { references: true, definitions: true, rename: true, },
@@ -1455,8 +1455,8 @@ export function generate(
 
 				function addClass(className: string, offset: number) {
 					tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`__VLS_styleScopedClasses`);
-					writePropertyAccess(
+					tsCodeGen.addText(`__VLS_styleScopedClasses[`);
+					writeCodeWithQuotes(
 						className,
 						{
 							start: offset,
@@ -1470,7 +1470,7 @@ export function generate(
 							},
 						},
 					);
-					tsCodeGen.addText(`;\n`);
+					tsCodeGen.addText(`];\n`);
 				}
 			}
 		}
