@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.30.1
+
+- feat: support vue 2 component slots type ([#819](https://github.com/johnsoncodehk/volar/pull/819))
+- feat: expose component public instance type by `defineExpose`
+- feat: support scoped class name auto-complete ([#752](https://github.com/johnsoncodehk/volar/issues/752))
+- feat: alway show commands after extension activated ([#795](https://github.com/johnsoncodehk/volar/issues/795))
+
+**Breaking changes**
+
+- Unsupported `vueCompilerOptions.experimentalExposeScriptSetupContext` option
+
 ## 0.30.0
 
 - feat: support components type-check by `static components` for class-base component ([#753](https://github.com/johnsoncodehk/volar/issues/753))
