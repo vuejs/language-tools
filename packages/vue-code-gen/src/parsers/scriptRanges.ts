@@ -47,6 +47,32 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 					componentsOptionNode: withNode ? componentsOptionNode : undefined,
 				};
 			}
+		} else if (ts.isClassDeclaration(node) 
+			&& node.modifiers && node.modifiers.some(modifier => modifier.kind == ts.SyntaxKind.ExportKeyword)
+			&& node.decorators) {
+			node.decorators.forEach(decorator => {
+				if (ts.isCallExpression(decorator.expression) 
+				&& decorator.expression.arguments
+				&& decorator.expression.arguments.length
+				&& ts.isObjectLiteralExpression(decorator.expression.arguments[0])) {
+					const objParameter = decorator.expression.arguments[0] as ts.ObjectLiteralExpression;
+					const componentProperty = objParameter.properties.find(property => property.name && ts.isIdentifier(property.name) && property.name.escapedText == 'components');
+					if (componentProperty) {
+						const componentsOptionNode = ts.isPropertyAssignment(componentProperty) && ts.isObjectLiteralExpression(componentProperty.initializer)
+							? componentProperty.initializer
+							: undefined;
+						const componentsOption = componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined;
+						exportDefault = {
+							..._getStartEnd(node),
+							expression: _getStartEnd(node),
+							args: _getStartEnd(objParameter),
+							argsNode: withNode ? objParameter : undefined,
+							componentsOption,
+							componentsOptionNode: withNode ? componentsOptionNode : undefined
+						};
+					}
+				}
+			});
 		}
 	});
 
