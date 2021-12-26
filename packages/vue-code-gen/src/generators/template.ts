@@ -13,7 +13,7 @@ const capabilitiesSet = {
 	tagHover: { basic: true },
 	event: { basic: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: true, },
-	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	attrReference: { references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },

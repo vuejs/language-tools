@@ -29,7 +29,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 		return result;
 	}
 
-	function onTs(uri: string, position: vscode.Position, isExtra = false) {
+	function onTs(uri: string, position: vscode.Position) {
 
 		let result: vscode.Hover | undefined;
 
@@ -48,24 +48,8 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			const tsHover = tsLs.doHover(
 				tsLoc.uri,
 				tsLoc.range.start,
-				isExtra,
 			);
 			if (!tsHover) continue;
-
-			if (!isExtra && tsLoc.type === 'embedded-ts' && tsLoc.data.capabilities.extraHoverInfo) {
-				const definitions = findDefinitions.on(uri, position) as vscode.LocationLink[];
-				for (const definition of definitions) {
-					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, true);
-					if (!extraHover) continue;
-					if (!vscode.MarkupContent.is(extraHover.contents)) continue;
-					const extraText = extraHover.contents.value;
-					for (const extraTextPart of extraText.split('\n\n')) {
-						if (vscode.MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraTextPart)) {
-							tsHover.contents.value += `\n\n` + extraTextPart;
-						}
-					}
-				}
-			}
 
 			if (tsHover.range) {
 				// ts -> vue
