@@ -19,9 +19,9 @@
 		"@volar/code-gen": "0.30.1",
 		"@volar/shared": "0.30.1",
 		"@volar/source-map": "0.30.1",
-		"@vue/compiler-core": "^3.2.21",
-		"@vue/compiler-dom": "^3.2.21",
-		"@vue/shared": "^3.2.21",
+		"@vue/compiler-core": "^3.2.26",
+		"@vue/compiler-dom": "^3.2.26",
+		"@vue/shared": "^3.2.26",
 		"upath": "^2.0.1"
 	}
 }
