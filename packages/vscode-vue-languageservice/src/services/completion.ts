@@ -21,7 +21,7 @@ export function getTriggerCharacters(tsVersion: string) {
 	return {
 		typescript: ts2.getTriggerCharacters(tsVersion),
 		html: ['<', ':', '@', '.'/* Event Modifiers */, '/'/* path completion */],
-		css: ['.', '@', '/'/* path completion */],
+		css: ['/', '-', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 		json: ['"', ':'],
 	};
 }
