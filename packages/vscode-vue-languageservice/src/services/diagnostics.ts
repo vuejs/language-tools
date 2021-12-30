@@ -377,6 +377,9 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			});
 			const errors_cache = ref<Map<string, vscode.Diagnostic[]>>(new Map());
 			const result = computed(async () => {
+				{ // fix can't track .value after await
+					cacheWithSourceMap.value
+				}
 				errors_cache.value = await errors.value;
 				return cacheWithSourceMap.value;
 			});
@@ -420,6 +423,9 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap = computed(async () => {
+				{ // fix can't track .value after await
+					sfcJsons.sourceMaps.value
+				}
 				let result: vscode.Diagnostic[] = [];
 				if (errors_cache.value) {
 					for (const [uri, errs] of await errors_cache.value) {
