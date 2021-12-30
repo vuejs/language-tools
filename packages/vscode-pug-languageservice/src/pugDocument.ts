@@ -234,25 +234,17 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		for (const token of tokens) {
 			if (token.type === 'newline' || token.type === 'outdent') {
 				let currentLine = token.loc.start.line - 2;
-				let prevLine = getLineText(currentLine);
+				let prevLine = shared.getLineText(pugTextDoc, currentLine);
 				while (prevLine.trim() === '') {
 					ends.push(pugTextDoc.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
 					if (currentLine <= 0) break;
 					currentLine--;
-					prevLine = getLineText(currentLine);
+					prevLine = shared.getLineText(pugTextDoc, currentLine);
 				}
 			}
 		}
 
 		return ends.sort((a, b) => a - b);
-
-		function getLineText(line: number) {
-			const text = pugTextDoc.getText({
-				start: { line: line, character: 0 },
-				end: { line: line + 1, character: 0 },
-			});
-			return text.substr(0, text.length - 1);
-		}
 	}
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
 

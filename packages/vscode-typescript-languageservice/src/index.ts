@@ -1,6 +1,7 @@
 import * as vscode from 'vscode-languageserver';
 import * as completions from './services/completion';
 import * as completions2 from './services/completion2';
+import * as jsDocCompletions from './services/jsDocCompletions';
 import * as completionResolve from './services/completionResolve';
 import * as definitions from './services/definition';
 import * as typeDefinitions from './services/typeDefinition';
@@ -53,6 +54,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
 		doComplete: completions2.register(languageService, getValidTextDocument, host, ts),
 		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, host),
+		doJsDocComplete: jsDocCompletions.register(languageService, getValidTextDocument),
 		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getValidTextDocument, host),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),

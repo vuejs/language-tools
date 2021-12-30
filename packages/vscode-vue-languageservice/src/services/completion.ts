@@ -99,6 +99,7 @@ export function register(
 		uri: string,
 		tsResult?: vscode.CompletionList,
 		emmetResult?: vscode.CompletionList,
+		jsDocResult?: vscode.CompletionList,
 		cssResult?: vscode.CompletionList,
 		jsonResult?: vscode.CompletionList,
 		htmlResult?: vscode.CompletionList,
@@ -129,6 +130,9 @@ export function register(
 			if (cache.emmetResult?.isIncomplete) {
 				cache.emmetResult = sourceFile ? await getEmmetResult(sourceFile) : undefined;
 			}
+			if (cache.jsDocResult?.isIncomplete) {
+				cache.jsDocResult = await getJsDocResult();
+			}
 			if (cache.cssResult?.isIncomplete) {
 				cache.cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
 			}
@@ -152,35 +156,37 @@ export function register(
 		}
 
 		const emmetResult = sourceFile ? await getEmmetResult(sourceFile) : undefined;
+		const jsDocResult = await getJsDocResult();
 
 		const tsResult = await getTsResult();
 		cache = { uri, tsResult, emmetResult };
-		if (tsResult?.items.length) return emmetResult ? combineResults(tsResult, emmetResult) : tsResult;
+		if (tsResult?.items.length) return combineResults(tsResult, emmetResult, jsDocResult);
 
 		// precede html for support inline css service
 		const cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
 		cache = { uri, cssResult, emmetResult };
-		if (cssResult?.items.length) return emmetResult ? combineResults(cssResult, emmetResult) : cssResult;
+		if (cssResult?.items.length) return combineResults(cssResult, emmetResult, jsDocResult);
 
 		const jsonResult = sourceFile ? await getJsonResult(sourceFile) : undefined;
 		cache = { uri, jsonResult, emmetResult };
-		if (jsonResult?.items.length) return emmetResult ? combineResults(jsonResult, emmetResult) : jsonResult;
+		if (jsonResult?.items.length) return combineResults(jsonResult, emmetResult, jsDocResult);
 
 		const htmlResult = sourceFile ? await getHtmlResult(sourceFile) : undefined;
 		cache = { uri, htmlResult, emmetResult };
-		if (htmlResult?.items.length) return emmetResult ? combineResults(htmlResult, emmetResult) : htmlResult;
+		if (htmlResult?.items.length) return combineResults(htmlResult, emmetResult, jsDocResult);
 
 		const vueResult = sourceFile ? await getVueResult(sourceFile) : undefined;
 		cache = { uri, vueResult, emmetResult };
-		if (vueResult?.items.length) return emmetResult ? combineResults(vueResult, emmetResult) : vueResult;
+		if (vueResult?.items.length) return combineResults(vueResult, emmetResult, jsDocResult);
 
 		cache = { uri, emmetResult };
 		return emmetResult;
 
-		function combineResults(...lists: vscode.CompletionList[]) {
+		function combineResults(...lists: (vscode.CompletionList | undefined)[]) {
+			const lists2 = lists.filter(shared.notEmpty);
 			return {
-				isIncomplete: lists.some(list => list.isIncomplete),
-				items: lists.map(list => list.items).flat(),
+				isIncomplete: lists2.some(list => list.isIncomplete),
+				items: lists2.map(list => list.items).flat(),
 			};
 		}
 		async function getTsResult() {
@@ -268,6 +274,30 @@ export function register(
 				);
 			}
 			return result;
+		}
+		function getJsDocResult() {
+			for (const tsLoc of sourceFiles.toTsLocations(
+				uri,
+				position,
+				position,
+				data => !!data.capabilities.completion,
+			)) {
+
+				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+					continue;
+
+				const tsJsDocComplete = getTsLs(tsLoc.lsType).doJsDocComplete(tsLoc.uri, tsLoc.range.start);
+				if (tsJsDocComplete) {
+					return vscode.CompletionList.create([transformCompletionItem(
+						tsJsDocComplete,
+						tsRange => {
+							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
+								return vueLoc.range;
+							}
+						},
+					)]);
+				}
+			}
 		}
 		async function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.CompletionList | undefined = undefined;
@@ -559,8 +589,10 @@ export function register(
 						mode: 'css',
 					};
 					const vueItems: vscode.CompletionItem[] = cssResult.items.map(cssItem => {
-						const newText = cssItem.textEdit?.newText || cssItem.insertText || cssItem.label;
-						cssItem.textEdit = vscode.TextEdit.replace(wordRange, newText);
+						if (!cssItem.textEdit) {
+							const newText = cssItem.insertText || cssItem.label;
+							cssItem.textEdit = vscode.TextEdit.replace(wordRange, newText);
+						}
 						const vueItem = transformCompletionItem(
 							cssItem,
 							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0],
