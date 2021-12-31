@@ -261,9 +261,9 @@ importers:
 
   packages/vscode-vue-languageservice/testCases:
     specifiers:
-      '@vue/runtime-dom': ^3.2.26
+      vue: ^3.2.26
     devDependencies:
-      '@vue/runtime-dom': 3.2.26
+      vue: 3.2.26
 
   packages/vue-code-gen:
     specifiers:
