@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
-import { computed, reactive, ref } from '@vue/reactivity';
+import { computed, reactive, ref, shallowReactive } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
@@ -36,13 +36,13 @@ export function createSourceFile(
 		scriptSetup: null,
 		styles: [],
 		customBlocks: [],
-	});
+	}) as shared.Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 	const lastUpdated = {
 		template: false,
 		script: false,
 		scriptSetup: false,
 	};
-	const templateScriptData = reactive<ITemplateScriptData>({
+	const templateScriptData = shallowReactive<ITemplateScriptData>({
 		projectVersion: undefined,
 		context: [],
 		contextItems: [],
