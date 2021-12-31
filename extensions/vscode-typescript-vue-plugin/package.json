@@ -23,7 +23,7 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "cd ../.. && npm run build",
+		"vscode:prepublish": "cd ../.. && yarn build",
 		"pack": "vsce package",
 		"release": "vsce publish --yarn"
 	},
@@ -41,8 +41,5 @@
 	],
 	"dependencies": {
 		"typescript-vue-plugin": "0.30.1"
-	},
-	"devDependencies": {
-		"vsce": "latest"
 	}
 }
