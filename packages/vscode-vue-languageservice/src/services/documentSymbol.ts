@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { transformSymbolInformations } from '@volar/transforms';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';

@@ -63,7 +63,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				`${vueUri}.${lang.value}`,
 				shared.syntaxToLanguageId(lang.value),
 				version++,
-				codeGen.value.getText(),
+				codeGen.value.codeGen.getText(),
 			);
 		}
 		else if (script.value || scriptSetup.value) {
@@ -71,7 +71,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				`${vueUri}.__VLS_script.${lang.value}`,
 				shared.syntaxToLanguageId(lang.value),
 				version++,
-				codeGen.value.getText(),
+				codeGen.value.codeGen.getText(),
 			);
 		}
 	});
@@ -99,7 +99,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 					documentSymbol: lsType === 'script',
 					codeActions: !script.value?.src && lsType === 'script',
 				},
-				codeGen.value.getMappings(parseMappingSourceRange),
+				codeGen.value.codeGen.getMappings(parseMappingSourceRange),
 			);
 
 			return sourceMap;

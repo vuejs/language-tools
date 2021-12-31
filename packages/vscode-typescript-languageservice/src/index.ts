@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import * as completions from './services/completion';
 import * as completions2 from './services/completion2';
 import * as jsDocCompletions from './services/jsDocCompletions';
@@ -25,7 +25,8 @@ import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-export type LanguageService = ReturnType<typeof createLanguageService>;
+
+export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
 export { getTriggerCharacters } from './services/completion';
 import * as path from 'path';

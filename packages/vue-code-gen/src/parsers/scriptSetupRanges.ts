@@ -1,7 +1,7 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextRange } from '../types';
 
-export type ScriptSetupRanges = ReturnType<typeof parseScriptSetupRanges>;
+export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
 export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 

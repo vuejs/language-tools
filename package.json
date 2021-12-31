@@ -20,12 +20,10 @@
 		"jest": "latest",
 		"lerna": "latest",
 		"ts-jest": "latest",
-		"typescript": "latest"
+		"typescript": "latest",
+		"yarn": "latest"
 	},
 	"resolutions": {
 		"to-vfile": "7.1.0"
-	},
-	"workspaces": [
-		"packages/*"
-	]
+	}
 }

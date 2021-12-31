@@ -1,5 +1,5 @@
 import * as rpc from 'vscode-jsonrpc';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 /**
  * Client Requests

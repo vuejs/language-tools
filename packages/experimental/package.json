@@ -16,10 +16,10 @@
 		"vue": "*"
 	},
 	"devDependencies": {
-		"@vitejs/plugin-vue": "^1.9.3",
+		"@vitejs/plugin-vue": "^2.0.1",
 		"@vue/compiler-sfc": "^3.2.26",
 		"@vue/runtime-core": "^3.2.26",
-		"vite": "^2.6.5",
+		"vite": "^2.7.10",
 		"vue": "^3.2.26"
 	}
 }

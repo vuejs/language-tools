@@ -1,5 +1,6 @@
 import { hyphenate } from '@vue/shared';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { Connection } from 'vscode-languageserver';
 import type { ApiLanguageServiceContext } from '../types';
 import * as references from '../services/references';
 
@@ -8,7 +9,7 @@ export function register(context: ApiLanguageServiceContext) {
 	const findReferences = references.register(context);
 
 	return async (
-		connection: vscode.Connection,
+		connection: Connection,
 		{ sourceFiles }: ApiLanguageServiceContext,
 		uri: string,
 		mode: 'kebab' | 'pascal',

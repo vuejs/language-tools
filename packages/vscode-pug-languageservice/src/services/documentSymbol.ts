@@ -1,10 +1,10 @@
 import { transformSymbolInformations } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
-import * as vscode from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
+import * as vscode from 'vscode-languageserver-types';
 
 export function register(htmlLs: html.LanguageService) {
-	return (pugDoc: PugDocument): vscode.SymbolInformation[] => {
+	return (pugDoc: PugDocument) => {
 
 		const htmlResult = htmlLs.findDocumentSymbols(
 			pugDoc.sourceMap.mappedDocument,

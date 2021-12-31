@@ -30,6 +30,7 @@ export function createLanguageServer(connection: vscode.Connection) {
 
 	async function onInitialize(params: vscode.InitializeParams) {
 
+		// @ts-expect-error
 		const options: shared.ServerInitializationOptions = params.initializationOptions;
 		let folders: string[] = [];
 		let rootUri: URI;

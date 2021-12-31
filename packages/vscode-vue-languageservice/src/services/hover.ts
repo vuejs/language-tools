@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { ApiLanguageServiceContext } from '../types';
 import { HtmlSourceMap } from '../utils/sourceMaps';
 import * as shared from '@volar/shared';

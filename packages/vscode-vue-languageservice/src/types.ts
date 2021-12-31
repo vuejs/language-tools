@@ -3,13 +3,12 @@ import type { DocumentContext, TextDocument } from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice';
 import type { HTMLDocument } from 'vscode-html-languageservice';
 import type * as json from 'vscode-json-languageservice';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from 'vscode-pug-languageservice';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { LanguageServiceHost } from './languageService';
 import type { SourceFile } from './sourceFile';
 import type { SourceFiles } from './sourceFiles';
-import * as CompilerDOM from '@vue/compiler-dom';
 
 export interface TsCompletionData {
 	lsType: 'template' | 'script',
@@ -59,7 +58,7 @@ export type Modules = {
 
 export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
-	experimentalTemplateCompilerOptions?: CompilerDOM.CompilerOptions;
+	experimentalTemplateCompilerOptions?: any;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
 }
 

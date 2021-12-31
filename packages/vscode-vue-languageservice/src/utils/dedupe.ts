@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 export function createLocationSet() {
 	const set = new Set<string>();

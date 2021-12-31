@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { createSourceFile, SourceFile } from './sourceFile';
@@ -48,12 +48,11 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
 
-export type DocumentLanguageService = ReturnType<typeof getDocumentLanguageService>;
-export type LanguageService = ReturnType<typeof createLanguageService>;
+export interface DocumentLanguageService extends ReturnType<typeof getDocumentLanguageService> { }
+export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export type LanguageServiceHost = ts2.LanguageServiceHost & {
 	getVueCompilationSettings?(): VueCompilerOptions,
 	getVueProjectVersion?(): string;
-	createTsLanguageService?(host: ts.LanguageServiceHost): ts.LanguageService,
 	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
 	schemaRequestService?: json.SchemaRequestService,
 	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
@@ -155,8 +154,8 @@ export function createLanguageService(
 
 	const templateTsHost = createTsLsHost('template');
 	const scriptTsHost = createTsLsHost('script');
-	const templateTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(templateTsHost) : ts.createLanguageService(templateTsHost);
-	const scriptTsLsRaw = vueHost.createTsLanguageService ? vueHost.createTsLanguageService(scriptTsHost) : ts.createLanguageService(scriptTsHost);
+	const templateTsLsRaw = ts.createLanguageService(templateTsHost);
+	const scriptTsLsRaw = ts.createLanguageService(scriptTsHost);
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
 	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));

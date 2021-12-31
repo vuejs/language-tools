@@ -6,7 +6,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import type * as html from 'vscode-html-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
 import { SourceFile } from '../sourceFile';
@@ -233,7 +233,7 @@ export function register(
 				}
 
 				if (inTemplate) {
-					const sortTexts = shared.getTsCompletions(ts)?.SortText;
+					const sortTexts = getTsCompletions(ts)?.SortText;
 					if (sortTexts) {
 						tsComplete.items = tsComplete.items.filter(tsItem => {
 							if (
@@ -262,6 +262,7 @@ export function register(
 						mode: 'ts',
 						tsItem: tsItem,
 					};
+					// @ts-expect-error
 					vueItem.data = data;
 					return vueItem;
 				});
@@ -326,6 +327,7 @@ export function register(
 
 				const { contextItems } = sourceFile.getTemplateScriptData();
 				for (const c of contextItems) {
+					// @ts-expect-error
 					const data: Data = c.data;
 					const dir = hyphenate(data.name);
 					if (dir.startsWith('v-')) {
@@ -345,6 +347,7 @@ export function register(
 					for (const componentName of componentNames) {
 						const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
 						for (const prop of bind) {
+							// @ts-expect-error
 							const data: Data = prop.data;
 							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
 							if (hyphenate(name).startsWith('on-')) {
@@ -377,6 +380,7 @@ export function register(
 							}
 						}
 						for (const event of on) {
+							// @ts-expect-error
 							const data: Data = event.data;
 							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
 							const propName = '@' + name;
@@ -473,8 +477,8 @@ export function register(
 					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(
 						htmlItem,
 						htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
-					));
-					const htmlItemsMap = new Map<string, html.CompletionItem>();
+					)) as vscode.CompletionItem[];
+					const htmlItemsMap = new Map<string, vscode.CompletionItem>();
 					for (const entry of htmlResult.items) {
 						htmlItemsMap.set(entry.label, entry);
 					}
@@ -495,6 +499,7 @@ export function register(
 								uri: uri,
 								importUri: importFile.uri,
 							};
+							// @ts-expect-error
 							vueItem.data = data;
 						}
 						else {
@@ -537,12 +542,14 @@ export function register(
 								docUri: sourceMap.mappedDocument.uri,
 								tsItem: tsItem,
 							};
+							// @ts-expect-error
 							vueItem.data = data;
 						}
 					}
 					{
 						const temp = new Map<string, vscode.CompletionItem>();
 						for (const item of vueItems) {
+							// @ts-expect-error
 							const data: CompletionData | undefined = item.data;
 							if (data?.mode === 'autoImport' && data.importUri === sourceFile.uri) { // don't import itself
 								continue;
@@ -579,7 +586,7 @@ export function register(
 					const wordStart = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
 					const wordRange: vscode.Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
 					const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
-					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext, settings?.completion);
+					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext, settings?.completion) as vscode.CompletionList;
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -597,6 +604,7 @@ export function register(
 							cssItem,
 							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0],
 						);
+						// @ts-expect-error
 						vueItem.data = data;
 						return vueItem;
 					});
@@ -707,7 +715,11 @@ export function register(
 			if (doc && entryDoc) {
 
 				const text = doc.getText();
-				const tags_1 = templateScriptData.componentItems.map(item => ({ item, name: (item.data as TsCompletionData).name }));
+				const tags_1 = templateScriptData.componentItems.map(item => {
+					// @ts-expect-error
+					const data: TsCompletionData = item.data;
+					return { item, name: data.name };
+				});
 				const tags_2 = templateTagNames
 					.filter(tag => tag.indexOf('.') >= 0)
 					.map(tag => ({ name: tag, item: undefined }));
@@ -763,4 +775,54 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 			};
 		}
 	}
+}
+
+function getTsCompletions(ts: typeof import('typescript/lib/tsserverlibrary')): {
+	StringCompletions: {
+		getStringLiteralCompletions: Function,
+		getStringLiteralCompletionDetails: Function,
+	},
+	moduleSpecifierResolutionLimit: 100,
+	moduleSpecifierResolutionCacheAttemptLimit: 1000,
+	SortText: {
+		LocalDeclarationPriority: '10',
+		LocationPriority: '11',
+		OptionalMember: '12',
+		MemberDeclaredBySpreadAssignment: '13',
+		SuggestedClassMembers: '14',
+		GlobalsOrKeywords: '15',
+		AutoImportSuggestions: '16',
+		JavascriptIdentifiers: '17',
+		DeprecatedLocalDeclarationPriority: '18',
+		DeprecatedLocationPriority: '19',
+		DeprecatedOptionalMember: '20',
+		DeprecatedMemberDeclaredBySpreadAssignment: '21',
+		DeprecatedSuggestedClassMembers: '22',
+		DeprecatedGlobalsOrKeywords: '23',
+		DeprecatedAutoImportSuggestions: '24'
+	},
+	CompletionSource: { ThisProperty: 'ThisProperty/' },
+	getCompletionsAtPosition: Function,
+	getCompletionEntriesFromSymbols: Function,
+	getCompletionEntryDetails: Function,
+	createCompletionDetailsForSymbol: Function,
+	createCompletionDetails: Function,
+	getCompletionEntrySymbol: Function,
+	CompletionKind: {
+		'0': 'ObjectPropertyDeclaration',
+		'1': 'Global',
+		'2': 'PropertyAccess',
+		'3': 'MemberLike',
+		'4': 'String',
+		'5': 'None',
+		ObjectPropertyDeclaration: 0,
+		Global: 1,
+		PropertyAccess: 2,
+		MemberLike: 3,
+		String: 4,
+		None: 5
+	},
+	getPropertiesForObjectExpression: Function,
+} | undefined {
+	return (ts as any).Completions;
 }

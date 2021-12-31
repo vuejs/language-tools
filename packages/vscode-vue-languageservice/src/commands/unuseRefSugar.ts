@@ -1,5 +1,6 @@
 import * as shared from '@volar/shared';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { Connection } from 'vscode-languageserver';
 import * as codeAction from '../services/codeAction';
 import * as codeActionResolve from '../services/codeActionResolve';
 import * as diagnostics from '../services/diagnostics';
@@ -14,7 +15,7 @@ export function register(context: ApiLanguageServiceContext) {
 	const getCodeActions = codeAction.register(context);
 	const resolveCodeAction = codeActionResolve.register(context);
 
-	return async (connection: vscode.Connection, uri: string) => {
+	return async (connection: Connection, uri: string) => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;

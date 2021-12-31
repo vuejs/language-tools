@@ -1,5 +1,5 @@
 import { transformCompletionItem } from '@volar/transforms';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
@@ -11,6 +11,7 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost, scriptTsLs }: ApiLanguageServiceContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
+		// @ts-expect-error
 		const data: CompletionData | undefined = item.data;
 		if (!data) return item;
 
@@ -48,6 +49,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 				data.tsItem,
 				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0],
 			);
+			// @ts-expect-error
 			newVueItem.data = data;
 			// TODO: this is a patch for import ts file icon
 			if (newVueItem.detail !== data.tsItem.detail + '.ts') {

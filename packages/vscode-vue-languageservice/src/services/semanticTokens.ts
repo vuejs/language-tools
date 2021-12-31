@@ -1,5 +1,6 @@
 import { hyphenate, isHTMLTag } from '@vue/shared';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
+import { ResultProgressReporter, SemanticTokensBuilder } from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 import * as ts2 from 'vscode-typescript-languageservice'; // TODO: remove it
@@ -27,7 +28,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
 
-	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
+	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) {
@@ -77,7 +78,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 		return buildTokens(tokens);
 
 		function buildTokens(tokens: TokenData[]) {
-			const builder = new vscode.SemanticTokensBuilder();
+			const builder = new SemanticTokensBuilder();
 			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
 				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
 			}

@@ -6,6 +6,7 @@ import type * as css from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice'
 import type * as vue from 'vscode-vue-languageservice';
 import * as shared from '@volar/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary'; // fix build failed
 
 export function createLsConfigs(rootFolders: string[], connection: vscode.Connection) {
 

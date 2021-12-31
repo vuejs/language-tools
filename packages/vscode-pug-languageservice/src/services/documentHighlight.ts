@@ -1,10 +1,9 @@
 import { transformLocations } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
-import type * as vscode from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
-	return (pugDoc: PugDocument, pos: vscode.Position) => {
+	return (pugDoc: PugDocument, pos: html.Position) => {
 
 		const htmlRange = pugDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion)?.[0];
 		if (!htmlRange) return;

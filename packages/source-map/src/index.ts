@@ -1,9 +1,13 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as vscode from 'vscode-languageserver';
 
 export interface Range {
 	start: number,
 	end: number,
+}
+
+interface Position {
+	line: number,
+	character: number,
 }
 
 export enum Mode {
@@ -157,24 +161,24 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		super(_mappings);
 	}
 
-	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+	public getSourceRange<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
 		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
 			return maped;
 		}
 	}
-	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+	public getMappedRange<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
 		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
 			return maped;
 		}
 	}
-	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+	public getSourceRanges<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
 		return this.getRanges(start, end ?? start, false, filter);
 	}
-	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+	public getMappedRanges<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
 		return this.getRanges(start, end ?? start, true, filter);
 	}
 
-	protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
+	protected * getRanges<T extends number | Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
 		const startIsNumber = typeof start === 'number';
 		const endIsNumber = typeof end === 'number';

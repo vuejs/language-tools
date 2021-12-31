@@ -2,7 +2,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, findBindingVars } from './scriptSetupRanges';
 import type { TextRange } from '../types';
 
-export type ScriptSetupRanges = ReturnType<typeof parseRefSugarDeclarationRanges>;
+export interface ScriptSetupRanges extends ReturnType<typeof parseRefSugarDeclarationRanges> { }
 
 export function parseRefSugarDeclarationRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, collectKeys: string[]) {
 

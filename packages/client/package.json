@@ -10,11 +10,12 @@
 	"dependencies": {
 		"@volar/server": "0.30.1",
 		"@volar/shared": "0.30.1",
+		"@vue/compiler-dom": "^3.2.26",
 		"@vue/reactivity": "^3.2.26",
 		"upath": "^2.0.1",
-		"vscode-html-languageservice": "^4.1.0",
-		"vscode-languageclient": "^8.0.0-next.2",
-		"vscode-languageserver-textdocument": "^1.0.1",
+		"vscode-html-languageservice": "^4.2.1",
+		"vscode-languageclient": "^8.0.0-next.7",
+		"vscode-languageserver-textdocument": "^1.0.3",
 		"vscode-nls": "5.0.0"
 	},
 	"devDependencies": {

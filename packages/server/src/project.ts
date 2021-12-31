@@ -6,8 +6,9 @@ import * as vscode from 'vscode-languageserver';
 import { getSchemaRequestService } from './schemaRequestService';
 import type { createLsConfigs } from './configs';
 import * as path from 'upath';
+import { getDocumentSafely } from './utils';
 
-export type Project = ReturnType<typeof createProject>;
+export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
 export const renameFileContentCache = new Map<string, string>();
 
@@ -169,9 +170,6 @@ export async function createProject(
 
 		const host: vue.LanguageServiceHost = {
 			// vue
-			createTsLanguageService(host) {
-				return shared.createTsLanguageService(ts, host);
-			},
 			getEmmetConfig: lsConfigs?.getEmmetConfiguration,
 			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,
 			getPreferences: lsConfigs?.getTsPreferences,
@@ -272,7 +270,7 @@ export function getScriptText(
 	sys: vue.Modules['typescript']['sys'],
 ) {
 	const uri = shared.fsPathToUri(fileName);
-	const doc = shared.getDocumentSafely(documents, uri);
+	const doc = getDocumentSafely(documents, uri);
 	if (doc) {
 		return doc.getText();
 	}

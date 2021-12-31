@@ -1,5 +1,5 @@
 import type { ApiLanguageServiceContext } from '../types';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import * as dedupe from '../utils/dedupe';
 
 export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {

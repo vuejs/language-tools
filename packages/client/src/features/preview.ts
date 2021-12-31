@@ -14,8 +14,8 @@ let lastPreviewQuery: string | undefined;
 let goToTemplateReq = 0;
 let lastPreviewPort = -1;
 
-type FinderState = { fileName: string };
-type PreviewState = { fileName: string, layout: string, query: string };
+interface FinderState { fileName: string }
+interface PreviewState { fileName: string, layout: string, query: string }
 
 export async function activate(context: vscode.ExtensionContext) {
 

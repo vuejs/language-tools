@@ -17,8 +17,8 @@
 	},
 	"dependencies": {
 		"domelementtype": "^2.2.0",
-		"domhandler": "^4.2.2",
-		"htmlparser2": "^7.1.2",
+		"domhandler": "^4.3.0",
+		"htmlparser2": "^7.2.0",
 		"pug": "^3.0.2"
 	}
 }

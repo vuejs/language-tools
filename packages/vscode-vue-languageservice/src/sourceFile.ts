@@ -18,7 +18,7 @@ import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
 
-export type SourceFile = ReturnType<typeof createSourceFile>;
+export interface SourceFile extends ReturnType<typeof createSourceFile> { }
 
 export function createSourceFile(
 	uri: string,
@@ -380,13 +380,18 @@ export function createSourceFile(
 		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns)), options)?.items ?? [] : [];
 
 		components = components.filter(entry => {
-			const name = (entry.data as TsCompletionData).name;
-			return name.indexOf('$') === -1 && !name.startsWith('_');
+			// @ts-expect-error
+			const data: TsCompletionData = entry.data;
+			return data.name.indexOf('$') === -1 && !data.name.startsWith('_');
 		});
 
+		// @ts-expect-error
 		const contextNames = context.map(entry => (entry.data as TsCompletionData).name);
+		// @ts-expect-error
 		const componentNames = components.map(entry => (entry.data as TsCompletionData).name);
+		// @ts-expect-error
 		const propNames = props.map(entry => (entry.data as TsCompletionData).name);
+		// @ts-expect-error
 		const setupReturnNames = setupReturns.map(entry => (entry.data as TsCompletionData).name);
 
 		let dirty = false;

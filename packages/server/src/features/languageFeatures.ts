@@ -6,6 +6,7 @@ import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 import type { createLsConfigs } from '../configs';
 import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
+import { getDocumentSafely } from '../utils';
 
 export function register(
 	ts: vue.Modules['typescript'],
@@ -45,7 +46,7 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri: string | undefined = item.data?.uri;
+		const uri = (item.data as any)?.uri as string | undefined;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
@@ -75,12 +76,14 @@ export function register(
 		return languageService?.getCodeLens(handler.textDocument.uri, await lsConfigs?.getCodeLensConfigs());
 	});
 	connection.onCodeLensResolve(async codeLens => {
-		const uri = codeLens.data?.uri;
+		const uri = (codeLens.data as any)?.uri as string | undefined;
+		if (!uri) return codeLens;
 		const languageService = await getLanguageService(uri);
 		return languageService?.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
 	});
 	connection.onExecuteCommand(async handler => {
-		const uri = handler.arguments?.[0];
+		const uri = handler.arguments?.[0] as string | undefined;
+		if (!uri) return;
 		const languageService = await getLanguageService(uri);
 		languageService?.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
 	});
@@ -214,7 +217,7 @@ export function register(
 								for (const file of handler.files) {
 									if (change.textDocument.uri === file.oldUri) {
 										change.textDocument.uri = file.newUri;
-										change.textDocument.version = shared.getDocumentSafely(documents, file.newUri)?.version ?? change.textDocument.version;
+										change.textDocument.version = getDocumentSafely(documents, file.newUri)?.version ?? change.textDocument.version;
 									}
 								}
 							}

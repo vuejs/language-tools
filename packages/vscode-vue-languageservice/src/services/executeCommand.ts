@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver';
+import { Connection } from 'vscode-languageserver';
 import { Commands } from '../commands';
 import * as convertTagNameCase from '../commands/convertTagNameCase';
 import { execute as executeHtmlToPug } from '../commands/htmlToPug';
@@ -19,7 +19,7 @@ export function register(context: ApiLanguageServiceContext) {
 	const doUnuseRefSugar = unuseRefSugar.register(context);
 	const doConvertTagNameCase = convertTagNameCase.register(context);
 
-	return async (uri: string, command: string, args: any[] | undefined, connection: vscode.Connection) => {
+	return async (uri: string, command: string, args: any[] | undefined, connection: Connection) => {
 
 		if (command === Commands.SHOW_REFERENCES && args) {
 			await executeShowReferences(args[0], args[1], args[2], connection);

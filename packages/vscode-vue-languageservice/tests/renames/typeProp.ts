@@ -1,5 +1,5 @@
 import * as path from 'upath';
-import { Position } from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { defineRename } from '../utils/defineRename';
 
 const file_from = path.resolve(__dirname, '../../testCases/renames/typeProp_from.vue');
@@ -24,7 +24,7 @@ import Comp from './typeProp_from.vue';
 
 defineRename({
 	fileName: file_from,
-	position: Position.create(0, 13),
+	position: vscode.Position.create(0, 13),
 	newName: 'barFoo',
 	length: 6,
 }, {
@@ -34,7 +34,7 @@ defineRename({
 
 defineRename({
 	fileName: file_from,
-	position: Position.create(3, 14),
+	position: vscode.Position.create(3, 14),
 	newName: 'barFoo',
 	length: 6,
 }, {
@@ -44,7 +44,7 @@ defineRename({
 
 defineRename({
 	fileName: file_to,
-	position: Position.create(1, 9),
+	position: vscode.Position.create(1, 9),
 	newName: 'bar-foo',
 	length: 7,
 }, {
@@ -54,7 +54,7 @@ defineRename({
 
 defineRename({
 	fileName: file_to,
-	position: Position.create(2, 9),
+	position: vscode.Position.create(2, 9),
 	newName: 'barFoo',
 	length: 6,
 }, {

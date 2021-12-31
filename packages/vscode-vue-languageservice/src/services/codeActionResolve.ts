@@ -1,5 +1,5 @@
 import type { ApiLanguageServiceContext } from '../types';
-import type { CodeAction } from 'vscode-languageserver-types';
+import type { CodeAction } from 'vscode-languageserver-protocol';
 import { tsEditToVueEdit } from './rename';
 import type { Data } from './callHierarchy';
 

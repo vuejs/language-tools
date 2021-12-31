@@ -8,14 +8,14 @@ import * as upath from 'upath';
 import { TextRange } from '@volar/vue-code-gen/out/types';
 import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
 
-type StylesheetNode = {
+interface StylesheetNode {
 	children: StylesheetNode[] | undefined,
 	end: number,
 	length: number,
 	offset: number,
 	parent: StylesheetNode | null,
 	type: number,
-};
+}
 
 function findStylesheetVBindRanges(docText: string, ss: css.Stylesheet) {
 	const result: TextRange[] = [];

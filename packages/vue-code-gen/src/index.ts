@@ -5,6 +5,9 @@ import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerVue2 from './vue2TemplateCompiler';
 
+export * from './types';
+export * from '@vue/compiler-dom';
+
 /**
  * @param templateAst Use `require('@vue/compiler-dom').compile` or `require('@volar/vue-code-gen').compileTemplate`, provide to resolve variables unused in script setup
  * @param cssVars Use `require('@vue/compiler-sfc').parseCssVars`, provide to resolve variables unused in script setup
@@ -42,13 +45,13 @@ export function generateSFCScriptTypeCheckCode(
 	);
 
 	return {
-		code: generated.getText(),
+		code: generated.codeGen.getText(),
 		scriptMappings: getScriptMappings('script'),
 		scriptSetupMappings: getScriptMappings('scriptSetup'),
 	};
 
 	function getScriptMappings(vueTag: 'script' | 'scriptSetup') {
-		return generated.getMappings()
+		return generated.codeGen.getMappings()
 			.filter(mapping =>
 				mapping.data.vueTag === vueTag
 				&& mapping.data.capabilities.diagnostic
