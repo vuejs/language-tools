@@ -89,6 +89,7 @@ node_modules/**/*.js
 !node_modules/@volar/client/out/common.js
 !node_modules/@volar/client/out/features/activeSelection.js
 !node_modules/@volar/client/out/features/attrNameCase.js
+!node_modules/@volar/client/out/features/autoInsertion.js
 !node_modules/@volar/client/out/features/callGraph.js
 !node_modules/@volar/client/out/features/createWorkspaceSnippets.js
 !node_modules/@volar/client/out/features/documentContent.js
@@ -97,7 +98,6 @@ node_modules/**/*.js
 !node_modules/@volar/client/out/features/preview.js
 !node_modules/@volar/client/out/features/showReferences.js
 !node_modules/@volar/client/out/features/splitEditors.js
-!node_modules/@volar/client/out/features/tagClosing.js
 !node_modules/@volar/client/out/features/tagNameCase.js
 !node_modules/@volar/client/out/features/tsVersion.js
 !node_modules/@volar/client/out/features/tsconfig.js
