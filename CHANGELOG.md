@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.30.2
+
+- feat: jsdoc comment suggestion ([#827](https://github.com/johnsoncodehk/volar/issues/827))
+- feat: TS directive comment suggestion
+- feat: auto insert attribute quotes
+- fix: css error range not reliable ([#826](https://github.com/johnsoncodehk/volar/issues/826))
+- fix: html, css completion trigger characters
+- fix: allow loose vue language id for markdown ([#831](https://github.com/johnsoncodehk/volar/issues/831))
+- fix: avoid auto close tag with undo ([#837](https://github.com/johnsoncodehk/volar/issues/837))
+
 ## 0.30.1
 
 - feat: support vue 2 component slots type ([#819](https://github.com/johnsoncodehk/volar/pull/819))
