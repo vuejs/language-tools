@@ -108,6 +108,8 @@ node_modules/**/*.js
 !node_modules/@volar/code-gen/out/*.js
 !node_modules/@volar/html2pug/out/*.js
 !node_modules/@volar/server/node.js
+!node_modules/@volar/server/out/commands.js
+!node_modules/@volar/server/out/commands/*.js
 !node_modules/@volar/server/out/common.js
 !node_modules/@volar/server/out/configs.js
 !node_modules/@volar/server/out/features/*.js
@@ -351,7 +353,6 @@ node_modules/**/*.js
 !node_modules/vscode-typescript-languageservice/out/utils/typeConverters.js
 !node_modules/vscode-uri/lib/umd/*.js
 !node_modules/vscode-vue-languageservice/out/*.js
-!node_modules/vscode-vue-languageservice/out/commands/*.js
 !node_modules/vscode-vue-languageservice/out/parsers/*.js
 !node_modules/vscode-vue-languageservice/out/services/*.js
 !node_modules/vscode-vue-languageservice/out/use/*.js

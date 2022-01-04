@@ -1,6 +1,7 @@
 import * as shared from '@volar/shared';
 import * as vue from 'vscode-vue-languageservice';
 import * as vscode from 'vscode-languageserver';
+import { Commands } from '../commands';
 
 export function register(
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
@@ -59,8 +60,8 @@ export function register(
 		server.executeCommandProvider = {
 			commands: [
 				...(server.executeCommandProvider?.commands ?? []),
-				vue.Commands.CONVERT_TO_KEBAB_CASE,
-				vue.Commands.CONVERT_TO_PASCAL_CASE,
+				Commands.CONVERT_TO_KEBAB_CASE,
+				Commands.CONVERT_TO_PASCAL_CASE,
 			]
 		};
 	}
@@ -82,13 +83,13 @@ export function register(
 		server.executeCommandProvider = {
 			commands: [
 				...(server.executeCommandProvider?.commands ?? []),
-				vue.Commands.HTML_TO_PUG,
-				vue.Commands.PUG_TO_HTML,
-				vue.Commands.USE_SETUP_SUGAR,
-				vue.Commands.UNUSE_SETUP_SUGAR,
-				vue.Commands.USE_REF_SUGAR,
-				vue.Commands.UNUSE_REF_SUGAR,
-				vue.Commands.SHOW_REFERENCES,
+				Commands.HTML_TO_PUG,
+				Commands.PUG_TO_HTML,
+				Commands.USE_SETUP_SUGAR,
+				Commands.UNUSE_SETUP_SUGAR,
+				Commands.USE_REF_SUGAR,
+				Commands.UNUSE_REF_SUGAR,
+				Commands.SHOW_REFERENCES,
 			]
 		};
 	}
