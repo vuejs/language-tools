@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import * as shared from '@volar/shared';

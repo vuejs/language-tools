@@ -1,7 +1,7 @@
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 import type { TextRange } from '../types';
 
-export type ScriptRanges = ReturnType<typeof parseScriptRanges>;
+export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
 export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, hasScriptSetup: boolean, withComponentOption: boolean, withNode: boolean) {
 

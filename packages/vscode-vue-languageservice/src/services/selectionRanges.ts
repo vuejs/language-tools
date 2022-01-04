@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { transformSelectionRanges } from '@volar/transforms';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';

@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFiles } from '../sourceFiles';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';

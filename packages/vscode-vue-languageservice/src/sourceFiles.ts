@@ -1,5 +1,5 @@
 import { computed, shallowReactive } from '@vue/reactivity';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
 import type { CssSourceMap, HtmlSourceMap, TeleportSourceMap, TsSourceMap } from './utils/sourceMaps';
@@ -7,9 +7,10 @@ import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
-import { TsMappingData } from 'packages/vue-code-gen/src/types';
+import type { TsMappingData } from '@volar/vue-code-gen';
+import type * as ts from 'typescript/lib/tsserverlibrary'; // fix build failed
 
-export type SourceFiles = ReturnType<typeof createSourceFiles>;
+export interface SourceFiles extends ReturnType<typeof createSourceFiles> { }
 
 export function createSourceFiles() {
 

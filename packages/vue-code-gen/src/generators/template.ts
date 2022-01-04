@@ -1,5 +1,5 @@
 import * as SourceMaps from '@volar/source-map';
-import { createCodeGen } from '@volar/code-gen';
+import { CodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
@@ -56,9 +56,9 @@ export function generate(
 	},
 ) {
 
-	const tsCodeGen = createCodeGen<TsMappingData>();
-	const tsFormatCodeGen = createCodeGen<TsMappingData>();
-	const cssCodeGen = createCodeGen<undefined>();
+	const tsCodeGen = new CodeGen<TsMappingData>();
+	const tsFormatCodeGen = new CodeGen<TsMappingData>();
+	const cssCodeGen = new CodeGen<undefined>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,

@@ -22,10 +22,10 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 		return [...set.values()];
 	}
 	function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.DiagnosticWithLocation[] {
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSyntacticDiagnostics(sourceFile, cancellationToken), 2)).flat();
+		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSyntacticDiagnostics(sourceFile, cancellationToken))).flat();
 	}
 	function getSemanticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSemanticDiagnostics(sourceFile, cancellationToken), 1)).flat();
+		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSemanticDiagnostics(sourceFile, cancellationToken))).flat();
 	}
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
 		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getGlobalDiagnostics(cancellationToken))).flat();
@@ -49,9 +49,8 @@ export function register({ modules: { typescript: ts }, sourceFiles, templateTsL
 	}
 
 	// transform
-	function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(lsType: 'script' | 'template', diagnostics: readonly T[], mode?: 1 | 2 | 3 | 4): T[] {
+	function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(lsType: 'script' | 'template', diagnostics: readonly T[]): T[] {
 		const result: T[] = [];
-		const tsLsHost = lsType === 'script' ? scriptTsHost : templateTsHost;
 		for (const diagnostic of diagnostics) {
 			if (
 				diagnostic.file !== undefined

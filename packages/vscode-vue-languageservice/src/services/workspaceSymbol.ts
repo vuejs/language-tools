@@ -1,5 +1,5 @@
 import { transformSymbolInformations } from '@volar/transforms';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { ApiLanguageServiceContext } from '../types';
 
 export function register(

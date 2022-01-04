@@ -1,5 +1,5 @@
 import { transformLocations } from '@volar/transforms';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
@@ -93,6 +93,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 
 				result.push({
 					...tsCodeAction,
+					// @ts-expect-error
 					data,
 					edit: vueEdit,
 				});
@@ -126,7 +127,7 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					),
 					only: context.only,
 				};
-				const cssCodeActions = cssLs.doCodeActions2(sourceMap.mappedDocument, cssRange, cssContext, sourceMap.stylesheet);
+				const cssCodeActions = cssLs.doCodeActions2(sourceMap.mappedDocument, cssRange, cssContext, sourceMap.stylesheet) as vscode.CodeAction[];
 				for (const codeAction of cssCodeActions) {
 
 					// TODO

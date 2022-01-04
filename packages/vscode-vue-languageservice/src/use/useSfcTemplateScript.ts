@@ -1,4 +1,4 @@
-import { CodeGen, createCodeGen, margeCodeGen } from '@volar/code-gen';
+import { CodeGen, margeCodeGen } from '@volar/code-gen';
 import * as shared from '@volar/shared';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import * as cssClasses from '../parsers/cssClasses';
@@ -73,7 +73,7 @@ export function useSfcTemplateScript(
 	});
 	const data = computed(() => {
 
-		const codeGen = createCodeGen<SourceMaps.TsMappingData>();
+		const codeGen = new CodeGen<SourceMaps.TsMappingData>();
 
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
@@ -114,14 +114,14 @@ export function useSfcTemplateScript(
 		writeCssVars();
 
 		if (templateCodeGens.value) {
-			margeCodeGen(codeGen as CodeGen, templateCodeGens.value.codeGen as CodeGen);
+			margeCodeGen(codeGen, templateCodeGens.value.codeGen);
 		}
 
 		codeGen.addText(`}\n`);
 		codeGen.addText(`export default __VLS_slots;\n`);
 
 		return {
-			...codeGen,
+			codeGen,
 			cssModuleMappingsArr,
 			cssScopedMappings,
 			ctxMappings,
@@ -310,7 +310,7 @@ export function useSfcTemplateScript(
 					documentSymbol: false,
 					codeActions: false,
 				},
-				data.value.getMappings(parseMappingSourceRange),
+				data.value.codeGen.getMappings(parseMappingSourceRange),
 			);
 			for (const [uri, mappings] of [
 				...data.value.cssModuleMappingsArr.flatMap(m => [...m]),
@@ -425,10 +425,10 @@ export function useSfcTemplateScript(
 		const newLang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
 		const newLangId = shared.syntaxToLanguageId(newLang);
 
-		if (data.value?.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== newLangId)) {
+		if (data.value?.codeGen.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== newLangId)) {
 			if (data.value) {
 				const _version = version++;
-				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + newLang, newLangId, _version, data.value.getText());
+				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + newLang, newLangId, _version, data.value.codeGen.getText());
 				formatTextDoc.value = templateCodeGens.value
 					? TextDocument.create(vueUri + '.__VLS_template.format.' + newLang, newLangId, _version, templateCodeGens.value.formatCodeGen.getText())
 					: undefined;

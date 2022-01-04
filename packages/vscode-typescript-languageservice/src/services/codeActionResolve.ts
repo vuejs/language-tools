@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import { Data } from './codeAction';
@@ -12,7 +12,8 @@ export function register(
 ) {
 	return async (codeAction: vscode.CodeAction) => {
 
-		const data = codeAction.data as Data;
+		// @ts-expect-error
+		const data: Data = codeAction.data;
 
 		const document = getTextDocument(data.uri);
 		const [formatOptions, preferences] = document ? await Promise.all([

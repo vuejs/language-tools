@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { compileSFCTemplate } from '@volar/vue-code-gen';

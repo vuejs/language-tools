@@ -1,9 +1,9 @@
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { Commands } from '../commands';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-type CodeLensOptions = {
+export interface CodeLensOptions {
 	references: boolean,
 	pugTool: boolean,
 	scriptSetupTool: boolean,
@@ -61,6 +61,7 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 							start: document.positionAt(maped.sourceRange.start),
 							end: document.positionAt(maped.sourceRange.end),
 						},
+						// @ts-expect-error
 						data,
 					});
 				}

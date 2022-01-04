@@ -1,6 +1,8 @@
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import * as completions from './services/completion';
 import * as completions2 from './services/completion2';
+import * as directiveCommentCompletions from './services/directiveCommentCompletions';
+import * as jsDocCompletions from './services/jsDocCompletions';
 import * as completionResolve from './services/completionResolve';
 import * as definitions from './services/definition';
 import * as typeDefinitions from './services/typeDefinition';
@@ -24,7 +26,8 @@ import * as callHierarchy from './services/callHierarchy';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-export type LanguageService = ReturnType<typeof createLanguageService>;
+
+export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
 export { getTriggerCharacters } from './services/completion';
 import * as path from 'path';
@@ -53,6 +56,8 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
 		doComplete: completions2.register(languageService, getValidTextDocument, host, ts),
 		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, host),
+		doDirectiveCommentComplete: directiveCommentCompletions.register(getValidTextDocument),
+		doJsDocComplete: jsDocCompletions.register(languageService, getValidTextDocument),
 		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getValidTextDocument, host),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),

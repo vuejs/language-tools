@@ -1,8 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
 import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
-import { FoldingRangeKind } from 'vscode-css-languageservice';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as shared from '@volar/shared';
 import type { HtmlLanguageServiceContext } from '../types';

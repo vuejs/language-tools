@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type { ApiLanguageServiceContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
@@ -29,6 +29,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 					lsType: tsLoc.lsType,
 					tsData: item.data,
 				};
+				// @ts-expect-error
 				item.data = data;
 			}
 			vueItems = vueItems.concat(items);

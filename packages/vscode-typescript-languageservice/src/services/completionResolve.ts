@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { entriesToLocations } from '../utils/transforms';
 import { handleKindModifiers } from './completion';
@@ -16,6 +16,7 @@ export function register(
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
+		// @ts-expect-error
 		const data: Data = item.data;
 		const fileName = data.fileName;
 		const name = data.name;

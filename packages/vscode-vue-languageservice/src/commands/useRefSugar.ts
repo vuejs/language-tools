@@ -1,4 +1,5 @@
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { Connection } from 'vscode-languageserver';
 import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import * as definition from '../services/definition';
 import { isBlacklistNode, isRefType } from '../services/refAutoClose';
@@ -11,7 +12,7 @@ export function register(context: ApiLanguageServiceContext) {
 	const findTypeDefinition = definition.register(context).onType;
 	const findReferences = references.register(context);
 
-	return async (connection: vscode.Connection, uri: string) => {
+	return async (connection: Connection, uri: string) => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;

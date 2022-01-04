@@ -3,19 +3,19 @@ import * as SourceMap from '@volar/source-map';
 import * as path from 'path';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createCodeGen } from '@volar/code-gen';
+import { CodeGen } from '@volar/code-gen';
 import * as pugLex from 'pug-lexer';
 
 const pugParser = require('pug-parser');
 
-export type PugDocument = ReturnType<typeof parsePugDocument>;
+export interface PugDocument extends ReturnType<typeof parsePugDocument> { }
 
 export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.LanguageService) {
 
 	const fsPath = shared.uriToFsPath(pugTextDoc.uri);
 	const fileName = path.basename(fsPath);
 	const pugCode = pugTextDoc.getText();
-	const codeGen = createCodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
+	const codeGen = new CodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
 	let error: {
 		code: string,
 		msg: string,
@@ -234,25 +234,17 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		for (const token of tokens) {
 			if (token.type === 'newline' || token.type === 'outdent') {
 				let currentLine = token.loc.start.line - 2;
-				let prevLine = getLineText(currentLine);
+				let prevLine = shared.getLineText(pugTextDoc, currentLine);
 				while (prevLine.trim() === '') {
 					ends.push(pugTextDoc.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
 					if (currentLine <= 0) break;
 					currentLine--;
-					prevLine = getLineText(currentLine);
+					prevLine = shared.getLineText(pugTextDoc, currentLine);
 				}
 			}
 		}
 
 		return ends.sort((a, b) => a - b);
-
-		function getLineText(line: number) {
-			const text = pugTextDoc.getText({
-				start: { line: line, character: 0 },
-				end: { line: line + 1, character: 0 },
-			});
-			return text.substr(0, text.length - 1);
-		}
 	}
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
 
@@ -343,13 +335,13 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 
 export type Node = BlockNode | TagNode | TextNode | CommentNode | BlockCommentNode;
 
-export type BlockNode = {
+export interface BlockNode {
 	type: 'Block',
 	nodes: Node[],
 	line: number,
 }
 
-export type TagNode = {
+export interface TagNode {
 	type: 'Tag',
 	name: string,
 	selfClosing: boolean,
@@ -369,14 +361,14 @@ export type TagNode = {
 	column: number,
 }
 
-export type TextNode = {
+export interface TextNode {
 	type: 'Text',
 	val: string,
 	line: number,
 	column: number,
 }
 
-export type CommentNode = {
+export interface CommentNode {
 	type: 'Comment',
 	val: string,
 	buffer: boolean,
@@ -384,7 +376,7 @@ export type CommentNode = {
 	column: number,
 }
 
-export type BlockCommentNode = {
+export interface BlockCommentNode {
 	type: 'BlockComment',
 	block: BlockNode,
 	val: string,

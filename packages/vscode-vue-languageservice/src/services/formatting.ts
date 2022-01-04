@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import { transformTextEdit } from '@volar/transforms';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';

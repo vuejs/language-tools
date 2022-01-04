@@ -13,7 +13,7 @@ export function getDummyTsLs(
 	_doc: TextDocument,
 	getPreferences: ts2.LanguageServiceHost['getPreferences'],
 	getFormatOptions: ts2.LanguageServiceHost['getFormatOptions'],
-) {
+): ts2.LanguageService {
 	if (!dummyTsLs) {
 		const host: ts2.LanguageServiceHost = {
 			getProjectVersion: () => dummyProjectVersion.toString(),

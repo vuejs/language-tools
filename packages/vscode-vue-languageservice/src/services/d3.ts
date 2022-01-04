@@ -1,5 +1,5 @@
 import type { ApiLanguageServiceContext } from '../types';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as references from './references';
 import * as definitions from './definition';

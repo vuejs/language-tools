@@ -6,11 +6,9 @@ export * from './ts';
 export * from './http';
 export * from './vue';
 
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-types';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 import { promisify } from 'util';
-import * as path from 'path';
 
 export const sleep = promisify(setTimeout);
 
@@ -100,18 +98,10 @@ export function eqSet<T>(as: Set<T>, bs: Set<T>) {
 	return true;
 }
 
-export function getDocumentSafely(documents: vscode.TextDocuments<TextDocument>, uri: string) {
-
-	const normalizeUri = URI.parse(uri).toString();
-	const document = documents.get(uri) ?? documents.get(normalizeUri);
-
-	if (document) {
-		return document;
-	}
-
-	for (const document of documents.all()) {
-		if (URI.parse(document.uri).toString() === normalizeUri) {
-			return document;
-		}
-	}
+export function getLineText(document: TextDocument, line: number) {
+	const text = document.getText({
+		start: { line: line, character: 0 },
+		end: { line: line + 1, character: 0 },
+	});
+	return text.substr(0, text.length - 1);
 }

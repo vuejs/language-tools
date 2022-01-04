@@ -5,8 +5,9 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createLsConfigs } from './configs';
+import { getDocumentSafely } from './utils';
 
-export type Projects = ReturnType<typeof createProjects>;
+export interface Projects extends ReturnType<typeof createProjects> { }
 
 const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -147,7 +148,7 @@ export function createProjects(
 		if (req !== documentUpdatedReq)
 			return;
 
-		const changeDocs = [...updatedUris].map(uri => shared.getDocumentSafely(documents, uri)).filter(shared.notEmpty);
+		const changeDocs = [...updatedUris].map(uri => getDocumentSafely(documents, uri)).filter(shared.notEmpty);
 		const otherDocs = documents.all().filter(doc => !updatedUris.has(doc.uri));
 
 		for (const changeDoc of changeDocs) {
@@ -175,7 +176,7 @@ export function createProjects(
 			if (req !== documentUpdatedReq)
 				return;
 
-			const changeDoc = docUri ? shared.getDocumentSafely(documents, docUri) : undefined;
+			const changeDoc = docUri ? getDocumentSafely(documents, docUri) : undefined;
 			const isDocCancel = changeDoc ? getCancelChecker(changeDoc.uri, changeDoc.version) : async () => {
 				await shared.sleep(0);
 				return false;
