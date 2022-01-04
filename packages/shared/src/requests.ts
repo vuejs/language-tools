@@ -77,11 +77,18 @@ export namespace D3Request {
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/d3');
 }
 
+export namespace GetAutoQuoteEditsRequest {
+	export type ParamsType = vscode.TextDocumentPositionParams;
+	export type ResponseType = string | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoQuote');
+}
+
 export namespace GetTagCloseEditsRequest {
 	export type ParamsType = vscode.TextDocumentPositionParams;
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/tag');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoClose');
 }
 
 export namespace GetRefCompleteEditsRequest {

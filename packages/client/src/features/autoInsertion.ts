@@ -6,8 +6,17 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Com
 	await htmlClient.onReady();
 	context.subscriptions.push(activateAutoInsertion(
 		(document, position) => {
-			let param = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return htmlClient.sendRequest(shared.GetTagCloseEditsRequest.type, param);
+			const params = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+			return htmlClient.sendRequest(shared.GetAutoQuoteEditsRequest.type, params);
+		},
+		{ vue: true },
+		'html.autoCreateQuotes',
+		(lastChange, lastCharacter) => lastChange.rangeLength === 0 && lastCharacter === '=',
+	));
+	context.subscriptions.push(activateAutoInsertion(
+		(document, position) => {
+			const params = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+			return htmlClient.sendRequest(shared.GetTagCloseEditsRequest.type, params);
 		},
 		{ vue: true },
 		'html.autoClosingTags',
@@ -15,8 +24,8 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Com
 	));
 	context.subscriptions.push(activateAutoInsertion(
 		(document, position) => {
-			let param = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return tsClient.sendRequest(shared.GetRefCompleteEditsRequest.type, param);
+			const params = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+			return tsClient.sendRequest(shared.GetRefCompleteEditsRequest.type, params);
 		},
 		{
 			vue: true,
@@ -69,7 +78,7 @@ function activateAutoInsertion(
 		if (!supportedLanguages[document.languageId]) {
 			return;
 		}
-		if (!vscode.workspace.getConfiguration(undefined, document.uri).get<boolean>(configName)) {
+		if (!vscode.workspace.getConfiguration(undefined, document.uri).get<boolean>(configName, true)) {
 			return;
 		}
 		isEnabled = true;
