@@ -180,20 +180,10 @@ export function register(
 		return languageService?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const result = await languageService?.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
-		return {
-			resultId: result?.resultId,
-			data: result?.data ?? [],
-		};
+		return onSemanticTokens(handler, token, resultProgress);
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const result = await languageService?.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
-		return {
-			resultId: result?.resultId,
-			data: result?.data ?? [],
-		};
+		return onSemanticTokens(handler, token, resultProgress);
 	});
 	connection.workspace.onWillRenameFiles(async handler => {
 
@@ -255,6 +245,30 @@ export function register(
 		}
 	});
 
+	async function onSemanticTokens(
+		handler: vscode.SemanticTokensParams | vscode.SemanticTokensRangeParams,
+		token: vscode.CancellationToken,
+		resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>,
+	) {
+
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		const result = await languageService?.getSemanticTokens(
+			handler.textDocument.uri,
+			'range' in handler ? handler.range : undefined,
+			token,
+			tokens => resultProgress?.report(buildTokens(tokens)),
+		) ?? [];
+
+		return buildTokens(result);
+
+		function buildTokens(tokens: [number, number, number, number, number | undefined][]) {
+			const builder = new vscode.SemanticTokensBuilder();
+			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
+				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+			}
+			return builder.build();
+		}
+	}
 	async function getLanguageService(uri: string) {
 		const projects = await getProjects();
 		const project = (await projects?.getProject(uri))?.project;
