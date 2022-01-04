@@ -4,7 +4,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as nls from 'vscode-nls';
 
-const localize = nls.loadMessageBundle();
+const localize = nls.loadMessageBundle(); // TODO: not working
 
 const defaultJsDoc = `/**\n * $0\n */`;
 
@@ -49,7 +49,7 @@ function createCompletionItem(document: TextDocument, position: vscode.Position,
 
 	const item = vscode.CompletionItem.create('/** */');
 	item.kind = vscode.CompletionItemKind.Text;
-	item.detail = localize('typescript.jsDocCompletionItem.documentation', 'JSDoc comment'); // TODO: not working
+	item.detail = localize('typescript.jsDocCompletionItem.documentation', 'JSDoc comment');
 	item.sortText = '\0';
 	item.insertTextFormat = vscode.InsertTextFormat.Snippet;
 
@@ -59,7 +59,7 @@ function createCompletionItem(document: TextDocument, position: vscode.Position,
 	const start = vscode.Position.create(position.line, position.character + (prefix ? -prefix[0].length : 0));
 	const end = vscode.Position.create(position.line, position.character + (suffix ? suffix[0].length : 0));
 	const range = vscode.Range.create(start, end);
-	item.textEdit = vscode.InsertReplaceEdit.create(insertText, range, range);
+	item.textEdit = vscode.TextEdit.replace(range, insertText);
 
 	return item;
 }

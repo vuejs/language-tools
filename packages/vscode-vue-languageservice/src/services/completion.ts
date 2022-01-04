@@ -20,6 +20,7 @@ import { TsSourceMap } from '../utils/sourceMaps';
 export function getTriggerCharacters(tsVersion: string) {
 	return {
 		typescript: ts2.getTriggerCharacters(tsVersion),
+		jsdoc: ['*'],
 		html: ['.', ':', '<', '"', '=', '/'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
 		css: ['/', '-', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 		json: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
@@ -97,13 +98,16 @@ export function register(
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
 		uri: string,
-		tsResult?: vscode.CompletionList,
-		emmetResult?: vscode.CompletionList,
-		jsDocResult?: vscode.CompletionList,
-		cssResult?: vscode.CompletionList,
-		jsonResult?: vscode.CompletionList,
-		htmlResult?: vscode.CompletionList,
-		vueResult?: vscode.CompletionList,
+		lists: {
+			ts?: vscode.CompletionList,
+			emmet?: vscode.CompletionList,
+			jsDoc?: vscode.CompletionList,
+			directiveComment?: vscode.CompletionList,
+			css?: vscode.CompletionList,
+			json?: vscode.CompletionList,
+			html?: vscode.CompletionList,
+			vue?: vscode.CompletionList,
+		},
 	} | undefined = undefined;
 	const componentCompletionDataGetters = new WeakMap<SourceFile, ReturnType<typeof useComponentCompletionData>>();
 
@@ -124,65 +128,68 @@ export function register(
 		const triggerCharacters = getTriggerCharacters(ts.version);
 
 		if (context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
-			if (cache.tsResult?.isIncomplete) {
-				cache.tsResult = await getTsResult();
+			if (cache.lists.ts?.isIncomplete) {
+				cache.lists.ts = await getTsResult();
 			}
-			if (cache.emmetResult?.isIncomplete) {
-				cache.emmetResult = sourceFile ? await getEmmetResult(sourceFile) : undefined;
+			if (cache.lists.emmet?.isIncomplete) {
+				cache.lists.emmet = sourceFile ? await getEmmetResult(sourceFile) : undefined;
 			}
-			if (cache.jsDocResult?.isIncomplete) {
-				cache.jsDocResult = await getJsDocResult();
+			if (cache.lists.jsDoc?.isIncomplete) {
+				cache.lists.jsDoc = await getJsDocResult();
 			}
-			if (cache.cssResult?.isIncomplete) {
-				cache.cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
+			if (cache.lists.directiveComment?.isIncomplete) {
+				cache.lists.jsDoc = await getDirectiveCommentResult();
 			}
-			if (cache.jsonResult?.isIncomplete) {
-				cache.jsonResult = sourceFile ? await getJsonResult(sourceFile) : undefined;
+			if (cache.lists.css?.isIncomplete) {
+				cache.lists.css = sourceFile ? await getCssResult(sourceFile) : undefined;
 			}
-			if (cache.htmlResult?.isIncomplete) {
-				cache.htmlResult = sourceFile ? await getHtmlResult(sourceFile) : undefined;
+			if (cache.lists.json?.isIncomplete) {
+				cache.lists.json = sourceFile ? await getJsonResult(sourceFile) : undefined;
 			}
-			if (cache.vueResult?.isIncomplete) {
-				cache.vueResult = sourceFile ? await getVueResult(sourceFile) : undefined;
+			if (cache.lists.html?.isIncomplete) {
+				cache.lists.html = sourceFile ? await getHtmlResult(sourceFile) : undefined;
 			}
-			const lists = [
-				cache.tsResult,
-				cache.emmetResult,
-				cache.cssResult,
-				cache.htmlResult,
-				cache.vueResult,
-			];
-			return combineResults(...lists.filter(shared.notEmpty));
+			if (cache.lists.vue?.isIncomplete) {
+				cache.lists.vue = sourceFile ? await getVueResult(sourceFile) : undefined;
+			}
+			return combineCacheResults();
 		}
 
-		const emmetResult = sourceFile ? await getEmmetResult(sourceFile) : undefined;
-		const jsDocResult = await getJsDocResult();
+		cache = { uri, lists: {} };
+		cache.lists.emmet = sourceFile ? await getEmmetResult(sourceFile) : undefined;
+		cache.lists.jsDoc = await getJsDocResult();
+		cache.lists.directiveComment = await getDirectiveCommentResult();
 
-		const tsResult = await getTsResult();
-		cache = { uri, tsResult, emmetResult };
-		if (tsResult?.items.length) return combineResults(tsResult, emmetResult, jsDocResult);
+		cache.lists.ts = await getTsResult();
+		if (cache.lists.ts?.items.length) {
+			return combineCacheResults();
+		}
 
 		// precede html for support inline css service
-		const cssResult = sourceFile ? await getCssResult(sourceFile) : undefined;
-		cache = { uri, cssResult, emmetResult };
-		if (cssResult?.items.length) return combineResults(cssResult, emmetResult, jsDocResult);
+		cache.lists.css = sourceFile ? await getCssResult(sourceFile) : undefined;
+		if (cache.lists.css?.items.length) {
+			return combineCacheResults();
+		}
 
-		const jsonResult = sourceFile ? await getJsonResult(sourceFile) : undefined;
-		cache = { uri, jsonResult, emmetResult };
-		if (jsonResult?.items.length) return combineResults(jsonResult, emmetResult, jsDocResult);
+		cache.lists.json = sourceFile ? await getJsonResult(sourceFile) : undefined;
+		if (cache.lists.json?.items.length) {
+			return combineCacheResults();
+		}
 
-		const htmlResult = sourceFile ? await getHtmlResult(sourceFile) : undefined;
-		cache = { uri, htmlResult, emmetResult };
-		if (htmlResult?.items.length) return combineResults(htmlResult, emmetResult, jsDocResult);
+		cache.lists.html = sourceFile ? await getHtmlResult(sourceFile) : undefined;
+		if (cache.lists.html?.items.length) {
+			return combineCacheResults();
+		}
 
-		const vueResult = sourceFile ? await getVueResult(sourceFile) : undefined;
-		cache = { uri, vueResult, emmetResult };
-		if (vueResult?.items.length) return combineResults(vueResult, emmetResult, jsDocResult);
+		cache.lists.vue = sourceFile ? await getVueResult(sourceFile) : undefined;
+		if (cache.lists.vue?.items.length) {
+			return combineCacheResults();
+		}
 
-		cache = { uri, emmetResult };
-		return emmetResult;
+		return combineCacheResults();
 
-		function combineResults(...lists: (vscode.CompletionList | undefined)[]) {
+		function combineCacheResults() {
+			const lists = cache ? Object.values(cache.lists) : [];
 			const lists2 = lists.filter(shared.notEmpty);
 			return {
 				isIncomplete: lists2.some(list => list.isIncomplete),
@@ -277,6 +284,13 @@ export function register(
 			return result;
 		}
 		function getJsDocResult() {
+
+			if (context?.triggerCharacter && !triggerCharacters.jsdoc.includes(context.triggerCharacter)) {
+				return;
+			}
+
+			const result: vscode.CompletionList = vscode.CompletionList.create();
+
 			for (const tsLoc of sourceFiles.toTsLocations(
 				uri,
 				position,
@@ -287,18 +301,49 @@ export function register(
 				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;
 
-				const tsJsDocComplete = getTsLs(tsLoc.lsType).doJsDocComplete(tsLoc.uri, tsLoc.range.start);
-				if (tsJsDocComplete) {
-					return vscode.CompletionList.create([transformCompletionItem(
-						tsJsDocComplete,
+				const jsDocComplete = getTsLs(tsLoc.lsType).doJsDocComplete(tsLoc.uri, tsLoc.range.start);
+				if (jsDocComplete) {
+					result.items.push(transformCompletionItem(
+						jsDocComplete,
 						tsRange => {
 							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
 								return vueLoc.range;
 							}
 						},
-					)]);
+					));
 				}
 			}
+
+			return result;
+		}
+		function getDirectiveCommentResult() {
+
+			const result: vscode.CompletionList = vscode.CompletionList.create();
+
+			for (const tsLoc of sourceFiles.toTsLocations(
+				uri,
+				position,
+				position,
+				data => !!data.capabilities.completion,
+			)) {
+
+				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+					continue;
+
+				const commentComplete = getTsLs(tsLoc.lsType).doDirectiveCommentComplete(tsLoc.uri, tsLoc.range.start);
+				if (commentComplete) {
+					result.items = result.items.concat(commentComplete.map(item => transformCompletionItem(
+						item,
+						tsRange => {
+							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
+								return vueLoc.range;
+							}
+						},
+					)));
+				}
+			}
+
+			return result;
 		}
 		async function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.CompletionList | undefined = undefined;
