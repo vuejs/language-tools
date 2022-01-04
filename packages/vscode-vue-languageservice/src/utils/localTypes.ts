@@ -54,7 +54,7 @@ export type GlobalComponents =
 		| 'Teleport'
 	>;
 
-export declare function getVforSourceType<T>(source: T): T extends number ? number[] : T;
+export declare function getVforSourceType<T>(source: T): T extends number ? number[] : T extends string ? string[] : T;
 export declare function getVforKeyType<T>(source: T): typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never; // use "T extends T" support for union
 export declare function getVforIndexType<T>(source: T): typeof Symbol.iterator extends keyof T ? undefined : number;
 export declare function getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
