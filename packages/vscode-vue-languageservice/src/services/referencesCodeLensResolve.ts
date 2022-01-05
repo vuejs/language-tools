@@ -1,17 +1,16 @@
 import type { ApiLanguageServiceContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
-import type { TsCodeLensData } from './codeLens';
+import type { ReferencesCodeLensData } from './referencesCodeLens';
 import * as findReferences from './references';
-import { Commands } from '../commands';
 
 export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 	const _findReferences = findReferences.register(arguments[0]);
 
-	return (codeLens: vscode.CodeLens, canShowReferences?: boolean) => {
+	return (codeLens: vscode.CodeLens, showReferencesCommand?: string) => {
 
 		// @ts-expect-error
-		const data: TsCodeLensData = codeLens.data;
+		const data = codeLens.data as ReferencesCodeLensData;
 		const tsLs = getTsLs(data.lsType);
 		const doc = data.uri ? sourceFiles.get(data.uri)?.getTextDocument() ?? tsLs.__internal__.getTextDocument(data.uri) : undefined;
 		const tsDoc = data.tsUri ? tsLs.__internal__.getTextDocument(data.tsUri) : undefined;
@@ -60,7 +59,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 			const referencesCount = references?.length ?? 0;
 			codeLens.command = {
 				title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
-				command: canShowReferences ? Commands.SHOW_REFERENCES : '',
+				command: showReferencesCommand ?? '',
 				arguments: [data.uri, codeLens.range.start, vueReferences],
 			};
 		}

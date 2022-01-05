@@ -1,11 +1,10 @@
 import { hyphenate, isHTMLTag } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import { ResultProgressReporter, SemanticTokensBuilder } from 'vscode-languageserver';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 import * as ts2 from 'vscode-typescript-languageservice'; // TODO: remove it
 
-type TokenData = [number, number, number, number, number | undefined];
+type SemanticToken = [number, number, number, number, number | undefined];
 
 export function getSemanticTokenLegend() {
 
@@ -28,13 +27,13 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
 
-	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
+	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, reportProgress?: (tokens: SemanticToken[]) => void): SemanticToken[] | undefined => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) {
 			// take over mode
 			const tokens = scriptTsLs.getDocumentSemanticTokens(uri, range, cancle);
-			return buildTokens(tokens ?? []);
+			return tokens;
 		}
 
 		const document = sourceFile.getTextDocument();
@@ -47,13 +46,13 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 				end: document.getText().length,
 			};
 
-		let tokens: TokenData[] = [];
+		let tokens: SemanticToken[] = [];
 
 		if (cancle?.isCancellationRequested) return;
 		const scriptResult = getTsResult(sourceFile, 'script');
 		if (!cancle?.isCancellationRequested && scriptResult.length) {
 			tokens = tokens.concat(scriptResult);
-			resultProgress?.report(buildTokens(tokens));
+			reportProgress?.(tokens);
 		}
 
 		if (sourceFile.getHtmlSourceMaps().length) {
@@ -64,29 +63,20 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 		const templateResult = getTsResult(sourceFile, 'template');
 		if (!cancle?.isCancellationRequested && templateResult.length) {
 			tokens = tokens.concat(templateResult);
-			resultProgress?.report(buildTokens(tokens));
+			reportProgress?.(tokens);
 		}
 
 		if (cancle?.isCancellationRequested) return;
 		const htmlResult = getHtmlResult(sourceFile);
 		if (!cancle?.isCancellationRequested && htmlResult.length) {
 			tokens = tokens.concat(htmlResult);
-			resultProgress?.report(buildTokens(tokens));
+			reportProgress?.(tokens);
 		}
 
-		if (cancle?.isCancellationRequested) return;
-		return buildTokens(tokens);
+		return tokens;
 
-		function buildTokens(tokens: TokenData[]) {
-			const builder = new SemanticTokensBuilder();
-			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
-				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
-			}
-
-			return builder.build();
-		}
 		function getTsResult(sourceFile: SourceFile, lsType: 'script' | 'template') {
-			const result: TokenData[] = [];
+			const result: SemanticToken[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 
 				if (sourceMap.lsType !== lsType)
@@ -125,7 +115,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 
-			const result: TokenData[] = [];
+			const result: SemanticToken[] = [];
 			const templateScriptData = sourceFile.getTemplateScriptData();
 			const components = new Set([
 				...templateScriptData.components,

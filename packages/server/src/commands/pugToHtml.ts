@@ -1,17 +1,25 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { Connection } from 'vscode-languageserver';
-import { htmlToPug } from '@volar/html2pug';
+import { pugToHtml } from '@volar/html2pug';
+import * as vue from 'vscode-vue-languageservice';
 
-export function execute(document: TextDocument, sourceFile: SourceFile, connection: Connection) {
+export async function execute(
+	vueLs: vue.LanguageService,
+	connection: Connection,
+	uri: string,
+) {
+
+	const sourceFile = vueLs.__internal__.context.sourceFiles.get(uri);
+	if (!sourceFile) return;
+
+	const document = sourceFile.getTextDocument();
 	const desc = sourceFile.getDescriptor();
 	if (!desc.template) return;
 	const lang = desc.template.lang;
-	if (lang !== 'html') return;
+	if (lang !== 'pug') return;
 
-	const pug = htmlToPug(desc.template.content) + '\n';
-	const newTemplate = `<template lang="pug">` + pug;
+	const html = pugToHtml(desc.template.content);
+	const newTemplate = `<template>\n` + html + `\n`;
 
 	const range = vscode.Range.create(
 		document.positionAt(desc.template.start),

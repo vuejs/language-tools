@@ -31,9 +31,8 @@ import * as signatureHelp from './services/signatureHelp';
 import * as colorPresentations from './services/colorPresentation';
 import * as semanticTokens from './services/semanticTokens';
 import * as foldingRanges from './services/foldingRanges';
-import * as codeLens from './services/codeLens';
-import * as codeLensResolve from './services/codeLensResolve';
-import * as executeCommand from './services/executeCommand';
+import * as codeLens from './services/referencesCodeLens';
+import * as codeLensResolve from './services/referencesCodeLensResolve';
 import * as callHierarchy from './services/callHierarchy';
 import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as tagNameCase from './services/tagNameCase';
@@ -257,9 +256,9 @@ export function createLanguageService(
 		getCodeActions: publicApiHook(codeActions.register(context), false),
 		doCodeActionResolve: publicApiHook(codeActionResolve.register(context), false),
 		doCompletionResolve: publicApiHook(completionResolve.register(context), false),
-		doCodeLensResolve: publicApiHook(codeLensResolve.register(context), false),
+		doReferencesCodeLensResolve: publicApiHook(codeLensResolve.register(context), false),
 		getSignatureHelp: publicApiHook(signatureHelp.register(context), false),
-		getCodeLens: publicApiHook(codeLens.register(context), false),
+		getReferencesCodeLens: publicApiHook(codeLens.register(context), false),
 		findDocumentHighlights: publicApiHook(documentHighlight.register(context), false),
 		findDocumentLinks: publicApiHook(documentLink.register(context), false),
 		findWorkspaceSymbols: publicApiHook(workspaceSymbol.register(context), false),
@@ -298,7 +297,6 @@ export function createLanguageService(
 			},
 			getContext: publicApiHook(() => context),
 			getD3: publicApiHook(d3.register(context)),
-			executeCommand: publicApiHook(executeCommand.register(context), true, false),
 			detectTagNameCase: publicApiHook(tagNameCase.register(context)),
 			doRefAutoClose: publicApiHook(refAutoClose.register(context), false),
 		},
