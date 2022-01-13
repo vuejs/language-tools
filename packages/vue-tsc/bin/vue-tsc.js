@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
+const proxyPath = JSON.stringify(require.resolve('../out/proxy'));
 
 fs.readFileSync = (...args) => {
     if (args[0] === tscPath) {
@@ -17,7 +18,7 @@ fs.readFileSync = (...args) => {
         );
         tsc = tsc.replace(
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) {`,
-            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require('vue-tsc/out/proxy').createProgramProxy(...arguments);`,
+            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require(${proxyPath}).createProgramProxy(...arguments);`,
         );
         return tsc;
     }
