@@ -63,11 +63,11 @@ export function generate(
 		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
 	}
 	if (usedTypes.mergePropDefaults) {
-		codeGen.addText(`declare function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
+		codeGen.addText(`type __VLS_MargePropDefaults<P, D> = {
 			[K in keyof P]: K extends keyof D ? P[K] & {
 				default: D[K]
 			} : P[K]
-		}\n`);
+		};\n`);
 	}
 	if (usedTypes.ConstructorOverloads) {
 		if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
@@ -208,6 +208,12 @@ export function generate(
 	}
 	function writeExportComponent() {
 
+		if (scriptSetupRanges?.withDefaultsArg) {
+			codeGen.addText(`const __VLS_withDefaultsArg = (`);
+			mapSubText('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+			codeGen.addText(`);\n`);
+		}
+
 		codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
 
 		if (script && scriptRanges?.exportDefault?.args) {
@@ -221,7 +227,7 @@ export function generate(
 				codeGen.addText(`props: (`);
 				if (scriptSetupRanges.withDefaultsArg) {
 					usedTypes.mergePropDefaults = true;
-					codeGen.addText(`__VLS_mergePropDefaults(`);
+					codeGen.addText(`{} as __VLS_MargePropDefaults<`);
 				}
 				if (scriptSetupRanges.propsRuntimeArg) {
 					mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
@@ -233,9 +239,8 @@ export function generate(
 					codeGen.addText(`>`);
 				}
 				if (scriptSetupRanges.withDefaultsArg) {
-					codeGen.addText(`, `);
-					mapSubText('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-					codeGen.addText(`)`);
+					codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+					codeGen.addText(`>`);
 				}
 				codeGen.addText(`),\n`);
 			}
