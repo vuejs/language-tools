@@ -1,0 +1,30 @@
+{
+	"properties": {
+		"vueCompilerOptions": {
+			"type": "object",
+			"properties": {
+				"experimentalCompatMode": {
+					"type": "number",
+					"default": 3,
+					"anyOf": [
+						{
+							"enum": [
+								2,
+								3
+							]
+						}
+					],
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/351"
+				},
+				"experimentalTemplateCompilerOptions": {
+					"type": "object",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/576"
+				},
+				"experimentalTemplateCompilerOptionsRequirePath": {
+					"type": "string",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
+				}
+			}
+		}
+	}
+}
