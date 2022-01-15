@@ -1,4 +1,18 @@
 <template>
+  <!-- number -->
+  <div v-for="(val, key) in 10">
+    {{ exactType(val, expected as number) }}
+    {{ isNotAnyOrUndefined(val) }}
+    {{ exactType(key, expected as number) }}
+    {{ isNotAnyOrUndefined(key) }}
+  </div>
+  <!-- string -->
+  <div v-for="(val, key) in 'foo'">
+    {{ exactType(val, expected as string) }}
+    {{ isNotAnyOrUndefined(val) }}
+    {{ exactType(key, expected as number) }}
+    {{ isNotAnyOrUndefined(key) }}
+  </div>
   <!-- array -->
   <div v-for="(val, key) in arr">
     {{ exactType(val, expected as 'a' | 'b') }}
