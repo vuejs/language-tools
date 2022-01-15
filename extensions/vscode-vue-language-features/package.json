@@ -45,6 +45,72 @@
 		}
 	},
 	"contributes": {
+		"jsonValidation": [
+			{
+				"fileMatch": "package.json",
+				"url": "./schemas/package.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "https://json.schemastore.org/tsconfig"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "https://json.schemastore.org/tsconfig"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "https://json.schemastore.org/tsconfig"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "typings.json",
+				"url": "https://json.schemastore.org/typings"
+			},
+			{
+				"fileMatch": ".bowerrc",
+				"url": "https://json.schemastore.org/bowerrc"
+			},
+			{
+				"fileMatch": ".babelrc",
+				"url": "https://json.schemastore.org/babelrc"
+			},
+			{
+				"fileMatch": ".babelrc.json",
+				"url": "https://json.schemastore.org/babelrc"
+			},
+			{
+				"fileMatch": "babel.config.json",
+				"url": "https://json.schemastore.org/babelrc"
+			},
+			{
+				"fileMatch": "jsconfig.json",
+				"url": "https://json.schemastore.org/jsconfig"
+			},
+			{
+				"fileMatch": "jsconfig.json",
+				"url": "./schemas/jsconfig.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig.*.json",
+				"url": "https://json.schemastore.org/jsconfig"
+			},
+			{
+				"fileMatch": "jsconfig.*.json",
+				"url": "./schemas/jsconfig.schema.json"
+			}
+		],
 		"languages": [
 			{
 				"id": "vue",
