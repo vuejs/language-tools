@@ -53,4 +53,9 @@ export function register(
 		if (!document) return;
 		return noStateLs.doTagComplete(document, handler.position);
 	});
+	connection.onRequest(shared.GetWrapParenthesesEditsRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.doParentheseWrap(document, handler.position);
+	});
 }

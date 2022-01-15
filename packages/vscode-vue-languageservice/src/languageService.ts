@@ -13,6 +13,7 @@ import * as completions from './services/completion';
 import * as completionResolve from './services/completionResolve';
 import * as autoCreateQuotes from './services/autoCreateQuotes';
 import * as autoClosingTags from './services/autoClosingTags';
+import * as autoWrapBrackets from './services/autoWrapParentheses';
 import * as refAutoClose from './services/refAutoClose';
 import * as hover from './services/hover';
 import * as diagnostics from './services/diagnostics';
@@ -89,6 +90,7 @@ export function getDocumentLanguageService(
 		getSelectionRanges: selectionRanges.register(context, getPreferences, getFormatOptions),
 		doQuoteComplete: autoCreateQuotes.register(context),
 		doTagComplete: autoClosingTags.register(context),
+		doParentheseWrap: autoWrapBrackets.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
 		findDocumentSymbols: documentSymbol.register(context, getPreferences, getFormatOptions),
 		findDocumentColors: documentColor.register(context),

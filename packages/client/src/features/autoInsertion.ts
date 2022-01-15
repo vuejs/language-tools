@@ -23,6 +23,21 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Com
 		(lastChange, lastCharacter) => lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/'),
 	));
 	context.subscriptions.push(activateAutoInsertion(
+		async (document, position) => {
+			const params = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
+			const result = await htmlClient.sendRequest(shared.GetWrapParenthesesEditsRequest.type, params);
+			if (result) {
+				return {
+					text: result.text,
+					range: htmlClient.protocol2CodeConverter.asRange(result.range),
+				};
+			}
+		},
+		{ vue: true },
+		'volar.autoWrapParentheses',
+		isCharacterTyping,
+	));
+	context.subscriptions.push(activateAutoInsertion(
 		(document, position) => {
 			const params = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
 			return tsClient.sendRequest(shared.GetRefCompleteEditsRequest.type, params);
@@ -35,25 +50,27 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Com
 			typescriptreact: true,
 		},
 		'volar.autoCompleteRefs',
-		(lastChange, lastCharacter, document) => {
-
-			const rangeStart = lastChange.range.start;
-			const position = new vscode.Position(rangeStart.line, rangeStart.character + lastChange.text.length);
-			const nextCharacter = document.getText(new vscode.Range(position, document.positionAt(document.offsetAt(position) + 1)));
-
-			if (lastCharacter === undefined) { // delete text
-				return false;
-			}
-			if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
-				return false;
-			}
-			return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter)
-		},
+		isCharacterTyping,
 	));
+
+	function isCharacterTyping(lastChange: vscode.TextDocumentContentChangeEvent, lastCharacter: string, document: vscode.TextDocument) {
+
+		const rangeStart = lastChange.range.start;
+		const position = new vscode.Position(rangeStart.line, rangeStart.character + lastChange.text.length);
+		const nextCharacter = document.getText(new vscode.Range(position, document.positionAt(document.offsetAt(position) + 1)));
+
+		if (lastCharacter === undefined) { // delete text
+			return false;
+		}
+		if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
+			return false;
+		}
+		return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter)
+	}
 }
 
 function activateAutoInsertion(
-	provider: (document: vscode.TextDocument, position: vscode.Position) => Thenable<string | null | undefined>,
+	provider: (document: vscode.TextDocument, position: vscode.Position) => Thenable<string | { text: string, range: vscode.Range } | null | undefined>,
 	supportedLanguages: { [id: string]: boolean },
 	configName: string,
 	changeValid: (lastChange: vscode.TextDocumentContentChangeEvent, lastCharacter: string, document: vscode.TextDocument) => boolean,
@@ -115,11 +132,16 @@ function activateAutoInsertion(
 					if (activeEditor) {
 						const activeDocument = activeEditor.document;
 						if (document === activeDocument && activeDocument.version === version) {
-							const selections = activeEditor.selections;
-							if (selections.length && selections.some(s => s.active.isEqual(position))) {
-								activeEditor.insertSnippet(new vscode.SnippetString(text), selections.map(s => s.active));
-							} else {
-								activeEditor.insertSnippet(new vscode.SnippetString(text), position);
+							if (typeof text === 'string') {
+								const selections = activeEditor.selections;
+								if (selections.length && selections.some(s => s.active.isEqual(position))) {
+									activeEditor.insertSnippet(new vscode.SnippetString(text), selections.map(s => s.active));
+								} else {
+									activeEditor.insertSnippet(new vscode.SnippetString(text), position);
+								}
+							}
+							else {
+								activeEditor.insertSnippet(new vscode.SnippetString(text.text), text.range);
 							}
 						}
 					}

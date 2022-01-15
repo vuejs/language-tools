@@ -81,21 +81,31 @@ export namespace GetAutoQuoteEditsRequest {
 	export type ParamsType = vscode.TextDocumentPositionParams;
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoQuote');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoCreateQuote');
 }
 
 export namespace GetTagCloseEditsRequest {
 	export type ParamsType = vscode.TextDocumentPositionParams;
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoClose');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoCloseTag');
+}
+
+export namespace GetWrapParenthesesEditsRequest {
+	export type ParamsType = vscode.TextDocumentPositionParams;
+	export type ResponseType = {
+		text: string,
+		range: vscode.Range,
+	} | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoWrapParentheses');
 }
 
 export namespace GetRefCompleteEditsRequest {
 	export type ParamsType = vscode.TextDocumentPositionParams;
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/ref');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/autoCompleteRef');
 }
 
 export namespace VerifyAllScriptsNotification {

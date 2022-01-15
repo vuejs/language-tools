@@ -239,6 +239,11 @@
 					"default": false,
 					"description": "[ref sugar ☐] code lens."
 				},
+				"volar.autoWrapParentheses": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
+				},
 				"volar.autoCompleteRefs": {
 					"type": "boolean",
 					"default": true,
