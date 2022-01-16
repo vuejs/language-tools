@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.30.4
+
+- fix: component tag semantic highlisht token incorrect with folding ([#801](https://github.com/johnsoncodehk/volar/issues/801))
+- fix: component type broken by `withDefaults` in 0.30.3
+
+**Breaking changes**
+
+- Unsupported `withDefaults` for component props type
+
 ## 0.30.3
 
 - feat: auto wrap `()` to as expression (`v-bind="foo as string"` -> `v-bind="(foo as string)"` ([#859](https://github.com/johnsoncodehk/volar/issues/859))
@@ -8,6 +17,10 @@
 - fix: vue-tsc and typescript could't guaranteed found each other ([#851](https://github.com/johnsoncodehk/volar/pull/851))
 - fix: avoid vue-tsc stripped props jsdoc comments for script setup components ([#799](https://github.com/johnsoncodehk/volar/issues/799))
 - fix: string source type incorrect in v-for ([#839](https://github.com/johnsoncodehk/volar/pull/839))
+
+**Known regressions**
+
+- component type broken by `withDefaults`
 
 ## 0.30.2
 
