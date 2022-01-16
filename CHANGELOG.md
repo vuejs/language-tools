@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.30.3
+
+- feat: auto wrap `()` to as expression (`v-bind="foo as string"` -> `v-bind="(foo as string)"` ([#859](https://github.com/johnsoncodehk/volar/issues/859))
+- feat: support tsconfig properties intellisense on take over mode ([#833](https://github.com/johnsoncodehk/volar/issues/833))
+- feat: support `vueCompilerOptions` intellisense in tsconfig ([#833](https://github.com/johnsoncodehk/volar/issues/833))
+- fix: vue-tsc and typescript could't guaranteed found each other ([#851](https://github.com/johnsoncodehk/volar/pull/851))
+- fix: avoid vue-tsc stripped props jsdoc comments for script setup components ([#799](https://github.com/johnsoncodehk/volar/issues/799))
+- fix: string source type incorrect in v-for ([#839](https://github.com/johnsoncodehk/volar/pull/839))
+
 ## 0.30.2
 
 - feat: jsdoc comment suggestion ([#827](https://github.com/johnsoncodehk/volar/issues/827))
