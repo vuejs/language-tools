@@ -139,16 +139,16 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 				const docText = sourceMap.mappedDocument.getText();
 				const scanner = sourceMap.language === 'html'
-					? htmlLs.createScanner(docText, htmlStart)
-					: pugLs.createScanner(sourceMap.pugDocument, htmlStart)
+					? htmlLs.createScanner(docText)
+					: pugLs.createScanner(sourceMap.pugDocument)
 				if (!scanner) continue;
 
 				let token = scanner.scan();
 				while (token !== html.TokenType.EOS) {
-					if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
+					const tokenOffset = scanner.getTokenOffset();
+					if (tokenOffset >= htmlStart && (token === html.TokenType.StartTag || token === html.TokenType.EndTag)) {
 						const tokenText = scanner.getTokenText();
 						if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
-							const tokenOffset = scanner.getTokenOffset();
 							const tokenLength = scanner.getTokenLength();
 							const vueRange = sourceMap.getSourceRange(tokenOffset)?.[0];
 							if (vueRange) {
