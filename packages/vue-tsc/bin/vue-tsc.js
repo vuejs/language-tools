@@ -18,7 +18,7 @@ fs.readFileSync = (...args) => {
         );
         tsc = tsc.replace(
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) {`,
-            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require('${proxyPath}').createProgramProxy(...arguments);`,
+            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`,
         );
         return tsc;
     }
