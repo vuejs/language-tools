@@ -116,7 +116,7 @@
 			},
 			{
 				"fileMatch": "jsconfig.json",
-				"url": "./schemas/vue-jsconfig.schema.json"
+				"url": "./schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.*.json",
@@ -128,7 +128,7 @@
 			},
 			{
 				"fileMatch": "jsconfig.*.json",
-				"url": "./schemas/vue-jsconfig.schema.json"
+				"url": "./schemas/vue-tsconfig.schema.json"
 			}
 		],
 		"languages": [
