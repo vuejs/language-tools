@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.30.5
+
+- fix: `vueCompilerOptions` intellisense not working on jsconfig
+- fix: vue-tsc broken on windows in 0.30.3
+
 ## 0.30.4
 
 - fix: component tag semantic highlisht token incorrect with folding ([#801](https://github.com/johnsoncodehk/volar/issues/801))
@@ -21,6 +26,7 @@
 **Known regressions**
 
 - component type broken by `withDefaults`
+- vue-tsc broken on windows
 
 ## 0.30.2
 
