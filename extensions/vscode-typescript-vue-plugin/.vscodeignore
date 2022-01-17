@@ -1,16 +1,11 @@
 # project
-.vscode/**
-**/*.map
-**/*.ts
-**/*.d.ts
-**/*.flow
-.gitignore
-**/tsconfig.json
-**/tsconfig.*.json
-**/*.tsbuildinfo
-**/tests/
-**/testCases/
-packages/
+node_modules/**/*.map
+node_modules/**/*.ts
+node_modules/**/*.d.ts
+node_modules/**/*.flow
+node_modules/**/*.tsbuildinfo
+node_modules/**/tests/
+node_modules/**/testCases/
 
 # text files
 node_modules/**/*.md
