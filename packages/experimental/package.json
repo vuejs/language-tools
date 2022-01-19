@@ -17,9 +17,9 @@
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^2.0.1",
-		"@vue/compiler-sfc": "^3.2.26",
-		"@vue/runtime-core": "^3.2.26",
-		"vite": "^2.7.10",
-		"vue": "^3.2.26"
+		"@vue/compiler-sfc": "^3.2.27",
+		"@vue/runtime-core": "^3.2.27",
+		"vite": "^2.7.13",
+		"vue": "^3.2.27"
 	}
 }

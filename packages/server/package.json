@@ -28,10 +28,10 @@
 		"@volar/shared": "0.30.5",
 		"prettier": "^1.16.4",
 		"pug-beautify": "^0.1.1",
-		"request-light": "^0.5.6",
+		"request-light": "^0.5.7",
 		"sass-formatter": "^0.7.2",
 		"upath": "^2.0.1",
-		"vscode-languageserver": "^8.0.0-next.5",
+		"vscode-languageserver": "^8.0.0-next.6",
 		"vscode-languageserver-textdocument": "^1.0.3",
 		"vscode-uri": "^3.0.3",
 		"vscode-vue-languageservice": "0.30.5"
