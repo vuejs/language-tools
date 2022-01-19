@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.30.6
+
+- fix: re-support `withDefaults` for props type in template ([#868](https://github.com/johnsoncodehk/volar/issues/868))
+- fix: tsconfig report `schemas/tsconfig.schema.json` missing ([#869](https://github.com/johnsoncodehk/volar/issues/869))
+- fix: enabled `editor.semanticHighlighting.enabled` by default to avoid component tag show invalid color when installed some themes
+- fix: export default expression semicolon breaks component type in script setup ([#874](https://github.com/johnsoncodehk/volar/issues/874))
+- fix: don't wrap options with defineComponent when convert to setup sugar
+
 ## 0.30.5
 
 - fix: `vueCompilerOptions` intellisense not working on jsconfig
