@@ -101,11 +101,11 @@ export async function execute(
 			}
 
 			if (ranges.otherOptions.length) {
-				scriptExportCode += 'export default defineComponent({\n';
+				scriptExportCode += 'export default {\n';
 				for (const otherOption of ranges.otherOptions) {
 					scriptExportCode += _script.content.substring(otherOption.start, otherOption.end) + ',\n';
 				}
-				scriptExportCode += '});\n';
+				scriptExportCode += '};\n';
 			}
 
 			return [scriptBodyCode, scriptExportCode]
