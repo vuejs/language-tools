@@ -142,42 +142,12 @@ export function generate(
 		if (!script)
 			return;
 
-		const sections: (TextRange | string)[] = [];
-
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			sections.push({ start: 0, end: scriptRanges.exportDefault.start });
-			sections.push('await' + ' '.repeat(scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start - 'await'.length));
-			sections.push({ start: scriptRanges.exportDefault.expression.start, end: script.content.length });
+			addVirtualCode('script', 0, scriptRanges.exportDefault.start);
+			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
 		}
 		else {
-			sections.push({ start: 0, end: script.content.length });
-		}
-
-		for (const section of sections) {
-			if (typeof section === 'string') {
-				codeGen.addText(section);
-			}
-			else {
-				codeGen.addCode(
-					script.content.substring(section.start, section.end),
-					section,
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'script',
-						capabilities: {
-							basic: lsType === 'script',
-							references: true,
-							definitions: lsType === 'script',
-							rename: true,
-							diagnostic: true, // also working for setup() returns unused in template checking
-							formatting: lsType === 'script',
-							completion: lsType === 'script',
-							semanticTokens: lsType === 'script',
-							foldingRanges: lsType === 'script',
-						},
-					}
-				);
-			}
+			addVirtualCode('script', 0, script.content.length);
 		}
 	}
 	function writeScriptSetup() {
@@ -205,11 +175,47 @@ export function generate(
 			},
 		);
 	}
+	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+		codeGen.addCode(
+			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
+			{ start, end },
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: vueTag,
+				capabilities: {
+					basic: lsType === 'script',
+					references: true,
+					definitions: lsType === 'script',
+					rename: true,
+					diagnostic: true, // also working for setup() returns unused in template checking
+					formatting: lsType === 'script',
+					completion: lsType === 'script',
+					semanticTokens: lsType === 'script',
+					foldingRanges: lsType === 'script',
+				},
+			}
+		);
+	}
+	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+		codeGen.addCode(
+			(vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end),
+			{ start, end },
+			SourceMaps.Mode.Offset,
+			{
+				vueTag,
+				capabilities: {
+					references: true,
+					definitions: true,
+					rename: true,
+				},
+			},
+		);
+	}
 	function writeExportComponent() {
 
 		if (scriptSetupRanges?.withDefaultsArg) {
 			codeGen.addText(`const __VLS_withDefaultsArg = (`);
-			mapSubText('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
 			codeGen.addText(`);\n`);
 		}
 
@@ -218,14 +224,14 @@ export function generate(
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
 			codeGen.addText(`...(`);
-			mapSubText('script', args.start, args.end);
+			addVirtualCode('script', args.start, args.end);
 			codeGen.addText(`),\n`);
 		}
 		if (scriptSetup && scriptSetupRanges) {
 			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
 				codeGen.addText(`props: (`);
 				if (scriptSetupRanges.propsRuntimeArg) {
-					mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 				}
 				else if (scriptSetupRanges.propsTypeArg) {
 
@@ -238,7 +244,7 @@ export function generate(
 					}
 
 					codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
-					mapSubText('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 					codeGen.addText(`>`);
 
 					if (scriptSetupRanges.withDefaultsArg) {
@@ -250,13 +256,13 @@ export function generate(
 			}
 			if (scriptSetupRanges.emitsRuntimeArg) {
 				codeGen.addText(`emits: (`);
-				mapSubText('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
 				codeGen.addText(`),\n`);
 			}
 			else if (scriptSetupRanges.emitsTypeArg) {
 				usedTypes.ConstructorOverloads = true;
 				codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
-				mapSubText('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codeGen.addText(`>),\n`);
 			}
 			const bindingsArr: {
@@ -292,7 +298,7 @@ export function generate(
 
 				if (scriptSetupRanges.exposeRuntimeArg) {
 					codeGen.addText(`return `);
-					mapSubText('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
 					codeGen.addText(`;\n`);
 				}
 				else {
@@ -339,22 +345,6 @@ export function generate(
 		}
 
 		codeGen.addText(`});\n`);
-
-		function mapSubText(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-			codeGen.addCode(
-				(vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end),
-				{ start, end },
-				SourceMaps.Mode.Offset,
-				{
-					vueTag,
-					capabilities: {
-						references: true,
-						definitions: true,
-						rename: true,
-					},
-				},
-			);
-		}
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);
