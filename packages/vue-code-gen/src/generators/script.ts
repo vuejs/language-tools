@@ -28,6 +28,7 @@ export function generate(
 	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
 	const usedTypes = {
 		DefinePropsToOptions: false,
+		mergePropDefaults: false,
 		ConstructorOverloads: false,
 	};
 
@@ -59,15 +60,21 @@ export function generate(
 
 	if (usedTypes.DefinePropsToOptions) {
 		codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+		codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+	}
+	if (usedTypes.mergePropDefaults) {
+		codeGen.addText(`type __VLS_WithDefaults<P, D> = {
+			[K in keyof P]: K extends keyof D ? P[K] & {
+				default: D[K]
+			} : P[K]
+		};\n`);
 	}
 	if (usedTypes.ConstructorOverloads) {
 		if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 		}
 		else {
-			codeGen.addText(
-				genConstructorOverloads('__VLS_ConstructorOverloads'));
+			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
 		}
 	}
 
@@ -200,6 +207,12 @@ export function generate(
 	}
 	function writeExportComponent() {
 
+		if (scriptSetupRanges?.withDefaultsArg) {
+			codeGen.addText(`const __VLS_withDefaultsArg = (`);
+			mapSubText('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+			codeGen.addText(`);\n`);
+		}
+
 		codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
 
 		if (script && scriptRanges?.exportDefault?.args) {
@@ -215,10 +228,23 @@ export function generate(
 					mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 				}
 				else if (scriptSetupRanges.propsTypeArg) {
+
 					usedTypes.DefinePropsToOptions = true;
-					codeGen.addText(`{} as __VLS_DefinePropsToOptions<`);
+					codeGen.addText(`{} as `);
+
+					if (scriptSetupRanges.withDefaultsArg) {
+						usedTypes.mergePropDefaults = true;
+						codeGen.addText(`__VLS_WithDefaults<`);
+					}
+
+					codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
 					mapSubText('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 					codeGen.addText(`>`);
+
+					if (scriptSetupRanges.withDefaultsArg) {
+						codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+						codeGen.addText(`>`);
+					}
 				}
 				codeGen.addText(`),\n`);
 			}

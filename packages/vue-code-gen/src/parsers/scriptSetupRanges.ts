@@ -5,6 +5,7 @@ export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRan
 
 export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 
+	let withDefaultsArg: TextRange | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
 	let emitsRuntimeArg: TextRange | undefined;
@@ -20,6 +21,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	return {
 		bindings,
 		typeBindings,
+		withDefaultsArg,
 		propsRuntimeArg,
 		propsTypeArg,
 		emitsRuntimeArg,
@@ -61,6 +63,12 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 							emitsTypeNums = typeArg.members.length;
 						}
 					}
+				}
+			}
+			else if (callText === 'withDefaults') {
+				if (node.arguments.length >= 2) {
+					const arg = node.arguments[1];
+					withDefaultsArg = _getStartEnd(arg);
 				}
 			}
 		}
