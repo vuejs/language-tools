@@ -41,6 +41,11 @@ type IsComponent_Strict<T> = IsConstructorComponent<T> extends true ? true : IsF
 type ComponentKeys<T> = keyof { [K in keyof T as IsComponent_Loose<T[K]> extends true ? K : never]: any };
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
+type ForableSource<T> = [
+	T extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T[keyof T], // item
+	typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never, // key
+	typeof Symbol.iterator extends keyof T ? undefined : number, // index
+][];
 ${camelCaseText};
 
 export type GlobalComponents =
@@ -54,11 +59,8 @@ export type GlobalComponents =
 		| 'Teleport'
 	>;
 
-export declare function getVforSourceType<T>(source: T): T extends number ? number[] : T extends string ? string[] : T;
-export declare function getVforKeyType<T>(source: T): typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never; // use "T extends T" support for union
-export declare function getVforIndexType<T>(source: T): typeof Symbol.iterator extends keyof T ? undefined : number;
+export declare function getVforSourceType<T>(source: T): ForableSource<NonNullable<T extends number ? number[] : T extends string ? string[] : T>>;
 export declare function getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
-export declare function pickForItem<T>(source: T): T extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T[keyof T];
 export declare function directiveFunction<T>(dir: T):
 	T extends ObjectDirective<infer E, infer V> ? (value: V) => void
 	: T extends FunctionDirective<infer E, infer V> ? (value: V) => void

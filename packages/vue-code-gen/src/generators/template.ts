@@ -551,27 +551,30 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.FOR) {
 			// v-for
-			const source = node.parseResult.source;
-			const value = node.parseResult.value;
-			const key = node.parseResult.key;
-			const index = node.parseResult.index;
+			const { source, value, key, index } = node.parseResult;
+			const leftExpressionRange = value ? { start: (value ?? key ?? index).loc.start.offset, end: (index ?? key ?? value).loc.end.offset } : undefined;
+			const leftExpressionText = leftExpressionRange ? node.loc.source.substring(leftExpressionRange.start - node.loc.start.offset, leftExpressionRange.end - node.loc.start.offset) : undefined;
 
-			if (value
-				&& source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-
-				let start_value = value.loc.start.offset;
-				let start_source = source.loc.start.offset;
-
-				const sourceVarName = `__VLS_${elementIndex++}`;
-				// const __VLS_100 = 123;
-				// const __VLS_100 = vmValue;
-				tsCodeGen.addText(`const ${sourceVarName} = __VLS_types.getVforSourceType(`);
+			tsCodeGen.addText(`for (const [`);
+			if (leftExpressionRange && leftExpressionText) {
+				writeCode(
+					leftExpressionText,
+					leftExpressionRange,
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					formatBrackets.square,
+				);
+			}
+			tsCodeGen.addText(`] of __VLS_types.getVforSourceType(`);
+			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeCode(
 					source.content,
 					{
-						start: start_source,
-						end: start_source + source.content.length,
+						start: source.loc.start.offset,
+						end: source.loc.start.offset + source.content.length,
 					},
 					SourceMaps.Mode.Offset,
 					{
@@ -580,79 +583,14 @@ export function generate(
 					},
 					formatBrackets.round,
 				);
-				tsCodeGen.addText(`);\n`);
-				tsCodeGen.addText(`for (const __VLS_${elementIndex++} in `);
-				writeCode(
-					sourceVarName,
-					{
-						start: source.loc.start.offset,
-						end: source.loc.end.offset,
-					},
-					SourceMaps.Mode.Totally,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.diagnosticOnly,
-					},
-				);
-				tsCodeGen.addText(`) {\n`);
-
-				tsCodeGen.addText(`const `);
-				writeCode(
-					value.content,
-					{
-						start: start_value,
-						end: start_value + value.content.length,
-					},
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-					formatBrackets.empty,
-				);
-				tsCodeGen.addText(` = __VLS_types.pickForItem(${sourceVarName});\n`);
-
-				if (key && key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					let start_key = key.loc.start.offset;
-					tsCodeGen.addText(`const `);
-					writeCode(
-						key.content,
-						{
-							start: start_key,
-							end: start_key + key.content.length,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.all,
-						},
-						formatBrackets.empty,
-					);
-					tsCodeGen.addText(` = __VLS_types.getVforKeyType(${sourceVarName});\n`);
-				}
-				if (index && index.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					let start_index = index.loc.start.offset;
-					tsCodeGen.addText(`const `);
-					writeCode(
-						index.content,
-						{
-							start: start_index,
-							end: start_index + index.content.length,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.all,
-						},
-						formatBrackets.empty,
-					);
-					tsCodeGen.addText(` = __VLS_types.getVforIndexType(${sourceVarName});\n`);
-				}
-				for (const childNode of node.children) {
-					visitNode(childNode, parentEl);
-				}
-				tsCodeGen.addText('}\n');
 			}
+			tsCodeGen.addText(`)) {\n`);
+
+			for (const childNode of node.children) {
+				visitNode(childNode, parentEl);
+			}
+
+			tsCodeGen.addText('}\n');
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 			// not needed progress
