@@ -28,8 +28,6 @@ export function defineTypeCheck(fileName: string, expectErrors: {
 
 		it(`should has script snapshot`, async () => {
 			expect(!!script).toEqual(true);
-			const errors = await tester.languageService.doValidation(uri);
-			expect(errors?.length).toEqual(expectErrors.length);
 		});
 
 		it(`should has ${expectErrors.length} errors`, async () => {

@@ -124,7 +124,8 @@ export type EmitEvent2<F, E> =
 export type EmitEvent<T, E> =
 	T extends DefineComponent<infer _, any, any, any, any, any, any, infer E2> ? EmitEvent_3<E2, E>
 	: T extends FunctionalComponent<infer _, infer E2> ? EmitEvent_3<E2, E>
-	: EmitEvent2<ExtractEmit2<T>, E>;
+	: T extends FunctionalComponent<infer _, infer E> ? EmitEvent2<SetupContext<E>['emit'], E>
+	: unknown;
 export type EmitEvent_3<E2, E> =
 	EmitsOptions extends E2 ? unknown
 	: E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']

@@ -158,9 +158,7 @@ export function generate(
 			const key_2 = camelize('on-' + key_1); // onClickOutside
 			const key_3 = camelize(key_1); // clickOutside
 
-			tsCodeGen.addText(`declare let ${var_on}: { `);
-			tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-			tsCodeGen.addText(`: __VLS_types.FillingEventArg<__VLS_types.FirstFunction<\n`);
+			tsCodeGen.addText(`type ${var_on} = __VLS_types.FirstFunction<\n`);
 			if (key_1 !== key_3) {
 				tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
@@ -189,7 +187,7 @@ export function generate(
 					},
 				},
 			);
-			tsCodeGen.addText(`]>>\n};\n`);
+			tsCodeGen.addText(`]>;\n`);
 
 			var_events[eventName] = var_on;
 		}
@@ -686,6 +684,10 @@ export function generate(
 		tsCodeGen.addText(`}\n`);
 
 		function writeEvents(node: CompilerDOM.ElementNode) {
+
+			const varComponentInstance = `__VLS_${elementIndex++}`;
+			let writedInstance = false;
+
 			for (const prop of node.props) {
 				if (
 					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -694,22 +696,52 @@ export function generate(
 				) {
 
 					const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
+
 					for (const prop_2 of transformResult.props) {
-						tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]} = { `);
-						writeObjectProperty(
-							prop.arg.loc.source,
+
+						tryWriteInstance();
+
+						tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
+						tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
+						{
+							tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.event,
-							},
-						);
-						tsCodeGen.addText(`: `);
-						appendExpressionNode(prop, prop_2.value);
-						tsCodeGen.addText(` };\n`);
+								tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]},\n`);
+
+								const camelizeName = camelize(prop.arg.loc.source);
+
+								if (camelizeName === prop.arg.loc.source) {
+									tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
+								}
+								else {
+									tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
+									{
+										tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
+										tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${camelizeName}'> : unknown,\n`);
+									}
+									tsCodeGen.addText(`>\n`);
+								}
+							}
+							tsCodeGen.addText(`>\n`);
+						}
+						tsCodeGen.addText(`>\n`);
+						tsCodeGen.addText(`} = {\n`);
+						{
+							writeObjectProperty(
+								prop.arg.loc.source,
+								{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								},
+								{
+									vueTag: 'template',
+									capabilities: capabilitiesSet.event,
+								},
+							);
+							tsCodeGen.addText(`: `);
+							appendExpressionNode(prop, prop_2.value);
+						}
+						tsCodeGen.addText(`};\n`);
 					}
 				}
 				else if (
@@ -782,6 +814,18 @@ export function generate(
 						tsCodeGen.addText(node.content);
 					}
 				}
+			}
+
+			function tryWriteInstance() {
+
+				if (writedInstance)
+					return;
+
+				tsCodeGen.addText(`const ${varComponentInstance} = new ${tagResolves[node.tag].rawComponent}({ `);
+				writeProps(node, false, 'slots');
+				tsCodeGen.addText(`});\n`);
+
+				writedInstance = true;
 			}
 		}
 	}
