@@ -20,6 +20,9 @@ import { exactType } from './shared';
 
 const C1 = defineComponent({ emits: { fooBar: (_num: number) => true } });
 const C2 = defineComponent({ props: { onFooBar: Function as PropType<(num: number) => void> } });
+</script>
+
+<script lang="ts">
 declare const C3: FunctionalComponent<{}, { fooBar(num: number): true }>;
 declare const C4: new <T>(props: { value: T }) => {
 	$props: typeof props;

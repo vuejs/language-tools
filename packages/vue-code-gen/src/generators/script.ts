@@ -55,9 +55,6 @@ export function generate(
 		);
 	}
 
-	if (!!scriptSetup)
-		writeExportComponent();
-
 	if (usedTypes.DefinePropsToOptions) {
 		codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
 		codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
@@ -150,31 +147,6 @@ export function generate(
 			addVirtualCode('script', 0, script.content.length);
 		}
 	}
-	function writeScriptSetup() {
-		if (!scriptSetup)
-			return;
-
-		codeGen.addCode(
-			scriptSetup.content,
-			{
-				start: 0,
-				end: scriptSetup.content.length,
-			},
-			SourceMaps.Mode.Offset,
-			{
-				vueTag: 'scriptSetup',
-				capabilities: {
-					basic: lsType === 'script',
-					references: true,
-					definitions: lsType === 'script',
-					diagnostic: lsType === 'script',
-					rename: true,
-					completion: lsType === 'script',
-					semanticTokens: lsType === 'script',
-				},
-			},
-		);
-	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
 		codeGen.addCode(
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
@@ -211,7 +183,56 @@ export function generate(
 			},
 		);
 	}
-	function writeExportComponent() {
+	function writeScriptSetup() {
+
+		if (!scriptSetup)
+			return;
+
+		if (!scriptSetupRanges)
+			return;
+
+		codeGen.addCode(
+			scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
+			{
+				start: 0,
+				end: scriptSetupRanges.importSectionEndOffset,
+			},
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: 'scriptSetup',
+				capabilities: {
+					basic: lsType === 'script',
+					references: true,
+					definitions: lsType === 'script',
+					diagnostic: lsType === 'script',
+					rename: true,
+					completion: lsType === 'script',
+					semanticTokens: lsType === 'script',
+				},
+			},
+		);
+
+		codeGen.addText('export default await (async () => {\n');
+		codeGen.addCode(
+			scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
+			{
+				start: scriptSetupRanges.importSectionEndOffset,
+				end: scriptSetup.content.length,
+			},
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: 'scriptSetup',
+				capabilities: {
+					basic: lsType === 'script',
+					references: true,
+					definitions: lsType === 'script',
+					diagnostic: lsType === 'script',
+					rename: true,
+					completion: lsType === 'script',
+					semanticTokens: lsType === 'script',
+				},
+			},
+		);
 
 		if (scriptSetupRanges?.withDefaultsArg) {
 			codeGen.addText(`const __VLS_withDefaultsArg = (`);
@@ -219,7 +240,7 @@ export function generate(
 			codeGen.addText(`);\n`);
 		}
 
-		codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
+		codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
 
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
@@ -345,6 +366,7 @@ export function generate(
 		}
 
 		codeGen.addText(`});\n`);
+		codeGen.addText(`})();\n`);
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);

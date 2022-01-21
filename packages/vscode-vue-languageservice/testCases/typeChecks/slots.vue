@@ -19,11 +19,6 @@
 
 <script lang="ts">
 export default { name: 'Self' };
-</script>
-
-<script lang="ts" setup>
-import { VNode } from 'vue';
-import { exactType } from './shared';
 
 declare const Comp: new <T>(props: { value: T }) => {
 	$props: typeof props;
@@ -31,4 +26,9 @@ declare const Comp: new <T>(props: { value: T }) => {
 		foo: (_: T) => VNode[];
 	},
 };
+</script>
+
+<script lang="ts" setup>
+import { VNode } from 'vue';
+import { exactType } from './shared';
 </script>

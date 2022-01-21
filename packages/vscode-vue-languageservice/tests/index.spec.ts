@@ -10,4 +10,5 @@ import './renames/scriptSetup_element';
 import './renames/scriptSetup';
 
 import './typeChecks/events';
+import './typeChecks/scriptSetup';
 import './typeChecks/v_for';
