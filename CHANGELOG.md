@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.31.0
+
+- feat: support generic emits ([#877](https://github.com/johnsoncodehk/volar/issues/877))
+- feat: support top level await in `<script setup>` without extra tsconfig setting ([#538](https://github.com/johnsoncodehk/volar/issues/538))
+- feat: fully support formatting for v-for expression
+- fix: can't ignore variable unused report by `_` prefixes in v-for ([#878](https://github.com/johnsoncodehk/volar/issues/878))
+- fix: no error when definitions from `<script setup>` used in `<script>` ([#766](https://github.com/johnsoncodehk/volar/issues/766))
+
 ## 0.30.6
 
 - fix: re-support `withDefaults` for props type in template ([#868](https://github.com/johnsoncodehk/volar/issues/868))
