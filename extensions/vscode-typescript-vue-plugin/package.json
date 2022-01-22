@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "vscode-typescript-vue-plugin",
-	"version": "0.30.6",
+	"version": "0.31.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -40,6 +40,6 @@
 		"../../packages/vue-code-gen"
 	],
 	"dependencies": {
-		"typescript-vue-plugin": "0.30.6"
+		"typescript-vue-plugin": "0.31.0"
 	}
 }
