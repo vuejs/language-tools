@@ -8,6 +8,10 @@
 - fix: export default expression semicolon breaks component type in script setup ([#874](https://github.com/johnsoncodehk/volar/issues/874))
 - fix: don't wrap options with defineComponent when convert to setup sugar
 
+**Breaking changes**
+
+- When use `<script setup>`, ignore extra component options wrapper function (`defineComponent` / `Vue.extends` ...)
+
 ## 0.30.5
 
 - fix: `vueCompilerOptions` intellisense not working on jsconfig
