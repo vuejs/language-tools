@@ -5,7 +5,8 @@ export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRan
 
 export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 
-	let foundNonImportNode = false;
+	let foundNonImportExportNode = false;
+	let notOnTopTypeExports: TextRange[] = [];
 	let importSectionEndOffset = 0;
 	let withDefaultsArg: TextRange | undefined;
 	let propsRuntimeArg: TextRange | undefined;
@@ -19,15 +20,25 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	const typeBindings = parseBindingRanges(ts, ast, true);
 
 	ast.forEachChild(node => {
-		if (!foundNonImportNode && !ts.isImportDeclaration(node)) {
+		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
+		if (
+			!foundNonImportExportNode
+			&& !ts.isImportDeclaration(node)
+			&& !isTypeExport
+			&& !ts.isEmptyStatement(node)
+		) {
 			importSectionEndOffset = node.getStart(ast);
-			foundNonImportNode = true;
+			foundNonImportExportNode = true;
+		}
+		else if (isTypeExport && foundNonImportExportNode) {
+			notOnTopTypeExports.push(_getStartEnd(node));
 		}
 	});
 	ast.forEachChild(visitNode);
 
 	return {
 		importSectionEndOffset,
+		notOnTopTypeExports,
 		bindings,
 		typeBindings,
 		withDefaultsArg,

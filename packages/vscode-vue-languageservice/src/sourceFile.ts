@@ -243,6 +243,7 @@ export function createSourceFile(
 			descriptor,
 			lastUpdated,
 
+			scriptSetupRanges,
 			sfcJsons,
 			sfcTemplate,
 			sfcTemplateData,

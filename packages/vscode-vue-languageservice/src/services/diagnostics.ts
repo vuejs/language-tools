@@ -155,6 +155,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			templateScriptData,
 			sfcScriptForTemplateLs,
 			templateLsSourceMaps,
+			scriptSetupRanges
 		} = sourceFile.refs;
 
 		const templateTsProjectVersion = ref<string>();
@@ -164,6 +165,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			result: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
 			cache: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
 		}, number, vscode.Diagnostic[]][] = [
+				[useScriptSetupWarnings(), 0, []],
 				[useStylesValidation(computed(() => cssLsDocuments.value)), 0, []],
 				[useJsonsValidation(computed(() => sfcJsons.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
@@ -361,6 +363,30 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			return {
 				result,
 				cache: cacheWithSourceMap,
+			};
+		}
+		function useScriptSetupWarnings() {
+			const errors = computed(() => {
+				const result: vscode.Diagnostic[] = [];
+				if (scriptSetupRanges.value && descriptor.scriptSetup) {
+					for (const range of scriptSetupRanges.value.notOnTopTypeExports) {
+						result.push(vscode.Diagnostic.create(
+							{
+								start: document.value.positionAt(range.start + descriptor.scriptSetup.startTagEnd),
+								end: document.value.positionAt(range.end + descriptor.scriptSetup.startTagEnd),
+							},
+							'type and interface export statements must be on the top in <script setup>',
+							vscode.DiagnosticSeverity.Warning,
+							undefined,
+							'volar',
+						));
+					}
+				}
+				return result;
+			});
+			return {
+				result: errors,
+				cache: errors,
 			};
 		}
 		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
