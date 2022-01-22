@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.1
+
+- fix: support type export statements on the top in `<script setup>` ([#886](https://github.com/johnsoncodehk/volar/issues/886))
+
 ## 0.31.0
 
 - feat: support generic emits ([#877](https://github.com/johnsoncodehk/volar/issues/877))
