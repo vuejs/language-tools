@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.31.0",
+	"version": "0.31.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -667,7 +667,7 @@
 		"../../packages/vue-code-gen"
 	],
 	"dependencies": {
-		"@volar/client": "0.31.0"
+		"@volar/client": "0.31.1"
 	},
 	"resolutions": {
 		"to-vfile": "7.1.0"
