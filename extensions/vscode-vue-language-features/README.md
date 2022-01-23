@@ -2,7 +2,7 @@
 
 > ⚡ Fast Vue Language Support Extension
 
-https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar
+[Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar)
 
 VueLF is a Language Support plugin built specifically for Vue 3. It's based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
 
