@@ -95,15 +95,23 @@ export function useSfcTemplateScript(
 		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
 		for (const [moduleName, moduleClasses] of cssModuleClasses.value) {
 			codeGen.addText(`declare var ${moduleName}: Record<string, string> & {\n`);
-			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true));
+			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
 			codeGen.addText('};\n');
 		}
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
 		codeGen.addText('declare var __VLS_styleScopedClasses: {\n');
-		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true);
-		codeGen.addText('};\n');
+		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true, 'boolean', true);
+		codeGen.addText('} & (');
+		const classNames: string[] = [];
+		for (const [_, classes] of cssScopedClasses.value) {
+			for (const [className] of classes) {
+				classNames.push(className);
+			}
+		}
+		codeGen.addText(classNames.map(name => `'${name}'`).join(' | '));
+		codeGen.addText(')[];\n');
 		codeGen.addText(`{\n`);
 
 		/* Props */
@@ -156,7 +164,7 @@ export function useSfcTemplateScript(
 			}
 			codeGen.addText(`} from './${vueFileName}.__VLS_script';\n`);
 		}
-		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>, patchRename: boolean) {
+		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>, patchRename: boolean, propertyType: string, optional: boolean) {
 			const mappings = new Map<string, {
 				tsRange: {
 					start: number,
@@ -198,7 +206,7 @@ export function useSfcTemplateScript(
 						mode: SourceMaps.Mode.Totally,
 						patchRename,
 					});
-					codeGen.addText(`'${className}': string,\n`);
+					codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType},\n`);
 				}
 			}
 			return mappings;

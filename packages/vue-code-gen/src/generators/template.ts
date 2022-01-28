@@ -1455,6 +1455,27 @@ export function generate(
 					tsCodeGen.addText(`];\n`);
 				}
 			}
+			else if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg.content === 'class'
+			) {
+				tsCodeGen.addText(`__VLS_styleScopedClasses = (`);
+				writeCode(
+					prop.exp.content,
+					{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.scopedClassName,
+					},
+				);
+				tsCodeGen.addText(`);\n`);
+			}
 		}
 	}
 	function writeSlots(node: CompilerDOM.ElementNode) {
