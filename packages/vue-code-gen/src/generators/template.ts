@@ -1420,6 +1420,7 @@ export function generate(
 
 				let startOffset = prop.value.loc.start.offset;
 				let tempClassName = '';
+				let openedBlock = false;
 
 				for (const char of (prop.value.loc.source + ' ')) {
 					if (char.trim() === '' || char === '"' || char === "'") {
@@ -1435,8 +1436,15 @@ export function generate(
 					}
 				}
 
+				if (openedBlock) {
+					tsCodeGen.addText(`}\n`);
+				}
+
 				function addClass(className: string, offset: number) {
-					tsCodeGen.addText(`// @ts-ignore\n`);
+					if (!openedBlock) {
+						tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+						openedBlock = true;
+					}
 					tsCodeGen.addText(`__VLS_styleScopedClasses[`);
 					writeCodeWithQuotes(
 						className,

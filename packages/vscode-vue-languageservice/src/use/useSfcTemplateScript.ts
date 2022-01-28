@@ -101,18 +101,10 @@ export function useSfcTemplateScript(
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
-		codeGen.addText('declare var __VLS_styleScopedClasses: {\n');
+		codeGen.addText('type __VLS_StyleScopedClasses = {\n');
 		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true, 'boolean', true);
-		codeGen.addText('} & (');
-		const classNames: string[] = [];
-		for (const [_, classes] of cssScopedClasses.value) {
-			for (const [className] of classes) {
-				classNames.push(className);
-			}
-		}
-		codeGen.addText(classNames.map(name => `'${name}'`).join(' | '));
-		codeGen.addText(')[];\n');
-		codeGen.addText(`{\n`);
+		codeGen.addText('};\n');
+		codeGen.addText('declare var __VLS_styleScopedClasses: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
 
 		/* Props */
 		codeGen.addText(`/* Props */\n`);
@@ -125,7 +117,6 @@ export function useSfcTemplateScript(
 			margeCodeGen(codeGen, templateCodeGens.value.codeGen);
 		}
 
-		codeGen.addText(`}\n`);
 		codeGen.addText(`export default __VLS_slots;\n`);
 
 		return {
