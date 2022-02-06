@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.2
+
+feat: improve scoped css class name references codeLens, auto-complete ([#907](https://github.com/johnsoncodehk/volar/issues/907))
+
 ## 0.31.1
 
 - fix: support type export statements on the top in `<script setup>` ([#886](https://github.com/johnsoncodehk/volar/issues/886))
