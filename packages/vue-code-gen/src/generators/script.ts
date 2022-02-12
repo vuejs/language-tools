@@ -67,6 +67,8 @@ export function generate(
 		};\n`);
 	}
 	if (usedTypes.ConstructorOverloads) {
+		// fix https://github.com/johnsoncodehk/volar/issues/926
+		codeGen.addText('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
 		if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 		}
@@ -282,9 +284,9 @@ export function generate(
 			}
 			else if (scriptSetupRanges.emitsTypeArg) {
 				usedTypes.ConstructorOverloads = true;
-				codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
+				codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codeGen.addText(`>),\n`);
+				codeGen.addText(`>>),\n`);
 			}
 			const bindingsArr: {
 				bindings: { start: number, end: number }[],
