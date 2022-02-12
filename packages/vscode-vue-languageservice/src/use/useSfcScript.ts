@@ -27,7 +27,7 @@ export function useSfcScript(
 			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
 				foldingRanges: true,
 				formatting: true,
-				documentSymbol: false,
+				documentSymbol: true,
 				codeActions: false,
 			});
 			sourceMap.mappings.push({

@@ -96,8 +96,14 @@ export function register(
 			return result;
 		}
 		function getTsResult(sourceFile: SourceFile) {
+
 			let result: vscode.SymbolInformation[] = [];
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			const tsSourceMaps = [
+				sourceFile.getTemplateFormattingScript().sourceMap,
+				...sourceFile.docLsScripts().sourceMaps,
+			].filter(shared.notEmpty);
+
+			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
 				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const symbols = dummyTsLs.findDocumentSymbols(sourceMap.mappedDocument.uri);

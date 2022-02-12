@@ -354,7 +354,7 @@ export function useSfcTemplateScript(
 				{
 					foldingRanges: false,
 					formatting: true,
-					documentSymbol: false,
+					documentSymbol: true,
 					codeActions: false,
 				},
 				templateCodeGens.value.formatCodeGen.getMappings(parseMappingSourceRange),

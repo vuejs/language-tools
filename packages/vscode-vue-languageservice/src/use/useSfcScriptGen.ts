@@ -96,7 +96,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				{
 					foldingRanges: false,
 					formatting: false,
-					documentSymbol: lsType === 'script',
+					documentSymbol: false,
 					codeActions: !script.value?.src && lsType === 'script',
 				},
 				codeGen.value.codeGen.getMappings(parseMappingSourceRange),
