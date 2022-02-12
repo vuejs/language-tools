@@ -1,8 +1,18 @@
 # Changelog
 
+## 0.31.3
+
+- feat: trigger event auto-complete when input `@` ([#949](https://github.com/johnsoncodehk/volar/issues/949))
+- feat: add `v-bind:*`, `v-on:*` to auto-complete ([#949](https://github.com/johnsoncodehk/volar/issues/949))
+- feat: avoid auto import added in script block first line ([#916](https://github.com/johnsoncodehk/volar/issues/916))
+- fix: language features not working in symbolic link project ([#914](https://github.com/johnsoncodehk/volar/issues/914))
+- fix: language server throw in `process.env.NODE_ENV === 'production'` env ([#915](https://github.com/johnsoncodehk/volar/issues/915))
+- fix: component type broken by union event key type ([#926](https://github.com/johnsoncodehk/volar/issues/926))
+- fix: document symbol not working for `<script setup>` ([#938](https://github.com/johnsoncodehk/volar/issues/938))
+
 ## 0.31.2
 
-feat: improve scoped css class name references codeLens, auto-complete ([#907](https://github.com/johnsoncodehk/volar/issues/907))
+- feat: improve scoped css class name references codeLens, auto-complete ([#907](https://github.com/johnsoncodehk/volar/issues/907))
 
 ## 0.31.1
 
