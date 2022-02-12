@@ -110,14 +110,7 @@ node_modules/**/*.js
 !node_modules/@volar/vue-code-gen/out/parsers/*.js
 !node_modules/@vscode/emmet-helper/lib/cjs/*.js
 !node_modules/@vscode/emmet-helper/node_modules/vscode-uri/lib/umd/*.js
-!node_modules/@vue/compiler-core/*.js
-!node_modules/@vue/compiler-core/dist/compiler-core.cjs.js
-!node_modules/@vue/compiler-dom/*.js
-!node_modules/@vue/compiler-dom/dist/compiler-dom.cjs.js
-!node_modules/@vue/reactivity/*.js
-!node_modules/@vue/reactivity/dist/reactivity.cjs.js
-!node_modules/@vue/shared/*.js
-!node_modules/@vue/shared/dist/shared.cjs.js
+!node_modules/@vue/**/*.js
 !node_modules/acorn/dist/acorn.js
 !node_modules/array-iterate/*.js
 !node_modules/asap/asap.js
