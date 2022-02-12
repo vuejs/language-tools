@@ -45,6 +45,21 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 				}
 			}
 			data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
+
+			// fix https://github.com/johnsoncodehk/volar/issues/916
+			if (data.tsItem.additionalTextEdits) {
+				for (const edit of data.tsItem.additionalTextEdits) {
+					if (
+						edit.range.start.line === 0
+						&& edit.range.start.character === 0
+						&& edit.range.end.line === 0
+						&& edit.range.end.character === 0
+					) {
+						edit.newText = (vueHost.getNewLine?.() ?? '\n') + edit.newText;
+					}
+				}
+			}
+
 			const newVueItem = transformCompletionItem(
 				data.tsItem,
 				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0],
