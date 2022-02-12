@@ -123,9 +123,9 @@ export function createParsedCommandLine(
 	}
 } {
 
-	const realTsConfig = ts.sys.realpath!(tsConfig);
-	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
+	const tsConfigPath = ts.sys.resolvePath(tsConfig);
+	const config = ts.readJsonConfigFile(tsConfigPath, ts.sys.readFile);
+	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
 	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 	content.fileNames = content.fileNames.map(normalizeFileName);
 
