@@ -399,16 +399,20 @@ export function register(
 							const data: Data = prop.data;
 							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
 							if (hyphenate(name).startsWith('on-')) {
-								const propName = '@' +
-									(name.startsWith('on-')
-										? name.substr('on-'.length)
-										: (name['on'.length].toLowerCase() + name.substr('onX'.length))
-									);
-								const propKey = componentName + ':' + propName;
-								attributes.push({
-									name: propName,
-									description: propKey,
-								});
+								const propNameBase = name.startsWith('on-')
+									? name.substr('on-'.length)
+									: (name['on'.length].toLowerCase() + name.substr('onX'.length));
+								const propKey = componentName + '@' + propNameBase;
+								attributes.push(
+									{
+										name: 'v-on:' + propNameBase,
+										description: propKey,
+									},
+									{
+										name: '@' + propNameBase,
+										description: propKey,
+									},
+								);
 								tsItems.set(propKey, prop);
 							}
 							else {
@@ -422,7 +426,11 @@ export function register(
 									{
 										name: ':' + propName,
 										description: propKey,
-									}
+									},
+									{
+										name: 'v-bind:' + propName,
+										description: propKey,
+									},
 								);
 								tsItems.set(propKey, prop);
 							}
@@ -431,10 +439,13 @@ export function register(
 							// @ts-expect-error
 							const data: Data = event.data;
 							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
-							const propName = '@' + name;
-							const propKey = componentName + ':' + propName;
+							const propKey = componentName + '@' + name;
 							attributes.push({
-								name: propName,
+								name: 'v-on:' + name,
+								description: propKey,
+							});
+							attributes.push({
+								name: '@' + name,
 								description: propKey,
 							});
 							tsItems.set(propKey, event);
@@ -555,12 +566,17 @@ export function register(
 							if (tsItem) {
 								vueItem.documentation = undefined;
 							}
-							if (vueItem.label.startsWith(':') || vueItem.label.startsWith('@')) {
+							if (
+								vueItem.label.startsWith(':')
+								|| vueItem.label.startsWith('@')
+								|| vueItem.label.startsWith('v-bind:')
+								|| vueItem.label.startsWith('v-on:')
+							) {
 								if (!documentation?.startsWith('*:')) {
 									vueItem.sortText = '\u0000' + vueItem.sortText;
 								}
 								if (tsItem) {
-									if (vueItem.label.startsWith(':')) {
+									if (vueItem.label.startsWith(':') || vueItem.label.startsWith('v-bind:')) {
 										vueItem.kind = vscode.CompletionItemKind.Property;
 									}
 									else {
