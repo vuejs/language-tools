@@ -1,6 +1,67 @@
 import * as fs from 'fs';
 import * as path from 'upath';
 import { normalizeFileName } from './path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import { createModuleSpecifierCache } from './moduleSpecifierCache';
+import { createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
+
+export function addCacheLogicToLanguageServiceHost(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	host: ts.LanguageServiceHost,
+	service: ts.LanguageService,
+) {
+
+	const moduleSpecifierCache = createModuleSpecifierCache();
+	const exportMapCache = (ts as any).createCacheableExportInfoMap({
+		getCurrentProgram() {
+			return service.getProgram()
+		},
+		getPackageJsonAutoImportProvider() {
+			return service.getProgram()
+		},
+	});
+	const packageJsonCache = createPackageJsonCache(ts, {
+		...host,
+		// @ts-expect-error
+		host: { ...host },
+		toPath,
+	});
+
+	// @ts-expect-error
+	host.getCachedExportInfoMap = () => exportMapCache;
+	// @ts-expect-error
+	host.getModuleSpecifierCache = () => moduleSpecifierCache;
+	// @ts-expect-error
+	host.getPackageJsonsVisibleToFile = (fileName: string, rootDir?: string) => {
+		const rootPath = rootDir && toPath(rootDir);
+		const filePath = toPath(fileName);
+		const result: PackageJsonInfo[] = [];
+		const processDirectory = (directory: ts.Path): boolean | undefined => {
+			switch (packageJsonCache.directoryHasPackageJson(directory)) {
+				// Sync and check same directory again
+				case Ternary.Maybe:
+					packageJsonCache.searchDirectoryAndAncestors(directory);
+					return processDirectory(directory);
+				// Check package.json
+				case Ternary.True:
+					const packageJsonFileName = (ts as any).combinePaths(directory, "package.json");
+					// this.watchPackageJsonFile(packageJsonFileName as ts.Path); // TODO
+					const info = packageJsonCache.getInDirectory(directory);
+					if (info) result.push(info);
+			}
+			if (rootPath && rootPath === directory) {
+				return true;
+			}
+		};
+
+		(ts as any).forEachAncestorDirectory((ts as any).getDirectoryPath(filePath), processDirectory);
+		return result;
+	};
+
+	function toPath(fileName: string) {
+		return (ts as any).toPath(fileName, host.getCurrentDirectory(), (ts as any).createGetCanonicalFileName(host.useCaseSensitiveFileNames?.()));
+	}
+}
 
 export function getWorkspaceTypescriptPath(tsdk: string, workspaceFolderFsPaths: string[]) {
 	if (path.isAbsolute(tsdk)) {
@@ -107,8 +168,6 @@ export function getTypeScriptVersion(serverPath: string): string | undefined {
 	}
 	return desc.version;
 }
-
-export type { SourceFile as TsSourceFile } from 'typescript/lib/tsserverlibrary';
 
 export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
