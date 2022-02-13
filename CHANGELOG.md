@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.31.4
+
+- perf: faster auto-import completion ([#808](https://github.com/johnsoncodehk/volar/issues/808))
+
 ## 0.31.3
 
 - feat: trigger event auto-complete when input `@` ([#949](https://github.com/johnsoncodehk/volar/issues/949))
