@@ -4,6 +4,8 @@ import { computed, Ref } from '@vue/reactivity';
 import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
+import type * as _0 from 'vscode-html-languageservice';  // fix TS2742
+
 export function useSfcTemplate(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,

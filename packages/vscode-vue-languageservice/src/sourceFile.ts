@@ -18,6 +18,10 @@ import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
 
+import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
+import type * as _1 from 'vscode-html-languageservice'; // fix TS2742
+import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
+
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
 
 export function createSourceFile(

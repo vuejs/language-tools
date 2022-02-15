@@ -641,14 +641,16 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run build && npm run esbuild-client-node -- --minify && npm run esbuild-server-node -- --minify && npm run esbuild-client-browser -- --minify",
-		"build": "cd ../.. && yarn build",
-		"esbuild-client-node": "esbuild ../../node_modules/@volar/client/out/nodeClientMain.js --bundle --outfile=out/client-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
-		"esbuild-server-node": "esbuild ../../node_modules/@volar/server/out/index.js --bundle --outfile=out/server-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
-		"esbuild-client-browser": "esbuild ../../node_modules/@volar/client/out/browserClientMain.js --bundle --outfile=out/client-browser.js --external:vscode --format=esm --platform=browser --tsconfig=../../tsconfig.build.json",
+		"build": "cd ../.. && npm run build",
+		"esbuild-client-node": "esbuild ./node_modules/@volar/client/out/nodeClientMain.js --bundle --outfile=out/client-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"esbuild-server-node": "esbuild ./node_modules/@volar/server/out/index.js --bundle --outfile=out/server-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"esbuild-client-browser": "esbuild ./node_modules/@volar/client/out/browserClientMain.js --bundle --outfile=out/client-browser.js --external:vscode --format=esm --platform=browser --tsconfig=../../tsconfig.build.json",
 		"pack": "vsce package",
-		"release": "vsce publish --yarn"
+		"release": "vsce publish"
 	},
 	"devDependencies": {
+		"@volar/client": "0.31.4",
+		"@volar/server": "0.31.4",
 		"esbuild": "latest",
 		"vsce": "latest"
 	}

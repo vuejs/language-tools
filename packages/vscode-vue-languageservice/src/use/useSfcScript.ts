@@ -3,6 +3,8 @@ import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import * as SourceMaps from '../utils/sourceMaps';
 
+import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
+
 export function useSfcScript(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,

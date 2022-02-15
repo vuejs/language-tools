@@ -24,12 +24,13 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run build && npm run esbuild -- --minify",
-		"build": "cd ../.. && yarn build",
-		"esbuild": "esbuild ../../node_modules/typescript-vue-plugin/out/index.js --bundle --outfile=out/index.js --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"build": "cd ../.. && npm run build",
+		"esbuild": "esbuild ./node_modules/typescript-vue-plugin/out/index.js --bundle --outfile=out/index.js --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
 		"pack": "vsce package",
-		"release": "vsce publish --yarn"
+		"release": "vsce publish"
 	},
 	"devDependencies": {
+		"typescript-vue-plugin": "0.31.4",
 		"esbuild": "latest",
 		"vsce": "latest"
 	},

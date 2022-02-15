@@ -20,8 +20,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      # install yarn
-      - run: npm i -g yarn
+      # install pnpm
+      - run: npm i -g pnpm
 
       # https://github.com/actions/cache/blob/main/examples.md#node---lerna
       - name: Cache node_modules
@@ -30,9 +30,8 @@ jobs:
           path: |
             node_modules
             */*/node_modules
-          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - run: yarn
-      - run: yarn build
-      - run: yarn pretest
-      - run: yarn test
+      - run: pnpm i
+      - run: npm run build
+      - run: npm run test
