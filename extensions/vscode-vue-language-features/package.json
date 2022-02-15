@@ -31,8 +31,8 @@
 		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
-	"main": "out/client-node",
-	"browser": "out/client-browser",
+	"main": "out/node/client",
+	"browser": "out/browser/client",
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
@@ -640,11 +640,11 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run build && npm run esbuild-client-node -- --minify && npm run esbuild-server-node -- --minify && npm run esbuild-client-browser -- --minify",
+		"vscode:prepublish": "npm run build && npm run esbuild:node -- --minify && npm run esbuild:browser -- --minify",
 		"build": "cd ../.. && npm run build",
-		"esbuild-client-node": "esbuild ./node_modules/@volar/client/out/nodeClientMain.js --bundle --outfile=out/client-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
-		"esbuild-server-node": "esbuild ./node_modules/@volar/server/out/index.js --bundle --outfile=out/server-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
-		"esbuild-client-browser": "esbuild ./node_modules/@volar/client/out/browserClientMain.js --bundle --outfile=out/client-browser.js --external:vscode --format=esm --platform=browser --tsconfig=../../tsconfig.build.json",
+		"esbuild-watch": "npm run esbuild:node -- --watch & npm run esbuild:browser -- --watch",
+		"esbuild:node": "esbuild client=./node_modules/@volar/client/out/nodeClientMain.js server=./node_modules/@volar/server/out/node.js --bundle --outdir=out/node --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"esbuild:browser": "esbuild client=./node_modules/@volar/client/out/browserClientMain.js --bundle --outdir=out/browser --external:vscode --format=cjs --platform=browser --tsconfig=../../tsconfig.build.json",
 		"pack": "vsce package",
 		"release": "vsce publish"
 	},
