@@ -1,8 +1,0 @@
-{
-	"extends": "../../tsconfig.base.json",
-	"references": [
-		{
-			"path": "../../packages/client/tsconfig.build.json"
-		}
-	]
-}

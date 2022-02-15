@@ -31,8 +31,8 @@
 		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
-	"main": "node_modules/@volar/client/out/nodeClientMain",
-	"browser": "node_modules/@volar/client/out/browserClientMain",
+	"main": "out/client-node",
+	"browser": "out/client-browser",
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
@@ -467,11 +467,6 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.genWhitelist",
-				"title": "Generate .vscodeignore Whitelist",
-				"category": "Volar (Debug)"
-			},
-			{
 				"command": "volar.action.showCallGraph",
 				"title": "Show Call Graph",
 				"category": "Volar (Experimental)"
@@ -562,10 +557,6 @@
 					"when": "volar.activated"
 				},
 				{
-					"command": "volar.action.genWhitelist",
-					"when": "volar.activated"
-				},
-				{
 					"command": "volar.action.showCallGraph",
 					"when": "editorLangId == vue"
 				},
@@ -649,27 +640,16 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "cd ../.. && yarn build",
+		"vscode:prepublish": "npm run build && npm run esbuild-client-node -- --minify && npm run esbuild-server-node -- --minify && npm run esbuild-client-browser -- --minify",
+		"build": "cd ../.. && yarn build",
+		"esbuild-client-node": "esbuild ../../node_modules/@volar/client/out/nodeClientMain.js --bundle --outfile=out/client-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"esbuild-server-node": "esbuild ../../node_modules/@volar/server/out/index.js --bundle --outfile=out/server-node.js --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"esbuild-client-browser": "esbuild ../../node_modules/@volar/client/out/browserClientMain.js --bundle --outfile=out/client-browser.js --external:vscode --format=esm --platform=browser --tsconfig=../../tsconfig.build.json",
 		"pack": "vsce package",
 		"release": "vsce publish --yarn"
 	},
-	"workspaces": [
-		"../../packages/client",
-		"../../packages/code-gen",
-		"../../packages/html2pug",
-		"../../packages/server",
-		"../../packages/shared",
-		"../../packages/source-map",
-		"../../packages/transforms",
-		"../../packages/vscode-pug-languageservice",
-		"../../packages/vscode-typescript-languageservice",
-		"../../packages/vscode-vue-languageservice",
-		"../../packages/vue-code-gen"
-	],
-	"dependencies": {
-		"@volar/client": "0.31.4"
-	},
-	"resolutions": {
-		"to-vfile": "7.1.0"
+	"devDependencies": {
+		"esbuild": "latest",
+		"vsce": "latest"
 	}
 }

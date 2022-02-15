@@ -17,29 +17,23 @@
 	"contributes": {
 		"typescriptServerPlugins": [
 			{
-				"name": "typescript-vue-plugin",
+				"name": "@volar/typescript-plugin-forward",
 				"enableForWorkspaceTypeScriptVersions": true
 			}
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "cd ../.. && yarn build",
+		"vscode:prepublish": "npm run build && npm run esbuild -- --minify",
+		"build": "cd ../.. && yarn build",
+		"esbuild": "esbuild ../../node_modules/typescript-vue-plugin/out/index.js --bundle --outfile=out/index.js --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
 		"pack": "vsce package",
 		"release": "vsce publish --yarn"
 	},
-	"workspaces": [
-		"../../packages/code-gen",
-		"../../packages/html2pug",
-		"../../packages/shared",
-		"../../packages/source-map",
-		"../../packages/transforms",
-		"../../packages/typescript-vue-plugin",
-		"../../packages/vscode-pug-languageservice",
-		"../../packages/vscode-typescript-languageservice",
-		"../../packages/vscode-vue-languageservice",
-		"../../packages/vue-code-gen"
-	],
+	"devDependencies": {
+		"esbuild": "latest",
+		"vsce": "latest"
+	},
 	"dependencies": {
-		"typescript-vue-plugin": "0.31.4"
+		"@volar/typescript-plugin-forward": "file:typescript-plugin-forward"
 	}
 }

@@ -1,7 +1,5 @@
 import type * as html from 'vscode-html-languageservice';
 
-export * from 'vscode-html-languageservice/lib/umd/htmlLanguageTypes';
-
 export interface SfcBlock {
 	start: number;
 	end: number;
