@@ -1,16 +1,10 @@
-export * from './path';
-export * from './requests';
-export * from './types';
-export * from './uriMap';
-export * from './ts';
-export * from './http';
-export * from './vue';
 
 import type * as vscode from 'vscode-languageserver-types';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { promisify } from 'util';
 
-export const sleep = promisify(setTimeout);
+export function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export function syntaxToLanguageId(syntax: string) {
 	switch (syntax) {

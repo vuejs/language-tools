@@ -642,10 +642,10 @@
 	"scripts": {
 		"vscode:prepublish": "npm run build",
 		"prebuild": "cd ../.. && npm run build",
-		"build": "npm run build:node -- --minify foo=bar && npm run build:browser -- --minify",
+		"build": "npm run build:node -- --minify && npm run build:browser -- --minify",
 		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
 		"build:node": "node scripts/build-node",
-		"build:browser": "esbuild client=./node_modules/@volar/client/out/browserClientMain.js --bundle --outdir=out/browser --external:vscode --format=esm --platform=browser --tsconfig=../../tsconfig.build.json",
+		"build:browser": "node scripts/build-browser",
 		"pack": "vsce package",
 		"release": "vsce publish"
 	},

@@ -3,9 +3,9 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Launch Client",
 			"type": "extensionHost",
 			"request": "launch",
-			"name": "Launch Client",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
@@ -22,9 +22,28 @@
 			}
 		},
 		{
+			"name": "Launch Web Client",
+			"type": "pwa-extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode-vue-language-features",
+				"--extensionDevelopmentKind=web"
+			],
+			"outFiles": [
+				"${workspaceRoot}/extensions/*/out/**/*.js",
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
+			"name": "Attach to Server - API",
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - API",
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
@@ -32,9 +51,9 @@
 			]
 		},
 		{
+			"name": "Attach to Server - Document",
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - Document",
 			"port": 6010,
 			"restart": true,
 			"outFiles": [
@@ -42,9 +61,9 @@
 			]
 		},
 		{
+			"name": "Attach to Server - HTML",
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - HTML",
 			"port": 6011,
 			"restart": true,
 			"outFiles": [

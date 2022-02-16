@@ -11,7 +11,7 @@
 		"release:vue-language-features": "cd extensions/vscode-vue-language-features && npm run release",
 		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && npm run release",
 		"test": "jest",
-		"chrome": "npm run build && vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
+		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
 	},
 	"devDependencies": {
 		"@types/jest": "latest",

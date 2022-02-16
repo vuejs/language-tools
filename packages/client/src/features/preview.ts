@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'upath';
-import * as fs from 'fs';
+import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { htmlLs } from './splitEditors';
@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-finder');
-		const viteDir = getViteDir(fileName);
+		const viteDir = await getViteDir(fileName);
 		if (viteDir) {
 			terminal.sendText(`cd ${viteDir}`);
 		}
@@ -176,7 +176,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-previewer');
-		const viteDir = getViteDir(fileName);
+		const viteDir = await getViteDir(fileName);
 		if (viteDir) {
 			terminal.sendText(`cd ${viteDir}`);
 		}
@@ -194,13 +194,13 @@ export async function activate(context: vscode.ExtensionContext) {
 		return port;
 	}
 
-	function getViteDir(fileName: string) {
+	async function getViteDir(fileName: string) {
 		let dir = path.dirname(fileName);
 		let viteConfigDir: string | undefined;
 		while (true) {
 			const configTs = path.join(dir, 'vite.config.ts');
 			const configJs = path.join(dir, 'vite.config.js');
-			if (fs.existsSync(configTs) || fs.existsSync(configJs)) {
+			if (await fs.exists(vscode.Uri.file(configTs)) || await fs.exists(vscode.Uri.file(configJs))) {
 				viteConfigDir = dir;
 				break;
 			}

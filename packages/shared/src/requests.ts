@@ -57,12 +57,6 @@ export namespace InitDoneRequest {
 	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/init');
 }
 
-export namespace DepsRequest {
-	export type ResponseType = string[];
-	export type ErrorType = never;
-	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/depFiles');
-}
-
 export namespace GetMatchTsConfigRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = string | null | undefined;

@@ -1,5 +1,4 @@
 import * as shared from '@volar/shared';
-import * as fs from 'fs';
 import * as path from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
@@ -37,11 +36,31 @@ export function register(
 				if (!ls) continue;
 				const localTypes = ls.__internal__.getLocalTypesFiles(lsType);
 				for (const fileName of localTypes.fileNames) {
-					fs.writeFile(fileName, localTypes.code, () => { });
+					connection.workspace.applyEdit({
+						edit: {
+							documentChanges: [
+								vscode.CreateFile.create(shared.fsPathToUri(fileName)),
+								vscode.TextDocumentEdit.create(
+									vscode.OptionalVersionedTextDocumentIdentifier.create(shared.fsPathToUri(fileName), null),
+									[{ range: vscode.Range.create(0, 0, 0, 0), newText: localTypes.code }],
+								),
+							]
+						}
+					});
 				}
 				const { sourceFiles } = await ls.__internal__.getContext();
 				for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
-					fs.writeFile(shared.uriToFsPath(doc.uri), doc.getText(), () => { });
+					connection.workspace.applyEdit({
+						edit: {
+							documentChanges: [
+								vscode.CreateFile.create(doc.uri),
+								vscode.TextDocumentEdit.create(
+									vscode.OptionalVersionedTextDocumentIdentifier.create(doc.uri, null),
+									[{ range: vscode.Range.create(0, 0, 0, 0), newText: doc.getText() }],
+								),
+							]
+						}
+					});
 				}
 			}
 		}
