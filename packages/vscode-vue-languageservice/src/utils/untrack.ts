@@ -1,4 +1,4 @@
-import { pauseTracking, resetTracking } from "@vue/reactivity";
+import { pauseTracking, resetTracking } from '@vue/reactivity';
 
 export function untrack<T extends (...args: any[]) => any>(source: T) {
 	return ((...args: any[]) => {

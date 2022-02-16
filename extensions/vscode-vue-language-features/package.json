@@ -640,11 +640,12 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run build && npm run esbuild:node -- --minify && npm run esbuild:browser -- --minify",
-		"build": "cd ../.. && npm run build",
-		"esbuild-watch": "npm run esbuild:node -- --watch & npm run esbuild:browser -- --watch",
-		"esbuild:node": "esbuild client=./node_modules/@volar/client/out/nodeClientMain.js server=./node_modules/@volar/server/out/node.js --bundle --outdir=out/node --external:vscode --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
-		"esbuild:browser": "esbuild client=./node_modules/@volar/client/out/browserClientMain.js --bundle --outdir=out/browser --external:vscode --format=cjs --platform=browser --tsconfig=../../tsconfig.build.json",
+		"vscode:prepublish": "npm run build",
+		"prebuild": "cd ../.. && npm run build",
+		"build": "npm run build:node -- --minify foo=bar && npm run build:browser -- --minify",
+		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
+		"build:node": "node scripts/build-node",
+		"build:browser": "esbuild client=./node_modules/@volar/client/out/browserClientMain.js --bundle --outdir=out/browser --external:vscode --format=esm --platform=browser --tsconfig=../../tsconfig.build.json",
 		"pack": "vsce package",
 		"release": "vsce publish"
 	},

@@ -23,10 +23,11 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run build && npm run esbuild -- --minify",
-		"build": "cd ../.. && npm run build",
-		"esbuild-watch": "npm run esbuild -- --watch",
-		"esbuild": "esbuild ./node_modules/typescript-vue-plugin/out/index.js --bundle --outfile=out/index.js --format=cjs --platform=node --main-fields=module,main --tsconfig=../../tsconfig.build.json",
+		"vscode:prepublish": "npm run build",
+		"prebuild": "cd ../.. && npm run build",
+		"build": "npm run esbuild -- --minify",
+		"watch": "npm run esbuild -- --watch",
+		"esbuild": "node scripts/build-node",
 		"pack": "vsce package",
 		"release": "vsce publish"
 	},
