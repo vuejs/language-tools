@@ -25,7 +25,7 @@
 	"scripts": {
 		"vscode:prepublish": "npm run build",
 		"prebuild": "cd ../.. && npm run build",
-		"build": "npm run esbuild -- --minify",
+		"build": "npm run esbuild",
 		"watch": "npm run esbuild -- --watch",
 		"esbuild": "node scripts/build-node",
 		"pack": "vsce package",

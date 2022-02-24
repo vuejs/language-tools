@@ -642,7 +642,7 @@
 	"scripts": {
 		"vscode:prepublish": "npm run build",
 		"prebuild": "cd ../.. && npm run build",
-		"build": "npm run build:node -- --minify && npm run build:browser -- --minify",
+		"build": "npm run build:node && npm run build:browser",
 		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
 		"build:node": "node scripts/build-node",
 		"build:browser": "node scripts/build-browser",
