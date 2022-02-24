@@ -5,7 +5,7 @@
 			"DOM",
 			"ES2020"
 		],
-		"outDir": ".",
+		"outDir": "out",
 		"rootDir": "src",
 	},
 	"include": [

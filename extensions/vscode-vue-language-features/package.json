@@ -285,6 +285,11 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.showWelcomePage": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show welcome page when open webview."
+				},
 				"volar.lowPowerMode": {
 					"type": "boolean",
 					"default": false,
@@ -310,15 +315,10 @@
 					"default": true,
 					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.icon.preview": {
+				"volar.icon.vite": {
 					"type": "boolean",
-					"default": false,
-					"description": "(Experimental) Show preview component icon in title area of editor."
-				},
-				"volar.icon.finder": {
-					"type": "boolean",
-					"default": false,
-					"description": "(Experimental) Show code finder icon in title area of editor."
+					"default": true,
+					"description": "(Experimental) Show extra Vite features."
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
@@ -478,16 +478,10 @@
 				"icon": "images/split-editors.png"
 			},
 			{
-				"command": "volar.action.finder",
-				"title": "Open Code Finder (WebView)",
-				"category": "Volar (Experimental)",
-				"icon": "$(search)"
-			},
-			{
-				"command": "volar.action.preview",
-				"title": "Open Component Preview",
-				"category": "Volar (Experimental)",
-				"icon": "$(open-preview)"
+				"command": "volar.action.vite",
+				"title": "Experimental Features for Vite",
+				"category": "Volar",
+				"icon": "images/vite-icon.svg"
 			},
 			{
 				"command": "volar.action.tagNameCase",
@@ -521,10 +515,10 @@
 				"icon": "$(search)"
 			},
 			{
-				"command": "volar.action.showInBrowser",
-				"title": "Show in Browser",
+				"command": "volar.action.openInBrowser",
+				"title": "Open in Browser",
 				"category": "Volar",
-				"icon": "$(browser)"
+				"icon": "$(link-external)"
 			},
 			{
 				"command": "workbench.action.webview.reloadWebviewAction",
@@ -565,11 +559,7 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "volar.action.finder",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.preview",
+					"command": "volar.action.vite",
 					"when": "editorLangId == vue"
 				},
 				{
@@ -594,10 +584,10 @@
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor && volar.showSelectElement"
+					"when": "activeEditor == WebviewEditor"
 				},
 				{
-					"command": "volar.action.showInBrowser",
+					"command": "volar.action.openInBrowser",
 					"when": "activeEditor == WebviewEditor"
 				},
 				{
@@ -612,22 +602,17 @@
 					"group": "navigation"
 				},
 				{
-					"command": "volar.action.preview",
-					"when": "editorLangId == vue && config.volar.icon.preview",
-					"group": "navigation"
-				},
-				{
-					"command": "volar.action.finder",
-					"when": "editorLangId == vue && config.volar.icon.finder",
+					"command": "volar.action.vite",
+					"when": "editorLangId == vue && config.volar.icon.vite && volar.foundViteDir",
 					"group": "navigation"
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor && volar.showSelectElement",
+					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				},
 				{
-					"command": "volar.action.showInBrowser",
+					"command": "volar.action.openInBrowser",
 					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				},

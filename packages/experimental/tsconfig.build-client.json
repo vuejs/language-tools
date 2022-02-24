@@ -7,7 +7,7 @@
 		],
 		"target": "es5",
 		"module": "esnext",
-		"outDir": ".",
+		"outDir": "out",
 		"rootDir": "src",
 	},
 	"include": [
