@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.32.0
+
+- feat: experimental webview features for vite ([#208](https://github.com/johnsoncodehk/volar/issues/208))
+- perf: bundle extension to speed up startup
+
 ## 0.31.4
 
 - perf: faster auto-import completion ([#808](https://github.com/johnsoncodehk/volar/issues/808))
