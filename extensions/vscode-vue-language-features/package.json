@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.31.4",
+	"version": "0.32.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -635,8 +635,8 @@
 		"release": "vsce publish"
 	},
 	"devDependencies": {
-		"@volar/client": "0.31.4",
-		"@volar/server": "0.31.4",
+		"@volar/client": "0.32.0",
+		"@volar/server": "0.32.0",
 		"esbuild": "latest",
 		"vsce": "latest"
 	}
