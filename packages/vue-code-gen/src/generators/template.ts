@@ -153,41 +153,19 @@ export function generate(
 		for (const eventName in tag.events) {
 
 			const var_on = `__VLS_${elementIndex++}`;
-			const event = tag.events[eventName];
 			const key_1 = eventName; // click-outside
-			const key_2 = camelize('on-' + key_1); // onClickOutside
 			const key_3 = camelize(key_1); // clickOutside
 
-			tsCodeGen.addText(`type ${var_on} = __VLS_types.FirstFunction<\n`);
+			tsCodeGen.addText(`type ${var_on} = \n`);
 			if (key_1 !== key_3) {
 				tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
 				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_3}'>\n`);
-				tsCodeGen.addText(`>,\n`);
+				tsCodeGen.addText(`>;\n`);
 			}
 			else {
-				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
+				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>;\n`);
 			}
-			tsCodeGen.addText(`(typeof ${var_baseProps} & Omit<__VLS_types.GlobalAttrs, keyof typeof ${var_baseProps}> & Record<string, unknown>)[`);
-			writeCodeWithQuotes(
-				key_2,
-				event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.attr,
-					beforeRename(newName) {
-						return camelize('on-' + newName);
-					},
-					doRename(oldName, newName) {
-						const hName = hyphenate(newName);
-						if (hyphenate(newName).startsWith('on-')) {
-							return camelize(hName.substr('on-'.length));
-						}
-						return newName;
-					},
-				},
-			);
-			tsCodeGen.addText(`]>;\n`);
 
 			var_events[eventName] = var_on;
 		}
@@ -707,7 +685,32 @@ export function generate(
 						{
 							tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 							{
+								tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 								tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]},\n`);
+								{
+									tsCodeGen.addText(`(typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Omit<__VLS_types.GlobalAttrs, keyof Props> & Record<string, unknown> : __VLS_types.GlobalAttrs & Record<string, unknown>)[`);
+									const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
+									writeCodeWithQuotes(
+										key_2,
+										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
+										{
+											vueTag: 'template',
+											capabilities: capabilitiesSet.attr,
+											beforeRename(newName) {
+												return camelize('on-' + newName);
+											},
+											doRename(oldName, newName) {
+												const hName = hyphenate(newName);
+												if (hyphenate(newName).startsWith('on-')) {
+													return camelize(hName.substr('on-'.length));
+												}
+												return newName;
+											},
+										},
+									);
+									tsCodeGen.addText(`]\n`);
+								}
+								tsCodeGen.addText(`>,\n`);
 
 								const camelizeName = camelize(prop.arg.loc.source);
 
