@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "@volar/experimental",
-	"version": "0.32.0",
+	"version": "0.32.1",
 	"license": "MIT",
 	"files": [
 		"*.js",
