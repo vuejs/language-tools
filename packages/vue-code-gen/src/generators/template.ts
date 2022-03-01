@@ -364,6 +364,7 @@ export function generate(
 		writeObjectProperty(
 			name,
 			slot.loc,
+			SourceMaps.Mode.Expand,
 			{
 				vueTag: 'template',
 				capabilities: capabilitiesSet.slotNameExport,
@@ -733,6 +734,7 @@ export function generate(
 									start: prop.arg.loc.start.offset,
 									end: prop.arg.loc.end.offset,
 								},
+								SourceMaps.Mode.Offset,
 								{
 									vueTag: 'template',
 									capabilities: capabilitiesSet.event,
@@ -1119,6 +1121,7 @@ export function generate(
 				writeObjectProperty(
 					name,
 					sourceRange,
+					SourceMaps.Mode.Offset,
 					data,
 				);
 			}
@@ -1535,6 +1538,7 @@ export function generate(
 						start: prop.arg.loc.start.offset,
 						end: prop.arg.loc.end.offset,
 					},
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						beforeRename: camelize,
@@ -1569,6 +1573,7 @@ export function generate(
 						start: prop.loc.start.offset,
 						end: prop.loc.start.offset + prop.name.length
 					},
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						beforeRename: camelize,
@@ -1638,7 +1643,7 @@ export function generate(
 	}
 	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
 		const sourceRange = sourceRanges[0];
-		const mode = writeObjectProperty(mapCode, sourceRange, data);
+		const mode = writeObjectProperty(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 
 		for (let i = 1; i < sourceRanges.length; i++) {
 			const sourceRange = sourceRanges[i];
@@ -1676,9 +1681,9 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: TsMappingData) {
 		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
-			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			writeCode(mapCode, sourceRange, mapMode, data);
 			return 1;
 		}
 		else {
