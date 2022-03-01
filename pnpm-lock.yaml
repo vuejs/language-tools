@@ -48,7 +48,7 @@ importers:
 
   packages/client:
     specifiers:
-      '@types/vscode': 1.58.0
+      '@types/vscode': 1.61.0
       '@volar/server': 0.32.0
       '@volar/shared': 0.32.0
       '@vue/compiler-dom': ^3.2.27
@@ -69,7 +69,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.4
       vscode-nls: 5.0.0
     devDependencies:
-      '@types/vscode': 1.58.0
+      '@types/vscode': 1.61.0
 
   packages/code-gen:
     specifiers:
@@ -2047,8 +2047,8 @@ packages:
       '@types/vfile-message': 2.0.0
     dev: false
 
-  /@types/vscode/1.58.0:
-    resolution: {integrity: sha512-enznxcBi4uYt20LWal09E0+VKEHZlq9PZawTu/mpWCVCFWWbiyR8HNI1ikBP1Ypqv8b3A/0md3DY1jcx+oQ8kQ==}
+  /@types/vscode/1.61.0:
+    resolution: {integrity: sha512-9k5Nwq45hkRwdfCFY+eKXeQQSbPoA114mF7U/4uJXRBJeGIO7MuJdhF1PnaDN+lllL9iKGQtd6FFXShBXMNaFg==}
     dev: true
 
   /@types/yargs-parser/20.2.1:
