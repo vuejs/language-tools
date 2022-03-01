@@ -17,16 +17,11 @@ export function getDummyTsLs(
 	if (!dummyTsLs) {
 		const host: ts2.LanguageServiceHost = {
 			getProjectVersion: () => dummyProjectVersion.toString(),
+			getScriptVersion: () => dummyProjectVersion.toString(),
 			getPreferences,
 			getFormatOptions,
 			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),
 			getScriptFileNames: () => [shared.uriToFsPath(doc.uri)],
-			getScriptVersion: (fileName) => {
-				if (shared.fsPathToUri(fileName) === doc.uri) {
-					return doc.version.toString();
-				}
-				return '';
-			},
 			getScriptSnapshot: fileName => {
 				if (shared.fsPathToUri(fileName) === shared.normalizeUri(doc.uri)) {
 					return ts.ScriptSnapshot.fromString(doc.getText());
