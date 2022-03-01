@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.32.1
+
+- feat: support generic events with props ([#981](https://github.com/johnsoncodehk/volar/issues/981))
+- fix: slots references always 0 ([#932](https://github.com/johnsoncodehk/volar/issues/932))
+- fix: `source.organizeImports` not working in `editor.codeActionsOnSave` ([#906](https://github.com/johnsoncodehk/volar/issues/906))
+- fix: component type incorrect if duplicate name with current `<script setup>` file name ([#944](https://github.com/johnsoncodehk/volar/issues/944))
+- fix: language server broken if TS version < 4.4 ([#962](https://github.com/johnsoncodehk/volar/issues/962))
+- fix: pug outline element level incorrect ([#969](https://github.com/johnsoncodehk/volar/issues/969))
+- fix: document symbols confusion between `<script>` and `<script setup>` ([#994](https://github.com/johnsoncodehk/volar/issues/994))
+- fix: vite icon do not show with first editor
+
 ## 0.32.0
 
 - feat: experimental webview features for vite ([#208](https://github.com/johnsoncodehk/volar/issues/208))
