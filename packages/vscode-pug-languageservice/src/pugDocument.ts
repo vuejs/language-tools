@@ -35,7 +35,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		attrsBlocks = collectAttrsBlocks(tokens);
 
 		ast = pugParser(tokens, { filename: fileName, src: pugCode }) as Node;
-		visitNode(ast, undefined);
+		visitNode(ast, undefined, undefined);
 
 		// support tag auto-complete in empty lines
 		for (const emptyLineEnd of emptyLineEnds) {
@@ -86,10 +86,10 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		ast,
 	};
 
-	function visitNode(node: Node, next: Node | undefined) {
+	function visitNode(node: Node, next: Node | undefined, parent: Node | undefined) {
 		if (node.type === 'Block') {
 			for (let i = 0; i < node.nodes.length; i++) {
-				visitNode(node.nodes[i], node.nodes[i + 1]);
+				visitNode(node.nodes[i], node.nodes[i + 1], node);
 			}
 		}
 		else if (node.type === 'Tag') {
@@ -102,8 +102,8 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			const selfClosing = node.block.nodes.length === 0;
 			addStartTag(node, selfClosing);
 			if (!selfClosing) {
-				visitNode(node.block, next);
-				addEndTag(node, next);
+				visitNode(node.block, next, parent);
+				addEndTag(node, next, parent);
 			}
 			const fullHtmlEnd = codeGen.getText().length;
 			codeGen.addMapping2({
@@ -186,8 +186,8 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			codeGen.addText('>');
 		}
 	}
-	function addEndTag(node: TagNode, next: Node | undefined) {
-		let nextStart = pugCode.length;
+	function addEndTag(node: TagNode, next: Node | undefined, parent: Node | undefined) {
+		let nextStart: number | undefined;
 		if (next) {
 			if (next.type === 'Block') {
 				nextStart = getDocOffset(next.line, 1);
@@ -196,16 +196,21 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 				nextStart = getDocOffset(next.line, next.column);
 			}
 		}
-		fullPugTagEnd = nextStart;
-		codeGen.addCode(
-			'',
-			{
-				start: nextStart,
-				end: nextStart,
-			},
-			SourceMap.Mode.Totally,
-			undefined,
-		);
+		else if (!parent) {
+			nextStart = pugCode.length;
+		}
+		if (nextStart !== undefined) {
+			fullPugTagEnd = nextStart;
+			codeGen.addCode(
+				'',
+				{
+					start: nextStart,
+					end: nextStart,
+				},
+				SourceMap.Mode.Totally,
+				undefined,
+			);
+		}
 		codeGen.addText(`</${node.name}>`);
 	}
 	function addClassesOrStyles(attrs: TagNode['attrs'], attrName: string) {
