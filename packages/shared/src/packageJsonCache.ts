@@ -38,6 +38,10 @@ export interface PackageJsonCache {
     searchDirectoryAndAncestors(directory: Path): void;
 }
 
+export function canCreatePackageJsonCache(ts: typeof import('typescript/lib/tsserverlibrary')) {
+    return 'createPackageJsonInfo' in ts && 'getDirectoryPath' in ts && 'combinePaths' in ts && 'tryFileExists' in ts && 'forEachAncestorDirectory' in ts;
+}
+
 export function createPackageJsonCache(
     ts: typeof import('typescript/lib/tsserverlibrary'),
     host: ProjectService,

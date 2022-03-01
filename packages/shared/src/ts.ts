@@ -2,16 +2,33 @@ import * as path from 'upath';
 import { normalizeFileName } from './path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
-import { createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
+import { createPackageJsonCache, canCreatePackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 
-export function addCacheLogicToLanguageServiceHost(
+export function injectCacheLogicToLanguageServiceHost(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	host: ts.LanguageServiceHost,
 	service: ts.LanguageService,
 ) {
 
+	const _createCacheableExportInfoMap = (ts as any).createCacheableExportInfoMap;
+	const _combinePaths = (ts as any).combinePaths;
+	const _forEachAncestorDirectory = (ts as any).forEachAncestorDirectory;
+	const _getDirectoryPath = (ts as any).getDirectoryPath;
+	const _toPath = (ts as any).toPath;
+	const _createGetCanonicalFileName = (ts as any).createGetCanonicalFileName;
+
+	if (
+		!_createCacheableExportInfoMap
+		|| !_combinePaths
+		|| !_forEachAncestorDirectory
+		|| !_getDirectoryPath
+		|| !_toPath
+		|| !_createGetCanonicalFileName
+		|| !canCreatePackageJsonCache(ts)
+	) return;
+
 	const moduleSpecifierCache = createModuleSpecifierCache();
-	const exportMapCache = (ts as any).createCacheableExportInfoMap({
+	const exportMapCache = _createCacheableExportInfoMap({
 		getCurrentProgram() {
 			return service.getProgram()
 		},
@@ -43,7 +60,7 @@ export function addCacheLogicToLanguageServiceHost(
 					return processDirectory(directory);
 				// Check package.json
 				case Ternary.True:
-					const packageJsonFileName = (ts as any).combinePaths(directory, "package.json");
+					const packageJsonFileName = _combinePaths(directory, "package.json");
 					// this.watchPackageJsonFile(packageJsonFileName as ts.Path); // TODO
 					const info = packageJsonCache.getInDirectory(directory);
 					if (info) result.push(info);
@@ -53,12 +70,12 @@ export function addCacheLogicToLanguageServiceHost(
 			}
 		};
 
-		(ts as any).forEachAncestorDirectory((ts as any).getDirectoryPath(filePath), processDirectory);
+		_forEachAncestorDirectory(_getDirectoryPath(filePath), processDirectory);
 		return result;
 	};
 
 	function toPath(fileName: string) {
-		return (ts as any).toPath(fileName, host.getCurrentDirectory(), (ts as any).createGetCanonicalFileName(host.useCaseSensitiveFileNames?.()));
+		return _toPath(fileName, host.getCurrentDirectory(), _createGetCanonicalFileName(host.useCaseSensitiveFileNames?.()));
 	}
 }
 

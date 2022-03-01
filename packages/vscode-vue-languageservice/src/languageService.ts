@@ -160,8 +160,8 @@ export function createLanguageService(
 	const templateTsLsRaw = ts.createLanguageService(templateTsHost);
 	const scriptTsLsRaw = ts.createLanguageService(scriptTsHost);
 
-	shared.addCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
-	shared.addCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
+	shared.injectCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
+	shared.injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
 
 	const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
 	const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
