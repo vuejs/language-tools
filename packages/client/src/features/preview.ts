@@ -72,13 +72,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.ComponentPreview, new PreviewPanelSerializer()));
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async e => {
-		if (e?.document.languageId === 'vue') {
-			const viteDir = await getViteDir(e.document.fileName);
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateFoundViteDir));
+
+	updateFoundViteDir();
+
+	async function updateFoundViteDir() {
+		if (vscode.window.activeTextEditor?.document.languageId === 'vue') {
+			const viteDir = await getViteDir(vscode.window.activeTextEditor.document.fileName);
 			vscode.commands.executeCommand('setContext', 'volar.foundViteDir', viteDir !== undefined);
 		}
-	}));
-
+	}
 	async function openPreview(mode: PreviewType, fileName: string, fileText: string, _terminal?: vscode.Terminal, _port?: number, _panel?: vscode.WebviewPanel) {
 
 		const viteDir = await getViteDir(fileName);
