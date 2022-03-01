@@ -59,9 +59,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (!editor)
 			return;
 
+		const viteConfigFile = await getViteConfigFile(editor.document.fileName);
 		const select = await userPick({
-			[PreviewType.Webview]: { label: 'Preview Vite App', description: '(Experimental)' },
-			[PreviewType.ComponentPreview]: { label: `Preview Component with Vite`, description: '(WIP)', detail: path.basename(editor.document.fileName) },
+			[PreviewType.Webview]: { label: 'Preview Vite App', description: '(Experimental)', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
+			[PreviewType.ComponentPreview]: { label: `Preview Component with Vite`, description: '(WIP)', detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName },
 			// refsGraph: { label: `Refs Reactive Graph (WIP)` },
 		});
 		if (select === undefined)
@@ -78,16 +79,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function updateFoundViteDir() {
 		if (vscode.window.activeTextEditor?.document.languageId === 'vue') {
-			const viteDir = await getViteDir(vscode.window.activeTextEditor.document.fileName);
-			vscode.commands.executeCommand('setContext', 'volar.foundViteDir', viteDir !== undefined);
+			const viteConfigFile = await getViteConfigFile(vscode.window.activeTextEditor.document.fileName);
+			vscode.commands.executeCommand('setContext', 'volar.foundViteDir', viteConfigFile !== undefined);
 		}
 	}
 	async function openPreview(mode: PreviewType, fileName: string, fileText: string, _terminal?: vscode.Terminal, _port?: number, _panel?: vscode.WebviewPanel) {
 
-		const viteDir = await getViteDir(fileName);
-		if (!viteDir)
+		const viteConfigFile = await getViteConfigFile(fileName);
+		if (!viteConfigFile)
 			return;
 
+		const viteDir = path.dirname(viteConfigFile);
 		const { terminal, port } = _terminal && _port
 			? { terminal: _terminal, port: _port }
 			: await startViteServer(viteDir);
@@ -265,14 +267,18 @@ export async function activate(context: vscode.ExtensionContext) {
 		};
 	}
 
-	async function getViteDir(fileName: string) {
+	async function getViteConfigFile(fileName: string) {
 		let dir = path.dirname(fileName);
-		let viteConfigDir: string | undefined;
+		let viteConfigFile: string | undefined;
 		while (true) {
 			const configTs = path.join(dir, 'vite.config.ts');
 			const configJs = path.join(dir, 'vite.config.js');
-			if (await fs.exists(vscode.Uri.file(configTs)) || await fs.exists(vscode.Uri.file(configJs))) {
-				viteConfigDir = dir;
+			if (await fs.exists(vscode.Uri.file(configTs))) {
+				viteConfigFile = configTs;
+				break;
+			}
+			if (await fs.exists(vscode.Uri.file(configJs))) {
+				viteConfigFile = configJs;
 				break;
 			}
 			const upperDir = path.dirname(dir);
@@ -281,7 +287,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 			dir = upperDir;
 		}
-		return viteConfigDir;
+		return viteConfigFile;
 	}
 
 	function createQuery(vueCode: string, fileName: string) {
