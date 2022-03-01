@@ -193,6 +193,8 @@ export function generate(
 		if (!scriptSetupRanges)
 			return;
 
+		const fullStart = codeGen.getText().length;
+
 		codeGen.addCode(
 			scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
 			{
@@ -369,6 +371,23 @@ export function generate(
 
 		codeGen.addText(`});\n`);
 		codeGen.addText(`})();\n`);
+
+		// for fix https://github.com/johnsoncodehk/volar/issues/906
+		codeGen.addMapping2({
+			mappedRange: {
+				start: fullStart,
+				end: codeGen.getText().length,
+			},
+			sourceRange: {
+				start: 0,
+				end: scriptSetup.content.length,
+			},
+			mode: SourceMaps.Mode.Totally,
+			data: {
+				vueTag: 'scriptSetup',
+				capabilities: {},
+			},
+		});
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);
