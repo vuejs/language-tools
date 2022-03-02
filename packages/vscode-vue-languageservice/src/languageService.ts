@@ -771,6 +771,7 @@ function createServices(
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 	const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
+	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 
 	return {
 		ts,
@@ -781,6 +782,7 @@ function createServices(
 		getStylesheet,
 		getCssVBindRanges,
 		getHtmlDocument,
+		getJsonDocument,
 		vueHost,
 		updateHtmlCustomData,
 		updateCssCustomData,
@@ -869,15 +871,33 @@ function createServices(
 
 		const cache = htmlDocuments.get(document);
 		if (cache) {
-			const [cacheVersion, cacheHtmlDoc] = cache;
+			const [cacheVersion, cacheDoc] = cache;
 			if (cacheVersion === document.version) {
-				return cacheHtmlDoc;
+				return cacheDoc;
 			}
 		}
 
-		const htmlDoc = htmlLs.parseHTMLDocument(document);
-		htmlDocuments.set(document, [document.version, htmlDoc]);
+		const doc = htmlLs.parseHTMLDocument(document);
+		htmlDocuments.set(document, [document.version, doc]);
 
-		return htmlDoc;
+		return doc;
+	}
+	function getJsonDocument(document: TextDocument) {
+
+		if (document.languageId !== 'json' && document.languageId !== 'jsonc')
+			return;
+
+		const cache = jsonDocuments.get(document);
+		if (cache) {
+			const [cacheVersion, cacheDoc] = cache;
+			if (cacheVersion === document.version) {
+				return cacheDoc;
+			}
+		}
+
+		const doc = jsonLs.parseJSONDocument(document);
+		jsonDocuments.set(document, [document.version, doc]);
+
+		return doc;
 	}
 }

@@ -1,7 +1,6 @@
 import type * as css from 'vscode-css-languageservice';
 import type { DocumentContext, TextDocument } from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice';
-import type { HTMLDocument } from 'vscode-html-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from 'vscode-pug-languageservice';
@@ -73,6 +72,7 @@ export type LanguageServiceContextBase = {
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
+	getJsonDocument: (documrnt: TextDocument) => json.JSONDocument | undefined,
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {

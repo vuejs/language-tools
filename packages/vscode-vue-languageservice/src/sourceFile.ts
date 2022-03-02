@@ -62,7 +62,7 @@ export function createSourceFile(
 
 	// use
 	const sfcStyles = useSfcStyles(uri, document, computed(() => descriptor.styles));
-	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks), context);
+	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks));
 	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template), context);
 	const sfcTemplateData = computed<undefined | {
 		sourceLang: 'html' | 'pug',

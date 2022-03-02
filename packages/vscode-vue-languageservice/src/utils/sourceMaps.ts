@@ -1,7 +1,6 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { PugDocument } from 'vscode-pug-languageservice';
-import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
 import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
 
@@ -43,7 +42,6 @@ export class JsonSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public jsonDocument: JSONDocument,
 		mappings?: SourceMaps.Mapping<undefined>[],
 	) {
 		super(sourceDocument, mappedDocument, mappings);

@@ -1,7 +1,5 @@
 import * as shared from '@volar/shared';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
-import type * as css from 'vscode-css-languageservice';
-import type * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '../sourceFile';
@@ -10,7 +8,7 @@ import * as dedupe from '../utils/dedupe';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -422,10 +420,15 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument, jsonDocument: json.JSONDocument }[]>) {
+		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument }[]>) {
 			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
-				for (const { textDocument, jsonDocument } of documents.value) {
+				for (const { textDocument } of documents.value) {
+
+					const jsonDocument = getJsonDocument(textDocument);
+					if (!jsonDocument)
+						continue;
+	
 					const errs = await jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
 						? {
 							comments: 'error',

@@ -94,7 +94,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument }: ApiLanguageServiceContext,
+	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument }: ApiLanguageServiceContext,
 	getScriptContentVersion: () => number,
 ) {
 
@@ -693,6 +693,11 @@ export function register(
 				return;
 			}
 			for (const sourceMap of sourceFile.getJsonSourceMaps()) {
+
+				const jsonDocument = getJsonDocument(sourceMap.mappedDocument);
+				if (!jsonDocument)
+					continue;
+
 				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 					if (!result) {
 						result = {
@@ -700,7 +705,7 @@ export function register(
 							items: [],
 						};
 					}
-					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.jsonDocument);
+					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, jsonDocument);
 					if (!jsonResult) continue;
 					if (jsonResult.isIncomplete) {
 						result.isIncomplete = true;
