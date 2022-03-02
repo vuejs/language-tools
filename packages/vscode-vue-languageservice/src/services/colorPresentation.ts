@@ -1,11 +1,11 @@
+import { SourceFile } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import type { HtmlLanguageServiceContext } from '../types';
+import type { DocumentServiceRuntimeContext } from '../types';
 
-export function register(context: HtmlLanguageServiceContext) {
+export function register(context: DocumentServiceRuntimeContext) {
 
-	const { getCssLs } = context;
+	const { getCssLs, getStylesheet } = context;
 
 	return (document: TextDocument, color: vscode.Color, range: vscode.Range) => {
 
@@ -20,11 +20,16 @@ export function register(context: HtmlLanguageServiceContext) {
 		function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.ColorPresentation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
+
+				if (!cssLs || !stylesheet)
+					continue;
+
 				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
 				for (const [cssRange] of cssRanges) {
-					const _result = cssLs.getColorPresentations(sourceMap.mappedDocument, sourceMap.stylesheet, color, cssRange);
+					const _result = cssLs.getColorPresentations(sourceMap.mappedDocument, stylesheet, color, cssRange);
 					for (const item of _result) {
 						if (item.textEdit) {
 							if (vscode.TextEdit.is(item.textEdit)) {

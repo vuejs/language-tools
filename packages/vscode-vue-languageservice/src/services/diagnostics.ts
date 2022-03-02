@@ -1,16 +1,13 @@
 import * as shared from '@volar/shared';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
-import type * as css from 'vscode-css-languageservice';
-import type * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import type { SourceFile, TsSourceMap, SourceMap } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
-import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -276,15 +273,17 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
-				if (sfcTemplateData.value?.sourceLang === 'html' && sfcTemplateCompileResult.value) {
+				if (sfcTemplateData.value?.lang === 'html' && sfcTemplateCompileResult.value) {
 					return sfcTemplateCompileResult.value.errors;
 				}
 				return [];
 			});
 			const pugErrors = computed(() => {
+
 				const result: vscode.Diagnostic[] = [];
-				if (sfcTemplateData.value?.sourceLang === 'pug' && sfcTemplate.pugDocument.value) {
-					const pugDoc = sfcTemplate.pugDocument.value;
+				const pugDoc = sfcTemplate.textDocument.value ? getPugDocument(sfcTemplate.textDocument.value) : undefined;
+
+				if (pugDoc) {
 					const astError = pugDoc.error;
 					if (astError) {
 						result.push({
@@ -356,8 +355,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				if (!sfcTemplate.textDocument.value) return [];
 				return [
-					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
-					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
+					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'html' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
+					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'jade' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 				];
 			});
 			return {
@@ -389,10 +388,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: errors,
 			};
 		}
-		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
+		function useStylesValidation(documents: Ref<{ textDocument: TextDocument }[]>) {
 			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
-				for (const { textDocument, stylesheet } of documents.value) {
+				for (const { textDocument } of documents.value) {
+					const stylesheet = getStylesheet(textDocument);
 					const cssLs = getCssLs(textDocument.languageId);
 					if (!cssLs || !stylesheet) continue;
 					const settings = await vueHost.getCssLanguageSettings?.(textDocument);
@@ -421,10 +421,15 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument, jsonDocument: json.JSONDocument }[]>) {
+		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument }[]>) {
 			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
-				for (const { textDocument, jsonDocument } of documents.value) {
+				for (const { textDocument } of documents.value) {
+
+					const jsonDocument = getJsonDocument(textDocument);
+					if (!jsonDocument)
+						continue;
+
 					const errs = await jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
 						? {
 							comments: 'error',

@@ -44,7 +44,7 @@ export const transformContext: CompilerDOM.TransformContext = {
 };
 
 export function generate(
-	sourceLang: 'html' | 'pug',
+	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
 	cssScopedClasses: string[] = [],

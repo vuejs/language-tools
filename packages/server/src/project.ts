@@ -14,7 +14,7 @@ export const renameFileContentCache = new Map<string, string>();
 
 export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
-	ts: vue.Modules['typescript'],
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	options: shared.ServerInitializationOptions,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
@@ -85,7 +85,7 @@ export async function createProject(
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
 				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
-				vueLs.__internal__.onInitProgress(p => {
+				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());
 					}
@@ -287,7 +287,7 @@ export async function createProject(
 export function getScriptText(
 	documents: vscode.TextDocuments<TextDocument>,
 	fileName: string,
-	sys: vue.Modules['typescript']['sys'],
+	sys: typeof import('typescript/lib/tsserverlibrary')['sys'],
 ) {
 	const uri = shared.fsPathToUri(fileName);
 	const doc = getDocumentSafely(documents, uri);

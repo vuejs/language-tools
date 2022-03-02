@@ -34,7 +34,7 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const localTypes = ls.__internal__.getLocalTypesFiles(lsType);
+				const localTypes = ls.__internal__.tsRuntime.getLocalTypesFiles(lsType);
 				for (const fileName of localTypes.fileNames) {
 					connection.workspace.applyEdit({
 						edit: {

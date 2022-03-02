@@ -1,14 +1,14 @@
 import { transformCompletionItem } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import { SourceFile } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';
 import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 
-export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, scriptTsLs }: LanguageServiceRuntimeContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
 		// @ts-expect-error

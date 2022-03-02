@@ -6,7 +6,7 @@ import { computed, reactive, ref, shallowReactive } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { ITemplateScriptData, LanguageServiceContext } from './types';
+import { BasicRuntimeContext, ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
 import { useSfcScript } from './use/useSfcScript';
@@ -17,9 +17,9 @@ import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
+import type * as html from 'vscode-html-languageservice'; // fix TS2742
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import type * as _1 from 'vscode-html-languageservice'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
@@ -28,13 +28,21 @@ export function createSourceFile(
 	uri: string,
 	_content: string,
 	_version: string,
-	context: LanguageServiceContext,
+	htmlLs: html.LanguageService,
+	compileTemplate: (document: TextDocument) => {
+		htmlTextDocument: TextDocument,
+		htmlToTemplate: (start: number, end: number) => number | undefined,
+	} | undefined,
+	compilerOptions: VueCompilerOptions,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
+	getCssClasses: BasicRuntimeContext['getCssClasses'],
 ) {
 
 	// refs
 	const content = ref('');
 	const version = ref('');
-	const descriptor = reactive<shared.Sfc>({
+	const sfc = reactive<shared.Sfc>({
 		template: null,
 		script: null,
 		scriptSetup: null,
@@ -58,107 +66,96 @@ export function createSourceFile(
 
 	// computeds
 	const document = computed(() => TextDocument.create(uri, 'vue', 0, content.value));
-	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
+	const vueHtmlDocument = computed(() => htmlLs.parseHTMLDocument(document.value));
 
 	// use
-	const sfcStyles = useSfcStyles(context, uri, document, computed(() => descriptor.styles));
-	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks), context);
-	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template), context);
+	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
+	const sfcJsons = useSfcJsons(uri, document, computed(() => sfc.customBlocks));
+	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
 	const sfcTemplateData = computed<undefined | {
-		sourceLang: 'html' | 'pug',
-		html: string,
+		lang: string,
 		htmlTextDocument: TextDocument,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	}>(() => {
-		if (sfcTemplate.pugDocument.value) {
-			const pugDoc = sfcTemplate.pugDocument.value;
-			return {
-				sourceLang: 'pug',
-				html: pugDoc.htmlCode,
-				htmlTextDocument: pugDoc.htmlTextDocument,
-				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-					const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
-					if (pugRange) {
-						return pugRange.start;
-					}
-				},
-			};
-		}
-		if (descriptor.template && sfcTemplate.textDocument.value && descriptor.template.lang === 'html') {
-			return {
-				sourceLang: 'html',
-				html: descriptor.template.content,
-				htmlTextDocument: sfcTemplate.textDocument.value,
-				htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
+		if (sfc.template && sfcTemplate.textDocument.value) {
+			const compiledHtml = compileTemplate(sfcTemplate.textDocument.value);
+			if (compiledHtml) {
+				return {
+					lang: sfc.template.lang,
+					htmlTextDocument: compiledHtml.htmlTextDocument,
+					htmlToTemplate: compiledHtml.htmlToTemplate,
+				};
 			};
 		}
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
 		computed(() => sfcTemplateData.value?.htmlTextDocument),
-		context.compilerOptions,
+		compilerOptions,
 	);
 	const sfcScript = useSfcScript(
 		uri,
 		document,
-		computed(() => descriptor.script),
-		context.modules.typescript,
+		computed(() => sfc.script),
+		ts,
 	);
 	const sfcScriptSetup = useSfcScript(
 		uri,
 		document,
-		computed(() => descriptor.scriptSetup),
-		context.modules.typescript,
+		computed(() => sfc.scriptSetup),
+		ts,
 	);
 	const scriptRanges = computed(() =>
 		sfcScript.ast.value
-			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup, false, false)
+			? parseScriptRanges(ts, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
 		sfcScriptSetup.ast.value
-			? parseScriptSetupRanges(context.modules.typescript, sfcScriptSetup.ast.value)
+			? parseScriptSetupRanges(ts, sfcScriptSetup.ast.value)
 			: undefined
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
 		'template',
 		uri,
 		document,
-		computed(() => descriptor.script),
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
-		context.compilerOptions.experimentalCompatMode === 2,
+		compilerOptions.experimentalCompatMode === 2,
+		getCssVBindRanges,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
 		uri,
 		document,
-		computed(() => descriptor.script),
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
-		context.compilerOptions.experimentalCompatMode === 2,
+		compilerOptions.experimentalCompatMode === 2,
+		getCssVBindRanges,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,
 		document,
-		computed(() => descriptor.script),
-		computed(() => descriptor.scriptSetup),
-		computed(() => descriptor.template),
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
+		computed(() => sfc.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
-		context.compilerOptions.experimentalCompatMode === 2,
+		compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		uri,
 		document,
-		computed(() => descriptor.template),
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.template),
+		computed(() => sfc.scriptSetup),
 		computed(() => scriptSetupRanges.value),
-		computed(() => descriptor.styles),
+		computed(() => sfc.styles),
 		templateScriptData,
 		sfcStyles.textDocuments,
 		sfcStyles.sourceMaps,
@@ -166,11 +163,13 @@ export function createSourceFile(
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		sfcScriptForScriptLs.lang,
-		context,
+		compilerOptions,
+		getCssVBindRanges,
+		getCssClasses,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
-		refs: parseRefSugarDeclarationRanges(context.modules.typescript, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
-		raws: parseRefSugarCallRanges(context.modules.typescript, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
+		refs: parseRefSugarDeclarationRanges(ts, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
+		raws: parseRefSugarCallRanges(ts, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
 	} : undefined));
 
 	// getters
@@ -224,10 +223,9 @@ export function createSourceFile(
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssLsSourceMaps.value),
 		getJsonSourceMaps: untrack(() => sfcJsons.sourceMaps.value),
-		getHtmlSourceMaps: untrack(() => sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
-		getPugSourceMaps: untrack(() => sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
+		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getDescriptor: untrack(() => descriptor), // TODO: untrack not working for reactive
+		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive
 		getScriptAst: untrack(() => sfcScript.ast.value),
 		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
@@ -244,7 +242,7 @@ export function createSourceFile(
 
 		refs: {
 			document,
-			descriptor,
+			descriptor: sfc,
 			lastUpdated,
 
 			scriptSetupRanges,
@@ -298,66 +296,66 @@ export function createSourceFile(
 
 		function updateTemplate(newData: shared.Sfc['template']) {
 
-			lastUpdated.template = descriptor.template?.lang !== newData?.lang
-				|| descriptor.template?.content !== newData?.content;
+			lastUpdated.template = sfc.template?.lang !== newData?.lang
+				|| sfc.template?.content !== newData?.content;
 
-			if (descriptor.template && newData) {
-				updateBlock(descriptor.template, newData);
+			if (sfc.template && newData) {
+				updateBlock(sfc.template, newData);
 			}
 			else {
-				descriptor.template = newData;
+				sfc.template = newData;
 			}
 		}
 		function updateScript(newData: shared.Sfc['script']) {
 
-			lastUpdated.script = descriptor.script?.lang !== newData?.lang
-				|| descriptor.script?.content !== newData?.content;
+			lastUpdated.script = sfc.script?.lang !== newData?.lang
+				|| sfc.script?.content !== newData?.content;
 
-			if (descriptor.script && newData) {
-				updateBlock(descriptor.script, newData);
+			if (sfc.script && newData) {
+				updateBlock(sfc.script, newData);
 			}
 			else {
-				descriptor.script = newData;
+				sfc.script = newData;
 			}
 		}
 		function updateScriptSetup(newData: shared.Sfc['scriptSetup']) {
 
-			lastUpdated.scriptSetup = descriptor.scriptSetup?.lang !== newData?.lang
-				|| descriptor.scriptSetup?.content !== newData?.content;
+			lastUpdated.scriptSetup = sfc.scriptSetup?.lang !== newData?.lang
+				|| sfc.scriptSetup?.content !== newData?.content;
 
-			if (descriptor.scriptSetup && newData) {
-				updateBlock(descriptor.scriptSetup, newData);
+			if (sfc.scriptSetup && newData) {
+				updateBlock(sfc.scriptSetup, newData);
 			}
 			else {
-				descriptor.scriptSetup = newData;
+				sfc.scriptSetup = newData;
 			}
 		}
 		function updateStyles(newDataArr: shared.Sfc['styles']) {
 			for (let i = 0; i < newDataArr.length; i++) {
 				const newData = newDataArr[i];
-				if (descriptor.styles.length > i) {
-					updateBlock(descriptor.styles[i], newData);
+				if (sfc.styles.length > i) {
+					updateBlock(sfc.styles[i], newData);
 				}
 				else {
-					descriptor.styles.push(newData);
+					sfc.styles.push(newData);
 				}
 			}
-			while (descriptor.styles.length > newDataArr.length) {
-				descriptor.styles.pop();
+			while (sfc.styles.length > newDataArr.length) {
+				sfc.styles.pop();
 			}
 		}
 		function updateCustomBlocks(newDataArr: shared.Sfc['customBlocks']) {
 			for (let i = 0; i < newDataArr.length; i++) {
 				const newData = newDataArr[i];
-				if (descriptor.customBlocks.length > i) {
-					updateBlock(descriptor.customBlocks[i], newData);
+				if (sfc.customBlocks.length > i) {
+					updateBlock(sfc.customBlocks[i], newData);
 				}
 				else {
-					descriptor.customBlocks.push(newData);
+					sfc.customBlocks.push(newData);
 				}
 			}
-			while (descriptor.customBlocks.length > newDataArr.length) {
-				descriptor.customBlocks.pop();
+			while (sfc.customBlocks.length > newDataArr.length) {
+				sfc.customBlocks.pop();
 			}
 		}
 		function updateBlock<T>(oldBlock: T, newBlock: T) {

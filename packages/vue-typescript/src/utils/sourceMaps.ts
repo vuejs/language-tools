@@ -1,9 +1,5 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { HTMLDocument } from 'vscode-html-languageservice';
-import type { Stylesheet } from 'vscode-css-languageservice';
-import type { PugDocument } from 'vscode-pug-languageservice';
-import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
 import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
 
@@ -29,10 +25,8 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public stylesheet: Stylesheet | undefined,
 		public module: string | undefined,
 		public scoped: boolean,
-		public links: { textDocument: TextDocument, stylesheet: Stylesheet }[],
 		public capabilities: {
 			foldingRanges: boolean,
 			formatting: boolean,
@@ -40,40 +34,6 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 		mappings?: SourceMaps.Mapping<undefined>[],
 	) {
 		super(sourceDocument, mappedDocument, mappings);
-	}
-}
-
-export class JsonSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public jsonDocument: JSONDocument,
-		mappings?: SourceMaps.Mapping<undefined>[],
-	) {
-		super(sourceDocument, mappedDocument, mappings);
-	}
-}
-
-export class HtmlSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public htmlDocument: HTMLDocument,
-		public language: 'html' = 'html',
-		mappings?: SourceMaps.Mapping<undefined>[],
-	) {
-		super(sourceDocument, mappedDocument, mappings);
-	}
-}
-
-export class PugSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public pugDocument: PugDocument,
-		public language: 'pug' = 'pug',
-	) {
-		super(sourceDocument, mappedDocument);
 	}
 }
 

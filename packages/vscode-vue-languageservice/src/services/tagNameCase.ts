@@ -1,8 +1,8 @@
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { SourceFile } from '../sourceFile';
+import { SourceFile } from '@volar/vue-typescript';
 
-export function register({ sourceFiles }: ApiLanguageServiceContext) {
+export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 	return (uri: string): {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',

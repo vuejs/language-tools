@@ -3,24 +3,25 @@ import { transformSelectionRanges } from '@volar/transforms';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
-import type { SourceFile } from '../sourceFile';
-import type { HtmlLanguageServiceContext } from '../types';
+import type { SourceFile } from '@volar/vue-typescript';
+import type { DocumentServiceRuntimeContext } from '../types';
 import { getDummyTsLs } from '../utils/sharedLs';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 export function register(
-	context: HtmlLanguageServiceContext,
+	context: DocumentServiceRuntimeContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs } = context;
+	const { typescript: ts, htmlLs, pugLs, getCssLs, getStylesheet, getPugDocument } = context;
 
 	return (document: TextDocument, positions: vscode.Position[]) => {
 
 		const sourceFile = context.getVueDocument(document);
 		if (!sourceFile) {
 			// take over mode
-			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
+			const dummyTsLs = getDummyTsLs(ts, ts2, document, getPreferences, getFormatOptions);
 			return dummyTsLs.getSelectionRanges(document.uri, positions);
 		}
 
@@ -84,7 +85,7 @@ export function register(
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTsLs = getDummyTsLs(ts, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const tsStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
 				const tsSelectRange = dummyTsLs.getSelectionRanges(sourceMap.mappedDocument.uri, tsStarts);
 				result = result.concat(transformSelectionRanges(
@@ -96,14 +97,15 @@ export function register(
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.SelectionRange[] = [];
-			for (const sourceMap of [
-				...sourceFile.getHtmlSourceMaps(),
-				...sourceFile.getPugSourceMaps()
-			]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
 				const htmlStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
-				const selectRanges = sourceMap.language === 'html'
-					? htmlLs.getSelectionRanges(sourceMap.mappedDocument, htmlStarts)
-					: pugLs.getSelectionRanges(sourceMap.pugDocument, htmlStarts)
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const selectRanges =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.getSelectionRanges(sourceMap.mappedDocument, htmlStarts)
+						: pugDocument ? pugLs.getSelectionRanges(pugDocument, htmlStarts)
+							: []
+
 				result = result.concat(transformSelectionRanges(
 					selectRanges,
 					range => sourceMap.getSourceRange(range.start, range.end)?.[0],
@@ -114,10 +116,15 @@ export function register(
 		function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.SelectionRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
+
+				if (!cssLs || !stylesheet)
+					continue;
+
 				const cssStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
-				const cssSelectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, cssStarts, sourceMap.stylesheet);
+				const cssSelectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, cssStarts, stylesheet);
 				result = result.concat(transformSelectionRanges(
 					cssSelectRanges,
 					range => sourceMap.getSourceRange(range.start, range.end)?.[0],

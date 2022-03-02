@@ -2,13 +2,13 @@ import { computed, shallowReactive } from '@vue/reactivity';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
-import type { CssSourceMap, HtmlSourceMap, TeleportSourceMap, TsSourceMap } from './utils/sourceMaps';
+import type { CssSourceMap, SourceMap, TeleportSourceMap, TsSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
 import type { TsMappingData } from '@volar/vue-code-gen';
-import type * as ts from 'typescript/lib/tsserverlibrary'; // fix build failed
+import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix build failed
 
 export interface SourceFiles extends ReturnType<typeof createSourceFiles> { }
 
@@ -43,11 +43,11 @@ export function createSourceFiles() {
 		return map;
 	});
 	const htmlSourceMaps = computed(() => {
-		const map = new Map<string, HtmlSourceMap>();
+		const map = new Map<string, SourceMap>();
 		for (const key in _sourceFiles) {
 			const sourceFile = _sourceFiles[key]!;
-			if (sourceFile.refs.sfcTemplate.htmlSourceMap.value) {
-				const sourceMap = sourceFile.refs.sfcTemplate.htmlSourceMap.value;
+			if (sourceFile.refs.sfcTemplate.textDocument.value?.languageId === 'html' && sourceFile.refs.sfcTemplate.sourceMap.value) {
+				const sourceMap = sourceFile.refs.sfcTemplate.sourceMap.value;
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
 			}
 		}

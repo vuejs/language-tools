@@ -1,8 +1,8 @@
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position) => {
 
@@ -101,18 +101,17 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		// vue -> css
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			if (!sourceMap.stylesheet)
-				continue;
-
+			const stylesheet = getStylesheet(sourceMap.mappedDocument);
 			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-			if (!cssLs)
+
+			if (!cssLs || !stylesheet)
 				continue;
 
 			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const cssLocs = cssLs.findReferences(
 					sourceMap.mappedDocument,
 					cssRange.start,
-					sourceMap.stylesheet,
+					stylesheet,
 				);
 				cssResult = cssResult.concat(cssLocs);
 			}

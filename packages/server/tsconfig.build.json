@@ -13,7 +13,16 @@
 	],
 	"references": [
 		{
+			"path": "../html2pug/tsconfig.build.json"
+		},
+		{
+			"path": "../shared/tsconfig.build.json"
+		},
+		{
+			"path": "../vue-code-gen/tsconfig.build.json"
+		},
+		{
 			"path": "../vscode-vue-languageservice/tsconfig.build.json"
-		}
+		},
 	]
 }

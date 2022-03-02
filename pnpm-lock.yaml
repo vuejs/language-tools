@@ -191,13 +191,13 @@ importers:
   packages/typescript-vue-plugin:
     specifiers:
       '@volar/shared': 0.32.1
+      '@volar/vue-typescript': 0.32.1
       typescript: latest
       upath: ^2.0.1
-      vscode-vue-languageservice: 0.32.1
     dependencies:
       '@volar/shared': link:../shared
+      '@volar/vue-typescript': link:../vue-typescript
       upath: 2.0.1
-      vscode-vue-languageservice: link:../vscode-vue-languageservice
     devDependencies:
       typescript: 4.6.2
 
@@ -247,12 +247,11 @@ importers:
 
   packages/vscode-vue-languageservice:
     specifiers:
-      '@volar/code-gen': 0.32.1
-      '@volar/html2pug': 0.32.1
       '@volar/shared': 0.32.1
       '@volar/source-map': 0.32.1
       '@volar/transforms': 0.32.1
       '@volar/vue-code-gen': 0.32.1
+      '@volar/vue-typescript': 0.32.1
       '@vscode/emmet-helper': ^2.8.3
       '@vue/reactivity': ^3.2.27
       '@vue/shared': ^3.2.27
@@ -266,12 +265,11 @@ importers:
       vscode-pug-languageservice: 0.32.1
       vscode-typescript-languageservice: 0.32.1
     dependencies:
-      '@volar/code-gen': link:../code-gen
-      '@volar/html2pug': link:../html2pug
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
       '@volar/vue-code-gen': link:../vue-code-gen
+      '@volar/vue-typescript': link:../vue-typescript
       '@vscode/emmet-helper': 2.8.4
       '@vue/reactivity': 3.2.31
       '@vue/shared': 3.2.31
@@ -316,10 +314,43 @@ importers:
   packages/vue-tsc:
     specifiers:
       '@volar/shared': 0.32.1
-      vscode-vue-languageservice: 0.32.1
+      '@volar/vue-typescript': 0.32.1
     dependencies:
       '@volar/shared': link:../shared
-      vscode-vue-languageservice: link:../vscode-vue-languageservice
+      '@volar/vue-typescript': link:../vue-typescript
+
+  packages/vue-typescript:
+    specifiers:
+      '@volar/code-gen': 0.32.1
+      '@volar/shared': 0.32.1
+      '@volar/source-map': 0.32.1
+      '@volar/vue-code-gen': 0.32.1
+      '@vue/reactivity': ^3.2.27
+      typescript: latest
+      upath: ^2.0.1
+      vscode-css-languageservice: ^5.1.9
+      vscode-html-languageservice: ^4.2.1
+      vscode-json-languageservice: ^4.1.10
+      vscode-languageserver-protocol: ^3.17.0-next.12
+      vscode-languageserver-textdocument: ^1.0.3
+      vscode-pug-languageservice: 0.32.1
+      vscode-typescript-languageservice: 0.32.1
+    dependencies:
+      '@volar/code-gen': link:../code-gen
+      '@volar/shared': link:../shared
+      '@volar/source-map': link:../source-map
+      '@volar/vue-code-gen': link:../vue-code-gen
+      '@vue/reactivity': 3.2.31
+      upath: 2.0.1
+      vscode-css-languageservice: 5.1.13
+      vscode-html-languageservice: 4.2.1
+      vscode-json-languageservice: 4.2.0
+      vscode-languageserver-protocol: 3.17.0-next.14
+      vscode-languageserver-textdocument: 1.0.4
+      vscode-pug-languageservice: link:../vscode-pug-languageservice
+      vscode-typescript-languageservice: link:../vscode-typescript-languageservice
+    devDependencies:
+      typescript: 4.6.2
 
 packages:
 

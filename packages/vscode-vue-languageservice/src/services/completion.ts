@@ -4,18 +4,18 @@ import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
-import type * as html from 'vscode-html-languageservice';
+import * as html from 'vscode-html-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import { SourceFile, TsSourceMap } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData } from '../types';
-import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
-import { TsSourceMap } from '../utils/sourceMaps';
+import * as emmet from '@vscode/emmet-helper';
+import { SearchTexts } from '@volar/vue-typescript';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {
@@ -94,7 +94,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders }: ApiLanguageServiceContext,
+	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext,
 	getScriptContentVersion: () => number,
 ) {
 
@@ -362,7 +362,11 @@ export function register(
 				nameCases.tag = clientCases.tagNameCase;
 				nameCases.attr = clientCases.attrNameCase;
 			}
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+
 				const componentCompletion = getComponentCompletionData(sourceFile);
 				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, vscode.CompletionItem>();
@@ -500,9 +504,10 @@ export function register(
 							items: [],
 						};
 					}
-					const htmlResult = sourceMap.language === 'html'
-						? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
-						: await pugLs.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
+					const htmlResult =
+						htmlDocument ? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, htmlDocument, documentContext)
+							: pugDocument ? await pugLs.doComplete(pugDocument, htmlRange.start, documentContext)
+								: undefined
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
@@ -638,19 +643,24 @@ export function register(
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
+
 					if (!result) {
 						result = {
 							isIncomplete: false,
 							items: [],
 						};
 					}
+					const stylesheet = getStylesheet(sourceMap.mappedDocument);
 					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-					if (!cssLs || !sourceMap.stylesheet) continue;
+
+					if (!cssLs || !stylesheet)
+						continue;
+
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
 					const wordRange: vscode.Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
 					const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
-					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext, settings?.completion) as vscode.CompletionList;
+					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, stylesheet, documentContext, settings?.completion) as vscode.CompletionList;
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}
@@ -683,6 +693,11 @@ export function register(
 				return;
 			}
 			for (const sourceMap of sourceFile.getJsonSourceMaps()) {
+
+				const jsonDocument = getJsonDocument(sourceMap.mappedDocument);
+				if (!jsonDocument)
+					continue;
+
 				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 					if (!result) {
 						result = {
@@ -690,7 +705,7 @@ export function register(
 							items: [],
 						};
 					}
-					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, sourceMap.jsonDocument);
+					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, jsonDocument);
 					if (!jsonResult) continue;
 					if (jsonResult.isIncomplete) {
 						result.isIncomplete = true;

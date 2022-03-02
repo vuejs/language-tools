@@ -1,9 +1,9 @@
 import { transformSymbolInformations } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 
 export function register(
-	context: ApiLanguageServiceContext,
+	context: LanguageServiceRuntimeContext,
 ) {
 
 	const { scriptTsLs, sourceFiles } = context;

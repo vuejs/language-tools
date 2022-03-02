@@ -38,8 +38,8 @@ export async function execute(
 		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
 	) {
 
-		const ranges = parseDeclarationRanges(vueLs.__internal__.context.modules.typescript, _scriptSetupAst);
-		const dotValueRanges = parseDotValueRanges(vueLs.__internal__.context.modules.typescript, _scriptSetupAst);
+		const ranges = parseDeclarationRanges(vueLs.__internal__.context.typescript, _scriptSetupAst);
+		const dotValueRanges = parseDotValueRanges(vueLs.__internal__.context.typescript, _scriptSetupAst);
 		const document = _sourceFile.getTextDocument();
 		const edits: vscode.TextEdit[] = [];
 
@@ -73,7 +73,7 @@ export async function execute(
 					if (end < _scriptSetup.startTagEnd || start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
 						return false;
 
-					if (vue.isBlacklistNode(vueLs.__internal__.context.modules.typescript, _scriptSetupAst, start - _scriptSetup.startTagEnd))
+					if (vue.isBlacklistNode(vueLs.__internal__.context.typescript, _scriptSetupAst, start - _scriptSetup.startTagEnd))
 						return false;
 
 					return true;

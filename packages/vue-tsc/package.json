@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@volar/shared": "0.32.1",
-    "vscode-vue-languageservice": "0.32.1"
+    "@volar/vue-typescript": "0.32.1"
   },
   "peerDependencies": {
     "typescript": "*"

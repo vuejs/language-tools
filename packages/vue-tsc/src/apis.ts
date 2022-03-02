@@ -1,10 +1,10 @@
-import type { ApiLanguageServiceContext } from './types';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ modules: { typescript: ts }, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext) {
 
 	return {
 		getRootFileNames,

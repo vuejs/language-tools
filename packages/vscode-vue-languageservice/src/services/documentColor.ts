@@ -1,11 +1,11 @@
+import { SourceFile } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import type { HtmlLanguageServiceContext } from '../types';
+import type { DocumentServiceRuntimeContext } from '../types';
 
-export function register(context: HtmlLanguageServiceContext) {
+export function register(context: DocumentServiceRuntimeContext) {
 
-	const { getCssLs } = context;
+	const { getCssLs, getStylesheet } = context;
 
 	return (document: TextDocument) => {
 
@@ -21,9 +21,14 @@ export function register(context: HtmlLanguageServiceContext) {
 			const result: vscode.ColorInformation[] = [];
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			for (const sourceMap of sourceMaps) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
-				let colors = cssLs.findDocumentColors(sourceMap.mappedDocument, sourceMap.stylesheet);
+
+				if (!cssLs || !stylesheet)
+					continue;
+
+				let colors = cssLs.findDocumentColors(sourceMap.mappedDocument, stylesheet);
 				for (const color of colors) {
 					const vueRange = sourceMap.getSourceRange(color.range.start, color.range.end)?.[0];
 					if (vueRange) {

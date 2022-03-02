@@ -1,8 +1,9 @@
 import { hyphenate, isHTMLTag } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
-import * as ts2 from 'vscode-typescript-languageservice'; // TODO: remove it
+import type { SourceFile } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
+import * as ts2 from 'vscode-typescript-languageservice';
+import * as html from 'vscode-html-languageservice';
 
 type SemanticToken = [number, number, number, number, number | undefined];
 
@@ -22,7 +23,7 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modules: { html } }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
@@ -55,7 +56,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 			reportProgress?.(tokens);
 		}
 
-		if (sourceFile.getHtmlSourceMaps().length) {
+		if (sourceFile.getTemplateSourceMaps().length) {
 			updateTemplateScripts()
 		}
 
@@ -122,7 +123,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 				...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
 			]);
 
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				let htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start;
 				if (htmlStart === undefined) {
@@ -138,9 +139,12 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 					continue;
 
 				const docText = sourceMap.mappedDocument.getText();
-				const scanner = sourceMap.language === 'html'
-					? htmlLs.createScanner(docText)
-					: pugLs.createScanner(sourceMap.pugDocument)
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const scanner =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.createScanner(docText)
+						: pugDocument ? pugLs.createScanner(pugDocument)
+							: undefined
+
 				if (!scanner) continue;
 
 				let token = scanner.scan();

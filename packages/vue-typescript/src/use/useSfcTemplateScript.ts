@@ -5,9 +5,8 @@ import * as cssClasses from '../parsers/cssClasses';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
-import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { ITemplateScriptData, LanguageServiceContext } from '../types';
+import { ITemplateScriptData, BasicRuntimeContext, VueCompilerOptions } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
@@ -21,36 +20,42 @@ export function useSfcTemplateScript(
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
-		stylesheet: css.Stylesheet | undefined;
-		links: {
-			textDocument: TextDocument;
-			stylesheet: css.Stylesheet;
-		}[];
 		module: string | undefined;
 		scoped: boolean;
 	}[]>,
 	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
 	templateData: Ref<{
-		sourceLang: 'html' | 'pug',
-		html: string,
+		lang: string,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	scriptLang: Ref<string>,
-	context: LanguageServiceContext,
+	compilerOptions: VueCompilerOptions,
+	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
+	getCssClasses: BasicRuntimeContext['getCssClasses'],
 ) {
 	let version = 0;
 	const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
 	const cssModuleClasses = computed(() =>
-		styleDocuments.value.reduce((map, style) => {
+		styleDocuments.value.reduce((obj, style) => {
 			if (style.module) {
-				map.set(style.module, cssClasses.parse(context.modules.css, [style], context));
+				const classes = getCssClasses(style.textDocument);
+				obj[style.module] = { [style.textDocument.uri]: classes };
 			}
-			return map;
-		}, new Map<string, ReturnType<typeof cssClasses.parse>>())
+			return obj;
+		}, {} as Record<string, Record<string, ReturnType<typeof cssClasses.findClassNames>>>)
 	);
-	const cssScopedClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.scoped), context));
+	const cssScopedClasses = computed(() => {
+		const obj: Record<string, ReturnType<typeof cssClasses.findClassNames>> = {};
+		for (const style of styleDocuments.value) {
+			if (style.scoped) {
+				const classes = getCssClasses(style.textDocument);
+				obj[style.textDocument.uri] = classes;
+			}
+		}
+		return obj;
+	});
 	const templateCodeGens = computed(() => {
 
 		if (!templateData.value)
@@ -59,10 +64,10 @@ export function useSfcTemplateScript(
 			return;
 
 		return templateGen.generate(
-			templateData.value.sourceLang,
+			templateData.value.lang,
 			sfcTemplateCompileResult.value.ast,
-			context.compilerOptions.experimentalCompatMode === 2,
-			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
+			compilerOptions.experimentalCompatMode === 2,
+			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
 			templateData.value.htmlToTemplate,
 			!!scriptSetup.value,
 			{
@@ -94,7 +99,8 @@ export function useSfcTemplateScript(
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');
 		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
-		for (const [moduleName, moduleClasses] of cssModuleClasses.value) {
+		for (const moduleName in cssModuleClasses.value) {
+			const moduleClasses = cssModuleClasses.value[moduleName];
 			codeGen.addText(`declare var ${moduleName}: Record<string, string> & {\n`);
 			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
 			codeGen.addText('};\n');
@@ -156,7 +162,7 @@ export function useSfcTemplateScript(
 			}
 			codeGen.addText(`} from './${vueFileName}.__VLS_script';\n`);
 		}
-		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>, patchRename: boolean, propertyType: string, optional: boolean) {
+		function writeCssClassProperties(data: Record<string, Record<string, [number, number][]>>, patchRename: boolean, propertyType: string, optional: boolean) {
 			const mappings = new Map<string, {
 				tsRange: {
 					start: number,
@@ -169,11 +175,13 @@ export function useSfcTemplateScript(
 				mode: SourceMaps.Mode,
 				patchRename: boolean,
 			}[]>();
-			for (const [uri, classes] of data) {
+			for (const uri in data) {
+				const classes = data[uri];
 				if (!mappings.has(uri)) {
 					mappings.set(uri, []);
 				}
-				for (const [className, ranges] of classes) {
+				for (const className in classes) {
+					const ranges = classes[className];
 					mappings.get(uri)!.push({
 						tsRange: {
 							start: codeGen.getText().length + 1, // + '
@@ -270,9 +278,12 @@ export function useSfcTemplateScript(
 		}
 		function writeCssVars() {
 			for (let i = 0; i < sfcStyles.value.length; i++) {
+
 				const style = sfcStyles.value[i];
+				const binds = getCssVBindRanges(style.textDocument);
 				const docText = style.textDocument.getText();
-				for (const cssBind of style.binds) {
+
+				for (const cssBind of binds) {
 					const bindText = docText.substring(cssBind.start, cssBind.end);
 					codeGen.addCode(
 						bindText,
@@ -366,10 +377,8 @@ export function useSfcTemplateScript(
 	const cssTextDocument = computed(() => {
 		if (templateCodeGens.value && template.value) {
 			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, templateCodeGens.value.cssCodeGen.getText());
-			const stylesheet = context.getCssLs('css')!.parseStylesheet(textDocument);
 			return {
 				textDocument,
-				stylesheet,
 				links: [],
 				module: false,
 				scoped: false,
@@ -381,10 +390,8 @@ export function useSfcTemplateScript(
 			const sourceMap = new SourceMaps.CssSourceMap(
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
-				cssTextDocument.value.stylesheet,
 				undefined,
 				false,
-				[],
 				{ foldingRanges: false, formatting: false },
 				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange),
 			);

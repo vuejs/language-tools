@@ -17,7 +17,7 @@
 	},
 	"dependencies": {
 		"@volar/shared": "0.32.1",
-		"upath": "^2.0.1",
-		"vscode-vue-languageservice": "0.32.1"
+		"@volar/vue-typescript": "0.32.1",
+		"upath": "^2.0.1"
 	}
 }

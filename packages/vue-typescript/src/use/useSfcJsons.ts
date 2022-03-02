@@ -1,22 +1,18 @@
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import type * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 export function useSfcJsons(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	customBlocks: Ref<shared.Sfc['customBlocks']>,
-	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocuments = computed(() => {
 		const documents: {
 			index: number,
 			textDocument: TextDocument,
-			jsonDocument: json.JSONDocument,
 		}[] = [];
 		for (let i = 0; i < customBlocks.value.length; i++) {
 			const customBlock = customBlocks.value[i];
@@ -28,20 +24,18 @@ export function useSfcJsons(
 				documents.push({
 					index: i,
 					textDocument: document,
-					jsonDocument: context.jsonLs.parseJSONDocument(document),
 				});
 			}
 		}
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.JsonSourceMap[] = [];
+		const sourceMaps: SourceMaps.SourceMap[] = [];
 		for (const doc of textDocuments.value) {
 			const customBlock = customBlocks.value[doc.index];
-			const sourceMap = new SourceMaps.JsonSourceMap(
+			const sourceMap = new SourceMaps.SourceMap(
 				vueDoc.value,
 				doc.textDocument,
-				doc.jsonDocument,
 			);
 			sourceMap.mappings.push({
 				data: undefined,

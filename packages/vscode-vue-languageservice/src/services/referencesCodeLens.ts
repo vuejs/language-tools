@@ -1,5 +1,5 @@
 import type * as vscode from 'vscode-languageserver-protocol';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 
 export interface ReferencesCodeLensData {
 	lsType: 'template' | 'script',
@@ -9,7 +9,7 @@ export interface ReferencesCodeLensData {
 	tsOffset: number,
 }
 
-export function register({ sourceFiles }: ApiLanguageServiceContext) {
+export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 	return (uri: string) => {
 
 		const sourceFile = sourceFiles.get(uri);
