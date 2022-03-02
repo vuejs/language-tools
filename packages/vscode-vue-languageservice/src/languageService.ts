@@ -112,7 +112,10 @@ export function getDocumentLanguageService(
 			document.version.toString(),
 			context.htmlLs,
 			context.compileTemplate,
-			context,
+			context.compilerOptions,
+			context.typescript,
+			context.getCssVBindRanges,
+			context.getCssClasses,
 		);
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;
@@ -641,7 +644,10 @@ export function createLanguageService(
 					doc.version.toString(),
 					context.htmlLs,
 					context.compileTemplate,
-					context,
+					context.compilerOptions,
+					context.typescript,
+					context.getCssVBindRanges,
+					context.getCssClasses,
 				));
 				vueScriptContentsUpdate = true;
 				vueScriptsUpdated = true;

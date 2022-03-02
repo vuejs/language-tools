@@ -6,7 +6,7 @@ import { computed, reactive, ref, shallowReactive } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { ITemplateScriptData, LanguageServiceContext } from './types';
+import { ITemplateScriptData, LanguageServiceContext, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
 import { useSfcScript } from './use/useSfcScript';
@@ -33,7 +33,10 @@ export function createSourceFile(
 		htmlTextDocument: TextDocument,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined,
-	context: LanguageServiceContext,
+	compilerOptions: VueCompilerOptions,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	getCssVBindRanges: LanguageServiceContext['getCssVBindRanges'],
+	getCssClasses: LanguageServiceContext['getCssClasses'],
 ) {
 
 	// refs
@@ -87,28 +90,28 @@ export function createSourceFile(
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
 		computed(() => sfcTemplateData.value?.htmlTextDocument),
-		context.compilerOptions,
+		compilerOptions,
 	);
 	const sfcScript = useSfcScript(
 		uri,
 		document,
 		computed(() => sfc.script),
-		context.typescript,
+		ts,
 	);
 	const sfcScriptSetup = useSfcScript(
 		uri,
 		document,
 		computed(() => sfc.scriptSetup),
-		context.typescript,
+		ts,
 	);
 	const scriptRanges = computed(() =>
 		sfcScript.ast.value
-			? parseScriptRanges(context.typescript, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
+			? parseScriptRanges(ts, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
 		sfcScriptSetup.ast.value
-			? parseScriptSetupRanges(context.typescript, sfcScriptSetup.ast.value)
+			? parseScriptSetupRanges(ts, sfcScriptSetup.ast.value)
 			: undefined
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
@@ -121,8 +124,8 @@ export function createSourceFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
-		context.compilerOptions.experimentalCompatMode === 2,
-		context,
+		compilerOptions.experimentalCompatMode === 2,
+		getCssVBindRanges,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -134,8 +137,8 @@ export function createSourceFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
-		context.compilerOptions.experimentalCompatMode === 2,
-		context,
+		compilerOptions.experimentalCompatMode === 2,
+		getCssVBindRanges,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,
@@ -144,7 +147,7 @@ export function createSourceFile(
 		computed(() => sfc.scriptSetup),
 		computed(() => sfc.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
-		context.compilerOptions.experimentalCompatMode === 2,
+		compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		uri,
@@ -160,11 +163,13 @@ export function createSourceFile(
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		sfcScriptForScriptLs.lang,
-		context,
+		compilerOptions,
+		getCssVBindRanges,
+		getCssClasses,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
-		refs: parseRefSugarDeclarationRanges(context.typescript, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
-		raws: parseRefSugarCallRanges(context.typescript, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
+		refs: parseRefSugarDeclarationRanges(ts, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
+		raws: parseRefSugarCallRanges(ts, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
 	} : undefined));
 
 	// getters

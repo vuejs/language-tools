@@ -7,7 +7,7 @@ import * as templateGen from '@volar/vue-code-gen/out/generators/template_script
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { getVueLibraryName } from '../utils/localTypes';
-import { LanguageServiceContext } from '../types';
+import type { LanguageServiceContext } from '../types';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
@@ -20,7 +20,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	isVue2: boolean,
-	context: LanguageServiceContext,
+	getCssVBindRanges: LanguageServiceContext['getCssVBindRanges'],
 ) {
 
 	let version = 0;
@@ -42,7 +42,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			() => {
 				const bindTexts: string[] = [];
 				for (const style of sfcStyles.value) {
-					const binds = context.getCssVBindRanges(style.textDocument);
+					const binds = getCssVBindRanges(style.textDocument);
 					const docText = style.textDocument.getText();
 					for (const cssBind of binds) {
 						const bindText = docText.substring(cssBind.start, cssBind.end);

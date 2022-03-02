@@ -6,7 +6,7 @@ import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scr
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { ITemplateScriptData, LanguageServiceContext } from '../types';
+import { ITemplateScriptData, LanguageServiceContext, VueCompilerOptions } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
@@ -31,14 +31,16 @@ export function useSfcTemplateScript(
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	scriptLang: Ref<string>,
-	context: LanguageServiceContext,
+	compilerOptions: VueCompilerOptions,
+	getCssVBindRanges: LanguageServiceContext['getCssVBindRanges'],
+	getCssClasses: LanguageServiceContext['getCssClasses'],
 ) {
 	let version = 0;
 	const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
 	const cssModuleClasses = computed(() =>
 		styleDocuments.value.reduce((obj, style) => {
 			if (style.module) {
-				const classes = context.getCssClasses(style.textDocument);
+				const classes = getCssClasses(style.textDocument);
 				obj[style.module] = { [style.textDocument.uri]: classes };
 			}
 			return obj;
@@ -48,7 +50,7 @@ export function useSfcTemplateScript(
 		const obj: Record<string, ReturnType<typeof cssClasses.findClassNames>> = {};
 		for (const style of styleDocuments.value) {
 			if (style.scoped) {
-				const classes = context.getCssClasses(style.textDocument);
+				const classes = getCssClasses(style.textDocument);
 				obj[style.textDocument.uri] = classes;
 			}
 		}
@@ -64,7 +66,7 @@ export function useSfcTemplateScript(
 		return templateGen.generate(
 			templateData.value.lang,
 			sfcTemplateCompileResult.value.ast,
-			context.compilerOptions.experimentalCompatMode === 2,
+			compilerOptions.experimentalCompatMode === 2,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
 			templateData.value.htmlToTemplate,
 			!!scriptSetup.value,
@@ -278,12 +280,7 @@ export function useSfcTemplateScript(
 			for (let i = 0; i < sfcStyles.value.length; i++) {
 
 				const style = sfcStyles.value[i];
-				const stylesheet = context.getStylesheet(style.textDocument);
-
-				if (!stylesheet)
-					continue;
-
-				const binds = context.getCssVBindRanges(style.textDocument);
+				const binds = getCssVBindRanges(style.textDocument);
 				const docText = style.textDocument.getText();
 
 				for (const cssBind of binds) {
