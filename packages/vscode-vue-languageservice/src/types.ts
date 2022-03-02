@@ -67,10 +67,13 @@ export type LanguageServiceContextBase = {
 	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
+
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {
 	getVueDocument(document: TextDocument): SourceFile | undefined;
 }
-export type ApiLanguageServiceContext = LanguageServiceContextBase & {
+
+export type TSContext = {
+	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	sourceFiles: SourceFiles;
 	vueHost: LanguageServiceHost;
 	documentContext: DocumentContext;
@@ -81,6 +84,10 @@ export type ApiLanguageServiceContext = LanguageServiceContextBase & {
 	scriptTsLs: ts2.LanguageService;
 	templateTsLs: ts2.LanguageService;
 	getTsLs: (lsType: 'template' | 'script') => ts2.LanguageService;
+}
+
+export type ApiLanguageServiceContext = LanguageServiceContextBase & TSContext & {
 	getTextDocument(uri: string): TextDocument | undefined;
 }
+
 export type LanguageServiceContext = ApiLanguageServiceContext | HtmlLanguageServiceContext;

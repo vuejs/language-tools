@@ -1,10 +1,10 @@
-import type { ApiLanguageServiceContext } from './types';
+import type { TSContext } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TSContext) {
 
 	return {
 		getRootFileNames,

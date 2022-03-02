@@ -1,8 +1,8 @@
-import type { ApiLanguageServiceContext } from './types';
+import type { TSContext } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TSContext) {
 
 	return {
 		getCompletionsAtPosition,
