@@ -37,14 +37,24 @@ export function useSfcTemplateScript(
 	let version = 0;
 	const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
 	const cssModuleClasses = computed(() =>
-		styleDocuments.value.reduce((map, style) => {
+		styleDocuments.value.reduce((obj, style) => {
 			if (style.module) {
-				map.set(style.module, cssClasses.parse(context.modules.css, [style], context));
+				const classes = context.getCssClasses(style.textDocument);
+				obj[style.module] = { [style.textDocument.uri]: classes };
 			}
-			return map;
-		}, new Map<string, ReturnType<typeof cssClasses.parse>>())
+			return obj;
+		}, {} as Record<string, Record<string, ReturnType<typeof cssClasses.findClassNames>>>)
 	);
-	const cssScopedClasses = computed(() => cssClasses.parse(context.modules.css, styleDocuments.value.filter(style => style.scoped), context));
+	const cssScopedClasses = computed(() => {
+		const obj: Record<string, ReturnType<typeof cssClasses.findClassNames>> = {};
+		for (const style of styleDocuments.value) {
+			if (style.scoped) {
+				const classes = context.getCssClasses(style.textDocument);
+				obj[style.textDocument.uri] = classes;
+			}
+		}
+		return obj;
+	});
 	const templateCodeGens = computed(() => {
 
 		if (!templateData.value)
@@ -56,7 +66,7 @@ export function useSfcTemplateScript(
 			templateData.value.sourceLang,
 			sfcTemplateCompileResult.value.ast,
 			context.compilerOptions.experimentalCompatMode === 2,
-			[...cssScopedClasses.value.values()].map(map => [...map.keys()]).flat(),
+			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
 			templateData.value.htmlToTemplate,
 			!!scriptSetup.value,
 			{
@@ -88,7 +98,8 @@ export function useSfcTemplateScript(
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');
 		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
-		for (const [moduleName, moduleClasses] of cssModuleClasses.value) {
+		for (const moduleName in cssModuleClasses.value) {
+			const moduleClasses = cssModuleClasses.value[moduleName];
 			codeGen.addText(`declare var ${moduleName}: Record<string, string> & {\n`);
 			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
 			codeGen.addText('};\n');
@@ -150,7 +161,7 @@ export function useSfcTemplateScript(
 			}
 			codeGen.addText(`} from './${vueFileName}.__VLS_script';\n`);
 		}
-		function writeCssClassProperties(data: Map<string, Map<string, Set<[number, number]>>>, patchRename: boolean, propertyType: string, optional: boolean) {
+		function writeCssClassProperties(data: Record<string, Record<string, [number, number][]>>, patchRename: boolean, propertyType: string, optional: boolean) {
 			const mappings = new Map<string, {
 				tsRange: {
 					start: number,
@@ -163,11 +174,13 @@ export function useSfcTemplateScript(
 				mode: SourceMaps.Mode,
 				patchRename: boolean,
 			}[]>();
-			for (const [uri, classes] of data) {
+			for (const uri in data) {
+				const classes = data[uri];
 				if (!mappings.has(uri)) {
 					mappings.set(uri, []);
 				}
-				for (const [className, ranges] of classes) {
+				for (const className in classes) {
+					const ranges = classes[className];
 					mappings.get(uri)!.push({
 						tsRange: {
 							start: codeGen.getText().length + 1, // + '

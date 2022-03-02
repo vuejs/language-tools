@@ -34,7 +34,7 @@ export function createSourceFile(
 	// refs
 	const content = ref('');
 	const version = ref('');
-	const descriptor = reactive<shared.Sfc>({
+	const sfc = reactive<shared.Sfc>({
 		template: null,
 		script: null,
 		scriptSetup: null,
@@ -61,9 +61,9 @@ export function createSourceFile(
 	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
 
 	// use
-	const sfcStyles = useSfcStyles(uri, document, computed(() => descriptor.styles));
-	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks));
-	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template));
+	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
+	const sfcJsons = useSfcJsons(uri, document, computed(() => sfc.customBlocks));
+	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
 	const sfcTemplateData = computed<undefined | {
 		sourceLang: 'html' | 'pug',
 		html: string,
@@ -84,10 +84,10 @@ export function createSourceFile(
 				},
 			};
 		}
-		if (descriptor.template && sfcTemplate.textDocument.value && descriptor.template.lang === 'html') {
+		if (sfc.template && sfcTemplate.textDocument.value && sfc.template.lang === 'html') {
 			return {
 				sourceLang: 'html',
-				html: descriptor.template.content,
+				html: sfc.template.content,
 				htmlTextDocument: sfcTemplate.textDocument.value,
 				htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
 			};
@@ -100,18 +100,18 @@ export function createSourceFile(
 	const sfcScript = useSfcScript(
 		uri,
 		document,
-		computed(() => descriptor.script),
+		computed(() => sfc.script),
 		context.modules.typescript,
 	);
 	const sfcScriptSetup = useSfcScript(
 		uri,
 		document,
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.scriptSetup),
 		context.modules.typescript,
 	);
 	const scriptRanges = computed(() =>
 		sfcScript.ast.value
-			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!descriptor.scriptSetup, false, false)
+			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
@@ -123,8 +123,8 @@ export function createSourceFile(
 		'template',
 		uri,
 		document,
-		computed(() => descriptor.script),
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
@@ -136,8 +136,8 @@ export function createSourceFile(
 		'script',
 		uri,
 		document,
-		computed(() => descriptor.script),
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
@@ -148,19 +148,19 @@ export function createSourceFile(
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,
 		document,
-		computed(() => descriptor.script),
-		computed(() => descriptor.scriptSetup),
-		computed(() => descriptor.template),
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
+		computed(() => sfc.template),
 		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
 		context.compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		uri,
 		document,
-		computed(() => descriptor.template),
-		computed(() => descriptor.scriptSetup),
+		computed(() => sfc.template),
+		computed(() => sfc.scriptSetup),
 		computed(() => scriptSetupRanges.value),
-		computed(() => descriptor.styles),
+		computed(() => sfc.styles),
 		templateScriptData,
 		sfcStyles.textDocuments,
 		sfcStyles.sourceMaps,
@@ -228,7 +228,7 @@ export function createSourceFile(
 		getJsonSourceMaps: untrack(() => sfcJsons.sourceMaps.value),
 		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getDescriptor: untrack(() => descriptor), // TODO: untrack not working for reactive
+		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive
 		getScriptAst: untrack(() => sfcScript.ast.value),
 		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
 		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
@@ -245,7 +245,7 @@ export function createSourceFile(
 
 		refs: {
 			document,
-			descriptor,
+			descriptor: sfc,
 			lastUpdated,
 
 			scriptSetupRanges,
@@ -299,66 +299,66 @@ export function createSourceFile(
 
 		function updateTemplate(newData: shared.Sfc['template']) {
 
-			lastUpdated.template = descriptor.template?.lang !== newData?.lang
-				|| descriptor.template?.content !== newData?.content;
+			lastUpdated.template = sfc.template?.lang !== newData?.lang
+				|| sfc.template?.content !== newData?.content;
 
-			if (descriptor.template && newData) {
-				updateBlock(descriptor.template, newData);
+			if (sfc.template && newData) {
+				updateBlock(sfc.template, newData);
 			}
 			else {
-				descriptor.template = newData;
+				sfc.template = newData;
 			}
 		}
 		function updateScript(newData: shared.Sfc['script']) {
 
-			lastUpdated.script = descriptor.script?.lang !== newData?.lang
-				|| descriptor.script?.content !== newData?.content;
+			lastUpdated.script = sfc.script?.lang !== newData?.lang
+				|| sfc.script?.content !== newData?.content;
 
-			if (descriptor.script && newData) {
-				updateBlock(descriptor.script, newData);
+			if (sfc.script && newData) {
+				updateBlock(sfc.script, newData);
 			}
 			else {
-				descriptor.script = newData;
+				sfc.script = newData;
 			}
 		}
 		function updateScriptSetup(newData: shared.Sfc['scriptSetup']) {
 
-			lastUpdated.scriptSetup = descriptor.scriptSetup?.lang !== newData?.lang
-				|| descriptor.scriptSetup?.content !== newData?.content;
+			lastUpdated.scriptSetup = sfc.scriptSetup?.lang !== newData?.lang
+				|| sfc.scriptSetup?.content !== newData?.content;
 
-			if (descriptor.scriptSetup && newData) {
-				updateBlock(descriptor.scriptSetup, newData);
+			if (sfc.scriptSetup && newData) {
+				updateBlock(sfc.scriptSetup, newData);
 			}
 			else {
-				descriptor.scriptSetup = newData;
+				sfc.scriptSetup = newData;
 			}
 		}
 		function updateStyles(newDataArr: shared.Sfc['styles']) {
 			for (let i = 0; i < newDataArr.length; i++) {
 				const newData = newDataArr[i];
-				if (descriptor.styles.length > i) {
-					updateBlock(descriptor.styles[i], newData);
+				if (sfc.styles.length > i) {
+					updateBlock(sfc.styles[i], newData);
 				}
 				else {
-					descriptor.styles.push(newData);
+					sfc.styles.push(newData);
 				}
 			}
-			while (descriptor.styles.length > newDataArr.length) {
-				descriptor.styles.pop();
+			while (sfc.styles.length > newDataArr.length) {
+				sfc.styles.pop();
 			}
 		}
 		function updateCustomBlocks(newDataArr: shared.Sfc['customBlocks']) {
 			for (let i = 0; i < newDataArr.length; i++) {
 				const newData = newDataArr[i];
-				if (descriptor.customBlocks.length > i) {
-					updateBlock(descriptor.customBlocks[i], newData);
+				if (sfc.customBlocks.length > i) {
+					updateBlock(sfc.customBlocks[i], newData);
 				}
 				else {
-					descriptor.customBlocks.push(newData);
+					sfc.customBlocks.push(newData);
 				}
 			}
-			while (descriptor.customBlocks.length > newDataArr.length) {
-				descriptor.customBlocks.pop();
+			while (sfc.customBlocks.length > newDataArr.length) {
+				sfc.customBlocks.pop();
 			}
 		}
 		function updateBlock<T>(oldBlock: T, newBlock: T) {

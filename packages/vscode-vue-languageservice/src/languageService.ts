@@ -50,6 +50,7 @@ import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
 import { TextRange } from '@volar/vue-code-gen/out/types';
 import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
+import { findClassNames } from './parsers/cssClasses';
 
 export interface DocumentLanguageService extends ReturnType<typeof getDocumentLanguageService> { }
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -770,6 +771,7 @@ function createServices(
 
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 	const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
+	const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, [number, number][]>>();
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
@@ -782,6 +784,7 @@ function createServices(
 		getCssLs,
 		getStylesheet,
 		getCssVBindRanges,
+		getCssClasses,
 		getHtmlDocument,
 		getJsonDocument,
 		getPugDocument,
@@ -865,6 +868,31 @@ function createServices(
 			}
 		}
 		return result;
+	}
+	function getCssClasses(textDocument: TextDocument) {
+
+		let classes = stylesheetClasses.get(textDocument);
+		if (!classes) {
+			classes = {};
+
+			const stylesheet = getStylesheet(textDocument);
+			if (stylesheet) {
+				const classNames = findClassNames(css, textDocument, stylesheet, getCssLs);
+				for (const className in classNames) {
+					const offsets = classNames[className];
+					for (const offset of offsets) {
+						if (!classes[className]) {
+							classes[className] = [];
+						}
+						classes[className]!.push(offset);
+					}
+				}
+			}
+
+			stylesheetClasses.set(textDocument, classes);
+		}
+
+		return classes;
 	}
 	function getHtmlDocument(document: TextDocument) {
 

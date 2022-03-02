@@ -2,44 +2,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as css from 'vscode-css-languageservice';
 import { LanguageServiceContext } from '../types';
 
-export function parse(
-	css: typeof import('vscode-css-languageservice'),
-	styleDocuments: {
-		textDocument: TextDocument;
-	}[],
-	context: LanguageServiceContext,
-) {
-	const result = new Map<string, Map<string, Set<[number, number]>>>();
-	for (const sourceMap of styleDocuments) {
-
-		const stylesheet = context.getStylesheet(sourceMap.textDocument);
-		if (!stylesheet)
-			continue;
-
-		for (const [className, offsets] of findClassNames(css, sourceMap.textDocument, stylesheet, context)) {
-			for (const offset of offsets) {
-				addClassName(sourceMap.textDocument.uri, className, offset);
-			}
-		}
-	}
-	return result;
-	function addClassName(uri: string, className: string, range: [number, number]) {
-		if (!result.has(uri))
-			result.set(uri, new Map());
-		if (!result.get(uri)!.has(className))
-			result.get(uri)!.set(className, new Set());
-		result.get(uri)!.get(className)?.add(range);
-	}
-}
-
-function findClassNames(
+export function findClassNames(
 	css: typeof import('vscode-css-languageservice'),
 	doc: TextDocument,
 	ss: css.Stylesheet,
-	context: LanguageServiceContext,
+	getCssLs: LanguageServiceContext['getCssLs'],
 ) {
-	const result = new Map<string, Set<[number, number]>>();
-	const cssLs = context.getCssLs(doc.languageId);
+	const result: Record<string, [number, number][]> = {};
+	const cssLs = getCssLs(doc.languageId);
 	if (!cssLs) return result;
 	const symbols = cssLs.findDocumentSymbols(doc, ss);
 	const usedNodes = new Set<number>();
@@ -57,13 +27,13 @@ function findClassNames(
 					if (_className_2.index === undefined) continue;
 					const className_2 = _className_2.toString();
 					if (className_1 === className_2) {
-						if (!result.has(className_1)) {
-							result.set(className_1, new Set());
+						if (!result[className_1]) {
+							result[className_1] = [];
 						}
 						const startIndex = doc.offsetAt(s.location.range.start) + _className_2.index - 1;
 						if (usedNodes.has(startIndex)) continue;
 						usedNodes.add(startIndex);
-						result.get(className_1)!.add([startIndex, startIndex + className_1.length + 1]);
+						result[className_1]!.push([startIndex, startIndex + className_1.length + 1]);
 						break;
 					}
 				}

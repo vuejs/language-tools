@@ -71,6 +71,7 @@ export type LanguageServiceContextBase = {
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
+	getCssClasses: (documrnt: TextDocument) => Record<string, [number, number][]>,
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
 	getJsonDocument: (documrnt: TextDocument) => json.JSONDocument | undefined,
 	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
