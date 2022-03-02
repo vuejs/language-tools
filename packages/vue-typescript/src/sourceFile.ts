@@ -8,7 +8,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
 import { BasicRuntimeContext, ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
-import { useSfcJsons } from './use/useSfcJsons';
+import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
 import { useSfcScript } from './use/useSfcScript';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
@@ -62,7 +62,7 @@ export function createSourceFile(
 		componentItems: [],
 		props: [],
 		setupReturns: [],
-	});
+	}) as ITemplateScriptData;
 
 	// computeds
 	const document = computed(() => TextDocument.create(uri, 'vue', 0, content.value));
@@ -70,7 +70,7 @@ export function createSourceFile(
 
 	// use
 	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
-	const sfcJsons = useSfcJsons(uri, document, computed(() => sfc.customBlocks));
+	const sfcCustomBlocks = useSfcCustomBlocks(uri, document, computed(() => sfc.customBlocks));
 	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
 	const sfcTemplateData = computed<undefined | {
 		lang: string,
@@ -222,7 +222,7 @@ export function createSourceFile(
 		getScriptTsSourceMap: untrack(() => sfcScriptForScriptLs.sourceMap.value),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssLsSourceMaps.value),
-		getJsonSourceMaps: untrack(() => sfcJsons.sourceMaps.value),
+		getCustomBlockSourceMaps: untrack(() => sfcCustomBlocks.sourceMaps.value),
 		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive
@@ -246,7 +246,7 @@ export function createSourceFile(
 			lastUpdated,
 
 			scriptSetupRanges,
-			sfcJsons,
+			sfcCustomBlocks,
 			sfcTemplate,
 			sfcTemplateData,
 			sfcTemplateCompileResult,

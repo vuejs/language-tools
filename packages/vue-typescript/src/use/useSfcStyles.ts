@@ -32,13 +32,13 @@ export function useSfcStyles(
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.CssSourceMap[] = [];
+		const sourceMaps: SourceMaps.StyleSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
 
 			const cssData = textDocuments.value[i];
 			const style = styles.value[i];
 
-			const sourceMap = new SourceMaps.CssSourceMap(
+			const sourceMap = new SourceMaps.StyleSourceMap(
 				vueDoc.value,
 				cssData.textDocument,
 				style.module,

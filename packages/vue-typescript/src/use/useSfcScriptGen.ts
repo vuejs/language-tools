@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref, ComputedRef } from '@vue/reactivity';
-import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
+import { ScriptSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
 import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template_scriptSetup';
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
@@ -91,7 +91,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	});
 	const sourceMap = computed(() => {
 		if (textDocument.value) {
-			const sourceMap = new TsSourceMap(
+			const sourceMap = new ScriptSourceMap(
 				vueDoc.value,
 				textDocument.value,
 				lsType,
@@ -123,7 +123,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		lang,
 		textDocument: textDocument as T extends 'script' ? ComputedRef<TextDocument> : ComputedRef<TextDocument | undefined>,
 		textDocumentTs,
-		sourceMap: sourceMap as T extends 'script' ? ComputedRef<TsSourceMap> : ComputedRef<TsSourceMap | undefined>,
+		sourceMap: sourceMap as T extends 'script' ? ComputedRef<ScriptSourceMap> : ComputedRef<ScriptSourceMap | undefined>,
 		teleportSourceMap: teleportSourceMap as T extends 'script' ? ComputedRef<TeleportSourceMap> : ComputedRef<TeleportSourceMap | undefined>,
 	};
 

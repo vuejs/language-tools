@@ -58,7 +58,7 @@ export function useSfcEntryForTemplateLs(
 	const sourceMap = computed(() => {
 		if (textDocument.value) {
 			const docText = textDocument.value.getText();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
+			const sourceMap = new SourceMaps.ScriptSourceMap(vueDoc.value, textDocument.value, 'template', false, {
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,

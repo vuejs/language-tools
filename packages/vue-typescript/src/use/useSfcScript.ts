@@ -26,7 +26,7 @@ export function useSfcScript(
 	});
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
+			const sourceMap = new SourceMaps.ScriptSourceMap(vueDoc.value, textDocument.value, 'template', false, {
 				foldingRanges: true,
 				formatting: true,
 				documentSymbol: true,

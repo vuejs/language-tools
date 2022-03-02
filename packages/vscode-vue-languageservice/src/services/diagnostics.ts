@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile, TsSourceMap, SourceMap } from '@volar/vue-typescript';
+import type { SourceFile, ScriptSourceMap, SourceMap } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { untrack } from '../utils/untrack';
@@ -140,7 +140,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		const {
 			cssLsDocuments,
 			cssLsSourceMaps,
-			sfcJsons,
+			sfcCustomBlocks,
 			sfcScriptForScriptLs,
 			lastUpdated,
 			sfcTemplate,
@@ -164,7 +164,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		}, number, vscode.Diagnostic[]][] = [
 				[useScriptSetupWarnings(), 0, []],
 				[useStylesValidation(computed(() => cssLsDocuments.value)), 0, []],
-				[useJsonsValidation(computed(() => sfcJsons.textDocuments.value)), 0, []],
+				[useJsonsValidation(computed(() => sfcCustomBlocks.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
 				[useScriptExistValidation(), 0, []],
 			];
@@ -455,12 +455,12 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			});
 			const cacheWithSourceMap = computed(async () => {
 				{ // fix can't track .value after await
-					sfcJsons.sourceMaps.value
+					sfcCustomBlocks.sourceMaps.value
 				}
 				let result: vscode.Diagnostic[] = [];
 				if (errors_cache.value) {
 					for (const [uri, errs] of await errors_cache.value) {
-						result = result.concat(toSourceDiags(errs, uri, sfcJsons.sourceMaps.value));
+						result = result.concat(toSourceDiags(errs, uri, sfcCustomBlocks.sourceMaps.value));
 					}
 				}
 				return result as vscode.Diagnostic[];
@@ -654,7 +654,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			}
 			return result;
 		}
-		function toTsSourceDiags(lsType: 'template' | 'script', errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: TsSourceMap[]) {
+		function toTsSourceDiags(lsType: 'template' | 'script', errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: ScriptSourceMap[]) {
 			const result: vscode.Diagnostic[] = [];
 			for (const error of errors) {
 				const vueRange = findVueRange(virtualScriptUri, error.range);

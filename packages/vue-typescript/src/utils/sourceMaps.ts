@@ -3,7 +3,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as SourceMaps from '@volar/source-map';
 import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
 
-export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
+export class ScriptSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
@@ -21,7 +21,7 @@ export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
 	}
 }
 
-export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
+export class StyleSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,

@@ -3,7 +3,7 @@ import { computed, Ref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as SourceMaps from '../utils/sourceMaps';
 
-export function useSfcJsons(
+export function useSfcCustomBlocks(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	customBlocks: Ref<shared.Sfc['customBlocks']>,
@@ -20,12 +20,10 @@ export function useSfcJsons(
 			const content = customBlock.content;
 			const uri = vueUri + '.' + i + '.' + lang;
 			const document = TextDocument.create(uri, lang, version++, content);
-			if (lang === 'json' || lang === 'jsonc') {
-				documents.push({
-					index: i,
-					textDocument: document,
-				});
-			}
+			documents.push({
+				index: i,
+				textDocument: document,
+			});
 		}
 		return documents;
 	});

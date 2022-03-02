@@ -23,7 +23,7 @@ export function useSfcTemplateScript(
 		module: string | undefined;
 		scoped: boolean;
 	}[]>,
-	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
+	styleSourceMaps: Ref<SourceMaps.StyleSourceMap[]>,
 	templateData: Ref<{
 		lang: string,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
@@ -310,7 +310,7 @@ export function useSfcTemplateScript(
 	});
 	const sourceMap = computed(() => {
 		if (textDoc.value) {
-			const sourceMap = new SourceMaps.TsSourceMap(
+			const sourceMap = new SourceMaps.ScriptSourceMap(
 				vueDoc.value,
 				textDoc.value,
 				'template',
@@ -358,7 +358,7 @@ export function useSfcTemplateScript(
 	});
 	const formatSourceMap = computed(() => {
 		if (templateCodeGens.value && formatTextDoc.value && template.value) {
-			const sourceMap = new SourceMaps.TsSourceMap(
+			const sourceMap = new SourceMaps.ScriptSourceMap(
 				vueDoc.value,
 				formatTextDoc.value,
 				'template',
@@ -387,7 +387,7 @@ export function useSfcTemplateScript(
 	});
 	const cssSourceMap = computed(() => {
 		if (templateCodeGens.value && cssTextDocument.value && template.value) {
-			const sourceMap = new SourceMaps.CssSourceMap(
+			const sourceMap = new SourceMaps.StyleSourceMap(
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
 				undefined,

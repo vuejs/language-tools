@@ -2,7 +2,7 @@ import { computed, shallowReactive } from '@vue/reactivity';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
-import type { CssSourceMap, SourceMap, TeleportSourceMap, TsSourceMap } from './utils/sourceMaps';
+import type { StyleSourceMap, SourceMap, TeleportSourceMap, ScriptSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
@@ -33,7 +33,7 @@ export function createSourceFiles() {
 	const all = computed(() => Object.values(_sourceFiles));
 	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
 	const cssSourceMaps = computed(() => {
-		const map = new Map<string, CssSourceMap>();
+		const map = new Map<string, StyleSourceMap>();
 		for (const key in _sourceFiles) {
 			const sourceFile = _sourceFiles[key]!;
 			for (const sourceMap of sourceFile.refs.cssLsSourceMaps.value) {
@@ -76,7 +76,7 @@ export function createSourceFiles() {
 				return map;
 			}),
 			sourceMaps: computed(() => {
-				const map = new Map<string, TsSourceMap>();
+				const map = new Map<string, ScriptSourceMap>();
 				for (const key in _sourceFiles) {
 					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.templateLsSourceMaps.value) {
@@ -117,7 +117,7 @@ export function createSourceFiles() {
 				return map;
 			}),
 			sourceMaps: computed(() => {
-				const map = new Map<string, TsSourceMap>();
+				const map = new Map<string, ScriptSourceMap>();
 				for (const key in _sourceFiles) {
 					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.scriptLsSourceMaps.value) {
@@ -160,7 +160,7 @@ export function createSourceFiles() {
 			start: vscode.Position,
 			end?: vscode.Position,
 			filter?: (data: TsMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+			sourceMapFilter?: (sourceMap: ScriptSourceMap) => boolean,
 		) {
 
 			if (end === undefined)
@@ -205,7 +205,7 @@ export function createSourceFiles() {
 			start: vscode.Position,
 			end?: vscode.Position,
 			filter?: (data: TsMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+			sourceMapFilter?: (sourceMap: ScriptSourceMap) => boolean,
 		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
@@ -247,7 +247,7 @@ export function createSourceFiles() {
 			start: number,
 			end?: number,
 			filter?: (data: TsMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: TsSourceMap) => boolean,
+			sourceMapFilter?: (sourceMap: ScriptSourceMap) => boolean,
 		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
