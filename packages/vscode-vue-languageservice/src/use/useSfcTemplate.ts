@@ -1,7 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 
 import type * as _0 from 'vscode-html-languageservice';  // fix TS2742
@@ -10,7 +9,6 @@ export function useSfcTemplate(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
 	template: Ref<shared.Sfc['template']>,
-	context: LanguageServiceContext,
 ) {
 	let version = 0;
 	const textDocument = computed(() => {
@@ -23,7 +21,7 @@ export function useSfcTemplate(
 		}
 	});
 	const htmlSourceMap = computed(() => {
-		if (textDocument.value && textDocument.value && template.value && template.value.lang === 'html') {
+		if (textDocument.value && template.value && template.value.lang === 'html') {
 			const sourceMap = new SourceMaps.HtmlSourceMap(
 				vueDoc.value,
 				textDocument.value,
@@ -43,17 +41,11 @@ export function useSfcTemplate(
 			return sourceMap;
 		}
 	});
-	const pugDocument = computed(() => {
-		if (textDocument.value?.languageId === 'jade') {
-			return context.pugLs.parsePugDocument(textDocument.value);
-		}
-	});
 	const pugSourceMap = computed(() => {
-		if (textDocument.value && template.value && pugDocument.value) {
+		if (textDocument.value && template.value && template.value.lang === 'pug') {
 			const sourceMap = new SourceMaps.PugSourceMap(
 				vueDoc.value,
 				textDocument.value,
-				pugDocument.value,
 			);
 			sourceMap.mappings.push({
 				data: undefined,
@@ -74,6 +66,5 @@ export function useSfcTemplate(
 		textDocument,
 		htmlSourceMap,
 		pugSourceMap,
-		pugDocument,
 	};
 }

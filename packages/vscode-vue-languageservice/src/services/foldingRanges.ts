@@ -12,7 +12,7 @@ export function register(
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
-	const { htmlLs, pugLs, getCssLs, modules } = context;
+	const { htmlLs, pugLs, getCssLs, modules, getPugDocument } = context;
 	return (document: TextDocument) => {
 
 		const sourceFile = context.getVueDocument(document);
@@ -79,7 +79,12 @@ export function register(
 		function getPugResult(sourceFile: SourceFile) {
 			let result: vscode.FoldingRange[] = [];
 			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				const foldingRanges = pugLs.getFoldingRanges(sourceMap.pugDocument);
+
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				if (!pugDocument)
+					continue;
+
+				const foldingRanges = pugLs.getFoldingRanges(pugDocument);
 				result = result.concat(toVueFoldingRanges(foldingRanges, sourceMap));
 			}
 			return result;

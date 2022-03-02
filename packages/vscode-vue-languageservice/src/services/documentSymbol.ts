@@ -14,7 +14,7 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument } = context;
+	const { modules, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument } = context;
 
 	return (document: TextDocument) => {
 
@@ -132,12 +132,11 @@ export function register(
 			]) {
 
 				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
-				if (!htmlDocument)
-					continue;
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
 
 				const symbols = sourceMap.language === 'html'
-					? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, htmlDocument)
-					: pugLs.findDocumentSymbols(sourceMap.pugDocument)
+					? (htmlDocument ? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, htmlDocument) : undefined)
+					: (pugDocument ? pugLs.findDocumentSymbols(pugDocument) : undefined)
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];

@@ -2,7 +2,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs, getStylesheet }: ApiLanguageServiceContext) {
+export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs, getStylesheet, getPugDocument }: ApiLanguageServiceContext) {
 	return async (uri: string) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -41,9 +41,12 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+
 				const links = sourceMap.language === 'html'
 					? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
-					: pugLs.findDocumentLinks(sourceMap.pugDocument, documentContext)
+					: (pugDocument ? pugLs.findDocumentLinks(pugDocument, documentContext) : [])
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 					if (vueRange) {

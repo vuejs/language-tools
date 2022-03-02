@@ -8,7 +8,7 @@ import * as dedupe from '../utils/dedupe';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -280,9 +280,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				return [];
 			});
 			const pugErrors = computed(() => {
+
 				const result: vscode.Diagnostic[] = [];
-				if (sfcTemplateData.value?.sourceLang === 'pug' && sfcTemplate.pugDocument.value) {
-					const pugDoc = sfcTemplate.pugDocument.value;
+				const pugDoc = sfcTemplate.textDocument.value ? getPugDocument(sfcTemplate.textDocument.value) : undefined;
+
+				if (pugDoc) {
 					const astError = pugDoc.error;
 					if (astError) {
 						result.push({
@@ -428,7 +430,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 					const jsonDocument = getJsonDocument(textDocument);
 					if (!jsonDocument)
 						continue;
-	
+
 					const errs = await jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
 						? {
 							comments: 'error',

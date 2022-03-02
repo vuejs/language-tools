@@ -2,7 +2,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument }: ApiLanguageServiceContext) {
 	return (uri: string, position: vscode.Position) => {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -45,14 +45,13 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getSty
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
 
 				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
-				if (!htmlDocument)
-					continue;
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
 
 				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 
 					const highlights = sourceMap.language === 'html'
-						? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, htmlDocument)
-						: pugLs.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
+						? (htmlDocument ? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, htmlDocument) : undefined)
+						: (pugDocument ? pugLs.findDocumentHighlights(pugDocument, htmlRange.start) : undefined)
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {

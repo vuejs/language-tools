@@ -63,15 +63,15 @@ export function createSourceFile(
 	// use
 	const sfcStyles = useSfcStyles(uri, document, computed(() => descriptor.styles));
 	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks));
-	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template), context);
+	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template));
 	const sfcTemplateData = computed<undefined | {
 		sourceLang: 'html' | 'pug',
 		html: string,
 		htmlTextDocument: TextDocument,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	}>(() => {
-		if (sfcTemplate.pugDocument.value) {
-			const pugDoc = sfcTemplate.pugDocument.value;
+		const pugDoc = sfcTemplate.textDocument.value ? context.getPugDocument(sfcTemplate.textDocument.value) : undefined;
+		if (pugDoc) {
 			return {
 				sourceLang: 'pug',
 				html: pugDoc.htmlCode,

@@ -22,7 +22,7 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modules: { html } }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modules: { html }, getPugDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
@@ -138,9 +138,10 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 					continue;
 
 				const docText = sourceMap.mappedDocument.getText();
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
 				const scanner = sourceMap.language === 'html'
 					? htmlLs.createScanner(docText)
-					: pugLs.createScanner(sourceMap.pugDocument)
+					: (pugDocument ? pugLs.createScanner(pugDocument) : undefined)
 				if (!scanner) continue;
 
 				let token = scanner.scan();

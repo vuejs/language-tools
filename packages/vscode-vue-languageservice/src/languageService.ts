@@ -772,6 +772,7 @@ function createServices(
 	const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
+	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
 	return {
 		ts,
@@ -783,6 +784,7 @@ function createServices(
 		getCssVBindRanges,
 		getHtmlDocument,
 		getJsonDocument,
+		getPugDocument,
 		vueHost,
 		updateHtmlCustomData,
 		updateCssCustomData,
@@ -897,6 +899,24 @@ function createServices(
 
 		const doc = jsonLs.parseJSONDocument(document);
 		jsonDocuments.set(document, [document.version, doc]);
+
+		return doc;
+	}
+	function getPugDocument(document: TextDocument) {
+
+		if (document.languageId !== 'jade')
+			return;
+
+		const cache = pugDocuments.get(document);
+		if (cache) {
+			const [cacheVersion, cacheDoc] = cache;
+			if (cacheVersion === document.version) {
+				return cacheDoc;
+			}
+		}
+
+		const doc = pugLs.parsePugDocument(document);
+		pugDocuments.set(document, [document.version, doc]);
 
 		return doc;
 	}

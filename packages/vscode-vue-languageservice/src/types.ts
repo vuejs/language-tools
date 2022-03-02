@@ -73,6 +73,7 @@ export type LanguageServiceContextBase = {
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
 	getJsonDocument: (documrnt: TextDocument) => json.JSONDocument | undefined,
+	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {

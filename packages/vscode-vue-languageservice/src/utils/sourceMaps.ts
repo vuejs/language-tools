@@ -1,6 +1,5 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { PugDocument } from 'vscode-pug-languageservice';
 import * as SourceMaps from '@volar/source-map';
 import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
 
@@ -63,7 +62,6 @@ export class PugSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public pugDocument: PugDocument,
 		public language: 'pug' = 'pug',
 	) {
 		super(sourceDocument, mappedDocument);
