@@ -58,6 +58,10 @@ export type LanguageServiceContextBase = {
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,
 	jsonLs: json.LanguageService,
+	compileTemplate(templateTextDocument: TextDocument): {
+		htmlTextDocument: TextDocument;
+		htmlToTemplate: (start: number, end: number) => number | undefined;
+	} | undefined
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],

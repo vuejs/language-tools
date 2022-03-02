@@ -25,8 +25,7 @@ export function useSfcTemplateScript(
 	}[]>,
 	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
 	templateData: Ref<{
-		sourceLang: 'html' | 'pug',
-		html: string,
+		lang: string,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
@@ -63,7 +62,7 @@ export function useSfcTemplateScript(
 			return;
 
 		return templateGen.generate(
-			templateData.value.sourceLang,
+			templateData.value.lang,
 			sfcTemplateCompileResult.value.ast,
 			context.compilerOptions.experimentalCompatMode === 2,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),

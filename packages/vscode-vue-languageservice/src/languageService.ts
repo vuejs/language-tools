@@ -106,7 +106,14 @@ export function getDocumentLanguageService(
 
 			return cacheVueDoc;
 		}
-		const vueDoc = createSourceFile(document.uri, document.getText(), document.version.toString(), context);
+		const vueDoc = createSourceFile(
+			document.uri,
+			document.getText(),
+			document.version.toString(),
+			context.htmlLs,
+			context.compileTemplate,
+			context,
+		);
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;
 	}
@@ -628,7 +635,14 @@ export function createLanguageService(
 			const doc = getHostDocument(uri);
 			if (!doc) continue;
 			if (!sourceFile) {
-				sourceFiles.set(uri, createSourceFile(doc.uri, doc.getText(), doc.version.toString(), context));
+				sourceFiles.set(uri, createSourceFile(
+					doc.uri,
+					doc.getText(),
+					doc.version.toString(),
+					context.htmlLs,
+					context.compileTemplate,
+					context,
+				));
 				vueScriptContentsUpdate = true;
 				vueScriptsUpdated = true;
 			}
@@ -776,8 +790,38 @@ function createServices(
 		updateHtmlCustomData,
 		updateCssCustomData,
 		getHtmlDataProviders: () => htmlDataProviders,
+		compileTemplate,
 	};
 
+	function compileTemplate(templateDocument: TextDocument): {
+		htmlTextDocument: TextDocument,
+		htmlToTemplate: (start: number, end: number) => number | undefined,
+	} | undefined {
+
+		if (templateDocument.languageId === 'html') {
+			return {
+				htmlTextDocument: templateDocument,
+				htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
+			};
+		}
+
+		if (templateDocument.languageId === 'jade') {
+
+			const pugDoc = getPugDocument(templateDocument);
+
+			if (pugDoc) {
+				return {
+					htmlTextDocument: pugDoc.htmlTextDocument,
+					htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
+						const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
+						if (pugRange) {
+							return pugRange.start;
+						}
+					},
+				};
+			}
+		}
+	}
 	function updateHtmlCustomData(customData: { [id: string]: html.HTMLDataV1 }) {
 		htmlDataProviders = [];
 		for (const id in customData) {

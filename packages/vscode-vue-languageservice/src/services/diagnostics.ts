@@ -274,7 +274,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
-				if (sfcTemplateData.value?.sourceLang === 'html' && sfcTemplateCompileResult.value) {
+				if (sfcTemplateData.value?.lang === 'html' && sfcTemplateCompileResult.value) {
 					return sfcTemplateCompileResult.value.errors;
 				}
 				return [];

@@ -17,9 +17,9 @@ import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
+import type * as html from 'vscode-html-languageservice'; // fix TS2742
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import type * as _1 from 'vscode-html-languageservice'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
@@ -28,6 +28,11 @@ export function createSourceFile(
 	uri: string,
 	_content: string,
 	_version: string,
+	htmlLs: html.LanguageService,
+	compileTemplate: (document: TextDocument) => {
+		htmlTextDocument: TextDocument,
+		htmlToTemplate: (start: number, end: number) => number | undefined,
+	} | undefined,
 	context: LanguageServiceContext,
 ) {
 
@@ -58,38 +63,25 @@ export function createSourceFile(
 
 	// computeds
 	const document = computed(() => TextDocument.create(uri, 'vue', 0, content.value));
-	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
+	const vueHtmlDocument = computed(() => htmlLs.parseHTMLDocument(document.value));
 
 	// use
 	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
 	const sfcJsons = useSfcJsons(uri, document, computed(() => sfc.customBlocks));
 	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
 	const sfcTemplateData = computed<undefined | {
-		sourceLang: 'html' | 'pug',
-		html: string,
+		lang: string,
 		htmlTextDocument: TextDocument,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
 	}>(() => {
-		const pugDoc = sfcTemplate.textDocument.value ? context.getPugDocument(sfcTemplate.textDocument.value) : undefined;
-		if (pugDoc) {
-			return {
-				sourceLang: 'pug',
-				html: pugDoc.htmlCode,
-				htmlTextDocument: pugDoc.htmlTextDocument,
-				htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-					const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
-					if (pugRange) {
-						return pugRange.start;
-					}
-				},
-			};
-		}
-		if (sfc.template && sfcTemplate.textDocument.value && sfc.template.lang === 'html') {
-			return {
-				sourceLang: 'html',
-				html: sfc.template.content,
-				htmlTextDocument: sfcTemplate.textDocument.value,
-				htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
+		if (sfc.template && sfcTemplate.textDocument.value) {
+			const compiledHtml = compileTemplate(sfcTemplate.textDocument.value);
+			if (compiledHtml) {
+				return {
+					lang: sfc.template.lang,
+					htmlTextDocument: compiledHtml.htmlTextDocument,
+					htmlToTemplate: compiledHtml.htmlToTemplate,
+				};
 			};
 		}
 	});
