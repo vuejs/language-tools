@@ -7,10 +7,6 @@ export function parse(
 	styleDocuments: {
 		textDocument: TextDocument;
 		stylesheet: css.Stylesheet | undefined;
-		links: {
-			textDocument: TextDocument;
-			stylesheet: css.Stylesheet;
-		}[];
 	}[],
 	context: LanguageServiceContext,
 ) {
@@ -20,13 +16,6 @@ export function parse(
 		for (const [className, offsets] of findClassNames(css, sourceMap.textDocument, sourceMap.stylesheet, context)) {
 			for (const offset of offsets) {
 				addClassName(sourceMap.textDocument.uri, className, offset);
-			}
-		}
-		for (const link of sourceMap.links) {
-			for (const [className, offsets] of findClassNames(css, link.textDocument, link.stylesheet, context)) {
-				for (const offset of offsets) {
-					addClassName(link.textDocument.uri, className, offset);
-				}
 			}
 		}
 	}

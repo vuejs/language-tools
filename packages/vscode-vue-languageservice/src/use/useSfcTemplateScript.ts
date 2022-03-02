@@ -22,10 +22,6 @@ export function useSfcTemplateScript(
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
 		stylesheet: css.Stylesheet | undefined;
-		links: {
-			textDocument: TextDocument;
-			stylesheet: css.Stylesheet;
-		}[];
 		module: string | undefined;
 		scoped: boolean;
 	}[]>,
@@ -384,7 +380,6 @@ export function useSfcTemplateScript(
 				cssTextDocument.value.stylesheet,
 				undefined,
 				false,
-				[],
 				{ foldingRanges: false, formatting: false },
 				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange),
 			);

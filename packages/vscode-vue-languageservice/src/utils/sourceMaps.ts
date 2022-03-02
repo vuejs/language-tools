@@ -32,7 +32,6 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 		public stylesheet: Stylesheet | undefined,
 		public module: string | undefined,
 		public scoped: boolean,
-		public links: { textDocument: TextDocument, stylesheet: Stylesheet }[],
 		public capabilities: {
 			foldingRanges: boolean,
 			formatting: boolean,
