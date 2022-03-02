@@ -8,5 +8,4 @@ export * from './languageService';
 export * from './sourceFile';
 export * from './types';
 export * from './basicRuntime';
-export * from './tsPluginProxy';
-export * from './tsProgramProxy';
+export * from './typescriptRuntime';

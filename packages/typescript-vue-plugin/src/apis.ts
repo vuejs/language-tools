@@ -1,51 +1,8 @@
-import type { LanguageServiceHost, TypeScriptFeaturesRuntimeContext } from './types';
+import type { TypeScriptFeaturesRuntimeContext } from 'vscode-vue-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
-import { createTypeScriptRuntime } from './typescriptRuntime';
 
-export function createTsPluginProxy(
-	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
-	vueHost: LanguageServiceHost,
-) {
-
-	const tsRuntime = createTypeScriptRuntime({ typescript: ts }, vueHost, true);
-	const _tsPluginApis = register(tsRuntime.context);
-	const tsPlugin: Partial<ts.LanguageService> = {
-		getSemanticDiagnostics: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getSemanticDiagnostics, false),
-		getEncodedSemanticClassifications: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getEncodedSemanticClassifications, false),
-		getCompletionsAtPosition: tsRuntime.apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-		getCompletionEntryDetails: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getCompletionEntryDetails, false), // not sure
-		getCompletionEntrySymbol: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getCompletionEntrySymbol, false), // not sure
-		getQuickInfoAtPosition: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getQuickInfoAtPosition, false),
-		getSignatureHelpItems: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getSignatureHelpItems, false),
-		getRenameInfo: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getRenameInfo, false),
-
-		findRenameLocations: tsRuntime.apiHook(_tsPluginApis.findRenameLocations, true),
-		getDefinitionAtPosition: tsRuntime.apiHook(_tsPluginApis.getDefinitionAtPosition, false),
-		getDefinitionAndBoundSpan: tsRuntime.apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
-		getTypeDefinitionAtPosition: tsRuntime.apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
-		getImplementationAtPosition: tsRuntime.apiHook(_tsPluginApis.getImplementationAtPosition, false),
-		getReferencesAtPosition: tsRuntime.apiHook(_tsPluginApis.getReferencesAtPosition, true),
-		findReferences: tsRuntime.apiHook(_tsPluginApis.findReferences, true),
-
-		// TODO: now is handle by vue server
-		// prepareCallHierarchy: tsRuntime.apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
-		// provideCallHierarchyIncomingCalls: tsRuntime.apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
-		// provideCallHierarchyOutgoingCalls: tsRuntime.apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
-		// getEditsForFileRename: tsRuntime.apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
-
-		// TODO
-		// getCodeFixesAtPosition: tsRuntime.apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
-		// getCombinedCodeFix: tsRuntime.apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
-		// applyCodeActionCommand: tsRuntime.apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
-		// getApplicableRefactors: tsRuntime.apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
-		// getEditsForRefactor: tsRuntime.apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
-	};
-
-	return tsPlugin;
-}
-
-function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
+export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
 
 	return {
 		getCompletionsAtPosition,

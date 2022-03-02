@@ -2,6 +2,8 @@ import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from 'vscode-vue-languageservice';
 import * as path from 'path';
 import * as shared from '@volar/shared';
+import * as apis from './apis';
+import { createTypeScriptRuntime } from 'vscode-vue-languageservice';
 
 export function createProgramProxy(options: ts.CreateProgramOptions) {
 
@@ -43,7 +45,23 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		getVueProjectVersion: () => '',
 		getProjectReferences: () => options.projectReferences,
 	};
-	const tsProgramProxy = vue.createTsProgramProxy({ typescript: ts }, vueLsHost);
+	const tsRuntime = createTypeScriptRuntime({ typescript: ts }, vueLsHost, true);
+	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
+	if (!tsProgram) throw '!tsProgram';
+
+	const tsProgramApis_2 = apis.register(tsRuntime.context);
+	const tsProgramApis_3: Partial<typeof tsProgram> = {
+		emit: tsRuntime.apiHook(tsProgramApis_2.emit),
+		getRootFileNames: tsRuntime.apiHook(tsProgramApis_2.getRootFileNames),
+		getSemanticDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getSemanticDiagnostics),
+		getSyntacticDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getSyntacticDiagnostics),
+		getGlobalDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getGlobalDiagnostics),
+	};
+	const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
+		get: (target: any, property: keyof typeof tsProgram) => {
+			return tsProgramApis_3[property] || target[property];
+		},
+	});
 
 	return tsProgramProxy;
 
