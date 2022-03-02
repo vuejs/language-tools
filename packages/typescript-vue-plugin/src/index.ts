@@ -1,7 +1,6 @@
-import * as vue from 'vscode-vue-languageservice'
+import * as vue from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
-import { createTypeScriptRuntime } from 'vscode-vue-languageservice';
 import * as apis from './apis';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
@@ -24,7 +23,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 
 			const proxyHost = createProxyHost(ts, info);
-			const tsRuntime = createTypeScriptRuntime({ typescript: ts }, proxyHost.host, true);
+			const tsRuntime = vue.createTypeScriptRuntime({ typescript: ts }, proxyHost.host, true);
 			const _tsPluginApis = apis.register(tsRuntime.context);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
 				getSemanticDiagnostics: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getSemanticDiagnostics, false),
@@ -92,7 +91,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		snapshots: ts.IScriptSnapshot | undefined,
 		snapshotsVersion: string | undefined,
 	}>();
-	const host: vue.LanguageServiceHost = {
+	const host: vue.LanguageServiceHostBase = {
 		getNewLine: () => info.project.getNewLine(),
 		useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 		readFile: path => info.project.readFile(path),

@@ -1,6 +1,6 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
-import type { SourceFile } from '../sourceFile';
+import type { SourceFile } from '@volar/vue-typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceMap } from '@volar/source-map';
 

@@ -8,7 +8,7 @@ import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from 'vscode-pug-languageservice';
 import { findClassNames } from './parsers/cssClasses';
-import { LanguageServiceHost } from './types';
+import { LanguageServiceHostBase } from './types';
 
 interface StylesheetNode {
     children: StylesheetNode[] | undefined,
@@ -20,7 +20,7 @@ interface StylesheetNode {
 }
 
 export function createBasicRuntime(
-    vueHost?: LanguageServiceHost,
+    vueHost?: LanguageServiceHostBase,
 ) {
     const fileSystemProvider: html.FileSystemProvider = {
         stat: (uri) => {
@@ -61,7 +61,7 @@ export function createBasicRuntime(
     const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
     const lessLs = css.getLESSLanguageService({ fileSystemProvider });
     const pugLs = pug.getLanguageService(htmlLs);
-    const jsonLs = json.getLanguageService({ schemaRequestService: vueHost?.schemaRequestService });
+    const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
     const postcssLs: css.LanguageService = {
         ...scssLs,
         doValidation: (document, stylesheet, documentSettings) => {

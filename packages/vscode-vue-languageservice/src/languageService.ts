@@ -20,9 +20,11 @@ import * as signatureHelp from './services/signatureHelp';
 import * as tagNameCase from './services/tagNameCase';
 import * as workspaceSymbol from './services/workspaceSymbol';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
-import { createTypeScriptRuntime } from './typescriptRuntime';
+import { createTypeScriptRuntime } from '@volar/vue-typescript';
 
 import type * as _0 from 'vscode-html-languageservice';
+import type * as _1 from 'vscode-css-languageservice';
+import type * as _2 from 'vscode-json-languageservice';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 

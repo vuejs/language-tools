@@ -1,12 +1,12 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as css from 'vscode-css-languageservice';
-import { RuntimeContext } from '../types';
+import { BasicRuntimeContext } from '../types';
 
 export function findClassNames(
 	css: typeof import('vscode-css-languageservice'),
 	doc: TextDocument,
 	ss: css.Stylesheet,
-	getCssLs: RuntimeContext['getCssLs'],
+	getCssLs: BasicRuntimeContext['getCssLs'],
 ) {
 	const result: Record<string, [number, number][]> = {};
 	const cssLs = getCssLs(doc.languageId);

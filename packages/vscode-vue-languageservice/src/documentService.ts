@@ -1,5 +1,4 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createBasicRuntime } from './basicRuntime';
 import * as autoClosingTags from './services/autoClosingTags';
 import * as autoCreateQuotes from './services/autoCreateQuotes';
 import * as autoWrapBrackets from './services/autoWrapParentheses';
@@ -10,8 +9,9 @@ import * as foldingRanges from './services/foldingRanges';
 import * as formatting from './services/formatting';
 import * as linkedEditingRanges from './services/linkedEditingRange';
 import * as selectionRanges from './services/selectionRanges';
-import { createSourceFile, SourceFile } from './sourceFile';
+import { createSourceFile, SourceFile } from '@volar/vue-typescript';
 import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
+import { createBasicRuntime } from '@volar/vue-typescript';
 
 import type * as _0 from 'vscode-languageserver-protocol';
 

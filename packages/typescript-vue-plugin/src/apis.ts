@@ -1,4 +1,4 @@
-import type { TypeScriptFeaturesRuntimeContext } from 'vscode-vue-languageservice';
+import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 

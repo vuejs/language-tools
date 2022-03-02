@@ -1,6 +1,6 @@
 import { transformCompletionItem } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SourceFile } from '../sourceFile';
+import { SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';

@@ -3,7 +3,7 @@ import { transformTextEdit } from '@volar/transforms';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
-import type { SourceFile } from '../sourceFile';
+import type { SourceFile } from '@volar/vue-typescript';
 import type { DocumentServiceRuntimeContext } from '../types';
 import * as sharedServices from '../utils/sharedLs';
 import * as ts2 from 'vscode-typescript-languageservice';

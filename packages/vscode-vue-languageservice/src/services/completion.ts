@@ -9,14 +9,13 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { SourceFile } from '../sourceFile';
+import { SourceFile, TsSourceMap } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData } from '../types';
-import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
-import { TsSourceMap } from '../utils/sourceMaps';
 import * as emmet from '@vscode/emmet-helper';
+import { SearchTexts } from '@volar/vue-typescript';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {

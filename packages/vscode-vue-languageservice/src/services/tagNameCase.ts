@@ -1,6 +1,6 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { SourceFile } from '../sourceFile';
+import { SourceFile } from '@volar/vue-typescript';
 
 export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 	return (uri: string): {

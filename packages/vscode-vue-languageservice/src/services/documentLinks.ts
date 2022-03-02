@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import type { SourceFile } from '../sourceFile';
+import type { SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 
 export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs, getStylesheet, getPugDocument }: LanguageServiceRuntimeContext) {

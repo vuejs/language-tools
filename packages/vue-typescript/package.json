@@ -1,5 +1,5 @@
 {
-	"name": "vscode-vue-languageservice",
+	"name": "@volar/vue-typescript",
 	"version": "0.32.1",
 	"main": "out/index.js",
 	"license": "MIT",
@@ -16,14 +16,11 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
+		"@volar/code-gen": "0.32.1",
 		"@volar/shared": "0.32.1",
 		"@volar/source-map": "0.32.1",
-		"@volar/transforms": "0.32.1",
 		"@volar/vue-code-gen": "0.32.1",
-		"@volar/vue-typescript": "0.32.1",
-		"@vscode/emmet-helper": "^2.8.3",
 		"@vue/reactivity": "^3.2.27",
-		"@vue/shared": "^3.2.27",
 		"upath": "^2.0.1",
 		"vscode-css-languageservice": "^5.1.9",
 		"vscode-html-languageservice": "^4.2.1",

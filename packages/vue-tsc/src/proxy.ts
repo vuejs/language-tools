@@ -1,9 +1,9 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-typescript';
 import * as path from 'path';
 import * as shared from '@volar/shared';
 import * as apis from './apis';
-import { createTypeScriptRuntime } from 'vscode-vue-languageservice';
+import { createTypeScriptRuntime } from '@volar/vue-typescript';
 
 export function createProgramProxy(options: ts.CreateProgramOptions) {
 
@@ -33,7 +33,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 	];
 	const vueCompilerOptions = getVueCompilerOptions();
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const vueLsHost: vue.LanguageServiceHost = {
+	const vueLsHost: vue.LanguageServiceHostBase = {
 		...host,
 		writeFile: undefined,
 		getCompilationSettings: () => options.options,

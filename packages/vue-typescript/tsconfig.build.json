@@ -19,7 +19,7 @@
 			"path": "../source-map/tsconfig.build.json"
 		},
 		{
-			"path": "../transforms/tsconfig.build.json"
+			"path": "../code-gen/tsconfig.build.json"
 		},
 		{
 			"path": "../vscode-pug-languageservice/tsconfig.build.json"
@@ -29,9 +29,6 @@
 		},
 		{
 			"path": "../vue-code-gen/tsconfig.build.json"
-		},
-		{
-			"path": "../vue-typescript/tsconfig.build.json"
 		},
 	],
 }

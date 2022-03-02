@@ -1,9 +1,9 @@
 import * as shared from '@volar/shared';
+import { SourceFiles } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { SourceFiles } from '../sourceFiles';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
-import type { TsMappingData } from '../utils/sourceMaps';
+import type { TsMappingData } from '@volar/vue-typescript';
 import { wordPatterns } from './completion';
 
 export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {

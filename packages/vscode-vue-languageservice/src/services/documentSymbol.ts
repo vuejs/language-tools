@@ -3,11 +3,11 @@ import { transformSymbolInformations } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
-import type { SourceFile } from '../sourceFile';
 import type { DocumentServiceRuntimeContext } from '../types';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as dedupe from '../utils/dedupe';
 import * as ts2 from 'vscode-typescript-languageservice';
+import { SourceFile } from '@volar/vue-typescript';
 
 export function register(
 	context: DocumentServiceRuntimeContext,

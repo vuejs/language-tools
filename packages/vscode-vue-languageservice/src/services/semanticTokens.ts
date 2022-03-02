@@ -1,6 +1,6 @@
 import { hyphenate, isHTMLTag } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { SourceFile } from '../sourceFile';
+import type { SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as html from 'vscode-html-languageservice';

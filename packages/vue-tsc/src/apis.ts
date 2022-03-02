@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TypeScriptFeaturesRuntimeContext } from 'vscode-vue-languageservice';
+import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 
 const lsTypes = ['script', 'template'] as const;
 

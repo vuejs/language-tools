@@ -7,7 +7,7 @@ import * as templateGen from '@volar/vue-code-gen/out/generators/template_script
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { getVueLibraryName } from '../utils/localTypes';
-import type { RuntimeContext } from '../types';
+import type { BasicRuntimeContext } from '../types';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
@@ -20,7 +20,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	isVue2: boolean,
-	getCssVBindRanges: RuntimeContext['getCssVBindRanges'],
+	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
 ) {
 
 	let version = 0;

@@ -6,7 +6,7 @@ import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scr
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { ITemplateScriptData, RuntimeContext, VueCompilerOptions } from '../types';
+import { ITemplateScriptData, BasicRuntimeContext, VueCompilerOptions } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 
@@ -32,8 +32,8 @@ export function useSfcTemplateScript(
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
-	getCssVBindRanges: RuntimeContext['getCssVBindRanges'],
-	getCssClasses: RuntimeContext['getCssClasses'],
+	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
+	getCssClasses: BasicRuntimeContext['getCssClasses'],
 ) {
 	let version = 0;
 	const vueFileName = upath.basename(shared.uriToFsPath(vueUri));

@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
+import type { SourceFile } from '@volar/vue-typescript';
+import type { SourceMap, TsSourceMap } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as shared from '@volar/shared';

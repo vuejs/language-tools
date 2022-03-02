@@ -7,12 +7,12 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import { createBasicRuntime } from './basicRuntime';
 import { createSourceFile } from './sourceFile';
 import { createSourceFiles } from './sourceFiles';
-import { LanguageServiceHost, TypeScriptFeaturesRuntimeContext } from './types';
+import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext } from './types';
 import * as localTypes from './utils/localTypes';
 
 export function createTypeScriptRuntime(
     { typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
-    vueHost: LanguageServiceHost,
+    vueHost: LanguageServiceHostBase,
     isTsPlugin = false,
 ) {
 
