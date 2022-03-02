@@ -226,8 +226,7 @@ export function createSourceFile(
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssLsSourceMaps.value),
 		getJsonSourceMaps: untrack(() => sfcJsons.sourceMaps.value),
-		getHtmlSourceMaps: untrack(() => sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
-		getPugSourceMaps: untrack(() => sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
+		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getDescriptor: untrack(() => descriptor), // TODO: untrack not working for reactive
 		getScriptAst: untrack(() => sfcScript.ast.value),

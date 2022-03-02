@@ -37,37 +37,6 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 	}
 }
 
-export class JsonSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		mappings?: SourceMaps.Mapping<undefined>[],
-	) {
-		super(sourceDocument, mappedDocument, mappings);
-	}
-}
-
-export class HtmlSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public language: 'html' = 'html',
-		mappings?: SourceMaps.Mapping<undefined>[],
-	) {
-		super(sourceDocument, mappedDocument, mappings);
-	}
-}
-
-export class PugSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public language: 'pug' = 'pug',
-	) {
-		super(sourceDocument, mappedDocument);
-	}
-}
-
 export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData> {
 	constructor(
 		public document: TextDocument,

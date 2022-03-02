@@ -126,7 +126,10 @@ export function register(
 
 	async function getHtmlFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
 		const result: vscode.TextEdit[] = [];
-		for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+			if (sourceMap.mappedDocument.languageId !== 'html')
+				continue;
 
 			const formatter = formatters['html'];
 			if (!formatter) continue;
@@ -144,7 +147,10 @@ export function register(
 
 	async function getPugFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
 		const result: vscode.TextEdit[] = [];
-		for (const sourceMap of sourceFile.getPugSourceMaps()) {
+		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+			if (sourceMap.mappedDocument.languageId !== 'jade')
+				continue;
 
 			const formatter = formatters['pug'];
 			if (!formatter) continue;

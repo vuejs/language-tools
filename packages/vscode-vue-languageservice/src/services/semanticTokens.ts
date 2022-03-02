@@ -55,7 +55,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 			reportProgress?.(tokens);
 		}
 
-		if (sourceFile.getHtmlSourceMaps().length) {
+		if (sourceFile.getTemplateSourceMaps().length) {
 			updateTemplateScripts()
 		}
 
@@ -122,7 +122,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 				...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
 			]);
 
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				let htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start;
 				if (htmlStart === undefined) {
@@ -139,9 +139,11 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 
 				const docText = sourceMap.mappedDocument.getText();
 				const pugDocument = getPugDocument(sourceMap.mappedDocument);
-				const scanner = sourceMap.language === 'html'
-					? htmlLs.createScanner(docText)
-					: (pugDocument ? pugLs.createScanner(pugDocument) : undefined)
+				const scanner =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.createScanner(docText)
+						: pugDocument ? pugLs.createScanner(pugDocument)
+							: undefined
+
 				if (!scanner) continue;
 
 				let token = scanner.scan();

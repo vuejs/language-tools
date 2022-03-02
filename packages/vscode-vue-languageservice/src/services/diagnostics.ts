@@ -356,8 +356,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				if (!sfcTemplate.textDocument.value) return [];
 				return [
-					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
-					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
+					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'html' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
+					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'jade' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 				];
 			});
 			return {

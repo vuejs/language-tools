@@ -40,13 +40,14 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentLink[] = [];
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const links =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
+						: pugDocument ? pugLs.findDocumentLinks(pugDocument, documentContext)
+							: [];
 
-				const links = sourceMap.language === 'html'
-					? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
-					: (pugDocument ? pugLs.findDocumentLinks(pugDocument, documentContext) : [])
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 					if (vueRange) {

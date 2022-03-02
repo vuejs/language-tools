@@ -78,7 +78,7 @@ export function register(
 		}
 		function getPugResult(sourceFile: SourceFile) {
 			let result: vscode.FoldingRange[] = [];
-			for (const sourceMap of sourceFile.getPugSourceMaps()) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				const pugDocument = getPugDocument(sourceMap.mappedDocument);
 				if (!pugDocument)

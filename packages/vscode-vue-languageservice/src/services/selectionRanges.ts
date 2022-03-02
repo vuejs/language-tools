@@ -96,17 +96,15 @@ export function register(
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.SelectionRange[] = [];
-			for (const sourceMap of [
-				...sourceFile.getHtmlSourceMaps(),
-				...sourceFile.getPugSourceMaps()
-			]) {
-
-				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				const htmlStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
-				const selectRanges = sourceMap.language === 'html'
-					? htmlLs.getSelectionRanges(sourceMap.mappedDocument, htmlStarts)
-					: (pugDocument ? pugLs.getSelectionRanges(pugDocument, htmlStarts) : [])
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const selectRanges =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.getSelectionRanges(sourceMap.mappedDocument, htmlStarts)
+						: pugDocument ? pugLs.getSelectionRanges(pugDocument, htmlStarts)
+							: []
+
 				result = result.concat(transformSelectionRanges(
 					selectRanges,
 					range => sourceMap.getSourceRange(range.start, range.end)?.[0],

@@ -375,7 +375,7 @@ export function createLanguageService(
 			}
 		}
 
-		for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
+		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 			for (const _ of sourceMap.getMappedRanges(pos)) {
 				return true;
 			}

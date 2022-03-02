@@ -3,8 +3,6 @@ import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import * as SourceMaps from '../utils/sourceMaps';
 
-import type * as _0 from 'vscode-html-languageservice';  // fix TS2742
-
 export function useSfcTemplate(
 	vueUri: string,
 	vueDoc: Ref<TextDocument>,
@@ -20,30 +18,9 @@ export function useSfcTemplate(
 			return document;
 		}
 	});
-	const htmlSourceMap = computed(() => {
-		if (textDocument.value && template.value && template.value.lang === 'html') {
-			const sourceMap = new SourceMaps.HtmlSourceMap(
-				vueDoc.value,
-				textDocument.value,
-			);
-			sourceMap.mappings.push({
-				data: undefined,
-				mode: SourceMaps.Mode.Offset,
-				sourceRange: {
-					start: template.value.startTagEnd,
-					end: template.value.startTagEnd + template.value.content.length,
-				},
-				mappedRange: {
-					start: 0,
-					end: template.value.content.length,
-				},
-			});
-			return sourceMap;
-		}
-	});
-	const pugSourceMap = computed(() => {
-		if (textDocument.value && template.value && template.value.lang === 'pug') {
-			const sourceMap = new SourceMaps.PugSourceMap(
+	const sourceMap = computed(() => {
+		if (textDocument.value && template.value) {
+			const sourceMap = new SourceMaps.SourceMap(
 				vueDoc.value,
 				textDocument.value,
 			);
@@ -64,7 +41,6 @@ export function useSfcTemplate(
 	});
 	return {
 		textDocument,
-		htmlSourceMap,
-		pugSourceMap,
+		sourceMap,
 	};
 }

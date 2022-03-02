@@ -126,17 +126,15 @@ export function register(
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.SymbolInformation[] = [];
-			for (const sourceMap of [
-				...sourceFile.getHtmlSourceMaps(),
-				...sourceFile.getPugSourceMaps()
-			]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
 				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const symbols =
+					htmlDocument ? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, htmlDocument)
+						: pugDocument ? pugLs.findDocumentSymbols(pugDocument)
+							: undefined
 
-				const symbols = sourceMap.language === 'html'
-					? (htmlDocument ? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, htmlDocument) : undefined)
-					: (pugDocument ? pugLs.findDocumentSymbols(pugDocument) : undefined)
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];

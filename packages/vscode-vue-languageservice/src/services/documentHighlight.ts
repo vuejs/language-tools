@@ -42,16 +42,18 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getSty
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentHighlight[] = [];
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
 				const pugDocument = getPugDocument(sourceMap.mappedDocument);
 
 				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 
-					const highlights = sourceMap.language === 'html'
-						? (htmlDocument ? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, htmlDocument) : undefined)
-						: (pugDocument ? pugLs.findDocumentHighlights(pugDocument, htmlRange.start) : undefined)
+					const highlights =
+						htmlDocument ? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, htmlDocument)
+							: pugDocument ? pugLs.findDocumentHighlights(pugDocument, htmlRange.start)
+								: undefined;
+
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {

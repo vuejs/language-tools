@@ -30,10 +30,10 @@ export function useSfcJsons(
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.JsonSourceMap[] = [];
+		const sourceMaps: SourceMaps.SourceMap[] = [];
 		for (const doc of textDocuments.value) {
 			const customBlock = customBlocks.value[doc.index];
-			const sourceMap = new SourceMaps.JsonSourceMap(
+			const sourceMap = new SourceMaps.SourceMap(
 				vueDoc.value,
 				doc.textDocument,
 			);

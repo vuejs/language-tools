@@ -97,8 +97,7 @@ export function register(
 			result = result.concat(referencesCodeLens);
 		}
 		if (options?.pugTool) {
-			result = result.concat(getHtmlResult(sourceFile));
-			result = result.concat(getPugResult(sourceFile));
+			result = result.concat(getHtmlPugResult(sourceFile));
 		}
 		if (options?.scriptSetupTool) {
 			result = result.concat(getScriptSetupConvertConvert(sourceFile));
@@ -162,47 +161,26 @@ export function register(
 			}
 			return result;
 		}
-		function getHtmlResult(sourceFile: vue.SourceFile) {
-			const sourceMaps = sourceFile.getHtmlSourceMaps();
+		function getHtmlPugResult(sourceFile: vue.SourceFile) {
+			const sourceMaps = sourceFile.getTemplateSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				for (const maped of sourceMap.mappings) {
-					return getPugHtmlConvertCodeLens(
-						'html',
-						{
-							start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-							end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-						},
-					);
+					if (sourceMap.mappedDocument.languageId === 'html' || sourceMap.mappedDocument.languageId === 'jade') {
+						return [{
+							range: {
+								start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+								end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+							},
+							command: {
+								title: 'pug ' + (sourceMap.mappedDocument.languageId === 'jade' ? '☑' : '☐'),
+								command: sourceMap.mappedDocument.languageId === 'jade' ? Commands.PUG_TO_HTML : Commands.HTML_TO_PUG,
+								arguments: [handler.textDocument.uri],
+							},
+						}];
+					}
 				}
 			}
 			return [];
-		}
-		function getPugResult(sourceFile: vue.SourceFile) {
-			const sourceMaps = sourceFile.getPugSourceMaps();
-			for (const sourceMap of sourceMaps) {
-				for (const maped of sourceMap.mappings) {
-					return getPugHtmlConvertCodeLens(
-						'pug',
-						{
-							start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-							end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-						},
-					);
-				}
-			}
-			return [];
-		}
-		function getPugHtmlConvertCodeLens(current: 'html' | 'pug', range: vscode.Range) {
-			const result: vscode.CodeLens[] = [];
-			result.push({
-				range,
-				command: {
-					title: 'pug ' + (current === 'pug' ? '☑' : '☐'),
-					command: current === 'pug' ? Commands.PUG_TO_HTML : Commands.HTML_TO_PUG,
-					arguments: [handler.textDocument.uri],
-				},
-			});
-			return result;
 		}
 	});
 	connection.onCodeLensResolve(async codeLens => {

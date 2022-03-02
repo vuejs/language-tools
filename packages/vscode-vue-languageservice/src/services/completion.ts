@@ -362,7 +362,7 @@ export function register(
 				nameCases.tag = clientCases.tagNameCase;
 				nameCases.attr = clientCases.attrNameCase;
 			}
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
 				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
 				const pugDocument = getPugDocument(sourceMap.mappedDocument);
@@ -504,9 +504,10 @@ export function register(
 							items: [],
 						};
 					}
-					const htmlResult = sourceMap.language === 'html'
-						? (htmlDocument ? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, htmlDocument, documentContext) : undefined)
-						: (pugDocument ? await pugLs.doComplete(pugDocument, htmlRange.start, documentContext) : undefined)
+					const htmlResult =
+						htmlDocument ? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, htmlDocument, documentContext)
+							: pugDocument ? await pugLs.doComplete(pugDocument, htmlRange.start, documentContext)
+								: undefined
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {
 						result.isIncomplete = true;
