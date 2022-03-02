@@ -48,6 +48,8 @@ import * as json from 'vscode-json-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as pug from 'vscode-pug-languageservice';
 import { createSourceFiles } from './sourceFiles';
+import { TextRange } from '@volar/vue-code-gen/out/types';
+import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
 
 export interface DocumentLanguageService extends ReturnType<typeof getDocumentLanguageService> { }
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -718,6 +720,16 @@ export function createLanguageService(
 		}
 	}
 }
+
+interface StylesheetNode {
+	children: StylesheetNode[] | undefined,
+	end: number,
+	length: number,
+	offset: number,
+	parent: StylesheetNode | null,
+	type: number,
+}
+
 function createServices(
 	ts: Modules['typescript'],
 	vueHost?: LanguageServiceHost,
@@ -774,12 +786,17 @@ function createServices(
 	};
 	let htmlDataProviders: html.IHTMLDataProvider[] = [];
 
+	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
+	const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
+
 	return {
 		ts,
 		htmlLs,
 		pugLs,
 		jsonLs,
 		getCssLs,
+		getStylesheet,
+		getCssVBindRanges,
 		vueHost,
 		updateHtmlCustomData,
 		updateCssCustomData,
@@ -806,5 +823,59 @@ function createServices(
 			case 'less': return lessLs;
 			case 'postcss': return postcssLs;
 		}
+	}
+	function getStylesheet(document: TextDocument) {
+
+		const cache = stylesheets.get(document);
+		if (cache) {
+			const [cacheVersion, cacheStylesheet] = cache;
+			if (cacheVersion === document.version) {
+				return cacheStylesheet;
+			}
+		}
+
+		const cssLs = getCssLs(document.languageId);
+		if (!cssLs)
+			return;
+
+		const stylesheet = cssLs.parseStylesheet(document);
+		stylesheets.set(document, [document.version, stylesheet]);
+
+		return stylesheet;
+	}
+	function getCssVBindRanges(document: TextDocument) {
+
+		const stylesheet = getStylesheet(document);
+		if (!stylesheet)
+			return [];
+
+		let binds = stylesheetVBinds.get(stylesheet);
+		if (!binds) {
+			binds = findStylesheetVBindRanges(document.getText(), stylesheet);
+			stylesheetVBinds.set(stylesheet, binds)
+		}
+
+		return binds;
+	}
+	function findStylesheetVBindRanges(docText: string, ss: css.Stylesheet) {
+		const result: TextRange[] = [];
+		visChild(ss as StylesheetNode);
+		function visChild(node: StylesheetNode) {
+			if (node.type === 22) {
+				const nodeText = docText.substring(node.offset, node.end);
+				for (const textRange of getMatchBindTexts(nodeText)) {
+					result.push({
+						start: textRange.start + node.offset,
+						end: textRange.end + node.offset,
+					});
+				}
+			}
+			else if (node.children) {
+				for (let i = 0; i < node.children.length; i++) {
+					visChild(node.children[i]);
+				}
+			}
+		}
+		return result;
 	}
 }

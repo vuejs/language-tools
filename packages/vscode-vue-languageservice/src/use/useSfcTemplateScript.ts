@@ -5,7 +5,6 @@ import * as cssClasses from '../parsers/cssClasses';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
-import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ITemplateScriptData, LanguageServiceContext } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
@@ -21,7 +20,6 @@ export function useSfcTemplateScript(
 	templateScriptData: ITemplateScriptData,
 	styleDocuments: Ref<{
 		textDocument: TextDocument;
-		stylesheet: css.Stylesheet | undefined;
 		module: string | undefined;
 		scoped: boolean;
 	}[]>,
@@ -266,9 +264,17 @@ export function useSfcTemplateScript(
 		}
 		function writeCssVars() {
 			for (let i = 0; i < sfcStyles.value.length; i++) {
+
 				const style = sfcStyles.value[i];
+				const stylesheet = context.getStylesheet(style.textDocument);
+
+				if (!stylesheet)
+					continue;
+
+				const binds = context.getCssVBindRanges(style.textDocument);
 				const docText = style.textDocument.getText();
-				for (const cssBind of style.binds) {
+
+				for (const cssBind of binds) {
 					const bindText = docText.substring(cssBind.start, cssBind.end);
 					codeGen.addCode(
 						bindText,
@@ -362,10 +368,8 @@ export function useSfcTemplateScript(
 	const cssTextDocument = computed(() => {
 		if (templateCodeGens.value && template.value) {
 			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, templateCodeGens.value.cssCodeGen.getText());
-			const stylesheet = context.getCssLs('css')!.parseStylesheet(textDocument);
 			return {
 				textDocument,
-				stylesheet,
 				links: [],
 				module: false,
 				scoped: false,
@@ -377,7 +381,6 @@ export function useSfcTemplateScript(
 			const sourceMap = new SourceMaps.CssSourceMap(
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
-				cssTextDocument.value.stylesheet,
 				undefined,
 				false,
 				{ foldingRanges: false, formatting: false },

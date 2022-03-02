@@ -10,7 +10,7 @@ import * as dedupe from '../utils/dedupe';
 import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -389,10 +389,11 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: errors,
 			};
 		}
-		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
+		function useStylesValidation(documents: Ref<{ textDocument: TextDocument }[]>) {
 			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
-				for (const { textDocument, stylesheet } of documents.value) {
+				for (const { textDocument } of documents.value) {
+					const stylesheet = getStylesheet(textDocument);
 					const cssLs = getCssLs(textDocument.languageId);
 					if (!cssLs || !stylesheet) continue;
 					const settings = await vueHost.getCssLanguageSettings?.(textDocument);

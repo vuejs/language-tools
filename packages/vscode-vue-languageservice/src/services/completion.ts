@@ -94,7 +94,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders }: ApiLanguageServiceContext,
+	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet }: ApiLanguageServiceContext,
 	getScriptContentVersion: () => number,
 ) {
 
@@ -638,19 +638,24 @@ export function register(
 			}
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
 				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
+
 					if (!result) {
 						result = {
 							isIncomplete: false,
 							items: [],
 						};
 					}
+					const stylesheet = getStylesheet(sourceMap.mappedDocument);
 					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-					if (!cssLs || !sourceMap.stylesheet) continue;
+
+					if (!cssLs || !stylesheet)
+						continue;
+
 					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
 					const wordStart = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
 					const wordRange: vscode.Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
 					const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
-					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet, documentContext, settings?.completion) as vscode.CompletionList;
+					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, stylesheet, documentContext, settings?.completion) as vscode.CompletionList;
 					if (cssResult.isIncomplete) {
 						result.isIncomplete = true;
 					}

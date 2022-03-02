@@ -14,7 +14,7 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs } = context;
+	const { modules, htmlLs, pugLs, getCssLs, getStylesheet } = context;
 
 	return (document: TextDocument) => {
 
@@ -144,9 +144,14 @@ export function register(
 		function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.SymbolInformation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
-				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
+
+				if (!cssLs || !stylesheet)
+					continue;
+
+				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, stylesheet);
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];

@@ -61,7 +61,7 @@ export function createSourceFile(
 	const vueHtmlDocument = computed(() => context.htmlLs.parseHTMLDocument(document.value));
 
 	// use
-	const sfcStyles = useSfcStyles(context, uri, document, computed(() => descriptor.styles));
+	const sfcStyles = useSfcStyles(uri, document, computed(() => descriptor.styles));
 	const sfcJsons = useSfcJsons(uri, document, computed(() => descriptor.customBlocks), context);
 	const sfcTemplate = useSfcTemplate(uri, document, computed(() => descriptor.template), context);
 	const sfcTemplateData = computed<undefined | {
@@ -130,6 +130,7 @@ export function createSourceFile(
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		context.compilerOptions.experimentalCompatMode === 2,
+		context,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -142,6 +143,7 @@ export function createSourceFile(
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		context.compilerOptions.experimentalCompatMode === 2,
+		context,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
 		uri,

@@ -1,7 +1,6 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { HTMLDocument } from 'vscode-html-languageservice';
-import type { Stylesheet } from 'vscode-css-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
 import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
@@ -29,7 +28,6 @@ export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public stylesheet: Stylesheet | undefined,
 		public module: string | undefined,
 		public scoped: boolean,
 		public capabilities: {

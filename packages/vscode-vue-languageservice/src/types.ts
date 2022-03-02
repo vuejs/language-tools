@@ -9,6 +9,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 import type { LanguageServiceHost } from './languageService';
 import type { SourceFile } from './sourceFile';
 import type { SourceFiles } from './sourceFiles';
+import type { TextRange } from './utils/sourceMaps';
 
 export interface TsCompletionData {
 	lsType: 'template' | 'script',
@@ -69,6 +70,8 @@ export type LanguageServiceContextBase = {
 	pugLs: pug.LanguageService,
 	jsonLs: json.LanguageService,
 	getCssLs: (lang: string) => css.LanguageService | undefined,
+	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
+	getCssVBindRanges: (documrnt: TextDocument) => TextRange[]
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {

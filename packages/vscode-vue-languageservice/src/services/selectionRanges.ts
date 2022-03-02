@@ -13,7 +13,7 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs } = context;
+	const { modules, htmlLs, pugLs, getCssLs, getStylesheet } = context;
 
 	return (document: TextDocument, positions: vscode.Position[]) => {
 
@@ -114,10 +114,15 @@ export function register(
 		function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.SelectionRange[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
+
+				if (!cssLs || !stylesheet)
+					continue;
+
 				const cssStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
-				const cssSelectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, cssStarts, sourceMap.stylesheet);
+				const cssSelectRanges = cssLs.getSelectionRanges(sourceMap.mappedDocument, cssStarts, stylesheet);
 				result = result.concat(transformSelectionRanges(
 					cssSelectRanges,
 					range => sourceMap.getSourceRange(range.start, range.end)?.[0],

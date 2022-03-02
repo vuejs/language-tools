@@ -6,14 +6,17 @@ export function parse(
 	css: typeof import('vscode-css-languageservice'),
 	styleDocuments: {
 		textDocument: TextDocument;
-		stylesheet: css.Stylesheet | undefined;
 	}[],
 	context: LanguageServiceContext,
 ) {
 	const result = new Map<string, Map<string, Set<[number, number]>>>();
 	for (const sourceMap of styleDocuments) {
-		if (!sourceMap.stylesheet) continue;
-		for (const [className, offsets] of findClassNames(css, sourceMap.textDocument, sourceMap.stylesheet, context)) {
+
+		const stylesheet = context.getStylesheet(sourceMap.textDocument);
+		if (!stylesheet)
+			continue;
+
+		for (const [className, offsets] of findClassNames(css, sourceMap.textDocument, stylesheet, context)) {
 			for (const offset of offsets) {
 				addClassName(sourceMap.textDocument.uri, className, offset);
 			}

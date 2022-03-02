@@ -6,7 +6,7 @@ import * as dedupe from '../utils/dedupe';
 import type { TsMappingData } from '../utils/sourceMaps';
 import { wordPatterns } from './completion';
 
-export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: ApiLanguageServiceContext) {
 
 	return {
 		prepareRename: (uri: string, position: vscode.Position): vscode.ResponseError | vscode.Range | undefined => {
@@ -195,11 +195,10 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 		// vue -> css
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			if (!sourceMap.stylesheet)
-				continue;
-
+			const stylesheet = getStylesheet(sourceMap.mappedDocument);
 			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-			if (!cssLs)
+
+			if (!cssLs || !stylesheet)
 				continue;
 
 			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
@@ -207,7 +206,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 					sourceMap.mappedDocument,
 					cssRange.start,
 					newName,
-					sourceMap.stylesheet,
+					stylesheet,
 				);
 				if (cssWorkspaceEdit) {
 					hasResult = true;
