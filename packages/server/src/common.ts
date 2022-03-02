@@ -62,7 +62,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 			const ts = runtimeEnv.loadTypescript(options);
 			const formatters = await import('./formatters');
-			const noStateLs = vue.getDocumentLanguageService(
+			const noStateLs = vue.getDocumentService(
 				{ typescript: ts },
 				(document) => tsConfigs.getPreferences(configuration, document),
 				(document, options) => tsConfigs.getFormatOptions(configuration, document, options),

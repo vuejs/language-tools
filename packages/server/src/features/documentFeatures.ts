@@ -6,7 +6,7 @@ import * as vue from 'vscode-vue-languageservice';
 export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	noStateLs: vue.DocumentLanguageService,
+	noStateLs: vue.DocumentService,
 ) {
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);

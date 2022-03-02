@@ -22,13 +22,13 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 
 			const proxyHost = createProxyHost(ts, info);
-			const vueLs = vue.createLanguageService(modules, proxyHost.host, true);
+			const tsPluginProxy = vue.createTsPluginProxy(modules, proxyHost.host);
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {
-					return vueLs.__internal__.tsPlugin[property] || target[property];
+					return tsPluginProxy[property] || target[property];
 				},
 			});
 		},

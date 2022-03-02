@@ -1,10 +1,37 @@
-import type { TypeScriptFeaturesRuntimeContext } from './types';
+import type { LanguageServiceHost, TypeScriptFeaturesRuntimeContext } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
+import { createTypeScriptRuntime } from './typescriptRuntime';
+
+export function createTsProgramProxy(
+	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
+	vueHost: LanguageServiceHost,
+) {
+
+	const tsRuntime = createTypeScriptRuntime({ typescript: ts }, vueHost, true);
+	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
+	if (!tsProgram) throw '!tsProgram';
+
+	const tsProgramApis_2 = register(tsRuntime.context);
+	const tsProgramApis_3: Partial<typeof tsProgram> = {
+		emit: tsRuntime.apiHook(tsProgramApis_2.emit),
+		getRootFileNames: tsRuntime.apiHook(tsProgramApis_2.getRootFileNames),
+		getSemanticDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getSemanticDiagnostics),
+		getSyntacticDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getSyntacticDiagnostics),
+		getGlobalDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getGlobalDiagnostics),
+	};
+	const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
+		get: (target: any, property: keyof typeof tsProgram) => {
+			return tsProgramApis_3[property] || target[property];
+		},
+	});
+
+	return tsProgramProxy;
+}
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext) {
+function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext) {
 
 	return {
 		getRootFileNames,

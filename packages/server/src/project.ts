@@ -85,7 +85,7 @@ export async function createProject(
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
 				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
-				vueLs.__internal__.onInitProgress(p => {
+				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());
 					}

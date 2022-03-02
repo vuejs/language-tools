@@ -5,10 +5,19 @@ import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from 'vscode-pug-languageservice';
 import type * as ts2 from 'vscode-typescript-languageservice';
-import type { LanguageServiceHost } from './languageService';
 import type { SourceFile } from './sourceFile';
 import type { SourceFiles } from './sourceFiles';
 import type { TextRange } from './utils/sourceMaps';
+import type * as emmet from '@vscode/emmet-helper';
+
+export type LanguageServiceHost = ts2.LanguageServiceHost & {
+    getVueCompilationSettings?(): VueCompilerOptions,
+    getVueProjectVersion?(): string;
+    getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
+    schemaRequestService?: json.SchemaRequestService,
+    getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
+    getHtmlHoverSettings?(document: TextDocument): Promise<html.HoverSettings>,
+};
 
 export interface TsCompletionData {
 	lsType: 'template' | 'script',

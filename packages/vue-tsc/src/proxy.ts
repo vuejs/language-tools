@@ -43,10 +43,9 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		getVueProjectVersion: () => '',
 		getProjectReferences: () => options.projectReferences,
 	};
-	const vueLs = vue.createLanguageService({ typescript: ts }, vueLsHost);
-	const program = vueLs.__internal__.tsProgramProxy;
+	const tsProgramProxy = vue.createTsProgramProxy({ typescript: ts }, vueLsHost);
 
-	return program;
+	return tsProgramProxy;
 
 	function getVueFileNames() {
 		const tsConfig = options.options.configFilePath;
