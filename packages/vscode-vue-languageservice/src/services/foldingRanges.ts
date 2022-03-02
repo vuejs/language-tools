@@ -4,12 +4,12 @@ import type { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import * as vscode from 'vscode-languageserver-protocol';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as shared from '@volar/shared';
-import type { HtmlLanguageServiceContext } from '../types';
+import type { DocumentServiceRuntimeContext } from '../types';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
 
 export function register(
-	context: HtmlLanguageServiceContext,
+	context: DocumentServiceRuntimeContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {

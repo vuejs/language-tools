@@ -1,12 +1,12 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFiles } from '../sourceFiles';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import type { TsMappingData } from '../utils/sourceMaps';
 import { wordPatterns } from './completion';
 
-export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return {
 		prepareRename: (uri: string, position: vscode.Position): vscode.ResponseError | vscode.Range | undefined => {

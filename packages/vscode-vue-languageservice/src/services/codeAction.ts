@@ -1,12 +1,12 @@
 import { transformLocations } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
 import type { Data } from './callHierarchy';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
 

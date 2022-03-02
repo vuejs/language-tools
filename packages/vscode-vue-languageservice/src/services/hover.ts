@@ -1,8 +1,8 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost, getStylesheet, getHtmlDocument, getPugDocument }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost, getStylesheet, getHtmlDocument, getPugDocument }: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, position: vscode.Position) => {
 

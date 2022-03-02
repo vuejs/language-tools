@@ -1,10 +1,10 @@
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFile } from '../sourceFile';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceMap } from '@volar/source-map';
 
-export function register({ sourceFiles }: ApiLanguageServiceContext) {
+export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 	return (uri: string, range: vscode.Range): {
 		language: string,
 		document: TextDocument | undefined,

@@ -6,7 +6,7 @@ import { computed, reactive, ref, shallowReactive } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { ITemplateScriptData, LanguageServiceContext, VueCompilerOptions } from './types';
+import { BasicRuntimeContext, ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcJsons } from './use/useSfcJsons';
 import { useSfcScript } from './use/useSfcScript';
@@ -35,8 +35,8 @@ export function createSourceFile(
 	} | undefined,
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getCssVBindRanges: LanguageServiceContext['getCssVBindRanges'],
-	getCssClasses: LanguageServiceContext['getCssClasses'],
+	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
+	getCssClasses: BasicRuntimeContext['getCssClasses'],
 ) {
 
 	// refs

@@ -1,8 +1,8 @@
-import type { TSContext } from './types';
+import type { TypeScriptFeaturesRuntimeContext } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TSContext) {
+export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
 
 	return {
 		getCompletionsAtPosition,

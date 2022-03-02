@@ -52,32 +52,32 @@ export interface VueCompilerOptions {
 	experimentalTemplateCompilerOptionsRequirePath?: string;
 }
 
-export type LanguageServiceContextBase = {
-	compilerOptions: VueCompilerOptions,
+export type BasicRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
-	htmlLs: html.LanguageService,
-	pugLs: pug.LanguageService,
-	jsonLs: json.LanguageService,
+	compilerOptions: VueCompilerOptions,
 	compileTemplate(templateTextDocument: TextDocument): {
 		htmlTextDocument: TextDocument;
 		htmlToTemplate: (start: number, end: number) => number | undefined;
 	} | undefined
-	getCssLs: (lang: string) => css.LanguageService | undefined,
-	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
 	getCssClasses: (documrnt: TextDocument) => Record<string, [number, number][]>,
+
+	htmlLs: html.LanguageService,
+	pugLs: pug.LanguageService,
+	jsonLs: json.LanguageService,
+	getCssLs: (lang: string) => css.LanguageService | undefined,
+	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
 	getJsonDocument: (documrnt: TextDocument) => json.JSONDocument | undefined,
 	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 
-export type HtmlLanguageServiceContext = LanguageServiceContextBase & {
+export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 	getVueDocument(document: TextDocument): SourceFile | undefined;
 }
 
-export type TSContext = {
-	typescript: typeof import('typescript/lib/tsserverlibrary'),
+export type TypeScriptFeaturesRuntimeContext = BasicRuntimeContext & {
 	sourceFiles: SourceFiles;
 	vueHost: LanguageServiceHost;
 	documentContext: DocumentContext;
@@ -90,8 +90,8 @@ export type TSContext = {
 	getTsLs: (lsType: 'template' | 'script') => ts2.LanguageService;
 }
 
-export type ApiLanguageServiceContext = LanguageServiceContextBase & TSContext & {
+export type LanguageServiceRuntimeContext = TypeScriptFeaturesRuntimeContext & {
 	getTextDocument(uri: string): TextDocument | undefined;
 }
 
-export type LanguageServiceContext = ApiLanguageServiceContext | HtmlLanguageServiceContext;
+export type RuntimeContext = LanguageServiceRuntimeContext | DocumentServiceRuntimeContext;

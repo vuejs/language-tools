@@ -1,9 +1,9 @@
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { ReferencesCodeLensData } from './referencesCodeLens';
 import * as findReferences from './references';
 
-export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 
 	const _findReferences = findReferences.register(arguments[0]);
 

@@ -1,8 +1,8 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument }: LanguageServiceRuntimeContext) {
 	return (uri: string, position: vscode.Position) => {
 
 		const sourceFile = sourceFiles.get(uri);

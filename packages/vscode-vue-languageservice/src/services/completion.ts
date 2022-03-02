@@ -10,7 +10,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
 import { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData } from '../types';
 import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
@@ -95,7 +95,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument }: ApiLanguageServiceContext,
+	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext,
 	getScriptContentVersion: () => number,
 ) {
 

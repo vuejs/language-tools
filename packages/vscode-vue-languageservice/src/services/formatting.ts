@@ -4,14 +4,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';
-import type { HtmlLanguageServiceContext } from '../types';
+import type { DocumentServiceRuntimeContext } from '../types';
 import * as sharedServices from '../utils/sharedLs';
 import * as ts2 from 'vscode-typescript-languageservice';
 
 type Promiseable<T> = T | Promise<T>;
 
 export function register(
-	context: HtmlLanguageServiceContext,
+	context: DocumentServiceRuntimeContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	formatters: { [lang: string]: (document: TextDocument, options: vscode.FormattingOptions) => Promiseable<vscode.TextEdit[]> },

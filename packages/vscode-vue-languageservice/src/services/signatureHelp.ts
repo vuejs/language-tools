@@ -1,7 +1,7 @@
 import type * as vscode from 'vscode-languageserver-protocol';
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 
-export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 	return (uri: string, position: vscode.Position, context?: vscode.SignatureHelpContext) => {
 
 		const tsResult = getTsResult();

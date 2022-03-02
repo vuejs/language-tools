@@ -5,7 +5,7 @@ import { createSourceFile, SourceFile } from './sourceFile';
 import * as localTypes from './utils/localTypes';
 import * as upath from 'upath';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { HtmlLanguageServiceContext, ApiLanguageServiceContext, TSContext, VueCompilerOptions } from './types';
+import { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext, TypeScriptFeaturesRuntimeContext, VueCompilerOptions } from './types';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
 // vue services
@@ -71,7 +71,7 @@ export function getDocumentLanguageService(
 ) {
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createServices();
-	const context: HtmlLanguageServiceContext = {
+	const context: DocumentServiceRuntimeContext = {
 		compilerOptions: {},
 		typescript: ts,
 		...services,
@@ -196,7 +196,9 @@ export function createLanguageService(
 	}
 
 	const services = createServices(vueHost);
-	const tsContext: TSContext = {
+	const compilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
+	const tsContext: TypeScriptFeaturesRuntimeContext = {
+		...services,
 		typescript: ts,
 		vueHost,
 		sourceFiles,
@@ -208,24 +210,26 @@ export function createLanguageService(
 		scriptTsLs,
 		documentContext,
 		getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs : scriptTsLs,
+		compilerOptions,
+		compileTemplate: services.compileTemplate,
+		getCssVBindRanges: services.getCssVBindRanges,
+		getCssClasses: services.getCssClasses,
 	};
-	const context: ApiLanguageServiceContext = {
-		compilerOptions: vueHost.getVueCompilationSettings?.() ?? {},
-		...services,
+	const lsContext: LanguageServiceRuntimeContext = {
 		...tsContext,
 		getTextDocument: getHostDocument,
 	};
-	const _callHierarchy = callHierarchy.register(context);
-	const findDefinition = definitions.register(context);
-	const renames = rename.register(context);
+	const _callHierarchy = callHierarchy.register(lsContext);
+	const findDefinition = definitions.register(lsContext);
+	const renames = rename.register(lsContext);
 
 	let tsPluginProxy: ReturnType<typeof createTsPluginProxy> | undefined;
 	let tsProgramProxy: ReturnType<typeof createTsProgramProxy> | undefined;;
 
 	return {
-		doValidation: publicApiHook(diagnostics.register(context, () => update(true)), false, false),
+		doValidation: publicApiHook(diagnostics.register(lsContext, () => update(true)), false, false),
 		findDefinition: publicApiHook(findDefinition.on, isTemplateScriptPosition),
-		findReferences: publicApiHook(references.register(context), true),
+		findReferences: publicApiHook(references.register(lsContext), true),
 		findTypeDefinition: publicApiHook(findDefinition.onType, isTemplateScriptPosition),
 		callHierarchy: {
 			doPrepare: publicApiHook(_callHierarchy.doPrepare, isTemplateScriptPosition),
@@ -235,20 +239,20 @@ export function createLanguageService(
 		prepareRename: publicApiHook(renames.prepareRename, isTemplateScriptPosition),
 		doRename: publicApiHook(renames.doRename, true),
 		getEditsForFileRename: publicApiHook(renames.onRenameFile, false),
-		getSemanticTokens: publicApiHook(semanticTokens.register(context, () => update(true)), false),
+		getSemanticTokens: publicApiHook(semanticTokens.register(lsContext, () => update(true)), false),
 
-		doHover: publicApiHook(hover.register(context), isTemplateScriptPosition),
-		doComplete: publicApiHook(completions.register(context, () => scriptContentVersion), isTemplateScriptPosition),
+		doHover: publicApiHook(hover.register(lsContext), isTemplateScriptPosition),
+		doComplete: publicApiHook(completions.register(lsContext, () => scriptContentVersion), isTemplateScriptPosition),
 
-		getCodeActions: publicApiHook(codeActions.register(context), false),
-		doCodeActionResolve: publicApiHook(codeActionResolve.register(context), false),
-		doCompletionResolve: publicApiHook(completionResolve.register(context), false),
-		doReferencesCodeLensResolve: publicApiHook(codeLensResolve.register(context), false),
-		getSignatureHelp: publicApiHook(signatureHelp.register(context), false),
-		getReferencesCodeLens: publicApiHook(codeLens.register(context), false),
-		findDocumentHighlights: publicApiHook(documentHighlight.register(context), false),
-		findDocumentLinks: publicApiHook(documentLink.register(context), false),
-		findWorkspaceSymbols: publicApiHook(workspaceSymbol.register(context), false),
+		getCodeActions: publicApiHook(codeActions.register(lsContext), false),
+		doCodeActionResolve: publicApiHook(codeActionResolve.register(lsContext), false),
+		doCompletionResolve: publicApiHook(completionResolve.register(lsContext), false),
+		doReferencesCodeLensResolve: publicApiHook(codeLensResolve.register(lsContext), false),
+		getSignatureHelp: publicApiHook(signatureHelp.register(lsContext), false),
+		getReferencesCodeLens: publicApiHook(codeLens.register(lsContext), false),
+		findDocumentHighlights: publicApiHook(documentHighlight.register(lsContext), false),
+		findDocumentLinks: publicApiHook(documentLink.register(lsContext), false),
+		findWorkspaceSymbols: publicApiHook(workspaceSymbol.register(lsContext), false),
 		dispose: () => {
 			scriptTsLs.dispose();
 			templateTsLs.dispose();
@@ -270,7 +274,7 @@ export function createLanguageService(
 				}
 				return tsProgramProxy;
 			},
-			context,
+			context: lsContext,
 			onInitProgress(cb: (p: number) => void) {
 				initProgressCallback.push(cb);
 			},
@@ -282,10 +286,10 @@ export function createLanguageService(
 					code,
 				};
 			},
-			getContext: publicApiHook(() => context),
-			getD3: publicApiHook(d3.register(context)),
-			detectTagNameCase: publicApiHook(tagNameCase.register(context)),
-			doRefAutoClose: publicApiHook(refAutoClose.register(context), false),
+			getContext: publicApiHook(() => lsContext),
+			getD3: publicApiHook(d3.register(lsContext)),
+			detectTagNameCase: publicApiHook(tagNameCase.register(lsContext)),
+			doRefAutoClose: publicApiHook(refAutoClose.register(lsContext), false),
 		},
 	};
 
@@ -297,7 +301,7 @@ export function createLanguageService(
 	function createTsPluginProxy() {
 
 		// ts plugin proxy
-		const _tsPluginApis = tsPluginApis.register(context);
+		const _tsPluginApis = tsPluginApis.register(lsContext);
 		const tsPlugin: Partial<ts.LanguageService> = {
 			getSemanticDiagnostics: apiHook(scriptTsLsRaw.getSemanticDiagnostics, false),
 			getEncodedSemanticClassifications: apiHook(scriptTsLsRaw.getEncodedSemanticClassifications, false),
@@ -338,7 +342,7 @@ export function createLanguageService(
 		const tsProgram = scriptTsLsRaw.getProgram(); // TODO: handle template ls?
 		if (!tsProgram) throw '!tsProgram';
 
-		const tsProgramApis_2 = tsProgramApis.register(context);
+		const tsProgramApis_2 = tsProgramApis.register(lsContext);
 		const tsProgramApis_3: Partial<typeof tsProgram> = {
 			emit: apiHook(tsProgramApis_2.emit),
 			getRootFileNames: apiHook(tsProgramApis_2.getRootFileNames),
@@ -642,12 +646,12 @@ export function createLanguageService(
 					doc.uri,
 					doc.getText(),
 					doc.version.toString(),
-					context.htmlLs,
-					context.compileTemplate,
-					context.compilerOptions,
-					context.typescript,
-					context.getCssVBindRanges,
-					context.getCssClasses,
+					lsContext.htmlLs,
+					lsContext.compileTemplate,
+					lsContext.compilerOptions,
+					lsContext.typescript,
+					lsContext.getCssVBindRanges,
+					lsContext.getCssClasses,
 				));
 				vueScriptContentsUpdate = true;
 				vueScriptsUpdated = true;
