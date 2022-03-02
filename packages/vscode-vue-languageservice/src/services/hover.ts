@@ -3,7 +3,7 @@ import type { ApiLanguageServiceContext } from '../types';
 import { HtmlSourceMap } from '../utils/sourceMaps';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost, getStylesheet }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost, getStylesheet, getHtmlDocument }: ApiLanguageServiceContext) {
 
 	return async (uri: string, position: vscode.Position) => {
 
@@ -80,13 +80,18 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			...sourceFile.getHtmlSourceMaps(),
 			...sourceFile.getPugSourceMaps(),
 		]) {
+
+			const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+			if (!htmlDocument)
+				continue;
+
 			const settings = await vueHost.getHtmlHoverSettings?.(sourceMap.mappedDocument);
 			for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 				const htmlHover = sourceMap instanceof HtmlSourceMap
 					? htmlLs.doHover(
 						sourceMap.mappedDocument,
 						htmlRange.start,
-						sourceMap.htmlDocument,
+						htmlDocument,
 						settings,
 					)
 					: pugLs.doHover(

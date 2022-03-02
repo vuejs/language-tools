@@ -14,7 +14,7 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs, getStylesheet } = context;
+	const { modules, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument } = context;
 
 	return (document: TextDocument) => {
 
@@ -130,8 +130,13 @@ export function register(
 				...sourceFile.getHtmlSourceMaps(),
 				...sourceFile.getPugSourceMaps()
 			]) {
+
+				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+				if (!htmlDocument)
+					continue;
+
 				const symbols = sourceMap.language === 'html'
-					? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument)
+					? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, htmlDocument)
 					: pugLs.findDocumentSymbols(sourceMap.pugDocument)
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {

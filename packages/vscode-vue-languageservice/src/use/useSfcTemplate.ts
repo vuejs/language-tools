@@ -22,17 +22,11 @@ export function useSfcTemplate(
 			return document;
 		}
 	});
-	const htmlDocument = computed(() => {
-		if (textDocument.value?.languageId === 'html') {
-			return context.htmlLs.parseHTMLDocument(textDocument.value);
-		}
-	});
 	const htmlSourceMap = computed(() => {
-		if (textDocument.value && textDocument.value && template.value && htmlDocument.value) {
+		if (textDocument.value && textDocument.value && template.value && template.value.lang === 'html') {
 			const sourceMap = new SourceMaps.HtmlSourceMap(
 				vueDoc.value,
 				textDocument.value,
-				htmlDocument.value,
 			);
 			sourceMap.mappings.push({
 				data: undefined,
@@ -80,7 +74,6 @@ export function useSfcTemplate(
 		textDocument,
 		htmlSourceMap,
 		pugSourceMap,
-		htmlDocument,
 		pugDocument,
 	};
 }

@@ -94,7 +94,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet }: ApiLanguageServiceContext,
+	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument }: ApiLanguageServiceContext,
 	getScriptContentVersion: () => number,
 ) {
 
@@ -363,6 +363,11 @@ export function register(
 				nameCases.attr = clientCases.attrNameCase;
 			}
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+
+				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+				if (!htmlDocument)
+					continue;
+
 				const componentCompletion = getComponentCompletionData(sourceFile);
 				const tags: html.ITagData[] = [];
 				const tsItems = new Map<string, vscode.CompletionItem>();
@@ -501,7 +506,7 @@ export function register(
 						};
 					}
 					const htmlResult = sourceMap.language === 'html'
-						? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument, documentContext)
+						? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, htmlDocument, documentContext)
 						: await pugLs.doComplete(sourceMap.pugDocument, htmlRange.start, documentContext)
 					if (!htmlResult) continue;
 					if (htmlResult.isIncomplete) {

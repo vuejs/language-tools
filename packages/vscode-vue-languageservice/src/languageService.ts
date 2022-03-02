@@ -68,7 +68,6 @@ export function getDocumentLanguageService(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	formatters: Parameters<typeof formatting['register']>[3],
 ) {
-	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createServices(modules.typescript);
 	const context: HtmlLanguageServiceContext = {
@@ -83,7 +82,6 @@ export function getDocumentLanguageService(
 			pug
 		},
 		...services,
-		getHtmlDocument,
 		getVueDocument,
 	};
 	return {
@@ -118,22 +116,6 @@ export function getDocumentLanguageService(
 		const vueDoc = createSourceFile(document.uri, document.getText(), document.version.toString(), context);
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;
-	}
-	function getHtmlDocument(document: TextDocument) {
-
-		if (document.languageId !== 'vue')
-			return;
-
-		const cache = htmlDocuments.get(document);
-		if (cache) {
-			const [cacheVersion, cacheHtmlDoc] = cache;
-			if (cacheVersion === document.version) {
-				return cacheHtmlDoc;
-			}
-		}
-		const htmlDoc = context.htmlLs.parseHTMLDocument(document);
-		htmlDocuments.set(document, [document.version, htmlDoc]);
-		return htmlDoc;
 	}
 }
 
@@ -788,6 +770,7 @@ function createServices(
 
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 	const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
+	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
 	return {
 		ts,
@@ -797,6 +780,7 @@ function createServices(
 		getCssLs,
 		getStylesheet,
 		getCssVBindRanges,
+		getHtmlDocument,
 		vueHost,
 		updateHtmlCustomData,
 		updateCssCustomData,
@@ -877,5 +861,23 @@ function createServices(
 			}
 		}
 		return result;
+	}
+	function getHtmlDocument(document: TextDocument) {
+
+		if (document.languageId !== 'vue' && document.languageId !== 'html')
+			return;
+
+		const cache = htmlDocuments.get(document);
+		if (cache) {
+			const [cacheVersion, cacheHtmlDoc] = cache;
+			if (cacheVersion === document.version) {
+				return cacheHtmlDoc;
+			}
+		}
+
+		const htmlDoc = htmlLs.parseHTMLDocument(document);
+		htmlDocuments.set(document, [document.version, htmlDoc]);
+
+		return htmlDoc;
 	}
 }

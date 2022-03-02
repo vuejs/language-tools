@@ -1,6 +1,5 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { HTMLDocument } from 'vscode-html-languageservice';
 import type { PugDocument } from 'vscode-pug-languageservice';
 import type { JSONDocument } from 'vscode-json-languageservice';
 import * as SourceMaps from '@volar/source-map';
@@ -55,7 +54,6 @@ export class HtmlSourceMap extends SourceMaps.SourceMap<undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public htmlDocument: HTMLDocument,
 		public language: 'html' = 'html',
 		mappings?: SourceMaps.Mapping<undefined>[],
 	) {

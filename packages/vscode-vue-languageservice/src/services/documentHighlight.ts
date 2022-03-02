@@ -2,7 +2,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument }: ApiLanguageServiceContext) {
 	return (uri: string, position: vscode.Position) => {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -43,10 +43,15 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getSty
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentHighlight[] = [];
 			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+
+				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+				if (!htmlDocument)
+					continue;
+
 				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 
 					const highlights = sourceMap.language === 'html'
-						? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
+						? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, htmlDocument)
 						: pugLs.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
 					if (!highlights) continue;
 

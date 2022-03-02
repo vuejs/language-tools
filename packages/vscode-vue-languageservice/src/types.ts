@@ -71,11 +71,11 @@ export type LanguageServiceContextBase = {
 	jsonLs: json.LanguageService,
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
-	getCssVBindRanges: (documrnt: TextDocument) => TextRange[]
+	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
+	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 export type HtmlLanguageServiceContext = LanguageServiceContextBase & {
-	getHtmlDocument(document: TextDocument): HTMLDocument | undefined;
 	getVueDocument(document: TextDocument): SourceFile | undefined;
 }
 export type ApiLanguageServiceContext = LanguageServiceContextBase & {
