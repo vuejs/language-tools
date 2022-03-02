@@ -6,7 +6,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 
-export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 

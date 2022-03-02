@@ -2,7 +2,7 @@ import type { HtmlLanguageServiceContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register({ modules: { typescript: ts }, getVueDocument }: HtmlLanguageServiceContext) {
+export function register({ typescript: ts, getVueDocument }: HtmlLanguageServiceContext) {
 
 	return (document: TextDocument, position: vscode.Position): { text: string, range: vscode.Range } | undefined | null => {
 

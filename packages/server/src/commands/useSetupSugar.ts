@@ -64,7 +64,7 @@ export async function execute(
 		_scriptAst: NonNullable<typeof scriptAst>,
 	) {
 
-		const ranges = parseUseScriptSetupRanges(vueLs.__internal__.context.modules.typescript, _scriptAst);
+		const ranges = parseUseScriptSetupRanges(vueLs.__internal__.context.typescript, _scriptAst);
 		const document = _sourceFile.getTextDocument();
 		const edits: vscode.TextEdit[] = [];
 		const scriptStartPos = document.positionAt(_script.startTagEnd);

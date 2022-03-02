@@ -6,19 +6,20 @@ import { getDummyTsLs } from '../utils/sharedLs';
 import * as shared from '@volar/shared';
 import type { HtmlLanguageServiceContext } from '../types';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 export function register(
 	context: HtmlLanguageServiceContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
-	const { htmlLs, pugLs, getCssLs, modules, getPugDocument } = context;
+	const { htmlLs, pugLs, getCssLs, typescript: ts, getPugDocument } = context;
 	return (document: TextDocument) => {
 
 		const sourceFile = context.getVueDocument(document);
 		if (!sourceFile) {
 			// take over mode
-			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
+			const dummyTsLs = getDummyTsLs(ts, ts2, document, getPreferences, getFormatOptions);
 			return dummyTsLs.getFoldingRanges(document.uri);
 		}
 
@@ -59,7 +60,7 @@ export function register(
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTsLs = getDummyTsLs(ts, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const foldingRanges = dummyTsLs.getFoldingRanges(sourceMap.mappedDocument.uri);
 				result = result.concat(toVueFoldingRangesTs(foldingRanges, sourceMap));
 			}

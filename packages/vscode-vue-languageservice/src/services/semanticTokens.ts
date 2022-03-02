@@ -2,7 +2,8 @@ import { hyphenate, isHTMLTag } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { SourceFile } from '../sourceFile';
 import type { ApiLanguageServiceContext } from '../types';
-import * as ts2 from 'vscode-typescript-languageservice'; // TODO: remove it
+import * as ts2 from 'vscode-typescript-languageservice';
+import * as html from 'vscode-html-languageservice';
 
 type SemanticToken = [number, number, number, number, number | undefined];
 
@@ -22,7 +23,7 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modules: { html }, getPugDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getPugDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
 
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));

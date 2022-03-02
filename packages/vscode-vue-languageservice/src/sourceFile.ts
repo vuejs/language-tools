@@ -101,22 +101,22 @@ export function createSourceFile(
 		uri,
 		document,
 		computed(() => sfc.script),
-		context.modules.typescript,
+		context.typescript,
 	);
 	const sfcScriptSetup = useSfcScript(
 		uri,
 		document,
 		computed(() => sfc.scriptSetup),
-		context.modules.typescript,
+		context.typescript,
 	);
 	const scriptRanges = computed(() =>
 		sfcScript.ast.value
-			? parseScriptRanges(context.modules.typescript, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
+			? parseScriptRanges(context.typescript, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
 		sfcScriptSetup.ast.value
-			? parseScriptSetupRanges(context.modules.typescript, sfcScriptSetup.ast.value)
+			? parseScriptSetupRanges(context.typescript, sfcScriptSetup.ast.value)
 			: undefined
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
@@ -171,8 +171,8 @@ export function createSourceFile(
 		context,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
-		refs: parseRefSugarDeclarationRanges(context.modules.typescript, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
-		raws: parseRefSugarCallRanges(context.modules.typescript, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
+		refs: parseRefSugarDeclarationRanges(context.typescript, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
+		raws: parseRefSugarCallRanges(context.typescript, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
 	} : undefined));
 
 	// getters

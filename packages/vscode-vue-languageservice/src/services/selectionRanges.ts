@@ -6,6 +6,7 @@ import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 import { getDummyTsLs } from '../utils/sharedLs';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 export function register(
 	context: HtmlLanguageServiceContext,
@@ -13,14 +14,14 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs, getStylesheet, getPugDocument } = context;
+	const { typescript: ts, htmlLs, pugLs, getCssLs, getStylesheet, getPugDocument } = context;
 
 	return (document: TextDocument, positions: vscode.Position[]) => {
 
 		const sourceFile = context.getVueDocument(document);
 		if (!sourceFile) {
 			// take over mode
-			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
+			const dummyTsLs = getDummyTsLs(ts, ts2, document, getPreferences, getFormatOptions);
 			return dummyTsLs.getSelectionRanges(document.uri, positions);
 		}
 
@@ -84,7 +85,7 @@ export function register(
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.foldingRanges)
 					continue;
-				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTsLs = getDummyTsLs(ts, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const tsStarts = positions.map(position => sourceMap.getMappedRange(position)?.[0].start).filter(shared.notEmpty);
 				const tsSelectRange = dummyTsLs.getSelectionRanges(sourceMap.mappedDocument.uri, tsStarts);
 				result = result.concat(transformSelectionRanges(

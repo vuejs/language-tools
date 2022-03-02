@@ -4,7 +4,7 @@ import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
-import type * as html from 'vscode-html-languageservice';
+import * as html from 'vscode-html-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -16,6 +16,7 @@ import { SearchTexts } from '../utils/string';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
 import { TsSourceMap } from '../utils/sourceMaps';
+import * as emmet from '@vscode/emmet-helper';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {
@@ -94,7 +95,7 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ modules: { html, emmet, typescript: ts }, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument }: ApiLanguageServiceContext,
+	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument }: ApiLanguageServiceContext,
 	getScriptContentVersion: () => number,
 ) {
 

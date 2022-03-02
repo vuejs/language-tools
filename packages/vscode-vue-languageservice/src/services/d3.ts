@@ -6,7 +6,7 @@ import * as definitions from './definition';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ modules: { typescript: ts }, sourceFiles, templateTsLs }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, templateTsLs }: ApiLanguageServiceContext) {
 
 	const findReferences = references.register(arguments[0]);
 	const findDefinition = definitions.register(arguments[0]);

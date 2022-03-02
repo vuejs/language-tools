@@ -46,16 +46,6 @@ export interface ITemplateScriptData {
 	setupReturns: string[];
 }
 
-export type Modules = {
-	typescript: typeof import('typescript/lib/tsserverlibrary'),
-	ts: typeof import('vscode-typescript-languageservice'),
-	css: typeof import('vscode-css-languageservice'),
-	html: typeof import('vscode-html-languageservice'),
-	json: typeof import('vscode-json-languageservice'),
-	pug: typeof import('vscode-pug-languageservice'),
-	emmet: typeof import('@vscode/emmet-helper'),
-};
-
 export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
 	experimentalTemplateCompilerOptions?: any;
@@ -64,7 +54,7 @@ export interface VueCompilerOptions {
 
 export type LanguageServiceContextBase = {
 	compilerOptions: VueCompilerOptions,
-	modules: Modules,
+	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,
 	jsonLs: json.LanguageService,

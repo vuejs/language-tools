@@ -17,7 +17,7 @@ import * as useRefSugar from '../commands/useRefSugar';
 import * as unuseRefSugar from '../commands/unuseRefSugar';
 
 export function register(
-	ts: vue.Modules['typescript'],
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	connection: vscode.Connection,
 	configuration: Configuration | undefined,
 	documents: vscode.TextDocuments<TextDocument>,

@@ -5,7 +5,7 @@ import { createSourceFile, SourceFile } from './sourceFile';
 import * as localTypes from './utils/localTypes';
 import * as upath from 'upath';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { HtmlLanguageServiceContext, ApiLanguageServiceContext, Modules, VueCompilerOptions } from './types';
+import { HtmlLanguageServiceContext, ApiLanguageServiceContext, VueCompilerOptions } from './types';
 import * as tsPluginApis from './tsPluginApis';
 import * as tsProgramApis from './tsProgramApis';
 // vue services
@@ -64,24 +64,16 @@ export type LanguageServiceHost = ts2.LanguageServiceHost & {
 };
 
 export function getDocumentLanguageService(
-	modules: { typescript: Modules['typescript'] },
+	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	formatters: Parameters<typeof formatting['register']>[3],
 ) {
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
-	const services = createServices(modules.typescript);
+	const services = createServices(ts);
 	const context: HtmlLanguageServiceContext = {
 		compilerOptions: {},
-		modules: {
-			typescript: modules.typescript,
-			emmet,
-			css,
-			html,
-			json,
-			ts: ts2,
-			pug
-		},
+		typescript: ts,
 		...services,
 		getVueDocument,
 	};
@@ -121,12 +113,11 @@ export function getDocumentLanguageService(
 }
 
 export function createLanguageService(
-	modules: { typescript: Modules['typescript'] },
+	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	vueHost: LanguageServiceHost,
 	isTsPlugin = false,
 ) {
 
-	const { typescript: ts } = modules;
 	const isVue2 = vueHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
 	let vueProjectVersion: string | undefined;
@@ -194,18 +185,10 @@ export function createLanguageService(
 		},
 	}
 
-	const services = createServices(modules.typescript, vueHost);
+	const services = createServices(ts, vueHost);
 	const context: ApiLanguageServiceContext = {
 		compilerOptions: vueHost.getVueCompilationSettings?.() ?? {},
-		modules: {
-			typescript: modules.typescript,
-			emmet,
-			css,
-			html,
-			json,
-			ts: ts2,
-			pug
-		},
+		typescript: ts,
 		...services,
 		vueHost,
 		sourceFiles,
@@ -714,7 +697,7 @@ interface StylesheetNode {
 }
 
 function createServices(
-	ts: Modules['typescript'],
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueHost?: LanguageServiceHost,
 ) {
 	const fileSystemProvider: html.FileSystemProvider = {

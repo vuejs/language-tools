@@ -6,6 +6,7 @@ import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
 import type { SourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 import * as sharedServices from '../utils/sharedLs';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 type Promiseable<T> = T | Promise<T>;
 
@@ -20,7 +21,7 @@ export function register(
 		const sourceFile = context.getVueDocument(document);
 		if (!sourceFile) {
 			// take over mode
-			const dummyTsLs = sharedServices.getDummyTsLs(context.modules.typescript, context.modules.ts, document, getPreferences, getFormatOptions);
+			const dummyTsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, getPreferences, getFormatOptions);
 			return await dummyTsLs.doFormatting(document.uri, options);
 		}
 		let newDocument = document;
@@ -175,7 +176,7 @@ export function register(
 
 		for (const sourceMap of tsSourceMaps) {
 			if (!sourceMap.capabilities.formatting) continue;
-			const dummyTsLs = sharedServices.getDummyTsLs(context.modules.typescript, context.modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+			const dummyTsLs = sharedServices.getDummyTsLs(context.typescript, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 			const textEdits = await dummyTsLs.doFormatting(sourceMap.mappedDocument.uri, options);
 			for (const textEdit of textEdits) {
 				for (const [vueRange] of sourceMap.getSourceRanges(

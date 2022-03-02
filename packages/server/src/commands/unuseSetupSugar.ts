@@ -68,8 +68,8 @@ export async function execute(
 		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
 	) {
 
-		const ranges = parseUnuseScriptSetupRanges(vueLs.__internal__.context.modules.typescript, _scriptSetupAst);
-		const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(vueLs.__internal__.context.modules.typescript, _scriptAst) : undefined;
+		const ranges = parseUnuseScriptSetupRanges(vueLs.__internal__.context.typescript, _scriptSetupAst);
+		const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(vueLs.__internal__.context.typescript, _scriptAst) : undefined;
 
 		const document = _sourceFile.getTextDocument();
 		const edits: vscode.TextEdit[] = [];

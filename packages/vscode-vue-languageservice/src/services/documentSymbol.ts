@@ -7,6 +7,7 @@ import type { SourceFile } from '../sourceFile';
 import type { HtmlLanguageServiceContext } from '../types';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as dedupe from '../utils/dedupe';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 export function register(
 	context: HtmlLanguageServiceContext,
@@ -14,14 +15,14 @@ export function register(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument } = context;
+	const { typescript: ts, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument } = context;
 
 	return (document: TextDocument) => {
 
 		const sourceFile = context.getVueDocument(document);
 		if (!sourceFile) {
 			// take over mode
-			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
+			const dummyTsLs = getDummyTsLs(ts, ts2, document, getPreferences, getFormatOptions);
 			return dummyTsLs.findDocumentSymbols(document.uri);
 		}
 
@@ -105,7 +106,7 @@ export function register(
 
 			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
-				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTsLs = getDummyTsLs(ts, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const symbols = dummyTsLs.findDocumentSymbols(sourceMap.mappedDocument.uri);
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];
