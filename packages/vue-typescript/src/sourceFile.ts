@@ -21,8 +21,14 @@ import type * as html from 'vscode-html-languageservice'; // fix TS2742
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
+import { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
+
+export type Embedded = {
+	sourceMap: EmbeddedDocumentSourceMap | undefined,
+	embeddeds: Embedded[]
+};
 
 export function createSourceFile(
 	uri: string,
@@ -207,6 +213,65 @@ export function createSourceFile(
 		sfcScriptForTemplateLs.teleportSourceMap.value,
 	].filter(shared.notEmpty));
 
+	const embeddeds = computed(() => {
+
+		const embeddeds: Embedded[] = [];
+
+		// styles
+		for (const style of sfcStyles.sourceMaps.value) {
+			embeddeds.push({
+				sourceMap: style,
+				embeddeds: [],
+			});
+		}
+
+		// customBlocks
+		for (const customBlock of sfcCustomBlocks.sourceMaps.value) {
+			embeddeds.push({
+				sourceMap: customBlock,
+				embeddeds: [],
+			});
+		}
+
+		// scripts - script ls
+		embeddeds.push({
+			sourceMap: sfcScriptForScriptLs.sourceMap.value,
+			embeddeds: [],
+		});
+
+		// scripts - template ls
+		embeddeds.push({
+			sourceMap: sfcEntryForTemplateLs.sourceMap.value,
+			embeddeds: [
+				{
+					sourceMap: sfcScriptForTemplateLs.sourceMap.value,
+					embeddeds: [],
+				},
+			],
+		})
+
+		// template
+		embeddeds.push({
+			sourceMap: sfcTemplate.sourceMap.value,
+			embeddeds: [
+				{
+					sourceMap: sfcTemplateScript.sourceMap.value,
+					embeddeds: [],
+				},
+				{
+					sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
+					embeddeds: [],
+				},
+				{
+					sourceMap: sfcTemplateScript.cssSourceMap.value,
+					embeddeds: [],
+				},
+			],
+		});
+
+		return embeddeds;
+	});
+
 	update(_content, _version);
 
 	return {
@@ -239,6 +304,7 @@ export function createSourceFile(
 			sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
 		})),
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
+		getEmbeddeds: untrack(() => embeddeds.value),
 
 		refs: {
 			document,

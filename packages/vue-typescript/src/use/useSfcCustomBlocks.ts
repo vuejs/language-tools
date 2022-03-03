@@ -28,15 +28,30 @@ export function useSfcCustomBlocks(
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.SourceMap[] = [];
+		const sourceMaps: SourceMaps.EmbeddedDocumentSourceMap[] = [];
 		for (const doc of textDocuments.value) {
 			const customBlock = customBlocks.value[doc.index];
-			const sourceMap = new SourceMaps.SourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				doc.textDocument,
 			);
 			sourceMap.mappings.push({
-				data: undefined,
+				data: {
+					vueTag: undefined,
+					capabilities: {
+						basic: true,
+						references: true,
+						definitions: true,
+						diagnostic: true,
+						formatting: true,
+						rename: true,
+						completion: true,
+						semanticTokens: true,
+						foldingRanges: true,
+						referencesCodeLens: true,
+						displayWithLink: true,
+					},
+				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: customBlock.startTagEnd,

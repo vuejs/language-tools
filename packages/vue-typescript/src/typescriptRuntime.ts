@@ -23,7 +23,7 @@ export function createTypeScriptRuntime(
     let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
     let templateProjectVersion = 0;
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
-    const documents = shared.createPathMap<TextDocument>();
+    const documents = shared.createPathMap<TextDocument>(); // TODO: remove this
     const sourceFiles = createSourceFiles();
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];

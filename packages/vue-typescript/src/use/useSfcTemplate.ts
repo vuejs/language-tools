@@ -20,12 +20,27 @@ export function useSfcTemplate(
 	});
 	const sourceMap = computed(() => {
 		if (textDocument.value && template.value) {
-			const sourceMap = new SourceMaps.SourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				textDocument.value,
 			);
 			sourceMap.mappings.push({
-				data: undefined,
+				data: {
+					vueTag: 'template',
+					capabilities: {
+						basic: true,
+						references: true,
+						definitions: true,
+						diagnostic: true,
+						formatting: true,
+						rename: true,
+						completion: true,
+						semanticTokens: true,
+						foldingRanges: true,
+						referencesCodeLens: true,
+						displayWithLink: true,
+					},
+				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: template.value.startTagEnd,

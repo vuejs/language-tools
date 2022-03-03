@@ -41,13 +41,6 @@ export function useSfcStyles(
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				cssData.textDocument,
-				undefined,
-				{
-					foldingRanges: true,
-					formatting: true,
-					codeActions: true,
-					documentSymbol: true,
-				},
 			);
 			sourceMap.mappings.push({
 				data: {

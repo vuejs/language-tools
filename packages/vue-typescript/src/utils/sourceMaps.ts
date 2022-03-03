@@ -7,12 +7,12 @@ export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedDocu
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public lsType: 'template' | 'script' | undefined,
-		public capabilities: {
-			foldingRanges: boolean,
-			formatting: boolean,
-			documentSymbol: boolean,
-			codeActions: boolean,
+		public lsType?: 'template' | 'script',
+		public capabilities = {
+			foldingRanges: true,
+			formatting: true,
+			documentSymbol: true,
+			codeActions: true,
 		},
 		mappings?: SourceMaps.Mapping<EmbeddedDocumentMappingData>[],
 	) {

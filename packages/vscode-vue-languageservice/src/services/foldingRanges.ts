@@ -93,7 +93,7 @@ export function register(
 	}
 }
 
-function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: SourceMap<any>) {
+function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: EmbeddedDocumentSourceMap) {
 	const result: vscode.FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
 		const vueRange = sourceMap.getSourceRange(

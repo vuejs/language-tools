@@ -25,6 +25,10 @@ import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import type * as _0 from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
 import type * as _2 from 'vscode-json-languageservice';
+import jsonPlugin from './plugins/jsonPlugin';
+import tsPlugin from './plugins/tsPlugin';
+import cssPlugin from './plugins/cssPlugin';
+import { PluginHost } from './plugins/definePlugin';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -35,9 +39,22 @@ export function createLanguageService(
 
 	const tsRuntime = createTypeScriptRuntime({ typescript: ts }, vueHost, false);
 	const blockingRequests = new Set<Promise<any>>();
+	const pluginHost: PluginHost = {
+		schemaRequestService: vueHost.schemaRequestService,
+		typescript: ts,
+		tsLs: undefined,
+		getCssLs: tsRuntime.services.getCssLs,
+		getStylesheet: tsRuntime.services.getStylesheet,
+	};
 	const context: LanguageServiceRuntimeContext = {
 		...tsRuntime.context,
 		getTextDocument: tsRuntime.getHostDocument,
+		pluginHost,
+		plugins: [
+			jsonPlugin(pluginHost),
+			tsPlugin(pluginHost),
+			cssPlugin(pluginHost),
+		],
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findDefinition = definitions.register(context);

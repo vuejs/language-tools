@@ -43,7 +43,7 @@ export function createSourceFiles() {
 		return map;
 	});
 	const htmlSourceMaps = computed(() => {
-		const map = new Map<string, SourceMap>();
+		const map = new Map<string, EmbeddedDocumentSourceMap>();
 		for (const key in _sourceFiles) {
 			const sourceFile = _sourceFiles[key]!;
 			if (sourceFile.refs.sfcTemplate.textDocument.value?.languageId === 'html' && sourceFile.refs.sfcTemplate.sourceMap.value) {

@@ -5,6 +5,7 @@ import type { TextDocument } from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
+import { EmbeddedLanguagePlugin, PluginHost } from './plugins/definePlugin';
 
 export type LanguageServiceHost = LanguageServiceHostBase & {
     getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
@@ -44,8 +45,10 @@ export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 }
 
 export type LanguageServiceRuntimeContext = TypeScriptFeaturesRuntimeContext & {
-	vueHost: LanguageServiceHost;
-	getTextDocument(uri: string): TextDocument | undefined;
+	pluginHost: PluginHost,
+	vueHost: LanguageServiceHost,
+	getTextDocument(uri: string): TextDocument | undefined,
+	plugins: EmbeddedLanguagePlugin[],
 }
 
 export type RuntimeContext = LanguageServiceRuntimeContext | DocumentServiceRuntimeContext;
