@@ -1,4 +1,4 @@
-export interface TsMappingData {
+export interface EmbeddedDocumentMappingData {
 	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style',
 	vueTagIndex?: number,
 	beforeRename?: (newName: string) => string,

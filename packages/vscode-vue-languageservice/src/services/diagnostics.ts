@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile, ScriptSourceMap, SourceMap } from '@volar/vue-typescript';
+import type { SourceFile, EmbeddedDocumentSourceMap, SourceMap } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { untrack } from '../utils/untrack';
@@ -635,7 +635,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function toSourceDiags(errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap[]) {
+		function toSourceDiags(errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap<any>[]) {
 			const result: vscode.Diagnostic[] = [];
 			for (const error of errors) {
 				if (vscode.Diagnostic.is(error)) {
@@ -654,7 +654,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			}
 			return result;
 		}
-		function toTsSourceDiags(lsType: 'template' | 'script', errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: ScriptSourceMap[]) {
+		function toTsSourceDiags(lsType: 'template' | 'script', errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: EmbeddedDocumentSourceMap[]) {
 			const result: vscode.Diagnostic[] = [];
 			for (const error of errors) {
 				const vueRange = findVueRange(virtualScriptUri, error.range);

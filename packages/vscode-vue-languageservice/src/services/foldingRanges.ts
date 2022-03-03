@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from '@volar/vue-typescript';
-import type { SourceMap, ScriptSourceMap } from '@volar/vue-typescript';
+import type { SourceMap, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as shared from '@volar/shared';
@@ -93,7 +93,7 @@ export function register(
 	}
 }
 
-function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: SourceMap) {
+function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: SourceMap<any>) {
 	const result: vscode.FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
 		const vueRange = sourceMap.getSourceRange(
@@ -112,7 +112,7 @@ function toVueFoldingRanges(virtualFoldingRanges: vscode.FoldingRange[], sourceM
 	}
 	return result;
 }
-function toVueFoldingRangesTs(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: ScriptSourceMap) {
+function toVueFoldingRangesTs(virtualFoldingRanges: vscode.FoldingRange[], sourceMap: EmbeddedDocumentSourceMap) {
 	const result: vscode.FoldingRange[] = [];
 	for (const foldingRange of virtualFoldingRanges) {
 		const vueLoc = sourceMap.getSourceRange(

@@ -23,7 +23,7 @@ export function useSfcTemplateScript(
 		module: string | undefined;
 		scoped: boolean;
 	}[]>,
-	styleSourceMaps: Ref<SourceMaps.StyleSourceMap[]>,
+	styleSourceMaps: Ref<SourceMaps.EmbeddedDocumentSourceMap[]>,
 	templateData: Ref<{
 		lang: string,
 		htmlToTemplate: (start: number, end: number) => number | undefined,
@@ -78,7 +78,7 @@ export function useSfcTemplateScript(
 	});
 	const data = computed(() => {
 
-		const codeGen = new CodeGen<SourceMaps.TsMappingData>();
+		const codeGen = new CodeGen<SourceMaps.EmbeddedDocumentMappingData>();
 
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
@@ -310,11 +310,10 @@ export function useSfcTemplateScript(
 	});
 	const sourceMap = computed(() => {
 		if (textDoc.value) {
-			const sourceMap = new SourceMaps.ScriptSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				textDoc.value,
 				'template',
-				true,
 				{
 					foldingRanges: false,
 					formatting: false,
@@ -358,11 +357,10 @@ export function useSfcTemplateScript(
 	});
 	const formatSourceMap = computed(() => {
 		if (templateCodeGens.value && formatTextDoc.value && template.value) {
-			const sourceMap = new SourceMaps.ScriptSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				formatTextDoc.value,
 				'template',
-				true,
 				{
 					foldingRanges: false,
 					formatting: true,
@@ -387,12 +385,16 @@ export function useSfcTemplateScript(
 	});
 	const cssSourceMap = computed(() => {
 		if (templateCodeGens.value && cssTextDocument.value && template.value) {
-			const sourceMap = new SourceMaps.StyleSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
 				undefined,
-				false,
-				{ foldingRanges: false, formatting: false },
+				{
+					foldingRanges: false,
+					formatting: false,
+					codeActions: false,
+					documentSymbol: false,
+				},
 				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange),
 			);
 			return sourceMap;

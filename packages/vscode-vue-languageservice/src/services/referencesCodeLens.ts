@@ -19,6 +19,7 @@ export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 		const result: vscode.CodeLens[] = [];
 
 		for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			if (sourceMap.lsType === undefined) continue;
 			for (const maped of sourceMap.mappings) {
 				if (!maped.data.capabilities.referencesCodeLens) continue;
 				const data: ReferencesCodeLensData = {

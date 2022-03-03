@@ -2,12 +2,12 @@ import { computed, shallowReactive } from '@vue/reactivity';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
-import type { StyleSourceMap, SourceMap, TeleportSourceMap, ScriptSourceMap } from './utils/sourceMaps';
+import type { EmbeddedDocumentSourceMap, SourceMap, TeleportSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
-import type { TsMappingData } from '@volar/vue-code-gen';
+import type { EmbeddedDocumentMappingData } from '@volar/vue-code-gen';
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix build failed
 
 export interface SourceFiles extends ReturnType<typeof createSourceFiles> { }
@@ -33,7 +33,7 @@ export function createSourceFiles() {
 	const all = computed(() => Object.values(_sourceFiles));
 	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
 	const cssSourceMaps = computed(() => {
-		const map = new Map<string, StyleSourceMap>();
+		const map = new Map<string, EmbeddedDocumentSourceMap>();
 		for (const key in _sourceFiles) {
 			const sourceFile = _sourceFiles[key]!;
 			for (const sourceMap of sourceFile.refs.cssLsSourceMaps.value) {
@@ -76,7 +76,7 @@ export function createSourceFiles() {
 				return map;
 			}),
 			sourceMaps: computed(() => {
-				const map = new Map<string, ScriptSourceMap>();
+				const map = new Map<string, EmbeddedDocumentSourceMap>();
 				for (const key in _sourceFiles) {
 					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.templateLsSourceMaps.value) {
@@ -117,7 +117,7 @@ export function createSourceFiles() {
 				return map;
 			}),
 			sourceMaps: computed(() => {
-				const map = new Map<string, ScriptSourceMap>();
+				const map = new Map<string, EmbeddedDocumentSourceMap>();
 				for (const key in _sourceFiles) {
 					const sourceFile = _sourceFiles[key]!;
 					for (const sourceMap of sourceFile.refs.scriptLsSourceMaps.value) {
@@ -159,8 +159,8 @@ export function createSourceFiles() {
 			uri: string,
 			start: vscode.Position,
 			end?: vscode.Position,
-			filter?: (data: TsMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: ScriptSourceMap) => boolean,
+			filter?: (data: EmbeddedDocumentMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 		) {
 
 			if (end === undefined)
@@ -204,8 +204,8 @@ export function createSourceFiles() {
 			uri: string,
 			start: vscode.Position,
 			end?: vscode.Position,
-			filter?: (data: TsMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: ScriptSourceMap) => boolean,
+			filter?: (data: EmbeddedDocumentMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))
@@ -246,8 +246,8 @@ export function createSourceFiles() {
 			uri: string,
 			start: number,
 			end?: number,
-			filter?: (data: TsMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: ScriptSourceMap) => boolean,
+			filter?: (data: EmbeddedDocumentMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 		) {
 
 			if (uri.endsWith(`/${localTypes.typesFileName}`))

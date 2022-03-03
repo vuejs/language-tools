@@ -32,21 +32,41 @@ export function useSfcStyles(
 		return documents;
 	});
 	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.StyleSourceMap[] = [];
+		const sourceMaps: SourceMaps.EmbeddedDocumentSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
 
 			const cssData = textDocuments.value[i];
 			const style = styles.value[i];
 
-			const sourceMap = new SourceMaps.StyleSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
 				vueDoc.value,
 				cssData.textDocument,
-				style.module,
-				style.scoped,
-				{ foldingRanges: true, formatting: true },
+				undefined,
+				{
+					foldingRanges: true,
+					formatting: true,
+					codeActions: true,
+					documentSymbol: true,
+				},
 			);
 			sourceMap.mappings.push({
-				data: undefined,
+				data: {
+					vueTag: 'style',
+					vueTagIndex: i,
+					capabilities: {
+						basic: true,
+						references: true,
+						definitions: true,
+						diagnostic: true,
+						formatting: true,
+						rename: true,
+						completion: true,
+						semanticTokens: true,
+						foldingRanges: true,
+						referencesCodeLens: true,
+						displayWithLink: true,
+					},
+				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: style.startTagEnd,

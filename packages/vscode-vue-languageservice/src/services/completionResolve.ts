@@ -37,6 +37,9 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 				return await scriptTsLs.doCompletionResolve(data.tsItem, newPosition);
 			}
 
+			if (sourceMap.lsType === undefined)
+				return item;
+
 			let newPosition_2: vscode.Position | undefined;
 			if (newPosition) {
 				for (const [tsRange] of sourceMap.getMappedRanges(newPosition, newPosition, data => !!data.capabilities.completion)) {

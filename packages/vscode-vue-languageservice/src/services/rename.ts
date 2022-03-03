@@ -3,7 +3,7 @@ import { SourceFiles } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
-import type { TsMappingData } from '@volar/vue-typescript';
+import type { EmbeddedDocumentMappingData } from '@volar/vue-typescript';
 import { wordPatterns } from './completion';
 
 export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
@@ -246,7 +246,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStyles
 	}
 }
 
-function canRename(data?: TsMappingData) {
+function canRename(data?: EmbeddedDocumentMappingData) {
 	return !data
 		|| data.capabilities.rename === true
 		|| (typeof data.capabilities.rename === 'object' && data.capabilities.rename.out)
@@ -292,7 +292,7 @@ export function margeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
  *    -> Yes: Only access template results
  *    -> No: Access all results
  */
-export function tsEditToVueEdit(lsType: 'script' | 'template', ignoreScriptLsResult: boolean, tsResult: vscode.WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data: TsMappingData) => boolean) {
+export function tsEditToVueEdit(lsType: 'script' | 'template', ignoreScriptLsResult: boolean, tsResult: vscode.WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data: EmbeddedDocumentMappingData) => boolean) {
 
 	const vueResult: vscode.WorkspaceEdit = {};
 	let hasResult = false;

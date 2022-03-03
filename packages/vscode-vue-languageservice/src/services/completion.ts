@@ -9,7 +9,7 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { SourceFile, ScriptSourceMap } from '@volar/vue-typescript';
+import { SourceFile, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData } from '../types';
 import { untrack } from '../utils/untrack';
@@ -741,7 +741,7 @@ export function register(
 		async function getEmmetResult(sourceFile: SourceFile) {
 			if (!vueHost.getEmmetConfig) return;
 			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
-			if (embededDoc && !(embededDoc.sourceMap instanceof ScriptSourceMap && embededDoc.sourceMap.lsType === 'template')) {
+			if (embededDoc && !(embededDoc.sourceMap instanceof EmbeddedDocumentSourceMap && embededDoc.sourceMap.lsType === 'template')) {
 				const emmetConfig = await vueHost.getEmmetConfig(embededDoc.language);
 				if (emmetConfig) {
 					let mode = emmet.getEmmetMode(embededDoc.language === 'vue' ? 'html' : embededDoc.language);
