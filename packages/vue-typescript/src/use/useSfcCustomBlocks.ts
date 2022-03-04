@@ -48,8 +48,6 @@ export function useSfcCustomBlocks(
 						completion: true,
 						semanticTokens: true,
 						foldingRanges: true,
-						referencesCodeLens: true,
-						displayWithLink: true,
 					},
 				},
 				mode: SourceMaps.Mode.Offset,

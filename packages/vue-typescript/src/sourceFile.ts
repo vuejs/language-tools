@@ -73,6 +73,7 @@ export function createSourceFile(
 	// computeds
 	const document = computed(() => TextDocument.create(uri, 'vue', 0, content.value));
 	const vueHtmlDocument = computed(() => htmlLs.parseHTMLDocument(document.value));
+	const parsedSfc = computed(() => shared.parseSfc(content.value, vueHtmlDocument.value));
 
 	// use
 	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
@@ -340,13 +341,12 @@ export function createSourceFile(
 
 		content.value = newContent;
 		version.value = newVersion;
-		const parsedSfc = shared.parseSfc(newContent, vueHtmlDocument.value);
 
-		updateTemplate(parsedSfc['template']);
-		updateScript(parsedSfc['script']);
-		updateScriptSetup(parsedSfc['scriptSetup']);
-		updateStyles(parsedSfc['styles']);
-		updateCustomBlocks(parsedSfc['customBlocks']);
+		updateTemplate(parsedSfc.value['template']);
+		updateScript(parsedSfc.value['script']);
+		updateScriptSetup(parsedSfc.value['scriptSetup']);
+		updateStyles(parsedSfc.value['styles']);
+		updateCustomBlocks(parsedSfc.value['customBlocks']);
 
 		sfcTemplateScript.update(); // TODO
 

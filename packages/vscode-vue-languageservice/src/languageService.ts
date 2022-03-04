@@ -20,14 +20,16 @@ import * as signatureHelp from './services/signatureHelp';
 import * as tagNameCase from './services/tagNameCase';
 import * as workspaceSymbol from './services/workspaceSymbol';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
-import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
 
 import type * as _0 from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
 import type * as _2 from 'vscode-json-languageservice';
-import jsonPlugin from './plugins/jsonPlugin';
-import tsPlugin from './plugins/tsPlugin';
-import cssPlugin from './plugins/cssPlugin';
+import useCssPlugin from './plugins/cssPlugin';
+import useHtmlPlugin from './plugins/htmlPlugin';
+import usePugPlugin from './plugins/pugPlugin';
+import useJsonPlugin from './plugins/jsonPlugin';
+import useTsPlugin from './plugins/tsPlugin';
 import { PluginHost } from './plugins/definePlugin';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -35,25 +37,44 @@ export interface LanguageService extends ReturnType<typeof createLanguageService
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	vueHost: LanguageServiceHost,
+	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 ) {
 
-	const tsRuntime = createTypeScriptRuntime({ typescript: ts }, vueHost, false);
+	const compilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
+	const services = createBasicRuntime();
+	const tsRuntime = createTypeScriptRuntime({
+		typescript: ts,
+		...services,
+		compilerOptions,
+	}, vueHost, false);
 	const blockingRequests = new Set<Promise<any>>();
 	const pluginHost: PluginHost = {
+		getSettings: async (section: string, scopeUri?: string) => getSettings?.(section, scopeUri),
 		schemaRequestService: vueHost.schemaRequestService,
+		fileSystemProvider: services.fileSystemProvider,
 		typescript: ts,
 		tsLs: undefined,
-		getCssLs: tsRuntime.services.getCssLs,
-		getStylesheet: tsRuntime.services.getStylesheet,
+		getCssLs: services.getCssLs,
+		getStylesheet: services.getStylesheet,
 	};
+	const cssPlugin = useCssPlugin(pluginHost, undefined);
+	const htmlPlugin = useHtmlPlugin(pluginHost, undefined);
+	const pugPlugin = usePugPlugin(pluginHost, { htmlLs: htmlPlugin.data!.htmlLs });
+	const jsonPlugin = useJsonPlugin(pluginHost, undefined);
+	const tsPlugin = useTsPlugin(pluginHost, undefined);
 	const context: LanguageServiceRuntimeContext = {
+		...services,
 		...tsRuntime.context,
+		typescript: ts,
+		compilerOptions,
 		getTextDocument: tsRuntime.getHostDocument,
 		pluginHost,
 		plugins: [
-			jsonPlugin(pluginHost),
-			tsPlugin(pluginHost),
-			cssPlugin(pluginHost),
+			cssPlugin,
+			htmlPlugin,
+			pugPlugin,
+			jsonPlugin,
+			tsPlugin,
 		],
 	};
 	const _callHierarchy = callHierarchy.register(context);
@@ -90,8 +111,8 @@ export function createLanguageService(
 		dispose: () => {
 			tsRuntime.dispose();
 		},
-		updateHtmlCustomData: tsRuntime.services.updateHtmlCustomData,
-		updateCssCustomData: tsRuntime.services.updateCssCustomData,
+		updateHtmlCustomData: services.updateHtmlCustomData,
+		updateCssCustomData: services.updateCssCustomData,
 
 		__internal__: {
 			tsRuntime,

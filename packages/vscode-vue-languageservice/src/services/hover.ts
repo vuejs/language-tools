@@ -3,7 +3,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 
-export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost, getStylesheet, getHtmlDocument, getPugDocument, plugins, getTextDocument, pluginHost }: LanguageServiceRuntimeContext) {
+export function register({ sourceFiles, getTsLs, plugins, getTextDocument, pluginHost }: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, position: vscode.Position) => {
 
@@ -36,6 +36,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 									contents: embeddedHover.contents,
 									range: vueRange,
 								});
+								break;
 							}
 						}
 						else {
@@ -50,7 +51,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
 				for (const embedded of embeddeds) {
 
-					visitEmbedded(embedded.embeddeds, cb);
+					await visitEmbedded(embedded.embeddeds, cb);
 
 					if (embedded.sourceMap) {
 						await cb(embedded.sourceMap);
@@ -86,136 +87,6 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 		else if (hovers.length === 1) {
 			return hovers[0];
 		}
-	}
-
-	// function onTs(uri: string, position: vscode.Position) {
-
-	// 	let result: vscode.Hover | undefined;
-
-	// 	// vue -> ts
-	// 	for (const tsLoc of sourceFiles.toTsLocations(
-	// 		uri,
-	// 		position,
-	// 		position,
-	// 		data => !!data.capabilities.basic
-	// 	)) {
-
-	// 		if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
-	// 			continue;
-
-	// 		const tsLs = getTsLs(tsLoc.lsType);
-	// 		const tsHover = tsLs.doHover(
-	// 			tsLoc.uri,
-	// 			tsLoc.range.start,
-	// 		);
-	// 		if (!tsHover) continue;
-
-	// 		if (tsHover.range) {
-	// 			// ts -> vue
-	// 			const hoverRange = { start: position, end: position };
-	// 			for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsHover.range.start, tsHover.range.end)) {
-	// 				result = {
-	// 					...tsHover,
-	// 					range: vueLoc.range,
-	// 				};
-	// 				if (shared.isInsideRange(vueLoc.range, hoverRange))
-	// 					break;
-	// 			}
-	// 		}
-	// 		else {
-	// 			result = tsHover;
-	// 		}
-	// 	}
-
-	// 	return result;
-	// }
-	async function onHtml(uri: string, position: vscode.Position) {
-
-		let result: vscode.Hover | undefined;
-
-		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile)
-			return result;
-
-		// vue -> html
-		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
-
-			const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
-			const pugDocument = getPugDocument(sourceMap.mappedDocument);
-
-			const settings = await vueHost.getHtmlHoverSettings?.(sourceMap.mappedDocument);
-			for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
-
-				const htmlHover = htmlDocument ? htmlLs.doHover(
-					sourceMap.mappedDocument,
-					htmlRange.start,
-					htmlDocument,
-					settings,
-				) : pugDocument ? pugLs.doHover(
-					pugDocument,
-					htmlRange.start,
-				) : undefined;
-
-				if (!htmlHover)
-					continue;
-				if (!htmlHover.range) {
-					result = htmlHover;
-					continue;
-				}
-				// html -> vue
-				for (const [vueRange] of sourceMap.getSourceRanges(htmlHover.range.start, htmlHover.range.end)) {
-					result = {
-						...htmlHover,
-						range: vueRange,
-					};
-				}
-			}
-		}
-
-		return result;
-	}
-	async function onCss(uri: string, position: vscode.Position) {
-
-		let result: vscode.Hover | undefined;
-
-		const sourceFile = sourceFiles.get(uri);
-		if (!sourceFile)
-			return result;
-
-		// vue -> css
-		for (const sourceMap of sourceFile.getCssSourceMaps()) {
-
-			const stylesheet = getStylesheet(sourceMap.mappedDocument);
-			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-
-			if (!cssLs || !stylesheet)
-				continue;
-
-			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
-				const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
-				const cssHover = cssLs.doHover(
-					sourceMap.mappedDocument,
-					cssRange.start,
-					stylesheet,
-					settings?.hover,
-				);
-				if (!cssHover)
-					continue;
-				if (!cssHover.range) {
-					result = cssHover;
-					continue;
-				}
-				// css -> vue
-				for (const [vueRange] of sourceMap.getSourceRanges(cssHover.range.start, cssHover.range.end)) {
-					result = {
-						...cssHover,
-						range: vueRange,
-					};
-				}
-			}
-		}
-
-		return result;
 	}
 }
 

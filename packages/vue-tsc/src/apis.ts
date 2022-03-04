@@ -4,7 +4,10 @@ import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext) {
+export function register(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	{ sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
+) {
 
 	return {
 		getRootFileNames,

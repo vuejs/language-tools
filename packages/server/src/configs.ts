@@ -14,7 +14,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	let tsPreferences: Record<string, Promise<ts.UserPreferences>> = {};
 	let tsFormatOptions: Record<string, Promise<ts.FormatCodeSettings>> = {};
 	let cssLanguageSettings: Record<string, Promise<css.LanguageSettings>> = {};
-	let htmlHoverSettings: Record<string, Promise<html.HoverSettings>> = {};
 	let codeLensConfigs: {
 		references: boolean,
 		pugTool: boolean,
@@ -22,6 +21,8 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	} | undefined;
 	let htmlCustomData: { [id: string]: html.HTMLDataV1 } | undefined;
 	let cssCustomData: css.CSSDataV1[] | undefined;
+
+	let settings: Record<string, Record<string, Promise<any>>> = {};
 
 	const vueLsArr: vue.LanguageService[] = [];
 
@@ -31,7 +32,7 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 		tsPreferences = {};
 		tsFormatOptions = {};
 		cssLanguageSettings = {};
-		htmlHoverSettings = {};
+		settings = {};
 		htmlCustomData = undefined;
 		cssCustomData = undefined;
 
@@ -47,7 +48,7 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 		getCssLanguageSettings,
 		getTsPreferences,
 		getTsFormatOptions,
-		getHtmlHoverSettings,
+		getSettings,
 		registerCustomData,
 	};
 
@@ -116,11 +117,15 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 		}
 		return cssCustomData;
 	}
-	async function getHtmlHoverSettings(textDocument: TextDocument) {
-		if (!htmlHoverSettings[textDocument.uri]) {
-			htmlHoverSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }) ?? {})();
+	async function getSettings(section: string, scopeUri?: string) {
+		if (!settings[section]) {
+			settings[section] = {};
 		}
-		return htmlHoverSettings[textDocument.uri];
+		const uri = scopeUri ?? '';
+		if (!settings[section][uri]) {
+			settings[section][uri] = (async () => await connection.workspace.getConfiguration({ scopeUri, section }) ?? undefined)();
+		}
+		return settings[section][uri];
 	}
 	function getTsPreferences(textDocument: TextDocument) {
 		return tsPreferences[textDocument.uri]

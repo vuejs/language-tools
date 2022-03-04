@@ -84,7 +84,7 @@ export async function createProject(
 		if (!vueLs) {
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
-				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
+				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost, lsConfigs?.getSettings);
 				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());
@@ -195,7 +195,6 @@ export async function createProject(
 			getPreferences: lsConfigs?.getTsPreferences,
 			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
-			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
 			// ts
 			getNewLine: () => projectSys.newLine,
 			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,

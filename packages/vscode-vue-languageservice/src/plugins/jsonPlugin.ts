@@ -18,7 +18,7 @@ export default definePlugin((host) => {
             if (!jsonDocument)
                 return;
 
-            return await jsonLs.doComplete(textDocument, position, jsonDocument) ?? undefined;
+            return jsonLs.doComplete(textDocument, position, jsonDocument);
         },
 
         async onCompletionResolve(item) {
@@ -31,7 +31,7 @@ export default definePlugin((host) => {
             if (!jsonDocument)
                 return;
 
-            return await jsonLs.doHover(textDocument, position, jsonDocument) ?? undefined;
+            return jsonLs.doHover(textDocument, position, jsonDocument);
         },
     };
 

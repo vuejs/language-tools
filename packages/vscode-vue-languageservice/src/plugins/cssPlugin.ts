@@ -1,4 +1,5 @@
 import { definePlugin } from './definePlugin';
+import * as css from 'vscode-css-languageservice';
 
 export default definePlugin((host) => {
 
@@ -13,7 +14,9 @@ export default definePlugin((host) => {
             if (!cssLs)
                 return;
 
-            return await cssLs.doHover(textDocument, position, stylesheet) ?? undefined;
+            const settings = await host.getSettings<css.LanguageSettings>(textDocument.languageId, textDocument.uri);
+
+            return cssLs.doHover(textDocument, position, stylesheet, settings?.hover);
         },
     };
 });

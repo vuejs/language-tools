@@ -8,7 +8,6 @@ import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from 'vscode-pug-languageservice';
 import { findClassNames } from './parsers/cssClasses';
-import { LanguageServiceHostBase } from './types';
 
 interface StylesheetNode {
     children: StylesheetNode[] | undefined,
@@ -19,9 +18,7 @@ interface StylesheetNode {
     type: number,
 }
 
-export function createBasicRuntime(
-    vueHost?: LanguageServiceHostBase,
-) {
+export function createBasicRuntime() {
     const fileSystemProvider: html.FileSystemProvider = {
         stat: (uri) => {
             return new Promise<html.FileStat>((resolve, reject) => {
@@ -82,6 +79,7 @@ export function createBasicRuntime(
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
+        fileSystemProvider,
         htmlLs,
         pugLs,
         jsonLs,
@@ -92,7 +90,6 @@ export function createBasicRuntime(
         getHtmlDocument,
         getJsonDocument,
         getPugDocument,
-        vueHost,
         updateHtmlCustomData,
         updateCssCustomData,
         getHtmlDataProviders: () => htmlDataProviders,

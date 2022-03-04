@@ -50,7 +50,7 @@ export type BasicRuntimeContext = {
 	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 
-export type TypeScriptFeaturesRuntimeContext = BasicRuntimeContext & {
+export type TypeScriptFeaturesRuntimeContext = {
 	sourceFiles: SourceFiles;
 	vueHost: LanguageServiceHostBase;
 	documentContext: DocumentContext;

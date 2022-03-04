@@ -4,17 +4,26 @@ import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts2 from 'vscode-typescript-languageservice';
-import { createBasicRuntime } from './basicRuntime';
+import { BasicRuntimeContext } from '.';
 import { createSourceFile } from './sourceFile';
 import { createSourceFiles } from './sourceFiles';
 import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext } from './types';
 import * as localTypes from './utils/localTypes';
 
 export function createTypeScriptRuntime(
-    { typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
+    options: {
+        typescript: typeof import('typescript/lib/tsserverlibrary'),
+        htmlLs: html.LanguageService,
+        compileTemplate: BasicRuntimeContext['compileTemplate'],
+        compilerOptions: BasicRuntimeContext['compilerOptions'],
+        getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
+        getCssClasses: BasicRuntimeContext['getCssClasses'],
+    },
     vueHost: LanguageServiceHostBase,
     isTsPlugin = false,
 ) {
+
+    const { typescript: ts } = options;
 
     const isVue2 = vueHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
@@ -82,11 +91,7 @@ export function createTypeScriptRuntime(
         },
     }
 
-    const services = createBasicRuntime(vueHost);
-    const compilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
     const context: TypeScriptFeaturesRuntimeContext = {
-        ...services,
-        typescript: ts,
         vueHost,
         sourceFiles,
         templateTsHost,
@@ -97,14 +102,9 @@ export function createTypeScriptRuntime(
         scriptTsLs,
         documentContext,
         getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs : scriptTsLs,
-        compilerOptions,
-        compileTemplate: services.compileTemplate,
-        getCssVBindRanges: services.getCssVBindRanges,
-        getCssClasses: services.getCssClasses,
     };
 
     return {
-        services,
         context,
         apiHook,
         update,
@@ -372,12 +372,12 @@ export function createTypeScriptRuntime(
                     doc.uri,
                     doc.getText(),
                     doc.version.toString(),
-                    context.htmlLs,
-                    context.compileTemplate,
-                    context.compilerOptions,
-                    context.typescript,
-                    context.getCssVBindRanges,
-                    context.getCssClasses,
+                    options.htmlLs,
+                    options.compileTemplate,
+                    options.compilerOptions,
+                    options.typescript,
+                    options.getCssVBindRanges,
+                    options.getCssClasses,
                 ));
                 vueScriptContentsUpdate = true;
                 vueScriptsUpdated = true;

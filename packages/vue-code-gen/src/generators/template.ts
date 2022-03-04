@@ -58,7 +58,7 @@ export function generate(
 
 	const tsCodeGen = new CodeGen<EmbeddedDocumentMappingData>();
 	const tsFormatCodeGen = new CodeGen<EmbeddedDocumentMappingData>();
-	const cssCodeGen = new CodeGen<undefined>();
+	const cssCodeGen = new CodeGen<EmbeddedDocumentMappingData>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
@@ -695,7 +695,7 @@ export function generate(
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 										{
 											vueTag: 'template',
-											capabilities: capabilitiesSet.attr,
+											capabilities: capabilitiesSet.attrReference,
 											beforeRename(newName) {
 												return camelize('on-' + newName);
 											},
@@ -1230,7 +1230,18 @@ export function generate(
 					content,
 					sourceRange,
 					SourceMaps.Mode.Offset,
-					undefined,
+					{
+						vueTag: 'template',
+						capabilities: {
+							basic: true,
+							references: true,
+							definitions: true,
+							diagnostic: true,
+							rename: true,
+							completion: true,
+							semanticTokens: true,
+						},
+					},
 				);
 				cssCodeGen.addText(` }\n`);
 			}

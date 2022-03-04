@@ -2,16 +2,14 @@ import { BasicRuntimeContext, SourceFile, TypeScriptFeaturesRuntimeContext, Lang
 import type * as emmet from '@vscode/emmet-helper';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
-import type * as html from 'vscode-html-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguagePlugin, PluginHost } from './plugins/definePlugin';
 
 export type LanguageServiceHost = LanguageServiceHostBase & {
-    getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
-    schemaRequestService?: json.SchemaRequestService,
-    getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
-    getHtmlHoverSettings?(document: TextDocument): Promise<html.HoverSettings>,
+	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
+	schemaRequestService?: json.SchemaRequestService,
+	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
 };
 
 export interface TsCompletionData {
@@ -44,7 +42,7 @@ export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 	getVueDocument(document: TextDocument): SourceFile | undefined;
 }
 
-export type LanguageServiceRuntimeContext = TypeScriptFeaturesRuntimeContext & {
+export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeaturesRuntimeContext & {
 	pluginHost: PluginHost,
 	vueHost: LanguageServiceHost,
 	getTextDocument(uri: string): TextDocument | undefined,

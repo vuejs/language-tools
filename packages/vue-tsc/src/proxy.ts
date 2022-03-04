@@ -3,7 +3,7 @@ import * as vue from '@volar/vue-typescript';
 import * as path from 'path';
 import * as shared from '@volar/shared';
 import * as apis from './apis';
-import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
 
 export function createProgramProxy(options: ts.CreateProgramOptions) {
 
@@ -45,11 +45,12 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		getVueProjectVersion: () => '',
 		getProjectReferences: () => options.projectReferences,
 	};
-	const tsRuntime = createTypeScriptRuntime({ typescript: ts }, vueLsHost, true);
+	const services = createBasicRuntime();
+	const tsRuntime = createTypeScriptRuntime({ typescript: ts, ...services, compilerOptions: vueCompilerOptions }, vueLsHost, false);
 	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
 	if (!tsProgram) throw '!tsProgram';
 
-	const tsProgramApis_2 = apis.register(tsRuntime.context);
+	const tsProgramApis_2 = apis.register(ts, tsRuntime.context);
 	const tsProgramApis_3: Partial<typeof tsProgram> = {
 		emit: tsRuntime.apiHook(tsProgramApis_2.emit),
 		getRootFileNames: tsRuntime.apiHook(tsProgramApis_2.getRootFileNames),

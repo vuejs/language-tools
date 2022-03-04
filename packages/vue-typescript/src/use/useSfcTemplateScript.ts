@@ -416,7 +416,7 @@ export function useSfcTemplateScript(
 		update, // TODO: cheapComputed
 	};
 
-	function parseMappingSourceRange(data: any /* TODO */, range: SourceMaps.Range) {
+	function parseMappingSourceRange(data: SourceMaps.EmbeddedDocumentMappingData, range: SourceMaps.Range) {
 		if (data?.vueTag === 'style' && data?.vueTagIndex !== undefined) {
 			return {
 				start: styles.value[data.vueTagIndex].startTagEnd + range.start,
