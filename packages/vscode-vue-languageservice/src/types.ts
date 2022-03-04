@@ -1,13 +1,12 @@
-import { BasicRuntimeContext, SourceFile, TypeScriptFeaturesRuntimeContext, LanguageServiceHostBase as LanguageServiceHostBase } from '@volar/vue-typescript';
+import { BasicRuntimeContext, SourceFile, TypeScriptFeaturesRuntimeContext, LanguageServiceHostBase as LanguageServiceHostBase, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type * as emmet from '@vscode/emmet-helper';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin, PluginHost } from './plugins/definePlugin';
+import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 
 export type LanguageServiceHost = LanguageServiceHostBase & {
-	getEmmetConfig?(syntax: string): Promise<emmet.VSCodeEmmetConfig>,
 	schemaRequestService?: json.SchemaRequestService,
 	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
 };
@@ -43,10 +42,9 @@ export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 }
 
 export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeaturesRuntimeContext & {
-	pluginHost: PluginHost,
 	vueHost: LanguageServiceHost,
 	getTextDocument(uri: string): TextDocument | undefined,
-	plugins: EmbeddedLanguagePlugin[],
+	getPlugins: (sourceMap?: EmbeddedDocumentSourceMap) => EmbeddedLanguagePlugin[],
 }
 
 export type RuntimeContext = LanguageServiceRuntimeContext | DocumentServiceRuntimeContext;

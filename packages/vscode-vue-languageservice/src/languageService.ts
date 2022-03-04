@@ -22,15 +22,19 @@ import * as workspaceSymbol from './services/workspaceSymbol';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
 
-import type * as _0 from 'vscode-html-languageservice';
-import type * as _1 from 'vscode-css-languageservice';
-import type * as _2 from 'vscode-json-languageservice';
+import type * as html from 'vscode-html-languageservice';
+import type * as css from 'vscode-css-languageservice';
+import type * as json from 'vscode-json-languageservice';
+import type * as emmet from '@vscode/emmet-helper';
+
 import useCssPlugin from './plugins/cssPlugin';
 import useHtmlPlugin from './plugins/htmlPlugin';
 import usePugPlugin from './plugins/pugPlugin';
 import useJsonPlugin from './plugins/jsonPlugin';
 import useTsPlugin from './plugins/tsPlugin';
-import { PluginHost } from './plugins/definePlugin';
+import useEmmetPlugin from './plugins/emmetPlugin';
+import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
+import { isGloballyWhitelisted } from '@vue/shared';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -48,34 +52,93 @@ export function createLanguageService(
 		compilerOptions,
 	}, vueHost, false);
 	const blockingRequests = new Set<Promise<any>>();
-	const pluginHost: PluginHost = {
-		getSettings: async (section: string, scopeUri?: string) => getSettings?.(section, scopeUri),
-		schemaRequestService: vueHost.schemaRequestService,
-		fileSystemProvider: services.fileSystemProvider,
-		typescript: ts,
-		tsLs: undefined,
+
+	// plugins
+	const cssPlugin = useCssPlugin({
 		getCssLs: services.getCssLs,
+		getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
 		getStylesheet: services.getStylesheet,
+	});
+	const htmlPlugin = useHtmlPlugin({
+		htmlLs: services.htmlLs,
+		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+	});
+	const pugPlugin = usePugPlugin({
+		pugLs: services.pugLs,
+		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+	});
+	const jsonPlugin = useJsonPlugin({
+		jsonLs: services.jsonLs,
+	});
+	const emmetPlugin = useEmmetPlugin({
+		getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),
+	});
+	const scriptTsPlugin = useTsPlugin({
+		typescript: ts,
+		tsLs: tsRuntime.context.scriptTsLs,
+		baseCompletionOptions: {
+			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+		},
+	});
+	const _templateTsPlugin = useTsPlugin({
+		typescript: ts,
+		tsLs: tsRuntime.context.templateTsLs,
+		baseCompletionOptions: {
+			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+			quotePreference: 'single',
+			includeCompletionsForModuleExports: false,
+			includeCompletionsForImportStatements: false,
+		},
+	});
+	const templateTsPlugin: EmbeddedLanguagePlugin = {
+		..._templateTsPlugin,
+		async onCompletion(textDocument, position, context) {
+
+			const tsComplete = await _templateTsPlugin.onCompletion?.(textDocument, position, context);
+
+			if (tsComplete) {
+				const sortTexts = completions.getTsCompletions(ts)?.SortText;
+				if (sortTexts) {
+					tsComplete.items = tsComplete.items.filter(tsItem => {
+						if (
+							(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
+							|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
+						) {
+							return isGloballyWhitelisted(tsItem.label);
+						}
+						return true;
+					});
+				}
+			}
+
+			return tsComplete;
+		},
 	};
-	const cssPlugin = useCssPlugin(pluginHost, undefined);
-	const htmlPlugin = useHtmlPlugin(pluginHost, undefined);
-	const pugPlugin = usePugPlugin(pluginHost, { htmlLs: htmlPlugin.data!.htmlLs });
-	const jsonPlugin = useJsonPlugin(pluginHost, undefined);
-	const tsPlugin = useTsPlugin(pluginHost, undefined);
+
 	const context: LanguageServiceRuntimeContext = {
 		...services,
 		...tsRuntime.context,
 		typescript: ts,
 		compilerOptions,
 		getTextDocument: tsRuntime.getHostDocument,
-		pluginHost,
-		plugins: [
-			cssPlugin,
-			htmlPlugin,
-			pugPlugin,
-			jsonPlugin,
-			tsPlugin,
-		],
+		getPlugins: sourceMap => {
+			const plugins = [
+				cssPlugin,
+				htmlPlugin,
+				pugPlugin,
+				jsonPlugin,
+				emmetPlugin,
+			];
+			if (sourceMap?.lsType === 'template') {
+				plugins.push(templateTsPlugin);
+			}
+			else {
+				plugins.push(scriptTsPlugin);
+			}
+			return plugins;
+		},
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findDefinition = definitions.register(context);

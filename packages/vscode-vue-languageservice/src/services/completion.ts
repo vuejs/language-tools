@@ -9,13 +9,13 @@ import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { SourceFile, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import { EmbeddedDocumentSourceMap, SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData } from '../types';
 import { untrack } from '../utils/untrack';
 import * as getEmbeddedDocument from './embeddedDocument';
-import * as emmet from '@vscode/emmet-helper';
 import { SearchTexts } from '@volar/vue-typescript';
+import { EmbeddedLanguagePlugin, visitEmbedded } from '../plugins/definePlugin';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {
@@ -94,24 +94,21 @@ export const eventModifiers: Record<string, string> = {
 };
 
 export function register(
-	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext,
+	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument, getPlugins, getTextDocument }: LanguageServiceRuntimeContext,
 	getScriptContentVersion: () => number,
 ) {
 
 	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
 		uri: string,
-		lists: {
-			ts?: vscode.CompletionList,
-			emmet?: vscode.CompletionList,
-			jsDoc?: vscode.CompletionList,
-			directiveComment?: vscode.CompletionList,
-			css?: vscode.CompletionList,
-			json?: vscode.CompletionList,
-			html?: vscode.CompletionList,
-			vue?: vscode.CompletionList,
-		},
-	} | undefined = undefined;
+		data: {
+			embeddedDocumentUri: string | undefined,
+			lsType: 'template' | 'script' | undefined,
+			plugin: EmbeddedLanguagePlugin,
+			list: vscode.CompletionList,
+		}[],
+		hasMainCompletion: boolean,
+	} | undefined;
 	const componentCompletionDataGetters = new WeakMap<SourceFile, ReturnType<typeof useComponentCompletionData>>();
 
 	return async (
@@ -127,76 +124,160 @@ export function register(
 		}>,
 	) => {
 
-		const sourceFile = sourceFiles.get(uri);
+		const vueDocument = sourceFiles.get(uri);
+
+		if (
+			context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions
+			&& cache?.uri === uri
+		) {
+
+			for (const cacheData of cache.data) {
+
+				if (!cacheData.list.isIncomplete)
+					continue;
+
+				let document: html.TextDocument | undefined;
+
+				if (vueDocument) {
+
+					const embeddeds = vueDocument.getEmbeddeds();
+
+					await visitEmbedded(embeddeds, async sourceMap => {
+
+						if (cacheData.embeddedDocumentUri !== sourceMap.mappedDocument.uri || cacheData.lsType !== sourceMap.lsType)
+							return;
+
+						for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+
+							if (!cacheData.plugin.onCompletion)
+								continue;
+
+							const embeddedCompletionList = await cacheData.plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
+
+							if (!embeddedCompletionList)
+								continue;
+
+							cacheData.list = transformCompletionList(
+								embeddedCompletionList,
+								embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+							);
+						}
+					});
+				}
+				else if (document = getTextDocument(uri)) {
+
+					if (!cacheData.plugin.onCompletion)
+						continue;
+
+					const cmpletionList = await cacheData.plugin.onCompletion(document, position, context);
+
+					if (!cmpletionList)
+						continue;
+
+					cacheData.list = cmpletionList;
+				}
+			}
+		}
+		else {
+
+			cache = {
+				uri,
+				data: [],
+				hasMainCompletion: false,
+			};
+
+			let document: html.TextDocument | undefined;
+
+			if (vueDocument) {
+
+				const embeddeds = vueDocument.getEmbeddeds();
+
+				await visitEmbedded(embeddeds, async sourceMap => {
+
+					const plugins = getPlugins(sourceMap);
+
+					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+
+						for (const plugin of plugins) {
+
+							if (!plugin.onCompletion)
+								continue;
+
+							if (context?.triggerCharacter && !plugin.triggerCharacters?.includes(context.triggerCharacter))
+								continue;
+
+							if (cache!.hasMainCompletion && !plugin.isAdditionalCompletion)
+								continue;
+
+							const embeddedCompletionList = await plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
+
+							if (!embeddedCompletionList)
+								continue;
+
+							const vueCompletionList = transformCompletionList(
+								embeddedCompletionList,
+								embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+							);
+
+							if (!plugin.isAdditionalCompletion) {
+								cache!.hasMainCompletion = true;
+							}
+
+							cache!.data.push({
+								embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								lsType: sourceMap.lsType,
+								plugin,
+								list: vueCompletionList,
+							})
+						}
+					}
+				});
+			}
+			else if (document = getTextDocument(uri)) {
+
+				const plugins = getPlugins();
+
+				for (const plugin of plugins) {
+
+					if (!plugin.onCompletion)
+						continue;
+
+					if (context?.triggerCharacter && !plugin.triggerCharacters?.includes(context.triggerCharacter))
+						continue;
+
+					if (cache.hasMainCompletion && !plugin.isAdditionalCompletion)
+						continue;
+
+					const cmpletionList = await plugin.onCompletion(document, position, context);
+
+					if (!cmpletionList)
+						continue;
+
+					if (!plugin.isAdditionalCompletion) {
+						cache.hasMainCompletion = true;
+					}
+
+					cache.data.push({
+						embeddedDocumentUri: undefined,
+						lsType: 'script',
+						plugin,
+						list: cmpletionList,
+					});
+				}
+			}
+		}
+
+		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
+
 		const triggerCharacters = getTriggerCharacters(ts.version);
 
-		if (context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions && cache?.uri === uri) {
-			if (cache.lists.ts?.isIncomplete) {
-				cache.lists.ts = await getTsResult();
-			}
-			if (cache.lists.emmet?.isIncomplete) {
-				cache.lists.emmet = sourceFile ? await getEmmetResult(sourceFile) : undefined;
-			}
-			if (cache.lists.jsDoc?.isIncomplete) {
-				cache.lists.jsDoc = await getJsDocResult();
-			}
-			if (cache.lists.directiveComment?.isIncomplete) {
-				cache.lists.jsDoc = await getDirectiveCommentResult();
-			}
-			if (cache.lists.css?.isIncomplete) {
-				cache.lists.css = sourceFile ? await getCssResult(sourceFile) : undefined;
-			}
-			if (cache.lists.json?.isIncomplete) {
-				cache.lists.json = sourceFile ? await getJsonResult(sourceFile) : undefined;
-			}
-			if (cache.lists.html?.isIncomplete) {
-				cache.lists.html = sourceFile ? await getHtmlResult(sourceFile) : undefined;
-			}
-			if (cache.lists.vue?.isIncomplete) {
-				cache.lists.vue = sourceFile ? await getVueResult(sourceFile) : undefined;
-			}
-			return combineCacheResults();
-		}
-
-		cache = { uri, lists: {} };
-		cache.lists.emmet = sourceFile ? await getEmmetResult(sourceFile) : undefined;
-		cache.lists.jsDoc = await getJsDocResult();
-		cache.lists.directiveComment = await getDirectiveCommentResult();
-
-		cache.lists.ts = await getTsResult();
-		if (cache.lists.ts?.items.length) {
-			return combineCacheResults();
-		}
-
-		// precede html for support inline css service
-		cache.lists.css = sourceFile ? await getCssResult(sourceFile) : undefined;
-		if (cache.lists.css?.items.length) {
-			return combineCacheResults();
-		}
-
-		cache.lists.json = sourceFile ? await getJsonResult(sourceFile) : undefined;
-		if (cache.lists.json?.items.length) {
-			return combineCacheResults();
-		}
-
-		cache.lists.html = sourceFile ? await getHtmlResult(sourceFile) : undefined;
-		if (cache.lists.html?.items.length) {
-			return combineCacheResults();
-		}
-
-		cache.lists.vue = sourceFile ? await getVueResult(sourceFile) : undefined;
-		if (cache.lists.vue?.items.length) {
-			return combineCacheResults();
-		}
-
-		return combineCacheResults();
-
-		function combineCacheResults() {
-			const lists = cache ? Object.values(cache.lists) : [];
-			const lists2 = lists.filter(shared.notEmpty);
+		function combineCompletionList(lists: vscode.CompletionList[]) {
 			return {
-				isIncomplete: lists2.some(list => list.isIncomplete),
-				items: lists2.map(list => list.items).flat(),
+				isIncomplete: lists.some(list => list.isIncomplete),
+				items: lists.map(list => list.items).flat().filter((result: vscode.CompletionItem) =>
+					result.label.indexOf('__VLS_') === -1
+					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)
+				),
 			};
 		}
 		async function getTsResult() {
@@ -738,26 +819,6 @@ export function register(
 				}
 			}
 		}
-		async function getEmmetResult(sourceFile: SourceFile) {
-			if (!vueHost.getEmmetConfig) return;
-			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
-			if (embededDoc && !(embededDoc.sourceMap instanceof EmbeddedDocumentSourceMap && embededDoc.sourceMap.lsType === 'template')) {
-				const emmetConfig = await vueHost.getEmmetConfig(embededDoc.language);
-				if (emmetConfig) {
-					let mode = emmet.getEmmetMode(embededDoc.language === 'vue' ? 'html' : embededDoc.language);
-					if (!mode) return;
-					const doc = embededDoc.document ?? sourceFile.getTextDocument();
-					const emmetResult = emmet.doComplete(doc, embededDoc.range.start, mode, emmetConfig);
-					if (emmetResult && embededDoc.sourceMap) {
-						return transformCompletionList(
-							emmetResult,
-							emmetRange => embededDoc.sourceMap!.getSourceRange(emmetRange.start, emmetRange.end)?.[0],
-						);
-					}
-					return emmetResult;
-				}
-			}
-		}
 	}
 
 	function getComponentCompletionData(sourceFile: SourceFile) {
@@ -856,7 +917,7 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 	}
 }
 
-function getTsCompletions(ts: typeof import('typescript/lib/tsserverlibrary')): {
+export function getTsCompletions(ts: typeof import('typescript/lib/tsserverlibrary')): {
 	StringCompletions: {
 		getStringLiteralCompletions: Function,
 		getStringLiteralCompletionDetails: Function,

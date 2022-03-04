@@ -1,40 +1,72 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { definePlugin } from './definePlugin';
 import * as ts2 from 'vscode-typescript-languageservice';
+import * as vscode from 'vscode-languageserver-protocol';
 
-export default definePlugin((host) => {
+export default definePlugin((host: {
+    typescript: typeof import('typescript/lib/tsserverlibrary'),
+    tsLs: ts2.LanguageService,
+    baseCompletionOptions: ts.GetCompletionsAtPositionOptions,
+}) => {
 
-    const triggerCharacters = ts2.getTriggerCharacters(host.typescript.version);
+    const basicTriggerCharacters = ts2.getTriggerCharacters(host.typescript.version);
+    const jsdocTriggerCharacter = '*';
 
     return {
-        async onCompletion(textDocument, position, context) {
 
-            if (context.triggerCharacter && !triggerCharacters.includes(context.triggerCharacter))
-                return;
+        triggerCharacters: [...basicTriggerCharacters, jsdocTriggerCharacter],
+
+        async onCompletion(textDocument, position, context) {
 
             if (!isValidLanguage(textDocument))
                 return;
 
-            if (!host.tsLs)
-                return;
+            let basicComplete: vscode.CompletionList | undefined;
 
-            return host.tsLs.doComplete(textDocument.uri, position);
+            if (!context?.triggerCharacter || basicTriggerCharacters.includes(context.triggerCharacter)) {
+
+                const options: ts.GetCompletionsAtPositionOptions = {
+                    ...host.baseCompletionOptions,
+                    triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
+                    triggerKind: context?.triggerKind,
+                };
+
+                basicComplete = await host.tsLs.doComplete(textDocument.uri, position, options);
+            }
+
+            withJsDocComplete();
+
+            return basicComplete;
+
+            function withJsDocComplete() {
+
+                if (context?.triggerCharacter && context.triggerCharacter !== jsdocTriggerCharacter)
+                    return;
+
+                const jsDocComplete = host.tsLs.doJsDocComplete(textDocument.uri, position);
+
+                if (jsDocComplete) {
+
+                    if (basicComplete) {
+                        basicComplete.items.push(jsDocComplete);
+                    }
+                    else {
+                        basicComplete = {
+                            isIncomplete: false,
+                            items: [jsDocComplete],
+                        };
+                    }
+                }
+            }
         },
 
         async onCompletionResolve(item) {
-
-            if (!host.tsLs)
-                return item;
-
             return host.tsLs.doCompletionResolve(item);
         },
 
         async onHover(textDocument, position) {
 
             if (!isValidLanguage(textDocument))
-                return;
-
-            if (!host.tsLs)
                 return;
 
             return host.tsLs.doHover(textDocument.uri, position);

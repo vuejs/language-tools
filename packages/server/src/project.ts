@@ -171,7 +171,6 @@ export async function createProject(
 
 		const host: vue.LanguageServiceHost = {
 			// vue
-			getEmmetConfig: lsConfigs?.getEmmetConfiguration,
 			schemaRequestService(uri) {
 
 				const protocol = uri.substr(0, uri.indexOf(':'));

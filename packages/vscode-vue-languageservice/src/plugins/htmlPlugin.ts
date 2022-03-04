@@ -2,16 +2,19 @@ import { definePlugin } from './definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export default definePlugin((host) => {
+export default definePlugin((host: {
+    htmlLs: html.LanguageService,
+    getHoverSettings(uri: string): Promise<html.HoverSettings | undefined>,
+}) => {
 
-    const htmlLs = html.getLanguageService({ fileSystemProvider: host.fileSystemProvider });
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
     return {
 
-        data: {
-            htmlLs,
-        },
+        triggerCharacters: [
+			'.', ':', '<', '"', '=', '/', // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
+			'@', // vue event shorthand
+		],
 
         async onHover(textDocument, position) {
 
@@ -20,9 +23,9 @@ export default definePlugin((host) => {
             if (!htmlDocument)
                 return;;
 
-            const hoverSettings = await host.getSettings<html.HoverSettings>('html.hover', textDocument.uri);
+            const hoverSettings = await host.getHoverSettings(textDocument.uri);
 
-            return htmlLs.doHover(textDocument, position, htmlDocument, hoverSettings);
+            return host.htmlLs.doHover(textDocument, position, htmlDocument, hoverSettings);
         },
     };
 
@@ -39,7 +42,7 @@ export default definePlugin((host) => {
             }
         }
 
-        const doc = htmlLs.parseHTMLDocument(document);
+        const doc = host.htmlLs.parseHTMLDocument(document);
         htmlDocuments.set(document, [document.version, doc]);
 
         return doc;

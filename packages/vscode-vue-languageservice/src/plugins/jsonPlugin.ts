@@ -2,27 +2,27 @@ import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { definePlugin } from './definePlugin';
 
-export default definePlugin((host) => {
+export default definePlugin((host: {
+    jsonLs: json.LanguageService,
+}) => {
 
-    const triggerCharacters = ['"', ':'];
-    const jsonLs = json.getLanguageService({ schemaRequestService: host.schemaRequestService });
     const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 
     return {
-        async onCompletion(textDocument, position, context) {
 
-            if (context.triggerCharacter && !triggerCharacters.includes(context.triggerCharacter))
-                return;
+		triggerCharacters: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
+
+        async onCompletion(textDocument, position, context) {
 
             const jsonDocument = getJsonDocument(textDocument);
             if (!jsonDocument)
                 return;
 
-            return jsonLs.doComplete(textDocument, position, jsonDocument);
+            return host.jsonLs.doComplete(textDocument, position, jsonDocument);
         },
 
         async onCompletionResolve(item) {
-            return await jsonLs.doResolve(item);
+            return await host.jsonLs.doResolve(item);
         },
 
         async onHover(textDocument, position) {
@@ -31,7 +31,7 @@ export default definePlugin((host) => {
             if (!jsonDocument)
                 return;
 
-            return jsonLs.doHover(textDocument, position, jsonDocument);
+            return host.jsonLs.doHover(textDocument, position, jsonDocument);
         },
     };
 
@@ -48,7 +48,7 @@ export default definePlugin((host) => {
             }
         }
 
-        const doc = jsonLs.parseJSONDocument(textDocument);
+        const doc = host.jsonLs.parseJSONDocument(textDocument);
         jsonDocuments.set(textDocument, [textDocument.version, doc]);
 
         return doc;

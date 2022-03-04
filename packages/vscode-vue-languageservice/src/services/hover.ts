@@ -1,14 +1,16 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
-import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import { visitEmbedded } from '../plugins/definePlugin';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register({ sourceFiles, getTsLs, plugins, getTextDocument, pluginHost }: LanguageServiceRuntimeContext) {
+export function register({ sourceFiles, getTsLs, getPlugins, getTextDocument }: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, position: vscode.Position) => {
 
 		const vueDocument = sourceFiles.get(uri);
 		const hovers: vscode.Hover[] = [];
+		let document: TextDocument | undefined;
 
 		if (vueDocument) {
 
@@ -16,7 +18,7 @@ export function register({ sourceFiles, getTsLs, plugins, getTextDocument, plugi
 
 			await visitEmbedded(embeddeds, async sourceMap => {
 
-				pluginHost.tsLs = sourceMap.lsType ? getTsLs(sourceMap.lsType) : undefined;
+				const plugins = getPlugins(sourceMap);
 
 				for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.basic)) {
 
@@ -44,37 +46,23 @@ export function register({ sourceFiles, getTsLs, plugins, getTextDocument, plugi
 						}
 					}
 				}
-
-				return true;
 			});
-
-			async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
-				for (const embedded of embeddeds) {
-
-					await visitEmbedded(embedded.embeddeds, cb);
-
-					if (embedded.sourceMap) {
-						await cb(embedded.sourceMap);
-					}
-				}
-			}
 		}
-		else {
+		else if (document = getTextDocument(uri)) {
 
-			const document = getTextDocument(uri);
+			const plugins = getPlugins();
 
-			if (document) {
+			for (const plugin of plugins) {
 
-				pluginHost.tsLs = getTsLs('script');
+				if (!plugin.onHover)
+					continue;
 
-				for (const plugin of plugins) {
-					if (plugin.onHover) {
-						const hover = await plugin.onHover(document, position);
-						if (hover) {
-							hovers.push(hover);
-						}
-					}
-				}
+				const hover = await plugin.onHover(document, position);
+
+				if (!hover)
+					continue;
+
+				hovers.push(hover);
 			}
 		}
 

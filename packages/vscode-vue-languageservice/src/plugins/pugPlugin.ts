@@ -3,9 +3,11 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from 'vscode-pug-languageservice';
 
-export default definePlugin((host, { htmlLs }: { htmlLs: html.LanguageService }) => {
+export default definePlugin((host: {
+    pugLs: pug.LanguageService,
+    getHoverSettings(uri: string): Promise<html.HoverSettings | undefined>,
+}) => {
 
-    const pugLs = pug.getLanguageService(htmlLs);
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
@@ -16,9 +18,9 @@ export default definePlugin((host, { htmlLs }: { htmlLs: html.LanguageService })
             if (!pugDocument)
                 return;;
 
-            const hoverSettings = await host.getSettings<html.HoverSettings>('html.hover', textDocument.uri);
+            const hoverSettings = await host.getHoverSettings(textDocument.uri);
 
-            return pugLs.doHover(pugDocument, position, hoverSettings);
+            return host.pugLs.doHover(pugDocument, position, hoverSettings);
         },
     };
 
@@ -35,7 +37,7 @@ export default definePlugin((host, { htmlLs }: { htmlLs: html.LanguageService })
             }
         }
 
-        const doc = pugLs.parsePugDocument(document);
+        const doc = host.pugLs.parsePugDocument(document);
         pugDocuments.set(document, [document.version, doc]);
 
         return doc;
