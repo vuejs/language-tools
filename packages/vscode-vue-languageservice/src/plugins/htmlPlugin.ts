@@ -5,6 +5,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 export default definePlugin((host: {
     htmlLs: html.LanguageService,
     getHoverSettings(uri: string): Promise<html.HoverSettings | undefined>,
+    documentContext: html.DocumentContext,
 }) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
@@ -26,6 +27,16 @@ export default definePlugin((host: {
             const hoverSettings = await host.getHoverSettings(textDocument.uri);
 
             return host.htmlLs.doHover(textDocument, position, htmlDocument, hoverSettings);
+        },
+
+        async onCompletion(textDocument, position, context) {
+
+            const htmlDocument = getHtmlDocument(textDocument);
+
+            if (!htmlDocument)
+                return;;
+
+            return host.htmlLs.doComplete2(textDocument, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
         },
     };
 

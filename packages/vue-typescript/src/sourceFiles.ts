@@ -32,6 +32,16 @@ export function createSourceFiles() {
 
 	const all = computed(() => Object.values(_sourceFiles));
 	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
+	const allSourceMps = computed(() => {
+		const map = new Map<string, EmbeddedDocumentSourceMap>();
+		for (const key in _sourceFiles) {
+			const sourceFile = _sourceFiles[key]!;
+			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
+				map.set(sourceMap.id + ':' + sourceMap.mappedDocument.uri, sourceMap);
+			}
+		}
+		return map;
+	});
 	const cssSourceMaps = computed(() => {
 		const map = new Map<string, EmbeddedDocumentSourceMap>();
 		for (const key in _sourceFiles) {
@@ -147,6 +157,8 @@ export function createSourceFiles() {
 		get: untrack(sourceFiles.uriGet),
 		set: untrack(sourceFiles.uriSet),
 		delete: untrack(sourceFiles.uriDelete),
+
+		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => allSourceMps.value.get(id + ':' + embeddedDocumentUri)),
 
 		getTsTeleports: untrack((lsType: 'script' | 'template') => tsRefs[lsType].teleports.value),
 		getTsDocuments: untrack((lsType: 'script' | 'template') => tsRefs[lsType].documents.value),

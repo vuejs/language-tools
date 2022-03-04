@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import { transformCompletionItem, transformCompletionList } from '@volar/transforms';
+import { transformCompletionItem } from '@volar/transforms';
 import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -8,8 +8,8 @@ import * as html from 'vscode-html-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Data, Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
-import { EmbeddedDocumentSourceMap, SourceFile } from '@volar/vue-typescript';
+import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
+import { SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData } from '../types';
 import { untrack } from '../utils/untrack';
@@ -35,50 +35,6 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
-export const vueTags: html.ITagData[] = [
-	{
-		name: 'template',
-		attributes: [
-			{
-				name: 'lang',
-				values: [
-					{ name: 'html' },
-					{ name: 'pug' },
-				],
-			},
-		],
-	},
-	{
-		name: 'script',
-		attributes: [
-			{
-				name: 'lang',
-				values: [
-					{ name: 'js' },
-					{ name: 'ts' },
-					{ name: 'jsx' },
-					{ name: 'tsx' },
-				],
-			},
-			{ name: 'setup', valueSet: 'v' },
-		],
-	},
-	{
-		name: 'style',
-		attributes: [
-			{
-				name: 'lang',
-				values: [
-					{ name: 'css' },
-					{ name: 'scss' },
-					{ name: 'less' },
-				],
-			},
-			{ name: 'scoped', valueSet: 'v' },
-			{ name: 'module', valueSet: 'v' },
-		],
-	},
-];
 // https://v3.vuejs.org/api/directives.html#v-on
 export const eventModifiers: Record<string, string> = {
 	stop: 'call event.stopPropagation().',
@@ -93,6 +49,14 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
+export interface CompletionItemData {
+	uri: string,
+	originalItem: vscode.CompletionItem,
+	pluginId: number,
+	sourceMapId: number | undefined,
+	embeddedDocumentUri: string | undefined,
+}
+
 export function register(
 	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument, getPlugins, getTextDocument }: LanguageServiceRuntimeContext,
 	getScriptContentVersion: () => number,
@@ -102,8 +66,8 @@ export function register(
 	let cache: {
 		uri: string,
 		data: {
+			sourceMapId: number | undefined,
 			embeddedDocumentUri: string | undefined,
-			lsType: 'template' | 'script' | undefined,
 			plugin: EmbeddedLanguagePlugin,
 			list: vscode.CompletionList,
 		}[],
@@ -124,7 +88,7 @@ export function register(
 		}>,
 	) => {
 
-		const vueDocument = sourceFiles.get(uri);
+		const document = getTextDocument(uri)
 
 		if (
 			context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions
@@ -136,57 +100,77 @@ export function register(
 				if (!cacheData.list.isIncomplete)
 					continue;
 
-				let document: html.TextDocument | undefined;
+				if (cacheData.sourceMapId !== undefined && cacheData.embeddedDocumentUri !== undefined) {
 
-				if (vueDocument) {
+					const sourceMap = sourceFiles.getSourceMap(cacheData.sourceMapId, cacheData.embeddedDocumentUri);
 
-					const embeddeds = vueDocument.getEmbeddeds();
+					if (!sourceMap)
+						continue;
 
-					await visitEmbedded(embeddeds, async sourceMap => {
+					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
-						if (cacheData.embeddedDocumentUri !== sourceMap.mappedDocument.uri || cacheData.lsType !== sourceMap.lsType)
-							return;
+						if (!cacheData.plugin.onCompletion)
+							continue;
 
-						for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+						const embeddedCompletionList = await cacheData.plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
 
-							if (!cacheData.plugin.onCompletion)
-								continue;
+						if (!embeddedCompletionList)
+							continue;
 
-							const embeddedCompletionList = await cacheData.plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
-
-							if (!embeddedCompletionList)
-								continue;
-
-							cacheData.list = transformCompletionList(
-								embeddedCompletionList,
-								embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
-							);
-						}
-					});
+						cacheData.list = {
+							...embeddedCompletionList,
+							items: embeddedCompletionList.items.map(item => ({
+								...transformCompletionItem(
+									item,
+									embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+								),
+								data: <CompletionItemData>{
+									uri,
+									originalItem: item,
+									pluginId: cacheData.plugin.id,
+									sourceMapId: sourceMap.id,
+									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								} as any,
+							})),
+						};
+					}
 				}
-				else if (document = getTextDocument(uri)) {
+
+				if (document) {
 
 					if (!cacheData.plugin.onCompletion)
 						continue;
 
-					const cmpletionList = await cacheData.plugin.onCompletion(document, position, context);
+					const completionList = await cacheData.plugin.onCompletion(document, position, context);
 
-					if (!cmpletionList)
+					if (!completionList)
 						continue;
 
-					cacheData.list = cmpletionList;
+					cacheData.list = {
+						...completionList,
+						items: completionList.items.map(item => ({
+							...item,
+							data: <CompletionItemData>{
+								uri,
+								originalItem: item,
+								pluginId: cacheData.plugin.id,
+								sourceMapId: undefined,
+								embeddedDocumentUri: undefined,
+							} as any,
+						}))
+					};
 				}
 			}
 		}
 		else {
+
+			const vueDocument = sourceFiles.get(uri);
 
 			cache = {
 				uri,
 				data: [],
 				hasMainCompletion: false,
 			};
-
-			let document: html.TextDocument | undefined;
 
 			if (vueDocument) {
 
@@ -214,26 +198,37 @@ export function register(
 							if (!embeddedCompletionList)
 								continue;
 
-							const vueCompletionList = transformCompletionList(
-								embeddedCompletionList,
-								embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
-							);
-
 							if (!plugin.isAdditionalCompletion) {
 								cache!.hasMainCompletion = true;
 							}
 
 							cache!.data.push({
+								sourceMapId: sourceMap.id,
 								embeddedDocumentUri: sourceMap.mappedDocument.uri,
-								lsType: sourceMap.lsType,
 								plugin,
-								list: vueCompletionList,
-							})
+								list: {
+									...embeddedCompletionList,
+									items: embeddedCompletionList.items.map(item => ({
+										...transformCompletionItem(
+											item,
+											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+										),
+										data: <CompletionItemData>{
+											uri,
+											originalItem: item,
+											pluginId: plugin.id,
+											sourceMapId: sourceMap.id,
+											embeddedDocumentUri: sourceMap.mappedDocument.uri,
+										} as any,
+									})),
+								},
+							});
 						}
 					}
 				});
 			}
-			else if (document = getTextDocument(uri)) {
+
+			if (document) {
 
 				const plugins = getPlugins();
 
@@ -248,9 +243,9 @@ export function register(
 					if (cache.hasMainCompletion && !plugin.isAdditionalCompletion)
 						continue;
 
-					const cmpletionList = await plugin.onCompletion(document, position, context);
+					const completionList = await plugin.onCompletion(document, position, context);
 
-					if (!cmpletionList)
+					if (!completionList)
 						continue;
 
 					if (!plugin.isAdditionalCompletion) {
@@ -258,10 +253,22 @@ export function register(
 					}
 
 					cache.data.push({
+						sourceMapId: undefined,
 						embeddedDocumentUri: undefined,
-						lsType: 'script',
 						plugin,
-						list: cmpletionList,
+						list: {
+							...completionList,
+							items: completionList.items.map(item => ({
+								...item,
+								data: <CompletionItemData>{
+									uri,
+									originalItem: item,
+									pluginId: plugin.id,
+									sourceMapId: undefined,
+									embeddedDocumentUri: undefined,
+								} as any,
+							}))
+						},
 					});
 				}
 			}
@@ -279,155 +286,6 @@ export function register(
 					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)
 				),
 			};
-		}
-		async function getTsResult() {
-			let result: vscode.CompletionList | undefined;
-			if (context?.triggerCharacter && !triggerCharacters.typescript.includes(context.triggerCharacter)) {
-				return result;
-			}
-			for (const tsLoc of sourceFiles.toTsLocations(
-				uri,
-				position,
-				position,
-				data => !!data.capabilities.completion,
-			)) {
-
-				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
-					continue;
-
-				if (!result) {
-					result = {
-						isIncomplete: false,
-						items: [],
-					};
-				}
-
-				const inTemplate = tsLoc.type === 'embedded-ts' && tsLoc.data.vueTag === 'template';
-				const options: ts.GetCompletionsAtPositionOptions = {
-					triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
-					triggerKind: context?.triggerKind,
-					// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-					includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-					...(inTemplate ? {
-						quotePreference: 'single',
-						includeCompletionsForModuleExports: false,
-						includeCompletionsForImportStatements: false,
-					} : {}),
-				};
-
-				const tsComplete = await getTsLs(tsLoc.lsType).doComplete(tsLoc.uri, tsLoc.range.start, options);
-				if (!tsComplete)
-					continue;
-
-				if (tsComplete.isIncomplete) {
-					result.isIncomplete = true;
-				}
-
-				if (inTemplate) {
-					const sortTexts = getTsCompletions(ts)?.SortText;
-					if (sortTexts) {
-						tsComplete.items = tsComplete.items.filter(tsItem => {
-							if (
-								(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
-								|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
-							) {
-								return isGloballyWhitelisted(tsItem.label);
-							}
-							return true;
-						});
-					}
-				}
-				const vueItems: vscode.CompletionItem[] = tsComplete.items.map(tsItem => {
-					const vueItem = transformCompletionItem(
-						tsItem,
-						tsRange => {
-							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
-								return vueLoc.range;
-							}
-						},
-					);
-					const data: CompletionData = {
-						lsType: tsLoc.lsType,
-						uri: uri,
-						docUri: tsLoc.uri,
-						mode: 'ts',
-						tsItem: tsItem,
-					};
-					// @ts-expect-error
-					vueItem.data = data;
-					return vueItem;
-				});
-				result.items = result.items.concat(vueItems);
-			}
-			if (result) {
-				result.items = result.items.filter((result: vscode.CompletionItem) =>
-					result.label.indexOf('__VLS_') === -1
-					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)
-				);
-			}
-			return result;
-		}
-		function getJsDocResult() {
-
-			if (context?.triggerCharacter && !triggerCharacters.jsdoc.includes(context.triggerCharacter)) {
-				return;
-			}
-
-			const result: vscode.CompletionList = vscode.CompletionList.create();
-
-			for (const tsLoc of sourceFiles.toTsLocations(
-				uri,
-				position,
-				position,
-				data => !!data.capabilities.completion,
-			)) {
-
-				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
-					continue;
-
-				const jsDocComplete = getTsLs(tsLoc.lsType).doJsDocComplete(tsLoc.uri, tsLoc.range.start);
-				if (jsDocComplete) {
-					result.items.push(transformCompletionItem(
-						jsDocComplete,
-						tsRange => {
-							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
-								return vueLoc.range;
-							}
-						},
-					));
-				}
-			}
-
-			return result;
-		}
-		function getDirectiveCommentResult() {
-
-			const result: vscode.CompletionList = vscode.CompletionList.create();
-
-			for (const tsLoc of sourceFiles.toTsLocations(
-				uri,
-				position,
-				position,
-				data => !!data.capabilities.completion,
-			)) {
-
-				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
-					continue;
-
-				const commentComplete = getTsLs(tsLoc.lsType).doDirectiveCommentComplete(tsLoc.uri, tsLoc.range.start);
-				if (commentComplete) {
-					result.items = result.items.concat(commentComplete.map(item => transformCompletionItem(
-						item,
-						tsRange => {
-							for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsRange.start, tsRange.end)) {
-								return vueLoc.range;
-							}
-						},
-					)));
-				}
-			}
-
-			return result;
 		}
 		async function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.CompletionList | undefined = undefined;
@@ -716,108 +574,6 @@ export function register(
 				htmlLs.setDataProviders(true, getHtmlDataProviders());
 			}
 			return result;
-		}
-		async function getCssResult(sourceFile: SourceFile) {
-			let result: vscode.CompletionList | undefined = undefined;
-			if (context?.triggerCharacter && !triggerCharacters.css.includes(context.triggerCharacter)) {
-				return;
-			}
-			for (const sourceMap of sourceFile.getCssSourceMaps()) {
-				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
-
-					if (!result) {
-						result = {
-							isIncomplete: false,
-							items: [],
-						};
-					}
-					const stylesheet = getStylesheet(sourceMap.mappedDocument);
-					const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-
-					if (!cssLs || !stylesheet)
-						continue;
-
-					const wordPattern = wordPatterns[sourceMap.mappedDocument.languageId] ?? wordPatterns.css;
-					const wordStart = shared.getWordRange(wordPattern, cssRange.end, sourceMap.mappedDocument)?.start; // TODO: use end?
-					const wordRange: vscode.Range = wordStart ? { start: wordStart, end: cssRange.end } : cssRange;
-					const settings = await vueHost.getCssLanguageSettings?.(sourceMap.mappedDocument);
-					const cssResult = await cssLs.doComplete2(sourceMap.mappedDocument, cssRange.start, stylesheet, documentContext, settings?.completion) as vscode.CompletionList;
-					if (cssResult.isIncomplete) {
-						result.isIncomplete = true;
-					}
-					const data: CompletionData = {
-						uri: uri,
-						docUri: sourceMap.mappedDocument.uri,
-						mode: 'css',
-					};
-					const vueItems: vscode.CompletionItem[] = cssResult.items.map(cssItem => {
-						if (!cssItem.textEdit) {
-							const newText = cssItem.insertText || cssItem.label;
-							cssItem.textEdit = vscode.TextEdit.replace(wordRange, newText);
-						}
-						const vueItem = transformCompletionItem(
-							cssItem,
-							cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0],
-						);
-						// @ts-expect-error
-						vueItem.data = data;
-						return vueItem;
-					});
-					result.items = result.items.concat(vueItems);
-				}
-			}
-			return result;
-		}
-		async function getJsonResult(sourceFile: SourceFile) {
-			let result: vscode.CompletionList | undefined = undefined;
-			if (context?.triggerCharacter && !triggerCharacters.json.includes(context.triggerCharacter)) {
-				return;
-			}
-			for (const sourceMap of sourceFile.getCustomBlockSourceMaps()) {
-
-				const jsonDocument = getJsonDocument(sourceMap.mappedDocument);
-				if (!jsonDocument)
-					continue;
-
-				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
-					if (!result) {
-						result = {
-							isIncomplete: false,
-							items: [],
-						};
-					}
-					const jsonResult = await jsonLs.doComplete(sourceMap.mappedDocument, cssRange.start, jsonDocument);
-					if (!jsonResult) continue;
-					if (jsonResult.isIncomplete) {
-						result.isIncomplete = true;
-					}
-					const vueItems: vscode.CompletionItem[] = jsonResult.items.map(jsonItem => {
-						const vueItem = transformCompletionItem(
-							jsonItem,
-							jsonRange => sourceMap.getSourceRange(jsonRange.start, jsonRange.end)?.[0],
-						);
-						return vueItem;
-					});
-					result.items = result.items.concat(vueItems);
-				}
-			}
-			return result;
-		}
-		async function getVueResult(sourceFile: SourceFile) {
-			const embededDoc = getEmbeddedDoc(uri, { start: position, end: position });
-			if (embededDoc) {
-				let syntax = shared.languageIdToSyntax(embededDoc.language);
-				if (syntax === 'vue') {
-					const dataProvider = html.newHTMLDataProvider(uri, {
-						version: 1.1,
-						tags: vueTags,
-					});
-					htmlLs.setDataProviders(false, [dataProvider]);
-					const result = await htmlLs.doComplete2(sourceFile.getTextDocument(), position, sourceFile.getVueHtmlDocument(), documentContext);
-					htmlLs.setDataProviders(true, getHtmlDataProviders());
-					return result;
-				}
-			}
 		}
 	}
 

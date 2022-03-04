@@ -308,9 +308,11 @@ export function useSfcTemplateScript(
 			}
 		}
 	});
+	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDoc.value) {
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				sourceMapId,
 				vueDoc.value,
 				textDoc.value,
 				'template',
@@ -355,9 +357,11 @@ export function useSfcTemplateScript(
 			return sourceMap;
 		}
 	});
+	const formatSourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const formatSourceMap = computed(() => {
 		if (templateCodeGens.value && formatTextDoc.value && template.value) {
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				formatSourceMapId,
 				vueDoc.value,
 				formatTextDoc.value,
 				'template',
@@ -383,9 +387,11 @@ export function useSfcTemplateScript(
 			};
 		}
 	});
+	const cssSourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const cssSourceMap = computed(() => {
 		if (templateCodeGens.value && cssTextDocument.value && template.value) {
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				cssSourceMapId,
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
 				undefined,

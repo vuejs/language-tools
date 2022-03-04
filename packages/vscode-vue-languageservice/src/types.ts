@@ -44,7 +44,8 @@ export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeaturesRuntimeContext & {
 	vueHost: LanguageServiceHost,
 	getTextDocument(uri: string): TextDocument | undefined,
-	getPlugins: (sourceMap?: EmbeddedDocumentSourceMap) => EmbeddedLanguagePlugin[],
+	getPlugins(sourceMap?: EmbeddedDocumentSourceMap): EmbeddedLanguagePlugin[],
+	getPluginById(id: number): EmbeddedLanguagePlugin | undefined,
 }
 
 export type RuntimeContext = LanguageServiceRuntimeContext | DocumentServiceRuntimeContext;

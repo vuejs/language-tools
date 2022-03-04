@@ -31,6 +31,7 @@ export function useSfcStyles(
 		}
 		return documents;
 	});
+	const sourceMapsId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMaps = computed(() => {
 		const sourceMaps: SourceMaps.EmbeddedDocumentSourceMap[] = [];
 		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
@@ -39,6 +40,7 @@ export function useSfcStyles(
 			const style = styles.value[i];
 
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				sourceMapsId,
 				vueDoc.value,
 				cssData.textDocument,
 			);

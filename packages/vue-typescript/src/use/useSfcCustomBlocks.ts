@@ -27,11 +27,13 @@ export function useSfcCustomBlocks(
 		}
 		return documents;
 	});
+	const sourceMapsId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMaps = computed(() => {
 		const sourceMaps: SourceMaps.EmbeddedDocumentSourceMap[] = [];
 		for (const doc of textDocuments.value) {
 			const customBlock = customBlocks.value[doc.index];
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				sourceMapsId,
 				vueDoc.value,
 				doc.textDocument,
 			);

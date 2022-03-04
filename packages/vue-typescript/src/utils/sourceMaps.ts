@@ -2,9 +2,40 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as SourceMaps from '@volar/source-map';
 import { EmbeddedDocumentMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
+import { Ref, computed } from '@vue/reactivity';
+
+let _id = 0;
+
+export function getEmbeddedDocumentSourceMapId() {
+	return _id++;
+}
+
+export function useEmbeddedDocumentSourceMap(
+	sourceDocument: Ref<TextDocument>,
+	mappedDocument: Ref<TextDocument>,
+	lsType?: 'template' | 'script',
+	capabilities = {
+		foldingRanges: true,
+		formatting: true,
+		documentSymbol: true,
+		codeActions: true,
+	},
+	mappings?: SourceMaps.Mapping<EmbeddedDocumentMappingData>[],
+) {
+	const id = _id++;
+	return computed(() => new EmbeddedDocumentSourceMap(
+		id,
+		sourceDocument.value,
+		mappedDocument.value,
+		lsType,
+		capabilities,
+		mappings,
+	));
+}
 
 export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedDocumentMappingData> {
 	constructor(
+		public id: number,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
 		public lsType?: 'template' | 'script',

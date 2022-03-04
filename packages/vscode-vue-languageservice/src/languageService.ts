@@ -27,12 +27,16 @@ import type * as css from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as emmet from '@vscode/emmet-helper';
 
+import useVuePlugin from './plugins/vuePlugin';
 import useCssPlugin from './plugins/cssPlugin';
 import useHtmlPlugin from './plugins/htmlPlugin';
 import usePugPlugin from './plugins/pugPlugin';
 import useJsonPlugin from './plugins/jsonPlugin';
 import useTsPlugin from './plugins/tsPlugin';
+import useJsDocPlugin from './plugins/jsDocPlugin';
+import useTsDirectiveCommentPlugin from './plugins/tsDirectiveCommentPlugin';
 import useEmmetPlugin from './plugins/emmetPlugin';
+
 import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 import { isGloballyWhitelisted } from '@vue/shared';
 
@@ -54,14 +58,19 @@ export function createLanguageService(
 	const blockingRequests = new Set<Promise<any>>();
 
 	// plugins
-	const cssPlugin = useCssPlugin({
-		getCssLs: services.getCssLs,
-		getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
-		getStylesheet: services.getStylesheet,
+	const vuePlugin = useVuePlugin({
+		documentContext: tsRuntime.context.documentContext,
 	});
 	const htmlPlugin = useHtmlPlugin({
 		htmlLs: services.htmlLs,
 		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+		documentContext: tsRuntime.context.documentContext,
+	});
+	const cssPlugin = useCssPlugin({
+		getCssLs: services.getCssLs,
+		getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
+		getStylesheet: services.getStylesheet,
+		documentContext: tsRuntime.context.documentContext,
 	});
 	const pugPlugin = usePugPlugin({
 		pugLs: services.pugLs,
@@ -92,6 +101,18 @@ export function createLanguageService(
 			includeCompletionsForImportStatements: false,
 		},
 	});
+	const scriptJsDocPlugin = useJsDocPlugin({
+		tsLs: tsRuntime.context.scriptTsLs,
+	});
+	const scriptTsDirectiveCommentPlugin = useTsDirectiveCommentPlugin({
+		tsLs: tsRuntime.context.scriptTsLs,
+	});
+	const templateJsDocPlugin = useJsDocPlugin({
+		tsLs: tsRuntime.context.templateTsLs,
+	});
+	const templateTsDirectiveCommentPlugin = useTsDirectiveCommentPlugin({
+		tsLs: tsRuntime.context.templateTsLs,
+	});
 	const templateTsPlugin: EmbeddedLanguagePlugin = {
 		..._templateTsPlugin,
 		async onCompletion(textDocument, position, context) {
@@ -117,6 +138,25 @@ export function createLanguageService(
 		},
 	};
 
+	const allPlugins = new Map<number, EmbeddedLanguagePlugin>();
+
+	for (const plugin of [
+		vuePlugin,
+		cssPlugin,
+		htmlPlugin,
+		pugPlugin,
+		jsonPlugin,
+		emmetPlugin,
+		scriptTsPlugin,
+		scriptJsDocPlugin,
+		scriptTsDirectiveCommentPlugin,
+		templateTsPlugin,
+		templateJsDocPlugin,
+		templateTsDirectiveCommentPlugin,
+	]) {
+		allPlugins.set(plugin.id, plugin);
+	}
+
 	const context: LanguageServiceRuntimeContext = {
 		...services,
 		...tsRuntime.context,
@@ -125,6 +165,7 @@ export function createLanguageService(
 		getTextDocument: tsRuntime.getHostDocument,
 		getPlugins: sourceMap => {
 			const plugins = [
+				vuePlugin,
 				cssPlugin,
 				htmlPlugin,
 				pugPlugin,
@@ -133,12 +174,17 @@ export function createLanguageService(
 			];
 			if (sourceMap?.lsType === 'template') {
 				plugins.push(templateTsPlugin);
+				plugins.push(templateJsDocPlugin);
+				plugins.push(templateTsDirectiveCommentPlugin);
 			}
 			else {
 				plugins.push(scriptTsPlugin);
+				plugins.push(scriptJsDocPlugin);
+				plugins.push(scriptTsDirectiveCommentPlugin);
 			}
 			return plugins;
 		},
+		getPluginById: id => allPlugins.get(id),
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findDefinition = definitions.register(context);

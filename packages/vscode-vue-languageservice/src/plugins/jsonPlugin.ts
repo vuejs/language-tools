@@ -10,7 +10,16 @@ export default definePlugin((host: {
 
     return {
 
-		triggerCharacters: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
+        triggerCharacters: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
+
+        async onHover(textDocument, position) {
+
+            const jsonDocument = getJsonDocument(textDocument);
+            if (!jsonDocument)
+                return;
+
+            return host.jsonLs.doHover(textDocument, position, jsonDocument);
+        },
 
         async onCompletion(textDocument, position, context) {
 
@@ -23,15 +32,6 @@ export default definePlugin((host: {
 
         async onCompletionResolve(item) {
             return await host.jsonLs.doResolve(item);
-        },
-
-        async onHover(textDocument, position) {
-
-            const jsonDocument = getJsonDocument(textDocument);
-            if (!jsonDocument)
-                return;
-
-            return host.jsonLs.doHover(textDocument, position, jsonDocument);
         },
     };
 

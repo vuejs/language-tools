@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref, ComputedRef } from '@vue/reactivity';
-import { EmbeddedDocumentSourceMap, TeleportSourceMap, EmbeddedDocumentMappingData, Range } from '../utils/sourceMaps';
+import { EmbeddedDocumentSourceMap, TeleportSourceMap, EmbeddedDocumentMappingData, Range, getEmbeddedDocumentSourceMapId } from '../utils/sourceMaps';
 import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template_scriptSetup';
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
@@ -89,9 +89,11 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			);
 		}
 	});
+	const sourceMapId = getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDocument.value) {
 			const sourceMap = new EmbeddedDocumentSourceMap(
+				sourceMapId,
 				vueDoc.value,
 				textDocument.value,
 				lsType,

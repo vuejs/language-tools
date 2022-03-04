@@ -272,6 +272,25 @@ export function createSourceFile(
 
 		return embeddeds;
 	});
+	const sourceMaps = computed(() => {
+
+		const _sourceMaps: EmbeddedDocumentSourceMap[] = [];
+
+		visitEmbedded(embeddeds.value, sourceMap => _sourceMaps.push(sourceMap));
+
+		function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => void) {
+			for (const embedded of embeddeds) {
+
+				visitEmbedded(embedded.embeddeds, cb);
+
+				if (embedded.sourceMap) {
+					cb(embedded.sourceMap);
+				}
+			}
+		}
+
+		return _sourceMaps;
+	});
 
 	update(_content, _version);
 
@@ -311,6 +330,7 @@ export function createSourceFile(
 			document,
 			descriptor: sfc,
 			lastUpdated,
+			sourceMaps,
 
 			scriptSetupRanges,
 			sfcCustomBlocks,

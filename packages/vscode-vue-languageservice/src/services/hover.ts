@@ -2,15 +2,14 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { visitEmbedded } from '../plugins/definePlugin';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function register({ sourceFiles, getTsLs, getPlugins, getTextDocument }: LanguageServiceRuntimeContext) {
+export function register({ sourceFiles, getPlugins, getTextDocument }: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, position: vscode.Position) => {
 
 		const vueDocument = sourceFiles.get(uri);
+		const document = getTextDocument(uri)
 		const hovers: vscode.Hover[] = [];
-		let document: TextDocument | undefined;
 
 		if (vueDocument) {
 
@@ -48,7 +47,8 @@ export function register({ sourceFiles, getTsLs, getPlugins, getTextDocument }: 
 				}
 			});
 		}
-		else if (document = getTextDocument(uri)) {
+
+		if (document) {
 
 			const plugins = getPlugins();
 

@@ -2,18 +2,25 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 
-type Promiseable<T> = T | Promise<T>;
+type WithPromise<T> = T | Promise<T>;
 
-export type EmbeddedLanguagePlugin = {
+type _EmbeddedLanguagePlugin = {
     isAdditionalCompletion?: boolean,
     triggerCharacters?: string[],
-    onCompletion?(textDocument: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): Promiseable<vscode.CompletionList | undefined | null>,
-    onCompletionResolve?(item: vscode.CompletionItem): Promiseable<vscode.CompletionItem>,
-    onHover?(textDocument: TextDocument, position: vscode.Position): Promiseable<vscode.Hover | undefined | null>,
+    onCompletion?(textDocument: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): WithPromise<vscode.CompletionList | undefined | null>,
+    onCompletionResolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): WithPromise<vscode.CompletionItem>,
+    onHover?(textDocument: TextDocument, position: vscode.Position): WithPromise<vscode.Hover | undefined | null>,
 };
 
-export function definePlugin<T>(_: (host: T) => EmbeddedLanguagePlugin) {
-    return _;
+export type EmbeddedLanguagePlugin = _EmbeddedLanguagePlugin & { id: number };
+
+let _id = 0;
+
+export function definePlugin<T>(_: (host: T) => _EmbeddedLanguagePlugin) {
+    return (host: T): EmbeddedLanguagePlugin => ({
+        id: _id++,
+        ..._(host),
+    });
 }
 
 export async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<void>) {

@@ -18,9 +18,11 @@ export function useSfcTemplate(
 			return document;
 		}
 	});
+	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDocument.value && template.value) {
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				sourceMapId,
 				vueDoc.value,
 				textDocument.value,
 			);

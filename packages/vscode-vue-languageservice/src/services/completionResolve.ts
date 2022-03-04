@@ -7,74 +7,64 @@ import * as path from 'upath';
 import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import { CompletionItemData } from './completion';
 
-export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, scriptTsLs }: LanguageServiceRuntimeContext) {
+export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, scriptTsLs, getPluginById }: LanguageServiceRuntimeContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
-		// @ts-expect-error
-		const data: CompletionData | undefined = item.data;
-		if (!data) return item;
+		const data: CompletionItemData = item.data as any;
+		const plugin = getPluginById(data.pluginId);
 
-		const sourceFile = sourceFiles.get(data.uri);
+		if (!plugin)
+			return item;
 
-		if (data.mode === 'ts') {
-			return await getTsResult(data);
+		if (!plugin.onCompletionResolve)
+			return item;
+
+		const originalItem = data.originalItem;
+
+		if (data.sourceMapId !== undefined && data.embeddedDocumentUri !== undefined) {
+
+			const sourceMap = sourceFiles.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
+
+			if (sourceMap) {
+
+				const newPosition_2 = newPosition
+					? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.capabilities.completion)?.[0].start
+					: undefined;
+				const resolvedItem = await plugin.onCompletionResolve(originalItem, newPosition_2);
+
+				item = transformCompletionItem(
+					resolvedItem,
+					embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+				);
+			}
 		}
-		if (data.mode === 'html') {
-			return await getHtmlResult(item, data);
+		else {
+			item = await plugin.onCompletionResolve(originalItem);
 		}
-		if (data.mode === 'autoImport' && sourceFile) {
-			return await getAutoImportResult(sourceFile, item, data);
+
+		// fix https://github.com/johnsoncodehk/volar/issues/916
+		if (item.additionalTextEdits) {
+			for (const edit of item.additionalTextEdits) {
+				if (
+					edit.range.start.line === 0
+					&& edit.range.start.character === 0
+					&& edit.range.end.line === 0
+					&& edit.range.end.character === 0
+				) {
+					edit.newText = (vueHost.getNewLine?.() ?? '\n') + edit.newText;
+				}
+			}
+		}
+
+		// TODO: monky fix import ts file icon
+		if (item.detail !== item.detail + '.ts') {
+			item.detail = item.detail;
 		}
 
 		return item;
 
-		async function getTsResult(data: TsCompletionData) {
-
-			const sourceMap = sourceFiles.getTsSourceMaps(data.lsType).get(data.docUri);
-			if (!sourceMap) {
-				// take over mode
-				return await scriptTsLs.doCompletionResolve(data.tsItem, newPosition);
-			}
-
-			if (sourceMap.lsType === undefined)
-				return item;
-
-			let newPosition_2: vscode.Position | undefined;
-			if (newPosition) {
-				for (const [tsRange] of sourceMap.getMappedRanges(newPosition, newPosition, data => !!data.capabilities.completion)) {
-					newPosition_2 = tsRange.start;
-					break;
-				}
-			}
-			data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
-
-			// fix https://github.com/johnsoncodehk/volar/issues/916
-			if (data.tsItem.additionalTextEdits) {
-				for (const edit of data.tsItem.additionalTextEdits) {
-					if (
-						edit.range.start.line === 0
-						&& edit.range.start.character === 0
-						&& edit.range.end.line === 0
-						&& edit.range.end.character === 0
-					) {
-						edit.newText = (vueHost.getNewLine?.() ?? '\n') + edit.newText;
-					}
-				}
-			}
-
-			const newVueItem = transformCompletionItem(
-				data.tsItem,
-				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0],
-			);
-			// @ts-expect-error
-			newVueItem.data = data;
-			// TODO: this is a patch for import ts file icon
-			if (newVueItem.detail !== data.tsItem.detail + '.ts') {
-				newVueItem.detail = data.tsItem.detail;
-			}
-			return newVueItem;
-		}
 		async function getHtmlResult(vueItem: vscode.CompletionItem, data: HtmlCompletionData) {
 			let tsItem: vscode.CompletionItem | undefined = data.tsItem;
 			if (!tsItem) return vueItem;
