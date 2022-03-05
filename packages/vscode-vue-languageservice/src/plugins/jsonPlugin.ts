@@ -102,7 +102,7 @@ export default definePlugin((host: {
 
         const htmlDocument = getJsonDocument(document);
         if (!htmlDocument)
-            return;;
+            return;
 
         return callback(htmlDocument);
     }

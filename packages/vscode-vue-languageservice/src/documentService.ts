@@ -13,6 +13,7 @@ import { createSourceFile, SourceFile } from '@volar/vue-typescript';
 import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
 import { createBasicRuntime } from '@volar/vue-typescript';
 
+import useVuePlugin from './plugins/vuePlugin';
 import useCssPlugin from './plugins/cssPlugin';
 import useHtmlPlugin from './plugins/htmlPlugin';
 import usePugPlugin from './plugins/pugPlugin';
@@ -22,6 +23,7 @@ import * as sharedServices from './utils/sharedLs';
 import * as ts2 from 'vscode-typescript-languageservice';
 
 import type * as _0 from 'vscode-languageserver-protocol';
+import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -34,7 +36,8 @@ export function getDocumentService(
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
-	const plugins = [
+	const plugins: EmbeddedLanguagePlugin[] = [
+		useVuePlugin({ getVueDocument }),
 		useHtmlPlugin({ getHtmlLs: () => services.htmlLs }),
 		usePugPlugin({ getPugLs: () => services.pugLs }),
 		useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet }),
@@ -55,13 +58,13 @@ export function getDocumentService(
 	};
 	return {
 		doFormatting: formatting.register(context, getPreferences, getFormatOptions, formatters),
-		getFoldingRanges: foldingRanges.register(context, getPreferences, getFormatOptions),
-		getSelectionRanges: selectionRanges.register(context, getPreferences, getFormatOptions),
+		getFoldingRanges: foldingRanges.register(context),
+		getSelectionRanges: selectionRanges.register(context),
 		doQuoteComplete: autoCreateQuotes.register(context),
 		doTagComplete: autoClosingTags.register(context),
 		doParentheseWrap: autoWrapBrackets.register(context),
 		findLinkedEditingRanges: linkedEditingRanges.register(context),
-		findDocumentSymbols: documentSymbol.register(context, getPreferences, getFormatOptions),
+		findDocumentSymbols: documentSymbol.register(context),
 		findDocumentColors: documentColor.register(context),
 		getColorPresentations: colorPresentations.register(context),
 	}

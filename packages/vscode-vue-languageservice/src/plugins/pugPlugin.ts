@@ -73,7 +73,7 @@ export default definePlugin((host: {
 
         const pugDocument = getPugDocument(document);
         if (!pugDocument)
-            return;;
+            return;
 
         return callback(pugDocument);
     }

@@ -97,6 +97,7 @@ export function createLanguageService(
 	const vuePlugin = wrapPlugin(
 		useVuePlugin({
 			documentContext: tsRuntime.context.documentContext,
+			getVueDocument: (document) => tsRuntime.context.sourceFiles.get(document.uri),
 		}),
 		{
 			triggerCharacters: vueTriggerCharacters,
@@ -150,8 +151,8 @@ export function createLanguageService(
 			getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),
 		}),
 		{
-			isAdditionalCompletion: true,
 			triggerCharacters: emmetTriggerCharacters,
+			isAdditionalCompletion: true,
 		},
 	);
 	const scriptTsPlugin = wrapPlugin(

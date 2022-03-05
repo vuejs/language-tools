@@ -1,45 +1,66 @@
-import { SourceFile } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { visitEmbedded } from '../plugins/definePlugin';
 import type { DocumentServiceRuntimeContext } from '../types';
+import * as shared from '@volar/shared';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
-	const { getCssLs, getStylesheet } = context;
+	return async (document: TextDocument) => {
 
-	return (document: TextDocument) => {
+		const vueDocument = context.getVueDocument(document);
+		const colorsList: vscode.ColorInformation[][] = [];
 
-		const sourceFile = context.getVueDocument(document);
-		if (!sourceFile)
-			return;
+		if (vueDocument) {
 
-		const cssResult = getCssResult(sourceFile);
+			const embeddeds = vueDocument.getEmbeddeds();
 
-		return cssResult;
+			await visitEmbedded(embeddeds, async sourceMap => {
 
-		function getCssResult(sourceFile: SourceFile) {
-			const result: vscode.ColorInformation[] = [];
-			const sourceMaps = sourceFile.getCssSourceMaps();
-			for (const sourceMap of sourceMaps) {
+				if (!sourceMap.capabilities.documentSymbol) // TODO: add color capabilitie setting
+					return true;
 
-				const stylesheet = getStylesheet(sourceMap.mappedDocument);
-				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+				const plugins = context.getPlugins(sourceMap.mappedDocument);
 
-				if (!cssLs || !stylesheet)
-					continue;
+				for (const plugin of plugins) {
 
-				let colors = cssLs.findDocumentColors(sourceMap.mappedDocument, stylesheet);
-				for (const color of colors) {
-					const vueRange = sourceMap.getSourceRange(color.range.start, color.range.end)?.[0];
-					if (vueRange) {
-						result.push({
-							...color,
-							range: vueRange,
-						});
-					}
+					if (!plugin.findDocumentColors)
+						continue;
+
+					const embeddedColors = await plugin.findDocumentColors(sourceMap.mappedDocument);
+
+					if (!embeddedColors)
+						continue;
+
+					const colors = embeddedColors.map(color => {
+						const range = sourceMap.getSourceRange(color.range.start, color.range.end)?.[0];
+						if (range) {
+							return vscode.ColorInformation.create(range, color.color);
+						}
+					}).filter(shared.notEmpty);
+
+					colorsList.push(colors);
 				}
-			}
-			return result;
+
+				return true;
+			});
 		}
+
+		const plugins = context.getPlugins(document);
+
+		for (const plugin of plugins) {
+
+			if (!plugin.findDocumentColors)
+				continue;
+
+			const colors = await plugin.findDocumentColors(document);
+
+			if (!colors)
+				continue;
+
+			colorsList.push(colors);
+		}
+
+		return colorsList.flat();
 	}
 }

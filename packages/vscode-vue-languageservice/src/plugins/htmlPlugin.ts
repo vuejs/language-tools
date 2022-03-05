@@ -1,4 +1,4 @@
-import { definePlugin } from './definePlugin';
+import { definePlugin, EmbeddedLanguagePlugin } from './definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -12,6 +12,37 @@ export default definePlugin((host: {
 }) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
+
+    return htmlPluginBase(host, getHtmlDocument);
+
+    function getHtmlDocument(document: TextDocument) {
+
+        if (document.languageId !== 'html')
+            return;
+
+        const cache = htmlDocuments.get(document);
+        if (cache) {
+            const [cacheVersion, cacheDoc] = cache;
+            if (cacheVersion === document.version) {
+                return cacheDoc;
+            }
+        }
+
+        const doc = host.getHtmlLs().parseHTMLDocument(document);
+        htmlDocuments.set(document, [document.version, doc]);
+
+        return doc;
+    }
+});
+
+export function htmlPluginBase(
+    host: {
+        getHtmlLs(): html.LanguageService,
+        getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
+        documentContext?: html.DocumentContext,
+    },
+    getHtmlDocument: (document: TextDocument) => html.HTMLDocument | undefined,
+): EmbeddedLanguagePlugin {
 
     return {
 
@@ -82,7 +113,13 @@ export default definePlugin((host: {
 
         findLinkedEditingRanges(document, position) {
             return worker(document, (htmlDocument) => {
-                return host.getHtmlLs().findLinkedEditingRanges(document, position, htmlDocument);
+
+                const ranges = host.getHtmlLs().findLinkedEditingRanges(document, position, htmlDocument);
+
+                if (!ranges)
+                    return;
+
+                return { ranges };
             });
         },
     };
@@ -91,27 +128,8 @@ export default definePlugin((host: {
 
         const htmlDocument = getHtmlDocument(document);
         if (!htmlDocument)
-            return;;
+            return;
 
         return callback(htmlDocument);
     }
-
-    function getHtmlDocument(document: TextDocument) {
-
-        if (document.languageId !== 'vue' && document.languageId !== 'html')
-            return;
-
-        const cache = htmlDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
-
-        const doc = host.getHtmlLs().parseHTMLDocument(document);
-        htmlDocuments.set(document, [document.version, doc]);
-
-        return doc;
-    }
-});
+}

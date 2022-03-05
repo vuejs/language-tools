@@ -1,57 +1,93 @@
-import { SourceFile } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { visitEmbedded } from '../plugins/definePlugin';
 import type { DocumentServiceRuntimeContext } from '../types';
+import * as shared from '@volar/shared';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
-	const { getCssLs, getStylesheet } = context;
+	return async (document: TextDocument, color: vscode.Color, range: vscode.Range) => {
 
-	return (document: TextDocument, color: vscode.Color, range: vscode.Range) => {
+		const vueDocument = context.getVueDocument(document);
+		let colorPresentations: vscode.ColorPresentation[] | undefined;
 
-		const sourceFile = context.getVueDocument(document);
-		if (!sourceFile)
-			return;
+		if (vueDocument) {
 
-		const cssResult = getCssResult(sourceFile);
+			const embeddeds = vueDocument.getEmbeddeds();
 
-		return cssResult;
+			await visitEmbedded(embeddeds, async sourceMap => {
 
-		function getCssResult(sourceFile: SourceFile) {
-			let result: vscode.ColorPresentation[] = [];
-			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+				if (!sourceMap.capabilities.documentSymbol) // TODO: add color capabilitie setting
+					return true;
 
-				const stylesheet = getStylesheet(sourceMap.mappedDocument);
-				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+				const plugins = context.getPlugins(sourceMap.mappedDocument);
 
-				if (!cssLs || !stylesheet)
+				for (const [mapedRange] of sourceMap.getMappedRanges(
+					range.start,
+					range.end,
+					data => !!data.capabilities.completion,
+				)) {
+
+					for (const plugin of plugins) {
+
+						if (!plugin.getColorPresentations)
+							continue;
+
+						const _colorPresentations = await plugin.getColorPresentations(sourceMap.mappedDocument, color, mapedRange);
+
+						if (!_colorPresentations)
+							continue;
+
+						colorPresentations = _colorPresentations.map(cp => {
+							if (cp.textEdit) {
+
+								const editRange = sourceMap.getSourceRange(cp.textEdit.range.start, cp.textEdit.range.end)?.[0];
+
+								if (!editRange)
+									return undefined;
+
+								cp.textEdit.range = editRange;
+							}
+							if (cp.additionalTextEdits) {
+								for (const textEdit of cp.additionalTextEdits) {
+
+									const editRange = sourceMap.getSourceRange(textEdit.range.start, textEdit.range.end)?.[0];
+
+									if (!editRange)
+										return undefined;
+
+									textEdit.range = editRange;
+								}
+							}
+							return cp;
+						}).filter(shared.notEmpty);
+
+						return false;
+					}
+				}
+
+				return true;
+			});
+		}
+
+		if (!colorPresentations) {
+
+			const plugins = context.getPlugins(document);
+
+			for (const plugin of plugins) {
+
+				if (!plugin.getColorPresentations)
 					continue;
 
-				const cssRanges = sourceMap.getMappedRanges(range.start, range.end);
-				for (const [cssRange] of cssRanges) {
-					const _result = cssLs.getColorPresentations(sourceMap.mappedDocument, stylesheet, color, cssRange);
-					for (const item of _result) {
-						if (item.textEdit) {
-							if (vscode.TextEdit.is(item.textEdit)) {
-								const vueRange = sourceMap.getSourceRange(item.textEdit.range.start, item.textEdit.range.end)?.[0];
-								if (vueRange) {
-									item.textEdit.range = vueRange;
-								}
-							}
-							if (item.additionalTextEdits) {
-								for (const textEdit of item.additionalTextEdits) {
-									const vueRange = sourceMap.getSourceRange(item.textEdit.range.start, item.textEdit.range.end)?.[0];
-									if (vueRange) {
-										textEdit.range = vueRange;
-									}
-								}
-							}
-						}
-					}
-					result = result.concat(_result);
-				}
+				const _colorPresentations = await plugin.getColorPresentations(document, color, range);
+
+				if (!_colorPresentations)
+					continue;
+
+				colorPresentations = _colorPresentations;
 			}
-			return result;
 		}
+
+		return colorPresentations;
 	}
 }

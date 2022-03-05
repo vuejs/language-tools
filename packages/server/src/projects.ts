@@ -184,7 +184,7 @@ export function createProjects(
 				await shared.sleep(0);
 				return false;
 			};
-			const isCancel = async () => req !== documentUpdatedReq || await isDocCancel();;
+			const isCancel = async () => req !== documentUpdatedReq || await isDocCancel();
 
 			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}

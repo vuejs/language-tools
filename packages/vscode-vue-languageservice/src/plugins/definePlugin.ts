@@ -41,7 +41,7 @@ export type EmbeddedLanguagePlugin = {
     },
 
     // html
-    findLinkedEditingRanges?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Range[]>;
+    findLinkedEditingRanges?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LinkedEditingRanges>;
 
     // doQuoteComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument, options?: CompletionConfiguration): string | null;
     // doTagComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument): string | null;
