@@ -1,28 +1,66 @@
 import type * as vscode from 'vscode-languageserver-protocol';
+import { visitEmbedded } from '../plugins/definePlugin';
 import type { LanguageServiceRuntimeContext } from '../types';
 
-export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
-	return (uri: string, position: vscode.Position, context?: vscode.SignatureHelpContext) => {
+export function register(context: LanguageServiceRuntimeContext) {
 
-		const tsResult = getTsResult();
-		if (tsResult) return tsResult;
+	return async (uri: string, position: vscode.Position, signatureHelpContext?: vscode.SignatureHelpContext) => {
 
-		function getTsResult() {
-			for (const tsLoc of sourceFiles.toTsLocations(
-				uri,
-				position,
-				position,
-				data => !!data.capabilities.basic,
-			)) {
+		const document = context.getTextDocument(uri);
+		const vueDocument = context.sourceFiles.get(uri);
 
-				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
+		let signatureHelp: vscode.SignatureHelp | undefined;
+
+		if (vueDocument) {
+
+			const embeddeds = vueDocument.getEmbeddeds();
+
+			await visitEmbedded(embeddeds, async sourceMap => {
+
+				for (const [mapedRange] of sourceMap.getMappedRanges(
+					position,
+					position,
+					data => !!data.capabilities.completion,
+				)) {
+
+					const plugins = context.getPlugins(sourceMap.lsType);
+
+					for (const plugin of plugins) {
+
+						if (!plugin.getSignatureHelp)
+							continue;
+
+						const _signatureHelp = await plugin.getSignatureHelp(sourceMap.mappedDocument, mapedRange.start, signatureHelpContext);
+
+						if (_signatureHelp) {
+							signatureHelp = _signatureHelp;
+							return false;
+						}
+					}
+				}
+
+				return true;
+			});
+		}
+
+		if (!signatureHelp && document) {
+
+			const plugins = context.getPlugins('script');
+
+			for (const plugin of plugins) {
+
+				if (!plugin.getSignatureHelp)
 					continue;
 
-				const result = getTsLs(tsLoc.lsType).getSignatureHelp(tsLoc.uri, tsLoc.range.start, context);
-				if (result) {
-					return result;
+				const _signatureHelp = await plugin.getSignatureHelp(document, position, signatureHelpContext);
+
+				if (_signatureHelp) {
+					signatureHelp = _signatureHelp;
+					break;
 				}
 			}
 		}
+
+		return signatureHelp;
 	}
 }

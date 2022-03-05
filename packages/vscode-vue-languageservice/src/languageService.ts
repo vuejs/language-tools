@@ -44,7 +44,7 @@ export interface LanguageService extends ReturnType<typeof createLanguageService
 
 let pluginId = 0;
 
-export type RuntimePlugin = ReturnType<typeof wrapPlugin>;
+export type LanguageServicePlugin = ReturnType<typeof wrapPlugin>;
 
 function wrapPlugin(plugin: EmbeddedLanguagePlugin, context?: {
 	useHtmlLs: boolean,
@@ -130,7 +130,7 @@ export function createLanguageService(
 	const templateTsDirectiveCommentPlugin = wrapPlugin(useTsDirectiveCommentPlugin({
 		tsLs: tsRuntime.context.templateTsLs,
 	}));
-	const templateTsPlugin: RuntimePlugin = {
+	const templateTsPlugin: LanguageServicePlugin = {
 		..._templateTsPlugin,
 		async doComplete(textDocument, position, context) {
 
@@ -155,7 +155,7 @@ export function createLanguageService(
 		},
 	};
 
-	const allPlugins = new Map<number, RuntimePlugin>();
+	const allPlugins = new Map<number, LanguageServicePlugin>();
 
 	for (const plugin of [
 		vuePlugin,
@@ -180,7 +180,7 @@ export function createLanguageService(
 		typescript: ts,
 		compilerOptions,
 		getTextDocument: tsRuntime.getHostDocument,
-		getPlugins: sourceMap => {
+		getPlugins: lsType => {
 			const plugins = [
 				vuePlugin,
 				cssPlugin,
@@ -189,12 +189,12 @@ export function createLanguageService(
 				jsonPlugin,
 				emmetPlugin,
 			];
-			if (sourceMap?.lsType === 'template') {
+			if (lsType === 'template') {
 				plugins.push(templateTsPlugin);
 				plugins.push(templateJsDocPlugin);
 				plugins.push(templateTsDirectiveCommentPlugin);
 			}
-			else {
+			else if (lsType === 'script') {
 				plugins.push(scriptTsPlugin);
 				plugins.push(scriptJsDocPlugin);
 				plugins.push(scriptTsDirectiveCommentPlugin);

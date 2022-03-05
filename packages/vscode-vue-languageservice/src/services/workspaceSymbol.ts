@@ -2,19 +2,32 @@ import { transformSymbolInformations } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 
-export function register(
-	context: LanguageServiceRuntimeContext,
-) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	const { scriptTsLs, sourceFiles } = context;
+	return async (query: string) => {
 
-	return (query: string) => {
+		const plugins = context.getPlugins('script');
+		const symbolsList: vscode.SymbolInformation[][] = [];
 
-		const symbols = scriptTsLs.findWorkspaceSymbols(query);
-		return transformSymbolInformations(symbols, loc => {
-			for (const vueLoc of sourceFiles.fromTsLocation('script', loc.uri, loc.range.start, loc.range.end)) {
-				return vscode.Location.create(vueLoc.uri, vueLoc.range);
-			}
-		});
+		for (const plugin of plugins) {
+
+			if (!plugin.findWorkspaceSymbols)
+				continue;
+
+			const embeddedSymbols = await plugin.findWorkspaceSymbols(query);
+
+			if (!embeddedSymbols)
+				continue;
+
+			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
+				for (const vueLoc of context.sourceFiles.fromEmbeddedLocation('script', loc.uri, loc.range.start, loc.range.end)) {
+					return vscode.Location.create(vueLoc.uri, vueLoc.range);
+				}
+			});
+
+			symbolsList.push(symbols);
+		}
+
+		return symbolsList.flat();
 	}
 }

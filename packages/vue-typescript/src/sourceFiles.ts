@@ -32,7 +32,7 @@ export function createSourceFiles() {
 
 	const all = computed(() => Object.values(_sourceFiles));
 	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
-	const allSourceMps = computed(() => {
+	const sourceMapsById = computed(() => {
 		const map = new Map<string, EmbeddedDocumentSourceMap>();
 		for (const key in _sourceFiles) {
 			const sourceFile = _sourceFiles[key]!;
@@ -41,6 +41,47 @@ export function createSourceFiles() {
 			}
 		}
 		return map;
+	});
+	const sourceMapsByLsType = {
+		noLsType: computed(() => {
+			const map = new Map<string, EmbeddedDocumentSourceMap>();
+			for (const key in _sourceFiles) {
+				const sourceFile = _sourceFiles[key]!;
+				for (const sourceMap of sourceFile.refs.sourceMaps.value) {
+					if (sourceMap.lsType === undefined) {
+						map.set(sourceMap.mappedDocument.uri, sourceMap);
+					}
+				}
+			}
+			return map;
+		}),
+	};
+	const sourceMapsByUriAndLsType = computed(() => {
+
+		const noLsType = new Map<string, EmbeddedDocumentSourceMap>();
+		const script = new Map<string, EmbeddedDocumentSourceMap>();
+		const template = new Map<string, EmbeddedDocumentSourceMap>();
+
+		for (const key in _sourceFiles) {
+			const sourceFile = _sourceFiles[key]!;
+			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
+				if (sourceMap.lsType === undefined) {
+					noLsType.set(sourceMap.mappedDocument.uri, sourceMap);
+				}
+				else if (sourceMap.lsType === 'script') {
+					script.set(sourceMap.mappedDocument.uri, sourceMap);
+				}
+				else if (sourceMap.lsType === 'template') {
+					template.set(sourceMap.mappedDocument.uri, sourceMap);
+				}
+			}
+		}
+
+		return {
+			noLsType,
+			script,
+			template,
+		};
 	});
 	const cssSourceMaps = computed(() => {
 		const map = new Map<string, EmbeddedDocumentSourceMap>();
@@ -158,7 +199,7 @@ export function createSourceFiles() {
 		set: untrack(sourceFiles.uriSet),
 		delete: untrack(sourceFiles.uriDelete),
 
-		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => allSourceMps.value.get(id + ':' + embeddedDocumentUri)),
+		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
 
 		getTsTeleports: untrack((lsType: 'script' | 'template') => tsRefs[lsType].teleports.value),
 		getTsDocuments: untrack((lsType: 'script' | 'template') => tsRefs[lsType].documents.value),
@@ -209,6 +250,58 @@ export function createSourceFiles() {
 						},
 					};
 				}
+			}
+		}),
+		fromEmbeddedLocation: untrack(function* (
+			lsType: 'script' | 'template' | undefined,
+			uri: string,
+			start: vscode.Position,
+			end?: vscode.Position,
+			filter?: (data: EmbeddedDocumentMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
+		) {
+
+			if (uri.endsWith(`/${localTypes.typesFileName}`))
+				return;
+
+			if (end === undefined)
+				end = start;
+
+			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
+
+			if (!sourceMap) {
+				if (lsType === 'script') {
+					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
+				}
+				else if (lsType === 'template') {
+					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
+				}
+			}
+
+			if (sourceMap) {
+
+				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+					return;
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
+					yield {
+						type: 'embedded-ts' as const,
+						sourceMap,
+						uri: sourceMap.sourceDocument.uri,
+						range: vueRange[0],
+						data: vueRange[1],
+					};
+				}
+			}
+			else {
+				yield {
+					type: 'source-ts' as const,
+					uri,
+					range: {
+						start,
+						end,
+					},
+				};
 			}
 		}),
 		fromTsLocation: untrack(function* (

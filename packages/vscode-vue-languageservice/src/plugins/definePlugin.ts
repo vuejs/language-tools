@@ -54,13 +54,19 @@ export function definePlugin<T>(_: (host: T) => EmbeddedLanguagePlugin) {
     return _;
 }
 
-export async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<void>) {
+export async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
     for (const embedded of embeddeds) {
 
-        await visitEmbedded(embedded.embeddeds, cb);
+        if (!await visitEmbedded(embedded.embeddeds, cb)) {
+            return false;
+        }
 
         if (embedded.sourceMap) {
-            await cb(embedded.sourceMap);
+            if (!await cb(embedded.sourceMap)) {
+                return false;
+            }
         }
     }
+
+    return true;
 }

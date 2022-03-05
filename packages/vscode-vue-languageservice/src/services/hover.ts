@@ -17,7 +17,7 @@ export function register({ sourceFiles, getPlugins, getTextDocument }: LanguageS
 
 			await visitEmbedded(embeddeds, async sourceMap => {
 
-				const plugins = getPlugins(sourceMap);
+				const plugins = getPlugins(sourceMap.lsType);
 
 				for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.basic)) {
 
@@ -45,12 +45,14 @@ export function register({ sourceFiles, getPlugins, getTextDocument }: LanguageS
 						}
 					}
 				}
+
+				return true;
 			});
 		}
 
 		if (document) {
 
-			const plugins = getPlugins();
+			const plugins = getPlugins('script');
 
 			for (const plugin of plugins) {
 

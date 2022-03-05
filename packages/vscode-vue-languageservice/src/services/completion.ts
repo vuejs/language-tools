@@ -13,7 +13,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { untrack } from '../utils/untrack';
 import { SearchTexts } from '@volar/vue-typescript';
 import { visitEmbedded } from '../plugins/definePlugin';
-import { RuntimePlugin } from '../languageService';
+import { LanguageServicePlugin } from '../languageService';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {
@@ -86,7 +86,7 @@ export function register(
 		data: {
 			sourceMapId: number | undefined,
 			embeddedDocumentUri: string | undefined,
-			plugin: RuntimePlugin,
+			plugin: LanguageServicePlugin,
 			list: vscode.CompletionList,
 		}[],
 		hasMainCompletion: boolean,
@@ -197,7 +197,7 @@ export function register(
 
 				await visitEmbedded(embeddeds, async sourceMap => {
 
-					const plugins = getPlugins(sourceMap);
+					const plugins = getPlugins(sourceMap.lsType);
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
@@ -257,12 +257,14 @@ export function register(
 							});
 						}
 					}
+
+					return true;
 				});
 			}
 
 			if (document) {
 
-				const plugins = getPlugins();
+				const plugins = getPlugins('script');
 
 				for (const plugin of plugins) {
 
