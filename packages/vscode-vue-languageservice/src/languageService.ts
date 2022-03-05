@@ -130,9 +130,9 @@ export function createLanguageService(
 	}));
 	const templateTsPlugin: RuntimePlugin = {
 		..._templateTsPlugin,
-		async onCompletion(textDocument, position, context) {
+		async doComplete(textDocument, position, context) {
 
-			const tsComplete = await _templateTsPlugin.onCompletion?.(textDocument, position, context);
+			const tsComplete = await _templateTsPlugin.doComplete?.(textDocument, position, context);
 
 			if (tsComplete) {
 				const sortTexts = completions.getTsCompletions(ts)?.SortText;

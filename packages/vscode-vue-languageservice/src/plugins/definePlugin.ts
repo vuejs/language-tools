@@ -7,9 +7,9 @@ type WithPromise<T> = T | Promise<T>;
 export type EmbeddedLanguagePlugin = {
     isAdditionalCompletion?: boolean,
     triggerCharacters?: string[],
-    onCompletion?(textDocument: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): WithPromise<vscode.CompletionList | undefined | null>,
-    onCompletionResolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): WithPromise<vscode.CompletionItem>,
-    onHover?(textDocument: TextDocument, position: vscode.Position): WithPromise<vscode.Hover | undefined | null>,
+    doComplete?(textDocument: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): WithPromise<vscode.CompletionList | undefined | null>,
+    doCompleteResolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): WithPromise<vscode.CompletionItem>,
+    doHover?(textDocument: TextDocument, position: vscode.Position): WithPromise<vscode.Hover | undefined | null>,
 };
 
 export function definePlugin<T>(_: (host: T) => EmbeddedLanguagePlugin) {

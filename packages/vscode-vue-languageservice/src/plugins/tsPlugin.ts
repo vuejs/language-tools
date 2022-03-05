@@ -12,7 +12,7 @@ export default definePlugin((host: {
 
         triggerCharacters: ts2.getTriggerCharacters(host.typescript.version),
 
-        async onCompletion(textDocument, position, context) {
+        async doComplete(textDocument, position, context) {
 
             if (!isValidLanguage(textDocument))
                 return;
@@ -26,11 +26,11 @@ export default definePlugin((host: {
             return host.tsLs.doComplete(textDocument.uri, position, options);
         },
 
-        async onCompletionResolve(item) {
+        async doCompleteResolve(item) {
             return host.tsLs.doCompletionResolve(item);
         },
 
-        async onHover(textDocument, position) {
+        async doHover(textDocument, position) {
 
             if (!isValidLanguage(textDocument))
                 return;

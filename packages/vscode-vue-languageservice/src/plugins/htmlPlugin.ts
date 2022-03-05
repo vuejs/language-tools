@@ -17,7 +17,7 @@ export default definePlugin((host: {
             '@', // vue event shorthand
         ],
 
-        async onHover(textDocument, position) {
+        async doHover(textDocument, position) {
 
             const htmlDocument = getHtmlDocument(textDocument);
 
@@ -29,7 +29,7 @@ export default definePlugin((host: {
             return host.htmlLs.doHover(textDocument, position, htmlDocument, hoverSettings);
         },
 
-        async onCompletion(textDocument, position, context) {
+        async doComplete(textDocument, position, context) {
 
             const htmlDocument = getHtmlDocument(textDocument);
 

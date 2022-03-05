@@ -23,10 +23,10 @@ export function register({ sourceFiles, getPlugins, getTextDocument }: LanguageS
 
 					for (const plugin of plugins) {
 
-						if (!plugin.onHover)
+						if (!plugin.doHover)
 							continue;
 
-						const embeddedHover = await plugin.onHover(sourceMap.mappedDocument, embeddedRange.start);
+						const embeddedHover = await plugin.doHover(sourceMap.mappedDocument, embeddedRange.start);
 
 						if (!embeddedHover)
 							continue;
@@ -54,10 +54,10 @@ export function register({ sourceFiles, getPlugins, getTextDocument }: LanguageS
 
 			for (const plugin of plugins) {
 
-				if (!plugin.onHover)
+				if (!plugin.doHover)
 					continue;
 
-				const hover = await plugin.onHover(document, position);
+				const hover = await plugin.doHover(document, position);
 
 				if (!hover)
 					continue;

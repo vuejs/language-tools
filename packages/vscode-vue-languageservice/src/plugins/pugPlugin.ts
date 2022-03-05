@@ -12,7 +12,7 @@ export default definePlugin((host: {
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
-        async onHover(textDocument, position) {
+        async doHover(textDocument, position) {
 
             const pugDocument = getPugDocument(textDocument);
 
@@ -24,7 +24,7 @@ export default definePlugin((host: {
             return host.pugLs.doHover(pugDocument, position, hoverSettings);
         },
 
-        async onCompletion(textDocument, position, context) {
+        async doComplete(textDocument, position, context) {
 
             const pugDocument = getPugDocument(textDocument);
 

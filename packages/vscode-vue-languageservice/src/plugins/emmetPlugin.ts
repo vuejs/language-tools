@@ -11,7 +11,7 @@ export default definePlugin((host: {
 
         isAdditionalCompletion: true,
 
-        async onCompletion(textDocument, position) {
+        async doComplete(textDocument, position) {
 
             const syntax = emmet.getEmmetMode(textDocument.languageId === 'vue' ? 'html' : textDocument.languageId);
             if (!syntax)

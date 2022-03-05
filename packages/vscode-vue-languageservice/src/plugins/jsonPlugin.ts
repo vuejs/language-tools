@@ -12,7 +12,7 @@ export default definePlugin((host: {
 
         triggerCharacters: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
 
-        async onHover(textDocument, position) {
+        async doHover(textDocument, position) {
 
             const jsonDocument = getJsonDocument(textDocument);
             if (!jsonDocument)
@@ -21,7 +21,7 @@ export default definePlugin((host: {
             return host.jsonLs.doHover(textDocument, position, jsonDocument);
         },
 
-        async onCompletion(textDocument, position, context) {
+        async doComplete(textDocument, position, context) {
 
             const jsonDocument = getJsonDocument(textDocument);
             if (!jsonDocument)
@@ -30,7 +30,7 @@ export default definePlugin((host: {
             return host.jsonLs.doComplete(textDocument, position, jsonDocument);
         },
 
-        async onCompletionResolve(item) {
+        async doCompleteResolve(item) {
             return await host.jsonLs.doResolve(item);
         },
     };

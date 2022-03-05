@@ -127,10 +127,10 @@ export function register(
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
-						if (!cacheData.plugin.onCompletion)
+						if (!cacheData.plugin.doComplete)
 							continue;
 
-						const embeddedCompletionList = await cacheData.plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
+						const embeddedCompletionList = await cacheData.plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, context);
 
 						if (!embeddedCompletionList)
 							continue;
@@ -156,10 +156,10 @@ export function register(
 
 				if (document) {
 
-					if (!cacheData.plugin.onCompletion)
+					if (!cacheData.plugin.doComplete)
 						continue;
 
-					const completionList = await cacheData.plugin.onCompletion(document, position, context);
+					const completionList = await cacheData.plugin.doComplete(document, position, context);
 
 					if (!completionList)
 						continue;
@@ -203,7 +203,7 @@ export function register(
 
 						for (const plugin of plugins) {
 
-							if (!plugin.onCompletion)
+							if (!plugin.doComplete)
 								continue;
 
 							if (context?.triggerCharacter && !plugin.triggerCharacters?.includes(context.triggerCharacter))
@@ -218,7 +218,7 @@ export function register(
 								htmlTsItems = await provideHtmlData(vueDocument);
 							}
 
-							const embeddedCompletionList = await plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
+							const embeddedCompletionList = await plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, context);
 
 							if (!embeddedCompletionList)
 								continue;
@@ -266,7 +266,7 @@ export function register(
 
 				for (const plugin of plugins) {
 
-					if (!plugin.onCompletion)
+					if (!plugin.doComplete)
 						continue;
 
 					if (context?.triggerCharacter && !plugin.triggerCharacters?.includes(context.triggerCharacter))
@@ -275,7 +275,7 @@ export function register(
 					if (cache.hasMainCompletion && !plugin.isAdditionalCompletion)
 						continue;
 
-					const completionList = await plugin.onCompletion(document, position, context);
+					const completionList = await plugin.doComplete(document, position, context);
 
 					if (!completionList)
 						continue;

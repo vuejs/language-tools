@@ -10,7 +10,7 @@ export default definePlugin((host: {
 
         triggerCharacters: ['@'],
 
-        async onCompletion(textDocument, position, context) {
+        async doComplete(textDocument, position, context) {
 
             if (!isValidLanguage(textDocument))
                 return;

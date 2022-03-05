@@ -50,7 +50,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, getPlu
 			if (!plugin)
 				return item;
 
-			if (!plugin.onCompletionResolve)
+			if (!plugin.doCompleteResolve)
 				return item;
 
 			const originalItem = data.originalItem;
@@ -64,7 +64,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, getPlu
 					const newPosition_2 = newPosition
 						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.capabilities.completion)?.[0].start
 						: undefined;
-					const resolvedItem = await plugin.onCompletionResolve(originalItem, newPosition_2);
+					const resolvedItem = await plugin.doCompleteResolve(originalItem, newPosition_2);
 
 					item = transformCompletionItem(
 						resolvedItem,
@@ -73,7 +73,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, getPlu
 				}
 			}
 			else {
-				item = await plugin.onCompletionResolve(originalItem);
+				item = await plugin.doCompleteResolve(originalItem);
 			}
 		}
 

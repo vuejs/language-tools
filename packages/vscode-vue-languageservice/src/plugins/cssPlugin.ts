@@ -22,7 +22,7 @@ export default definePlugin((host: {
 
         triggerCharacters: ['/', '-', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 
-        async onHover(textDocument, position) {
+        async doHover(textDocument, position) {
 
             const stylesheet = host.getStylesheet(textDocument);
             if (!stylesheet)
@@ -37,7 +37,7 @@ export default definePlugin((host: {
             return cssLs.doHover(textDocument, position, stylesheet, settings?.hover);
         },
 
-        async onCompletion(textDocument, position, context) {
+        async doComplete(textDocument, position, context) {
 
             const stylesheet = host.getStylesheet(textDocument);
             if (!stylesheet)
