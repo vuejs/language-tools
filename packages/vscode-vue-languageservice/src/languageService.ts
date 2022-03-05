@@ -76,12 +76,12 @@ export function createLanguageService(
 		documentContext: tsRuntime.context.documentContext,
 	}));
 	const htmlPlugin = wrapPlugin(useHtmlPlugin({
-		htmlLs: services.htmlLs,
+		getHtmlLs: () => services.htmlLs,
 		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
 		documentContext: tsRuntime.context.documentContext,
 	}), { useHtmlLs: true });
 	const pugPlugin = wrapPlugin(usePugPlugin({
-		pugLs: services.pugLs,
+		getPugLs: () => services.pugLs,
 		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
 		documentContext: tsRuntime.context.documentContext,
 	}), { useHtmlLs: true });
@@ -92,7 +92,7 @@ export function createLanguageService(
 		documentContext: tsRuntime.context.documentContext,
 	}));
 	const jsonPlugin = wrapPlugin(useJsonPlugin({
-		jsonLs: services.jsonLs,
+		getJsonLs: () => services.jsonLs,
 		getDocumentLanguageSettings: async () => undefined, // TODO
 		schema: undefined, // TODO
 	}));
@@ -101,7 +101,7 @@ export function createLanguageService(
 	}));
 	const scriptTsPlugin = wrapPlugin(useTsPlugin({
 		typescript: ts,
-		tsLs: tsRuntime.context.scriptTsLs,
+		getTsLs: () => tsRuntime.context.scriptTsLs,
 		baseCompletionOptions: {
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
@@ -109,7 +109,7 @@ export function createLanguageService(
 	}));
 	const _templateTsPlugin = wrapPlugin(useTsPlugin({
 		typescript: ts,
-		tsLs: tsRuntime.context.templateTsLs,
+		getTsLs: () => tsRuntime.context.templateTsLs,
 		baseCompletionOptions: {
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
@@ -119,16 +119,16 @@ export function createLanguageService(
 		},
 	}));
 	const scriptJsDocPlugin = wrapPlugin(useJsDocPlugin({
-		tsLs: tsRuntime.context.scriptTsLs,
+		getTsLs: () => tsRuntime.context.scriptTsLs,
 	}));
 	const scriptTsDirectiveCommentPlugin = wrapPlugin(useTsDirectiveCommentPlugin({
-		tsLs: tsRuntime.context.scriptTsLs,
+		getTsLs: () => tsRuntime.context.scriptTsLs,
 	}));
 	const templateJsDocPlugin = wrapPlugin(useJsDocPlugin({
-		tsLs: tsRuntime.context.templateTsLs,
+		getTsLs: () => tsRuntime.context.templateTsLs,
 	}));
 	const templateTsDirectiveCommentPlugin = wrapPlugin(useTsDirectiveCommentPlugin({
-		tsLs: tsRuntime.context.templateTsLs,
+		getTsLs: () => tsRuntime.context.templateTsLs,
 	}));
 	const templateTsPlugin: LanguageServicePlugin = {
 		..._templateTsPlugin,

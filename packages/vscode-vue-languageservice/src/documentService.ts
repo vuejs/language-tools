@@ -13,6 +13,14 @@ import { createSourceFile, SourceFile } from '@volar/vue-typescript';
 import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
 import { createBasicRuntime } from '@volar/vue-typescript';
 
+import useCssPlugin from './plugins/cssPlugin';
+import useHtmlPlugin from './plugins/htmlPlugin';
+import usePugPlugin from './plugins/pugPlugin';
+import useJsonPlugin from './plugins/jsonPlugin';
+import useTsPlugin, { isTsDocument } from './plugins/tsPlugin';
+import * as sharedServices from './utils/sharedLs';
+import * as ts2 from 'vscode-typescript-languageservice';
+
 import type * as _0 from 'vscode-languageserver-protocol';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
@@ -25,11 +33,25 @@ export function getDocumentService(
 ) {
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createBasicRuntime();
+	let tsLs: ts2.LanguageService;
+	const plugins = [
+		useHtmlPlugin({ getHtmlLs: () => services.htmlLs }),
+		usePugPlugin({ getPugLs: () => services.pugLs }),
+		useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet }),
+		useJsonPlugin({ getJsonLs: () => services.jsonLs }),
+		useTsPlugin({ getTsLs: () => tsLs, typescript: ts }),
+	];
 	const context: DocumentServiceRuntimeContext = {
 		compilerOptions: {},
 		typescript: ts,
 		...services,
 		getVueDocument,
+		getPlugins: (document) => {
+			if (isTsDocument(document)) {
+				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, getPreferences, getFormatOptions);
+			}
+			return plugins;
+		},
 	};
 	return {
 		doFormatting: formatting.register(context, getPreferences, getFormatOptions, formatters),

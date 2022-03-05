@@ -3,7 +3,7 @@ import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import { LanguageServicePlugin } from './languageService';
-// import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
+import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 
 export type LanguageServiceHost = LanguageServiceHostBase & {
 	schemaRequestService?: json.SchemaRequestService,
@@ -12,7 +12,7 @@ export type LanguageServiceHost = LanguageServiceHostBase & {
 
 export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 	getVueDocument(document: TextDocument): SourceFile | undefined;
-	// getPlugins(): EmbeddedLanguagePlugin[],
+	getPlugins(document: TextDocument): EmbeddedLanguagePlugin[],
 }
 
 export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeaturesRuntimeContext & {

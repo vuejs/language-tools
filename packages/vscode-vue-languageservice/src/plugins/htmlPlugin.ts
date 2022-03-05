@@ -3,9 +3,9 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default definePlugin((host: {
-    htmlLs: html.LanguageService,
-    getHoverSettings(uri: string): Promise<html.HoverSettings | undefined>,
-    documentContext: html.DocumentContext,
+    getHtmlLs(): html.LanguageService,
+    getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
+    documentContext?: html.DocumentContext,
 }) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
@@ -19,64 +19,72 @@ export default definePlugin((host: {
 
         doComplete(document, position, context) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.doComplete2(document, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
+
+                if (!host.documentContext)
+                    return;
+
+                return host.getHtmlLs().doComplete2(document, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
             });
         },
 
         doHover(document, position) {
             return worker(document, async (htmlDocument) => {
 
-                const hoverSettings = await host.getHoverSettings(document.uri);
+                const hoverSettings = await host.getHoverSettings?.(document.uri);
 
-                return host.htmlLs.doHover(document, position, htmlDocument, hoverSettings);
+                return host.getHtmlLs().doHover(document, position, htmlDocument, hoverSettings);
             });
         },
 
         findDocumentHighlights(document, position) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.findDocumentHighlights(document, position, htmlDocument);
+                return host.getHtmlLs().findDocumentHighlights(document, position, htmlDocument);
             });
         },
 
         findDocumentLinks(document) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.findDocumentLinks(document, host.documentContext);
+
+                if (!host.documentContext)
+                    return;
+
+                return host.getHtmlLs().findDocumentLinks(document, host.documentContext);
             });
         },
 
         findDocumentSymbols(document) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.findDocumentSymbols(document, htmlDocument);
+                return host.getHtmlLs().findDocumentSymbols(document, htmlDocument);
             });
         },
 
         doRename(document, position, newName) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.doRename(document, position, newName, htmlDocument);
+                return host.getHtmlLs().doRename(document, position, newName, htmlDocument);
             });
         },
 
         getFoldingRanges(document) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.getFoldingRanges(document);
+                return host.getHtmlLs().getFoldingRanges(document);
             });
         },
 
         getSelectionRanges(document, positions) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.getSelectionRanges(document, positions);
+                return host.getHtmlLs().getSelectionRanges(document, positions);
             });
         },
 
         format(document, range, options) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.format(document, range, options);
+                return host.getHtmlLs().format(document, range, options);
             });
         },
 
         findLinkedEditingRanges(document, position) {
             return worker(document, (htmlDocument) => {
-                return host.htmlLs.findLinkedEditingRanges(document, position, htmlDocument);
+                return host.getHtmlLs().findLinkedEditingRanges(document, position, htmlDocument);
             });
         },
     };
@@ -103,7 +111,7 @@ export default definePlugin((host: {
             }
         }
 
-        const doc = host.htmlLs.parseHTMLDocument(document);
+        const doc = host.getHtmlLs().parseHTMLDocument(document);
         htmlDocuments.set(document, [document.version, doc]);
 
         return doc;

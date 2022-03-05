@@ -1,11 +1,12 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { definePlugin } from './definePlugin';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from 'vscode-typescript-languageservice';
 
 export default definePlugin((host: {
     typescript: typeof import('typescript/lib/tsserverlibrary'),
-    tsLs: ts2.LanguageService,
-    baseCompletionOptions: ts.GetCompletionsAtPositionOptions,
+    getTsLs: () => ts2.LanguageService,
+    baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
 }) => {
 
     return {
@@ -14,7 +15,7 @@ export default definePlugin((host: {
 
         doValidation(document, options) {
             if (isTsDocument(document)) {
-                return host.tsLs.doValidation(document.uri, options);
+                return host.getTsLs().doValidation(document.uri, options);
             }
         },
 
@@ -26,103 +27,103 @@ export default definePlugin((host: {
                     triggerKind: context?.triggerKind,
                 };
 
-                return host.tsLs.doComplete(document.uri, position, options);
+                return host.getTsLs().doComplete(document.uri, position, options);
             }
         },
 
         doCompleteResolve(item) {
-            return host.tsLs.doCompletionResolve(item);
+            return host.getTsLs().doCompletionResolve(item);
         },
 
         doHover(document, position) {
             if (isTsDocument(document)) {
-                return host.tsLs.doHover(document.uri, position);
+                return host.getTsLs().doHover(document.uri, position);
             }
         },
 
         findDefinition(document, position) {
             if (isTsDocument(document)) {
-                return host.tsLs.findDefinition(document.uri, position);
+                return host.getTsLs().findDefinition(document.uri, position);
             }
         },
 
         findTypeDefinition(document, position) {
             if (isTsDocument(document)) {
-                return host.tsLs.findTypeDefinition(document.uri, position);
+                return host.getTsLs().findTypeDefinition(document.uri, position);
             }
         },
 
         findReferences(document, position) {
             if (isTsDocument(document) || isJsonDocument(document)) {
-                return host.tsLs.findReferences(document.uri, position);
+                return host.getTsLs().findReferences(document.uri, position);
             }
         },
 
         findDocumentHighlights(document, position) {
             if (isTsDocument(document)) {
-                return host.tsLs.findDocumentHighlights(document.uri, position);
+                return host.getTsLs().findDocumentHighlights(document.uri, position);
             }
         },
 
         findDocumentSymbols(document) {
             if (isTsDocument(document)) {
-                return host.tsLs.findDocumentSymbols(document.uri);
+                return host.getTsLs().findDocumentSymbols(document.uri);
             }
         },
 
         findDocumentSemanticTokens(document, range, cancleToken) {
             if (isTsDocument(document)) {
-                return host.tsLs.getDocumentSemanticTokens(document.uri, range, cancleToken);
+                return host.getTsLs().getDocumentSemanticTokens(document.uri, range, cancleToken);
             }
         },
 
         findWorkspaceSymbols(query) {
-            return host.tsLs.findWorkspaceSymbols(query);
+            return host.getTsLs().findWorkspaceSymbols(query);
         },
 
         doCodeActions(document, range, context) {
             if (isTsDocument(document)) {
-                return host.tsLs.getCodeActions(document.uri, range, context);
+                return host.getTsLs().getCodeActions(document.uri, range, context);
             }
         },
 
         doRenamePrepare(document, position) {
             if (isTsDocument(document)) {
-                return host.tsLs.prepareRename(document.uri, position);
+                return host.getTsLs().prepareRename(document.uri, position);
             }
         },
 
         doRename(document, position, newName) {
             if (isTsDocument(document) || isJsonDocument(document)) {
-                return host.tsLs.doRename(document.uri, position, newName);
+                return host.getTsLs().doRename(document.uri, position, newName);
             }
         },
 
         getEditsForFileRename(oldUri, newUri) {
-            return host.tsLs.getEditsForFileRename(oldUri, newUri);
+            return host.getTsLs().getEditsForFileRename(oldUri, newUri);
         },
 
         getFoldingRanges(document) {
             if (isTsDocument(document)) {
-                return host.tsLs.getFoldingRanges(document.uri);
+                return host.getTsLs().getFoldingRanges(document.uri);
             }
         },
 
         getSelectionRanges(document, positions) {
             if (isTsDocument(document)) {
-                return host.tsLs.getSelectionRanges(document.uri, positions);
+                return host.getTsLs().getSelectionRanges(document.uri, positions);
             }
         },
 
         getSignatureHelp(document, position, context) {
             if (isTsDocument(document)) {
-                return host.tsLs.getSignatureHelp(document.uri, position, context);
+                return host.getTsLs().getSignatureHelp(document.uri, position, context);
             }
         },
 
         format(document, range, options) {
             if (isTsDocument(document)) {
-                return host.tsLs.doFormatting(document.uri, options, range);
+                return host.getTsLs().doFormatting(document.uri, options, range);
             }
         },
 
@@ -130,16 +131,16 @@ export default definePlugin((host: {
 
             doPrepare(document, position) {
                 if (isTsDocument(document)) {
-                    return host.tsLs.callHierarchy.doPrepare(document.uri, position);
+                    return host.getTsLs().callHierarchy.doPrepare(document.uri, position);
                 }
             },
 
             getIncomingCalls(item) {
-                return host.tsLs.callHierarchy.getIncomingCalls(item);
+                return host.getTsLs().callHierarchy.getIncomingCalls(item);
             },
 
             getOutgoingCalls(item) {
-                return host.tsLs.callHierarchy.getOutgoingCalls(item);
+                return host.getTsLs().callHierarchy.getOutgoingCalls(item);
             },
         },
     };

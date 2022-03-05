@@ -4,9 +4,9 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from 'vscode-pug-languageservice';
 
 export default definePlugin((host: {
-    pugLs: pug.LanguageService,
-    getHoverSettings(uri: string): Promise<html.HoverSettings | undefined>,
-    documentContext: html.DocumentContext,
+    getPugLs(): pug.LanguageService,
+    getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
+    documentContext?: html.DocumentContext,
 }) => {
 
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
@@ -15,46 +15,54 @@ export default definePlugin((host: {
 
         doComplete(document, position, context) {
             return worker(document, (pugDocument) => {
-                return host.pugLs.doComplete(pugDocument, position, host.documentContext, /** TODO: CompletionConfiguration */);
+
+                if (!host.documentContext)
+                    return;
+
+                return host.getPugLs().doComplete(pugDocument, position, host.documentContext, /** TODO: CompletionConfiguration */);
             });
         },
 
         doHover(document, position) {
             return worker(document, async (pugDocument) => {
 
-                const hoverSettings = await host.getHoverSettings(document.uri);
+                const hoverSettings = await host.getHoverSettings?.(document.uri);
 
-                return host.pugLs.doHover(pugDocument, position, hoverSettings);
+                return host.getPugLs().doHover(pugDocument, position, hoverSettings);
             });
         },
 
         findDocumentHighlights(document, position) {
             return worker(document, (pugDocument) => {
-                return host.pugLs.findDocumentHighlights(pugDocument, position);
+                return host.getPugLs().findDocumentHighlights(pugDocument, position);
             });
         },
 
         findDocumentLinks(document) {
             return worker(document, (pugDocument) => {
-                return host.pugLs.findDocumentLinks(pugDocument, host.documentContext);
+
+                if (!host.documentContext)
+                    return;
+
+                return host.getPugLs().findDocumentLinks(pugDocument, host.documentContext);
             });
         },
 
         findDocumentSymbols(document) {
             return worker(document, (pugDocument) => {
-                return host.pugLs.findDocumentSymbols(pugDocument);
+                return host.getPugLs().findDocumentSymbols(pugDocument);
             });
         },
 
         getFoldingRanges(document) {
             return worker(document, (pugDocument) => {
-                return host.pugLs.getFoldingRanges(pugDocument);
+                return host.getPugLs().getFoldingRanges(pugDocument);
             });
         },
 
         getSelectionRanges(document, positions) {
             return worker(document, (pugDocument) => {
-                return host.pugLs.getSelectionRanges(pugDocument, positions);
+                return host.getPugLs().getSelectionRanges(pugDocument, positions);
             });
         },
     };
@@ -81,7 +89,7 @@ export default definePlugin((host: {
             }
         }
 
-        const doc = host.pugLs.parsePugDocument(document);
+        const doc = host.getPugLs().parsePugDocument(document);
         pugDocuments.set(document, [document.version, doc]);
 
         return doc;

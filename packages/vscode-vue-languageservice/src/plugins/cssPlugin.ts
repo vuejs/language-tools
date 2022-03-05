@@ -14,8 +14,8 @@ export const wordPatterns: { [lang: string]: RegExp } = {
 export default definePlugin((host: {
     getCssLs(lang: string): css.LanguageService | undefined,
     getStylesheet(document: TextDocument): css.Stylesheet | undefined,
-    getLanguageSettings(languageId: string, uri: string): Promise<css.LanguageSettings | undefined>,
-    documentContext: css.DocumentContext,
+    getLanguageSettings?(languageId: string, uri: string): Promise<css.LanguageSettings | undefined>,
+    documentContext?: css.DocumentContext,
 }) => {
 
     return {
@@ -25,7 +25,7 @@ export default definePlugin((host: {
         doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                const settings = await host.getLanguageSettings(document.languageId, document.uri);
+                const settings = await host.getLanguageSettings?.(document.languageId, document.uri);
 
                 return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
             });
@@ -34,10 +34,13 @@ export default definePlugin((host: {
         doComplete(document, position, context) {
             return worker(document, async (stylesheet, cssLs) => {
 
+                if (!host.documentContext)
+                    return;
+
                 const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
                 const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
                 const wordRange = vscode.Range.create(wordStart ?? position, position);
-                const settings = await host.getLanguageSettings(document.languageId, document.uri);
+                const settings = await host.getLanguageSettings?.(document.languageId, document.uri);
                 const cssResult = await cssLs.doComplete2(document, position, stylesheet, host.documentContext, settings?.completion);
 
                 if (cssResult) {
@@ -59,7 +62,7 @@ export default definePlugin((host: {
         doHover(document, position) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                const settings = await host.getLanguageSettings(document.languageId, document.uri);
+                const settings = await host.getLanguageSettings?.(document.languageId, document.uri);
 
                 return cssLs.doHover(document, position, stylesheet, settings?.hover);
             });
@@ -90,6 +93,10 @@ export default definePlugin((host: {
 
         findDocumentLinks(document) {
             return worker(document, (stylesheet, cssLs) => {
+
+                if (!host.documentContext)
+                    return;
+
                 return cssLs.findDocumentLinks(document, stylesheet, host.documentContext);
             });
         },
