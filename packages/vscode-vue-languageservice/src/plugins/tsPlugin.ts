@@ -3,15 +3,16 @@ import { definePlugin } from './definePlugin';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from 'vscode-typescript-languageservice';
 
+export function getTriggerCharacters(tsVersion: string) {
+    return ts2.getTriggerCharacters(tsVersion);
+}
+
 export default definePlugin((host: {
-    typescript: typeof import('typescript/lib/tsserverlibrary'),
     getTsLs: () => ts2.LanguageService,
     baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
 }) => {
 
     return {
-
-        triggerCharacters: ts2.getTriggerCharacters(host.typescript.version),
 
         doValidation(document, options) {
             if (isTsDocument(document)) {

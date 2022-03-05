@@ -3,6 +3,8 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from 'vscode-pug-languageservice';
 
+export const triggerCharacters: string[] = []; // TODO
+
 export default definePlugin((host: {
     getPugLs(): pug.LanguageService,
     getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,

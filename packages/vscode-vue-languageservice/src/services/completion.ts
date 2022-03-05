@@ -15,19 +15,6 @@ import { SearchTexts } from '@volar/vue-typescript';
 import { visitEmbedded } from '../plugins/definePlugin';
 import { LanguageServicePlugin } from '../languageService';
 
-export function getTriggerCharacters(tsVersion: string) {
-	return {
-		typescript: ts2.getTriggerCharacters(tsVersion),
-		jsdoc: ['*'],
-		html: [
-			'.', ':', '<', '"', '=', '/', // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
-			'@', // vue event shorthand
-		],
-		css: ['/', '-', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
-		json: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
-	};
-}
-
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
 	stop: 'call event.stopPropagation().',
@@ -206,10 +193,10 @@ export function register(
 							if (!plugin.doComplete)
 								continue;
 
-							if (context?.triggerCharacter && !plugin.triggerCharacters?.includes(context.triggerCharacter))
+							if (context?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(context.triggerCharacter))
 								continue;
 
-							if (cache!.hasMainCompletion && !plugin.isAdditionalCompletion)
+							if (cache!.hasMainCompletion && !plugin.context?.isAdditionalCompletion)
 								continue;
 
 							let htmlTsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
@@ -223,7 +210,7 @@ export function register(
 							if (!embeddedCompletionList)
 								continue;
 
-							if (!plugin.isAdditionalCompletion) {
+							if (!plugin.context?.isAdditionalCompletion) {
 								cache!.hasMainCompletion = true;
 							}
 
@@ -271,10 +258,10 @@ export function register(
 					if (!plugin.doComplete)
 						continue;
 
-					if (context?.triggerCharacter && !plugin.triggerCharacters?.includes(context.triggerCharacter))
+					if (context?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(context.triggerCharacter))
 						continue;
 
-					if (cache.hasMainCompletion && !plugin.isAdditionalCompletion)
+					if (cache.hasMainCompletion && !plugin.context?.isAdditionalCompletion)
 						continue;
 
 					const completionList = await plugin.doComplete(document, position, context);
@@ -282,7 +269,7 @@ export function register(
 					if (!completionList)
 						continue;
 
-					if (!plugin.isAdditionalCompletion) {
+					if (!plugin.context?.isAdditionalCompletion) {
 						cache.hasMainCompletion = true;
 					}
 

@@ -11,6 +11,9 @@ export const wordPatterns: { [lang: string]: RegExp } = {
     postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
 
+// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
+export const triggerCharacters = ['/', '-', ':'];
+
 export default definePlugin((host: {
     getCssLs(lang: string): css.LanguageService | undefined,
     getStylesheet(document: TextDocument): css.Stylesheet | undefined,
@@ -19,8 +22,6 @@ export default definePlugin((host: {
 }) => {
 
     return {
-
-        triggerCharacters: ['/', '-', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 
         doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {

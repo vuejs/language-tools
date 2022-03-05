@@ -27,15 +27,15 @@ import type * as css from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as emmet from '@vscode/emmet-helper';
 
-import useVuePlugin from './plugins/vuePlugin';
-import useCssPlugin from './plugins/cssPlugin';
-import useHtmlPlugin from './plugins/htmlPlugin';
-import usePugPlugin from './plugins/pugPlugin';
-import useJsonPlugin from './plugins/jsonPlugin';
-import useTsPlugin from './plugins/tsPlugin';
-import useJsDocPlugin from './plugins/jsDocPlugin';
-import useTsDirectiveCommentPlugin from './plugins/tsDirectiveCommentPlugin';
-import useEmmetPlugin from './plugins/emmetPlugin';
+import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
+import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/cssPlugin';
+import useHtmlPlugin, { triggerCharacters as _htmlTriggerCharacters } from './plugins/htmlPlugin';
+import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pugPlugin';
+import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plugins/jsonPlugin';
+import useTsPlugin, { getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
+import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './plugins/jsDocPlugin';
+import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './plugins/directiveCommentPlugin';
+import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './plugins/emmetPlugin';
 
 import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 import { isGloballyWhitelisted } from '@vue/shared';
@@ -46,14 +46,35 @@ let pluginId = 0;
 
 export type LanguageServicePlugin = ReturnType<typeof wrapPlugin>;
 
+const htmlTriggerCharacter = [
+	..._htmlTriggerCharacters,
+	'@', // vue event shorthand
+];
+
 function wrapPlugin(plugin: EmbeddedLanguagePlugin, context?: {
-	useHtmlLs: boolean,
+	useHtmlLs?: boolean,
+	isAdditionalCompletion?: boolean,
+	triggerCharacters?: string[],
 }) {
 	return {
 		id: pluginId++,
 		...plugin,
 		context,
 	};
+}
+
+export function getTriggerCharacters(tsVersion: string) {
+	return [...new Set([
+		...vueTriggerCharacters,
+		...getTsTriggerCharacters(tsVersion),
+		...jsonTriggerCharacters,
+		...jsDocTriggerCharacters,
+		...cssTriggerCharacters,
+		...htmlTriggerCharacter,
+		...pugTriggerCharacters,
+		...directiveCommentTriggerCharacters,
+		...emmetTriggerCharacters,
+	])];
 }
 
 export function createLanguageService(
@@ -70,66 +91,132 @@ export function createLanguageService(
 		compilerOptions,
 	}, vueHost, false);
 	const blockingRequests = new Set<Promise<any>>();
+	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
 
 	// plugins
-	const vuePlugin = wrapPlugin(useVuePlugin({
-		documentContext: tsRuntime.context.documentContext,
-	}));
-	const htmlPlugin = wrapPlugin(useHtmlPlugin({
-		getHtmlLs: () => services.htmlLs,
-		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
-		documentContext: tsRuntime.context.documentContext,
-	}), { useHtmlLs: true });
-	const pugPlugin = wrapPlugin(usePugPlugin({
-		getPugLs: () => services.pugLs,
-		getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
-		documentContext: tsRuntime.context.documentContext,
-	}), { useHtmlLs: true });
-	const cssPlugin = wrapPlugin(useCssPlugin({
-		getCssLs: services.getCssLs,
-		getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
-		getStylesheet: services.getStylesheet,
-		documentContext: tsRuntime.context.documentContext,
-	}));
-	const jsonPlugin = wrapPlugin(useJsonPlugin({
-		getJsonLs: () => services.jsonLs,
-		getDocumentLanguageSettings: async () => undefined, // TODO
-		schema: undefined, // TODO
-	}));
-	const emmetPlugin = wrapPlugin(useEmmetPlugin({
-		getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),
-	}));
-	const scriptTsPlugin = wrapPlugin(useTsPlugin({
-		typescript: ts,
-		getTsLs: () => tsRuntime.context.scriptTsLs,
-		baseCompletionOptions: {
-			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+	const vuePlugin = wrapPlugin(
+		useVuePlugin({
+			documentContext: tsRuntime.context.documentContext,
+		}),
+		{
+			triggerCharacters: vueTriggerCharacters,
 		},
-	}));
-	const _templateTsPlugin = wrapPlugin(useTsPlugin({
-		typescript: ts,
-		getTsLs: () => tsRuntime.context.templateTsLs,
-		baseCompletionOptions: {
-			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-			quotePreference: 'single',
-			includeCompletionsForModuleExports: false,
-			includeCompletionsForImportStatements: false,
+	);
+	const htmlPlugin = wrapPlugin(
+		useHtmlPlugin({
+			getHtmlLs: () => services.htmlLs,
+			getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+			documentContext: tsRuntime.context.documentContext,
+		}),
+		{
+			useHtmlLs: true,
+			triggerCharacters: htmlTriggerCharacter,
 		},
-	}));
-	const scriptJsDocPlugin = wrapPlugin(useJsDocPlugin({
-		getTsLs: () => tsRuntime.context.scriptTsLs,
-	}));
-	const scriptTsDirectiveCommentPlugin = wrapPlugin(useTsDirectiveCommentPlugin({
-		getTsLs: () => tsRuntime.context.scriptTsLs,
-	}));
-	const templateJsDocPlugin = wrapPlugin(useJsDocPlugin({
-		getTsLs: () => tsRuntime.context.templateTsLs,
-	}));
-	const templateTsDirectiveCommentPlugin = wrapPlugin(useTsDirectiveCommentPlugin({
-		getTsLs: () => tsRuntime.context.templateTsLs,
-	}));
+	);
+	const pugPlugin = wrapPlugin(
+		usePugPlugin({
+			getPugLs: () => services.pugLs,
+			getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+			documentContext: tsRuntime.context.documentContext,
+		}),
+		{
+			useHtmlLs: true,
+			triggerCharacters: pugTriggerCharacters,
+		},
+	);
+	const cssPlugin = wrapPlugin(
+		useCssPlugin({
+			getCssLs: services.getCssLs,
+			getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
+			getStylesheet: services.getStylesheet,
+			documentContext: tsRuntime.context.documentContext,
+		}),
+		{
+			triggerCharacters: cssTriggerCharacters,
+		},
+	);
+	const jsonPlugin = wrapPlugin(
+		useJsonPlugin({
+			getJsonLs: () => services.jsonLs,
+			getDocumentLanguageSettings: async () => undefined, // TODO
+			schema: undefined, // TODO
+		}),
+		{
+			triggerCharacters: cssTriggerCharacters,
+		},
+	);
+	const emmetPlugin = wrapPlugin(
+		useEmmetPlugin({
+			getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),
+		}),
+		{
+			isAdditionalCompletion: true,
+			triggerCharacters: emmetTriggerCharacters,
+		},
+	);
+	const scriptTsPlugin = wrapPlugin(
+		useTsPlugin({
+			getTsLs: () => tsRuntime.context.scriptTsLs,
+			baseCompletionOptions: {
+				// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+				includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+			},
+		}),
+		{
+			triggerCharacters: tsTriggerCharacters,
+		},
+	);
+	const _templateTsPlugin = wrapPlugin(
+		useTsPlugin({
+			getTsLs: () => tsRuntime.context.templateTsLs,
+			baseCompletionOptions: {
+				// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+				includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+				quotePreference: 'single',
+				includeCompletionsForModuleExports: false,
+				includeCompletionsForImportStatements: false,
+			},
+		}),
+		{
+			triggerCharacters: tsTriggerCharacters,
+		},
+	);
+	const scriptJsDocPlugin = wrapPlugin(
+		useJsDocPlugin({
+			getTsLs: () => tsRuntime.context.scriptTsLs,
+		}),
+		{
+			triggerCharacters: jsDocTriggerCharacters,
+			isAdditionalCompletion: true,
+		},
+	);
+	const templateJsDocPlugin = wrapPlugin(
+		useJsDocPlugin({
+			getTsLs: () => tsRuntime.context.templateTsLs,
+		}),
+		{
+			triggerCharacters: jsDocTriggerCharacters,
+			isAdditionalCompletion: true,
+		},
+	);
+	const scriptTsDirectiveCommentPlugin = wrapPlugin(
+		useDirectiveCommentPlugin({
+			getTsLs: () => tsRuntime.context.scriptTsLs,
+		}),
+		{
+			triggerCharacters: directiveCommentTriggerCharacters,
+			isAdditionalCompletion: true,
+		},
+	);
+	const templateTsDirectiveCommentPlugin = wrapPlugin(
+		useDirectiveCommentPlugin({
+			getTsLs: () => tsRuntime.context.templateTsLs,
+		}),
+		{
+			triggerCharacters: directiveCommentTriggerCharacters,
+			isAdditionalCompletion: true,
+		},
+	);
 	const templateTsPlugin: LanguageServicePlugin = {
 		..._templateTsPlugin,
 		async doComplete(textDocument, position, context) {

@@ -6,8 +6,6 @@ type NotNullableResult<T> = T | Thenable<T>;
 type NullableResult<T> = T | undefined | null | Thenable<T | undefined | null>;
 
 export type EmbeddedLanguagePlugin = {
-    isAdditionalCompletion?: boolean,
-    triggerCharacters?: string[],
     doValidation?(document: TextDocument, options: {
         semantic?: boolean;
         syntactic?: boolean;

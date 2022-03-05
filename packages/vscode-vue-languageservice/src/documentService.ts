@@ -39,7 +39,7 @@ export function getDocumentService(
 		usePugPlugin({ getPugLs: () => services.pugLs }),
 		useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet }),
 		useJsonPlugin({ getJsonLs: () => services.jsonLs }),
-		useTsPlugin({ getTsLs: () => tsLs, typescript: ts }),
+		useTsPlugin({ getTsLs: () => tsLs }),
 	];
 	const context: DocumentServiceRuntimeContext = {
 		compilerOptions: {},

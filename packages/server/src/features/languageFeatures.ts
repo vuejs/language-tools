@@ -55,7 +55,8 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri = (item.data as any as CompletionData).uri;
+		const uri = (item.data as any as CompletionData | undefined)?.uri;
+		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
 			: undefined;

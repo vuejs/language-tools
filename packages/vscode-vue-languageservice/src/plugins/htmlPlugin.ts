@@ -2,6 +2,9 @@ import { definePlugin } from './definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
+export const triggerCharacters = ['.', ':', '<', '"', '=', '/'];
+
 export default definePlugin((host: {
     getHtmlLs(): html.LanguageService,
     getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
@@ -11,11 +14,6 @@ export default definePlugin((host: {
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
     return {
-
-        triggerCharacters: [
-            '.', ':', '<', '"', '=', '/', // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
-            '@', // vue event shorthand
-        ],
 
         doComplete(document, position, context) {
             return worker(document, (htmlDocument) => {

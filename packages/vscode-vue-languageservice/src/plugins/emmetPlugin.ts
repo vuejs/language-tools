@@ -1,6 +1,8 @@
 import { definePlugin } from './definePlugin';
 import * as emmet from '@vscode/emmet-helper';
 
+export const triggerCharacters = []; // TODO
+
 export default definePlugin((host: {
     getEmmetConfig(): Promise<emmet.VSCodeEmmetConfig | undefined>,
 }) => {
@@ -8,8 +10,6 @@ export default definePlugin((host: {
     let emmetConfig: any;
 
     return {
-
-        isAdditionalCompletion: true,
 
         async doComplete(textDocument, position) {
 

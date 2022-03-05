@@ -2,6 +2,8 @@ import { definePlugin } from './definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+export { triggerCharacters } from './htmlPlugin';
+
 const vueTags: html.ITagData[] = [
     {
         name: 'template',
@@ -60,8 +62,6 @@ export default definePlugin((host: {
     htmlLs.setDataProviders(false, [dataProvider]);
 
     return {
-
-        triggerCharacters: ['.', ':', '<', '"', '=', '/'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
 
         async doComplete(textDocument, position) {
 

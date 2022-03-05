@@ -3,6 +3,9 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { definePlugin } from './definePlugin';
 import * as vscode from 'vscode-languageserver-protocol';
 
+// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
+export const triggerCharacters = ['"', ':'];
+
 export default definePlugin((host: {
     getJsonLs: () => json.LanguageService,
     getDocumentLanguageSettings?(): Promise<json.DocumentLanguageSettings | undefined>,
@@ -12,8 +15,6 @@ export default definePlugin((host: {
     const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 
     return {
-
-        triggerCharacters: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
 
         doValidation(document) {
             return worker(document, async (jsonDocument) => {
