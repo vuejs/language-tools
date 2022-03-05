@@ -1,26 +1,18 @@
 import type { Mapping, Mode, Range } from '@volar/source-map';
 
-export type CodeGen = ReturnType<typeof createCodeGen>;
+export class CodeGen<T = undefined> {
 
-export function createCodeGen<T = undefined>() {
+	private text = '';
+	private mappings: Mapping<T>[] = [];
 
-	let text = '';
-	const mappings: Mapping<T>[] = [];
-
-	return {
-		getText: () => text,
-		getMappings,
-		addText,
-		addCode,
-		addMapping,
-		addMapping2,
+	public getText() {
+		return this.text;
 	}
-
-	function getMappings(sourceRangeParser?: (data: T, range: Range) => Range): Mapping<T>[] {
+	public getMappings(sourceRangeParser?: (data: T, range: Range) => Range): Mapping<T>[] {
 		if (!sourceRangeParser) {
-			return mappings;
+			return this.mappings;
 		}
-		return mappings.map(mapping => ({
+		return this.mappings.map(mapping => ({
 			...mapping,
 			sourceRange: sourceRangeParser(mapping.data, mapping.sourceRange),
 			additional: mapping.additional
@@ -31,9 +23,9 @@ export function createCodeGen<T = undefined>() {
 				: undefined,
 		}));
 	}
-	function addCode(str: string, sourceRange: Range, mode: Mode, data: T, extraSourceRanges?: Range[]) {
-		const targetRange = addText(str);
-		addMapping2({
+	public addCode(str: string, sourceRange: Range, mode: Mode, data: T, extraSourceRanges?: Range[]) {
+		const targetRange = this.addText(str);
+		this.addMapping2({
 			mappedRange: targetRange,
 			sourceRange,
 			mode,
@@ -46,28 +38,28 @@ export function createCodeGen<T = undefined>() {
 		});
 		return targetRange;
 	}
-	function addMapping(str: string, sourceRange: Range, mode: Mode, data: T) {
+	public addMapping(str: string, sourceRange: Range, mode: Mode, data: T) {
 		const targetRange = {
-			start: text.length,
-			end: text.length + str.length,
+			start: this.text.length,
+			end: this.text.length + str.length,
 		};
-		addMapping2({ mappedRange: targetRange, sourceRange, mode, data });
+		this.addMapping2({ mappedRange: targetRange, sourceRange, mode, data });
 		return targetRange;
 	}
-	function addMapping2(mapping: Mapping<T>) {
-		mappings.push(mapping);
+	public addMapping2(mapping: Mapping<T>) {
+		this.mappings.push(mapping);
 	}
-	function addText(str: string) {
+	public addText(str: string) {
 		const range = {
-			start: text.length,
-			end: text.length + str.length,
+			start: this.text.length,
+			end: this.text.length + str.length,
 		};
-		text += str;
+		this.text += str;
 		return range;
 	}
 }
 
-export function margeCodeGen<T extends CodeGen>(a: T, b: T) {
+export function margeCodeGen<T extends CodeGen<any>>(a: T, b: T) {
 	const aLength = a.getText().length;
 	for (const mapping of b.getMappings()) {
 		a.addMapping2({

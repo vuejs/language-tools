@@ -1,27 +1,28 @@
 import * as shared from '@volar/shared';
 import { transformSymbolInformations } from '@volar/transforms';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
-import type { SourceFile } from '../sourceFile';
-import type { HtmlLanguageServiceContext } from '../types';
+import type { DocumentServiceRuntimeContext } from '../types';
 import { getDummyTsLs } from '../utils/sharedLs';
 import * as dedupe from '../utils/dedupe';
+import * as ts2 from 'vscode-typescript-languageservice';
+import { SourceFile } from '@volar/vue-typescript';
 
 export function register(
-	context: HtmlLanguageServiceContext,
+	context: DocumentServiceRuntimeContext,
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 ) {
 
-	const { modules, htmlLs, pugLs, getCssLs } = context;
+	const { typescript: ts, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument } = context;
 
 	return (document: TextDocument) => {
 
 		const sourceFile = context.getVueDocument(document);
 		if (!sourceFile) {
 			// take over mode
-			const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, document, getPreferences, getFormatOptions);
+			const dummyTsLs = getDummyTsLs(ts, ts2, document, getPreferences, getFormatOptions);
 			return dummyTsLs.findDocumentSymbols(document.uri);
 		}
 
@@ -96,10 +97,16 @@ export function register(
 			return result;
 		}
 		function getTsResult(sourceFile: SourceFile) {
+
 			let result: vscode.SymbolInformation[] = [];
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			const tsSourceMaps = [
+				sourceFile.getTemplateFormattingScript().sourceMap,
+				...sourceFile.docLsScripts().sourceMaps,
+			].filter(shared.notEmpty);
+
+			for (const sourceMap of tsSourceMaps) {
 				if (!sourceMap.capabilities.documentSymbol) continue;
-				const dummyTsLs = getDummyTsLs(modules.typescript, modules.ts, sourceMap.mappedDocument, getPreferences, getFormatOptions);
+				const dummyTsLs = getDummyTsLs(ts, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
 				const symbols = dummyTsLs.findDocumentSymbols(sourceMap.mappedDocument.uri);
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];
@@ -120,13 +127,15 @@ export function register(
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			let result: vscode.SymbolInformation[] = [];
-			for (const sourceMap of [
-				...sourceFile.getHtmlSourceMaps(),
-				...sourceFile.getPugSourceMaps()
-			]) {
-				const symbols = sourceMap.language === 'html'
-					? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.htmlDocument)
-					: pugLs.findDocumentSymbols(sourceMap.pugDocument)
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const symbols =
+					htmlDocument ? htmlLs.findDocumentSymbols(sourceMap.mappedDocument, htmlDocument)
+						: pugDocument ? pugLs.findDocumentSymbols(pugDocument)
+							: undefined
+
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];
@@ -138,9 +147,14 @@ export function register(
 		function getCssResult(sourceFile: SourceFile) {
 			let result: vscode.SymbolInformation[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
-				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, sourceMap.stylesheet);
+
+				if (!cssLs || !stylesheet)
+					continue;
+
+				let symbols = cssLs.findDocumentSymbols(sourceMap.mappedDocument, stylesheet);
 				if (!symbols) continue;
 				result = result.concat(transformSymbolInformations(symbols, loc => {
 					const vueRange = sourceMap.getSourceRange(loc.range.start, loc.range.end)?.[0];

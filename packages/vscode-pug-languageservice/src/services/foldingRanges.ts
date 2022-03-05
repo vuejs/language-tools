@@ -1,10 +1,11 @@
-import * as vscode from 'vscode-languageserver';
+import type * as html from 'vscode-html-languageservice';
 import type { PugDocument, Node } from '../pugDocument';
+import * as vscode from 'vscode-languageserver-types';
 
 export function register() {
-	return (pugDoc: PugDocument): vscode.FoldingRange[] => {
+	return (pugDoc: PugDocument) => {
 
-		const result: vscode.FoldingRange[] = [];
+		const result: html.FoldingRange[] = [];
 		const docEndPos = pugDoc.pugTextDocument.positionAt(pugDoc.pugTextDocument.getText().length);
 
 		if (pugDoc.ast) {

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.29.8",
+	"version": "0.32.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -13,7 +13,7 @@
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"engines": {
-		"vscode": "^1.58.0"
+		"vscode": "^1.61.0"
 	},
 	"keywords": [
 		"volar",
@@ -31,8 +31,8 @@
 		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
-	"main": "node_modules/@volar/client/out/nodeClientMain",
-	"browser": "node_modules/@volar/client/out/browserClientMain",
+	"main": "out/node/client",
+	"browser": "out/browser/client",
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
@@ -45,6 +45,92 @@
 		}
 	},
 	"contributes": {
+		"jsonValidation": [
+			{
+				"fileMatch": "package.json",
+				"url": "./schemas/package.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "https://json.schemastore.org/tsconfig"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "https://json.schemastore.org/tsconfig"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "https://json.schemastore.org/tsconfig"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "./schemas/tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "typings.json",
+				"url": "https://json.schemastore.org/typings"
+			},
+			{
+				"fileMatch": ".bowerrc",
+				"url": "https://json.schemastore.org/bowerrc"
+			},
+			{
+				"fileMatch": ".babelrc",
+				"url": "https://json.schemastore.org/babelrc"
+			},
+			{
+				"fileMatch": ".babelrc.json",
+				"url": "https://json.schemastore.org/babelrc"
+			},
+			{
+				"fileMatch": "babel.config.json",
+				"url": "https://json.schemastore.org/babelrc"
+			},
+			{
+				"fileMatch": "jsconfig.json",
+				"url": "https://json.schemastore.org/jsconfig"
+			},
+			{
+				"fileMatch": "jsconfig.json",
+				"url": "./schemas/jsconfig.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig.*.json",
+				"url": "https://json.schemastore.org/jsconfig"
+			},
+			{
+				"fileMatch": "jsconfig.*.json",
+				"url": "./schemas/jsconfig.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig.*.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			}
+		],
 		"languages": [
 			{
 				"id": "vue",
@@ -199,6 +285,11 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.showWelcomePage": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show welcome page when open webview."
+				},
 				"volar.lowPowerMode": {
 					"type": "boolean",
 					"default": false,
@@ -224,20 +315,20 @@
 					"default": true,
 					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.icon.preview": {
+				"volar.icon.vite": {
 					"type": "boolean",
-					"default": false,
-					"description": "(Experimental) Show preview component icon in title area of editor."
-				},
-				"volar.icon.finder": {
-					"type": "boolean",
-					"default": false,
-					"description": "(Experimental) Show code finder icon in title area of editor."
+					"default": true,
+					"description": "(Experimental) Show extra Vite features."
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": false,
 					"description": "[ref sugar ☐] code lens."
+				},
+				"volar.autoWrapParentheses": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
 				},
 				"volar.autoCompleteRefs": {
 					"type": "boolean",
@@ -315,6 +406,11 @@
 				}
 			}
 		},
+		"configurationDefaults": {
+			"[vue]": {
+				"editor.semanticHighlighting.enabled": true
+			}
+		},
 		"semanticTokenScopes": [
 			{
 				"language": "vue",
@@ -371,11 +467,6 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.genWhitelist",
-				"title": "Generate .vscodeignore Whitelist",
-				"category": "Volar (Debug)"
-			},
-			{
 				"command": "volar.action.showCallGraph",
 				"title": "Show Call Graph",
 				"category": "Volar (Experimental)"
@@ -387,16 +478,10 @@
 				"icon": "images/split-editors.png"
 			},
 			{
-				"command": "volar.action.finder",
-				"title": "Open Code Finder (WebView)",
-				"category": "Volar (Experimental)",
-				"icon": "$(search)"
-			},
-			{
-				"command": "volar.action.preview",
-				"title": "Open Component Preview",
-				"category": "Volar (Experimental)",
-				"icon": "$(open-preview)"
+				"command": "volar.action.vite",
+				"title": "Experimental Features for Vite",
+				"category": "Volar",
+				"icon": "images/vite-icon.svg"
 			},
 			{
 				"command": "volar.action.tagNameCase",
@@ -430,10 +515,10 @@
 				"icon": "$(search)"
 			},
 			{
-				"command": "volar.action.showInBrowser",
-				"title": "Show in Browser",
+				"command": "volar.action.openInBrowser",
+				"title": "Open in Browser",
 				"category": "Volar",
-				"icon": "$(browser)"
+				"icon": "$(link-external)"
 			},
 			{
 				"command": "workbench.action.webview.reloadWebviewAction",
@@ -451,23 +536,19 @@
 			"commandPalette": [
 				{
 					"command": "volar.action.restartServer",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.verifyAllScripts",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.writeTemplateLsVirtualFiles",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.writeScriptLsVirtualFiles",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.genWhitelist",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.showCallGraph",
@@ -478,11 +559,7 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "volar.action.finder",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.preview",
+					"command": "volar.action.vite",
 					"when": "editorLangId == vue"
 				},
 				{
@@ -503,19 +580,19 @@
 				},
 				{
 					"command": "volar.action.createWorkspaceSnippets",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor && volar.showSelectElement"
+					"when": "activeEditor == WebviewEditor"
 				},
 				{
-					"command": "volar.action.showInBrowser",
+					"command": "volar.action.openInBrowser",
 					"when": "activeEditor == WebviewEditor"
 				},
 				{
 					"command": "volar.selectTypeScriptVersion",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				}
 			],
 			"editor/title": [
@@ -525,22 +602,17 @@
 					"group": "navigation"
 				},
 				{
-					"command": "volar.action.preview",
-					"when": "editorLangId == vue && config.volar.icon.preview",
-					"group": "navigation"
-				},
-				{
-					"command": "volar.action.finder",
-					"when": "editorLangId == vue && config.volar.icon.finder",
+					"command": "volar.action.vite",
+					"when": "editorLangId == vue && config.volar.icon.vite && volar.foundViteDir",
 					"group": "navigation"
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor && volar.showSelectElement",
+					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				},
 				{
-					"command": "volar.action.showInBrowser",
+					"command": "volar.action.openInBrowser",
 					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
 				},
@@ -553,20 +625,19 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "cd ../.. && npm run build",
+		"vscode:prepublish": "npm run build",
+		"prebuild": "cd ../.. && npm run build",
+		"build": "npm run build:node && npm run build:browser",
+		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
+		"build:node": "node scripts/build-node",
+		"build:browser": "node scripts/build-browser",
 		"pack": "vsce package",
-		"release": "vsce publish --yarn"
-	},
-	"workspaces": [
-		"../../packages/*"
-	],
-	"dependencies": {
-		"@volar/client": "0.29.8"
+		"release": "vsce publish"
 	},
 	"devDependencies": {
+		"@volar/client": "0.32.1",
+		"@volar/server": "0.32.1",
+		"esbuild": "latest",
 		"vsce": "latest"
-	},
-	"resolutions": {
-		"to-vfile": "7.1.0"
 	}
 }

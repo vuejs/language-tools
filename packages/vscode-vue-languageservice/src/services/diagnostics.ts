@@ -1,16 +1,13 @@
 import * as shared from '@volar/shared';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
-import type * as css from 'vscode-css-languageservice';
-import type * as json from 'vscode-json-languageservice';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import type { SourceFile, TsSourceMap, SourceMap } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
-import { SourceMap, TsSourceMap } from '../utils/sourceMaps';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
@@ -106,7 +103,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 		}
 
 		function useScriptValidation(mode: 1 | 2 | 3 | 4) {
-			const errors = computed(() => {
+			const errors: ComputedRef<vscode.Diagnostic[]> = computed(() => {
 				{ // watching
 					docVersion.value
 					if (mode === 1) {
@@ -127,8 +124,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				}
 				return [];
 			});
-			const errors_cache = ref<vscode.Diagnostic[]>([]);
-			const result = computed(() => {
+			const errors_cache: Ref<vscode.Diagnostic[]> = ref([]);
+			const result: ComputedRef<vscode.Diagnostic[]> = computed(() => {
 				errors_cache.value = errors.value;
 				return errors_cache.value;
 			});
@@ -155,6 +152,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			templateScriptData,
 			sfcScriptForTemplateLs,
 			templateLsSourceMaps,
+			scriptSetupRanges
 		} = sourceFile.refs;
 
 		const templateTsProjectVersion = ref<string>();
@@ -164,6 +162,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			result: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
 			cache: ComputedRef<Promise<vscode.Diagnostic[]> | vscode.Diagnostic[]>;
 		}, number, vscode.Diagnostic[]][] = [
+				[useScriptSetupWarnings(), 0, []],
 				[useStylesValidation(computed(() => cssLsDocuments.value)), 0, []],
 				[useJsonsValidation(computed(() => sfcJsons.textDocuments.value)), 0, []],
 				[useTemplateValidation(), 0, []],
@@ -274,15 +273,17 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		function useTemplateValidation() {
 			const htmlErrors = computed(() => {
-				if (sfcTemplateData.value?.sourceLang === 'html' && sfcTemplateCompileResult.value) {
+				if (sfcTemplateData.value?.lang === 'html' && sfcTemplateCompileResult.value) {
 					return sfcTemplateCompileResult.value.errors;
 				}
 				return [];
 			});
 			const pugErrors = computed(() => {
+
 				const result: vscode.Diagnostic[] = [];
-				if (sfcTemplateData.value?.sourceLang === 'pug' && sfcTemplate.pugDocument.value) {
-					const pugDoc = sfcTemplate.pugDocument.value;
+				const pugDoc = sfcTemplate.textDocument.value ? getPugDocument(sfcTemplate.textDocument.value) : undefined;
+
+				if (pugDoc) {
 					const astError = pugDoc.error;
 					if (astError) {
 						result.push({
@@ -344,8 +345,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				}
 				return result;
 			});
-			const htmlErrors_cache = ref<vscode.Diagnostic[]>([]);
-			const pugErrors_cache = ref<vscode.Diagnostic[]>([]);
+			const htmlErrors_cache: Ref<vscode.Diagnostic[]> = ref([]);
+			const pugErrors_cache: Ref<vscode.Diagnostic[]> = ref([]);
 			const result = computed(() => {
 				htmlErrors_cache.value = htmlErrors.value;
 				pugErrors_cache.value = pugErrors.value;
@@ -354,8 +355,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				if (!sfcTemplate.textDocument.value) return [];
 				return [
-					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.htmlSourceMap.value ? [sfcTemplate.htmlSourceMap.value] : []),
-					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.pugSourceMap.value ? [sfcTemplate.pugSourceMap.value] : []),
+					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'html' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
+					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'jade' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 				];
 			});
 			return {
@@ -363,20 +364,48 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function useStylesValidation(documents: Ref<{ textDocument: TextDocument, stylesheet: css.Stylesheet | undefined }[]>) {
+		function useScriptSetupWarnings() {
+			const errors = computed(() => {
+				const result: vscode.Diagnostic[] = [];
+				if (scriptSetupRanges.value && descriptor.scriptSetup) {
+					for (const range of scriptSetupRanges.value.notOnTopTypeExports) {
+						result.push(vscode.Diagnostic.create(
+							{
+								start: document.value.positionAt(range.start + descriptor.scriptSetup.startTagEnd),
+								end: document.value.positionAt(range.end + descriptor.scriptSetup.startTagEnd),
+							},
+							'type and interface export statements must be on the top in <script setup>',
+							vscode.DiagnosticSeverity.Warning,
+							undefined,
+							'volar',
+						));
+					}
+				}
+				return result;
+			});
+			return {
+				result: errors,
+				cache: errors,
+			};
+		}
+		function useStylesValidation(documents: Ref<{ textDocument: TextDocument }[]>) {
 			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
-				for (const { textDocument, stylesheet } of documents.value) {
+				for (const { textDocument } of documents.value) {
+					const stylesheet = getStylesheet(textDocument);
 					const cssLs = getCssLs(textDocument.languageId);
 					if (!cssLs || !stylesheet) continue;
 					const settings = await vueHost.getCssLanguageSettings?.(textDocument);
-					const errs = cssLs.doValidation(textDocument, stylesheet, settings ?? undefined /* cssLs accept undefined but not null */);
+					const errs = cssLs.doValidation(textDocument, stylesheet, settings ?? undefined /* cssLs accept undefined but not null */) as vscode.Diagnostic[];
 					if (errs) result.set(textDocument.uri, errs);
 				}
 				return result;
 			});
 			const errors_cache = ref<Map<string, vscode.Diagnostic[]>>(new Map());
 			const result = computed(async () => {
+				{ // fix can't track .value after await
+					cacheWithSourceMap.value
+				}
 				errors_cache.value = await errors.value;
 				return cacheWithSourceMap.value;
 			});
@@ -392,10 +421,15 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument, jsonDocument: json.JSONDocument }[]>) {
+		function useJsonsValidation(documents: Ref<{ textDocument: TextDocument }[]>) {
 			const errors = computed(async () => {
 				let result = new Map<string, vscode.Diagnostic[]>();
-				for (const { textDocument, jsonDocument } of documents.value) {
+				for (const { textDocument } of documents.value) {
+
+					const jsonDocument = getJsonDocument(textDocument);
+					if (!jsonDocument)
+						continue;
+
 					const errs = await jsonLs.doValidation(textDocument, jsonDocument, textDocument.languageId === 'json'
 						? {
 							comments: 'error',
@@ -404,7 +438,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 						: {
 							comments: 'ignore',
 							trailingCommas: 'warning',
-						});
+						}) as vscode.Diagnostic[];
 					if (errs) {
 						for (const err of errs) {
 							err.source = err.source ?? 'json';
@@ -420,6 +454,9 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap = computed(async () => {
+				{ // fix can't track .value after await
+					sfcJsons.sourceMaps.value
+				}
 				let result: vscode.Diagnostic[] = [];
 				if (errors_cache.value) {
 					for (const [uri, errs] of await errors_cache.value) {
@@ -510,7 +547,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				}
 				return [];
 			});
-			const errors_cache = ref<vscode.Diagnostic[]>([]);
+			const errors_cache: Ref<vscode.Diagnostic[]> = ref([]);
 			const result = computed(() => {
 				errors_cache.value = errors.value;
 				return cacheWithSourceMap.value;
@@ -571,14 +608,14 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				}
 				return result;
 			});
-			const errors_1_cache = ref<vscode.Diagnostic[]>([]);
-			const errors_2_cache = ref<vscode.Diagnostic[]>([]);
+			const errors_1_cache: Ref<vscode.Diagnostic[]> = ref([]);
+			const errors_2_cache: Ref<vscode.Diagnostic[]> = ref([]);
 			const result = computed(() => {
 				errors_1_cache.value = errors_1.value;
 				errors_2_cache.value = errors_2.value;
 				return cacheWithSourceMap.value;
 			});
-			const cacheWithSourceMap = computed(() => {
+			const cacheWithSourceMap: ComputedRef<vscode.Diagnostic[]> = computed(() => {
 				const result_1 = sfcTemplateScript.textDocument.value ? toTsSourceDiags(
 					'template',
 					errors_1_cache.value,

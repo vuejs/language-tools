@@ -4,19 +4,34 @@ on: [push, pull_request]
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x]
+        node-version: [14.x]
+        os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm i -g yarn
-    - run: yarn
-    - run: npm run prerelease
+      - uses: actions/checkout@v2
+
+      # install node
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # install pnpm
+      - run: npm i -g pnpm
+
+      # https://github.com/actions/cache/blob/main/examples.md#node---lerna
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - run: pnpm i
+      - run: npm run build
+      - run: npm run test

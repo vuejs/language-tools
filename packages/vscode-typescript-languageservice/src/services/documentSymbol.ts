@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as PConst from '../protocol.const';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { parseKindModifier } from '../utils/modifiers';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -64,7 +64,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 					item.text,
 					getSymbolKind(item.kind),
 					range,
-					undefined,
+					document.uri,
 					parent?.text,
 				);
 
@@ -77,6 +77,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 				const kindModifiers = parseKindModifier(item.kindModifiers);
 				if (kindModifiers.has(PConst.KindModifiers.deprecated)) {
 					symbolInfo.deprecated = true;
+					if (!symbolInfo.tags) symbolInfo.tags = [];
+					symbolInfo.tags.push(vscode.SymbolTag.Deprecated);
 				}
 
 				if (shouldInclude) {

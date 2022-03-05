@@ -1,5 +1,5 @@
 import * as SourceMaps from '@volar/source-map';
-import { createCodeGen } from '@volar/code-gen';
+import { CodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
@@ -13,9 +13,9 @@ const capabilitiesSet = {
 	tagHover: { basic: true },
 	event: { basic: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: true, },
-	attr: { basic: true, extraHoverInfo: true, diagnostic: true, references: true, definitions: true, rename: true, },
+	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
 	attrReference: { references: true, definitions: true, rename: true, },
-	scopedClassName: { references: true, definitions: true, rename: true, },
+	scopedClassName: { references: true, definitions: true, rename: true, completion: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	refAttr: { references: true, definitions: true, rename: true, },
@@ -44,7 +44,7 @@ export const transformContext: CompilerDOM.TransformContext = {
 };
 
 export function generate(
-	sourceLang: 'html' | 'pug',
+	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
 	cssScopedClasses: string[] = [],
@@ -56,9 +56,9 @@ export function generate(
 	},
 ) {
 
-	const tsCodeGen = createCodeGen<TsMappingData>();
-	const tsFormatCodeGen = createCodeGen<TsMappingData>();
-	const cssCodeGen = createCodeGen<undefined>();
+	const tsCodeGen = new CodeGen<TsMappingData>();
+	const tsFormatCodeGen = new CodeGen<TsMappingData>();
+	const cssCodeGen = new CodeGen<undefined>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
@@ -153,43 +153,19 @@ export function generate(
 		for (const eventName in tag.events) {
 
 			const var_on = `__VLS_${elementIndex++}`;
-			const event = tag.events[eventName];
 			const key_1 = eventName; // click-outside
-			const key_2 = camelize('on-' + key_1); // onClickOutside
 			const key_3 = camelize(key_1); // clickOutside
 
-			tsCodeGen.addText(`declare let ${var_on}: { `);
-			tsCodeGen.addText(validTsVar.test(key_1) ? key_1 : `'${key_1}'`);
-			tsCodeGen.addText(`: __VLS_types.FillingEventArg<__VLS_types.FirstFunction<\n`);
+			tsCodeGen.addText(`type ${var_on} = \n`);
 			if (key_1 !== key_3) {
 				tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
 				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_3}'>\n`);
-				tsCodeGen.addText(`>,\n`);
+				tsCodeGen.addText(`>;\n`);
 			}
 			else {
-				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
+				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>;\n`);
 			}
-			tsCodeGen.addText(`(typeof ${var_baseProps} & Omit<__VLS_types.GlobalAttrs, keyof typeof ${var_baseProps}> & Record<string, unknown>)[`);
-			writeCodeWithQuotes(
-				key_2,
-				event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.attr,
-					beforeRename(newName) {
-						return camelize('on-' + newName);
-					},
-					doRename(oldName, newName) {
-						const hName = hyphenate(newName);
-						if (hyphenate(newName).startsWith('on-')) {
-							return camelize(hName.substr('on-'.length));
-						}
-						return newName;
-					},
-				},
-			);
-			tsCodeGen.addText(`]>>\n};\n`);
 
 			var_events[eventName] = var_on;
 		}
@@ -366,6 +342,7 @@ export function generate(
 		writeObjectProperty(
 			name,
 			slot.loc,
+			SourceMaps.Mode.Expand,
 			{
 				vueTag: 'template',
 				capabilities: capabilitiesSet.slotNameExport,
@@ -551,27 +528,30 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.FOR) {
 			// v-for
-			const source = node.parseResult.source;
-			const value = node.parseResult.value;
-			const key = node.parseResult.key;
-			const index = node.parseResult.index;
+			const { source, value, key, index } = node.parseResult;
+			const leftExpressionRange = value ? { start: (value ?? key ?? index).loc.start.offset, end: (index ?? key ?? value).loc.end.offset } : undefined;
+			const leftExpressionText = leftExpressionRange ? node.loc.source.substring(leftExpressionRange.start - node.loc.start.offset, leftExpressionRange.end - node.loc.start.offset) : undefined;
 
-			if (value
-				&& source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-
-				let start_value = value.loc.start.offset;
-				let start_source = source.loc.start.offset;
-
-				const sourceVarName = `__VLS_${elementIndex++}`;
-				// const __VLS_100 = 123;
-				// const __VLS_100 = vmValue;
-				tsCodeGen.addText(`const ${sourceVarName} = __VLS_types.getVforSourceType(`);
+			tsCodeGen.addText(`for (const [`);
+			if (leftExpressionRange && leftExpressionText) {
+				writeCode(
+					leftExpressionText,
+					leftExpressionRange,
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					formatBrackets.square,
+				);
+			}
+			tsCodeGen.addText(`] of __VLS_types.getVforSourceType(`);
+			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeCode(
 					source.content,
 					{
-						start: start_source,
-						end: start_source + source.content.length,
+						start: source.loc.start.offset,
+						end: source.loc.start.offset + source.content.length,
 					},
 					SourceMaps.Mode.Offset,
 					{
@@ -580,79 +560,14 @@ export function generate(
 					},
 					formatBrackets.round,
 				);
-				tsCodeGen.addText(`);\n`);
-				tsCodeGen.addText(`for (const __VLS_${elementIndex++} in `);
-				writeCode(
-					sourceVarName,
-					{
-						start: source.loc.start.offset,
-						end: source.loc.end.offset,
-					},
-					SourceMaps.Mode.Totally,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.diagnosticOnly,
-					},
-				);
-				tsCodeGen.addText(`) {\n`);
-
-				tsCodeGen.addText(`const `);
-				writeCode(
-					value.content,
-					{
-						start: start_value,
-						end: start_value + value.content.length,
-					},
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-					formatBrackets.empty,
-				);
-				tsCodeGen.addText(` = __VLS_types.pickForItem(${sourceVarName});\n`);
-
-				if (key && key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					let start_key = key.loc.start.offset;
-					tsCodeGen.addText(`const `);
-					writeCode(
-						key.content,
-						{
-							start: start_key,
-							end: start_key + key.content.length,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.all,
-						},
-						formatBrackets.empty,
-					);
-					tsCodeGen.addText(` = __VLS_types.getVforKeyType(${sourceVarName});\n`);
-				}
-				if (index && index.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					let start_index = index.loc.start.offset;
-					tsCodeGen.addText(`const `);
-					writeCode(
-						index.content,
-						{
-							start: start_index,
-							end: start_index + index.content.length,
-						},
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.all,
-						},
-						formatBrackets.empty,
-					);
-					tsCodeGen.addText(` = __VLS_types.getVforIndexType(${sourceVarName});\n`);
-				}
-				for (const childNode of node.children) {
-					visitNode(childNode, parentEl);
-				}
-				tsCodeGen.addText('}\n');
 			}
+			tsCodeGen.addText(`)) {\n`);
+
+			for (const childNode of node.children) {
+				visitNode(childNode, parentEl);
+			}
+
+			tsCodeGen.addText('}\n');
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 			// not needed progress
@@ -748,6 +663,10 @@ export function generate(
 		tsCodeGen.addText(`}\n`);
 
 		function writeEvents(node: CompilerDOM.ElementNode) {
+
+			const varComponentInstance = `__VLS_${elementIndex++}`;
+			let writedInstance = false;
+
 			for (const prop of node.props) {
 				if (
 					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -756,22 +675,78 @@ export function generate(
 				) {
 
 					const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
+
 					for (const prop_2 of transformResult.props) {
-						tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]} = { `);
-						writeObjectProperty(
-							prop.arg.loc.source,
+
+						tryWriteInstance();
+
+						tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
+						tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
+						{
+							tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.event,
-							},
-						);
-						tsCodeGen.addText(`: `);
-						appendExpressionNode(prop, prop_2.value);
-						tsCodeGen.addText(` };\n`);
+								tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
+								tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]},\n`);
+								{
+									tsCodeGen.addText(`(typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Omit<__VLS_types.GlobalAttrs, keyof Props> & Record<string, unknown> : __VLS_types.GlobalAttrs & Record<string, unknown>)[`);
+									const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
+									writeCodeWithQuotes(
+										key_2,
+										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
+										{
+											vueTag: 'template',
+											capabilities: capabilitiesSet.attr,
+											beforeRename(newName) {
+												return camelize('on-' + newName);
+											},
+											doRename(oldName, newName) {
+												const hName = hyphenate(newName);
+												if (hyphenate(newName).startsWith('on-')) {
+													return camelize(hName.substr('on-'.length));
+												}
+												return newName;
+											},
+										},
+									);
+									tsCodeGen.addText(`]\n`);
+								}
+								tsCodeGen.addText(`>,\n`);
+
+								const camelizeName = camelize(prop.arg.loc.source);
+
+								if (camelizeName === prop.arg.loc.source) {
+									tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
+								}
+								else {
+									tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
+									{
+										tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
+										tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${camelizeName}'> : unknown,\n`);
+									}
+									tsCodeGen.addText(`>\n`);
+								}
+							}
+							tsCodeGen.addText(`>\n`);
+						}
+						tsCodeGen.addText(`>\n`);
+						tsCodeGen.addText(`} = {\n`);
+						{
+							writeObjectProperty(
+								prop.arg.loc.source,
+								{
+									start: prop.arg.loc.start.offset,
+									end: prop.arg.loc.end.offset,
+								},
+								SourceMaps.Mode.Offset,
+								{
+									vueTag: 'template',
+									capabilities: capabilitiesSet.event,
+								},
+							);
+							tsCodeGen.addText(`: `);
+							appendExpressionNode(prop, prop_2.value);
+						}
+						tsCodeGen.addText(`};\n`);
 					}
 				}
 				else if (
@@ -844,6 +819,18 @@ export function generate(
 						tsCodeGen.addText(node.content);
 					}
 				}
+			}
+
+			function tryWriteInstance() {
+
+				if (writedInstance)
+					return;
+
+				tsCodeGen.addText(`const ${varComponentInstance} = new ${tagResolves[node.tag].rawComponent}({ `);
+				writeProps(node, false, 'slots');
+				tsCodeGen.addText(`});\n`);
+
+				writedInstance = true;
 			}
 		}
 	}
@@ -1137,6 +1124,7 @@ export function generate(
 				writeObjectProperty(
 					name,
 					sourceRange,
+					SourceMaps.Mode.Offset,
 					data,
 				);
 			}
@@ -1438,6 +1426,7 @@ export function generate(
 
 				let startOffset = prop.value.loc.start.offset;
 				let tempClassName = '';
+				let openedBlock = false;
 
 				for (const char of (prop.value.loc.source + ' ')) {
 					if (char.trim() === '' || char === '"' || char === "'") {
@@ -1453,10 +1442,17 @@ export function generate(
 					}
 				}
 
+				if (openedBlock) {
+					tsCodeGen.addText(`}\n`);
+				}
+
 				function addClass(className: string, offset: number) {
-					tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`__VLS_styleScopedClasses`);
-					writePropertyAccess(
+					if (!openedBlock) {
+						tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+						openedBlock = true;
+					}
+					tsCodeGen.addText(`__VLS_styleScopedClasses[`);
+					writeCodeWithQuotes(
 						className,
 						{
 							start: offset,
@@ -1470,8 +1466,29 @@ export function generate(
 							},
 						},
 					);
-					tsCodeGen.addText(`;\n`);
+					tsCodeGen.addText(`];\n`);
 				}
+			}
+			else if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg.content === 'class'
+			) {
+				tsCodeGen.addText(`__VLS_styleScopedClasses = (`);
+				writeCode(
+					prop.exp.content,
+					{
+						start: prop.exp.loc.start.offset,
+						end: prop.exp.loc.end.offset,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.scopedClassName,
+					},
+				);
+				tsCodeGen.addText(`);\n`);
 			}
 		}
 	}
@@ -1524,6 +1541,7 @@ export function generate(
 						start: prop.arg.loc.start.offset,
 						end: prop.arg.loc.end.offset,
 					},
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						beforeRename: camelize,
@@ -1558,6 +1576,7 @@ export function generate(
 						start: prop.loc.start.offset,
 						end: prop.loc.start.offset + prop.name.length
 					},
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						beforeRename: camelize,
@@ -1627,7 +1646,7 @@ export function generate(
 	}
 	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
 		const sourceRange = sourceRanges[0];
-		const mode = writeObjectProperty(mapCode, sourceRange, data);
+		const mode = writeObjectProperty(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 
 		for (let i = 1; i < sourceRanges.length; i++) {
 			const sourceRange = sourceRanges[i];
@@ -1665,9 +1684,9 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: TsMappingData) {
 		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
-			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			writeCode(mapCode, sourceRange, mapMode, data);
 			return 1;
 		}
 		else {

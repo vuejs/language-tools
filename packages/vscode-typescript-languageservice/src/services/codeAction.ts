@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
@@ -95,6 +95,7 @@ export function register(
 				uri,
 				fileName,
 			};
+			// @ts-expect-error
 			action.data = data;
 			result.push(action);
 		}
@@ -111,6 +112,7 @@ export function register(
 					fixNames.unreachableCode,
 				],
 			};
+			// @ts-expect-error
 			action.data = data;
 			result.push(action);
 		}
@@ -131,6 +133,7 @@ export function register(
 					'unusedIdentifier_infer',
 				],
 			};
+			// @ts-expect-error
 			action.data = data;
 			result.push(action);
 		}
@@ -148,6 +151,7 @@ export function register(
 					'fixMissingImport',
 				],
 			};
+			// @ts-expect-error
 			action.data = data;
 			result.push(action);
 		}
@@ -204,6 +208,7 @@ export function register(
 					fileName,
 					fixIds: [codeFix.fixId],
 				};
+				// @ts-expect-error
 				fixAll.data = data;
 				fixAll.diagnostics = diagnostics;
 				codeActions.push(fixAll);
@@ -225,6 +230,7 @@ export function register(
 					refactorName: refactor.name,
 					actionName: action.name,
 				};
+				// @ts-expect-error
 				codeAction.data = data;
 				if (action.notApplicableReason) {
 					codeAction.disabled = { reason: action.notApplicableReason };

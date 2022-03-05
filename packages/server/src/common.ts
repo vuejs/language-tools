@@ -1,7 +1,4 @@
 import * as shared from '@volar/shared';
-import * as fs from 'fs';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as path from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
@@ -11,7 +8,14 @@ import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
 import * as tsConfigs from './tsConfigs';
 
-export function createLanguageServer(connection: vscode.Connection) {
+export interface RuntimeEnvironment {
+	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
+	loadTypescriptLocalized: (initOptions: shared.ServerInitializationOptions) => any,
+	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string> },
+	onDidChangeConfiguration?: (settings: any) => void,
+}
+
+export function createLanguageServer(connection: vscode.Connection, runtimeEnv: RuntimeEnvironment) {
 
 	connection.onInitialize(onInitialize);
 	connection.listen();
@@ -26,10 +30,10 @@ export function createLanguageServer(connection: vscode.Connection) {
 		}
 		return undefined;
 	});
-	connection.onRequest(shared.DepsRequest.type, () => Object.keys(require.cache));
 
 	async function onInitialize(params: vscode.InitializeParams) {
 
+		// @ts-expect-error
 		const options: shared.ServerInitializationOptions = params.initializationOptions;
 		let folders: string[] = [];
 		let rootUri: URI;
@@ -56,9 +60,9 @@ export function createLanguageServer(connection: vscode.Connection) {
 
 		if (options.documentFeatures) {
 
-			const ts = loadTypescript(options.typescript.serverPath);
+			const ts = runtimeEnv.loadTypescript(options);
 			const formatters = await import('./formatters');
-			const noStateLs = vue.getDocumentLanguageService(
+			const noStateLs = vue.getDocumentService(
 				{ typescript: ts },
 				(document) => tsConfigs.getPreferences(configuration, document),
 				(document, options) => tsConfigs.getFormatOptions(configuration, document, options),
@@ -82,7 +86,7 @@ export function createLanguageServer(connection: vscode.Connection) {
 			let projects: ReturnType<typeof createProjects> | undefined;
 			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
 
-			const ts = loadTypescript(options.typescript.serverPath);
+			const ts = runtimeEnv.loadTypescript(options);
 
 			(await import('./features/customFeatures')).register(connection, documents, () => projects);
 			(await import('./features/languageFeatures')).register(ts, connection, configuration, documents, () => projects, options.languageFeatures, lsConfigs, params);
@@ -91,13 +95,14 @@ export function createLanguageServer(connection: vscode.Connection) {
 			connection.onInitialized(async () => {
 
 				const inferredCompilerOptions = await getInferredCompilerOptions(ts, configuration);
-				const tsLocalized = options.typescript.localizedPath ? loadTypescriptLocalized(options.typescript.localizedPath) : undefined;
+				const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
 
 				if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
 					connection.client.register(vscode.DidChangeConfigurationNotification.type);
 				}
 
 				projects = createProjects(
+					runtimeEnv,
 					folders,
 					ts,
 					tsLocalized,
@@ -116,15 +121,5 @@ export function createLanguageServer(connection: vscode.Connection) {
 		}
 
 		return result;
-	}
-}
-
-function loadTypescript(tsPath: string): typeof import('typescript/lib/tsserverlibrary') {
-	return require(path.toUnix(tsPath));
-}
-
-function loadTypescriptLocalized(tsPath: string): ts.MapLike<string> | undefined {
-	if (fs.existsSync(tsPath)) {
-		return require(path.toUnix(tsPath));
 	}
 }

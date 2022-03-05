@@ -1,170 +1,82 @@
-import * as fs from 'fs';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import { normalizeFileName } from './path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import { createModuleSpecifierCache } from './moduleSpecifierCache';
+import { createPackageJsonCache, canCreatePackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 
-export function getTsCompletions(ts: typeof import('typescript/lib/tsserverlibrary')): {
-	StringCompletions: {
-		getStringLiteralCompletions: Function,
-		getStringLiteralCompletionDetails: Function,
-	},
-	moduleSpecifierResolutionLimit: 100,
-	moduleSpecifierResolutionCacheAttemptLimit: 1000,
-	SortText: {
-		LocalDeclarationPriority: '10',
-		LocationPriority: '11',
-		OptionalMember: '12',
-		MemberDeclaredBySpreadAssignment: '13',
-		SuggestedClassMembers: '14',
-		GlobalsOrKeywords: '15',
-		AutoImportSuggestions: '16',
-		JavascriptIdentifiers: '17',
-		DeprecatedLocalDeclarationPriority: '18',
-		DeprecatedLocationPriority: '19',
-		DeprecatedOptionalMember: '20',
-		DeprecatedMemberDeclaredBySpreadAssignment: '21',
-		DeprecatedSuggestedClassMembers: '22',
-		DeprecatedGlobalsOrKeywords: '23',
-		DeprecatedAutoImportSuggestions: '24'
-	},
-	CompletionSource: { ThisProperty: 'ThisProperty/' },
-	getCompletionsAtPosition: Function,
-	getCompletionEntriesFromSymbols: Function,
-	getCompletionEntryDetails: Function,
-	createCompletionDetailsForSymbol: Function,
-	createCompletionDetails: Function,
-	getCompletionEntrySymbol: Function,
-	CompletionKind: {
-		'0': 'ObjectPropertyDeclaration',
-		'1': 'Global',
-		'2': 'PropertyAccess',
-		'3': 'MemberLike',
-		'4': 'String',
-		'5': 'None',
-		ObjectPropertyDeclaration: 0,
-		Global: 1,
-		PropertyAccess: 2,
-		MemberLike: 3,
-		String: 4,
-		None: 5
-	},
-	getPropertiesForObjectExpression: Function,
-} | undefined {
-	return (ts as any).Completions;
-}
-
-export function createTsLanguageService(
+export function injectCacheLogicToLanguageServiceHost(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	host: ts.LanguageServiceHost,
+	service: ts.LanguageService,
 ) {
-	// TODO: new cache logic https://github.com/microsoft/TypeScript/blob/4c0a51e14b67460b47bdcebea6b70270a83a243e/src/server/project.ts#L258
-	return ts.createLanguageService(host);
-}
 
-export function getWorkspaceTypescriptPath(tsdk: string, workspaceFolderFsPaths: string[]) {
-	if (path.isAbsolute(tsdk)) {
-		const tsPath = findTypescriptModulePathInLib(tsdk);
-		if (tsPath) {
-			return tsPath;
-		}
-	}
-	else {
-		for (const folder of workspaceFolderFsPaths) {
-			const tsPath = findTypescriptModulePathInLib(path.join(folder, tsdk));
-			if (tsPath) {
-				return tsPath;
+	const _createCacheableExportInfoMap = (ts as any).createCacheableExportInfoMap;
+	const _combinePaths = (ts as any).combinePaths;
+	const _forEachAncestorDirectory = (ts as any).forEachAncestorDirectory;
+	const _getDirectoryPath = (ts as any).getDirectoryPath;
+	const _toPath = (ts as any).toPath;
+	const _createGetCanonicalFileName = (ts as any).createGetCanonicalFileName;
+
+	if (
+		!_createCacheableExportInfoMap
+		|| !_combinePaths
+		|| !_forEachAncestorDirectory
+		|| !_getDirectoryPath
+		|| !_toPath
+		|| !_createGetCanonicalFileName
+		|| !canCreatePackageJsonCache(ts)
+	) return;
+
+	const moduleSpecifierCache = createModuleSpecifierCache();
+	const exportMapCache = _createCacheableExportInfoMap({
+		getCurrentProgram() {
+			return service.getProgram()
+		},
+		getPackageJsonAutoImportProvider() {
+			return service.getProgram()
+		},
+	});
+	const packageJsonCache = createPackageJsonCache(ts, {
+		...host,
+		// @ts-expect-error
+		host: { ...host },
+		toPath,
+	});
+
+	// @ts-expect-error
+	host.getCachedExportInfoMap = () => exportMapCache;
+	// @ts-expect-error
+	host.getModuleSpecifierCache = () => moduleSpecifierCache;
+	// @ts-expect-error
+	host.getPackageJsonsVisibleToFile = (fileName: string, rootDir?: string) => {
+		const rootPath = rootDir && toPath(rootDir);
+		const filePath = toPath(fileName);
+		const result: PackageJsonInfo[] = [];
+		const processDirectory = (directory: ts.Path): boolean | undefined => {
+			switch (packageJsonCache.directoryHasPackageJson(directory)) {
+				// Sync and check same directory again
+				case Ternary.Maybe:
+					packageJsonCache.searchDirectoryAndAncestors(directory);
+					return processDirectory(directory);
+				// Check package.json
+				case Ternary.True:
+					const packageJsonFileName = _combinePaths(directory, "package.json");
+					// this.watchPackageJsonFile(packageJsonFileName as ts.Path); // TODO
+					const info = packageJsonCache.getInDirectory(directory);
+					if (info) result.push(info);
 			}
-		}
-	}
-}
-
-export function getWorkspaceTypescriptLocalizedPath(tsdk: string, lang: string, workspaceFolderFsPaths: string[]) {
-	if (path.isAbsolute(tsdk)) {
-		const tsPath = findTypescriptLocalizedPathInLib(tsdk, lang);
-		if (tsPath) {
-			return tsPath;
-		}
-	}
-	else {
-		for (const folder of workspaceFolderFsPaths) {
-			const tsPath = findTypescriptLocalizedPathInLib(path.join(folder, tsdk), lang);
-			if (tsPath) {
-				return tsPath;
+			if (rootPath && rootPath === directory) {
+				return true;
 			}
-		}
-	}
-}
+		};
 
-export function findTypescriptModulePathInLib(lib: string) {
+		_forEachAncestorDirectory(_getDirectoryPath(filePath), processDirectory);
+		return result;
+	};
 
-	const tsserverlibrary = path.join(lib, 'tsserverlibrary.js');
-	const typescript = path.join(lib, 'typescript.js');
-	const tsserver = path.join(lib, 'tsserver.js');
-
-	if (fs.existsSync(tsserverlibrary)) {
-		return tsserverlibrary;
+	function toPath(fileName: string) {
+		return _toPath(fileName, host.getCurrentDirectory(), _createGetCanonicalFileName(host.useCaseSensitiveFileNames?.()));
 	}
-	if (fs.existsSync(typescript)) {
-		return typescript;
-	}
-	if (fs.existsSync(tsserver)) {
-		return tsserver;
-	}
-}
-
-export function findTypescriptLocalizedPathInLib(lib: string, lang: string) {
-
-	const localized = path.join(lib, lang, 'diagnosticMessages.generated.json');
-
-	if (fs.existsSync(localized)) {
-		return localized;
-	}
-}
-
-export function getVscodeTypescriptPath(appRoot: string) {
-	return path.join(appRoot, 'extensions', 'node_modules', 'typescript', 'lib', 'typescript.js');
-}
-
-export function getVscodeTypescriptLocalizedPath(appRoot: string, lang: string): string | undefined {
-	const tsPath = path.join(appRoot, 'extensions', 'node_modules', 'typescript', 'lib', lang, 'diagnosticMessages.generated.json');
-	if (fs.existsSync(tsPath)) {
-		return tsPath;
-	}
-}
-
-export function getTypeScriptVersion(serverPath: string): string | undefined {
-	if (!fs.existsSync(serverPath)) {
-		return undefined;
-	}
-
-	const p = serverPath.split(path.sep);
-	if (p.length <= 2) {
-		return undefined;
-	}
-	const p2 = p.slice(0, -2);
-	const modulePath = p2.join(path.sep);
-	let fileName = path.join(modulePath, 'package.json');
-	if (!fs.existsSync(fileName)) {
-		// Special case for ts dev versions
-		if (path.basename(modulePath) === 'built') {
-			fileName = path.join(modulePath, '..', 'package.json');
-		}
-	}
-	if (!fs.existsSync(fileName)) {
-		return undefined;
-	}
-
-	const contents = fs.readFileSync(fileName).toString();
-	let desc: any = null;
-	try {
-		desc = JSON.parse(contents);
-	} catch (err) {
-		return undefined;
-	}
-	if (!desc || !desc.version) {
-		return undefined;
-	}
-	return desc.version;
 }
 
 export function createParsedCommandLine(
@@ -180,9 +92,9 @@ export function createParsedCommandLine(
 	}
 } {
 
-	const realTsConfig = ts.sys.realpath!(tsConfig);
-	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
+	const tsConfigPath = ts.sys.resolvePath(tsConfig);
+	const config = ts.readJsonConfigFile(tsConfigPath, ts.sys.readFile);
+	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
 	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 	content.fileNames = content.fileNames.map(normalizeFileName);
 

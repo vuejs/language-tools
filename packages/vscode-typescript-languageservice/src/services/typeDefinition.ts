@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { entriesToLocationLinks } from '../utils/transforms';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';

@@ -4,6 +4,13 @@ import { defineComponent, defineAsyncComponent, h, ref, computed, Suspense } fro
 export const vuePlugin: Plugin = app => {
 	installFinder(app);
 	installPreview(app);
+	let href = '';
+    setInterval(function () {
+        if (href !== location.href) {
+            href = location.href;
+            parent.postMessage({ command: 'urlChanged', data: href }, '*');
+        }
+    }, 200);
 };
 
 function installFinder(app: App) {
@@ -120,7 +127,7 @@ function installPreview(app: App) {
 				]);
 			},
 		});
-		// TODO: fix preview not working is preview component is root component
+		// TODO: fix preview not working if preview component is root component
 		(app._component as any).setup = preview.setup;
 
 		app.config.warnHandler = (msg) => {

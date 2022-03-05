@@ -3,16 +3,18 @@ import * as vue from 'vscode-vue-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import { getSchemaRequestService } from './schemaRequestService';
 import type { createLsConfigs } from './configs';
 import * as path from 'upath';
+import { getDocumentSafely } from './utils';
+import { RuntimeEnvironment } from './common';
 
-export type Project = ReturnType<typeof createProject>;
+export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
 export const renameFileContentCache = new Map<string, string>();
 
 export async function createProject(
-	ts: vue.Modules['typescript'],
+	runtimeEnv: RuntimeEnvironment,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	options: shared.ServerInitializationOptions,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
@@ -83,7 +85,7 @@ export async function createProject(
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
 				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
-				vueLs.__internal__.onInitProgress(p => {
+				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());
 					}
@@ -169,11 +171,27 @@ export async function createProject(
 
 		const host: vue.LanguageServiceHost = {
 			// vue
-			createTsLanguageService(host) {
-				return shared.createTsLanguageService(ts, host);
-			},
 			getEmmetConfig: lsConfigs?.getEmmetConfiguration,
-			schemaRequestService: options.languageFeatures?.schemaRequestService ? getSchemaRequestService(connection, options.languageFeatures.schemaRequestService) : undefined,
+			schemaRequestService(uri) {
+
+				const protocol = uri.substr(0, uri.indexOf(':'));
+
+				const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
+				if (builtInHandler) {
+					return builtInHandler(uri);
+				}
+
+				if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
+					return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
+						return responseText;
+					}, error => {
+						return Promise.reject(error.message);
+					});
+				}
+				else {
+					return Promise.reject('clientHandledGetDocumentContentRequest is false');
+				}
+			},
 			getPreferences: lsConfigs?.getTsPreferences,
 			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
@@ -269,10 +287,10 @@ export async function createProject(
 export function getScriptText(
 	documents: vscode.TextDocuments<TextDocument>,
 	fileName: string,
-	sys: vue.Modules['typescript']['sys'],
+	sys: typeof import('typescript/lib/tsserverlibrary')['sys'],
 ) {
 	const uri = shared.fsPathToUri(fileName);
-	const doc = shared.getDocumentSafely(documents, uri);
+	const doc = getDocumentSafely(documents, uri);
 	if (doc) {
 		return doc.getText();
 	}

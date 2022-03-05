@@ -1,4 +1,4 @@
-import { createCodeGen } from '@volar/code-gen';
+import { CodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import * as path from 'upath';
@@ -24,9 +24,8 @@ export function generate(
 	vueLibName: string,
 ) {
 
-	const codeGen = createCodeGen<TsMappingData>();
+	const codeGen = new CodeGen<TsMappingData>();
 	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
-	const shouldAddExportDefault = lsType === 'script' && !!scriptSetup;
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -56,27 +55,25 @@ export function generate(
 		);
 	}
 
-	if (lsType === 'template' || shouldAddExportDefault)
-		writeExportComponent();
-
 	if (usedTypes.DefinePropsToOptions) {
 		codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-		codeGen.addText(`type __VLS_DefinePropsToOptions<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+		codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
 	}
 	if (usedTypes.mergePropDefaults) {
-		codeGen.addText(`declare function __VLS_mergePropDefaults<P, D>(props: P, defaults: D): {
+		codeGen.addText(`type __VLS_WithDefaults<P, D> = {
 			[K in keyof P]: K extends keyof D ? P[K] & {
 				default: D[K]
 			} : P[K]
-		}\n`);
+		};\n`);
 	}
 	if (usedTypes.ConstructorOverloads) {
+		// fix https://github.com/johnsoncodehk/volar/issues/926
+		codeGen.addText('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
 		if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 		}
 		else {
-			codeGen.addText(
-				genConstructorOverloads('__VLS_ConstructorOverloads'));
+			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
 		}
 	}
 
@@ -103,7 +100,7 @@ export function generate(
 	}
 
 	return {
-		...codeGen,
+		codeGen,
 		teleports,
 	};
 
@@ -144,52 +141,86 @@ export function generate(
 		if (!script)
 			return;
 
-		const sections: (TextRange | string)[] = [];
-
-		if (shouldAddExportDefault && scriptRanges?.exportDefault) {
-			sections.push({ start: 0, end: scriptRanges.exportDefault.start });
-			sections.push('await' + ' '.repeat(scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start - 'await'.length));
-			sections.push({ start: scriptRanges.exportDefault.expression.start, end: script.content.length });
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
+			addVirtualCode('script', 0, scriptRanges.exportDefault.start);
+			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
 		}
 		else {
-			sections.push({ start: 0, end: script.content.length });
-		}
-
-		for (const section of sections) {
-			if (typeof section === 'string') {
-				codeGen.addText(section);
-			}
-			else {
-				codeGen.addCode(
-					script.content.substring(section.start, section.end),
-					section,
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'script',
-						capabilities: {
-							basic: lsType === 'script',
-							references: true,
-							definitions: lsType === 'script',
-							rename: true,
-							diagnostic: true, // also working for setup() returns unused in template checking
-							formatting: lsType === 'script',
-							completion: lsType === 'script',
-							semanticTokens: lsType === 'script',
-							foldingRanges: lsType === 'script',
-						},
-					}
-				);
-			}
+			addVirtualCode('script', 0, script.content.length);
 		}
 	}
+	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+		codeGen.addCode(
+			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
+			{ start, end },
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: vueTag,
+				capabilities: {
+					basic: lsType === 'script',
+					references: true,
+					definitions: lsType === 'script',
+					rename: true,
+					diagnostic: true, // also working for setup() returns unused in template checking
+					formatting: lsType === 'script',
+					completion: lsType === 'script',
+					semanticTokens: lsType === 'script',
+					foldingRanges: lsType === 'script',
+				},
+			}
+		);
+	}
+	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+		codeGen.addCode(
+			(vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end),
+			{ start, end },
+			SourceMaps.Mode.Offset,
+			{
+				vueTag,
+				capabilities: {
+					references: true,
+					definitions: true,
+					rename: true,
+				},
+			},
+		);
+	}
 	function writeScriptSetup() {
+
 		if (!scriptSetup)
 			return;
 
+		if (!scriptSetupRanges)
+			return;
+
+		const fullStart = codeGen.getText().length;
+
 		codeGen.addCode(
-			scriptSetup.content,
+			scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
 			{
 				start: 0,
+				end: scriptSetupRanges.importSectionEndOffset,
+			},
+			SourceMaps.Mode.Offset,
+			{
+				vueTag: 'scriptSetup',
+				capabilities: {
+					basic: lsType === 'script',
+					references: true,
+					definitions: lsType === 'script',
+					diagnostic: lsType === 'script',
+					rename: true,
+					completion: lsType === 'script',
+					semanticTokens: lsType === 'script',
+				},
+			},
+		);
+
+		codeGen.addText('export default await (async () => {\n');
+		codeGen.addCode(
+			scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
+			{
+				start: scriptSetupRanges.importSectionEndOffset,
 				end: scriptSetup.content.length,
 			},
 			SourceMaps.Mode.Offset,
@@ -206,54 +237,58 @@ export function generate(
 				},
 			},
 		);
-	}
-	function writeExportComponent() {
-		if (shouldAddExportDefault) {
-			codeGen.addText(`export default (await import('${vueLibName}')).defineComponent({\n`);
+
+		if (scriptSetupRanges?.withDefaultsArg) {
+			codeGen.addText(`const __VLS_withDefaultsArg = (`);
+			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+			codeGen.addText(`);\n`);
 		}
-		else {
-			codeGen.addText(`\n`);
-			codeGen.addText(`export const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
-		}
+
+		codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
+
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
 			codeGen.addText(`...(`);
-			mapSubText('script', args.start, args.end);
+			addVirtualCode('script', args.start, args.end);
 			codeGen.addText(`),\n`);
 		}
 		if (scriptSetup && scriptSetupRanges) {
 			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
 				codeGen.addText(`props: (`);
-				if (scriptSetupRanges.withDefaultsArg) {
-					usedTypes.mergePropDefaults = true;
-					codeGen.addText(`__VLS_mergePropDefaults(`);
-				}
 				if (scriptSetupRanges.propsRuntimeArg) {
-					mapSubText('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 				}
 				else if (scriptSetupRanges.propsTypeArg) {
+
 					usedTypes.DefinePropsToOptions = true;
-					codeGen.addText(`{} as __VLS_DefinePropsToOptions<`);
-					mapSubText('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+					codeGen.addText(`{} as `);
+
+					if (scriptSetupRanges.withDefaultsArg) {
+						usedTypes.mergePropDefaults = true;
+						codeGen.addText(`__VLS_WithDefaults<`);
+					}
+
+					codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 					codeGen.addText(`>`);
-				}
-				if (scriptSetupRanges.withDefaultsArg) {
-					codeGen.addText(`, `);
-					mapSubText('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-					codeGen.addText(`)`);
+
+					if (scriptSetupRanges.withDefaultsArg) {
+						codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+						codeGen.addText(`>`);
+					}
 				}
 				codeGen.addText(`),\n`);
 			}
 			if (scriptSetupRanges.emitsRuntimeArg) {
 				codeGen.addText(`emits: (`);
-				mapSubText('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
 				codeGen.addText(`),\n`);
 			}
 			else if (scriptSetupRanges.emitsTypeArg) {
 				usedTypes.ConstructorOverloads = true;
-				codeGen.addText(`emits: ({} as __VLS_ConstructorOverloads<`);
-				mapSubText('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codeGen.addText(`>),\n`);
+				codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				codeGen.addText(`>>),\n`);
 			}
 			const bindingsArr: {
 				bindings: { start: number, end: number }[],
@@ -274,17 +309,29 @@ export function generate(
 					vueTag: 'script',
 				});
 			}
+
 			codeGen.addText(`setup() {\n`);
+
 			if (lsType === 'script') {
-				codeGen.addText(`return () => {\n`);
+				codeGen.addText(`() => {\n`);
 				for (const bindText of getStyleBindTexts()) {
 					codeGen.addText('// @ts-ignore\n');
 					codeGen.addText(bindText + ';\n');
 				}
 				writeTemplate();
 				codeGen.addText(`};\n`);
+
+				if (scriptSetupRanges.exposeRuntimeArg) {
+					codeGen.addText(`return `);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+					codeGen.addText(`;\n`);
+				}
+				else {
+					codeGen.addText(`return { };\n`);
+				};
 			}
-			else if (lsType === 'template') {
+
+			if (lsType === 'template') {
 				codeGen.addText(`return {\n`);
 				for (const { bindings, content } of bindingsArr) {
 					for (const expose of bindings) {
@@ -323,22 +370,24 @@ export function generate(
 		}
 
 		codeGen.addText(`});\n`);
+		codeGen.addText(`})();\n`);
 
-		function mapSubText(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-			codeGen.addCode(
-				(vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end),
-				{ start, end },
-				SourceMaps.Mode.Offset,
-				{
-					vueTag,
-					capabilities: {
-						references: true,
-						definitions: true,
-						rename: true,
-					},
-				},
-			);
-		}
+		// for fix https://github.com/johnsoncodehk/volar/issues/906
+		codeGen.addMapping2({
+			mappedRange: {
+				start: fullStart,
+				end: codeGen.getText().length,
+			},
+			sourceRange: {
+				start: 0,
+				end: scriptSetup.content.length,
+			},
+			mode: SourceMaps.Mode.Totally,
+			data: {
+				vueTag: 'scriptSetup',
+				capabilities: {},
+			},
+		});
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);

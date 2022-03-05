@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
@@ -38,8 +38,6 @@ export function register(
 		if (!response1) return;
 
 		const tokenSpan = [...response1.spans, ...response2.spans];
-
-		// const builder = new vscode.SemanticTokensBuilder();
 		const tokens: [number, number, number, number, number][] = [];
 		let i = 0;
 		while (i < tokenSpan.length) {
@@ -67,11 +65,9 @@ export function register(
 			for (let line = startPos.line; line <= endPos.line; line++) {
 				const startCharacter = (line === startPos.line ? startPos.character : 0);
 				const endCharacter = (line === endPos.line ? endPos.character : docLineLength(document, line));
-				// builder.push(line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers);
 				tokens.push([line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers]);
 			}
 		}
-		// return builder.build();
 		return tokens;
 	}
 }

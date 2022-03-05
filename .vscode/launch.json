@@ -3,28 +3,13 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Launch Client",
 			"type": "extensionHost",
 			"request": "launch",
-			"name": "Launch Vue Language Features",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features"
-			],
-			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js"
-			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
-		},
-		{
-			"type": "extensionHost",
-			"request": "launch",
-			"name": "Launch TypeScript Vue Plugin",
-			"runtimeExecutable": "${execPath}",
-			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features",
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-vue-plugin"
 			],
 			"outFiles": [
@@ -37,9 +22,28 @@
 			}
 		},
 		{
+			"name": "Launch Web Client",
+			"type": "pwa-extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode-vue-language-features",
+				"--extensionDevelopmentKind=web"
+			],
+			"outFiles": [
+				"${workspaceRoot}/extensions/*/out/**/*.js",
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
+			"name": "Attach to Server - API",
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - API",
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
@@ -47,9 +51,9 @@
 			]
 		},
 		{
+			"name": "Attach to Server - Document",
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - Document",
 			"port": 6010,
 			"restart": true,
 			"outFiles": [
@@ -57,9 +61,9 @@
 			]
 		},
 		{
+			"name": "Attach to Server - HTML",
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Server - HTML",
 			"port": 6011,
 			"restart": true,
 			"outFiles": [
@@ -71,7 +75,7 @@
 		{
 			"name": "Client + Server",
 			"configurations": [
-				"Launch Vue Language Features",
+				"Launch Client",
 				"Attach to Server - API",
 				"Attach to Server - Document",
 				"Attach to Server - HTML"

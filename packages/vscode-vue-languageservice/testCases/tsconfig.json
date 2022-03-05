@@ -1,7 +1,13 @@
 {
     "compilerOptions": {
+        "lib": [
+            "esnext",
+            "dom"
+        ],
         "strict": true,
         "allowJs": true,
-        "noUncheckedIndexedAccess": true
+        "noUncheckedIndexedAccess": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
     }
 }

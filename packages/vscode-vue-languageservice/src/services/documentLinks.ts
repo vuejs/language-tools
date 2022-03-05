@@ -1,8 +1,8 @@
-import * as vscode from 'vscode-languageserver';
-import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { SourceFile } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 
-export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs, getStylesheet, getPugDocument }: LanguageServiceRuntimeContext) {
 	return async (uri: string) => {
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) return;
@@ -40,10 +40,14 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentLink[] = [];
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
-				const links = sourceMap.language === 'html'
-					? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
-					: pugLs.findDocumentLinks(sourceMap.pugDocument, documentContext)
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const links =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.findDocumentLinks(sourceMap.mappedDocument, documentContext)
+						: pugDocument ? pugLs.findDocumentLinks(pugDocument, documentContext)
+							: [];
+
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 					if (vueRange) {
@@ -60,9 +64,14 @@ export function register({ documentContext, sourceFiles, htmlLs, pugLs, getCssLs
 			const sourceMaps = sourceFile.getCssSourceMaps();
 			const result: vscode.DocumentLink[] = [];
 			for (const sourceMap of sourceMaps) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
-				const links = await cssLs.findDocumentLinks2(sourceMap.mappedDocument, sourceMap.stylesheet, documentContext);
+
+				if (!cssLs || !stylesheet)
+					continue;
+
+				const links = await cssLs.findDocumentLinks2(sourceMap.mappedDocument, stylesheet, documentContext);
 				for (const link of links) {
 					const vueRange = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 					if (vueRange) {

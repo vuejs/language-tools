@@ -6,9 +6,18 @@ import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 import type { createLsConfigs } from '../configs';
 import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
+import { getDocumentSafely } from '../utils';
+import { Commands } from '../commands';
+import * as convertTagNameCase from '../commands/convertTagNameCase';
+import * as htmlToPug from '../commands/htmlToPug';
+import * as pugToHtml from '../commands/pugToHtml';
+import * as useSetupSugar from '../commands/useSetupSugar';
+import * as unuseSetupSugar from '../commands/unuseSetupSugar';
+import * as useRefSugar from '../commands/useRefSugar';
+import * as unuseRefSugar from '../commands/unuseRefSugar';
 
 export function register(
-	ts: vue.Modules['typescript'],
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	connection: vscode.Connection,
 	configuration: Configuration | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
@@ -45,7 +54,7 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri: string | undefined = item.data?.uri;
+		const uri = (item.data as any)?.uri as string | undefined;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
@@ -71,18 +80,156 @@ export function register(
 		return languageService?.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
 	connection.onCodeLens(async handler => {
+
 		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.getCodeLens(handler.textDocument.uri, await lsConfigs?.getCodeLensConfigs());
+		if (!languageService) return;
+
+		const sourceFile = languageService.__internal__.context.sourceFiles.get(handler.textDocument.uri);
+		if (!sourceFile) return;
+
+		const options = await lsConfigs?.getCodeLensConfigs();
+		const document = sourceFile.getTextDocument();
+
+		let result: vscode.CodeLens[] = [];
+
+		if (options?.references) {
+			const referencesCodeLens = await languageService.getReferencesCodeLens(handler.textDocument.uri);
+			result = result.concat(referencesCodeLens);
+		}
+		if (options?.pugTool) {
+			result = result.concat(getHtmlPugResult(sourceFile));
+		}
+		if (options?.scriptSetupTool) {
+			result = result.concat(getScriptSetupConvertConvert(sourceFile));
+			result = result.concat(getRefSugarConvert(sourceFile));
+		}
+
+		return result;
+
+		function getScriptSetupConvertConvert(sourceFile: vue.SourceFile) {
+
+			const ranges = sourceFile.getSfcRefSugarRanges();
+			if (ranges?.refs.length)
+				return [];
+
+			const result: vscode.CodeLens[] = [];
+			const descriptor = sourceFile.getDescriptor();
+			if (descriptor.scriptSetup) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+						end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+					},
+					command: {
+						title: 'setup sugar ☑',
+						command: Commands.UNUSE_SETUP_SUGAR,
+						arguments: [handler.textDocument.uri],
+					},
+				});
+			}
+			else if (descriptor.script) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.script.startTagEnd),
+						end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+					},
+					command: {
+						title: 'setup sugar ☐',
+						command: Commands.USE_SETUP_SUGAR,
+						arguments: [handler.textDocument.uri],
+					},
+				});
+			}
+			return result;
+		}
+		function getRefSugarConvert(sourceFile: vue.SourceFile) {
+			const result: vscode.CodeLens[] = [];
+			const descriptor = sourceFile.getDescriptor();
+			const ranges = sourceFile.getSfcRefSugarRanges();
+			if (descriptor.scriptSetup && ranges) {
+				result.push({
+					range: {
+						start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+						end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+					},
+					command: {
+						title: 'ref sugar (take 2) ' + (ranges.refs.length ? '☑' : '☐'),
+						command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
+						arguments: [handler.textDocument.uri],
+					},
+				});
+			}
+			return result;
+		}
+		function getHtmlPugResult(sourceFile: vue.SourceFile) {
+			const sourceMaps = sourceFile.getTemplateSourceMaps();
+			for (const sourceMap of sourceMaps) {
+				for (const maped of sourceMap.mappings) {
+					if (sourceMap.mappedDocument.languageId === 'html' || sourceMap.mappedDocument.languageId === 'jade') {
+						return [{
+							range: {
+								start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+								end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+							},
+							command: {
+								title: 'pug ' + (sourceMap.mappedDocument.languageId === 'jade' ? '☑' : '☐'),
+								command: sourceMap.mappedDocument.languageId === 'jade' ? Commands.PUG_TO_HTML : Commands.HTML_TO_PUG,
+								arguments: [handler.textDocument.uri],
+							},
+						}];
+					}
+				}
+			}
+			return [];
+		}
 	});
 	connection.onCodeLensResolve(async codeLens => {
-		const uri = codeLens.data?.uri;
+		const uri = (codeLens.data as any)?.uri as string | undefined; // TODO
+		if (!uri) return codeLens;
 		const languageService = await getLanguageService(uri);
-		return languageService?.doCodeLensResolve(codeLens, typeof features.codeLens === 'object' && features.codeLens.showReferencesNotification) ?? codeLens;
+		return languageService?.doReferencesCodeLensResolve(codeLens, Commands.SHOW_REFERENCES) ?? codeLens;
 	});
 	connection.onExecuteCommand(async handler => {
-		const uri = handler.arguments?.[0];
-		const languageService = await getLanguageService(uri);
-		languageService?.__internal__.executeCommand(uri, handler.command, handler.arguments, connection);
+
+		if (handler.command === Commands.SHOW_REFERENCES && handler.arguments) {
+			connection.sendNotification(shared.ShowReferencesNotification.type, {
+				textDocument: { uri: handler.arguments[0] as string },
+				position: handler.arguments[1] as vscode.Position,
+				references: handler.arguments[2] as vscode.Location[],
+			});
+			return;
+		}
+
+		const uri = handler.arguments?.[0] as string | undefined;
+		if (!uri) return;
+
+		const vueLs = await getLanguageService(uri);
+		if (!vueLs) return;
+
+		if (handler.command === Commands.USE_SETUP_SUGAR) {
+			await useSetupSugar.execute(vueLs, connection, uri);
+		}
+		if (handler.command === Commands.UNUSE_SETUP_SUGAR) {
+			await unuseSetupSugar.execute(vueLs, connection, uri);
+		}
+		if (handler.command === Commands.USE_REF_SUGAR) {
+			await useRefSugar.execute(vueLs, connection, uri);
+		}
+		if (handler.command === Commands.UNUSE_REF_SUGAR) {
+			await unuseRefSugar.execute(vueLs, connection, uri);
+		}
+		if (handler.command === Commands.HTML_TO_PUG) {
+			await htmlToPug.execute(vueLs, connection, uri);
+		}
+		if (handler.command === Commands.PUG_TO_HTML) {
+			await pugToHtml.execute(vueLs, connection, uri);
+		}
+		if (handler.command === Commands.CONVERT_TO_KEBAB_CASE) {
+			await convertTagNameCase.execute(vueLs, connection, uri, 'kebab');
+		}
+		if (handler.command === Commands.CONVERT_TO_PASCAL_CASE) {
+			await convertTagNameCase.execute(vueLs, connection, uri, 'pascal');
+		}
 	});
 	connection.onCodeAction(async handler => {
 		const uri = handler.textDocument.uri;
@@ -177,20 +324,10 @@ export function register(
 		return languageService?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const result = await languageService?.getSemanticTokens(handler.textDocument.uri, undefined, token, resultProgress);
-		return {
-			resultId: result?.resultId,
-			data: result?.data ?? [],
-		};
+		return onSemanticTokens(handler, token, resultProgress);
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const result = await languageService?.getSemanticTokens(handler.textDocument.uri, handler.range, token, resultProgress);
-		return {
-			resultId: result?.resultId,
-			data: result?.data ?? [],
-		};
+		return onSemanticTokens(handler, token, resultProgress);
 	});
 	connection.workspace.onWillRenameFiles(async handler => {
 
@@ -214,7 +351,7 @@ export function register(
 								for (const file of handler.files) {
 									if (change.textDocument.uri === file.oldUri) {
 										change.textDocument.uri = file.newUri;
-										change.textDocument.version = shared.getDocumentSafely(documents, file.newUri)?.version ?? change.textDocument.version;
+										change.textDocument.version = getDocumentSafely(documents, file.newUri)?.version ?? change.textDocument.version;
 									}
 								}
 							}
@@ -252,6 +389,30 @@ export function register(
 		}
 	});
 
+	async function onSemanticTokens(
+		handler: vscode.SemanticTokensParams | vscode.SemanticTokensRangeParams,
+		token: vscode.CancellationToken,
+		resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>,
+	) {
+
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		const result = await languageService?.getSemanticTokens(
+			handler.textDocument.uri,
+			'range' in handler ? handler.range : undefined,
+			token,
+			tokens => resultProgress?.report(buildTokens(tokens)),
+		) ?? [];
+
+		return buildTokens(result);
+
+		function buildTokens(tokens: [number, number, number, number, number | undefined][]) {
+			const builder = new vscode.SemanticTokensBuilder();
+			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
+				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+			}
+			return builder.build();
+		}
+	}
 	async function getLanguageService(uri: string) {
 		const projects = await getProjects();
 		const project = (await projects?.getProject(uri))?.project;

@@ -1,16 +1,17 @@
 import { transformCompletionItem } from '@volar/transforms';
-import * as vscode from 'vscode-languageserver';
-import { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import * as vscode from 'vscode-languageserver-protocol';
+import { SourceFile } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';
 import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 
-export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vueHost, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, scriptTsLs }: LanguageServiceRuntimeContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
+		// @ts-expect-error
 		const data: CompletionData | undefined = item.data;
 		if (!data) return item;
 
@@ -23,7 +24,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			return await getHtmlResult(item, data);
 		}
 		if (data.mode === 'autoImport' && sourceFile) {
-			return getAutoImportResult(sourceFile, item, data);
+			return await getAutoImportResult(sourceFile, item, data);
 		}
 
 		return item;
@@ -44,10 +45,26 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 				}
 			}
 			data.tsItem = await getTsLs(sourceMap.lsType).doCompletionResolve(data.tsItem, newPosition_2);
+
+			// fix https://github.com/johnsoncodehk/volar/issues/916
+			if (data.tsItem.additionalTextEdits) {
+				for (const edit of data.tsItem.additionalTextEdits) {
+					if (
+						edit.range.start.line === 0
+						&& edit.range.start.character === 0
+						&& edit.range.end.line === 0
+						&& edit.range.end.character === 0
+					) {
+						edit.newText = (vueHost.getNewLine?.() ?? '\n') + edit.newText;
+					}
+				}
+			}
+
 			const newVueItem = transformCompletionItem(
 				data.tsItem,
 				tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0],
 			);
+			// @ts-expect-error
 			newVueItem.data = data;
 			// TODO: this is a patch for import ts file icon
 			if (newVueItem.detail !== data.tsItem.detail + '.ts') {
@@ -82,7 +99,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 
 			return vueItem;
 		}
-		function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
+		async function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
 
 			const importFile = shared.uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
@@ -111,7 +128,7 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			const componentName = capitalize(camelize(vueItem.label));
 			const textDoc = sourceFile.getTextDocument();
 			let insertText = '';
-			const planAResult = planAInsertText();
+			const planAResult = await planAInsertText();
 			if (planAResult) {
 				insertText = planAResult.insertText;
 				vueItem.detail = planAResult.description + '\n\n' + rPath;
@@ -178,10 +195,14 @@ export function register({ modules: { typescript: ts }, sourceFiles, getTsLs, vu
 			}
 			return vueItem;
 
-			function planAInsertText() {
-				const scriptUrl = sourceFile.getScriptTsDocument().uri;
+			async function planAInsertText() {
+				const scriptDoc = sourceFile.getScriptTsDocument();
 				const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptUrl), 0, tsImportName, {}, importFile, undefined, undefined);
+				const [formatOptions, preferences] = await Promise.all([
+					vueHost.getFormatOptions?.(scriptDoc) ?? {},
+					vueHost.getPreferences?.(scriptDoc) ?? {},
+				]);
+				const tsDetail = getTsLs('script').__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptDoc.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 				if (tsDetail?.codeActions) {
 					for (const action of tsDetail.codeActions) {
 						for (const change of action.changes) {

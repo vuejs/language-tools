@@ -1,0 +1,34 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../shared/tsconfig.build.json"
+		},
+		{
+			"path": "../source-map/tsconfig.build.json"
+		},
+		{
+			"path": "../code-gen/tsconfig.build.json"
+		},
+		{
+			"path": "../vscode-pug-languageservice/tsconfig.build.json"
+		},
+		{
+			"path": "../vscode-typescript-languageservice/tsconfig.build.json"
+		},
+		{
+			"path": "../vue-code-gen/tsconfig.build.json"
+		},
+	],
+}

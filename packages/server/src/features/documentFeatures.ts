@@ -6,7 +6,7 @@ import * as vue from 'vscode-vue-languageservice';
 export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	noStateLs: vue.DocumentLanguageService,
+	noStateLs: vue.DocumentService,
 ) {
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -43,9 +43,19 @@ export function register(
 		if (!document) return;
 		return noStateLs.getColorPresentations(document, handler.color, handler.range);
 	});
+	connection.onRequest(shared.GetAutoQuoteEditsRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.doQuoteComplete(document, handler.position);
+	});
 	connection.onRequest(shared.GetTagCloseEditsRequest.type, handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
 		return noStateLs.doTagComplete(document, handler.position);
+	});
+	connection.onRequest(shared.GetWrapParenthesesEditsRequest.type, handler => {
+		const document = documents.get(handler.textDocument.uri);
+		if (!document) return;
+		return noStateLs.doParentheseWrap(document, handler.position);
 	});
 }

@@ -1,9 +1,9 @@
-import type * as vscode from 'vscode-languageserver';
-import type { ApiLanguageServiceContext } from '../types';
+import type * as vscode from 'vscode-languageserver-protocol';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return {
 		on: (uri: string, position: vscode.Position) => {
@@ -117,37 +117,44 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					return;
 				loopChecker.add({ uri: uri, range: { start: position, end: position } });
 
-				const tsLocs = mode === 'typeDefinition'
+				for (const location of mode === 'typeDefinition'
 					? tsLs.findTypeDefinition(uri, position)
-					: tsLs.findDefinition(uri, position);
+					: tsLs.findDefinition(uri, position)
+				) {
 
-				tsResult = tsResult.concat(tsLocs.map(tsLoc => ({
-					...tsLoc,
-					originalUri: uri,
-					isOriginal,
-				})));
-
-				for (const location of tsLocs) {
 					loopChecker.add({ uri: location.targetUri, range: location.targetSelectionRange });
+
 					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType).get(location.targetUri);
-
-					if (!teleport)
+					if (!teleport) {
+						addResult(location);
 						continue;
+					}
 
-					if (
-						!teleport.allowCrossFile
-						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, location.targetUri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
-					) continue;
+					let foundTeleport = false;
 
 					for (const [teleRange] of teleport.findTeleports(
 						location.targetSelectionRange.start,
 						location.targetSelectionRange.end,
 						sideData => !!sideData.capabilities.definitions,
 					)) {
+						foundTeleport = true;
 						if (loopChecker.has({ uri: location.targetUri, range: teleRange }))
 							continue;
 						withTeleports(location.targetUri, teleRange.start, false);
 					}
+
+					if (!foundTeleport) {
+						addResult(location);
+						continue;
+					}
+				}
+
+				function addResult(tsLoc: vscode.LocationLink) {
+					tsResult.push({
+						...tsLoc,
+						originalUri: uri,
+						isOriginal,
+					});
 				}
 			}
 		}
@@ -166,18 +173,17 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		// vue -> css
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			if (!sourceMap.stylesheet)
-				continue;
-
+			const stylesheet = getStylesheet(sourceMap.mappedDocument);
 			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-			if (!cssLs)
+
+			if (!cssLs || !stylesheet)
 				continue;
 
 			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const cssLoc = cssLs.findDefinition(
 					sourceMap.mappedDocument,
 					cssRange.start,
-					sourceMap.stylesheet,
+					stylesheet,
 				);
 				if (cssLoc) {
 					cssResult.push(cssLoc);

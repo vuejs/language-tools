@@ -5,12 +5,15 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createLsConfigs } from './configs';
+import { getDocumentSafely } from './utils';
+import { RuntimeEnvironment } from './common';
 
-export type Projects = ReturnType<typeof createProjects>;
+export interface Projects extends ReturnType<typeof createProjects> { }
 
 const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
 export function createProjects(
+	runtimeEnv: RuntimeEnvironment,
 	rootPaths: string[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -23,12 +26,17 @@ export function createProjects(
 
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
+	let lastOpenDoc: {
+		uri: string,
+		time: number,
+	} | undefined;
 
 	const updatedUris = new Set<string>();
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
 	for (const rootPath of rootPaths) {
 		workspaces.set(rootPath, createWorkspace(
+			runtimeEnv,
 			rootPath,
 			ts,
 			tsLocalized,
@@ -40,16 +48,28 @@ export function createProjects(
 		));
 	}
 
+	documents.onDidOpen(async change => {
+		lastOpenDoc = {
+			uri: change.document.uri,
+			time: Date.now(),
+		};
+	});
 	documents.onDidChangeContent(async change => {
+
+		await waitForOnDidChangeWatchedFiles(change.document.uri);
+
 		for (const workspace of workspaces.values()) {
 			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
 			for (const project of projects) {
 				(await project).onDocumentUpdated(change.document);
 			}
 		}
+
 		updateDiagnostics(change.document.uri);
 	});
-	documents.onDidClose(change => connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] }));
+	documents.onDidClose(change => {
+		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
+	});
 	connection.onDidChangeWatchedFiles(async handler => {
 
 		const tsConfigChanges: vscode.FileEvent[] = [];
@@ -131,7 +151,7 @@ export function createProjects(
 		if (req !== documentUpdatedReq)
 			return;
 
-		const changeDocs = [...updatedUris].map(uri => shared.getDocumentSafely(documents, uri)).filter(shared.notEmpty);
+		const changeDocs = [...updatedUris].map(uri => getDocumentSafely(documents, uri)).filter(shared.notEmpty);
 		const otherDocs = documents.all().filter(doc => !updatedUris.has(doc.uri));
 
 		for (const changeDoc of changeDocs) {
@@ -159,7 +179,7 @@ export function createProjects(
 			if (req !== documentUpdatedReq)
 				return;
 
-			const changeDoc = docUri ? shared.getDocumentSafely(documents, docUri) : undefined;
+			const changeDoc = docUri ? getDocumentSafely(documents, docUri) : undefined;
 			const isDocCancel = changeDoc ? getCancelChecker(changeDoc.uri, changeDoc.version) : async () => {
 				await shared.sleep(0);
 				return false;
@@ -203,6 +223,8 @@ export function createProjects(
 	}
 	async function getProject(uri: string) {
 
+		await waitForOnDidChangeWatchedFiles(uri);
+
 		const fileName = shared.uriToFsPath(uri);
 		const rootPaths = [...workspaces.keys()]
 			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
@@ -223,6 +245,14 @@ export function createProjects(
 			};
 		}
 	}
+	async function waitForOnDidChangeWatchedFiles(uri: string) {
+		if (lastOpenDoc?.uri === uri) {
+			const dt = lastOpenDoc.time + 2000 - Date.now();
+			if (dt > 0) {
+				await shared.sleep(dt);
+			}
+		}
+	}
 	function clearDiagnostics() {
 		for (const doc of documents.all()) {
 			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
@@ -231,6 +261,7 @@ export function createProjects(
 }
 
 function createWorkspace(
+	runtimeEnv: RuntimeEnvironment,
 	rootPath: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -270,6 +301,7 @@ function createWorkspace(
 	function getInferredProject() {
 		if (!inferredProject) {
 			inferredProject = createProject(
+				runtimeEnv,
 				ts,
 				options,
 				rootPath,
@@ -359,7 +391,7 @@ function createWorkspace(
 					// fix https://github.com/johnsoncodehk/volar/issues/712
 					if (!ts.sys.fileExists(tsConfigPath) && ts.sys.directoryExists(tsConfigPath)) {
 						const newTsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
-						const newJsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
+						const newJsConfigPath = path.join(tsConfigPath, 'jsconfig.json');
 						if (ts.sys.fileExists(newTsConfigPath)) {
 							tsConfigPath = newTsConfigPath;
 						}
@@ -395,6 +427,7 @@ function createWorkspace(
 		let project = projects.fsPathGet(tsConfig);
 		if (!project) {
 			project = createProject(
+				runtimeEnv,
 				ts,
 				options,
 				path.dirname(tsConfig),

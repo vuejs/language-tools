@@ -75,6 +75,9 @@ export async function getPreferences(
 		includeCompletionsWithSnippetText: config.suggest?.includeCompletionsWithSnippetText ?? true,
 		allowIncompleteCompletions: true,
 		displayPartsForJSDoc: true,
+
+		// custom
+		includeCompletionsForModuleExports: config.suggest?.autoImports ?? true,
 	};
 
 	return preferences;

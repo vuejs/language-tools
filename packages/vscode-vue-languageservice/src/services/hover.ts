@@ -1,12 +1,8 @@
-import * as vscode from 'vscode-languageserver';
-import type { ApiLanguageServiceContext } from '../types';
-import { HtmlSourceMap } from '../utils/sourceMaps';
-import { register as registerFindDefinitions } from './definition';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost }: ApiLanguageServiceContext) {
-
-	const findDefinitions = registerFindDefinitions(arguments[0]);
+export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHost, getStylesheet, getHtmlDocument, getPugDocument }: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, position: vscode.Position) => {
 
@@ -29,7 +25,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 		return result;
 	}
 
-	function onTs(uri: string, position: vscode.Position, isExtra = false) {
+	function onTs(uri: string, position: vscode.Position) {
 
 		let result: vscode.Hover | undefined;
 
@@ -48,24 +44,8 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			const tsHover = tsLs.doHover(
 				tsLoc.uri,
 				tsLoc.range.start,
-				isExtra,
 			);
 			if (!tsHover) continue;
-
-			if (!isExtra && tsLoc.type === 'embedded-ts' && tsLoc.data.capabilities.extraHoverInfo) {
-				const definitions = findDefinitions.on(uri, position) as vscode.LocationLink[];
-				for (const definition of definitions) {
-					const extraHover = onTs(definition.targetUri, definition.targetSelectionRange.start, true);
-					if (!extraHover) continue;
-					if (!vscode.MarkupContent.is(extraHover.contents)) continue;
-					const extraText = extraHover.contents.value;
-					for (const extraTextPart of extraText.split('\n\n')) {
-						if (vscode.MarkupContent.is(tsHover.contents) && !tsHover.contents.value.split('\n\n').includes(extraTextPart)) {
-							tsHover.contents.value += `\n\n` + extraTextPart;
-						}
-					}
-				}
-			}
 
 			if (tsHover.range) {
 				// ts -> vue
@@ -95,23 +75,24 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 			return result;
 
 		// vue -> html
-		for (const sourceMap of [
-			...sourceFile.getHtmlSourceMaps(),
-			...sourceFile.getPugSourceMaps(),
-		]) {
+		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+			const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+			const pugDocument = getPugDocument(sourceMap.mappedDocument);
+
 			const settings = await vueHost.getHtmlHoverSettings?.(sourceMap.mappedDocument);
 			for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
-				const htmlHover = sourceMap instanceof HtmlSourceMap
-					? htmlLs.doHover(
-						sourceMap.mappedDocument,
-						htmlRange.start,
-						sourceMap.htmlDocument,
-						settings,
-					)
-					: pugLs.doHover(
-						sourceMap.pugDocument,
-						htmlRange.start,
-					)
+
+				const htmlHover = htmlDocument ? htmlLs.doHover(
+					sourceMap.mappedDocument,
+					htmlRange.start,
+					htmlDocument,
+					settings,
+				) : pugDocument ? pugLs.doHover(
+					pugDocument,
+					htmlRange.start,
+				) : undefined;
+
 				if (!htmlHover)
 					continue;
 				if (!htmlHover.range) {
@@ -141,11 +122,10 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 		// vue -> css
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			if (!sourceMap.stylesheet)
-				continue;
-
+			const stylesheet = getStylesheet(sourceMap.mappedDocument);
 			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-			if (!cssLs)
+
+			if (!cssLs || !stylesheet)
 				continue;
 
 			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
@@ -153,7 +133,7 @@ export function register({ sourceFiles, htmlLs, pugLs, getCssLs, getTsLs, vueHos
 				const cssHover = cssLs.doHover(
 					sourceMap.mappedDocument,
 					cssRange.start,
-					sourceMap.stylesheet,
+					stylesheet,
 					settings?.hover,
 				);
 				if (!cssHover)

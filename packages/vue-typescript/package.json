@@ -1,0 +1,33 @@
+{
+	"name": "@volar/vue-typescript",
+	"version": "0.32.1",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vscode-vue-languageservice"
+	},
+	"devDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@volar/code-gen": "0.32.1",
+		"@volar/shared": "0.32.1",
+		"@volar/source-map": "0.32.1",
+		"@volar/vue-code-gen": "0.32.1",
+		"@vue/reactivity": "^3.2.27",
+		"upath": "^2.0.1",
+		"vscode-css-languageservice": "^5.1.9",
+		"vscode-html-languageservice": "^4.2.1",
+		"vscode-json-languageservice": "^4.1.10",
+		"vscode-languageserver-protocol": "^3.17.0-next.12",
+		"vscode-languageserver-textdocument": "^1.0.3",
+		"vscode-pug-languageservice": "0.32.1",
+		"vscode-typescript-languageservice": "0.32.1"
+	}
+}

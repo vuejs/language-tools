@@ -1,12 +1,12 @@
 import * as shared from '@volar/shared';
-import * as vscode from 'vscode-languageserver';
-import type { SourceFiles } from '../sourceFiles';
-import type { ApiLanguageServiceContext } from '../types';
+import { SourceFiles } from '@volar/vue-typescript';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
-import type { TsMappingData } from '../utils/sourceMaps';
+import type { TsMappingData } from '@volar/vue-typescript';
 import { wordPatterns } from './completion';
 
-export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return {
 		prepareRename: (uri: string, position: vscode.Position): vscode.ResponseError | vscode.Range | undefined => {
@@ -143,11 +143,6 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 					if (!teleport)
 						continue;
 
-					if (
-						!teleport.allowCrossFile
-						&& sourceFiles.getSourceFileByTsUri(lsType, editUri) !== sourceFiles.getSourceFileByTsUri(lsType, tsUri)
-					) continue;
-
 					for (const [teleRange, sideData] of teleport.findTeleports(
 						textEdit.range.start,
 						textEdit.range.end,
@@ -200,11 +195,10 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 		// vue -> css
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			if (!sourceMap.stylesheet)
-				continue;
-
+			const stylesheet = getStylesheet(sourceMap.mappedDocument);
 			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-			if (!cssLs)
+
+			if (!cssLs || !stylesheet)
 				continue;
 
 			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
@@ -212,7 +206,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs }: ApiLang
 					sourceMap.mappedDocument,
 					cssRange.start,
 					newName,
-					sourceMap.stylesheet,
+					stylesheet,
 				);
 				if (cssWorkspaceEdit) {
 					hasResult = true;

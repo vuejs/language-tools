@@ -1,11 +1,10 @@
 import * as shared from '@volar/shared';
 import { transformLocations } from '@volar/transforms';
 import type * as html from 'vscode-html-languageservice';
-import type * as vscode from 'vscode-languageserver';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
-	return (pugDoc: PugDocument, posArr: vscode.Position[]): vscode.SelectionRange[] => {
+	return (pugDoc: PugDocument, posArr: html.Position[]) => {
 
 		const htmlPosArr = posArr
 			.map(position => pugDoc.sourceMap.getMappedRange(position, position, data => !data?.isEmptyTagCompletion)?.[0].start)

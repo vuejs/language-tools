@@ -1,7 +1,8 @@
 {
 	"name": "@volar/shared",
-	"version": "0.29.8",
-	"main": "out/index.js",
+	"version": "0.32.1",
+	"main": "out/node.js",
+	"module": "out/browser.js",
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",
@@ -14,11 +15,13 @@
 	},
 	"dependencies": {
 		"upath": "^2.0.1",
-		"vscode-jsonrpc": "^8.0.0-next.2",
-		"vscode-uri": "^3.0.2"
+		"vscode-html-languageservice": "^4.2.1",
+		"vscode-jsonrpc": "^8.0.0-next.5",
+		"vscode-uri": "^3.0.3"
 	},
 	"devDependencies": {
 		"typescript": "latest",
-		"vscode-html-languageservice": "^4.1.0"
+		"vscode-languageserver-protocol": "^3.17.0-next.12",
+		"vscode-languageserver-textdocument": "^1.0.3"
 	}
 }

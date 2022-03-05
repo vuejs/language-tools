@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 import * as path from 'upath';
 import { createTester } from './createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -28,8 +28,6 @@ export function defineTypeCheck(fileName: string, expectErrors: {
 
 		it(`should has script snapshot`, async () => {
 			expect(!!script).toEqual(true);
-			const errors = await tester.languageService.doValidation(uri);
-			expect(errors?.length).toEqual(expectErrors.length);
 		});
 
 		it(`should has ${expectErrors.length} errors`, async () => {

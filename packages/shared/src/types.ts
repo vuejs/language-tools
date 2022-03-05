@@ -12,7 +12,7 @@ export interface ServerInitializationOptions {
 		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/server/out/index.js
 		 */
 		serverPath: string
-		localizedPath: string | undefined
+		localizedPath?: string
 	}
 	/**
 	 * typescript, html, css... language service will be create in server if this option is not null

@@ -1,10 +1,10 @@
-import type { ApiLanguageServiceContext } from '../types';
-import type * as vscode from 'vscode-languageserver';
-import type { SourceFile } from '../sourceFile';
+import type { LanguageServiceRuntimeContext } from '../types';
+import type * as vscode from 'vscode-languageserver-protocol';
+import type { SourceFile } from '@volar/vue-typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceMap } from '@volar/source-map';
 
-export function register({ sourceFiles }: ApiLanguageServiceContext) {
+export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 	return (uri: string, range: vscode.Range): {
 		language: string,
 		document: TextDocument | undefined,
@@ -21,11 +21,8 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 		const cssResult = getCssResult(sourceFile);
 		if (cssResult !== undefined) return cssResult;
 
-		const htmlResult = getHtmlResult(sourceFile);
-		if (htmlResult !== undefined) return htmlResult;
-
-		const pugResult = getPugResult(sourceFile);
-		if (pugResult !== undefined) return pugResult;
+		const templateResult = getTemplateResult(sourceFile);
+		if (templateResult !== undefined) return templateResult;
 
 		return {
 			language: 'vue',
@@ -46,26 +43,14 @@ export function register({ sourceFiles }: ApiLanguageServiceContext) {
 				}
 			}
 		}
-		function getHtmlResult(sourceFile: SourceFile) {
-			for (const sourceMap of sourceFile.getHtmlSourceMaps()) {
-				for (const [htmlRange] of sourceMap.getMappedRanges(range.start, range.end)) {
+		function getTemplateResult(sourceFile: SourceFile) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+				for (const [htmlOrPugRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 					return {
 						sourceMap,
 						language: sourceMap.mappedDocument.languageId,
 						document: sourceMap.mappedDocument,
-						range: htmlRange,
-					};
-				}
-			}
-		}
-		function getPugResult(sourceFile: SourceFile) {
-			for (const sourceMap of sourceFile.getPugSourceMaps()) {
-				for (const [pugRange] of sourceMap.getMappedRanges(range.start, range.end)) {
-					return {
-						sourceMap,
-						language: sourceMap.mappedDocument.languageId,
-						document: sourceMap.mappedDocument,
-						range: pugRange,
+						range: htmlOrPugRange,
 					};
 				}
 			}

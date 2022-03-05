@@ -1,5 +1,131 @@
 # Changelog
 
+## 0.32.1
+
+- feat: support generic events with props ([#981](https://github.com/johnsoncodehk/volar/issues/981))
+- fix: slots references always 0 ([#932](https://github.com/johnsoncodehk/volar/issues/932))
+- fix: `source.organizeImports` not working in `editor.codeActionsOnSave` ([#906](https://github.com/johnsoncodehk/volar/issues/906))
+- fix: component type incorrect if duplicate name with current `<script setup>` file name ([#944](https://github.com/johnsoncodehk/volar/issues/944))
+- fix: language server broken if TS version < 4.4 ([#962](https://github.com/johnsoncodehk/volar/issues/962))
+- fix: pug outline element level incorrect ([#969](https://github.com/johnsoncodehk/volar/issues/969))
+- fix: document symbols confusion between `<script>` and `<script setup>` ([#994](https://github.com/johnsoncodehk/volar/issues/994))
+- fix: vite icon do not show with first editor
+
+## 0.32.0
+
+- feat: experimental webview features for vite ([#208](https://github.com/johnsoncodehk/volar/issues/208))
+- perf: bundle extension to speed up startup
+
+## 0.31.4
+
+- perf: faster auto-import completion ([#808](https://github.com/johnsoncodehk/volar/issues/808))
+
+## 0.31.3
+
+- feat: trigger event auto-complete when input `@` ([#949](https://github.com/johnsoncodehk/volar/issues/949))
+- feat: add `v-bind:*`, `v-on:*` to auto-complete ([#949](https://github.com/johnsoncodehk/volar/issues/949))
+- feat: avoid auto import added in script block first line ([#916](https://github.com/johnsoncodehk/volar/issues/916))
+- fix: language features not working in symbolic link project ([#914](https://github.com/johnsoncodehk/volar/issues/914))
+- fix: language server throw in `process.env.NODE_ENV === 'production'` env ([#915](https://github.com/johnsoncodehk/volar/issues/915))
+- fix: component type broken by union event key type ([#926](https://github.com/johnsoncodehk/volar/issues/926))
+- fix: document symbol not working for `<script setup>` ([#938](https://github.com/johnsoncodehk/volar/issues/938))
+
+## 0.31.2
+
+- feat: improve scoped css class name references codeLens, auto-complete ([#907](https://github.com/johnsoncodehk/volar/issues/907))
+
+## 0.31.1
+
+- fix: support type export statements on the top in `<script setup>` ([#886](https://github.com/johnsoncodehk/volar/issues/886))
+
+## 0.31.0
+
+- feat: support generic emits ([#877](https://github.com/johnsoncodehk/volar/issues/877))
+- feat: support top level await in `<script setup>` without extra tsconfig setting ([#538](https://github.com/johnsoncodehk/volar/issues/538))
+- feat: fully support formatting for v-for expression
+- fix: can't ignore variable unused report by `_` prefixes in v-for ([#878](https://github.com/johnsoncodehk/volar/issues/878))
+- fix: no error when definitions from `<script setup>` used in `<script>` ([#766](https://github.com/johnsoncodehk/volar/issues/766))
+
+## 0.30.6
+
+- fix: re-support `withDefaults` for props type in template ([#868](https://github.com/johnsoncodehk/volar/issues/868))
+- fix: tsconfig report `schemas/tsconfig.schema.json` missing ([#869](https://github.com/johnsoncodehk/volar/issues/869))
+- fix: enabled `editor.semanticHighlighting.enabled` by default to avoid component tag show invalid color when installed some themes
+- fix: export default expression semicolon breaks component type in script setup ([#874](https://github.com/johnsoncodehk/volar/issues/874))
+- fix: don't wrap options with defineComponent when convert to setup sugar
+
+**Breaking changes**
+
+- When use `<script setup>`, ignore extra component options wrapper function (`defineComponent` / `Vue.extends` ...)
+
+## 0.30.5
+
+- fix: `vueCompilerOptions` intellisense not working on jsconfig
+- fix: vue-tsc broken on windows in 0.30.3
+
+## 0.30.4
+
+- fix: component tag semantic highlisht token incorrect with folding ([#801](https://github.com/johnsoncodehk/volar/issues/801))
+- fix: component type broken by `withDefaults` in 0.30.3
+
+**Breaking changes**
+
+- Unsupported `withDefaults` for component props type
+
+## 0.30.3
+
+- feat: auto wrap `()` to as expression (`v-bind="foo as string"` -> `v-bind="(foo as string)"` ([#859](https://github.com/johnsoncodehk/volar/issues/859))
+- feat: support tsconfig properties intellisense on take over mode ([#833](https://github.com/johnsoncodehk/volar/issues/833))
+- feat: support `vueCompilerOptions` intellisense in tsconfig ([#833](https://github.com/johnsoncodehk/volar/issues/833))
+- fix: vue-tsc and typescript could't guaranteed found each other ([#851](https://github.com/johnsoncodehk/volar/pull/851))
+- fix: avoid vue-tsc stripped props jsdoc comments for script setup components ([#799](https://github.com/johnsoncodehk/volar/issues/799))
+- fix: string source type incorrect in v-for ([#839](https://github.com/johnsoncodehk/volar/pull/839))
+
+**Known regressions**
+
+- component type broken by `withDefaults`
+- vue-tsc broken on windows
+
+## 0.30.2
+
+- feat: jsdoc comment suggestion ([#827](https://github.com/johnsoncodehk/volar/issues/827))
+- feat: TS directive comment suggestion
+- feat: auto insert attribute quotes
+- fix: css error range not reliable ([#826](https://github.com/johnsoncodehk/volar/issues/826))
+- fix: html, css completion trigger characters
+- fix: allow loose vue language id for markdown ([#831](https://github.com/johnsoncodehk/volar/issues/831))
+- fix: avoid auto close tag with undo ([#837](https://github.com/johnsoncodehk/volar/issues/837))
+
+## 0.30.1
+
+- feat: support vue 2 component slots type ([#819](https://github.com/johnsoncodehk/volar/pull/819))
+- feat: expose component public instance type by `defineExpose`
+- feat: support scoped class name auto-complete ([#752](https://github.com/johnsoncodehk/volar/issues/752))
+- feat: alway show commands after extension activated ([#795](https://github.com/johnsoncodehk/volar/issues/795))
+
+**Breaking changes**
+
+- Unsupported `vueCompilerOptions.experimentalExposeScriptSetupContext` option
+
+## 0.30.0
+
+- feat: support components type-check by `static components` for class-base component ([#753](https://github.com/johnsoncodehk/volar/issues/753))
+- feat: support `vueCompilerOptions.experimentalExposeScriptSetupContext` option for jest ([#805](https://github.com/johnsoncodehk/volar/issues/805))
+- feat: support `typescript.suggest.autoImports` setting ([#746](https://github.com/johnsoncodehk/volar/issues/746))
+- fix: `@vue/composition-api` defineComponent types incorrect in template ([#780](https://github.com/johnsoncodehk/volar/issues/780))
+- fix: directives syntax highlight incorrect in svg tag ([#776](https://github.com/johnsoncodehk/volar/issues/776))
+- fix: project references ignored jsconfig ([#756](https://github.com/johnsoncodehk/volar/issues/756))
+- fix: html semantic tokens range incorrect in long template code ([#801](https://github.com/johnsoncodehk/volar/issues/801))
+- fix: `typescript.preferences.importModuleSpecifier` setting not working for component auto import ([#793](https://github.com/johnsoncodehk/volar/issues/793))
+- fix: `Organize Imports` commmand not always working ([#798](https://github.com/johnsoncodehk/volar/issues/798))
+- fix: css variable injection virtual code cannot update ([#777](https://github.com/johnsoncodehk/volar/issues/777))
+- fix: should not initializes new language service when create a new file ([#802](https://github.com/johnsoncodehk/volar/issues/802))
+- fix: new file first diagnostics incorrect 
+
+**Breaking changes**
+
+- Do not support component context types in template for `export default { ... }` without `Vue.extend` or `defineComponent` ([#750](https://github.com/johnsoncodehk/volar/pull/750))
+
 ## 0.29.8
 
 - perf: cache `URI.file`, `URI.parse` results

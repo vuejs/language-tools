@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import * as upath from 'upath';
-import type * as vscode from 'vscode-languageserver';
-import type { ApiLanguageServiceContext } from '../types';
+import type * as vscode from 'vscode-languageserver-protocol';
+import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 
 export interface Data {
@@ -9,7 +9,7 @@ export interface Data {
 	tsData: any
 }
 
-export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 	function doPrepare(uri: string, position: vscode.Position) {
 		let vueItems: vscode.CallHierarchyItem[] = [];
 
@@ -29,6 +29,7 @@ export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
 					lsType: tsLoc.lsType,
 					tsData: item.data,
 				};
+				// @ts-expect-error
 				item.data = data;
 			}
 			vueItems = vueItems.concat(items);

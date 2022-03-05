@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 export function createLocationSet() {
 	const set = new Set<string>();
@@ -82,10 +82,7 @@ export function withLocationLinks<T extends vscode.LocationLink>(items: T[]): T[
 		item.targetSelectionRange.start.character,
 		item.targetSelectionRange.end.line,
 		item.targetSelectionRange.end.character,
-		item.targetRange.start.line,
-		item.targetRange.start.character,
-		item.targetRange.end.line,
-		item.targetRange.end.character,
+		// ignore difference targetRange
 	].join(':'));
 }
 export function withCallHierarchyIncomingCalls<T extends vscode.CallHierarchyIncomingCall>(items: T[]): T[] {

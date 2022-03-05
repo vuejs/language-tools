@@ -1,25 +1,44 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextRange } from '../types';
 
-export type ScriptSetupRanges = ReturnType<typeof parseScriptSetupRanges>;
+export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
 export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
 
+	let foundNonImportExportNode = false;
+	let notOnTopTypeExports: TextRange[] = [];
+	let importSectionEndOffset = 0;
 	let withDefaultsArg: TextRange | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
+	let exposeRuntimeArg: TextRange | undefined;
 	let emitsTypeNums = -1;
 
 	const bindings = parseBindingRanges(ts, ast, false);
 	const typeBindings = parseBindingRanges(ts, ast, true);
 
 	ast.forEachChild(node => {
-		visitNode(node);
+		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
+		if (
+			!foundNonImportExportNode
+			&& !ts.isImportDeclaration(node)
+			&& !isTypeExport
+			&& !ts.isEmptyStatement(node)
+		) {
+			importSectionEndOffset = node.getStart(ast);
+			foundNonImportExportNode = true;
+		}
+		else if (isTypeExport && foundNonImportExportNode) {
+			notOnTopTypeExports.push(_getStartEnd(node));
+		}
 	});
+	ast.forEachChild(visitNode);
 
 	return {
+		importSectionEndOffset,
+		notOnTopTypeExports,
 		bindings,
 		typeBindings,
 		withDefaultsArg,
@@ -28,6 +47,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 		emitsRuntimeArg,
 		emitsTypeArg,
 		emitsTypeNums,
+		exposeRuntimeArg,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -39,14 +59,17 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineProps' || callText === 'defineEmits') {
+			if (callText === 'defineProps' || callText === 'defineEmits' || callText === 'defineExpose') {
 				if (node.arguments.length) {
 					const runtimeArg = node.arguments[0];
 					if (callText === 'defineProps') {
 						propsRuntimeArg = _getStartEnd(runtimeArg);
 					}
-					else {
+					else if (callText === 'defineEmits') {
 						emitsRuntimeArg = _getStartEnd(runtimeArg);
+					}
+					else if (callText === 'defineExpose') {
+						exposeRuntimeArg = _getStartEnd(runtimeArg);
 					}
 				}
 				else if (node.typeArguments?.length) {
@@ -54,7 +77,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 					if (callText === 'defineProps') {
 						propsTypeArg = _getStartEnd(typeArg);
 					}
-					else {
+					else if (callText === 'defineEmits') {
 						emitsTypeArg = _getStartEnd(typeArg);
 						if (ts.isTypeLiteralNode(typeArg)) {
 							emitsTypeNums = typeArg.members.length;

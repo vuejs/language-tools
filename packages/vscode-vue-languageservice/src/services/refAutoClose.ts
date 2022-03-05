@@ -1,12 +1,12 @@
-import type { ApiLanguageServiceContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 
-export function register({ modules: { typescript: ts }, sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+export function register({ typescript: ts, sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 

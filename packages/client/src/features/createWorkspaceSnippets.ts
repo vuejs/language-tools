@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from '../utils/fs';
 
 export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.createWorkspaceSnippets', async () => {
@@ -10,14 +9,15 @@ export async function activate(context: vscode.ExtensionContext) {
 				const volar = vscode.extensions.getExtension('johnsoncodehk.volar');
 				if (!volar) return;
 
-				const templatePath = path.join(volar.extensionPath, 'templates', 'vue.code-snippets');
-				const newTemplatePath = path.join(rootPath.uri.fsPath, '.vscode', 'vue.code-snippets');
+				const templateUri = vscode.Uri.joinPath(volar.extensionUri, 'templates', 'vue.code-snippets');
+				const newTemplateUri = vscode.Uri.joinPath(rootPath.uri, '.vscode', 'vue.code-snippets');
 
-				if (!fs.existsSync(newTemplatePath)) {
-					const template = fs.readFileSync(templatePath);
-					fs.writeFileSync(newTemplatePath, template);
+				if (!await fs.exists(newTemplateUri)) {
+					const template = await vscode.workspace.fs.readFile(templateUri);
+					vscode.workspace.fs.writeFile(newTemplateUri, template)
 				}
-				const document = await vscode.workspace.openTextDocument(templatePath);
+
+				const document = await vscode.workspace.openTextDocument(newTemplateUri);
 				await vscode.window.showTextDocument(document);
 			}
 		}

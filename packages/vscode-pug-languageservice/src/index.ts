@@ -10,18 +10,9 @@ import { register as registerScanner } from './services/scanner';
 import { register as registerSelectRanges } from './services/selectionRanges';
 import { register as registerFoldingRanges } from './services/foldingRanges';
 
-// fix TS2742
-export type {
-	HTMLDocument,
-	DocumentContext,
-	CompletionConfiguration,
-	TokenType,
-	ScannerState,
-} from 'vscode-html-languageservice';
-
 export { PugDocument } from './pugDocument';
 
-export type LanguageService = ReturnType<typeof getLanguageService>;
+export interface LanguageService extends ReturnType<typeof getLanguageService> { }
 
 export function getLanguageService(htmlLs: html.LanguageService) {
 	return {

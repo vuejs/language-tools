@@ -1,8 +1,8 @@
-import type * as vscode from 'vscode-languageserver';
-import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
+import type * as vscode from 'vscode-languageserver-protocol';
+import type { SourceFile } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getStylesheet, getHtmlDocument, getPugDocument }: LanguageServiceRuntimeContext) {
 	return (uri: string, position: vscode.Position) => {
 
 		const sourceFile = sourceFiles.get(uri);
@@ -42,12 +42,18 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentHighlight[] = [];
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+
+				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+
 				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
 
-					const highlights = sourceMap.language === 'html'
-						? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, sourceMap.htmlDocument)
-						: pugLs.findDocumentHighlights(sourceMap.pugDocument, htmlRange.start)
+					const highlights =
+						htmlDocument ? htmlLs.findDocumentHighlights(sourceMap.mappedDocument, htmlRange.start, htmlDocument)
+							: pugDocument ? pugLs.findDocumentHighlights(pugDocument, htmlRange.start)
+								: undefined;
+
 					if (!highlights) continue;
 
 					for (const highlight of highlights) {
@@ -66,10 +72,15 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs }: ApiL
 		function getCssResult(sourceFile: SourceFile) {
 			const result: vscode.DocumentHighlight[] = [];
 			for (const sourceMap of sourceFile.getCssSourceMaps()) {
+
+				const stylesheet = getStylesheet(sourceMap.mappedDocument);
 				const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-				if (!cssLs || !sourceMap.stylesheet) continue;
+
+				if (!cssLs || !stylesheet)
+					continue;
+
 				for (const [cssRange] of sourceMap.getMappedRanges(position)) {
-					const highlights = cssLs.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, sourceMap.stylesheet);
+					const highlights = cssLs.findDocumentHighlights(sourceMap.mappedDocument, cssRange.start, stylesheet);
 					for (const highlight of highlights) {
 						const vueRange = sourceMap.getSourceRange(highlight.range.start, highlight.range.end)?.[0];
 						if (vueRange) {

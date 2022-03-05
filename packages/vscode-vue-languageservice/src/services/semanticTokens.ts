@@ -1,10 +1,11 @@
 import { hyphenate, isHTMLTag } from '@vue/shared';
-import * as vscode from 'vscode-languageserver';
-import type { SourceFile } from '../sourceFile';
-import type { ApiLanguageServiceContext } from '../types';
-import * as ts2 from 'vscode-typescript-languageservice'; // TODO: remove it
+import * as vscode from 'vscode-languageserver-protocol';
+import type { SourceFile } from '@volar/vue-typescript';
+import type { LanguageServiceRuntimeContext } from '../types';
+import * as ts2 from 'vscode-typescript-languageservice';
+import * as html from 'vscode-html-languageservice';
 
-type TokenData = [number, number, number, number, number | undefined];
+type SemanticToken = [number, number, number, number, number | undefined];
 
 export function getSemanticTokenLegend() {
 
@@ -22,18 +23,18 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modules: { html } }: ApiLanguageServiceContext, updateTemplateScripts: () => void) {
+export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
 
-	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>) => {
+	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken, reportProgress?: (tokens: SemanticToken[]) => void): SemanticToken[] | undefined => {
 
 		const sourceFile = sourceFiles.get(uri);
 		if (!sourceFile) {
 			// take over mode
 			const tokens = scriptTsLs.getDocumentSemanticTokens(uri, range, cancle);
-			return buildTokens(tokens ?? []);
+			return tokens;
 		}
 
 		const document = sourceFile.getTextDocument();
@@ -46,16 +47,16 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 				end: document.getText().length,
 			};
 
-		let tokens: TokenData[] = [];
+		let tokens: SemanticToken[] = [];
 
 		if (cancle?.isCancellationRequested) return;
 		const scriptResult = getTsResult(sourceFile, 'script');
 		if (!cancle?.isCancellationRequested && scriptResult.length) {
 			tokens = tokens.concat(scriptResult);
-			resultProgress?.report(buildTokens(tokens));
+			reportProgress?.(tokens);
 		}
 
-		if (sourceFile.getHtmlSourceMaps().length) {
+		if (sourceFile.getTemplateSourceMaps().length) {
 			updateTemplateScripts()
 		}
 
@@ -63,29 +64,20 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 		const templateResult = getTsResult(sourceFile, 'template');
 		if (!cancle?.isCancellationRequested && templateResult.length) {
 			tokens = tokens.concat(templateResult);
-			resultProgress?.report(buildTokens(tokens));
+			reportProgress?.(tokens);
 		}
 
 		if (cancle?.isCancellationRequested) return;
 		const htmlResult = getHtmlResult(sourceFile);
 		if (!cancle?.isCancellationRequested && htmlResult.length) {
 			tokens = tokens.concat(htmlResult);
-			resultProgress?.report(buildTokens(tokens));
+			reportProgress?.(tokens);
 		}
 
-		if (cancle?.isCancellationRequested) return;
-		return buildTokens(tokens);
+		return tokens;
 
-		function buildTokens(tokens: TokenData[]) {
-			const builder = new vscode.SemanticTokensBuilder();
-			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
-				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
-			}
-
-			return builder.build();
-		}
 		function getTsResult(sourceFile: SourceFile, lsType: 'script' | 'template') {
-			const result: TokenData[] = [];
+			const result: SemanticToken[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 
 				if (sourceMap.lsType !== lsType)
@@ -123,36 +115,44 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, modu
 			return result;
 		}
 		function getHtmlResult(sourceFile: SourceFile) {
-			const result: TokenData[] = [];
 
+			const result: SemanticToken[] = [];
 			const templateScriptData = sourceFile.getTemplateScriptData();
 			const components = new Set([
 				...templateScriptData.components,
 				...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
 			]);
 
-			for (const sourceMap of [...sourceFile.getHtmlSourceMaps(), ...sourceFile.getPugSourceMaps()]) {
+			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
-				const inSourceMap = [...sourceMap.mappings].some(mapping =>
-					(mapping.sourceRange.start >= offsetRange.start && mapping.sourceRange.start <= offsetRange.end)
-					|| (mapping.sourceRange.end >= offsetRange.start && mapping.sourceRange.end <= offsetRange.end)
-				);
-				if (!inSourceMap)
+				let htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start;
+				if (htmlStart === undefined) {
+					for (const mapping of sourceMap.mappings) {
+						if (mapping.sourceRange.end >= offsetRange.start) {
+							if (htmlStart === undefined || mapping.mappedRange.start < htmlStart) {
+								htmlStart = mapping.mappedRange.start;
+							}
+						}
+					}
+				}
+				if (htmlStart === undefined)
 					continue;
 
-				const htmlStart = sourceMap.getMappedRange(offsetRange.start)?.[0].start ?? 0;
 				const docText = sourceMap.mappedDocument.getText();
-				const scanner = sourceMap.language === 'html'
-					? htmlLs.createScanner(docText, htmlStart)
-					: pugLs.createScanner(sourceMap.pugDocument, htmlStart)
+				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+				const scanner =
+					sourceMap.mappedDocument.languageId === 'html' ? htmlLs.createScanner(docText)
+						: pugDocument ? pugLs.createScanner(pugDocument)
+							: undefined
+
 				if (!scanner) continue;
 
 				let token = scanner.scan();
 				while (token !== html.TokenType.EOS) {
-					if (token === html.TokenType.StartTag || token === html.TokenType.EndTag) {
+					const tokenOffset = scanner.getTokenOffset();
+					if (tokenOffset >= htmlStart && (token === html.TokenType.StartTag || token === html.TokenType.EndTag)) {
 						const tokenText = scanner.getTokenText();
 						if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
-							const tokenOffset = scanner.getTokenOffset();
 							const tokenLength = scanner.getTokenLength();
 							const vueRange = sourceMap.getSourceRange(tokenOffset)?.[0];
 							if (vueRange) {

@@ -1,5 +1,5 @@
 import * as rpc from 'vscode-jsonrpc';
-import type * as vscode from 'vscode-languageserver';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 /**
  * Client Requests
@@ -57,12 +57,6 @@ export namespace InitDoneRequest {
 	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/init');
 }
 
-export namespace DepsRequest {
-	export type ResponseType = string[];
-	export type ErrorType = never;
-	export const type = new rpc.RequestType0<ResponseType, ErrorType>('volar/depFiles');
-}
-
 export namespace GetMatchTsConfigRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = string | null | undefined;
@@ -77,18 +71,35 @@ export namespace D3Request {
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/d3');
 }
 
+export namespace GetAutoQuoteEditsRequest {
+	export type ParamsType = vscode.TextDocumentPositionParams;
+	export type ResponseType = string | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoCreateQuote');
+}
+
 export namespace GetTagCloseEditsRequest {
 	export type ParamsType = vscode.TextDocumentPositionParams;
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/tag');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoCloseTag');
+}
+
+export namespace GetWrapParenthesesEditsRequest {
+	export type ParamsType = vscode.TextDocumentPositionParams;
+	export type ResponseType = {
+		text: string,
+		range: vscode.Range,
+	} | null | undefined;
+	export type ErrorType = never;
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoWrapParentheses');
 }
 
 export namespace GetRefCompleteEditsRequest {
 	export type ParamsType = vscode.TextDocumentPositionParams;
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/ref');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/autoCompleteRef');
 }
 
 export namespace VerifyAllScriptsNotification {

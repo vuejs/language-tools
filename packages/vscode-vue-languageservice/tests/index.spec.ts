@@ -9,5 +9,6 @@ import './renames/scriptSetup_component';
 import './renames/scriptSetup_element';
 import './renames/scriptSetup';
 
-import './typeChecks/emit';
+import './typeChecks/events';
+import './typeChecks/scriptSetup';
 import './typeChecks/v_for';

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "vscode-typescript-vue-plugin",
-	"version": "0.29.8",
+	"version": "0.32.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -17,32 +17,26 @@
 	"contributes": {
 		"typescriptServerPlugins": [
 			{
-				"name": "typescript-vue-plugin",
+				"name": "@volar/typescript-plugin-forward",
 				"enableForWorkspaceTypeScriptVersions": true
 			}
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "cd ../.. && npm run build",
+		"vscode:prepublish": "npm run build",
+		"prebuild": "cd ../.. && npm run build",
+		"build": "npm run esbuild",
+		"watch": "npm run esbuild -- --watch",
+		"esbuild": "node scripts/build-node",
 		"pack": "vsce package",
-		"release": "vsce publish --yarn"
-	},
-	"workspaces": [
-		"../../packages/code-gen",
-		"../../packages/html2pug",
-		"../../packages/shared",
-		"../../packages/source-map",
-		"../../packages/transforms",
-		"../../packages/typescript-vue-plugin",
-		"../../packages/vscode-pug-languageservice",
-		"../../packages/vscode-typescript-languageservice",
-		"../../packages/vscode-vue-languageservice",
-		"../../packages/vue-code-gen"
-	],
-	"dependencies": {
-		"typescript-vue-plugin": "0.29.8"
+		"release": "vsce publish"
 	},
 	"devDependencies": {
+		"esbuild": "latest",
+		"typescript-vue-plugin": "0.32.1",
 		"vsce": "latest"
+	},
+	"dependencies": {
+		"@volar/typescript-plugin-forward": "file:typescript-plugin-forward"
 	}
 }

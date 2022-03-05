@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as PConst from '../protocol.const';
-import * as vscode from 'vscode-languageserver';
+import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as semver from 'semver';
@@ -137,6 +137,7 @@ export function register(
 					name: tsEntry.name,
 					tsData: tsEntry.data,
 				};
+				// @ts-expect-error
 				item.data = data;
 
 				return item;

@@ -1,17 +1,17 @@
 # TypeScript Vue Plugin
 
-> A [TS server plugin](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin) to make TS server know *.vue.
+> A [TS server plugin](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin) to make TS server know *.vue files.
 
-https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-vue-plugin
+[Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-vue-plugin)
 
-:warning: Recommended [use take over mode instead of this plugin](https://github.com/johnsoncodehk/volar/discussions/471).
+⚠️ It's recommended to [use take over mode instead of this plugin](https://github.com/johnsoncodehk/volar/discussions/471).
 
-It proxy TS server requests to make some extra works:
+This plugin proxies TS server requests to provide some extra functionality:
 
-- When find references in *.ts, you also get results from *.vue.
-- When renaming in *.ts, also get editing to *.vue refernces.
-- When typing import statment, you can have .vue file path completion.
-- (And some detail diffencen most people don't need to know...
+- When finding references in *.ts files, you also get results from *.vue files.
+- When renaming in *.ts files, references on *.vue files also get adjusted.
+- When typing import statements, .vue* files will also appear for autocompletion.
+- (And some extra details most people don't need to know...)
 
 ## Sponsors
 

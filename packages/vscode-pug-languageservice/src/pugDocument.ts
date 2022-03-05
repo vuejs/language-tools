@@ -3,19 +3,19 @@ import * as SourceMap from '@volar/source-map';
 import * as path from 'path';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createCodeGen } from '@volar/code-gen';
+import { CodeGen } from '@volar/code-gen';
 import * as pugLex from 'pug-lexer';
 
 const pugParser = require('pug-parser');
 
-export type PugDocument = ReturnType<typeof parsePugDocument>;
+export interface PugDocument extends ReturnType<typeof parsePugDocument> { }
 
 export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.LanguageService) {
 
 	const fsPath = shared.uriToFsPath(pugTextDoc.uri);
 	const fileName = path.basename(fsPath);
 	const pugCode = pugTextDoc.getText();
-	const codeGen = createCodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
+	const codeGen = new CodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
 	let error: {
 		code: string,
 		msg: string,
@@ -35,7 +35,7 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		attrsBlocks = collectAttrsBlocks(tokens);
 
 		ast = pugParser(tokens, { filename: fileName, src: pugCode }) as Node;
-		visitNode(ast, undefined);
+		visitNode(ast, undefined, undefined);
 
 		// support tag auto-complete in empty lines
 		for (const emptyLineEnd of emptyLineEnds) {
@@ -86,10 +86,10 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		ast,
 	};
 
-	function visitNode(node: Node, next: Node | undefined) {
+	function visitNode(node: Node, next: Node | undefined, parent: Node | undefined) {
 		if (node.type === 'Block') {
 			for (let i = 0; i < node.nodes.length; i++) {
-				visitNode(node.nodes[i], node.nodes[i + 1]);
+				visitNode(node.nodes[i], node.nodes[i + 1], node);
 			}
 		}
 		else if (node.type === 'Tag') {
@@ -102,8 +102,8 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			const selfClosing = node.block.nodes.length === 0;
 			addStartTag(node, selfClosing);
 			if (!selfClosing) {
-				visitNode(node.block, next);
-				addEndTag(node, next);
+				visitNode(node.block, next, parent);
+				addEndTag(node, next, parent);
 			}
 			const fullHtmlEnd = codeGen.getText().length;
 			codeGen.addMapping2({
@@ -186,8 +186,8 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 			codeGen.addText('>');
 		}
 	}
-	function addEndTag(node: TagNode, next: Node | undefined) {
-		let nextStart = pugCode.length;
+	function addEndTag(node: TagNode, next: Node | undefined, parent: Node | undefined) {
+		let nextStart: number | undefined;
 		if (next) {
 			if (next.type === 'Block') {
 				nextStart = getDocOffset(next.line, 1);
@@ -196,16 +196,21 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 				nextStart = getDocOffset(next.line, next.column);
 			}
 		}
-		fullPugTagEnd = nextStart;
-		codeGen.addCode(
-			'',
-			{
-				start: nextStart,
-				end: nextStart,
-			},
-			SourceMap.Mode.Totally,
-			undefined,
-		);
+		else if (!parent) {
+			nextStart = pugCode.length;
+		}
+		if (nextStart !== undefined) {
+			fullPugTagEnd = nextStart;
+			codeGen.addCode(
+				'',
+				{
+					start: nextStart,
+					end: nextStart,
+				},
+				SourceMap.Mode.Totally,
+				undefined,
+			);
+		}
 		codeGen.addText(`</${node.name}>`);
 	}
 	function addClassesOrStyles(attrs: TagNode['attrs'], attrName: string) {
@@ -234,25 +239,17 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 		for (const token of tokens) {
 			if (token.type === 'newline' || token.type === 'outdent') {
 				let currentLine = token.loc.start.line - 2;
-				let prevLine = getLineText(currentLine);
+				let prevLine = shared.getLineText(pugTextDoc, currentLine);
 				while (prevLine.trim() === '') {
 					ends.push(pugTextDoc.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
 					if (currentLine <= 0) break;
 					currentLine--;
-					prevLine = getLineText(currentLine);
+					prevLine = shared.getLineText(pugTextDoc, currentLine);
 				}
 			}
 		}
 
 		return ends.sort((a, b) => a - b);
-
-		function getLineText(line: number) {
-			const text = pugTextDoc.getText({
-				start: { line: line, character: 0 },
-				end: { line: line + 1, character: 0 },
-			});
-			return text.substr(0, text.length - 1);
-		}
 	}
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
 
@@ -343,13 +340,13 @@ export function parsePugDocument(pugTextDoc: TextDocument, htmlLs: html.Language
 
 export type Node = BlockNode | TagNode | TextNode | CommentNode | BlockCommentNode;
 
-export type BlockNode = {
+export interface BlockNode {
 	type: 'Block',
 	nodes: Node[],
 	line: number,
 }
 
-export type TagNode = {
+export interface TagNode {
 	type: 'Tag',
 	name: string,
 	selfClosing: boolean,
@@ -369,14 +366,14 @@ export type TagNode = {
 	column: number,
 }
 
-export type TextNode = {
+export interface TextNode {
 	type: 'Text',
 	val: string,
 	line: number,
 	column: number,
 }
 
-export type CommentNode = {
+export interface CommentNode {
 	type: 'Comment',
 	val: string,
 	buffer: boolean,
@@ -384,7 +381,7 @@ export type CommentNode = {
 	column: number,
 }
 
-export type BlockCommentNode = {
+export interface BlockCommentNode {
 	type: 'BlockComment',
 	block: BlockNode,
 	val: string,

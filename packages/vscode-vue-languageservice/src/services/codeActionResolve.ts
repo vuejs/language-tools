@@ -1,9 +1,9 @@
-import type { ApiLanguageServiceContext } from '../types';
-import type { CodeAction } from 'vscode-languageserver-types';
+import type { LanguageServiceRuntimeContext } from '../types';
+import type { CodeAction } from 'vscode-languageserver-protocol';
 import { tsEditToVueEdit } from './rename';
 import type { Data } from './callHierarchy';
 
-export function register({ sourceFiles, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 	return async (codeAction: CodeAction) => {
 		const data: Data = codeAction.data as any;
 		const tsCodeAction: CodeAction = {

@@ -1,8 +1,8 @@
-import type { ApiLanguageServiceContext } from '../types';
-import type * as vscode from 'vscode-languageserver';
+import type { LanguageServiceRuntimeContext } from '../types';
+import type * as vscode from 'vscode-languageserver-protocol';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceContext) {
+export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position) => {
 
@@ -54,32 +54,34 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 					return;
 				loopChecker.add({ uri: uri, range: { start: position, end: position } });
 
-				const tsLocs = tsLs.findReferences(
+				for (const tsLoc_2 of tsLs.findReferences(
 					uri,
 					position,
-				);
-				tsResult = tsResult.concat(tsLocs);
-
-				for (const tsLoc_2 of tsLocs) {
+				)) {
 					loopChecker.add({ uri: tsLoc_2.uri, range: tsLoc_2.range });
 					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType).get(tsLoc_2.uri);
 
-					if (!teleport)
+					if (!teleport) {
+						tsResult.push(tsLoc_2);
 						continue;
+					}
 
-					if (
-						!teleport.allowCrossFile
-						&& sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.uri) !== sourceFiles.getSourceFileByTsUri(tsLoc.lsType, uri)
-					) continue;
+					let foundTeleport = false;
 
 					for (const [teleRange] of teleport.findTeleports(
 						tsLoc_2.range.start,
 						tsLoc_2.range.end,
 						sideData => !!sideData.capabilities.references,
 					)) {
+						foundTeleport = true;
 						if (loopChecker.has({ uri: tsLoc_2.uri, range: teleRange }))
 							continue;
 						withTeleports(tsLoc_2.uri, teleRange.start);
+					}
+
+					if (!foundTeleport) {
+						tsResult.push(tsLoc_2);
+						continue;
 					}
 				}
 			}
@@ -99,18 +101,17 @@ export function register({ sourceFiles, getCssLs, getTsLs }: ApiLanguageServiceC
 		// vue -> css
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			if (!sourceMap.stylesheet)
-				continue;
-
+			const stylesheet = getStylesheet(sourceMap.mappedDocument);
 			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
-			if (!cssLs)
+
+			if (!cssLs || !stylesheet)
 				continue;
 
 			for (const [cssRange] of sourceMap.getMappedRanges(position)) {
 				const cssLocs = cssLs.findReferences(
 					sourceMap.mappedDocument,
 					cssRange.start,
-					sourceMap.stylesheet,
+					stylesheet,
 				);
 				cssResult = cssResult.concat(cssLocs);
 			}

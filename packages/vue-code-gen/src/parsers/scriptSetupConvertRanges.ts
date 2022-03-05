@@ -2,16 +2,16 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 import type { TextRange } from '../types';
 
-export type ScriptSetupRanges = ReturnType<typeof parseUnuseScriptSetupRanges>;
+export interface ScriptSetupRanges extends ReturnType<typeof parseUnuseScriptSetupRanges> { }
 
-type PropTypeArg = {
+interface PropTypeArg {
 	name: TextRange,
 	type: TextRange,
 	required: boolean,
 	default: TextRange | undefined,
-};
+}
 
-type EmitTypeArg = {
+interface EmitTypeArg {
 	name: TextRange,
 	restArgs: TextRange | undefined,
 };

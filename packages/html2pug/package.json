@@ -1,6 +1,6 @@
 {
 	"name": "@volar/html2pug",
-	"version": "0.29.8",
+	"version": "0.32.1",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -17,8 +17,8 @@
 	},
 	"dependencies": {
 		"domelementtype": "^2.2.0",
-		"domhandler": "^4.2.2",
-		"htmlparser2": "^7.1.2",
+		"domhandler": "^4.3.0",
+		"htmlparser2": "^7.2.0",
 		"pug": "^3.0.2"
 	}
 }

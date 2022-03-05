@@ -11,12 +11,11 @@ import * as documentPrintWidth from './features/documentPrintWidth';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
-import * as tagClosing from './features/tagClosing';
+import * as autoInsertion from './features/autoInsertion';
 import * as tagNameCase from './features/tagNameCase';
 import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
-import * as whitelist from './features/whitelist';
 import * as tsconfig from './features/tsconfig';
 
 let apiClient: lsp.CommonLanguageClient;
@@ -60,6 +59,8 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 }
 
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
+
+	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
 	const lowPowerMode = lowPowerModeEnabled();
 	if (lowPowerMode) {
@@ -139,10 +140,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	callGraph.activate(context, apiClient);
 	verifyAll.activate(context, docClient ?? apiClient);
 	virtualFiles.activate(context, docClient ?? apiClient);
-	tagClosing.activate(context, htmlClient, apiClient);
+	autoInsertion.activate(context, htmlClient, apiClient);
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.activate(context, docClient ?? apiClient);
-	whitelist.activate(context, clients);
 
 	async function registarLowPowerModeChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
