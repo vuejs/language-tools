@@ -1,47 +1,25 @@
 import { transformCompletionItem } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
-import { CompletionData, HtmlCompletionData, TsCompletionData, AutoImportComponentCompletionData } from '../types';
 import * as path from 'upath';
 import * as shared from '@volar/shared';
 import { camelize, capitalize } from '@vue/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { CompletionItemData } from './completion';
+import { AutoImportCompletionData, CompletionData, HtmlCompletionData, PluginCompletionData } from './completion';
 
-export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, scriptTsLs, getPluginById }: LanguageServiceRuntimeContext) {
+export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, getPluginById }: LanguageServiceRuntimeContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
-		const data: CompletionItemData = item.data as any;
-		const plugin = getPluginById(data.pluginId);
+		const data: CompletionData | undefined = item.data as any;
 
-		if (!plugin)
-			return item;
-
-		if (!plugin.onCompletionResolve)
-			return item;
-
-		const originalItem = data.originalItem;
-
-		if (data.sourceMapId !== undefined && data.embeddedDocumentUri !== undefined) {
-
-			const sourceMap = sourceFiles.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
-
-			if (sourceMap) {
-
-				const newPosition_2 = newPosition
-					? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.capabilities.completion)?.[0].start
-					: undefined;
-				const resolvedItem = await plugin.onCompletionResolve(originalItem, newPosition_2);
-
-				item = transformCompletionItem(
-					resolvedItem,
-					embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
-				);
-			}
+		if (data?.mode === 'plugin') {
+			await pluginWorker(data);
 		}
-		else {
-			item = await plugin.onCompletionResolve(originalItem);
+		else if (data?.mode === 'html') {
+			await htmlWorker(data)
+		}
+		else if (data?.mode === 'autoImport') {
+			await componentAutoImportWorker(data);
 		}
 
 		// fix https://github.com/johnsoncodehk/volar/issues/916
@@ -65,35 +43,76 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 
 		return item;
 
-		async function getHtmlResult(vueItem: vscode.CompletionItem, data: HtmlCompletionData) {
+		async function pluginWorker(data: PluginCompletionData) {
+
+			const plugin = getPluginById(data.pluginId);
+
+			if (!plugin)
+				return item;
+
+			if (!plugin.onCompletionResolve)
+				return item;
+
+			const originalItem = data.originalItem;
+
+			if (data.sourceMapId !== undefined && data.embeddedDocumentUri !== undefined) {
+
+				const sourceMap = sourceFiles.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
+
+				if (sourceMap) {
+
+					const newPosition_2 = newPosition
+						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.capabilities.completion)?.[0].start
+						: undefined;
+					const resolvedItem = await plugin.onCompletionResolve(originalItem, newPosition_2);
+
+					item = transformCompletionItem(
+						resolvedItem,
+						embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+					);
+				}
+			}
+			else {
+				item = await plugin.onCompletionResolve(originalItem);
+			}
+		}
+
+		async function htmlWorker(data: HtmlCompletionData) {
+
 			let tsItem: vscode.CompletionItem | undefined = data.tsItem;
-			if (!tsItem) return vueItem;
+			if (!tsItem) return item;
 
 			tsItem = await getTsLs('template').doCompletionResolve(tsItem);
-			vueItem.tags = [...vueItem.tags ?? [], ...tsItem.tags ?? []];
+			item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
 
 			const details: string[] = [];
 			const documentations: string[] = [];
 
-			if (vueItem.detail) details.push(vueItem.detail);
+			if (item.detail) details.push(item.detail);
 			if (tsItem.detail) details.push(tsItem.detail);
 			if (details.length) {
-				vueItem.detail = details.join('\n\n');
+				item.detail = details.join('\n\n');
 			}
 
-			if (vueItem.documentation) documentations.push(typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation.value);
+			if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
 			if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
 			if (documentations.length) {
-				vueItem.documentation = {
+				item.documentation = {
 					kind: vscode.MarkupKind.Markdown,
 					value: documentations.join('\n\n'),
 				};
 			}
 
-			return vueItem;
+			return item;
 		}
-		async function getAutoImportResult(sourceFile: SourceFile, vueItem: vscode.CompletionItem, data: AutoImportComponentCompletionData) {
 
+		async function componentAutoImportWorker(data: AutoImportCompletionData) {
+
+			const _sourceFile = sourceFiles.get(data.uri);
+			if (!_sourceFile)
+				return;
+
+			const sourceFile = _sourceFile;
 			const importFile = shared.uriToFsPath(data.importUri);
 			const rPath = path.relative(vueHost.getCurrentDirectory(), importFile);
 			const descriptor = sourceFile.getDescriptor();
@@ -106,32 +125,32 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 			}
 
 			if (!descriptor.scriptSetup && !descriptor.script) {
-				vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
-				vueItem.documentation = {
+				item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
+				item.documentation = {
 					kind: vscode.MarkupKind.Markdown,
 					value: '[Error] `<script>` / `<script setup>` block not found.',
 				};
-				return vueItem;
+				return;
 			}
 
-			vueItem.labelDetails = { description: rPath };
+			item.labelDetails = { description: rPath };
 
 			const scriptImport = scriptAst ? getLastImportNode(scriptAst) : undefined;
 			const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
-			const componentName = capitalize(camelize(vueItem.label));
+			const componentName = capitalize(camelize(item.label));
 			const textDoc = sourceFile.getTextDocument();
 			let insertText = '';
 			const planAResult = await planAInsertText();
 			if (planAResult) {
 				insertText = planAResult.insertText;
-				vueItem.detail = planAResult.description + '\n\n' + rPath;
+				item.detail = planAResult.description + '\n\n' + rPath;
 			}
 			else {
 				insertText = planBInsertText();
-				vueItem.detail = `Auto import from '${importPath}'\n\n${rPath}`;
+				item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
 			}
 			if (descriptor.scriptSetup) {
-				vueItem.additionalTextEdits = [
+				item.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						textDoc.positionAt(descriptor.scriptSetup.startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0)),
 						'\n' + insertText,
@@ -139,7 +158,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 				];
 			}
 			else if (descriptor.script && scriptAst) {
-				vueItem.additionalTextEdits = [
+				item.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						textDoc.positionAt(descriptor.script.startTagEnd + (scriptImport ? scriptImport.end : 0)),
 						'\n' + insertText,
@@ -159,7 +178,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 						};
 						const printText = printer.printNode(ts.EmitHint.Expression, newNode, scriptAst);
-						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
+						item.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.end),
@@ -176,7 +195,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 						};
 						const printText = printer.printNode(ts.EmitHint.Expression, newNode, scriptAst);
-						vueItem.additionalTextEdits.push(vscode.TextEdit.replace(
+						item.additionalTextEdits.push(vscode.TextEdit.replace(
 							vscode.Range.create(
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),
 								textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.end),
@@ -186,7 +205,7 @@ export function register({ typescript: ts, sourceFiles, getTsLs, vueHost, script
 					}
 				}
 			}
-			return vueItem;
+			return item;
 
 			async function planAInsertText() {
 				const scriptDoc = sourceFile.getScriptTsDocument();

@@ -13,9 +13,9 @@ export default definePlugin((host: {
     return {
 
         triggerCharacters: [
-			'.', ':', '<', '"', '=', '/', // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
-			'@', // vue event shorthand
-		],
+            '.', ':', '<', '"', '=', '/', // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
+            '@', // vue event shorthand
+        ],
 
         async onHover(textDocument, position) {
 
@@ -34,7 +34,7 @@ export default definePlugin((host: {
             const htmlDocument = getHtmlDocument(textDocument);
 
             if (!htmlDocument)
-                return;;
+                return;
 
             return host.htmlLs.doComplete2(textDocument, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
         },

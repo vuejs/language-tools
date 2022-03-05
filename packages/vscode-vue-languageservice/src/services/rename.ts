@@ -4,7 +4,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import type { EmbeddedDocumentMappingData } from '@volar/vue-typescript';
-import { wordPatterns } from './completion';
+import { wordPatterns } from '../plugins/cssPlugin';
 
 export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 

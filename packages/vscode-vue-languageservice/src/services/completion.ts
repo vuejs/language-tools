@@ -1,8 +1,7 @@
 import * as shared from '@volar/shared';
 import { transformCompletionItem } from '@volar/transforms';
 import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
-import { camelize, capitalize, hyphenate, isGloballyWhitelisted } from '@vue/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as ts2 from 'vscode-typescript-languageservice';
@@ -11,11 +10,10 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
 import { SourceFile } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
-import { CompletionData } from '../types';
 import { untrack } from '../utils/untrack';
-import * as getEmbeddedDocument from './embeddedDocument';
 import { SearchTexts } from '@volar/vue-typescript';
-import { EmbeddedLanguagePlugin, visitEmbedded } from '../plugins/definePlugin';
+import { visitEmbedded } from '../plugins/definePlugin';
+import { RuntimePlugin } from '../languageService';
 
 export function getTriggerCharacters(tsVersion: string) {
 	return {
@@ -29,14 +27,9 @@ export function getTriggerCharacters(tsVersion: string) {
 		json: ['"', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
 	};
 }
-export const wordPatterns: { [lang: string]: RegExp } = {
-	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
-	less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
-	scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
-	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
-};
+
 // https://v3.vuejs.org/api/directives.html#v-on
-export const eventModifiers: Record<string, string> = {
+const eventModifiers: Record<string, string> = {
 	stop: 'call event.stopPropagation().',
 	prevent: 'call event.preventDefault().',
 	capture: 'add event listener in capture mode.',
@@ -49,7 +42,19 @@ export const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export interface CompletionItemData {
+const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective', {
+	version: 1.1,
+	tags: [],
+	globalAttributes: [
+		{ name: 'v-if' },
+		{ name: 'v-else-if' },
+		{ name: 'v-else', valueSet: 'v' },
+		{ name: 'v-for' },
+	],
+});
+
+export interface PluginCompletionData {
+	mode: 'plugin',
 	uri: string,
 	originalItem: vscode.CompletionItem,
 	pluginId: number,
@@ -57,18 +62,31 @@ export interface CompletionItemData {
 	embeddedDocumentUri: string | undefined,
 }
 
+export interface HtmlCompletionData {
+	mode: 'html',
+	uri: string,
+	tsItem: vscode.CompletionItem | undefined,
+}
+
+export interface AutoImportCompletionData {
+	mode: 'autoImport',
+	uri: string,
+	importUri: string,
+}
+
+export type CompletionData = PluginCompletionData | HtmlCompletionData | AutoImportCompletionData;
+
 export function register(
-	{ typescript: ts, sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, jsonLs, documentContext, vueHost, templateTsLs, getHtmlDataProviders, getStylesheet, getHtmlDocument, getJsonDocument, getPugDocument, getPlugins, getTextDocument }: LanguageServiceRuntimeContext,
+	{ sourceFiles, htmlLs, vueHost, templateTsLs, getHtmlDataProviders, getPlugins, getTextDocument }: LanguageServiceRuntimeContext,
 	getScriptContentVersion: () => number,
 ) {
 
-	const getEmbeddedDoc = getEmbeddedDocument.register(arguments[0]);
 	let cache: {
 		uri: string,
 		data: {
 			sourceMapId: number | undefined,
 			embeddedDocumentUri: string | undefined,
-			plugin: EmbeddedLanguagePlugin,
+			plugin: RuntimePlugin,
 			list: vscode.CompletionList,
 		}[],
 		hasMainCompletion: boolean,
@@ -124,7 +142,7 @@ export function register(
 									item,
 									embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 								),
-								data: <CompletionItemData>{
+								data: <PluginCompletionData>{
 									uri,
 									originalItem: item,
 									pluginId: cacheData.plugin.id,
@@ -150,7 +168,8 @@ export function register(
 						...completionList,
 						items: completionList.items.map(item => ({
 							...item,
-							data: <CompletionItemData>{
+							data: <PluginCompletionData>{
+								mode: 'plugin',
 								uri,
 								originalItem: item,
 								pluginId: cacheData.plugin.id,
@@ -193,6 +212,12 @@ export function register(
 							if (cache!.hasMainCompletion && !plugin.isAdditionalCompletion)
 								continue;
 
+							let htmlTsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
+
+							if (plugin.context?.useHtmlLs) {
+								htmlTsItems = await provideHtmlData(vueDocument);
+							}
+
 							const embeddedCompletionList = await plugin.onCompletion(sourceMap.mappedDocument, embeddedRange.start, context);
 
 							if (!embeddedCompletionList)
@@ -202,26 +227,33 @@ export function register(
 								cache!.hasMainCompletion = true;
 							}
 
+							const completionList: vscode.CompletionList = {
+								...embeddedCompletionList,
+								items: embeddedCompletionList.items.map(item => ({
+									...transformCompletionItem(
+										item,
+										embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+									),
+									data: <PluginCompletionData>{
+										mode: 'plugin',
+										uri,
+										originalItem: item,
+										pluginId: plugin.id,
+										sourceMapId: sourceMap.id,
+										embeddedDocumentUri: sourceMap.mappedDocument.uri,
+									} as any,
+								})),
+							};
+
+							if (htmlTsItems) {
+								afterHtmlCompletion(completionList, vueDocument, htmlTsItems)
+							}
+
 							cache!.data.push({
 								sourceMapId: sourceMap.id,
 								embeddedDocumentUri: sourceMap.mappedDocument.uri,
 								plugin,
-								list: {
-									...embeddedCompletionList,
-									items: embeddedCompletionList.items.map(item => ({
-										...transformCompletionItem(
-											item,
-											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
-										),
-										data: <CompletionItemData>{
-											uri,
-											originalItem: item,
-											pluginId: plugin.id,
-											sourceMapId: sourceMap.id,
-											embeddedDocumentUri: sourceMap.mappedDocument.uri,
-										} as any,
-									})),
-								},
+								list: completionList,
 							});
 						}
 					}
@@ -260,7 +292,8 @@ export function register(
 							...completionList,
 							items: completionList.items.map(item => ({
 								...item,
-								data: <CompletionItemData>{
+								data: <PluginCompletionData>{
+									mode: 'plugin',
 									uri,
 									originalItem: item,
 									pluginId: plugin.id,
@@ -276,8 +309,6 @@ export function register(
 
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
 
-		const triggerCharacters = getTriggerCharacters(ts.version);
-
 		function combineCompletionList(lists: vscode.CompletionList[]) {
 			return {
 				isIncomplete: lists.some(list => list.isIncomplete),
@@ -287,293 +318,297 @@ export function register(
 				),
 			};
 		}
-		async function getHtmlResult(sourceFile: SourceFile) {
-			let result: vscode.CompletionList | undefined = undefined;
-			if (context?.triggerCharacter && !triggerCharacters.html.includes(context.triggerCharacter)) {
-				return;
-			}
+
+		async function provideHtmlData(vueDocument: SourceFile) {
+
 			let nameCases = {
 				tag: 'both' as 'both' | 'kebabCase' | 'pascalCase',
 				attr: 'kebabCase' as 'kebabCase' | 'camelCase',
 			};
+
 			if (getNameCases) {
 				const clientCases = await getNameCases(uri);
 				nameCases.tag = clientCases.tagNameCase;
 				nameCases.attr = clientCases.attrNameCase;
 			}
-			for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
 
-				const htmlDocument = getHtmlDocument(sourceMap.mappedDocument);
-				const pugDocument = getPugDocument(sourceMap.mappedDocument);
+			const componentCompletion = getComponentCompletionData(vueDocument);
+			const tags: html.ITagData[] = [];
+			const tsItems = new Map<string, vscode.CompletionItem>();
+			const globalAttributes: html.IAttributeData[] = [];
+			const { contextItems } = vueDocument.getTemplateScriptData();
 
-				const componentCompletion = getComponentCompletionData(sourceFile);
-				const tags: html.ITagData[] = [];
-				const tsItems = new Map<string, vscode.CompletionItem>();
-				const globalAttributes: html.IAttributeData[] = [
-					{ name: 'v-if' },
-					{ name: 'v-else-if' },
-					{ name: 'v-else', valueSet: 'v' },
-					{ name: 'v-for' },
-				];
-
-				const { contextItems } = sourceFile.getTemplateScriptData();
-				for (const c of contextItems) {
-					// @ts-expect-error
-					const data: Data = c.data;
-					const dir = hyphenate(data.name);
-					if (dir.startsWith('v-')) {
-						const key = 'dir:' + dir;
-						globalAttributes.push({ name: dir, description: key });
-						tsItems.set(key, c);
-					}
+			for (const item of contextItems) {
+				// @ts-expect-error
+				const data: Data = item.data;
+				const dir = hyphenate(data.name);
+				if (dir.startsWith('v-')) {
+					const key = createInternalItemId('vueDirective', [dir]);
+					globalAttributes.push({ name: dir, description: key });
+					tsItems.set(key, item);
 				}
+			}
 
-				for (const [_componentName, { item, bind, on }] of componentCompletion) {
-					const componentNames =
-						nameCases.tag === 'kebabCase'
-							? new Set([hyphenate(_componentName)])
-							: nameCases.tag === 'pascalCase'
-								? new Set([_componentName])
-								: new Set([hyphenate(_componentName), _componentName])
-					for (const componentName of componentNames) {
-						const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
-						for (const prop of bind) {
-							// @ts-expect-error
-							const data: Data = prop.data;
-							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
-							if (hyphenate(name).startsWith('on-')) {
-								const propNameBase = name.startsWith('on-')
-									? name.substr('on-'.length)
-									: (name['on'.length].toLowerCase() + name.substr('onX'.length));
-								const propKey = componentName + '@' + propNameBase;
-								attributes.push(
-									{
-										name: 'v-on:' + propNameBase,
-										description: propKey,
-									},
-									{
-										name: '@' + propNameBase,
-										description: propKey,
-									},
-								);
-								tsItems.set(propKey, prop);
-							}
-							else {
-								const propName = name;
-								const propKey = componentName + ':' + propName;
-								attributes.push(
-									{
-										name: propName,
-										description: propKey,
-									},
-									{
-										name: ':' + propName,
-										description: propKey,
-									},
-									{
-										name: 'v-bind:' + propName,
-										description: propKey,
-									},
-								);
-								tsItems.set(propKey, prop);
-							}
-						}
-						for (const event of on) {
-							// @ts-expect-error
-							const data: Data = event.data;
-							const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
-							const propKey = componentName + '@' + name;
-							attributes.push({
-								name: 'v-on:' + name,
-								description: propKey,
-							});
-							attributes.push({
-								name: '@' + name,
-								description: propKey,
-							});
-							tsItems.set(propKey, event);
-						}
-						if (componentName !== '*') {
-							tags.push({
-								name: componentName,
-								description: componentName + ':',
-								attributes,
-							});
-						}
-						if (item) {
-							tsItems.set(componentName + ':', item);
-						}
-					}
-				}
-				const descriptor = sourceFile.getDescriptor();
-				const enabledComponentAutoImport = (isEnabledComponentAutoImport ? await isEnabledComponentAutoImport() : undefined) ?? true;
-				if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
-					for (const vueFile of sourceFiles.getAll()) {
-						let baseName = path.basename(vueFile.uri, '.vue');
-						if (baseName.toLowerCase() === 'index') {
-							baseName = path.basename(path.dirname(vueFile.uri));
-						}
-						const componentName_1 = hyphenate(baseName);
-						const componentName_2 = capitalize(camelize(baseName));
-						let i: number | '' = '';
-						if (componentCompletion.has(componentName_1) || componentCompletion.has(componentName_2)) {
-							i = 1;
-							while (componentCompletion.has(componentName_1 + i) || componentCompletion.has(componentName_2 + i)) {
-								i++;
-							}
-						}
-						tags.push({
-							name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
-							description: vueFile.uri,
-							attributes: [],
-						});
-					}
-				}
-				const dataProvider = html.newHTMLDataProvider(uri, {
-					version: 1.1,
-					tags,
-					globalAttributes,
-				});
-				htmlLs.setDataProviders(true, [...getHtmlDataProviders(), dataProvider]);
+			for (const [_componentName, { item, bind, on }] of componentCompletion) {
 
-				for (const [htmlRange] of sourceMap.getMappedRanges(position)) {
-					if (!result) {
-						result = {
-							isIncomplete: false,
-							items: [],
-						};
-					}
-					const htmlResult =
-						htmlDocument ? await htmlLs.doComplete2(sourceMap.mappedDocument, htmlRange.start, htmlDocument, documentContext)
-							: pugDocument ? await pugLs.doComplete(pugDocument, htmlRange.start, documentContext)
-								: undefined
-					if (!htmlResult) continue;
-					if (htmlResult.isIncomplete) {
-						result.isIncomplete = true;
-					}
+				const componentNames =
+					nameCases.tag === 'kebabCase' ? new Set([hyphenate(_componentName)])
+						: nameCases.tag === 'pascalCase' ? new Set([_componentName])
+							: new Set([hyphenate(_componentName), _componentName])
 
-					const replacement = getReplacement(htmlResult, sourceMap.mappedDocument);
-					if (replacement) {
-						const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
-						const hasModifier = replacement.text.includes('.');
-						if (isEvent && hasModifier) {
-							const modifiers = replacement.text.split('.').slice(1);
-							const textWithoutModifier = path.trimExt(replacement.text, [], 999);
-							for (const modifier in eventModifiers) {
-								if (modifiers.includes(modifier)) continue;
-								const modifierDes = eventModifiers[modifier];
-								const newItem: html.CompletionItem = {
-									label: modifier,
-									filterText: textWithoutModifier + '.' + modifier,
-									documentation: modifierDes,
-									textEdit: {
-										range: replacement.textEdit.range,
-										newText: textWithoutModifier + '.' + modifier,
-									},
-									kind: vscode.CompletionItemKind.EnumMember,
-								};
-								htmlResult.items.push(newItem);
-							}
-						}
-					}
+				for (const componentName of componentNames) {
 
-					let vueItems = htmlResult.items.map(htmlItem => transformCompletionItem(
-						htmlItem,
-						htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
-					)) as vscode.CompletionItem[];
-					const htmlItemsMap = new Map<string, vscode.CompletionItem>();
-					for (const entry of htmlResult.items) {
-						htmlItemsMap.set(entry.label, entry);
-					}
-					for (const vueItem of vueItems) {
-						const documentation = typeof vueItem.documentation === 'string' ? vueItem.documentation : vueItem.documentation?.value;
-						const importFile = documentation?.startsWith('file://') ? sourceFiles.get(documentation) : undefined;
-						if (importFile) {
-							const filePath = shared.uriToFsPath(importFile.uri);
-							const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
-							vueItem.documentation = undefined;
-							vueItem.labelDetails = { description: rPath };
-							vueItem.filterText = vueItem.label + ' ' + rPath;
-							vueItem.detail = rPath;
-							vueItem.kind = vscode.CompletionItemKind.File;
-							vueItem.sortText = '\u0003' + vueItem.sortText;
-							const data: CompletionData = {
-								mode: 'autoImport',
-								uri: uri,
-								importUri: importFile.uri,
-							};
-							// @ts-expect-error
-							vueItem.data = data;
+					const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
+
+					for (const prop of bind) {
+
+						// @ts-expect-error
+						const data: Data = prop.data;
+						const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
+
+						if (hyphenate(name).startsWith('on-')) {
+
+							const propNameBase = name.startsWith('on-')
+								? name.substr('on-'.length)
+								: (name['on'.length].toLowerCase() + name.substr('onX'.length));
+							const propKey = createInternalItemId('componentEvent', [componentName, propNameBase]);
+
+							attributes.push(
+								{
+									name: 'v-on:' + propNameBase,
+									description: propKey,
+								},
+								{
+									name: '@' + propNameBase,
+									description: propKey,
+								},
+							);
+							tsItems.set(propKey, prop);
 						}
 						else {
-							const tsItem = documentation ? tsItems.get(documentation) : undefined;
-							if (tsItem) {
-								vueItem.documentation = undefined;
-							}
-							if (
-								vueItem.label.startsWith(':')
-								|| vueItem.label.startsWith('@')
-								|| vueItem.label.startsWith('v-bind:')
-								|| vueItem.label.startsWith('v-on:')
-							) {
-								if (!documentation?.startsWith('*:')) {
-									vueItem.sortText = '\u0000' + vueItem.sortText;
-								}
-								if (tsItem) {
-									if (vueItem.label.startsWith(':') || vueItem.label.startsWith('v-bind:')) {
-										vueItem.kind = vscode.CompletionItemKind.Property;
-									}
-									else {
-										vueItem.kind = vscode.CompletionItemKind.Event;
-									}
-								}
-							}
-							else if (
-								vueItem.label === 'v-if'
-								|| vueItem.label === 'v-else-if'
-								|| vueItem.label === 'v-else'
-								|| vueItem.label === 'v-for'
-							) {
-								vueItem.kind = vscode.CompletionItemKind.Method;
-								vueItem.sortText = '\u0003' + vueItem.sortText;
-							}
-							else if (vueItem.label.startsWith('v-')) {
-								vueItem.kind = vscode.CompletionItemKind.Function;
-								vueItem.sortText = '\u0002' + vueItem.sortText;
-							}
-							else {
-								vueItem.sortText = '\u0001' + vueItem.sortText;
-							}
-							const data: CompletionData = {
-								mode: 'html',
-								uri: uri,
-								docUri: sourceMap.mappedDocument.uri,
-								tsItem: tsItem,
-							};
-							// @ts-expect-error
-							vueItem.data = data;
+
+							const propName = name;
+							const propKey = createInternalItemId('componentProp', [componentName, propName]);
+
+							attributes.push(
+								{
+									name: propName,
+									description: propKey,
+								},
+								{
+									name: ':' + propName,
+									description: propKey,
+								},
+								{
+									name: 'v-bind:' + propName,
+									description: propKey,
+								},
+							);
+							tsItems.set(propKey, prop);
 						}
 					}
-					{
-						const temp = new Map<string, vscode.CompletionItem>();
-						for (const item of vueItems) {
-							// @ts-expect-error
-							const data: CompletionData | undefined = item.data;
-							if (data?.mode === 'autoImport' && data.importUri === sourceFile.uri) { // don't import itself
-								continue;
-							}
-							if (!temp.get(item.label)?.documentation) { // filter HTMLAttributes
-								temp.set(item.label, item);
-							}
-						}
-						vueItems = [...temp.values()];
+					for (const event of on) {
+
+						// @ts-expect-error
+						const data: Data = event.data;
+						const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
+						const propKey = createInternalItemId('componentEvent', [componentName, name]);
+
+						attributes.push({
+							name: 'v-on:' + name,
+							description: propKey,
+						});
+						attributes.push({
+							name: '@' + name,
+							description: propKey,
+						});
+						tsItems.set(propKey, event);
 					}
-					result.items = result.items.concat(vueItems);
+
+					const componentKey = createInternalItemId('component', [componentName])
+
+					if (componentName !== '*') {
+						tags.push({
+							name: componentName,
+							description: componentKey,
+							attributes,
+						});
+					}
+
+					if (item) {
+						tsItems.set(componentKey, item);
+					}
+				}
+			}
+
+			const descriptor = vueDocument.getDescriptor();
+			const enabledComponentAutoImport = (isEnabledComponentAutoImport ? await isEnabledComponentAutoImport() : undefined) ?? true;
+
+			if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
+				for (const vueFile of sourceFiles.getAll()) {
+					let baseName = path.basename(vueFile.uri, '.vue');
+					if (baseName.toLowerCase() === 'index') {
+						baseName = path.basename(path.dirname(vueFile.uri));
+					}
+					const componentName_1 = hyphenate(baseName);
+					const componentName_2 = capitalize(camelize(baseName));
+					let i: number | '' = '';
+					if (componentCompletion.has(componentName_1) || componentCompletion.has(componentName_2)) {
+						i = 1;
+						while (componentCompletion.has(componentName_1 + i) || componentCompletion.has(componentName_2 + i)) {
+							i++;
+						}
+					}
+					tags.push({
+						name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
+						description: createInternalItemId('importFile', [vueFile.uri]),
+						attributes: [],
+					});
+				}
+			}
+
+			const dataProvider = html.newHTMLDataProvider(uri, {
+				version: 1.1,
+				tags,
+				globalAttributes,
+			});
+
+			htmlLs.setDataProviders(true, [
+				...getHtmlDataProviders(),
+				vueGlobalDirectiveProvider,
+				dataProvider,
+			]);
+
+			return tsItems;
+		}
+
+		function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFile, tsItems: Map<string, vscode.CompletionItem>) {
+
+			const replacement = getReplacement(completionList, vueDocument.getTextDocument());
+
+			if (replacement) {
+
+				const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
+				const hasModifier = replacement.text.includes('.');
+
+				if (isEvent && hasModifier) {
+
+					const modifiers = replacement.text.split('.').slice(1);
+					const textWithoutModifier = path.trimExt(replacement.text, [], 999);
+
+					for (const modifier in eventModifiers) {
+
+						if (modifiers.includes(modifier))
+							continue;
+
+						const modifierDes = eventModifiers[modifier];
+						const newItem: html.CompletionItem = {
+							label: modifier,
+							filterText: textWithoutModifier + '.' + modifier,
+							documentation: modifierDes,
+							textEdit: {
+								range: replacement.textEdit.range,
+								newText: textWithoutModifier + '.' + modifier,
+							},
+							kind: vscode.CompletionItemKind.EnumMember,
+						};
+
+						completionList.items.push(newItem);
+					}
+				}
+			}
+
+			for (const item of completionList.items) {
+
+				const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+				const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
+
+				if (itemId) {
+					item.documentation = undefined;
 				}
 
-				htmlLs.setDataProviders(true, getHtmlDataProviders());
+				if (itemId?.type === 'importFile') {
+
+					const [fileUri] = itemId.args;
+					const filePath = shared.uriToFsPath(fileUri);
+					const rPath = path.relative(vueHost.getCurrentDirectory(), filePath);
+					item.labelDetails = { description: rPath };
+					item.filterText = item.label + ' ' + rPath;
+					item.detail = rPath;
+					item.kind = vscode.CompletionItemKind.File;
+					item.sortText = '\u0003' + item.sortText;
+					item.data = <AutoImportCompletionData>{
+						mode: 'autoImport',
+						uri: uri,
+						importUri: fileUri,
+					} as any;
+				}
+				else if (itemIdKey && itemId) {
+
+					const tsItem = itemIdKey ? tsItems.get(itemIdKey) : undefined;
+
+					if (itemId.type === 'componentProp' || itemId.type === 'componentEvent') {
+
+						const [componentName] = itemId.args;
+
+						if (componentName !== '*') {
+							item.sortText = '\u0000' + item.sortText;
+						}
+
+						if (tsItem) {
+							if (itemId.type === 'componentProp') {
+								item.kind = vscode.CompletionItemKind.Property;
+							}
+							else {
+								item.kind = vscode.CompletionItemKind.Event;
+							}
+						}
+					}
+					else if (
+						item.label === 'v-if'
+						|| item.label === 'v-else-if'
+						|| item.label === 'v-else'
+						|| item.label === 'v-for'
+					) {
+						item.kind = vscode.CompletionItemKind.Method;
+						item.sortText = '\u0003' + item.sortText;
+					}
+					else if (item.label.startsWith('v-')) {
+						item.kind = vscode.CompletionItemKind.Function;
+						item.sortText = '\u0002' + item.sortText;
+					}
+					else {
+						item.sortText = '\u0001' + item.sortText;
+					}
+
+					item.data = <HtmlCompletionData>{
+						mode: 'html',
+						uri,
+						tsItem: tsItem,
+					} as any;
+				}
 			}
-			return result;
+
+			{
+				const temp = new Map<string, vscode.CompletionItem>();
+
+				for (const item of completionList.items) {
+
+					const data: CompletionData | undefined = item.data as any;
+
+					if (data?.mode === 'autoImport' && data.importUri === vueDocument.uri) { // don't import itself
+						continue;
+					}
+
+					if (!temp.get(item.label)?.documentation) { // filter HTMLAttributes
+						temp.set(item.label, item);
+					}
+				}
+
+				completionList.items = [...temp.values()];
+			}
+
+			htmlLs.setDataProviders(true, getHtmlDataProviders());
 		}
 	}
 
@@ -585,6 +620,7 @@ export function register(
 		}
 		return getter();
 	}
+
 	function useComponentCompletionData(sourceFile: SourceFile) {
 
 		const {
@@ -657,6 +693,20 @@ export function register(
 				usedTags.value = nowUsedTags;
 			}
 			return result.value;
+		};
+	}
+}
+
+function createInternalItemId(type: 'importFile' | 'vueDirective' | 'componentEvent' | 'componentProp' | 'component', args: string[]) {
+	return '__VLS_::' + type + '::' + args.join(',');
+}
+
+function readInternalItemId(key: string) {
+	if (key.startsWith('__VLS_::')) {
+		const strs = key.split('::');
+		return {
+			type: strs[1] as 'importFile' | 'vueDirective' | 'componentEvent' | 'componentProp' | 'component',
+			args: strs[2].split(','),
 		};
 	}
 }

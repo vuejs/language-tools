@@ -4,7 +4,7 @@ import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 
 type WithPromise<T> = T | Promise<T>;
 
-type _EmbeddedLanguagePlugin = {
+export type EmbeddedLanguagePlugin = {
     isAdditionalCompletion?: boolean,
     triggerCharacters?: string[],
     onCompletion?(textDocument: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): WithPromise<vscode.CompletionList | undefined | null>,
@@ -12,15 +12,8 @@ type _EmbeddedLanguagePlugin = {
     onHover?(textDocument: TextDocument, position: vscode.Position): WithPromise<vscode.Hover | undefined | null>,
 };
 
-export type EmbeddedLanguagePlugin = _EmbeddedLanguagePlugin & { id: number };
-
-let _id = 0;
-
-export function definePlugin<T>(_: (host: T) => _EmbeddedLanguagePlugin) {
-    return (host: T): EmbeddedLanguagePlugin => ({
-        id: _id++,
-        ..._(host),
-    });
+export function definePlugin<T>(_: (host: T) => EmbeddedLanguagePlugin) {
+    return _;
 }
 
 export async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<void>) {
