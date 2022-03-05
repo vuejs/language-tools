@@ -42,20 +42,6 @@ export function createSourceFiles() {
 		}
 		return map;
 	});
-	const sourceMapsByLsType = {
-		noLsType: computed(() => {
-			const map = new Map<string, EmbeddedDocumentSourceMap>();
-			for (const key in _sourceFiles) {
-				const sourceFile = _sourceFiles[key]!;
-				for (const sourceMap of sourceFile.refs.sourceMaps.value) {
-					if (sourceMap.lsType === undefined) {
-						map.set(sourceMap.mappedDocument.uri, sourceMap);
-					}
-				}
-			}
-			return map;
-		}),
-	};
 	const sourceMapsByUriAndLsType = computed(() => {
 
 		const noLsType = new Map<string, EmbeddedDocumentSourceMap>();
