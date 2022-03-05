@@ -153,6 +153,8 @@ export default definePlugin((host: {
                 return htmlLs.getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
             });
         },
+
+        format: undefined,
     };
 
     function worker<T>(document: TextDocument, callback: (vueDocument: SourceFile) => T) {

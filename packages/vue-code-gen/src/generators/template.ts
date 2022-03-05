@@ -1802,9 +1802,7 @@ export function generate(
 				mode,
 				data: {
 					vueTag: 'template',
-					capabilities: {
-						formatting: true,
-					},
+					capabilities: {},
 				},
 			});
 			tsFormatCodeGen.addText(formatWrapper[1]);

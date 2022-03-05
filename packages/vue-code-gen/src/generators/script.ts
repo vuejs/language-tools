@@ -127,10 +127,8 @@ export function generate(
 					definitions: lsType === 'script',
 					rename: true,
 					diagnostic: lsType === 'script',
-					formatting: lsType === 'script',
 					completion: lsType === 'script',
 					semanticTokens: lsType === 'script',
-					foldingRanges: lsType === 'script',
 				},
 			}
 		);
@@ -162,10 +160,8 @@ export function generate(
 					definitions: lsType === 'script',
 					rename: true,
 					diagnostic: true, // also working for setup() returns unused in template checking
-					formatting: lsType === 'script',
 					completion: lsType === 'script',
 					semanticTokens: lsType === 'script',
-					foldingRanges: lsType === 'script',
 				},
 			}
 		);

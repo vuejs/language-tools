@@ -36,10 +36,7 @@ export function useSfcScript(
 			sourceMap.mappings.push({
 				data: {
 					vueTag: 'script',
-					capabilities: {
-						formatting: true,
-						foldingRanges: true,
-					},
+					capabilities: {},
 				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {

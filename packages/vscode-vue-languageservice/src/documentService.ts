@@ -29,14 +29,13 @@ export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
-	formatters: Parameters<typeof formatting['register']>[3],
 ) {
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
 	const plugins: EmbeddedLanguagePlugin[] = [
 		useVuePlugin({ getVueDocument }),
-		useHtmlPlugin({ getHtmlLs: () => services.htmlLs }),
+		patchHtmlFormat(useHtmlPlugin({ getHtmlLs: () => services.htmlLs })),
 		usePugPlugin({ getPugLs: () => services.pugLs }),
 		useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet }),
 		useJsonPlugin({ getJsonLs: () => services.jsonLs }),
@@ -55,7 +54,7 @@ export function getDocumentService(
 		},
 	};
 	return {
-		doFormatting: formatting.register(context, getPreferences, getFormatOptions, formatters),
+		doFormatting: formatting.register(context),
 
 		getFoldingRanges(document: TextDocument) {
 			return documentFeatureWorker(
@@ -221,4 +220,34 @@ export function getDocumentService(
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;
 	}
+}
+
+function patchHtmlFormat(htmlPlugin: EmbeddedLanguagePlugin) {
+
+	const originalFormat = htmlPlugin.format;
+
+	if (originalFormat) {
+
+		htmlPlugin.format = async (document, range, options) => {
+
+			const prefixes = '<template>';
+			const suffixes = '</template>';
+
+			const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
+			const result = await originalFormat?.(patchDocument, range, options);
+
+			if (result) {
+				for (const edit of result) {
+					if (document.offsetAt(edit.range.start) === 0 && document.offsetAt(edit.range.end) === document.getText().length) {
+						edit.newText = edit.newText.trim();
+						edit.newText = edit.newText.substring(prefixes.length, edit.newText.length - suffixes.length);
+					}
+				}
+			}
+
+			return result;
+		};
+	}
+
+	return htmlPlugin;
 }

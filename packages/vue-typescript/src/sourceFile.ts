@@ -325,6 +325,8 @@ export function createSourceFile(
 		})),
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
+		getSourceMaps: untrack(() => sourceMaps.value),
+
 
 		refs: {
 			document,

@@ -1,196 +1,202 @@
-import * as shared from '@volar/shared';
-import { transformTextEdit } from '@volar/transforms';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { LanguageServiceHost } from 'vscode-typescript-languageservice';
-import type { SourceFile } from '@volar/vue-typescript';
+import type { Embedded, EmbeddedDocumentSourceMap, SourceFile } from '@volar/vue-typescript';
 import type { DocumentServiceRuntimeContext } from '../types';
-import * as sharedServices from '../utils/sharedLs';
-import * as ts2 from 'vscode-typescript-languageservice';
 
-type Promiseable<T> = T | Promise<T>;
-
-export function register(
-	context: DocumentServiceRuntimeContext,
-	getPreferences: LanguageServiceHost['getPreferences'],
-	getFormatOptions: LanguageServiceHost['getFormatOptions'],
-	formatters: { [lang: string]: (document: TextDocument, options: vscode.FormattingOptions) => Promiseable<vscode.TextEdit[]> },
-) {
+export function register(context: DocumentServiceRuntimeContext) {
 	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
-		const sourceFile = context.getVueDocument(document);
-		if (!sourceFile) {
-			// take over mode
-			const dummyTsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, getPreferences, getFormatOptions);
-			return await dummyTsLs.doFormatting(document.uri, options);
-		}
-		let newDocument = document;
+		const originalDocument = document;
+		const rootEdits = await tryFormat(document);
+		const vueDocument = context.getVueDocument(document);
 
-		const pugEdits = await getPugFormattingEdits(sourceFile, options);
-		const htmlEdits = await getHtmlFormattingEdits(sourceFile, options);
-		if (pugEdits.length + htmlEdits.length > 0) {
-			newDocument = TextDocument.create(newDocument.uri, newDocument.languageId, newDocument.version + 1, TextDocument.applyEdits(newDocument, [
-				...pugEdits,
-				...htmlEdits,
-			]));
-			sourceFile.update(newDocument.getText(), newDocument.version.toString()); // TODO: high cost
+		if (!vueDocument)
+			return rootEdits;
+
+		if (rootEdits?.length) {
+			applyEdits(rootEdits);
 		}
 
-		const tsEdits = await getTsFormattingEdits(sourceFile, options);
-		const cssEdits = await getCssFormattingEdits(sourceFile, options);
-		if (tsEdits.length + cssEdits.length > 0) {
-			newDocument = TextDocument.create(newDocument.uri, newDocument.languageId, newDocument.version + 1, TextDocument.applyEdits(newDocument, [
-				...tsEdits,
-				...cssEdits,
-			]));
-			sourceFile.update(newDocument.getText(), newDocument.version.toString()); // TODO: high cost
+		let level = 0;
+
+		while (true) {
+
+			tryUpdateVueDocument();
+
+			const embeddeds = getEmbeddedsByLevel(vueDocument, level++);
+
+			if (embeddeds.length === 0)
+				break;
+
+			let edits: vscode.TextEdit[] = [];
+			let toPatchIndent: {
+				sourceMapId: number,
+				sourceMapEmbeddedDocumentUri: string,
+			} | undefined;
+
+			for (const embedded of embeddeds) {
+
+				if (!embedded.sourceMap?.capabilities.formatting)
+					continue;
+
+				if (embedded.sourceMap.lsType === 'template')
+					toPatchIndent = {
+						sourceMapId: embedded.sourceMap.id,
+						sourceMapEmbeddedDocumentUri: embedded.sourceMap.mappedDocument.uri,
+					};
+
+				const _edits = await tryFormat(embedded.sourceMap.mappedDocument);
+
+				if (!_edits)
+					continue;
+
+				for (const textEdit of _edits) {
+					for (const [range] of embedded.sourceMap.getSourceRanges(
+						textEdit.range.start,
+						textEdit.range.end,
+					)) {
+						edits.push({
+							newText: textEdit.newText,
+							range,
+						});
+					}
+				}
+			}
+
+			if (edits.length > 0) {
+				applyEdits(edits);
+			}
+
+			if (toPatchIndent !== undefined) {
+
+				tryUpdateVueDocument();
+
+				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.id === toPatchIndent?.sourceMapId && sourceMap.mappedDocument.uri === toPatchIndent.sourceMapEmbeddedDocumentUri);
+
+				if (sourceMap) {
+
+					const indentEdits = patchInterpolationIndent(vueDocument, sourceMap);
+
+					if (indentEdits.length > 0) {
+						applyEdits(indentEdits);
+					}
+				}
+			}
 		}
 
-		const indentTextEdits = patchInterpolationIndent(sourceFile);
-		newDocument = TextDocument.create(newDocument.uri, newDocument.languageId, newDocument.version + 1, TextDocument.applyEdits(newDocument, indentTextEdits));
-		if (newDocument.getText() === document.getText()) return;
+		if (document.getText() === originalDocument.getText())
+			return;
 
 		const editRange = vscode.Range.create(
-			document.positionAt(0),
-			document.positionAt(document.getText().length),
+			originalDocument.positionAt(0),
+			originalDocument.positionAt(originalDocument.getText().length),
 		);
-		const textEdit = vscode.TextEdit.replace(editRange, newDocument.getText());
+		const textEdit = vscode.TextEdit.replace(editRange, document.getText());
+
 		return [textEdit];
+
+		function tryUpdateVueDocument() {
+			if (vueDocument?.getTextDocument().getText() !== document.getText()) {
+				vueDocument?.update(document.getText(), document.version.toString());
+			}
+		}
+
+		function getEmbeddedsByLevel(vueDocument: SourceFile, level: number) {
+
+			const embeddeds = vueDocument.getEmbeddeds();
+			const embeddedsLevels: Embedded[][] = [embeddeds];
+
+			while (true) {
+
+				if (embeddedsLevels.length > level)
+					return embeddedsLevels[level];
+
+				let nextEmbeddeds: Embedded[] = [];
+
+				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
+
+					nextEmbeddeds = nextEmbeddeds.concat(embeddeds.embeddeds);
+				}
+
+				embeddedsLevels.push(nextEmbeddeds);
+			}
+		}
+
+		async function tryFormat(document: TextDocument) {
+
+			const plugins = context.getPlugins(document);
+
+			for (const plugin of plugins) {
+
+				if (!plugin.format)
+					continue;
+
+				const edits = await plugin.format(document, undefined, options);
+
+				if (!edits || edits.length === 0)
+					continue;
+
+				return edits;
+			}
+		}
+
+		function applyEdits(textEdits: vscode.TextEdit[]) {
+
+			const newText = TextDocument.applyEdits(document, textEdits);
+
+			if (newText !== document.getText()) {
+				document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
+			}
+		}
 	};
+}
 
-	function patchInterpolationIndent(sourceFile: SourceFile) {
-		const indentTextEdits: vscode.TextEdit[] = [];
-		const tsSourceMap = sourceFile.getTemplateFormattingScript().sourceMap;
-		if (!tsSourceMap) return indentTextEdits;
+function patchInterpolationIndent(vueDocument: SourceFile, sourceMap: EmbeddedDocumentSourceMap) {
 
-		const document = sourceFile.getTextDocument();
-		for (const maped of tsSourceMap.mappings) {
-			if (!maped.data.capabilities.formatting)
-				continue;
+	const indentTextEdits: vscode.TextEdit[] = [];
+	const document = vueDocument.getTextDocument();
 
-			const textRange = {
-				start: document.positionAt(maped.sourceRange.start),
-				end: document.positionAt(maped.sourceRange.end),
-			};
-			const text = document.getText(textRange);
-			if (text.indexOf('\n') === -1)
-				continue;
-			const lines = text.split('\n');
-			const removeIndent = getRemoveIndent();
-			const baseIndent = getBaseIndent();
-			for (let i = 1; i < lines.length; i++) {
-				const line = lines[i];
-				if (line.startsWith(removeIndent)) {
-					lines[i] = line.replace(removeIndent, baseIndent);
-				}
-				else {
-					lines[i] = baseIndent.replace(removeIndent, '') + line;
-				}
+	for (const maped of sourceMap.mappings) {
+
+		const textRange = {
+			start: document.positionAt(maped.sourceRange.start),
+			end: document.positionAt(maped.sourceRange.end),
+		};
+		const text = document.getText(textRange);
+
+		if (text.indexOf('\n') === -1)
+			continue;
+
+		const lines = text.split('\n');
+		const removeIndent = getRemoveIndent(lines);
+		const baseIndent = getBaseIndent(maped.sourceRange.start);
+
+		for (let i = 1; i < lines.length; i++) {
+			const line = lines[i];
+			if (line.startsWith(removeIndent)) {
+				lines[i] = line.replace(removeIndent, baseIndent);
 			}
-			indentTextEdits.push({
-				newText: lines.join('\n'),
-				range: textRange,
-			});
-
-			function getRemoveIndent() {
-				const lastLine = lines[lines.length - 1];
-				return lastLine.substr(0, lastLine.length - lastLine.trimStart().length);
-			}
-			function getBaseIndent() {
-				const startPos = document.positionAt(maped.sourceRange.start);
-				const startLineText = document.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
-				return startLineText.substr(0, startLineText.length - startLineText.trimStart().length);
+			else {
+				lines[i] = baseIndent.replace(removeIndent, '') + line;
 			}
 		}
-		return indentTextEdits;
+
+		indentTextEdits.push({
+			newText: lines.join('\n'),
+			range: textRange,
+		});
 	}
 
-	async function getCssFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
-		const result: vscode.TextEdit[] = [];
-		for (const sourceMap of sourceFile.getCssSourceMaps()) {
+	return indentTextEdits;
 
-			if (!sourceMap.capabilities.formatting) continue;
-
-			const formatter = formatters[sourceMap.mappedDocument.languageId];
-			if (!formatter) continue;
-
-			const cssEdits = await formatter(sourceMap.mappedDocument, options);
-			for (const cssEdit of cssEdits) {
-				const vueEdit = transformTextEdit(cssEdit, cssRange => sourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0]);
-				if (vueEdit) {
-					result.push(vueEdit);
-				}
-			}
-		}
-		return result;
+	function getRemoveIndent(lines: string[]) {
+		const lastLine = lines[lines.length - 1];
+		return lastLine.substring(0, lastLine.length - lastLine.trimStart().length);
 	}
 
-	async function getHtmlFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
-		const result: vscode.TextEdit[] = [];
-		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
-
-			if (sourceMap.mappedDocument.languageId !== 'html')
-				continue;
-
-			const formatter = formatters['html'];
-			if (!formatter) continue;
-
-			const htmlEdits = await formatter(sourceMap.mappedDocument, options);
-			for (const htmlEdit of htmlEdits) {
-				const vueEdit = transformTextEdit(htmlEdit, htmlRange => sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0]);
-				if (vueEdit) {
-					result.push(vueEdit);
-				}
-			}
-		}
-		return result;
-	}
-
-	async function getPugFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
-		const result: vscode.TextEdit[] = [];
-		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
-
-			if (sourceMap.mappedDocument.languageId !== 'jade')
-				continue;
-
-			const formatter = formatters['pug'];
-			if (!formatter) continue;
-
-			const pugEdits = await formatter(sourceMap.mappedDocument, options);
-			for (const pugEdit of pugEdits) {
-				const vueEdit = transformTextEdit(pugEdit, pugRange => sourceMap.getSourceRange(pugRange.start, pugRange.end)?.[0]);
-				if (vueEdit) {
-					result.push(vueEdit);
-				}
-			}
-		}
-		return result;
-	}
-
-	async function getTsFormattingEdits(sourceFile: SourceFile, options: vscode.FormattingOptions) {
-		const result: vscode.TextEdit[] = [];
-		const tsSourceMaps = [
-			sourceFile.getTemplateFormattingScript().sourceMap,
-			...sourceFile.docLsScripts().sourceMaps,
-		].filter(shared.notEmpty);
-
-		for (const sourceMap of tsSourceMaps) {
-			if (!sourceMap.capabilities.formatting) continue;
-			const dummyTsLs = sharedServices.getDummyTsLs(context.typescript, ts2, sourceMap.mappedDocument, getPreferences, getFormatOptions);
-			const textEdits = await dummyTsLs.doFormatting(sourceMap.mappedDocument.uri, options);
-			for (const textEdit of textEdits) {
-				for (const [vueRange] of sourceMap.getSourceRanges(
-					textEdit.range.start,
-					textEdit.range.end,
-					data => !!data.capabilities.formatting,
-				)) {
-					result.push({
-						newText: textEdit.newText,
-						range: vueRange,
-					});
-				}
-			}
-		}
-		return result;
+	function getBaseIndent(pos: number) {
+		const startPos = document.positionAt(pos);
+		const startLineText = document.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
+		return startLineText.substring(0, startLineText.length - startLineText.trimStart().length);
 	}
 }

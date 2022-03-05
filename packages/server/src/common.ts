@@ -66,15 +66,15 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 				{ typescript: ts },
 				(document) => tsConfigs.getPreferences(configuration, document),
 				(document, options) => tsConfigs.getFormatOptions(configuration, document, options),
-				formatters.getFormatters(async (uri) => {
-					if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
-						const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
-						if (response !== undefined) {
-							return response;
-						}
-					}
-					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
-				}),
+				// formatters.getFormatters(async (uri) => {
+				// 	if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
+				// 		const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
+				// 		if (response !== undefined) {
+				// 			return response;
+				// 		}
+				// 	}
+				// 	return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
+				// }),
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);
