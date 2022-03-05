@@ -61,20 +61,19 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 		if (options.documentFeatures) {
 
 			const ts = runtimeEnv.loadTypescript(options);
-			const formatters = await import('./formatters');
 			const noStateLs = vue.getDocumentService(
 				{ typescript: ts },
 				(document) => tsConfigs.getPreferences(configuration, document),
 				(document, options) => tsConfigs.getFormatOptions(configuration, document, options),
-				// formatters.getFormatters(async (uri) => {
-				// 	if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
-				// 		const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
-				// 		if (response !== undefined) {
-				// 			return response;
-				// 		}
-				// 	}
-				// 	return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
-				// }),
+				async (uri) => {
+					if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
+						const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
+						if (response !== undefined) {
+							return response;
+						}
+					}
+					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
+				},
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);

@@ -11,8 +11,10 @@ export type LanguageServiceHost = LanguageServiceHostBase & {
 };
 
 export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
-	getVueDocument(document: TextDocument): SourceFile | undefined;
-	getPlugins(document: TextDocument): EmbeddedLanguagePlugin[],
+	getVueDocument(document: TextDocument): SourceFile | undefined,
+	getPlugins(): EmbeddedLanguagePlugin[],
+	getFormatPlugins(): EmbeddedLanguagePlugin[],
+	updateTsLs(document: TextDocument): void,
 }
 
 export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeaturesRuntimeContext & {

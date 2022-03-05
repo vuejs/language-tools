@@ -234,6 +234,16 @@ export function createSourceFile(
 			});
 		}
 
+		// scripts - format
+		embeddeds.push({
+			sourceMap: sfcScript.sourceMap.value,
+			embeddeds: [],
+		});
+		embeddeds.push({
+			sourceMap: sfcScriptSetup.sourceMap.value,
+			embeddeds: [],
+		});
+
 		// scripts - script ls
 		embeddeds.push({
 			sourceMap: sfcScriptForScriptLs.sourceMap.value,

@@ -16,6 +16,13 @@ import useHtmlPlugin from './plugins/htmlPlugin';
 import usePugPlugin from './plugins/pugPlugin';
 import useJsonPlugin from './plugins/jsonPlugin';
 import useTsPlugin, { isTsDocument } from './plugins/tsPlugin';
+
+// formatter plugins
+import useCssFormatPlugin from './plugins/prettierCssPlugin';
+import useHtmlFormatPlugin from './plugins/prettyhtmlPlugin';
+import usePugFormatPlugin from './plugins/pugBeautifyPlugin';
+import useSassFormatPlugin from './plugins/sassFormatterPlugin';
+
 import * as sharedServices from './utils/sharedLs';
 import * as ts2 from 'vscode-typescript-languageservice';
 
@@ -29,28 +36,55 @@ export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
+	getPrintWidth: (uri: string) => Promise<number>,
 ) {
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
-	const plugins: EmbeddedLanguagePlugin[] = [
-		useVuePlugin({ getVueDocument }),
-		patchHtmlFormat(useHtmlPlugin({ getHtmlLs: () => services.htmlLs })),
-		usePugPlugin({ getPugLs: () => services.pugLs }),
-		useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet }),
-		useJsonPlugin({ getJsonLs: () => services.jsonLs }),
-		useTsPlugin({ getTsLs: () => tsLs }),
-	];
+
+	// language support plugins
+	const vuePlugin = useVuePlugin({ getVueDocument });
+	const htmlPlugin = patchHtmlFormat(useHtmlPlugin({ getHtmlLs: () => services.htmlLs }));
+	const pugPlugin = usePugPlugin({ getPugLs: () => services.pugLs });
+	const cssPlugin = useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet });
+	const jsonPlugin = useJsonPlugin({ getJsonLs: () => services.jsonLs });
+	const tsPlugin = useTsPlugin({ getTsLs: () => tsLs });
+
+	// formatter plugins
+	const cssFormatPlugin = useCssFormatPlugin({});
+	const htmlFormatPlugin = patchHtmlFormat(useHtmlFormatPlugin({ getPrintWidth }));
+	const pugFormatPlugin = usePugFormatPlugin({});
+	const sassFormatPlugin = useSassFormatPlugin({});
+
 	const context: DocumentServiceRuntimeContext = {
 		compilerOptions: {},
 		typescript: ts,
 		...services,
 		getVueDocument,
-		getPlugins: (document) => {
+		getPlugins() {
+			return [
+				vuePlugin,
+				htmlPlugin,
+				pugPlugin,
+				cssPlugin,
+				jsonPlugin,
+				tsPlugin,
+			];
+		},
+		getFormatPlugins() {
+			return [
+				cssFormatPlugin,
+				htmlFormatPlugin,
+				pugFormatPlugin,
+				sassFormatPlugin,
+				jsonPlugin,
+				tsPlugin,
+			];
+		},
+		updateTsLs(document) {
 			if (isTsDocument(document)) {
 				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, getPreferences, getFormatOptions);
 			}
-			return plugins;
 		},
 	};
 	return {

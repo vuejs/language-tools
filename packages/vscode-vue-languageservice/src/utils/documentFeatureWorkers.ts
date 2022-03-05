@@ -47,7 +47,9 @@ export async function documentRangeFeatureWorker<T, K>(
 			if (!isValidSourceMap(sourceMap))
 				return true;
 
-			const plugins = context.getPlugins(sourceMap.mappedDocument);
+			const plugins = context.getPlugins();
+
+			context.updateTsLs(sourceMap.mappedDocument);
 
 			for (const mapedArg of transformArg(arg, sourceMap)) {
 
@@ -76,7 +78,9 @@ export async function documentRangeFeatureWorker<T, K>(
 
 	if (results.length === 0 || !!combineResult) {
 
-		const plugins = context.getPlugins(document);
+		const plugins = context.getPlugins();
+
+		context.updateTsLs(document);
 
 		for (const plugin of plugins) {
 

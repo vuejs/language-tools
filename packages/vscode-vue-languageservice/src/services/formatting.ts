@@ -124,7 +124,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		async function tryFormat(document: TextDocument) {
 
-			const plugins = context.getPlugins(document);
+			const plugins = context.getFormatPlugins();
+
+			context.updateTsLs(document);
 
 			for (const plugin of plugins) {
 
