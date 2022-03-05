@@ -22,50 +22,131 @@ export default definePlugin((host: {
 
         triggerCharacters: ['/', '-', ':'], // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 
-        async doHover(textDocument, position) {
+        doValidation(document) {
+            return worker(document, async (stylesheet, cssLs) => {
 
-            const stylesheet = host.getStylesheet(textDocument);
-            if (!stylesheet)
-                return;
+                const settings = await host.getLanguageSettings(document.languageId, document.uri);
 
-            const cssLs = host.getCssLs(textDocument.languageId);
-            if (!cssLs)
-                return;
-
-            const settings = await host.getLanguageSettings(textDocument.languageId, textDocument.uri);
-
-            return cssLs.doHover(textDocument, position, stylesheet, settings?.hover);
+                return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
+            });
         },
 
-        async doComplete(textDocument, position, context) {
+        doComplete(document, position, context) {
+            return worker(document, async (stylesheet, cssLs) => {
 
-            const stylesheet = host.getStylesheet(textDocument);
-            if (!stylesheet)
-                return;
+                const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
+                const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
+                const wordRange = vscode.Range.create(wordStart ?? position, position);
+                const settings = await host.getLanguageSettings(document.languageId, document.uri);
+                const cssResult = await cssLs.doComplete2(document, position, stylesheet, host.documentContext, settings?.completion);
 
-            const cssLs = host.getCssLs(textDocument.languageId);
-            if (!cssLs)
-                return;
+                if (cssResult) {
+                    for (const item of cssResult.items) {
 
-            const wordPattern = wordPatterns[textDocument.languageId] ?? wordPatterns.css;
-            const wordStart = shared.getWordRange(wordPattern, position, textDocument)?.start; // TODO: use end?
-            const wordRange = vscode.Range.create(wordStart ?? position, position);
-            const settings = await host.getLanguageSettings(textDocument.languageId, textDocument.uri);
-            const cssResult = await cssLs.doComplete2(textDocument, position, stylesheet, host.documentContext, settings?.completion);
+                        if (item.textEdit)
+                            continue
 
-            if (cssResult) {
-                for (const item of cssResult.items) {
-
-                    if (item.textEdit)
-                        continue
-
-                    // track https://github.com/microsoft/vscode-css-languageservice/issues/265
-                    const newText = item.insertText || item.label;
-                    item.textEdit = vscode.TextEdit.replace(wordRange, newText);
+                        // track https://github.com/microsoft/vscode-css-languageservice/issues/265
+                        const newText = item.insertText || item.label;
+                        item.textEdit = vscode.TextEdit.replace(wordRange, newText);
+                    }
                 }
-            }
 
-            return cssResult;
+                return cssResult;
+            });
+        },
+
+        doHover(document, position) {
+            return worker(document, async (stylesheet, cssLs) => {
+
+                const settings = await host.getLanguageSettings(document.languageId, document.uri);
+
+                return cssLs.doHover(document, position, stylesheet, settings?.hover);
+            });
+        },
+
+        findDefinition(document, position) {
+            return worker(document, (stylesheet, cssLs) => {
+
+                const location = cssLs.findDefinition(document, position, stylesheet);
+
+                if (location) {
+                    return [vscode.LocationLink.create(location.uri, location.range, location.range)];
+                }
+            });
+        },
+
+        findReferences(document, position) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.findReferences(document, position, stylesheet);
+            });
+        },
+
+        findDocumentHighlights(document, position) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.findDocumentHighlights(document, position, stylesheet);
+            });
+        },
+
+        findDocumentLinks(document) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.findDocumentLinks(document, stylesheet, host.documentContext);
+            });
+        },
+
+        findDocumentSymbols(document) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.findDocumentSymbols(document, stylesheet);
+            });
+        },
+
+        doCodeActions(document, range, context) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.doCodeActions(document, range, context, stylesheet);
+            });
+        },
+
+        findDocumentColors(document) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.findDocumentColors(document, stylesheet);
+            });
+        },
+
+        getColorPresentations(document, color, range) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.getColorPresentations(document, stylesheet, color, range);
+            });
+        },
+
+        doRename(document, position, newName) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.doRename(document, position, newName, stylesheet);
+            });
+        },
+
+        getFoldingRanges(document) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.getFoldingRanges(document, stylesheet);
+            });
+        },
+
+        getSelectionRanges(document, positions) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.getSelectionRanges(document, positions, stylesheet);
+            });
         },
     };
+
+    function worker<T>(document: TextDocument, callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T) {
+
+        const stylesheet = host.getStylesheet(document);
+        if (!stylesheet)
+            return;
+
+        const cssLs = host.getCssLs(document.languageId);
+        if (!cssLs)
+            return;
+
+        return callback(stylesheet, cssLs);
+    }
 });

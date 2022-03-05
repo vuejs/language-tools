@@ -17,28 +17,78 @@ export default definePlugin((host: {
             '@', // vue event shorthand
         ],
 
-        async doHover(textDocument, position) {
-
-            const htmlDocument = getHtmlDocument(textDocument);
-
-            if (!htmlDocument)
-                return;;
-
-            const hoverSettings = await host.getHoverSettings(textDocument.uri);
-
-            return host.htmlLs.doHover(textDocument, position, htmlDocument, hoverSettings);
+        doComplete(document, position, context) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.doComplete2(document, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
+            });
         },
 
-        async doComplete(textDocument, position, context) {
+        doHover(document, position) {
+            return worker(document, async (htmlDocument) => {
 
-            const htmlDocument = getHtmlDocument(textDocument);
+                const hoverSettings = await host.getHoverSettings(document.uri);
 
-            if (!htmlDocument)
-                return;
+                return host.htmlLs.doHover(document, position, htmlDocument, hoverSettings);
+            });
+        },
 
-            return host.htmlLs.doComplete2(textDocument, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
+        findDocumentHighlights(document, position) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.findDocumentHighlights(document, position, htmlDocument);
+            });
+        },
+
+        findDocumentLinks(document) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.findDocumentLinks(document, host.documentContext);
+            });
+        },
+
+        findDocumentSymbols(document) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.findDocumentSymbols(document, htmlDocument);
+            });
+        },
+
+        doRename(document, position, newName) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.doRename(document, position, newName, htmlDocument);
+            });
+        },
+
+        getFoldingRanges(document) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.getFoldingRanges(document);
+            });
+        },
+
+        getSelectionRanges(document, positions) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.getSelectionRanges(document, positions);
+            });
+        },
+
+        format(document, range, options) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.format(document, range, options);
+            });
+        },
+
+        findLinkedEditingRanges(document, position) {
+            return worker(document, (htmlDocument) => {
+                return host.htmlLs.findLinkedEditingRanges(document, position, htmlDocument);
+            });
         },
     };
+
+    function worker<T>(document: TextDocument, callback: (htmlDocument: html.HTMLDocument) => T) {
+
+        const htmlDocument = getHtmlDocument(document);
+        if (!htmlDocument)
+            return;;
+
+        return callback(htmlDocument);
+    }
 
     function getHtmlDocument(document: TextDocument) {
 

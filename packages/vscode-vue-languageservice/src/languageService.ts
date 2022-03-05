@@ -93,6 +93,8 @@ export function createLanguageService(
 	}));
 	const jsonPlugin = wrapPlugin(useJsonPlugin({
 		jsonLs: services.jsonLs,
+		getDocumentLanguageSettings: async () => undefined, // TODO
+		schema: undefined, // TODO
 	}));
 	const emmetPlugin = wrapPlugin(useEmmetPlugin({
 		getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),

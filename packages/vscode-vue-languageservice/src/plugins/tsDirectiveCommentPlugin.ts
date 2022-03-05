@@ -1,6 +1,6 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { definePlugin } from './definePlugin';
 import * as ts2 from 'vscode-typescript-languageservice';
+import { isTsDocument } from './tsPlugin';
 
 export default definePlugin((host: {
     tsLs: ts2.LanguageService,
@@ -11,26 +11,18 @@ export default definePlugin((host: {
         triggerCharacters: ['@'],
 
         async doComplete(textDocument, position, context) {
+            if (isTsDocument(textDocument)) {
 
-            if (!isValidLanguage(textDocument))
-                return;
+                const commentComplete = host.tsLs.doDirectiveCommentComplete(textDocument.uri, position);
 
-            const commentComplete = host.tsLs.doDirectiveCommentComplete(textDocument.uri, position);
-
-            if (commentComplete) {
-
-                return {
-                    isIncomplete: false,
-                    items: commentComplete,
+                if (commentComplete) {
+    
+                    return {
+                        isIncomplete: false,
+                        items: commentComplete,
+                    }
                 }
             }
         },
     };
-
-    function isValidLanguage(textDocument: TextDocument) {
-        return textDocument.languageId === 'javascript' ||
-            textDocument.languageId === 'typescript' ||
-            textDocument.languageId === 'javascriptreact' ||
-            textDocument.languageId === 'typescriptreact'
-    }
 });

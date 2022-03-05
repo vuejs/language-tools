@@ -12,28 +12,61 @@ export default definePlugin((host: {
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
-        async doHover(textDocument, position) {
 
-            const pugDocument = getPugDocument(textDocument);
-
-            if (!pugDocument)
-                return;;
-
-            const hoverSettings = await host.getHoverSettings(textDocument.uri);
-
-            return host.pugLs.doHover(pugDocument, position, hoverSettings);
+        doComplete(document, position, context) {
+            return worker(document, (pugDocument) => {
+                return host.pugLs.doComplete(pugDocument, position, host.documentContext, /** TODO: CompletionConfiguration */);
+            });
         },
 
-        async doComplete(textDocument, position, context) {
+        doHover(document, position) {
+            return worker(document, async (pugDocument) => {
 
-            const pugDocument = getPugDocument(textDocument);
+                const hoverSettings = await host.getHoverSettings(document.uri);
 
-            if (!pugDocument)
-                return;;
+                return host.pugLs.doHover(pugDocument, position, hoverSettings);
+            });
+        },
 
-            return host.pugLs.doComplete(pugDocument, position, host.documentContext, /** TODO: CompletionConfiguration */);
+        findDocumentHighlights(document, position) {
+            return worker(document, (pugDocument) => {
+                return host.pugLs.findDocumentHighlights(pugDocument, position);
+            });
+        },
+
+        findDocumentLinks(document) {
+            return worker(document, (pugDocument) => {
+                return host.pugLs.findDocumentLinks(pugDocument, host.documentContext);
+            });
+        },
+
+        findDocumentSymbols(document) {
+            return worker(document, (pugDocument) => {
+                return host.pugLs.findDocumentSymbols(pugDocument);
+            });
+        },
+
+        getFoldingRanges(document) {
+            return worker(document, (pugDocument) => {
+                return host.pugLs.getFoldingRanges(pugDocument);
+            });
+        },
+
+        getSelectionRanges(document, positions) {
+            return worker(document, (pugDocument) => {
+                return host.pugLs.getSelectionRanges(pugDocument, positions);
+            });
         },
     };
+
+    function worker<T>(document: TextDocument, callback: (pugDocument: pug.PugDocument) => T) {
+
+        const pugDocument = getPugDocument(document);
+        if (!pugDocument)
+            return;;
+
+        return callback(pugDocument);
+    }
 
     function getPugDocument(document: TextDocument) {
 
