@@ -103,31 +103,59 @@ export {}
 
 - Due to performance, *.ts content update don't update template diagnosis for now. ([#565](https://github.com/johnsoncodehk/volar/issues/565)) (Block by [microsoft/TypeScript#41051](https://github.com/microsoft/TypeScript/issues/41051))
 
-## Note
+## Notes
 
-> You need to disable Vetur to avoid conflicts.
+### Vetur
 
-> Recommended use css / less / scss as `<style>` language, because these base on [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice) to provide reliable language support.
->
-> If use postcss / stylus / sass, you need to install additional extension for syntax highlighting. I tried these and it works, you can also choose others.
->
-> - postcss: [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss).
-> - stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
-> - sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
+You need to disable Vetur to avoid conflicts.
 
-> Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
+Recommended use css / less / scss as `<style>` language, because these base on [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice) to provide reliable language support.
 
-> If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/guide/snippet.html#customizable-scaffold-snippets), recommend use [Snippet Generator](https://marketplace.visualstudio.com/items?itemName=wenfangdu.snippet-generator) convert to VSCode Snippets. There are also snippets on the VSCode Marketplace, such as Sarah Drasner's [Vue VSCode Snippets](https://marketplace.visualstudio.com/items?itemName=sdras.vue-vscode-snippets), if you prefer ready-made snippets without customization.
+If use postcss / stylus / sass, you need to install additional extension for syntax highlighting. I tried these and it works, you can also choose others.
 
-> If VSCode gives an error for `class` and `slot` like this:
-> 
-> <kbd><img width="483" src="https://user-images.githubusercontent.com/3253920/145134536-7bb090e9-9dcd-4a61-8096-3c47d6c1a699.png" /></kbd>
->
-> This is because one of the packages installed in your project uses `@types/react` which breaks some parts of Volar.
-> 
-> Please see the following solutions:
-> - https://github.com/johnsoncodehk/volar/discussions/592
-> - https://github.com/johnsoncodehk/volar/discussions/592#discussioncomment-1763880
+- postcss: [language-postcss](https://marketplace.visualstudio.com/items?itemName=cpylua.language-postcss).
+- stylus: [language-stylus](https://marketplace.visualstudio.com/items?itemName=sysoev.language-stylus)
+- sass: [Sass](https://marketplace.visualstudio.com/items?itemName=Syler.sass-indented)
+
+Volar does not include ESLint and Prettier, but the official [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extensions support Vue, so you could install these yourself if needed.
+
+If using Vetur's [Customizable Scaffold Snippets](https://vuejs.github.io/vetur/guide/snippet.html#customizable-scaffold-snippets), recommend use [Snippet Generator](https://marketplace.visualstudio.com/items?itemName=wenfangdu.snippet-generator) convert to VSCode Snippets. There are also snippets on the VSCode Marketplace, such as Sarah Drasner's [Vue VSCode Snippets](https://marketplace.visualstudio.com/items?itemName=sdras.vue-vscode-snippets), if you prefer ready-made snippets without customization.
+
+If VSCode gives an error for `class` and `slot` like this:
+
+<kbd><img width="483" src="https://user-images.githubusercontent.com/3253920/145134536-7bb090e9-9dcd-4a61-8096-3c47d6c1a699.png" /></kbd>
+
+This is because one of the packages installed in your project uses `@types/react` which breaks some parts of Volar.
+
+Please see the following solutions:
+- https://github.com/johnsoncodehk/volar/discussions/592
+- https://github.com/johnsoncodehk/volar/discussions/592#discussioncomment-1763880
+
+### Recursive components
+
+Volar can't typecheck recursive components out of the box due to TS limitation.
+But there's a workaround, you can explicitly specify component's props like so:
+
+`Bar.vue`
+
+```vue
+<template>
+  <Bar :a="'wrong'" />
+</template>
+
+<script setup lang="ts">
+import { defineAsyncComponent, type DefineComponent } from 'vue'
+
+interface Props {
+  a: number
+}
+
+const Bar = defineAsyncComponent<DefineComponent<Props>>(
+  () => import('./Bar.vue') as any
+)
+defineProps<Props>()
+</script>
+```
 
 ## Credits
 
