@@ -1,16 +1,16 @@
 import { transformCompletionItem } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
-import { PluginCompletionData } from './completion';
+import { PluginCompletionData } from './complete';
 
-export function register({ sourceFiles, vueHost, getPluginById }: LanguageServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
 		const data: PluginCompletionData | undefined = item.data as any;
 
 		if (data) {
 
-			const plugin = getPluginById(data.pluginId);
+			const plugin = context.getPluginById(data.pluginId);
 
 			if (!plugin)
 				return item;
@@ -22,7 +22,7 @@ export function register({ sourceFiles, vueHost, getPluginById }: LanguageServic
 
 			if (data.sourceMapId !== undefined && data.embeddedDocumentUri !== undefined) {
 
-				const sourceMap = sourceFiles.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
+				const sourceMap = context.sourceFiles.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
 
 				if (sourceMap) {
 
@@ -53,7 +53,7 @@ export function register({ sourceFiles, vueHost, getPluginById }: LanguageServic
 					&& edit.range.end.line === 0
 					&& edit.range.end.character === 0
 				) {
-					edit.newText = (vueHost.getNewLine?.() ?? '\n') + edit.newText;
+					edit.newText = (context.vueHost.getNewLine?.() ?? '\n') + edit.newText;
 				}
 			}
 		}

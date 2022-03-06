@@ -11,7 +11,7 @@ export async function documentFeatureWorker<T>(
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
-	return documentRangeFeatureWorker(
+	return documentArgFeatureWorker(
 		context,
 		document,
 		true,
@@ -23,7 +23,7 @@ export async function documentFeatureWorker<T>(
 	);
 }
 
-export async function documentRangeFeatureWorker<T, K>(
+export async function documentArgFeatureWorker<T, K>(
 	context: DocumentServiceRuntimeContext,
 	document: TextDocument,
 	arg: K,
@@ -104,11 +104,10 @@ export async function documentRangeFeatureWorker<T, K>(
 	}
 }
 
-export async function languageRangeFeatureWorker<T, K>(
+export async function languageFeatureWorker<T, K>(
 	context: LanguageServiceRuntimeContext,
 	uri: string,
 	arg: K,
-	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | [K],
 	worker: (plugin: EmbeddedLanguagePlugin, document: TextDocument, arg: K) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
@@ -125,9 +124,6 @@ export async function languageRangeFeatureWorker<T, K>(
 		const embeddeds = vueDocument.getEmbeddeds();
 
 		await visitEmbedded(embeddeds, async sourceMap => {
-
-			if (!isValidSourceMap(sourceMap))
-				return true;
 
 			const plugins = context.getPlugins(sourceMap.lsType);
 

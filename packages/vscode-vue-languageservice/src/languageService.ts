@@ -1,56 +1,51 @@
-import type * as vscode from 'vscode-languageserver-protocol';
+import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
+import type * as emmet from '@vscode/emmet-helper';
+import { isGloballyWhitelisted } from '@vue/shared';
+import type * as css from 'vscode-css-languageservice';
+import type * as html from 'vscode-html-languageservice';
+import * as vscode from 'vscode-languageserver-protocol';
+import * as ts2 from 'vscode-typescript-languageservice';
+import * as autoInsert from './languageFuatures/autoInsert';
+import * as completions from './languageFuatures/complete';
+import * as completionResolve from './languageFuatures/completeResolve';
+import * as hover from './languageFuatures/hover';
+import * as signatureHelp from './languageFuatures/signatureHelp';
+import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
+import useAutoDotValuePlugin from './plugins/autoDotValuePlugin';
+import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/cssPlugin';
+import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
+import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './plugins/directiveCommentPlugin';
+import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './plugins/emmetPlugin';
+import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './plugins/htmlPlugin';
+import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './plugins/jsDocPlugin';
+import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plugins/jsonPlugin';
+import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pugPlugin';
+import useTsPlugin, { getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
+import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
+import useVueTemplateLanguagePlugin, { getTsCompletions, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
 import * as callHierarchy from './services/callHierarchy';
 import * as codeActions from './services/codeAction';
 import * as codeActionResolve from './services/codeActionResolve';
-import * as completions from './services/completion';
-import * as completionResolve from './services/completionResolve';
 import * as d3 from './services/d3';
 import * as definitions from './services/definition';
 import * as diagnostics from './services/diagnostics';
 import * as documentHighlight from './services/documentHighlight';
 import * as documentLink from './services/documentLinks';
-import * as hover from './services/hover';
 import * as references from './services/references';
 import * as codeLens from './services/referencesCodeLens';
 import * as codeLensResolve from './services/referencesCodeLensResolve';
 import * as rename from './services/rename';
 import * as semanticTokens from './services/semanticTokens';
-import * as signatureHelp from './services/signatureHelp';
 import * as tagNameCase from './services/tagNameCase';
-import * as workspaceSymbol from './services/workspaceSymbol';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
-import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
-import * as ts2 from 'vscode-typescript-languageservice';
-
-import type * as html from 'vscode-html-languageservice';
-import type * as css from 'vscode-css-languageservice';
-import type * as json from 'vscode-json-languageservice';
-import type * as emmet from '@vscode/emmet-helper';
-
-import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
-import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/cssPlugin';
-import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './plugins/htmlPlugin';
-import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pugPlugin';
-import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plugins/jsonPlugin';
-import useTsPlugin, { getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
-import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './plugins/jsDocPlugin';
-import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './plugins/directiveCommentPlugin';
-import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './plugins/emmetPlugin';
-import useVueTemplateLanguagePlugin, { triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
-import useAutoDotValuePlugin from './plugins/autoDotValuePlugin';
-
-import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
-import { isGloballyWhitelisted } from '@vue/shared';
-import { documentRangeFeatureWorker, languageRangeFeatureWorker } from './utils/documentFeatureWorkers';
-import { getTsCompletions } from './plugins/vueTemplateLanguagePlugin';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
+export type LanguageServicePlugin = ReturnType<typeof defineLanguageServicePlugin>;
+
 let pluginId = 0;
 
-export type LanguageServicePlugin = ReturnType<typeof wrapPlugin>;
-
-function wrapPlugin(plugin: EmbeddedLanguagePlugin, context?: {
+function defineLanguageServicePlugin(plugin: EmbeddedLanguagePlugin, context?: {
 	isAdditionalCompletion?: boolean,
 	triggerCharacters?: string[],
 }) {
@@ -97,7 +92,7 @@ export function createLanguageService(
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
 
 	// plugins
-	const vuePlugin = wrapPlugin(
+	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getVueDocument: (document) => tsRuntime.context.sourceFiles.get(document.uri),
 			documentContext: tsRuntime.context.documentContext,
@@ -124,7 +119,7 @@ export function createLanguageService(
 		}),
 		pugTriggerCharacters,
 	);
-	const cssPlugin = wrapPlugin(
+	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
 			getCssLs: services.getCssLs,
 			getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
@@ -135,7 +130,7 @@ export function createLanguageService(
 			triggerCharacters: cssTriggerCharacters,
 		},
 	);
-	const jsonPlugin = wrapPlugin(
+	const jsonPlugin = defineLanguageServicePlugin(
 		useJsonPlugin({
 			getJsonLs: () => services.jsonLs,
 			getDocumentLanguageSettings: async () => undefined, // TODO
@@ -145,7 +140,7 @@ export function createLanguageService(
 			triggerCharacters: cssTriggerCharacters,
 		},
 	);
-	const emmetPlugin = wrapPlugin(
+	const emmetPlugin = defineLanguageServicePlugin(
 		useEmmetPlugin({
 			getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),
 		}),
@@ -173,7 +168,7 @@ export function createLanguageService(
 			includeCompletionsForImportStatements: false,
 		},
 	)
-	const autoDotValuePlugin = wrapPlugin(
+	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
 			ts,
 			getTsLs: () => tsRuntime.context.scriptTsLs,
@@ -228,32 +223,31 @@ export function createLanguageService(
 	const renames = rename.register(context);
 
 	return {
-		doValidation: publicApiHook(diagnostics.register(context, () => tsRuntime.update(true)), false, false),
-		findDefinition: publicApiHook(findDefinition.on, isTemplateScriptPosition),
-		findReferences: publicApiHook(references.register(context), true),
-		findTypeDefinition: publicApiHook(findDefinition.onType, isTemplateScriptPosition),
+		doValidation: defineApi(diagnostics.register(context, () => tsRuntime.update(true)), false, false),
+		findDefinition: defineApi(findDefinition.on, isTemplateScriptPosition),
+		findReferences: defineApi(references.register(context), true),
+		findTypeDefinition: defineApi(findDefinition.onType, isTemplateScriptPosition),
+		prepareRename: defineApi(renames.prepareRename, isTemplateScriptPosition),
+		doRename: defineApi(renames.doRename, true),
+		getEditsForFileRename: defineApi(renames.onRenameFile, false),
+		getSemanticTokens: defineApi(semanticTokens.register(context, () => tsRuntime.update(true)), false),
+		doHover: defineApi(hover.register(context), isTemplateScriptPosition),
+		doComplete: defineApi(completions.register(context), isTemplateScriptPosition),
+		getCodeActions: defineApi(codeActions.register(context), false),
+		doCodeActionResolve: defineApi(codeActionResolve.register(context), false),
+		doCompletionResolve: defineApi(completionResolve.register(context), false),
+		doReferencesCodeLensResolve: defineApi(codeLensResolve.register(context), false),
+		getSignatureHelp: defineApi(signatureHelp.register(context), false),
+		getReferencesCodeLens: defineApi(codeLens.register(context), false),
+		findDocumentHighlights: defineApi(documentHighlight.register(context), false),
+		findDocumentLinks: defineApi(documentLink.register(context), false),
+		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context), false),
+		doAutoInsert: defineApi(autoInsert.register(context), false),
 		callHierarchy: {
-			doPrepare: publicApiHook(_callHierarchy.doPrepare, isTemplateScriptPosition),
-			getIncomingCalls: publicApiHook(_callHierarchy.getIncomingCalls, true),
-			getOutgoingCalls: publicApiHook(_callHierarchy.getOutgoingCalls, true),
+			doPrepare: defineApi(_callHierarchy.doPrepare, isTemplateScriptPosition),
+			getIncomingCalls: defineApi(_callHierarchy.getIncomingCalls, true),
+			getOutgoingCalls: defineApi(_callHierarchy.getOutgoingCalls, true),
 		},
-		prepareRename: publicApiHook(renames.prepareRename, isTemplateScriptPosition),
-		doRename: publicApiHook(renames.doRename, true),
-		getEditsForFileRename: publicApiHook(renames.onRenameFile, false),
-		getSemanticTokens: publicApiHook(semanticTokens.register(context, () => tsRuntime.update(true)), false),
-
-		doHover: publicApiHook(hover.register(context), isTemplateScriptPosition),
-		doComplete: publicApiHook(completions.register(context), isTemplateScriptPosition),
-
-		getCodeActions: publicApiHook(codeActions.register(context), false),
-		doCodeActionResolve: publicApiHook(codeActionResolve.register(context), false),
-		doCompletionResolve: publicApiHook(completionResolve.register(context), false),
-		doReferencesCodeLensResolve: publicApiHook(codeLensResolve.register(context), false),
-		getSignatureHelp: publicApiHook(signatureHelp.register(context), false),
-		getReferencesCodeLens: publicApiHook(codeLens.register(context), false),
-		findDocumentHighlights: publicApiHook(documentHighlight.register(context), false),
-		findDocumentLinks: publicApiHook(documentLink.register(context), false),
-		findWorkspaceSymbols: publicApiHook(workspaceSymbol.register(context), false),
 		dispose: () => {
 			tsRuntime.dispose();
 		},
@@ -264,48 +258,14 @@ export function createLanguageService(
 			tsRuntime,
 			rootPath: vueHost.getCurrentDirectory(),
 			context,
-			getContext: publicApiHook(() => context, true),
-			getD3: publicApiHook(d3.register(context), true),
-			detectTagNameCase: publicApiHook(tagNameCase.register(context), true),
+			getContext: defineApi(() => context, true),
+			getD3: defineApi(d3.register(context), true),
+			detectTagNameCase: defineApi(tagNameCase.register(context), true),
 		},
-
-		doAutoInsert: publicApiHook(
-			(uri: string, position: vscode.Position, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) => {
-				return languageRangeFeatureWorker(
-					context,
-					uri,
-					position,
-					sourceMap => true,
-					function* (position, sourceMap) {
-						for (const [mapedRange] of sourceMap.getMappedRanges(
-							position,
-							position,
-							data => !!data.capabilities.completion,
-						)) {
-							yield mapedRange.start;
-						}
-					},
-					(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
-					(data, sourceMap) => {
-
-						if (typeof data === 'string')
-							return data;
-
-						const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
-
-						if (range) {
-							data.range = range;
-							return data;
-						}
-					},
-				);
-			},
-			false,
-		),
 	};
 
 	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguagePlugin, triggerCharacters: string[]) {
-		return wrapPlugin(
+		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
 				ts,
 				htmlLs: services.htmlLs,
@@ -326,7 +286,7 @@ export function createLanguageService(
 		);
 	}
 	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, baseCompletionOptions: ts.GetCompletionsAtPositionOptions) {
-		const _languageSupportPlugin = wrapPlugin(
+		const _languageSupportPlugin = defineLanguageServicePlugin(
 			useTsPlugin({
 				getTsLs: () => tsLs,
 				baseCompletionOptions,
@@ -359,7 +319,7 @@ export function createLanguageService(
 				return tsComplete;
 			},
 		} : _languageSupportPlugin;
-		const jsDocPlugin = wrapPlugin(
+		const jsDocPlugin = defineLanguageServicePlugin(
 			useJsDocPlugin({
 				getTsLs: () => tsLs,
 			}),
@@ -368,7 +328,7 @@ export function createLanguageService(
 				isAdditionalCompletion: true,
 			},
 		);
-		const directiveCommentPlugin = wrapPlugin(
+		const directiveCommentPlugin = defineLanguageServicePlugin(
 			useDirectiveCommentPlugin({
 				getTsLs: () => tsLs,
 			}),
@@ -409,7 +369,7 @@ export function createLanguageService(
 
 		return false;
 	}
-	function publicApiHook<T extends (...args: any) => any>(
+	function defineApi<T extends (...args: any) => any>(
 		api: T,
 		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean),
 		blockNewRequest = true,

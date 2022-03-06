@@ -15,7 +15,6 @@ import * as useSetupSugar from '../commands/useSetupSugar';
 import * as unuseSetupSugar from '../commands/unuseSetupSugar';
 import * as useRefSugar from '../commands/useRefSugar';
 import * as unuseRefSugar from '../commands/unuseRefSugar';
-import type { PluginCompletionData } from 'vscode-vue-languageservice/src/services/completion';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -45,7 +44,7 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri = (item.data as any as PluginCompletionData | undefined)?.uri;
+		const uri = (item.data as { uri?: string } | undefined)?.uri;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)

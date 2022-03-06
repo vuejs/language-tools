@@ -12,9 +12,7 @@ export interface PluginCompletionData {
 	embeddedDocumentUri: string | undefined,
 }
 
-export function register(
-	{ sourceFiles, getPlugins, getTextDocument }: LanguageServiceRuntimeContext,
-) {
+export function register(context: LanguageServiceRuntimeContext) {
 
 	let cache: {
 		uri: string,
@@ -29,12 +27,12 @@ export function register(
 		} | undefined,
 	} | undefined;
 
-	return async (uri: string, position: vscode.Position, context?: vscode.CompletionContext) => {
+	return async (uri: string, position: vscode.Position, completionContext?: vscode.CompletionContext) => {
 
-		const document = getTextDocument(uri);
+		const document = context.getTextDocument(uri);
 
 		if (
-			context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions
+			completionContext?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions
 			&& cache?.uri === uri
 		) {
 
@@ -45,7 +43,7 @@ export function register(
 
 				if (cacheData.sourceMapId !== undefined && cacheData.embeddedDocumentUri !== undefined) {
 
-					const sourceMap = sourceFiles.getSourceMap(cacheData.sourceMapId, cacheData.embeddedDocumentUri);
+					const sourceMap = context.sourceFiles.getSourceMap(cacheData.sourceMapId, cacheData.embeddedDocumentUri);
 
 					if (!sourceMap)
 						continue;
@@ -55,7 +53,7 @@ export function register(
 						if (!cacheData.plugin.doComplete)
 							continue;
 
-						const embeddedCompletionList = await cacheData.plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, context);
+						const embeddedCompletionList = await cacheData.plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
 						if (!embeddedCompletionList) {
 							cacheData.list.isIncomplete = false;
@@ -86,7 +84,7 @@ export function register(
 					if (!cacheData.plugin.doComplete)
 						continue;
 
-					const completionList = await cacheData.plugin.doComplete(document, position, context);
+					const completionList = await cacheData.plugin.doComplete(document, position, completionContext);
 
 					if (!completionList) {
 						cacheData.list.isIncomplete = false;
@@ -111,7 +109,7 @@ export function register(
 		}
 		else {
 
-			const vueDocument = sourceFiles.get(uri);
+			const vueDocument = context.sourceFiles.get(uri);
 
 			cache = {
 				uri,
@@ -125,7 +123,7 @@ export function register(
 
 				await visitEmbedded(embeddeds, async sourceMap => {
 
-					const plugins = getPlugins(sourceMap.lsType);
+					const plugins = context.getPlugins(sourceMap.lsType);
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
@@ -134,13 +132,13 @@ export function register(
 							if (!plugin.doComplete)
 								continue;
 
-							if (context?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(context.triggerCharacter))
+							if (completionContext?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
 							if (cache!.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
-							const embeddedCompletionList = await plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, context);
+							const embeddedCompletionList = await plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
 							if (!embeddedCompletionList)
 								continue;
@@ -181,20 +179,20 @@ export function register(
 
 			if (document) {
 
-				const plugins = getPlugins('script');
+				const plugins = context.getPlugins('script');
 
 				for (const plugin of plugins) {
 
 					if (!plugin.doComplete)
 						continue;
 
-					if (context?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(context.triggerCharacter))
+					if (completionContext?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(completionContext.triggerCharacter))
 						continue;
 
 					if (cache.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache.mainCompletion.documentUri !== document.uri))
 						continue;
 
-					const completionList = await plugin.doComplete(document, position, context);
+					const completionList = await plugin.doComplete(document, position, completionContext);
 
 					if (!completionList)
 						continue;

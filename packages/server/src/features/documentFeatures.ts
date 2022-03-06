@@ -11,7 +11,7 @@ export function register(
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return noStateLs.doFormatting(document, handler.options);
+		return noStateLs.format(document, handler.options);
 	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);

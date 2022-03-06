@@ -1,33 +1,29 @@
+import { createBasicRuntime, createSourceFile, SourceFile } from '@volar/vue-typescript';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { documentFeatureWorker, documentRangeFeatureWorker } from './utils/documentFeatureWorkers';
-import * as formatting from './services/formatting';
-import { createSourceFile, SourceFile } from '@volar/vue-typescript';
-import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
-import { createBasicRuntime } from '@volar/vue-typescript';
-import * as vscode from 'vscode-languageserver-protocol';
-import * as shared from '@volar/shared';
-
-import useVuePlugin from './plugins/vuePlugin';
-import useCssPlugin from './plugins/cssPlugin';
-import useHtmlPlugin from './plugins/htmlPlugin';
-import usePugPlugin from './plugins/pugPlugin';
-import useJsonPlugin from './plugins/jsonPlugin';
-import useTsPlugin, { isTsDocument } from './plugins/tsPlugin';
+import * as ts2 from 'vscode-typescript-languageservice';
+import * as autoInsert from './documentFeatures/autoInsert';
+import * as colorPresentations from './documentFeatures/colorPresentations';
+import * as documentColors from './documentFeatures/documentColors';
+import * as documentSymbols from './documentFeatures/documentSymbols';
+import * as foldingRanges from './documentFeatures/foldingRanges';
+import * as format from './documentFeatures/format';
+import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
+import * as selectionRanges from './documentFeatures/selectionRanges';
 import useAutoWrapParenthesesPlugin from './plugins/autoWrapParenthesesPlugin';
-
-// formatter plugins
+import useCssPlugin from './plugins/cssPlugin';
+import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
+import useHtmlPlugin from './plugins/htmlPlugin';
+import useJsonPlugin from './plugins/jsonPlugin';
 import useCssFormatPlugin from './plugins/prettierCssPlugin';
 import useHtmlFormatPlugin from './plugins/prettyhtmlPlugin';
 import usePugFormatPlugin from './plugins/pugBeautifyPlugin';
+import usePugPlugin from './plugins/pugPlugin';
 import useSassFormatPlugin from './plugins/sassFormatterPlugin';
-
+import useTsPlugin, { isTsDocument } from './plugins/tsPlugin';
+import useVuePlugin from './plugins/vuePlugin';
+import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
 import * as sharedServices from './utils/sharedLs';
-import * as ts2 from 'vscode-typescript-languageservice';
-
-import type * as _0 from 'vscode-languageserver-protocol';
-import type * as _1 from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
-import { transformFoldingRanges, transformSelectionRanges, transformSymbolInformations } from '@volar/transforms';
+import type * as _ from 'vscode-languageserver-protocol';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -38,6 +34,7 @@ export function getDocumentService(
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 ) {
+
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
@@ -89,168 +86,18 @@ export function getDocumentService(
 			}
 		},
 	};
+
 	return {
-		doFormatting: formatting.register(context),
+		format: format.register(context),
+		getFoldingRanges: foldingRanges.register(context),
+		getSelectionRanges: selectionRanges.register(context),
+		findLinkedEditingRanges: linkedEditingRanges.register(context),
+		findDocumentSymbols: documentSymbols.register(context),
+		findDocumentColors: documentColors.register(context),
+		getColorPresentations: colorPresentations.register(context),
+		doAutoInsert: autoInsert.register(context),
+	};
 
-		getFoldingRanges(document: TextDocument) {
-			return documentFeatureWorker(
-				context,
-				document,
-				sourceMap => sourceMap.capabilities.foldingRanges,
-				(plugin, document) => plugin.getFoldingRanges?.(document),
-				(data, sourceMap) => transformFoldingRanges(
-					data,
-					range => sourceMap.getSourceRange(range.start, range.end)?.[0],
-				),
-				arr => arr.flat(),
-			);
-		},
-
-		getSelectionRanges(document: TextDocument, positions: vscode.Position[]) {
-			return documentRangeFeatureWorker(
-				context,
-				document,
-				positions,
-				sourceMap => true,
-				(positions, sourceMap) => [positions
-					.map(position => sourceMap.getMappedRange(position, position, data => !!data.capabilities.basic)?.[0].start)
-					.filter(shared.notEmpty)],
-				(plugin, document, positions) => plugin.getSelectionRanges?.(document, positions),
-				(data, sourceMap) => transformSelectionRanges(
-					data,
-					range => sourceMap.getSourceRange(range.start, range.end)?.[0],
-				),
-				arr => arr.flat(),
-			);
-		},
-
-		findLinkedEditingRanges(document: TextDocument, position: vscode.Position) {
-			return documentRangeFeatureWorker(
-				context,
-				document,
-				position,
-				sourceMap => true,
-				function* (position, sourceMap) {
-					for (const [mapedRange] of sourceMap.getMappedRanges(
-						position,
-						position,
-						data => !!data.capabilities.completion,
-					)) {
-						yield mapedRange.start;
-					}
-				},
-				(plugin, document, position) => plugin.findLinkedEditingRanges?.(document, position),
-				(data, sourceMap) => ({
-					wordPattern: data.wordPattern,
-					ranges: data.ranges.map(range => sourceMap.getSourceRange(range.start, range.end)?.[0]).filter(shared.notEmpty),
-				}),
-			);
-		},
-
-		findDocumentSymbols(document: TextDocument) {
-			return documentFeatureWorker(
-				context,
-				document,
-				sourceMap => sourceMap.capabilities.documentSymbol, // TODO: add color capabilitie setting
-				(plugin, document) => plugin.findDocumentSymbols?.(document),
-				(data, sourceMap) => transformSymbolInformations(
-					data,
-					location => {
-						const sourceRange = sourceMap.getSourceRange(location.range.start, location.range.end)?.[0];
-						if (sourceRange) {
-							return vscode.Location.create(sourceMap.sourceDocument.uri, sourceRange);
-						}
-					},
-				),
-				arr => arr.flat(),
-			);
-		},
-
-		findDocumentColors(document: TextDocument) {
-			return documentFeatureWorker(
-				context,
-				document,
-				sourceMap => sourceMap.capabilities.documentSymbol, // TODO: add color capabilitie setting
-				(plugin, document) => plugin.findDocumentColors?.(document),
-				(data, sourceMap) => data.map(color => {
-					const range = sourceMap.getSourceRange(color.range.start, color.range.end)?.[0];
-					if (range) {
-						return vscode.ColorInformation.create(range, color.color);
-					}
-				}).filter(shared.notEmpty),
-				arr => arr.flat(),
-			);
-		},
-
-		getColorPresentations(document: TextDocument, color: vscode.Color, range: vscode.Range) {
-			return documentRangeFeatureWorker(
-				context,
-				document,
-				range,
-				sourceMap => sourceMap.capabilities.documentSymbol, // TODO: add color capabilitie setting
-				function* (range, sourceMap) {
-					for (const [mapedRange] of sourceMap.getMappedRanges(range.start, range.end)) {
-						yield mapedRange;
-					}
-				},
-				(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
-				(data, sourceMap) => data.map(cp => {
-					if (cp.textEdit) {
-
-						const editRange = sourceMap.getSourceRange(cp.textEdit.range.start, cp.textEdit.range.end)?.[0];
-
-						if (!editRange)
-							return undefined;
-
-						cp.textEdit.range = editRange;
-					}
-					if (cp.additionalTextEdits) {
-						for (const textEdit of cp.additionalTextEdits) {
-
-							const editRange = sourceMap.getSourceRange(textEdit.range.start, textEdit.range.end)?.[0];
-
-							if (!editRange)
-								return undefined;
-
-							textEdit.range = editRange;
-						}
-					}
-					return cp;
-				}).filter(shared.notEmpty),
-			);
-		},
-
-		doAutoInsert(document: TextDocument, position: vscode.Position, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) {
-			return documentRangeFeatureWorker(
-				context,
-				document,
-				position,
-				sourceMap => true,
-				function* (position, sourceMap) {
-					for (const [mapedRange] of sourceMap.getMappedRanges(
-						position,
-						position,
-						data => !!data.capabilities.completion,
-					)) {
-						yield mapedRange.start;
-					}
-				},
-				(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
-				(data, sourceMap) => {
-
-					if (typeof data === 'string')
-						return data;
-
-					const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
-
-					if (range) {
-						data.range = range;
-						return data;
-					}
-				},
-			);
-		},
-	}
 	function getVueDocument(document: TextDocument) {
 
 		if (document.languageId !== 'vue')
