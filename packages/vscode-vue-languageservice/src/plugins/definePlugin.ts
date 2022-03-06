@@ -42,10 +42,16 @@ export type EmbeddedLanguagePlugin = {
 
     // html
     findLinkedEditingRanges?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LinkedEditingRanges>;
+    doAutoInsert?(document: TextDocument, position: vscode.Position, options: {
+        lastChange: {
+            range: vscode.Range;
+            rangeOffset: number;
+            rangeLength: number;
+            text: string;
+        },
+    }): NullableResult<string | vscode.TextEdit>;
 
-    // doQuoteComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument, options?: CompletionConfiguration): string | null;
-    // doTagComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument): string | null;
-    // findMatchingTagPosition(document: TextDocument, position: Position, htmlDocument: HTMLDocument): Position | null;
+    // findMatchingTagPosition?(document: TextDocument, position: vscode.Position, htmlDocument: HTMLDocument): vscode.Position | null;
 };
 
 export function definePlugin<T>(_: (host: T) => EmbeddedLanguagePlugin) {

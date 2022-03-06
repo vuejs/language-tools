@@ -1,54 +1,70 @@
-import type { LanguageServiceRuntimeContext } from '../types';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
-import type * as ts2 from 'vscode-typescript-languageservice';
+import * as ts2 from 'vscode-typescript-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
+import { isTsDocument } from './tsPlugin';
+import { definePlugin, EmbeddedLanguagePlugin } from './definePlugin';
 
-export function register({ typescript: ts, sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
+export default definePlugin((host: {
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	getTsLs: () => ts2.LanguageService,
+	isEnabled: () => Promise<boolean | undefined>,
+}) => {
 
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 
-	return (document: TextDocument, position: vscode.Position): string | undefined | null => {
+	return {
 
-		for (const tsLoc of sourceFiles.toTsLocations(
-			document.uri,
-			position,
-			position,
-			data => !!data.capabilities.completion,
-		)) {
+		async doAutoInsert(document, position, options) {
 
-			if (tsLoc.lsType === 'template')
-				continue;
+			if (!isTsDocument(document))
+				return;
 
-			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
-				continue;
+			if (!isCharacterTyping(document, options))
+				return;
 
-			const tsLs = getTsLs(tsLoc.lsType);
-			const tsDoc = tsLs.__internal__.getTextDocument(tsLoc.uri);
-			if (!tsDoc)
-				continue;
+			const enabled = await host.isEnabled() ?? true;
+			if (!enabled)
+				return;
 
-			const sourceFile = getAst(tsDoc);
-			if (isBlacklistNode(ts, sourceFile, tsDoc.offsetAt(tsLoc.range.start)))
-				continue;
+			const sourceFile = getAst(document);
+			if (isBlacklistNode(host.ts, sourceFile, document.offsetAt(position)))
+				return;
 
-			const typeDefs = tsLs.findTypeDefinition(tsLoc.uri, tsLoc.range.start);
-			if (isRefType(typeDefs, tsLs)) {
+			const typeDefs = host.getTsLs().findTypeDefinition(document.uri, position);
+			if (isRefType(typeDefs, host.getTsLs())) {
 				return '${1:.value}';
 			}
-		}
+		},
 	}
 
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
 		if (!ast) {
-			ast = ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), ts.ScriptTarget.Latest);
+			ast = host.ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), host.ts.ScriptTarget.Latest);
 			asts.set(tsDoc, ast);
 		}
 		return ast;
 	}
+});
+
+export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) {
+
+	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
+	const rangeStart = options.lastChange.range.start;
+	const position = vscode.Position.create(rangeStart.line, rangeStart.character + options.lastChange.text.length);
+	const nextCharacter = document.getText(vscode.Range.create(position, document.positionAt(document.offsetAt(position) + 1)));
+
+	if (lastCharacter === undefined) { // delete text
+		return false;
+	}
+	if (options.lastChange.text.indexOf('\n') >= 0) { // multi-line change
+		return false;
+	}
+
+	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter)
 }
 
 export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number) {

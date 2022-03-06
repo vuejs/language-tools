@@ -389,6 +389,10 @@ export function register(
 			return null;
 		}
 	});
+	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.doAutoInsert(handler.textDocument.uri, handler.position, handler.options);
+	});
 
 	async function onSemanticTokens(
 		handler: vscode.SemanticTokensParams | vscode.SemanticTokensRangeParams,

@@ -71,35 +71,20 @@ export namespace D3Request {
 	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/d3');
 }
 
-export namespace GetAutoQuoteEditsRequest {
-	export type ParamsType = vscode.TextDocumentPositionParams;
-	export type ResponseType = string | null | undefined;
+export namespace AutoInsertRequest {
+	export type ParamsType = vscode.TextDocumentPositionParams & {
+		options: {
+			lastChange: {
+				range: vscode.Range;
+				rangeOffset: number;
+				rangeLength: number;
+				text: string;
+			},
+		},
+	};
+	export type ResponseType = string | vscode.TextEdit | null | undefined;
 	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoCreateQuote');
-}
-
-export namespace GetTagCloseEditsRequest {
-	export type ParamsType = vscode.TextDocumentPositionParams;
-	export type ResponseType = string | null | undefined;
-	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoCloseTag');
-}
-
-export namespace GetWrapParenthesesEditsRequest {
-	export type ParamsType = vscode.TextDocumentPositionParams;
-	export type ResponseType = {
-		text: string,
-		range: vscode.Range,
-	} | null | undefined;
-	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('html/autoWrapParentheses');
-}
-
-export namespace GetRefCompleteEditsRequest {
-	export type ParamsType = vscode.TextDocumentPositionParams;
-	export type ResponseType = string | null | undefined;
-	export type ErrorType = never;
-	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('volar/autoCompleteRef');
+	export const type = new rpc.RequestType<ParamsType, ResponseType, ErrorType>('vue/autoInsert');
 }
 
 export namespace VerifyAllScriptsNotification {

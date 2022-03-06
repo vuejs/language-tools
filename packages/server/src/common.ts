@@ -60,6 +60,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 		if (options.documentFeatures) {
 
+			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
 			const ts = runtimeEnv.loadTypescript(options);
 			const noStateLs = vue.getDocumentService(
 				{ typescript: ts },
@@ -74,6 +75,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 					}
 					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
 				},
+				lsConfigs?.getSettings,
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);

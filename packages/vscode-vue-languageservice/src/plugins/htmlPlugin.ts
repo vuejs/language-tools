@@ -5,11 +5,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
 export const triggerCharacters = ['.', ':', '<', '"', '=', '/'];
 
-export default definePlugin((host: {
-    getHtmlLs(): html.LanguageService,
-    getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
-    documentContext?: html.DocumentContext,
-}) => {
+export default definePlugin((host: Parameters<typeof htmlPluginBase>[0]) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
@@ -38,7 +34,12 @@ export default definePlugin((host: {
 export function htmlPluginBase(
     host: {
         getHtmlLs(): html.LanguageService,
+        getSettings?(): Promise<{
+            autoCreateQuotes: boolean,
+            autoClosingTags: boolean,
+        } | undefined>,
         getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
+        getCompletionConfiguration?(): Promise<html.CompletionConfiguration | undefined>, // TODO
         documentContext?: html.DocumentContext,
     },
     getHtmlDocument: (document: TextDocument) => html.HTMLDocument | undefined,
@@ -120,6 +121,41 @@ export function htmlPluginBase(
                     return;
 
                 return { ranges };
+            });
+        },
+
+        doAutoInsert(document, position, options) {
+            return worker(document, async (htmlDocument) => {
+
+                const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
+
+                if (options.lastChange.rangeLength === 0 && lastCharacter === '=') {
+
+                    const enabled = (await host.getSettings?.())?.autoCreateQuotes ?? true;
+
+                    if (enabled) {
+
+                        const text = host.getHtmlLs().doQuoteComplete(document, position, htmlDocument, await host.getCompletionConfiguration?.());
+
+                        if (text) {
+                            return text;
+                        }
+                    }
+                }
+
+                if (options.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
+
+                    const enabled = (await host.getSettings?.())?.autoClosingTags ?? true;
+
+                    if (enabled) {
+
+                        const text = host.getHtmlLs().doTagComplete(document, position, htmlDocument);
+
+                        if (text) {
+                            return text;
+                        }
+                    }
+                }
             });
         },
     };

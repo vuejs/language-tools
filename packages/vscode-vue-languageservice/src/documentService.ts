@@ -1,7 +1,4 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as autoClosingTags from './services/autoClosingTags';
-import * as autoCreateQuotes from './services/autoCreateQuotes';
-import * as autoWrapBrackets from './services/autoWrapParentheses';
 import { documentFeatureWorker, documentRangeFeatureWorker } from './utils/documentFeatureWorkers';
 import * as formatting from './services/formatting';
 import { createSourceFile, SourceFile } from '@volar/vue-typescript';
@@ -16,6 +13,7 @@ import useHtmlPlugin from './plugins/htmlPlugin';
 import usePugPlugin from './plugins/pugPlugin';
 import useJsonPlugin from './plugins/jsonPlugin';
 import useTsPlugin, { isTsDocument } from './plugins/tsPlugin';
+import useAutoWrapParenthesesPlugin from './plugins/autoWrapParenthesesPlugin';
 
 // formatter plugins
 import useCssFormatPlugin from './plugins/prettierCssPlugin';
@@ -27,6 +25,7 @@ import * as sharedServices from './utils/sharedLs';
 import * as ts2 from 'vscode-typescript-languageservice';
 
 import type * as _0 from 'vscode-languageserver-protocol';
+import type * as _1 from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 import { transformFoldingRanges, transformSelectionRanges, transformSymbolInformations } from '@volar/transforms';
 
@@ -37,6 +36,7 @@ export function getDocumentService(
 	getPreferences: LanguageServiceHost['getPreferences'],
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	getPrintWidth: (uri: string) => Promise<number>,
+	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 ) {
 	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
 	const services = createBasicRuntime();
@@ -49,6 +49,7 @@ export function getDocumentService(
 	const cssPlugin = useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet });
 	const jsonPlugin = useJsonPlugin({ getJsonLs: () => services.jsonLs });
 	const tsPlugin = useTsPlugin({ getTsLs: () => tsLs });
+	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({ ts, getVueDocument, isEnabled: async () => getSettings?.('volar.autoWrapParentheses') });
 
 	// formatter plugins
 	const cssFormatPlugin = useCssFormatPlugin({});
@@ -69,6 +70,7 @@ export function getDocumentService(
 				cssPlugin,
 				jsonPlugin,
 				tsPlugin,
+				autoWrapParenthesesPlugin,
 			];
 		},
 		getFormatPlugins() {
@@ -218,10 +220,36 @@ export function getDocumentService(
 			);
 		},
 
-		// auto inserts
-		doQuoteComplete: autoCreateQuotes.register(context),
-		doTagComplete: autoClosingTags.register(context),
-		doParentheseWrap: autoWrapBrackets.register(context),
+		doAutoInsert(document: TextDocument, position: vscode.Position, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) {
+			return documentRangeFeatureWorker(
+				context,
+				document,
+				position,
+				sourceMap => true,
+				function* (position, sourceMap) {
+					for (const [mapedRange] of sourceMap.getMappedRanges(
+						position,
+						position,
+						data => !!data.capabilities.completion,
+					)) {
+						yield mapedRange.start;
+					}
+				},
+				(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
+				(data, sourceMap) => {
+
+					if (typeof data === 'string')
+						return data;
+
+					const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
+
+					if (range) {
+						data.range = range;
+						return data;
+					}
+				},
+			);
+		},
 	}
 	function getVueDocument(document: TextDocument) {
 

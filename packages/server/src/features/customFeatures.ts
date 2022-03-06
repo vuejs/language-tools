@@ -9,12 +9,6 @@ export function register(
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 ) {
-	connection.onRequest(shared.GetRefCompleteEditsRequest.type, async handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		const languageService = await getLanguageService(document.uri);
-		return languageService?.__internal__.doRefAutoClose(document, handler.position);
-	});
 	connection.onRequest(shared.D3Request.type, async handler => {
 		const document = documents.get(handler.uri);
 		if (!document) return;

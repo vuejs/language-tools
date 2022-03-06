@@ -4,7 +4,6 @@ import { computed, pauseTracking, resetTracking, ref } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
-import * as ts2 from 'vscode-typescript-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
@@ -93,7 +92,7 @@ export function register(
 		}>,
 	) => {
 
-		const document = getTextDocument(uri)
+		const document = getTextDocument(uri);
 
 		if (
 			context?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions
@@ -119,8 +118,10 @@ export function register(
 
 						const embeddedCompletionList = await cacheData.plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, context);
 
-						if (!embeddedCompletionList)
+						if (!embeddedCompletionList) {
+							cacheData.list.isIncomplete = false;
 							continue;
+						}
 
 						cacheData.list = {
 							...embeddedCompletionList,
@@ -148,8 +149,10 @@ export function register(
 
 					const completionList = await cacheData.plugin.doComplete(document, position, context);
 
-					if (!completionList)
+					if (!completionList) {
+						cacheData.list.isIncomplete = false;
 						continue;
+					}
 
 					cacheData.list = {
 						...completionList,

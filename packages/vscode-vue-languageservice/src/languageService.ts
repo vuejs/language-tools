@@ -10,7 +10,6 @@ import * as diagnostics from './services/diagnostics';
 import * as documentHighlight from './services/documentHighlight';
 import * as documentLink from './services/documentLinks';
 import * as hover from './services/hover';
-import * as refAutoClose from './services/refAutoClose';
 import * as references from './services/references';
 import * as codeLens from './services/referencesCodeLens';
 import * as codeLensResolve from './services/referencesCodeLensResolve';
@@ -36,9 +35,11 @@ import useTsPlugin, { getTriggerCharacters as getTsTriggerCharacters } from './p
 import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './plugins/jsDocPlugin';
 import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './plugins/directiveCommentPlugin';
 import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './plugins/emmetPlugin';
+import useAutoDotValuePlugin from './plugins/autoDotValuePlugin';
 
 import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
 import { isGloballyWhitelisted } from '@vue/shared';
+import { documentRangeFeatureWorker, languageRangeFeatureWorker } from './utils/documentFeatureWorkers';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -54,6 +55,7 @@ const htmlTriggerCharacter = [
 function wrapPlugin(plugin: EmbeddedLanguagePlugin, context?: {
 	useHtmlLs?: boolean,
 	isAdditionalCompletion?: boolean,
+	isEmmetCompletion?: boolean,
 	triggerCharacters?: string[],
 }) {
 	return {
@@ -96,8 +98,8 @@ export function createLanguageService(
 	// plugins
 	const vuePlugin = wrapPlugin(
 		useVuePlugin({
-			documentContext: tsRuntime.context.documentContext,
 			getVueDocument: (document) => tsRuntime.context.sourceFiles.get(document.uri),
+			documentContext: tsRuntime.context.documentContext,
 		}),
 		{
 			triggerCharacters: vueTriggerCharacters,
@@ -242,6 +244,13 @@ export function createLanguageService(
 			return tsComplete;
 		},
 	};
+	const autoDotValuePlugin = wrapPlugin(
+		useAutoDotValuePlugin({
+			ts,
+			getTsLs: () => tsRuntime.context.scriptTsLs,
+			isEnabled: async () => getSettings?.('volar.autoCompleteRefs'),
+		}),
+	);
 
 	const allPlugins = new Map<number, LanguageServicePlugin>();
 
@@ -258,6 +267,7 @@ export function createLanguageService(
 		templateTsPlugin,
 		templateJsDocPlugin,
 		templateTsDirectiveCommentPlugin,
+		autoDotValuePlugin,
 	]) {
 		allPlugins.set(plugin.id, plugin);
 	}
@@ -286,6 +296,7 @@ export function createLanguageService(
 				plugins.push(scriptTsPlugin);
 				plugins.push(scriptJsDocPlugin);
 				plugins.push(scriptTsDirectiveCommentPlugin);
+				plugins.push(autoDotValuePlugin);
 			}
 			return plugins;
 		},
@@ -332,11 +343,44 @@ export function createLanguageService(
 			tsRuntime,
 			rootPath: vueHost.getCurrentDirectory(),
 			context,
-			getContext: publicApiHook(() => context),
-			getD3: publicApiHook(d3.register(context)),
-			detectTagNameCase: publicApiHook(tagNameCase.register(context)),
-			doRefAutoClose: publicApiHook(refAutoClose.register(context), false),
+			getContext: publicApiHook(() => context, true),
+			getD3: publicApiHook(d3.register(context), true),
+			detectTagNameCase: publicApiHook(tagNameCase.register(context), true),
 		},
+
+		doAutoInsert: publicApiHook(
+			(uri: string, position: vscode.Position, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) => {
+				return languageRangeFeatureWorker(
+					context,
+					uri,
+					position,
+					sourceMap => true,
+					function* (position, sourceMap) {
+						for (const [mapedRange] of sourceMap.getMappedRanges(
+							position,
+							position,
+							data => !!data.capabilities.completion,
+						)) {
+							yield mapedRange.start;
+						}
+					},
+					(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
+					(data, sourceMap) => {
+
+						if (typeof data === 'string')
+							return data;
+
+						const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
+
+						if (range) {
+							data.range = range;
+							return data;
+						}
+					},
+				);
+			},
+			false,
+		),
 	};
 
 	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
@@ -367,7 +411,7 @@ export function createLanguageService(
 	}
 	function publicApiHook<T extends (...args: any) => any>(
 		api: T,
-		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
+		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean),
 		blockNewRequest = true,
 	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
 		const handler = {

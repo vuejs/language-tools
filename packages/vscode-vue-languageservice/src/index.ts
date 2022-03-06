@@ -1,6 +1,6 @@
 export { getSemanticTokenLegend } from './services/semanticTokens';
 export { margeWorkspaceEdits } from './services/rename';
-export { isRefType, isBlacklistNode } from './services/refAutoClose';
+export { isRefType, isBlacklistNode } from './plugins/autoDotValuePlugin';
 export * from './documentService';
 export * from './languageService';
 export * from './types';

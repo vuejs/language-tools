@@ -54,8 +54,8 @@ const vueTags: html.ITagData[] = [
 ];
 
 export default definePlugin((host: {
-    documentContext?: html.DocumentContext,
     getVueDocument(document: TextDocument): SourceFile | undefined,
+    documentContext?: html.DocumentContext,
 }) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
@@ -78,7 +78,7 @@ export default definePlugin((host: {
 
                 const result: vscode.SymbolInformation[] = [];
                 const descriptor = vueDocument.getDescriptor();
-    
+
                 if (descriptor.template) {
                     result.push({
                         name: '<template>',
@@ -129,7 +129,7 @@ export default definePlugin((host: {
                         )),
                     });
                 }
-    
+
                 return result;
             });
         },
