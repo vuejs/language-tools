@@ -35,12 +35,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 		let vueResult: vscode.LocationLink[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of sourceFiles.toEmbeddedLocation(
 			uri,
 			position,
 			position,
 			data => !!data.capabilities.definitions,
 		)) {
+
+			if (tsLoc.lsType === undefined)
+				continue;
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
@@ -55,7 +58,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 			let originSelectionRange: vscode.Range | undefined;
 			for (const tsLoc_2 of tsResult) {
 				if (tsLoc_2.originSelectionRange) {
-					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
+					for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
 						if (shared.isInsideRange(vueLoc.range, tempRange)) {
 							originSelectionRange = vueLoc.range;
 							break;
@@ -72,13 +75,13 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 				let targetRange: vscode.Range | undefined;
 				let targetSelectionRange: vscode.Range | undefined;
 
-				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
+				for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
 					targetUri = vueLoc.uri;
 					targetRange = vueLoc.range;
 					break;
 				}
 
-				for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
+				for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
 					targetUri = vueLoc.uri;
 					targetSelectionRange = vueLoc.range;
 					break;
@@ -94,15 +97,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 				}
 				else if (tsLoc.lsType === 'script' && (tsLoc.type === 'source-ts' || tsLoc.data.vueTag === 'script' || tsLoc.data.vueTag === 'scriptSetup')) {
 					// fix https://github.com/johnsoncodehk/volar/issues/728
-					const targetSourceFile = sourceFiles.getSourceFileByTsUri(tsLoc.lsType, tsLoc_2.targetUri);
-					if (targetSourceFile) {
-						const targetDocument = targetSourceFile.getTextDocument();
+					const sourceMap = sourceFiles.fromEmbeddedDocumentUri(tsLoc.lsType, tsLoc_2.targetUri);
+					if (sourceMap) {
+						const targetDocument = sourceMap.sourceDocument;
 						const targetRange = {
 							start: targetDocument.positionAt(0),
 							end: targetDocument.positionAt(targetDocument.getText().length),
 						};
 						vueResult.push({
-							targetUri: targetSourceFile.uri,
+							targetUri: targetDocument.uri,
 							targetRange: targetRange,
 							targetSelectionRange: targetRange,
 							originSelectionRange,
@@ -124,7 +127,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 
 					loopChecker.add({ uri: location.targetUri, range: location.targetSelectionRange });
 
-					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType).get(location.targetUri);
+					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType!).get(location.targetUri);
 					if (!teleport) {
 						addResult(location);
 						continue;
@@ -194,7 +197,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 		// css -> vue
 		for (const cssLoc of cssResult) {
 
-			const sourceMap = sourceFiles.getCssSourceMaps().get(cssLoc.uri);
+			const sourceMap = sourceFiles.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
 			if (!sourceMap)
 				continue;
 

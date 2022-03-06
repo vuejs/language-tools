@@ -13,12 +13,15 @@ export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext
 	function doPrepare(uri: string, position: vscode.Position) {
 		let vueItems: vscode.CallHierarchyItem[] = [];
 
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of sourceFiles.toEmbeddedLocation(
 			uri,
 			position,
 			position,
 			data => !!data.capabilities.references,
 		)) {
+
+			if (tsLoc.lsType === undefined)
+				continue;
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
@@ -99,11 +102,11 @@ export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext
 		return vueOrTsItems;
 	}
 	function toVueCallHierarchyItem(lsType: 'script' | 'template', tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
-		if (!sourceFiles.getTsDocuments(lsType).get(tsItem.uri)) {
+		if (!sourceFiles.fromEmbeddedDocumentUri(lsType, tsItem.uri)) {
 			return [tsItem, tsRanges]; // not virtual file
 		}
 
-		const sourceMap = sourceFiles.getTsSourceMaps(lsType).get(tsItem.uri);
+		const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, tsItem.uri);
 		if (!sourceMap)
 			return;
 
@@ -138,7 +141,7 @@ export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext
 
 		const tsItems: vscode.CallHierarchyItem[] = [];
 
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of sourceFiles.toEmbeddedLocation(
 			item.uri,
 			item.range.start,
 			item.range.end,
@@ -148,7 +151,7 @@ export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 				continue;
 
-			for (const tsSelectionLoc of sourceFiles.toTsLocations(
+			for (const tsSelectionLoc of sourceFiles.toEmbeddedLocation(
 				item.uri,
 				item.selectionRange.start,
 				item.selectionRange.end,

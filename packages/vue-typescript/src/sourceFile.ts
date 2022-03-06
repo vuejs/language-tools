@@ -310,25 +310,16 @@ export function createSourceFile(
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
 		getTextDocument: untrack(() => document.value),
-		getTemplateScriptDocument: untrack(() => sfcTemplateScript.textDocument.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
 		getScriptTsDocument: untrack(() => sfcScriptForScriptLs.textDocument.value),
-		getScriptTsSourceMap: untrack(() => sfcScriptForScriptLs.sourceMap.value),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getCssSourceMaps: untrack(() => cssLsSourceMaps.value),
-		getCustomBlockSourceMaps: untrack(() => sfcCustomBlocks.sourceMaps.value),
 		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive
 		getScriptAst: untrack(() => sfcScript.ast.value),
 		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
-		getVueHtmlDocument: untrack(() => vueHtmlDocument.value),
-		getScriptSetupData: untrack(() => scriptSetupRanges.value),
-		docLsScripts: untrack(() => ({
-			documents: [sfcScript.textDocument.value, sfcScriptSetup.textDocument.value].filter(shared.notEmpty),
-			sourceMaps: [sfcScript.sourceMap.value, sfcScriptSetup.sourceMap.value].filter(shared.notEmpty),
-		})),
 		getTemplateFormattingScript: untrack(() => ({
 			document: sfcTemplateScript.textDocumentForFormatting.value,
 			sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
@@ -356,11 +347,6 @@ export function createSourceFile(
 			templateScriptData,
 
 			cssLsDocuments,
-			cssLsSourceMaps,
-			scriptLsDocuments,
-			scriptLsSourceMaps,
-			templateLsDocuments,
-			templateLsSourceMaps,
 			templateLsTeleports,
 		},
 	};

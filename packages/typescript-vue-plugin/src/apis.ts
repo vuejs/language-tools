@@ -235,7 +235,7 @@ export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeSc
 	function transformSpan(lsType: 'script' | 'template', fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of sourceFiles.fromTsLocation2(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of sourceFiles.fromEmbeddedLocation(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
 			return {
 				fileName: shared.uriToFsPath(vueLoc.uri),
 				textSpan: {

@@ -110,7 +110,7 @@ export default definePlugin((host: {
 
         doCodeActions(document, range, context) {
             return worker(document, (stylesheet, cssLs) => {
-                return cssLs.doCodeActions(document, range, context, stylesheet);
+                return cssLs.doCodeActions2(document, range, context, stylesheet) as vscode.CodeAction[];
             });
         },
 

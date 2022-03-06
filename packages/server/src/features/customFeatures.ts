@@ -43,14 +43,14 @@ export function register(
 					});
 				}
 				const { sourceFiles } = await ls.__internal__.getContext();
-				for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
+				for (const sourceMap of sourceFiles.getEmbeddeds(lsType)) {
 					connection.workspace.applyEdit({
 						edit: {
 							documentChanges: [
-								vscode.CreateFile.create(doc.uri),
+								vscode.CreateFile.create(sourceMap.mappedDocument.uri),
 								vscode.TextDocumentEdit.create(
-									vscode.OptionalVersionedTextDocumentIdentifier.create(doc.uri, null),
-									[{ range: vscode.Range.create(0, 0, 0, 0), newText: doc.getText() }],
+									vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
+									[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
 								),
 							]
 						}

@@ -50,12 +50,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStyles
 
 		let error: vscode.ResponseError | undefined;
 
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of sourceFiles.toEmbeddedLocation(
 			uri,
 			position,
 			position,
 			data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.in),
 		)) {
+
+			if (tsLoc.lsType === undefined)
+				continue;
 
 			const tsLs = getTsLs(tsLoc.lsType);
 			const tsPrepare = tsLs.prepareRename(
@@ -70,7 +73,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStyles
 				continue;
 			}
 
-			for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
+			for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
 				return vueLoc.range;
 		}
 
@@ -92,12 +95,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStyles
 
 		let result: vscode.WorkspaceEdit | undefined;
 
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of sourceFiles.toEmbeddedLocation(
 			uri,
 			position,
 			position,
 			data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.in),
 		)) {
+
+			if (tsLoc.lsType === undefined)
+				continue;
 
 			let newName_2 = newName;
 
@@ -221,7 +227,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, scriptTsLs, getStyles
 		// css -> vue
 		for (const cssUri in cssResult.changes) {
 
-			const sourceMap = sourceFiles.getCssSourceMaps().get(cssUri);
+			const sourceMap = sourceFiles.fromEmbeddedDocumentUri(undefined, cssUri);
 			if (!sourceMap)
 				continue;
 
@@ -292,7 +298,7 @@ export function margeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
  *    -> Yes: Only access template results
  *    -> No: Access all results
  */
-export function tsEditToVueEdit(lsType: 'script' | 'template', ignoreScriptLsResult: boolean, tsResult: vscode.WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data: EmbeddedDocumentMappingData) => boolean) {
+export function tsEditToVueEdit(lsType: 'script' | 'template' | undefined, ignoreScriptLsResult: boolean, tsResult: vscode.WorkspaceEdit, sourceFiles: SourceFiles, isValidRange: (data: EmbeddedDocumentMappingData) => boolean) {
 
 	const vueResult: vscode.WorkspaceEdit = {};
 	let hasResult = false;
@@ -303,13 +309,13 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', ignoreScriptLsRes
 			vueResult.changeAnnotations = {};
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
-		const uri = sourceFiles.getSourceFileByTsUri(lsType, tsUri)?.uri ?? tsUri;
+		const uri = sourceFiles.fromEmbeddedDocumentUri(lsType, tsUri)?.sourceDocument.uri ?? tsUri;
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of sourceFiles.fromTsLocation(
+			for (const vueLoc of sourceFiles.fromEmbeddedLocation(
 				lsType,
 				tsUri,
 				tsEdit.range.start,
@@ -352,7 +358,7 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', ignoreScriptLsRes
 			}
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
-				const sourceMap = sourceFiles.getTsSourceMaps(lsType).get(tsDocEdit.textDocument.uri);
+				const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, tsDocEdit.textDocument.uri);
 				if (sourceMap) {
 					vueDocEdit = vscode.TextDocumentEdit.create(
 						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
@@ -384,11 +390,11 @@ export function tsEditToVueEdit(lsType: 'script' | 'template', ignoreScriptLsRes
 				vueDocEdit = tsDocEdit; // TODO: remove .ts?
 			}
 			else if (vscode.RenameFile.is(tsDocEdit) && !ignoreScriptLsResult) {
-				const oldUri = sourceFiles.getSourceFileByTsUri(lsType, tsDocEdit.oldUri)?.uri ?? tsDocEdit.oldUri;
+				const oldUri = sourceFiles.fromEmbeddedDocumentUri(lsType, tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
 				vueDocEdit = vscode.RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			else if (vscode.DeleteFile.is(tsDocEdit) && !ignoreScriptLsResult) {
-				const uri = sourceFiles.getSourceFileByTsUri(lsType, tsDocEdit.uri)?.uri ?? tsDocEdit.uri;
+				const uri = sourceFiles.fromEmbeddedDocumentUri(lsType, tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
 				vueDocEdit = vscode.DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			if (vueDocEdit) {

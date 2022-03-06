@@ -226,7 +226,7 @@ export function createTypeScriptRuntime(
                                 updateSourceFiles([uri], false); // create virtual files
                             }
                         }
-                        return sourceFiles.getTsDocuments(lsType).has(shared.fsPathToUri(fileName));
+                        return !!sourceFiles.fromEmbeddedDocumentUri(lsType, shared.fsPathToUri(fileName));
                     }
                     else {
                         return !!vueHost.fileExists?.(fileName);
@@ -281,8 +281,8 @@ export function createTypeScriptRuntime(
         function getScriptFileNames() {
             const tsFileNames = getLocalTypesFiles(lsType);
 
-            for (const [tsUri] of sourceFiles.getTsDocuments(lsType)) {
-                tsFileNames.push(shared.uriToFsPath(tsUri)); // virtual .ts
+            for (const sourceMap of sourceFiles.getEmbeddeds(lsType)) {
+                tsFileNames.push(shared.uriToFsPath(sourceMap.mappedDocument.uri)); // virtual .ts
             }
             for (const fileName of vueHost.getScriptFileNames()) {
                 if (isTsPlugin) {
@@ -300,9 +300,9 @@ export function createTypeScriptRuntime(
             if (basename === localTypes.typesFileName) {
                 return '0';
             }
-            let doc = sourceFiles.getTsDocuments(lsType).get(uri);
-            if (doc) {
-                return doc.version.toString();
+            let sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, uri);
+            if (sourceMap) {
+                return sourceMap.mappedDocument.version.toString();
             }
             return vueHost.getScriptVersion(fileName);
         }
@@ -317,9 +317,9 @@ export function createTypeScriptRuntime(
                 return localTypesScript;
             }
             const uri = shared.fsPathToUri(fileName);
-            const doc = sourceFiles.getTsDocuments(lsType).get(uri);
-            if (doc) {
-                const text = doc.getText();
+            const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, uri);
+            if (sourceMap) {
+                const text = sourceMap.mappedDocument.getText();
                 const snapshot = ts.ScriptSnapshot.fromString(text);
                 scriptSnapshots.set(fileName, [version, snapshot]);
                 return snapshot;

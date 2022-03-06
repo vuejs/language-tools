@@ -139,7 +139,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 
 		const {
 			cssLsDocuments,
-			cssLsSourceMaps,
 			sfcCustomBlocks,
 			sfcScriptForScriptLs,
 			lastUpdated,
@@ -151,7 +150,6 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			sfcTemplateCompileResult,
 			templateScriptData,
 			sfcScriptForTemplateLs,
-			templateLsSourceMaps,
 			scriptSetupRanges
 		} = sourceFile.refs;
 
@@ -355,8 +353,8 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				if (!sfcTemplate.textDocument.value) return [];
 				return [
-					...toSourceDiags(htmlErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'html' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
-					...toSourceDiags(pugErrors.value, sfcTemplate.textDocument.value.uri, sfcTemplate.textDocument.value.languageId === 'jade' && sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
+					...toSourceDiags(undefined, sfcTemplate.textDocument.value.uri, htmlErrors.value),
+					...toSourceDiags(undefined, sfcTemplate.textDocument.value.uri, pugErrors.value),
 				];
 			});
 			return {
@@ -412,7 +410,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				let result: vscode.Diagnostic[] = [];
 				for (const [uri, errs] of errors_cache.value) {
-					result = result.concat(toSourceDiags(errs, uri, cssLsSourceMaps.value));
+					result = result.concat(toSourceDiags(undefined, uri, errs));
 				}
 				return result as vscode.Diagnostic[];
 			});
@@ -460,7 +458,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				let result: vscode.Diagnostic[] = [];
 				if (errors_cache.value) {
 					for (const [uri, errs] of await errors_cache.value) {
-						result = result.concat(toSourceDiags(errs, uri, sfcCustomBlocks.sourceMaps.value));
+						result = result.concat(toSourceDiags(undefined, uri, errs));
 					}
 				}
 				return result as vscode.Diagnostic[];
@@ -555,7 +553,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			const cacheWithSourceMap = computed(() => {
 				const doc = document.value;
 				if (!doc) return [];
-				return toTsSourceDiags('script', errors_cache.value, doc.uri, templateLsSourceMaps.value);
+				return toSourceDiags('script', doc.uri, errors_cache.value);
 			});
 			return {
 				result,
@@ -616,17 +614,15 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				return cacheWithSourceMap.value;
 			});
 			const cacheWithSourceMap: ComputedRef<vscode.Diagnostic[]> = computed(() => {
-				const result_1 = sfcTemplateScript.textDocument.value ? toTsSourceDiags(
+				const result_1 = sfcTemplateScript.textDocument.value ? toSourceDiags(
 					'template',
-					errors_1_cache.value,
 					sfcTemplateScript.textDocument.value.uri,
-					templateLsSourceMaps.value,
+					errors_1_cache.value,
 				) : [];
-				const result_2 = sfcScriptForTemplateLs.textDocument.value ? toTsSourceDiags(
+				const result_2 = sfcScriptForTemplateLs.textDocument.value ? toSourceDiags(
 					'template',
-					errors_2_cache.value,
 					sfcScriptForTemplateLs.textDocument.value.uri,
-					templateLsSourceMaps.value,
+					errors_2_cache.value,
 				) : [];
 				return [...result_1, ...result_2];
 			});
@@ -635,87 +631,57 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 				cache: cacheWithSourceMap,
 			};
 		}
-		function toSourceDiags(errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: SourceMap<any>[]) {
-			const result: vscode.Diagnostic[] = [];
-			for (const error of errors) {
-				if (vscode.Diagnostic.is(error)) {
-					for (const sourceMap of sourceMaps) {
-						if (sourceMap.mappedDocument.uri !== virtualScriptUri)
-							continue;
-						const vueRange = sourceMap.getSourceRange(error.range.start, error.range.end);
-						if (!vueRange)
-							continue;
-						result.push({
-							...error,
-							range: vueRange[0],
-						});
-					}
-				}
-			}
-			return result;
-		}
-		function toTsSourceDiags(lsType: 'template' | 'script', errors: vscode.Diagnostic[], virtualScriptUri: string, sourceMaps: EmbeddedDocumentSourceMap[]) {
-			const result: vscode.Diagnostic[] = [];
-			for (const error of errors) {
-				const vueRange = findVueRange(virtualScriptUri, error.range);
-				if (vueRange) {
-					const vueError: vscode.Diagnostic = {
-						...error,
-						range: vueRange,
-					};
-					if (vueError.relatedInformation) {
-						const vueInfos: vscode.DiagnosticRelatedInformation[] = [];
-						for (const info of vueError.relatedInformation) {
-							const vueInfoRange = findVueRange(info.location.uri, info.location.range);
-							if (vueInfoRange) {
-								vueInfos.push({
-									location: {
-										uri: vueInfoRange.uri,
-										range: vueInfoRange,
-									},
-									message: info.message,
-								});
-							}
-						}
-						vueError.relatedInformation = vueInfos;
-					}
-					result.push(vueError);
-				}
-			}
+	}
+
+	function toSourceDiags(lsType: 'template' | 'script' | undefined, uri: string, errors: vscode.Diagnostic[]) {
+
+		const result: vscode.Diagnostic[] = [];
+		const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, uri);
+
+		if (!sourceMap)
 			return result;
 
-			function findVueRange(virtualUri: string, virtualRange: vscode.Range) {
-				for (const sourceMap of sourceMaps) {
-					if (sourceMap.mappedDocument.uri === virtualUri) {
+		for (const error of errors) {
 
-						const vueRange = sourceMap.getSourceRange(
-							virtualRange.start,
-							virtualRange.end,
+			const vueRange = sourceMap.getSourceRange(error.range.start, error.range.end)?.[0];
+
+			if (vueRange) {
+
+				const vueError: vscode.Diagnostic = {
+					...error,
+					range: vueRange,
+				};
+
+				if (vueError.relatedInformation) {
+
+					const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
+
+					for (const info of vueError.relatedInformation) {
+						for (const vueLoc of sourceFiles.fromEmbeddedLocation(
+							lsType,
+							info.location.uri,
+							info.location.range.start,
+							info.location.range.end,
 							data => !!data.capabilities.diagnostic,
-						)?.[0];
-						if (vueRange) {
-							return {
-								uri: sourceFile.uri,
-								start: vueRange.start,
-								end: vueRange.end,
-							};
+						)) {
+							relatedInfos.push({
+								location: {
+									uri: vueLoc.uri,
+									range: vueLoc.range,
+								},
+								message: info.message,
+							});
+							break;
 						}
 					}
+
+					vueError.relatedInformation = relatedInfos;
 				}
-				for (const vueLoc of sourceFiles.fromTsLocation(
-					lsType,
-					virtualUri,
-					virtualRange.start,
-					virtualRange.end,
-					data => !!data.capabilities.diagnostic,
-				)) {
-					return {
-						uri: vueLoc.uri,
-						start: vueLoc.range.start,
-						end: vueLoc.range.end,
-					};
-				}
+
+				result.push(vueError);
 			}
 		}
+
+		return result;
 	}
 }

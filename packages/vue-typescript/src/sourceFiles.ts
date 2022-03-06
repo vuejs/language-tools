@@ -80,39 +80,8 @@ export function createSourceFiles() {
 			template,
 		};
 	});
-	const cssSourceMaps = computed(() => {
-		const map = new Map<string, EmbeddedDocumentSourceMap>();
-		for (const key in _sourceFiles) {
-			const sourceFile = _sourceFiles[key]!;
-			for (const sourceMap of sourceFile.refs.cssLsSourceMaps.value) {
-				map.set(sourceMap.mappedDocument.uri, sourceMap);
-			}
-		}
-		return map;
-	});
-	const htmlSourceMaps = computed(() => {
-		const map = new Map<string, EmbeddedDocumentSourceMap>();
-		for (const key in _sourceFiles) {
-			const sourceFile = _sourceFiles[key]!;
-			if (sourceFile.refs.sfcTemplate.textDocument.value?.languageId === 'html' && sourceFile.refs.sfcTemplate.sourceMap.value) {
-				const sourceMap = sourceFile.refs.sfcTemplate.sourceMap.value;
-				map.set(sourceMap.mappedDocument.uri, sourceMap);
-			}
-		}
-		return map;
-	});
 	const tsRefs = {
 		template: {
-			documents: computed(() => {
-				const map = new Map<string, TextDocument>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const tsDoc of sourceFile.refs.templateLsDocuments.value) {
-						map.set(tsDoc.uri, tsDoc);
-					}
-				}
-				return map;
-			}),
 			teleports: computed(() => {
 				const map = new Map<string, TeleportSourceMap>();
 				for (const key in _sourceFiles) {
@@ -123,64 +92,14 @@ export function createSourceFiles() {
 				}
 				return map;
 			}),
-			sourceMaps: computed(() => {
-				const map = new Map<string, EmbeddedDocumentSourceMap>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const sourceMap of sourceFile.refs.templateLsSourceMaps.value) {
-						map.set(sourceMap.mappedDocument.uri, sourceMap);
-					}
-				}
-				return map;
-			}),
-			urisMapSourceFiles: computed(() => {
-				const map = new Map<string, SourceFile>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const tsDoc of sourceFile.refs.templateLsDocuments.value) {
-						map.set(tsDoc.uri, sourceFile);
-					}
-				}
-				return map;
-			}),
 		},
 		script: {
-			documents: computed(() => {
-				const map = new Map<string, TextDocument>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const tsDoc of sourceFile.refs.scriptLsDocuments.value) {
-						map.set(tsDoc.uri, tsDoc);
-					}
-				}
-				return map;
-			}),
 			teleports: computed(() => {
 				const map = new Map<string, TeleportSourceMap>();
 				for (const key in _sourceFiles) {
 					const sourceFile = _sourceFiles[key]!;
 					const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
 					map.set(sourceMap.mappedDocument.uri, sourceMap);
-				}
-				return map;
-			}),
-			sourceMaps: computed(() => {
-				const map = new Map<string, EmbeddedDocumentSourceMap>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const sourceMap of sourceFile.refs.scriptLsSourceMaps.value) {
-						map.set(sourceMap.mappedDocument.uri, sourceMap);
-					}
-				}
-				return map;
-			}),
-			urisMapSourceFiles: computed(() => {
-				const map = new Map<string, SourceFile>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const tsDoc of sourceFile.refs.scriptLsDocuments.value) {
-						map.set(tsDoc.uri, sourceFile);
-					}
 				}
 				return map;
 			}),
@@ -199,13 +118,27 @@ export function createSourceFiles() {
 		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
 
 		getTsTeleports: untrack((lsType: 'script' | 'template') => tsRefs[lsType].teleports.value),
-		getTsDocuments: untrack((lsType: 'script' | 'template') => tsRefs[lsType].documents.value),
-		getTsSourceMaps: untrack((lsType: 'script' | 'template') => tsRefs[lsType].sourceMaps.value),
-		getSourceFileByTsUri: untrack((lsType: 'script' | 'template', uri: string) => tsRefs[lsType].urisMapSourceFiles.value.get(uri)),
-		getCssSourceMaps: untrack(() => cssSourceMaps.value),
-		getHtmlSourceMaps: untrack(() => htmlSourceMaps.value),
+		getEmbeddeds: untrack(function* (
+			lsType: 'script' | 'template' | undefined,
+		) {
 
-		toTsLocations: untrack(function* (
+			for (const sourceMap of sourceMapsByUriAndLsType.value.noLsType) {
+				yield sourceMap[1];
+			}
+
+			if (lsType === 'script') {
+				for (const sourceMap of sourceMapsByUriAndLsType.value.script) {
+					yield sourceMap[1];
+				}
+			}
+			else if (lsType === 'template') {
+				for (const sourceMap of sourceMapsByUriAndLsType.value.template) {
+					yield sourceMap[1];
+				}
+			}
+		}),
+
+		toEmbeddedLocation: untrack(function* (
 			uri: string,
 			start: vscode.Position,
 			end?: vscode.Position,
@@ -216,44 +149,43 @@ export function createSourceFiles() {
 			if (end === undefined)
 				end = start;
 
-			for (const lsType of ['script', 'template'] as const) {
-				const sourceFile = sourceFiles.uriGet(uri);
-				if (sourceFile) {
-					for (const sourceMap of lsType === 'script' ? sourceFile.refs.scriptLsSourceMaps.value : sourceFile.refs.templateLsSourceMaps.value) {
+			const sourceFile = sourceFiles.uriGet(uri);
 
-						if (sourceMapFilter && !sourceMapFilter(sourceMap))
-							continue;
+			if (sourceFile) {
+				for (const sourceMap of sourceFile.getSourceMaps()) {
 
-						for (const tsRange of sourceMap.getMappedRanges(start, end, filter)) {
-							yield {
-								lsType,
-								type: 'embedded-ts' as const,
-								sourceMap,
-								uri: sourceMap.mappedDocument.uri,
-								range: tsRange[0],
-								data: tsRange[1],
-							};
-						}
+					if (sourceMapFilter && !sourceMapFilter(sourceMap))
+						continue;
+
+					for (const tsRange of sourceMap.getMappedRanges(start, end, filter)) {
+						yield {
+							lsType: sourceMap.lsType,
+							type: 'embedded-ts' as const,
+							sourceMap,
+							uri: sourceMap.mappedDocument.uri,
+							range: tsRange[0],
+							data: tsRange[1],
+						};
 					}
 				}
-				else {
-					yield {
-						lsType,
-						type: 'source-ts' as const,
-						uri,
-						range: {
-							start,
-							end,
-						},
-					};
-				}
+			}
+			else {
+				yield {
+					lsType: 'script' as const,
+					type: 'source-ts' as const,
+					uri,
+					range: {
+						start,
+						end,
+					},
+				};
 			}
 		}),
-		fromEmbeddedLocation: untrack(function* (
+		fromEmbeddedLocation: untrack(function* <T extends vscode.Position | number>(
 			lsType: 'script' | 'template' | undefined,
 			uri: string,
-			start: vscode.Position,
-			end?: vscode.Position,
+			start: T,
+			end?: T,
 			filter?: (data: EmbeddedDocumentMappingData) => boolean,
 			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 		) {
@@ -306,89 +238,23 @@ export function createSourceFiles() {
 		) {
 			return embeddedDocumentsMap.value.get(document);
 		}),
-		fromTsLocation: untrack(function* (
-			lsType: 'script' | 'template',
+		fromEmbeddedDocumentUri: untrack(function (
+			lsType: 'script' | 'template' | undefined,
 			uri: string,
-			start: vscode.Position,
-			end?: vscode.Position,
-			filter?: (data: EmbeddedDocumentMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 		) {
 
-			if (uri.endsWith(`/${localTypes.typesFileName}`))
-				return;
+			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
 
-			if (end === undefined)
-				end = start;
-
-			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
-			if (sourceMap) {
-
-				if (sourceMapFilter && !sourceMapFilter(sourceMap))
-					return;
-
-				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
-					yield {
-						type: 'embedded-ts' as const,
-						sourceMap,
-						uri: sourceMap.sourceDocument.uri,
-						range: vueRange[0],
-						data: vueRange[1],
-					};
+			if (!sourceMap) {
+				if (lsType === 'script') {
+					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
+				}
+				else if (lsType === 'template') {
+					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
 				}
 			}
-			else {
-				yield {
-					type: 'source-ts' as const,
-					uri,
-					range: {
-						start,
-						end,
-					},
-				};
-			}
-		}),
-		fromTsLocation2: untrack(function* (
-			lsType: 'script' | 'template',
-			uri: string,
-			start: number,
-			end?: number,
-			filter?: (data: EmbeddedDocumentMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
-		) {
 
-			if (uri.endsWith(`/${localTypes.typesFileName}`))
-				return;
-
-			if (end === undefined)
-				end = start;
-
-			const sourceMap = tsRefs[lsType].sourceMaps.value.get(uri);
-			if (sourceMap) {
-
-				if (sourceMapFilter && !sourceMapFilter(sourceMap))
-					return;
-
-				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
-					yield {
-						type: 'embedded-ts' as const,
-						sourceMap,
-						uri: sourceMap.sourceDocument.uri,
-						range: vueRange[0],
-						data: vueRange[1],
-					};
-				}
-			}
-			else {
-				yield {
-					type: 'source-ts' as const,
-					uri,
-					range: {
-						start,
-						end,
-					},
-				};
-			}
+			return sourceMap;
 		}),
 	};
 }

@@ -20,12 +20,15 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 		let vueResult: vscode.Location[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of sourceFiles.toEmbeddedLocation(
 			uri,
 			position,
 			position,
 			data => !!data.capabilities.references,
 		)) {
+
+			if (tsLoc.lsType === undefined)
+				continue;
 
 			const loopChecker = dedupe.createLocationSet();
 			const tsLs = getTsLs(tsLoc.lsType);
@@ -34,7 +37,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 
 			// ts -> vue
 			for (const tsLoc_2 of tsResult) {
-				for (const vueLoc of sourceFiles.fromTsLocation(
+				for (const vueLoc of sourceFiles.fromEmbeddedLocation(
 					tsLoc.lsType,
 					tsLoc_2.uri,
 					tsLoc_2.range.start,
@@ -59,7 +62,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 					position,
 				)) {
 					loopChecker.add({ uri: tsLoc_2.uri, range: tsLoc_2.range });
-					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType).get(tsLoc_2.uri);
+					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType!).get(tsLoc_2.uri);
 
 					if (!teleport) {
 						tsResult.push(tsLoc_2);
@@ -120,7 +123,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 		// css -> vue
 		for (const cssLoc of cssResult) {
 
-			const sourceMap = sourceFiles.getCssSourceMaps().get(cssLoc.uri);
+			const sourceMap = sourceFiles.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
 			if (!sourceMap)
 				continue;
 

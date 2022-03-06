@@ -18,19 +18,22 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, getCssLs, getSty
 
 		function getTsResult() {
 			const result: vscode.DocumentHighlight[] = [];
-			for (const tsLoc of sourceFiles.toTsLocations(
+			for (const tsLoc of sourceFiles.toEmbeddedLocation(
 				uri,
 				position,
 				position,
 				data => !!data.capabilities.basic,
 			)) {
 
+				if (tsLoc.lsType === undefined)
+					continue;
+
 				if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
 					continue;
 
 				const highlights = getTsLs(tsLoc.lsType).findDocumentHighlights(tsLoc.uri, tsLoc.range.start);
 				for (const highlight of highlights) {
-					for (const vueLoc of sourceFiles.fromTsLocation(tsLoc.lsType, tsLoc.uri, highlight.range.start, highlight.range.end)) {
+					for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc.uri, highlight.range.start, highlight.range.end)) {
 						result.push({
 							...highlight,
 							range: vueLoc.range,

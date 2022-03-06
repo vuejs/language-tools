@@ -20,7 +20,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					yield mapedRange.start;
 				}
 			},
-			(plugin, document) => plugin.doHover?.(document, position),
+			(plugin, document, position) => plugin.doHover?.(document, position),
 			(data, sourceMap) => {
 
 				if (!data.range)

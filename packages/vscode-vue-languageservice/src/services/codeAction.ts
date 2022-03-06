@@ -6,11 +6,11 @@ import { tsEditToVueEdit } from './rename';
 import type { Data } from './callHierarchy';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
+	return async (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => {
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = context.sourceFiles.get(uri);
 		if (sourceFile) {
 
 			const descriptor = sourceFile.getDescriptor();
@@ -34,8 +34,8 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 				.map(scriptRange => shared.getOverlapRange(scriptRange, range))
 				.filter(shared.notEmpty);
 
-			const tsResult = (await Promise.all(scriptRanges.map(scriptRange => onTs(uri, scriptRange, context)))).flat();
-			const cssResult = (await Promise.all(styleRanges.map(styleRange => onCss(uri, styleRange, context)))).flat();
+			const tsResult = (await Promise.all(scriptRanges.map(scriptRange => onTs(uri, scriptRange, codeActionContext)))).flat();
+			const cssResult = (await Promise.all(styleRanges.map(styleRange => onCss(uri, styleRange, codeActionContext)))).flat();
 
 			return dedupe.withCodeAction([
 				...tsResult,
@@ -43,8 +43,8 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 			]);
 		}
 
-		const tsResult = await onTs(uri, range, context);
-		const cssResult = onCss(uri, range, context);
+		const tsResult = await onTs(uri, range, codeActionContext);
+		const cssResult = onCss(uri, range, codeActionContext);
 
 		return dedupe.withCodeAction([
 			...tsResult,
@@ -52,11 +52,11 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 		]);
 	}
 
-	async function onTs(uri: string, range: vscode.Range, context: vscode.CodeActionContext) {
+	async function onTs(uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) {
 
 		let result: vscode.CodeAction[] = [];
 
-		for (const tsLoc of sourceFiles.toTsLocations(
+		for (const tsLoc of context.sourceFiles.toEmbeddedLocation(
 			uri,
 			range.start,
 			range.end,
@@ -64,13 +64,16 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 			sourceMap => !!sourceMap.capabilities.codeActions,
 		)) {
 
-			const tsLs = getTsLs(tsLoc.lsType);
+			if (tsLoc.lsType === undefined)
+				continue;
+
+			const tsLs = context.getTsLs(tsLoc.lsType);
 			const tsContext: vscode.CodeActionContext = {
 				diagnostics: transformLocations(
-					context.diagnostics,
+					codeActionContext.diagnostics,
 					vueRange => tsLoc.type === 'embedded-ts' ? tsLoc.sourceMap.getMappedRange(vueRange.start, vueRange.end)?.[0] : vueRange,
 				),
-				only: context.only,
+				only: codeActionContext.only,
 			};
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
@@ -83,7 +86,7 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, false, tsCodeAction.edit, sourceFiles, () => true) : undefined;
+				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, false, tsCodeAction.edit, context.sourceFiles, () => true) : undefined;
 				if (tsCodeAction.edit && !vueEdit) continue;
 
 				const data: Data = {
@@ -102,18 +105,18 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 
 		return result;
 	}
-	function onCss(uri: string, range: vscode.Range, context: vscode.CodeActionContext) {
+	function onCss(uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) {
 
 		let result: vscode.CodeAction[] = [];
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = context.sourceFiles.get(uri);
 		if (!sourceFile)
 			return result;
 
 		for (const sourceMap of sourceFile.getCssSourceMaps()) {
 
-			const stylesheet = getStylesheet(sourceMap.mappedDocument);
-			const cssLs = getCssLs(sourceMap.mappedDocument.languageId);
+			const stylesheet = context.getStylesheet(sourceMap.mappedDocument);
+			const cssLs = context.getCssLs(sourceMap.mappedDocument.languageId);
 
 			if (!cssLs || !stylesheet)
 				continue;
@@ -121,10 +124,10 @@ export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: Lang
 			for (const [cssRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 				const cssContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
-						context.diagnostics,
+						codeActionContext.diagnostics,
 						vueRange => sourceMap.getMappedRange(vueRange.start, vueRange.end)?.[0],
 					),
-					only: context.only,
+					only: codeActionContext.only,
 				};
 				const cssCodeActions = cssLs.doCodeActions2(sourceMap.mappedDocument, cssRange, cssContext, stylesheet) as vscode.CodeAction[];
 				for (const codeAction of cssCodeActions) {

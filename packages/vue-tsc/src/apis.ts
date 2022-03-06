@@ -61,7 +61,7 @@ export function register(
 				&& diagnostic.length !== undefined
 			) {
 				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
-				for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
+				for (const tsOrVueLoc of sourceFiles.fromEmbeddedLocation(
 					lsType,
 					shared.fsPathToUri(fileName),
 					diagnostic.start,
