@@ -20,6 +20,7 @@ import * as tagNameCase from './services/tagNameCase';
 import * as workspaceSymbol from './services/workspaceSymbol';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
+import * as ts2 from 'vscode-typescript-languageservice';
 
 import type * as html from 'vscode-html-languageservice';
 import type * as css from 'vscode-css-languageservice';
@@ -153,93 +154,25 @@ export function createLanguageService(
 			isAdditionalCompletion: true,
 		},
 	);
-	const scriptTsPlugin = wrapPlugin(
-		useTsPlugin({
-			getTsLs: () => tsRuntime.context.scriptTsLs,
-			baseCompletionOptions: {
-				// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-				includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-			},
-		}),
+	const scriptTsPlugins = useTsPlugins(
+		tsRuntime.context.scriptTsLs,
+		false,
 		{
-			triggerCharacters: tsTriggerCharacters,
+			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		},
-	);
-	const _templateTsPlugin = wrapPlugin(
-		useTsPlugin({
-			getTsLs: () => tsRuntime.context.templateTsLs,
-			baseCompletionOptions: {
-				// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-				includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-				quotePreference: 'single',
-				includeCompletionsForModuleExports: false,
-				includeCompletionsForImportStatements: false,
-			},
-		}),
+	)
+	const templateTsPlugins = useTsPlugins(
+		tsRuntime.context.templateTsLs,
+		true,
 		{
-			triggerCharacters: tsTriggerCharacters,
+			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+			quotePreference: 'single',
+			includeCompletionsForModuleExports: false,
+			includeCompletionsForImportStatements: false,
 		},
-	);
-	const scriptJsDocPlugin = wrapPlugin(
-		useJsDocPlugin({
-			getTsLs: () => tsRuntime.context.scriptTsLs,
-		}),
-		{
-			triggerCharacters: jsDocTriggerCharacters,
-			isAdditionalCompletion: true,
-		},
-	);
-	const templateJsDocPlugin = wrapPlugin(
-		useJsDocPlugin({
-			getTsLs: () => tsRuntime.context.templateTsLs,
-		}),
-		{
-			triggerCharacters: jsDocTriggerCharacters,
-			isAdditionalCompletion: true,
-		},
-	);
-	const scriptTsDirectiveCommentPlugin = wrapPlugin(
-		useDirectiveCommentPlugin({
-			getTsLs: () => tsRuntime.context.scriptTsLs,
-		}),
-		{
-			triggerCharacters: directiveCommentTriggerCharacters,
-			isAdditionalCompletion: true,
-		},
-	);
-	const templateTsDirectiveCommentPlugin = wrapPlugin(
-		useDirectiveCommentPlugin({
-			getTsLs: () => tsRuntime.context.templateTsLs,
-		}),
-		{
-			triggerCharacters: directiveCommentTriggerCharacters,
-			isAdditionalCompletion: true,
-		},
-	);
-	const templateTsPlugin: LanguageServicePlugin = {
-		..._templateTsPlugin,
-		async doComplete(textDocument, position, context) {
-
-			const tsComplete = await _templateTsPlugin.doComplete?.(textDocument, position, context);
-
-			if (tsComplete) {
-				const sortTexts = getTsCompletions(ts)?.SortText;
-				if (sortTexts) {
-					tsComplete.items = tsComplete.items.filter(tsItem => {
-						if (
-							(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
-							|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
-						) {
-							return isGloballyWhitelisted(tsItem.label);
-						}
-						return true;
-					});
-				}
-			}
-
-			return tsComplete;
-		},
-	};
+	)
 	const autoDotValuePlugin = wrapPlugin(
 		useAutoDotValuePlugin({
 			ts,
@@ -257,13 +190,9 @@ export function createLanguageService(
 		vueTemplatePugPlugin,
 		jsonPlugin,
 		emmetPlugin,
-		scriptTsPlugin,
-		scriptJsDocPlugin,
-		scriptTsDirectiveCommentPlugin,
-		templateTsPlugin,
-		templateJsDocPlugin,
-		templateTsDirectiveCommentPlugin,
 		autoDotValuePlugin,
+		...scriptTsPlugins,
+		...templateTsPlugins,
 	]) {
 		allPlugins.set(plugin.id, plugin);
 	}
@@ -275,7 +204,7 @@ export function createLanguageService(
 		compilerOptions,
 		getTextDocument: tsRuntime.getHostDocument,
 		getPlugins: lsType => {
-			const plugins = [
+			let plugins = [
 				vuePlugin,
 				cssPlugin,
 				vueTemplateHtmlPlugin,
@@ -284,14 +213,10 @@ export function createLanguageService(
 				emmetPlugin,
 			];
 			if (lsType === 'template') {
-				plugins.push(templateTsPlugin);
-				plugins.push(templateJsDocPlugin);
-				plugins.push(templateTsDirectiveCommentPlugin);
+				plugins = plugins.concat(templateTsPlugins);
 			}
 			else if (lsType === 'script') {
-				plugins.push(scriptTsPlugin);
-				plugins.push(scriptJsDocPlugin);
-				plugins.push(scriptTsDirectiveCommentPlugin);
+				plugins = plugins.concat(scriptTsPlugins);
 				plugins.push(autoDotValuePlugin);
 			}
 			return plugins;
@@ -399,6 +324,64 @@ export function createLanguageService(
 				triggerCharacters: [...triggerCharacters, ...vueTemplateLanguageTriggerCharacters],
 			},
 		);
+	}
+	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, baseCompletionOptions: ts.GetCompletionsAtPositionOptions) {
+		const _languageSupportPlugin = wrapPlugin(
+			useTsPlugin({
+				getTsLs: () => tsLs,
+				baseCompletionOptions,
+			}),
+			{
+				triggerCharacters: tsTriggerCharacters,
+			},
+		);
+		const languageSupportPlugin: LanguageServicePlugin = isTemplatePlugin ? {
+			..._languageSupportPlugin,
+			async doComplete(textDocument, position, context) {
+
+				const tsComplete = await _languageSupportPlugin.doComplete?.(textDocument, position, context);
+
+				if (tsComplete) {
+					const sortTexts = getTsCompletions(ts)?.SortText;
+					if (sortTexts) {
+						tsComplete.items = tsComplete.items.filter(tsItem => {
+							if (
+								(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
+								|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
+							) {
+								return isGloballyWhitelisted(tsItem.label);
+							}
+							return true;
+						});
+					}
+				}
+
+				return tsComplete;
+			},
+		} : _languageSupportPlugin;
+		const jsDocPlugin = wrapPlugin(
+			useJsDocPlugin({
+				getTsLs: () => tsLs,
+			}),
+			{
+				triggerCharacters: jsDocTriggerCharacters,
+				isAdditionalCompletion: true,
+			},
+		);
+		const directiveCommentPlugin = wrapPlugin(
+			useDirectiveCommentPlugin({
+				getTsLs: () => tsLs,
+			}),
+			{
+				triggerCharacters: directiveCommentTriggerCharacters,
+				isAdditionalCompletion: true,
+			},
+		);
+		return [
+			languageSupportPlugin,
+			jsDocPlugin,
+			directiveCommentPlugin,
+		];
 	}
 	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
 
