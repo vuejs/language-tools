@@ -73,6 +73,19 @@ export default definePlugin((host: {
             documentContext: host.documentContext,
         }, getHtmlDocument),
 
+        findDocumentLinks(document) {
+            return worker(document, (vueDocument) => {
+
+                if (!host.documentContext)
+                    return;
+
+                const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
+                const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
+
+                return htmlLs.findDocumentLinks(sfcWithEmptyBlocksDocument, host.documentContext);
+            });
+        },
+
         findDocumentSymbols(document) {
             return worker(document, (vueDocument) => {
 
@@ -81,7 +94,7 @@ export default definePlugin((host: {
 
                 if (descriptor.template) {
                     result.push({
-                        name: '<template>',
+                        name: 'template',
                         kind: vscode.SymbolKind.Module,
                         location: vscode.Location.create(document.uri, vscode.Range.create(
                             document.positionAt(descriptor.template.startTagEnd),
@@ -91,7 +104,7 @@ export default definePlugin((host: {
                 }
                 if (descriptor.script) {
                     result.push({
-                        name: '<script>',
+                        name: 'script',
                         kind: vscode.SymbolKind.Module,
                         location: vscode.Location.create(document.uri, vscode.Range.create(
                             document.positionAt(descriptor.script.startTagEnd),
@@ -101,7 +114,7 @@ export default definePlugin((host: {
                 }
                 if (descriptor.scriptSetup) {
                     result.push({
-                        name: '<script setup>',
+                        name: 'script setup',
                         kind: vscode.SymbolKind.Module,
                         location: vscode.Location.create(document.uri, vscode.Range.create(
                             document.positionAt(descriptor.scriptSetup.startTagEnd),
@@ -111,7 +124,7 @@ export default definePlugin((host: {
                 }
                 for (const style of descriptor.styles) {
                     result.push({
-                        name: `<${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}>`,
+                        name: `${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}`,
                         kind: vscode.SymbolKind.Module,
                         location: vscode.Location.create(document.uri, vscode.Range.create(
                             document.positionAt(style.startTagEnd),
@@ -121,7 +134,7 @@ export default definePlugin((host: {
                 }
                 for (const customBlock of descriptor.customBlocks) {
                     result.push({
-                        name: `<${customBlock.type}>`,
+                        name: `${customBlock.type}`,
                         kind: vscode.SymbolKind.Module,
                         location: vscode.Location.create(document.uri, vscode.Range.create(
                             document.positionAt(customBlock.startTagEnd),

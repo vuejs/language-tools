@@ -4,6 +4,7 @@ import type { Embedded, EmbeddedDocumentSourceMap, SourceFile } from '@volar/vue
 import type { DocumentServiceRuntimeContext } from '../types';
 
 export function register(context: DocumentServiceRuntimeContext) {
+
 	return async (document: TextDocument, options: vscode.FormattingOptions) => {
 
 		const originalDocument = document;

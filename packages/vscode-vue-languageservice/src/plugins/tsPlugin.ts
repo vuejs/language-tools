@@ -147,14 +147,14 @@ export default definePlugin((host: {
     };
 });
 
-
 export function isTsDocument(document: TextDocument) {
     return document.languageId === 'javascript' ||
         document.languageId === 'typescript' ||
         document.languageId === 'javascriptreact' ||
-        document.languageId === 'typescriptreact'
+        document.languageId === 'typescriptreact';
 }
 
 export function isJsonDocument(document: TextDocument) {
-    return document.languageId === 'json';
+    return document.languageId === 'json' ||
+        document.languageId === 'jsonc';
 }

@@ -4,6 +4,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { PluginCompletionData } from './complete';
 
 export function register(context: LanguageServiceRuntimeContext) {
+
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
 		const data: PluginCompletionData | undefined = item.data as any;
