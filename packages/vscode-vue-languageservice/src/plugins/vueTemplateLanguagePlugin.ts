@@ -60,7 +60,7 @@ export default definePlugin((host: {
     templateTsLs: ts2.LanguageService,
     templateLanguagePlugin: EmbeddedLanguagePlugin,
     isSupportedDocument: (document: TextDocument) => boolean,
-    getNameCases: (uri: string) => Promise<{
+    getNameCases?: (uri: string) => Promise<{
         tag: 'both' | 'kebabCase' | 'pascalCase',
         attr: 'kebabCase' | 'camelCase',
     }>,
@@ -302,7 +302,10 @@ export default definePlugin((host: {
 
     async function provideHtmlData(vueDocument: SourceFile) {
 
-        const nameCases = await host.getNameCases(vueDocument.uri);
+        const nameCases = await host.getNameCases?.(vueDocument.uri) ?? {
+            tag: 'both',
+            attr: 'kebabCase',
+        };
         const componentCompletion = getComponentCompletionData(vueDocument);
         const tags: html.ITagData[] = [];
         const tsItems = new Map<string, vscode.CompletionItem>();

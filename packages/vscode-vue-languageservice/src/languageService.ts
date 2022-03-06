@@ -79,8 +79,8 @@ export function getTriggerCharacters(tsVersion: string) {
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	vueHost: LanguageServiceHost,
-	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
-	getNameCases: (uri: string) => Promise<{
+	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
+	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,

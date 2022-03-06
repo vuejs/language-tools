@@ -88,25 +88,21 @@ export async function createProject(
 					{ typescript: ts },
 					languageServiceHost,
 					lsConfigs?.getSettings,
-					async (uri) => {
-
-						const cases = {
-							tag: 'both' as 'both' | 'kebabCase' | 'pascalCase',
-							attr: 'kebabCase' as 'kebabCase' | 'camelCase',
-						};
+					options.languageFeatures?.completion ? async (uri) => {
 
 						if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
 							const res = await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
-							cases.attr = res.attrNameCase;
-							cases.tag = res.tagNameCase;
-						}
-						else if (options.languageFeatures?.completion) {
-							cases.tag = options.languageFeatures.completion.defaultTagNameCase;
-							cases.attr = options.languageFeatures.completion.defaultAttrNameCase;
+							return {
+								tag: res.tagNameCase,
+								attr: res.attrNameCase,
+							};
 						}
 
-						return cases;
-					},
+						return {
+							tag: options.languageFeatures!.completion!.defaultTagNameCase,
+							attr: options.languageFeatures!.completion!.defaultAttrNameCase,
+						};
+					} : undefined,
 				);
 				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
