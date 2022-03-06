@@ -84,7 +84,30 @@ export async function createProject(
 		if (!vueLs) {
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
-				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost, lsConfigs?.getSettings);
+				const vueLs = vue.createLanguageService(
+					{ typescript: ts },
+					languageServiceHost,
+					lsConfigs?.getSettings,
+					async (uri) => {
+
+						const cases = {
+							tag: 'both' as 'both' | 'kebabCase' | 'pascalCase',
+							attr: 'kebabCase' as 'kebabCase' | 'camelCase',
+						};
+
+						if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
+							const res = await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
+							cases.attr = res.attrNameCase;
+							cases.tag = res.tagNameCase;
+						}
+						else if (options.languageFeatures?.completion) {
+							cases.tag = options.languageFeatures.completion.defaultTagNameCase;
+							cases.attr = options.languageFeatures.completion.defaultAttrNameCase;
+						}
+
+						return cases;
+					},
+				);
 				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());

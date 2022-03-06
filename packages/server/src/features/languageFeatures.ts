@@ -15,7 +15,7 @@ import * as useSetupSugar from '../commands/useSetupSugar';
 import * as unuseSetupSugar from '../commands/unuseSetupSugar';
 import * as useRefSugar from '../commands/useRefSugar';
 import * as unuseRefSugar from '../commands/unuseRefSugar';
-import type { CompletionData } from 'vscode-vue-languageservice/src/services/completion';
+import type { PluginCompletionData } from 'vscode-vue-languageservice/src/services/completion';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -33,16 +33,6 @@ export function register(
 			handler.textDocument.uri,
 			handler.position,
 			handler.context,
-			async () => await configuration?.getConfiguration('volar.completion.autoImportComponent') ?? true,
-			async (uri) => {
-				if (features.completion?.getDocumentNameCasesRequest) {
-					return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
-				}
-				return {
-					tagNameCase: features.completion!.defaultTagNameCase,
-					attrNameCase: features.completion!.defaultAttrNameCase,
-				};
-			},
 		);
 		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
 		if (!insertReplaceSupport && list) {
@@ -55,7 +45,7 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri = (item.data as any as CompletionData | undefined)?.uri;
+		const uri = (item.data as any as PluginCompletionData | undefined)?.uri;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)

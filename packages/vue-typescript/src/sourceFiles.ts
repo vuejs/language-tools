@@ -1,8 +1,8 @@
 import { computed, shallowReactive } from '@vue/reactivity';
 import type * as vscode from 'vscode-languageserver-protocol';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { SourceFile } from './sourceFile';
-import type { EmbeddedDocumentSourceMap, SourceMap, TeleportSourceMap } from './utils/sourceMaps';
+import type { EmbeddedDocumentSourceMap, TeleportSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
@@ -42,14 +42,25 @@ export function createSourceFiles() {
 		}
 		return map;
 	});
+	const embeddedDocumentsMap = computed(() => {
+
+		const map = new Map<TextDocument, SourceFile>();
+
+		for (const sourceFile of all.value) {
+			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
+				map.set(sourceMap.mappedDocument, sourceFile);
+			}
+		}
+
+		return map;
+	});
 	const sourceMapsByUriAndLsType = computed(() => {
 
 		const noLsType = new Map<string, EmbeddedDocumentSourceMap>();
 		const script = new Map<string, EmbeddedDocumentSourceMap>();
 		const template = new Map<string, EmbeddedDocumentSourceMap>();
 
-		for (const key in _sourceFiles) {
-			const sourceFile = _sourceFiles[key]!;
+		for (const sourceFile of all.value) {
 			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
 				if (sourceMap.lsType === undefined) {
 					noLsType.set(sourceMap.mappedDocument.uri, sourceMap);
@@ -289,6 +300,11 @@ export function createSourceFiles() {
 					},
 				};
 			}
+		}),
+		fromEmbeddedDocument: untrack(function (
+			document: TextDocument,
+		) {
+			return embeddedDocumentsMap.value.get(document);
 		}),
 		fromTsLocation: untrack(function* (
 			lsType: 'script' | 'template',

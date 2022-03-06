@@ -51,6 +51,11 @@ export type EmbeddedLanguagePlugin = {
         },
     }): NullableResult<string | vscode.TextEdit>;
 
+    /**
+     * TODO: only support to doCompleteResolve for now
+     */
+    resolveEmbeddedRange?(range: vscode.Range, sourceMap: EmbeddedDocumentSourceMap): vscode.Range | undefined;
+
     // findMatchingTagPosition?(document: TextDocument, position: vscode.Position, htmlDocument: HTMLDocument): vscode.Position | null;
 };
 
