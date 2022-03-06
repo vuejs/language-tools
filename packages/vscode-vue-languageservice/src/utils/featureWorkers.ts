@@ -1,5 +1,6 @@
 import type { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { LanguageServicePlugin } from '../languageService';
 import { EmbeddedLanguagePlugin, visitEmbedded } from '../plugins/definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
 
@@ -108,9 +109,9 @@ export async function languageFeatureWorker<T, K>(
 	context: LanguageServiceRuntimeContext,
 	uri: string,
 	arg: K,
-	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | [K],
+	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
 	worker: (plugin: EmbeddedLanguagePlugin, document: TextDocument, arg: K) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap, plugin: LanguageServicePlugin) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
@@ -136,7 +137,7 @@ export async function languageFeatureWorker<T, K>(
 					if (!embeddedResult)
 						continue;
 
-					const result = await transform(embeddedResult!, sourceMap);
+					const result = await transform(embeddedResult!, sourceMap, plugin);
 
 					if (!result)
 						continue;

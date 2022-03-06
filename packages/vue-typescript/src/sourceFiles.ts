@@ -80,30 +80,26 @@ export function createSourceFiles() {
 			template,
 		};
 	});
-	const tsRefs = {
-		template: {
-			teleports: computed(() => {
-				const map = new Map<string, TeleportSourceMap>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					for (const sourceMap of sourceFile.refs.templateLsTeleports.value) {
-						map.set(sourceMap.mappedDocument.uri, sourceMap);
-					}
-				}
-				return map;
-			}),
-		},
-		script: {
-			teleports: computed(() => {
-				const map = new Map<string, TeleportSourceMap>();
-				for (const key in _sourceFiles) {
-					const sourceFile = _sourceFiles[key]!;
-					const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
+	const tsTeleports = {
+		template: computed(() => {
+			const map = new Map<string, TeleportSourceMap>();
+			for (const key in _sourceFiles) {
+				const sourceFile = _sourceFiles[key]!;
+				for (const sourceMap of sourceFile.refs.templateLsTeleports.value) {
 					map.set(sourceMap.mappedDocument.uri, sourceMap);
 				}
-				return map;
-			}),
-		},
+			}
+			return map;
+		}),
+		script: computed(() => {
+			const map = new Map<string, TeleportSourceMap>();
+			for (const key in _sourceFiles) {
+				const sourceFile = _sourceFiles[key]!;
+				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
+				map.set(sourceMap.mappedDocument.uri, sourceMap);
+			}
+			return map;
+		}),
 	};
 	const dirs = computed(() => [...new Set(uris.value.map(shared.uriToFsPath).map(path.dirname))]);
 
@@ -117,7 +113,7 @@ export function createSourceFiles() {
 
 		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
 
-		getTsTeleports: untrack((lsType: 'script' | 'template') => tsRefs[lsType].teleports.value),
+		getTsTeleports: untrack((lsType: 'script' | 'template') => tsTeleports[lsType].value),
 		getEmbeddeds: untrack(function* (
 			lsType: 'script' | 'template' | undefined,
 		) {

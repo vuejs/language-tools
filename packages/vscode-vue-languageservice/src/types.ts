@@ -23,5 +23,3 @@ export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeat
 	getPlugins(lsType: 'template' | 'script' | undefined): LanguageServicePlugin[],
 	getPluginById(id: number): LanguageServicePlugin | undefined,
 }
-
-export type RuntimeContext = LanguageServiceRuntimeContext | DocumentServiceRuntimeContext;

@@ -3,8 +3,12 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { tsEditToVueEdit } from './rename';
-import type { Data } from './callHierarchy';
 import * as shared from '@volar/shared';
+
+export  interface Data {
+	lsType: 'script' | 'template'
+	tsData: any
+}
 
 export function register(context: LanguageServiceRuntimeContext) {
 

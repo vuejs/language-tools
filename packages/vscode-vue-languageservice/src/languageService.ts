@@ -23,7 +23,7 @@ import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugi
 import useTsPlugin, { getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
 import useVueTemplateLanguagePlugin, { getTsCompletions, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
-import * as callHierarchy from './services/callHierarchy';
+import * as callHierarchy from './languageFuatures/callHierarchy';
 import * as codeActions from './services/codeAction';
 import * as codeActionResolve from './services/codeActionResolve';
 import * as d3 from './services/d3';
