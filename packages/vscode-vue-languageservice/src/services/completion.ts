@@ -75,7 +75,9 @@ export function register(
 			plugin: LanguageServicePlugin,
 			list: vscode.CompletionList,
 		}[],
-		hasMainCompletion: boolean,
+		mainCompletion: {
+			documentUri: string,
+		} | undefined,
 	} | undefined;
 	const componentCompletionDataGetters = new WeakMap<SourceFile, ReturnType<typeof useComponentCompletionData>>();
 
@@ -178,7 +180,7 @@ export function register(
 			cache = {
 				uri,
 				data: [],
-				hasMainCompletion: false,
+				mainCompletion: undefined,
 			};
 
 			if (vueDocument) {
@@ -199,7 +201,7 @@ export function register(
 							if (context?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(context.triggerCharacter))
 								continue;
 
-							if (cache!.hasMainCompletion && !plugin.context?.isAdditionalCompletion)
+							if (cache!.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
 							let htmlTsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
@@ -214,7 +216,7 @@ export function register(
 								continue;
 
 							if (!plugin.context?.isAdditionalCompletion) {
-								cache!.hasMainCompletion = true;
+								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
 							}
 
 							const completionList: vscode.CompletionList = {
@@ -264,7 +266,7 @@ export function register(
 					if (context?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(context.triggerCharacter))
 						continue;
 
-					if (cache.hasMainCompletion && !plugin.context?.isAdditionalCompletion)
+					if (cache.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache.mainCompletion.documentUri !== document.uri))
 						continue;
 
 					const completionList = await plugin.doComplete(document, position, context);
@@ -273,7 +275,7 @@ export function register(
 						continue;
 
 					if (!plugin.context?.isAdditionalCompletion) {
-						cache.hasMainCompletion = true;
+						cache.mainCompletion = { documentUri: document.uri };
 					}
 
 					cache.data.push({
