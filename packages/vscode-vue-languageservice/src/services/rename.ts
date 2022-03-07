@@ -6,7 +6,7 @@ import * as dedupe from '../utils/dedupe';
 import type { EmbeddedDocumentMappingData } from '@volar/vue-typescript';
 import { wordPatterns } from '../plugins/cssPlugin';
 
-export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments, getCssLs, getTsLs, scriptTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return {
 		prepareRename: (uri: string, position: vscode.Position): vscode.ResponseError | vscode.Range | undefined => {
@@ -50,7 +50,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 
 		let error: vscode.ResponseError | undefined;
 
-		for (const tsLoc of sourceFiles.toEmbeddedLocation(
+		for (const tsLoc of vueDocuments.toEmbeddedLocation(
 			uri,
 			position,
 			position,
@@ -73,7 +73,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 				continue;
 			}
 
-			for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
+			for (const vueLoc of vueDocuments.fromEmbeddedLocation(tsLoc.lsType, tsLoc.uri, tsPrepare.start, tsPrepare.end))
 				return vueLoc.range;
 		}
 
@@ -81,21 +81,21 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 	}
 	async function onTsFile(oldUri: string, newUri: string) {
 
-		const sourceFile = sourceFiles.get(oldUri);
+		const sourceFile = vueDocuments.get(oldUri);
 		const isVirtualFile = !!sourceFile;
 		const tsOldUri = sourceFile ? sourceFile.getScriptTsDocument().uri : oldUri;
 		const tsNewUri = isVirtualFile ? newUri + '.ts' : newUri;
 		const tsResult = await scriptTsLs.getEditsForFileRename(tsOldUri, tsNewUri);
 
 		if (tsResult) {
-			return tsEditToVueEdit('script', false, tsResult, sourceFiles, canRename);
+			return tsEditToVueEdit('script', false, tsResult, vueDocuments, canRename);
 		}
 	}
 	async function doTsRename(uri: string, position: vscode.Position, newName: string) {
 
 		let result: vscode.WorkspaceEdit | undefined;
 
-		for (const tsLoc of sourceFiles.toEmbeddedLocation(
+		for (const tsLoc of vueDocuments.toEmbeddedLocation(
 			uri,
 			position,
 			position,
@@ -113,7 +113,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 			const tsResult = await doTsRenameWorker(tsLoc.lsType, tsLoc.uri, tsLoc.range.start, newName_2);
 			if (tsResult) {
 				const renameFromScriptContent = tsLoc.type === 'source-ts' || (tsLoc.data.vueTag === 'script' || tsLoc.data.vueTag === 'scriptSetup')
-				const vueResult = tsEditToVueEdit(tsLoc.lsType, tsLoc.lsType === 'template' && renameFromScriptContent, tsResult, sourceFiles, canRename);
+				const vueResult = tsEditToVueEdit(tsLoc.lsType, tsLoc.lsType === 'template' && renameFromScriptContent, tsResult, vueDocuments, canRename);
 				if (vueResult) {
 					if (!result)
 						result = vueResult;
@@ -145,7 +145,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 
 					loopChecker.add({ uri: editUri, range: textEdit.range });
 
-					const teleport = sourceFiles.getTsTeleports(lsType).get(editUri);
+					const teleport = vueDocuments.getTsTeleports(lsType).get(editUri);
 					if (!teleport)
 						continue;
 
@@ -172,7 +172,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 	}
 	function onCssPrepare(uri: string, position: vscode.Position) {
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = vueDocuments.get(uri);
 		if (!sourceFile)
 			return;
 
@@ -190,7 +190,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 	}
 	function onCss(uri: string, position: vscode.Position, newName: string) {
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = vueDocuments.get(uri);
 		if (!sourceFile)
 			return;
 
@@ -227,7 +227,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, scriptT
 		// css -> vue
 		for (const cssUri in cssResult.changes) {
 
-			const sourceMap = sourceFiles.fromEmbeddedDocumentUri(undefined, cssUri);
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri(undefined, cssUri);
 			if (!sourceMap)
 				continue;
 

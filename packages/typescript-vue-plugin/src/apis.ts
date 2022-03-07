@@ -2,7 +2,7 @@ import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ vueDocuments: sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
+export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
 
 	return {
 		getCompletionsAtPosition,
@@ -72,7 +72,7 @@ export function register({ vueDocuments: sourceFiles, scriptTsLsRaw, templateTsL
 				symbols = symbols.concat(_symbols);
 				for (const ref of _symbols) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
+					const teleport = vueDocuments.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 
 					if (!teleport)
 						continue;
@@ -130,7 +130,7 @@ export function register({ vueDocuments: sourceFiles, scriptTsLsRaw, templateTsL
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
+					const teleport = vueDocuments.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 					if (!teleport)
 						continue;
 
@@ -176,7 +176,7 @@ export function register({ vueDocuments: sourceFiles, scriptTsLsRaw, templateTsL
 
 						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-						const teleport = sourceFiles.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
+						const teleport = vueDocuments.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
 						if (!teleport)
 							continue;
 
@@ -235,7 +235,7 @@ export function register({ vueDocuments: sourceFiles, scriptTsLsRaw, templateTsL
 	function transformSpan(lsType: 'script' | 'template', fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of sourceFiles.fromEmbeddedLocation(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of vueDocuments.fromEmbeddedLocation(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
 			return {
 				fileName: shared.uriToFsPath(vueLoc.uri),
 				textSpan: {

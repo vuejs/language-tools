@@ -7,14 +7,14 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { untrack } from '../utils/untrack';
 
-export function register({ vueDocuments: sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
+export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
 	const vueWorkers = new WeakMap<VueDocument, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
 
 	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = vueDocuments.get(uri);
 		if (sourceFile) {
 
 			let worker = vueWorkers.get(sourceFile);
@@ -636,7 +636,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, jsonLs, template
 	function toSourceDiags(lsType: 'template' | 'script' | undefined, uri: string, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
-		const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, uri);
+		const sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
 
 		if (!sourceMap)
 			return result;
@@ -657,7 +657,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, jsonLs, template
 					const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 					for (const info of vueError.relatedInformation) {
-						for (const vueLoc of sourceFiles.fromEmbeddedLocation(
+						for (const vueLoc of vueDocuments.fromEmbeddedLocation(
 							lsType,
 							info.location.uri,
 							info.location.range.start,

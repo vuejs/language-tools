@@ -9,10 +9,10 @@ export interface ReferencesCodeLensData {
 	tsOffset: number,
 }
 
-export function register({ vueDocuments: sourceFiles }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments }: LanguageServiceRuntimeContext) {
 	return (uri: string) => {
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = vueDocuments.get(uri);
 		if (!sourceFile) return [];
 
 		const document = sourceFile.getTextDocument();

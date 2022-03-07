@@ -3,7 +3,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { ReferencesCodeLensData } from './referencesCodeLens';
 import * as findReferences from './references';
 
-export function register({ vueDocuments: sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments, getTsLs }: LanguageServiceRuntimeContext) {
 
 	const _findReferences = findReferences.register(arguments[0]);
 
@@ -12,9 +12,9 @@ export function register({ vueDocuments: sourceFiles, getTsLs }: LanguageService
 		// @ts-expect-error
 		const data = codeLens.data as ReferencesCodeLensData;
 		const tsLs = getTsLs(data.lsType);
-		const doc = data.uri ? sourceFiles.get(data.uri)?.getTextDocument() ?? tsLs.__internal__.getTextDocument(data.uri) : undefined;
+		const doc = data.uri ? vueDocuments.get(data.uri)?.getTextDocument() ?? tsLs.__internal__.getTextDocument(data.uri) : undefined;
 		const tsDoc = data.tsUri ? tsLs.__internal__.getTextDocument(data.tsUri) : undefined;
-		const sourceFile = data.uri ? sourceFiles.get(data.uri) : undefined;
+		const sourceFile = data.uri ? vueDocuments.get(data.uri) : undefined;
 
 		if (data.uri && doc && tsDoc && data.offset !== undefined && data.tsOffset !== undefined) {
 			const pos = doc.positionAt(data.offset);

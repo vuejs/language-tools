@@ -6,7 +6,7 @@ const lsTypes = ['script', 'template'] as const;
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	{ vueDocuments: sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
+	{ vueDocuments, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
 ) {
 
 	return {
@@ -61,7 +61,7 @@ export function register(
 				&& diagnostic.length !== undefined
 			) {
 				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
-				for (const tsOrVueLoc of sourceFiles.fromEmbeddedLocation(
+				for (const tsOrVueLoc of vueDocuments.fromEmbeddedLocation(
 					lsType,
 					shared.fsPathToUri(fileName),
 					diagnostic.start,

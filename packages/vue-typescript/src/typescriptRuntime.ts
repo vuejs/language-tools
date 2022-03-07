@@ -33,7 +33,7 @@ export function createTypeScriptRuntime(
     let templateProjectVersion = 0;
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
     const documents = shared.createPathMap<TextDocument>(); // TODO: remove this
-    const sourceFiles = createVueDocuments();
+    const vueDocuments = createVueDocuments();
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
 
@@ -93,7 +93,7 @@ export function createTypeScriptRuntime(
 
     const context: TypeScriptFeaturesRuntimeContext = {
         vueHost,
-        vueDocuments: sourceFiles,
+        vueDocuments,
         templateTsHost,
         scriptTsHost,
         templateTsLsRaw,
@@ -130,7 +130,7 @@ export function createTypeScriptRuntime(
     function getLocalTypesFiles(lsType: 'script' | 'template') {
         if (lsType === 'script')
             return [];
-        return sourceFiles.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
+        return vueDocuments.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
     }
     function apiHook<T extends (...args: any) => any>(
         api: T,
@@ -156,7 +156,7 @@ export function createTypeScriptRuntime(
             const addUris: string[] = [];
             const updateUris: string[] = [];
 
-            for (const sourceFile of sourceFiles.getAll()) {
+            for (const sourceFile of vueDocuments.getAll()) {
                 const fileName = shared.uriToFsPath(sourceFile.uri);
                 if (!newFileUris.has(sourceFile.uri) && !vueHost.fileExists?.(fileName)) {
                     // delete
@@ -172,7 +172,7 @@ export function createTypeScriptRuntime(
             }
 
             for (const newUri of newFileUris) {
-                if (!sourceFiles.get(newUri)) {
+                if (!vueDocuments.get(newUri)) {
                     // add
                     addUris.push(newUri);
                 }
@@ -219,14 +219,14 @@ export function createTypeScriptRuntime(
                     const fileNameTrim = upath.trimExt(fileName);
                     if (fileNameTrim.endsWith('.vue')) {
                         const uri = shared.fsPathToUri(fileNameTrim);
-                        const sourceFile = sourceFiles.get(uri);
+                        const sourceFile = vueDocuments.get(uri);
                         if (!sourceFile) {
                             const fileExists = !!vueHost.fileExists?.(fileNameTrim);
                             if (fileExists) {
                                 updateSourceFiles([uri], false); // create virtual files
                             }
                         }
-                        return !!sourceFiles.fromEmbeddedDocumentUri(lsType, shared.fsPathToUri(fileName));
+                        return !!vueDocuments.fromEmbeddedDocumentUri(lsType, shared.fsPathToUri(fileName));
                     }
                     else {
                         return !!vueHost.fileExists?.(fileName);
@@ -241,7 +241,7 @@ export function createTypeScriptRuntime(
             getScriptSnapshot,
             readDirectory: (path, extensions, exclude, include, depth) => {
                 const result = vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
-                for (const uri of sourceFiles.getUris()) {
+                for (const uri of vueDocuments.getUris()) {
                     const vuePath = shared.uriToFsPath(uri);
                     const vuePath2 = upath.join(path, upath.basename(vuePath));
                     if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
@@ -281,7 +281,7 @@ export function createTypeScriptRuntime(
         function getScriptFileNames() {
             const tsFileNames = getLocalTypesFiles(lsType);
 
-            for (const sourceMap of sourceFiles.getEmbeddeds(lsType)) {
+            for (const sourceMap of vueDocuments.getEmbeddeds(lsType)) {
                 tsFileNames.push(shared.uriToFsPath(sourceMap.mappedDocument.uri)); // virtual .ts
             }
             for (const fileName of vueHost.getScriptFileNames()) {
@@ -300,7 +300,7 @@ export function createTypeScriptRuntime(
             if (basename === localTypes.typesFileName) {
                 return '0';
             }
-            let sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, uri);
+            let sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
             if (sourceMap) {
                 return sourceMap.mappedDocument.version.toString();
             }
@@ -317,7 +317,7 @@ export function createTypeScriptRuntime(
                 return localTypesScript;
             }
             const uri = shared.fsPathToUri(fileName);
-            const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, uri);
+            const sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
             if (sourceMap) {
                 const text = sourceMap.mappedDocument.getText();
                 const snapshot = ts.ScriptSnapshot.fromString(text);
@@ -364,11 +364,11 @@ export function createTypeScriptRuntime(
             }
         }
         for (const uri of uris) {
-            const sourceFile = sourceFiles.get(uri);
+            const sourceFile = vueDocuments.get(uri);
             const doc = getHostDocument(uri);
             if (!doc) continue;
             if (!sourceFile) {
-                sourceFiles.set(uri, createVueDocument(
+                vueDocuments.set(uri, createVueDocument(
                     doc.uri,
                     doc.getText(),
                     doc.version.toString(),
@@ -407,7 +407,7 @@ export function createTypeScriptRuntime(
             lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
             let currentNums = 0;
             for (const uri of templateScriptUpdateUris) {
-                if (sourceFiles.get(uri)?.updateTemplateScript(templateTsLs)) {
+                if (vueDocuments.get(uri)?.updateTemplateScript(templateTsLs)) {
                     templateScriptUpdated = true;
                 }
                 currentNums++;
@@ -428,7 +428,7 @@ export function createTypeScriptRuntime(
     function unsetSourceFiles(uris: string[]) {
         let updated = false;
         for (const uri of uris) {
-            if (sourceFiles.delete(uri)) {
+            if (vueDocuments.delete(uri)) {
                 updated = true;
             }
         }

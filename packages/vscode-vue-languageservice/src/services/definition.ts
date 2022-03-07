@@ -3,7 +3,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import * as shared from '@volar/shared';
 
-export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return {
 		on: (uri: string, position: vscode.Position) => {
@@ -35,7 +35,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 		let vueResult: vscode.LocationLink[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toEmbeddedLocation(
+		for (const tsLoc of vueDocuments.toEmbeddedLocation(
 			uri,
 			position,
 			position,
@@ -58,7 +58,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 			let originSelectionRange: vscode.Range | undefined;
 			for (const tsLoc_2 of tsResult) {
 				if (tsLoc_2.originSelectionRange) {
-					for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
+					for (const vueLoc of vueDocuments.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.originalUri, tsLoc_2.originSelectionRange.start, tsLoc_2.originSelectionRange.end)) {
 						if (shared.isInsideRange(vueLoc.range, tempRange)) {
 							originSelectionRange = vueLoc.range;
 							break;
@@ -75,13 +75,13 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 				let targetRange: vscode.Range | undefined;
 				let targetSelectionRange: vscode.Range | undefined;
 
-				for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
+				for (const vueLoc of vueDocuments.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetRange.start, tsLoc_2.targetRange.end)) {
 					targetUri = vueLoc.uri;
 					targetRange = vueLoc.range;
 					break;
 				}
 
-				for (const vueLoc of sourceFiles.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
+				for (const vueLoc of vueDocuments.fromEmbeddedLocation(tsLoc.lsType, tsLoc_2.targetUri, tsLoc_2.targetSelectionRange.start, tsLoc_2.targetSelectionRange.end)) {
 					targetUri = vueLoc.uri;
 					targetSelectionRange = vueLoc.range;
 					break;
@@ -97,7 +97,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 				}
 				else if (tsLoc.lsType === 'script' && (tsLoc.type === 'source-ts' || tsLoc.data.vueTag === 'script' || tsLoc.data.vueTag === 'scriptSetup')) {
 					// fix https://github.com/johnsoncodehk/volar/issues/728
-					const sourceMap = sourceFiles.fromEmbeddedDocumentUri(tsLoc.lsType, tsLoc_2.targetUri);
+					const sourceMap = vueDocuments.fromEmbeddedDocumentUri(tsLoc.lsType, tsLoc_2.targetUri);
 					if (sourceMap) {
 						const targetDocument = sourceMap.sourceDocument;
 						const targetRange = {
@@ -127,7 +127,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 
 					loopChecker.add({ uri: location.targetUri, range: location.targetSelectionRange });
 
-					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType!).get(location.targetUri);
+					const teleport = vueDocuments.getTsTeleports(tsLoc.lsType!).get(location.targetUri);
 					if (!teleport) {
 						addResult(location);
 						continue;
@@ -169,7 +169,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 		let cssResult: vscode.Location[] = [];
 		let vueResult: vscode.Location[] = [];
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = vueDocuments.get(uri);
 		if (!sourceFile)
 			return vueResult;
 
@@ -197,7 +197,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 		// css -> vue
 		for (const cssLoc of cssResult) {
 
-			const sourceMap = sourceFiles.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
 			if (!sourceMap)
 				continue;
 

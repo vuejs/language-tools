@@ -2,7 +2,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position) => {
 
@@ -20,7 +20,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 		let vueResult: vscode.Location[] = [];
 
 		// vue -> ts
-		for (const tsLoc of sourceFiles.toEmbeddedLocation(
+		for (const tsLoc of vueDocuments.toEmbeddedLocation(
 			uri,
 			position,
 			position,
@@ -37,7 +37,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 
 			// ts -> vue
 			for (const tsLoc_2 of tsResult) {
-				for (const vueLoc of sourceFiles.fromEmbeddedLocation(
+				for (const vueLoc of vueDocuments.fromEmbeddedLocation(
 					tsLoc.lsType,
 					tsLoc_2.uri,
 					tsLoc_2.range.start,
@@ -62,7 +62,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 					position,
 				)) {
 					loopChecker.add({ uri: tsLoc_2.uri, range: tsLoc_2.range });
-					const teleport = sourceFiles.getTsTeleports(tsLoc.lsType!).get(tsLoc_2.uri);
+					const teleport = vueDocuments.getTsTeleports(tsLoc.lsType!).get(tsLoc_2.uri);
 
 					if (!teleport) {
 						tsResult.push(tsLoc_2);
@@ -97,7 +97,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 		let cssResult: vscode.Location[] = [];
 		let vueResult: vscode.Location[] = [];
 
-		const sourceFile = sourceFiles.get(uri);
+		const sourceFile = vueDocuments.get(uri);
 		if (!sourceFile)
 			return vueResult;
 
@@ -123,7 +123,7 @@ export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStyl
 		// css -> vue
 		for (const cssLoc of cssResult) {
 
-			const sourceMap = sourceFiles.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
 			if (!sourceMap)
 				continue;
 

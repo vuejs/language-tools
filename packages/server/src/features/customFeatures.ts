@@ -42,8 +42,8 @@ export function register(
 						}
 					});
 				}
-				const { vueDocuments: sourceFiles } = await ls.__internal__.getContext();
-				for (const sourceMap of sourceFiles.getEmbeddeds(lsType)) {
+				const { vueDocuments } = await ls.__internal__.getContext();
+				for (const sourceMap of vueDocuments.getEmbeddeds(lsType)) {
 					connection.workspace.applyEdit({
 						edit: {
 							documentChanges: [
@@ -74,8 +74,8 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const { vueDocuments: sourceFiles } = await ls.__internal__.getContext();
-				const allFiles = sourceFiles.getAll();
+				const { vueDocuments } = await ls.__internal__.getContext();
+				const allFiles = vueDocuments.getAll();
 				let i = 0;
 				for (const sourceFile of allFiles) {
 					progress.report(i++ / allFiles.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(sourceFile.uri)));
