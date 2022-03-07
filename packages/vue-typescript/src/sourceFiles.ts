@@ -62,7 +62,7 @@ export function createVueDocuments() {
 
 		for (const sourceFile of all.value) {
 			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
-				if (sourceMap.lsType === undefined) {
+				if (sourceMap.lsType === 'nonTs') {
 					noLsType.set(sourceMap.mappedDocument.uri, sourceMap);
 				}
 				else if (sourceMap.lsType === 'script') {
