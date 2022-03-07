@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { SearchTexts, SourceFile, SourceFiles } from '@volar/vue-typescript';
+import { SearchTexts, VueDocument, VueDocuments } from '@volar/vue-typescript';
 import { computed, pauseTracking, ref, resetTracking } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'upath';
@@ -68,10 +68,10 @@ export default definePlugin((host: {
     isEnabledComponentAutoImport: () => Promise<boolean>,
     getHtmlDataProviders: () => html.IHTMLDataProvider[],
     vueHost: LanguageServiceHost,
-    vueDocuments: SourceFiles,
+    vueDocuments: VueDocuments,
 }) => {
 
-    const componentCompletionDataGetters = new WeakMap<SourceFile, ReturnType<typeof useComponentCompletionData>>();
+    const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
     const autoImportPositions = new WeakSet<vscode.Position>();
 
     return {
@@ -300,7 +300,7 @@ export default definePlugin((host: {
         }
     }
 
-    async function provideHtmlData(vueDocument: SourceFile) {
+    async function provideHtmlData(vueDocument: VueDocument) {
 
         const nameCases = await host.getNameCases?.(vueDocument.uri) ?? {
             tag: 'both',
@@ -456,7 +456,7 @@ export default definePlugin((host: {
         return tsItems;
     }
 
-    function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFile, tsItems: Map<string, vscode.CompletionItem>) {
+    function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
 
         const replacement = getReplacement(completionList, vueDocument.getTextDocument());
 
@@ -584,7 +584,7 @@ export default definePlugin((host: {
         host.htmlLs.setDataProviders(true, host.getHtmlDataProviders());
     }
 
-    function getComponentCompletionData(sourceFile: SourceFile) {
+    function getComponentCompletionData(sourceFile: VueDocument) {
         let getter = componentCompletionDataGetters.get(sourceFile);
         if (!getter) {
             getter = untrack(useComponentCompletionData(sourceFile));
@@ -606,7 +606,7 @@ export default definePlugin((host: {
         } : undefined;
     }
 
-    function useComponentCompletionData(sourceFile: SourceFile) {
+    function useComponentCompletionData(sourceFile: VueDocument) {
 
         const {
             sfcTemplateScript,

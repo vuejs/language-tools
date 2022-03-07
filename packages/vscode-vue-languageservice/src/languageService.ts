@@ -94,7 +94,7 @@ export function createLanguageService(
 	// plugins
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
-			getVueDocument: (document) => tsRuntime.context.sourceFiles.get(document.uri),
+			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		{
@@ -278,7 +278,7 @@ export function createLanguageService(
 				isEnabledComponentAutoImport: async () => (await getSettings?.('volar.completion.autoImportComponent')) ?? true,
 				getHtmlDataProviders: services.getHtmlDataProviders,
 				vueHost,
-				vueDocuments: tsRuntime.context.sourceFiles,
+				vueDocuments: tsRuntime.context.vueDocuments,
 			}),
 			{
 				triggerCharacters: [...triggerCharacters, ...vueTemplateLanguageTriggerCharacters],
@@ -345,7 +345,7 @@ export function createLanguageService(
 	}
 	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
 
-		const sourceFile = tsRuntime.context.sourceFiles.get(uri);
+		const sourceFile = tsRuntime.context.vueDocuments.get(uri);
 		if (!sourceFile) {
 			return false;
 		}

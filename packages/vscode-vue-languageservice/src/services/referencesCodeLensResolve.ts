@@ -3,7 +3,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { ReferencesCodeLensData } from './referencesCodeLens';
 import * as findReferences from './references';
 
-export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments: sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 
 	const _findReferences = findReferences.register(arguments[0]);
 

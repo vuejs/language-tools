@@ -1,4 +1,4 @@
-import { BasicRuntimeContext, SourceFile, TypeScriptFeaturesRuntimeContext, LanguageServiceHostBase as LanguageServiceHostBase, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import { BasicRuntimeContext, VueDocument, TypeScriptFeaturesRuntimeContext, LanguageServiceHostBase as LanguageServiceHostBase, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
@@ -11,7 +11,7 @@ export type LanguageServiceHost = LanguageServiceHostBase & {
 };
 
 export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
-	getVueDocument(document: TextDocument): SourceFile | undefined,
+	getVueDocument(document: TextDocument): VueDocument | undefined,
 	getPlugins(): EmbeddedLanguagePlugin[],
 	getFormatPlugins(): EmbeddedLanguagePlugin[],
 	updateTsLs(document: TextDocument): void,

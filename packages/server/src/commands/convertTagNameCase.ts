@@ -10,7 +10,7 @@ export async function execute(
 	mode: 'kebab' | 'pascal',
 ) {
 
-	const sourceFile = vueLs.__internal__.context.sourceFiles.get(uri);
+	const sourceFile = vueLs.__internal__.context.vueDocuments.get(uri);
 	if (!sourceFile)
 		return;
 

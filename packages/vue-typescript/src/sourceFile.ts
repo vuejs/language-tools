@@ -23,14 +23,14 @@ import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
 import { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 
-export interface SourceFile extends ReturnType<typeof createSourceFile> { }
+export interface VueDocument extends ReturnType<typeof createVueDocument> { }
 
 export type Embedded = {
 	sourceMap: EmbeddedDocumentSourceMap | undefined,
 	embeddeds: Embedded[]
 };
 
-export function createSourceFile(
+export function createVueDocument(
 	uri: string,
 	_content: string,
 	_version: string,

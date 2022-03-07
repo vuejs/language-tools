@@ -2,7 +2,7 @@ import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
+export function register({ vueDocuments: sourceFiles, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
 
 	return {
 		getCompletionsAtPosition,

@@ -2,14 +2,14 @@ import * as shared from '@volar/shared';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile, EmbeddedDocumentSourceMap, SourceMap } from '@volar/vue-typescript';
+import type { VueDocument, EmbeddedDocumentSourceMap, SourceMap } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { untrack } from '../utils/untrack';
 
-export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
+export function register({ vueDocuments: sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTsLs, vueHost, getTextDocument, getStylesheet, getJsonDocument, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
-	const vueWorkers = new WeakMap<SourceFile, ReturnType<typeof useDiagnostics>>();
+	const vueWorkers = new WeakMap<VueDocument, ReturnType<typeof useDiagnostics>>();
 	const tsWorkers = new Map<string, ReturnType<typeof useDiagnostics_ts>>();
 
 	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
@@ -135,7 +135,7 @@ export function register({ sourceFiles, getCssLs, jsonLs, templateTsLs, scriptTs
 			};
 		}
 	}
-	function useDiagnostics(sourceFile: SourceFile) {
+	function useDiagnostics(sourceFile: VueDocument) {
 
 		const {
 			cssLsDocuments,

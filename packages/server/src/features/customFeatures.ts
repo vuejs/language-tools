@@ -42,7 +42,7 @@ export function register(
 						}
 					});
 				}
-				const { sourceFiles } = await ls.__internal__.getContext();
+				const { vueDocuments: sourceFiles } = await ls.__internal__.getContext();
 				for (const sourceMap of sourceFiles.getEmbeddeds(lsType)) {
 					connection.workspace.applyEdit({
 						edit: {
@@ -74,7 +74,7 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const { sourceFiles } = await ls.__internal__.getContext();
+				const { vueDocuments: sourceFiles } = await ls.__internal__.getContext();
 				const allFiles = sourceFiles.getAll();
 				let i = 0;
 				for (const sourceFile of allFiles) {

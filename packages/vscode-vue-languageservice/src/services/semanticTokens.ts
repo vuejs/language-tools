@@ -1,6 +1,6 @@
 import { hyphenate, isHTMLTag } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { SourceFile } from '@volar/vue-typescript';
+import type { VueDocument } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as html from 'vscode-html-languageservice';
@@ -23,7 +23,7 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
+export function register({ vueDocuments: sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getPugDocument }: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
 	const semanticTokensLegend = getSemanticTokenLegend();
 	const tokenTypes = new Map(semanticTokensLegend.tokenTypes.map((t, i) => [t, i]));
@@ -76,7 +76,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getP
 
 		return tokens;
 
-		function getTsResult(sourceFile: SourceFile, lsType: 'script' | 'template') {
+		function getTsResult(sourceFile: VueDocument, lsType: 'script' | 'template') {
 			const result: SemanticToken[] = [];
 			for (const sourceMap of sourceFile.getTsSourceMaps()) {
 
@@ -114,7 +114,7 @@ export function register({ sourceFiles, getTsLs, htmlLs, pugLs, scriptTsLs, getP
 			}
 			return result;
 		}
-		function getHtmlResult(sourceFile: SourceFile) {
+		function getHtmlResult(sourceFile: VueDocument) {
 
 			const result: SemanticToken[] = [];
 			const templateScriptData = sourceFile.getTemplateScriptData();

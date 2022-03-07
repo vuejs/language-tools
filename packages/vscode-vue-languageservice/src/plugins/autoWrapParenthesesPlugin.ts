@@ -1,13 +1,13 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import { definePlugin } from './definePlugin';
-import { SourceFile } from '@volar/vue-typescript';
+import { VueDocument } from '@volar/vue-typescript';
 import { isCharacterTyping } from './autoDotValuePlugin';
 import * as shared from '@volar/shared';
 
 export default definePlugin((host: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getVueDocument: (document: TextDocument) => SourceFile | undefined,
+	getVueDocument: (document: TextDocument) => VueDocument | undefined,
 	isEnabled: () => Promise<boolean | undefined>,
 }) => {
 

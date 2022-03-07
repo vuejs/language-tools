@@ -1,7 +1,7 @@
 import { computed, shallowReactive } from '@vue/reactivity';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { SourceFile } from './sourceFile';
+import type { VueDocument } from './sourceFile';
 import type { EmbeddedDocumentSourceMap, TeleportSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
@@ -10,12 +10,12 @@ import * as localTypes from './utils/localTypes';
 import type { EmbeddedDocumentMappingData } from '@volar/vue-code-gen';
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix build failed
 
-export interface SourceFiles extends ReturnType<typeof createSourceFiles> { }
+export interface VueDocuments extends ReturnType<typeof createVueDocuments> { }
 
-export function createSourceFiles() {
+export function createVueDocuments() {
 
-	const _sourceFiles = shallowReactive<Record<string, SourceFile>>({});
-	const sourceFiles = shared.createPathMap<SourceFile>({
+	const _sourceFiles = shallowReactive<Record<string, VueDocument>>({});
+	const sourceFiles = shared.createPathMap<VueDocument>({
 		delete: key => delete _sourceFiles[key],
 		get: key => _sourceFiles[key],
 		has: key => !!_sourceFiles[key],
@@ -44,7 +44,7 @@ export function createSourceFiles() {
 	});
 	const embeddedDocumentsMap = computed(() => {
 
-		const map = new Map<TextDocument, SourceFile>();
+		const map = new Map<TextDocument, VueDocument>();
 
 		for (const sourceFile of all.value) {
 			for (const sourceMap of sourceFile.refs.sourceMaps.value) {

@@ -116,7 +116,7 @@ export async function languageFeatureWorker<T, K>(
 ) {
 
 	const document = context.getTextDocument(uri);
-	const vueDocument = context.sourceFiles.get(uri);
+	const vueDocument = context.vueDocuments.get(uri);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 

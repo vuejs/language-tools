@@ -1,7 +1,7 @@
 import { definePlugin } from './definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFile } from '@volar/vue-typescript';
+import { VueDocument } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import { htmlPluginBase } from './htmlPlugin';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -54,7 +54,7 @@ const vueTags: html.ITagData[] = [
 ];
 
 export default definePlugin((host: {
-    getVueDocument(document: TextDocument): SourceFile | undefined,
+    getVueDocument(document: TextDocument): VueDocument | undefined,
     documentContext?: html.DocumentContext,
 }) => {
 
@@ -170,7 +170,7 @@ export default definePlugin((host: {
         format: undefined,
     };
 
-    function worker<T>(document: TextDocument, callback: (vueDocument: SourceFile) => T) {
+    function worker<T>(document: TextDocument, callback: (vueDocument: VueDocument) => T) {
 
         const vueDocument = host.getVueDocument(document);
         if (!vueDocument)
@@ -199,7 +199,7 @@ export default definePlugin((host: {
     }
 });
 
-function getSfcCodeWithEmptyBlocks(vueDocument: SourceFile, sfcCode: string) {
+function getSfcCodeWithEmptyBlocks(vueDocument: VueDocument, sfcCode: string) {
 
     const descriptor = vueDocument.getDescriptor();
     const blocks = [

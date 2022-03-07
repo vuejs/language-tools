@@ -5,8 +5,8 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts2 from 'vscode-typescript-languageservice';
 import { BasicRuntimeContext } from '.';
-import { createSourceFile } from './sourceFile';
-import { createSourceFiles } from './sourceFiles';
+import { createVueDocument } from './sourceFile';
+import { createVueDocuments } from './sourceFiles';
 import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext } from './types';
 import * as localTypes from './utils/localTypes';
 
@@ -33,7 +33,7 @@ export function createTypeScriptRuntime(
     let templateProjectVersion = 0;
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
     const documents = shared.createPathMap<TextDocument>(); // TODO: remove this
-    const sourceFiles = createSourceFiles();
+    const sourceFiles = createVueDocuments();
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
 
@@ -93,7 +93,7 @@ export function createTypeScriptRuntime(
 
     const context: TypeScriptFeaturesRuntimeContext = {
         vueHost,
-        sourceFiles,
+        vueDocuments: sourceFiles,
         templateTsHost,
         scriptTsHost,
         templateTsLsRaw,
@@ -368,7 +368,7 @@ export function createTypeScriptRuntime(
             const doc = getHostDocument(uri);
             if (!doc) continue;
             if (!sourceFile) {
-                sourceFiles.set(uri, createSourceFile(
+                sourceFiles.set(uri, createVueDocument(
                     doc.uri,
                     doc.getText(),
                     doc.version.toString(),

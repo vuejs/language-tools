@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { Embedded, EmbeddedDocumentSourceMap, SourceFile } from '@volar/vue-typescript';
+import type { Embedded, EmbeddedDocumentSourceMap, VueDocument } from '@volar/vue-typescript';
 import type { DocumentServiceRuntimeContext } from '../types';
 
 export function register(context: DocumentServiceRuntimeContext) {
@@ -102,7 +102,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}
 		}
 
-		function getEmbeddedsByLevel(vueDocument: SourceFile, level: number) {
+		function getEmbeddedsByLevel(vueDocument: VueDocument, level: number) {
 
 			const embeddeds = vueDocument.getEmbeddeds();
 			const embeddedsLevels: Embedded[][] = [embeddeds];
@@ -154,7 +154,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 	};
 }
 
-function patchInterpolationIndent(vueDocument: SourceFile, sourceMap: EmbeddedDocumentSourceMap) {
+function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedDocumentSourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
 	const document = vueDocument.getTextDocument();

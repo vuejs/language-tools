@@ -6,7 +6,7 @@ const lsTypes = ['script', 'template'] as const;
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	{ sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
+	{ vueDocuments: sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
 ) {
 
 	return {

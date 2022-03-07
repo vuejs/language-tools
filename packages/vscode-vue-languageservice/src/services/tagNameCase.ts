@@ -1,8 +1,8 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { SourceFile } from '@volar/vue-typescript';
+import { VueDocument } from '@volar/vue-typescript';
 
-export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments: sourceFiles }: LanguageServiceRuntimeContext) {
 	return (uri: string): {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
@@ -19,7 +19,7 @@ export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 			attr: getAttrNameCase(sourceFile),
 		};
 
-		function getAttrNameCase(sourceFile: SourceFile): 'kebabCase' | 'camelCase' | 'unsure' {
+		function getAttrNameCase(sourceFile: VueDocument): 'kebabCase' | 'camelCase' | 'unsure' {
 
 			const attrNames = sourceFile.getTemplateAttrNames() ?? new Set();
 
@@ -52,7 +52,7 @@ export function register({ sourceFiles }: LanguageServiceRuntimeContext) {
 			}
 			return 'unsure';
 		}
-		function getTagNameCase(sourceFile: SourceFile): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
+		function getTagNameCase(sourceFile: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
 			const components = sourceFile.getTemplateScriptData().components;
 			const tagNames = new Set(Object.keys(sourceFile.getTemplateTagNames() ?? {}));

@@ -2,7 +2,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { SourceFile } from '@volar/vue-typescript';
+import { VueDocument } from '@volar/vue-typescript';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -25,7 +25,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		) ?? [];
-		const vueDocument = context.sourceFiles.get(uri);
+		const vueDocument = context.vueDocuments.get(uri);
 		const fictitiousLinks = vueDocument ? getFictitiousLinks(vueDocument) : [];
 
 		return [
@@ -33,7 +33,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			...fictitiousLinks,
 		];
 
-		function getFictitiousLinks(vueDocument: SourceFile) {
+		function getFictitiousLinks(vueDocument: VueDocument) {
 
 			const result: vscode.DocumentLink[] = [];
 			const document = vueDocument.getTextDocument();

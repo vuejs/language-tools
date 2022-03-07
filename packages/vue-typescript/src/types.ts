@@ -5,7 +5,7 @@ import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from 'vscode-pug-languageservice';
 import type * as ts2 from 'vscode-typescript-languageservice';
-import type { SourceFiles } from './sourceFiles';
+import type { VueDocuments } from './sourceFiles';
 import type { TextRange } from './utils/sourceMaps';
 
 export type LanguageServiceHostBase = ts2.LanguageServiceHost & {
@@ -50,7 +50,7 @@ export type BasicRuntimeContext = {
 }
 
 export type TypeScriptFeaturesRuntimeContext = {
-	sourceFiles: SourceFiles;
+	vueDocuments: VueDocuments;
 	vueHost: LanguageServiceHostBase;
 	documentContext: DocumentContext;
 	scriptTsHost: ts.LanguageServiceHost;

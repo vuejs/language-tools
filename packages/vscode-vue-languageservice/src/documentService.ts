@@ -1,4 +1,4 @@
-import { createBasicRuntime, createSourceFile, SourceFile } from '@volar/vue-typescript';
+import { createBasicRuntime, createVueDocument, VueDocument } from '@volar/vue-typescript';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as autoInsert from './documentFeatures/autoInsert';
@@ -35,7 +35,7 @@ export function getDocumentService(
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 ) {
 
-	const vueDocuments = new WeakMap<TextDocument, SourceFile>();
+	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
 
@@ -115,7 +115,7 @@ export function getDocumentService(
 
 			return cacheVueDoc;
 		}
-		const vueDoc = createSourceFile(
+		const vueDoc = createVueDocument(
 			document.uri,
 			document.getText(),
 			document.version.toString(),

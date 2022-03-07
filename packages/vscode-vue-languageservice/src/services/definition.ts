@@ -3,7 +3,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import * as shared from '@volar/shared';
 
-export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return {
 		on: (uri: string, position: vscode.Position) => {

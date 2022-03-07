@@ -2,7 +2,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import * as dedupe from '../utils/dedupe';
 
-export function register({ sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments: sourceFiles, getCssLs, getTsLs, getStylesheet }: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position) => {
 

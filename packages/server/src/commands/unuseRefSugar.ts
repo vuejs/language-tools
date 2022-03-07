@@ -9,7 +9,7 @@ export async function execute(
 	uri: string,
 ) {
 
-	const sourceFile = vueLs.__internal__.context.sourceFiles.get(uri);
+	const sourceFile = vueLs.__internal__.context.vueDocuments.get(uri);
 	if (!sourceFile) return;
 
 	const descriptor = sourceFile.getDescriptor();

@@ -14,7 +14,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => {
 
-		const sourceFile = context.sourceFiles.get(uri);
+		const sourceFile = context.vueDocuments.get(uri);
 		if (sourceFile) {
 
 			const descriptor = sourceFile.getDescriptor();
@@ -60,7 +60,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		let result: vscode.CodeAction[] = [];
 
-		for (const tsLoc of context.sourceFiles.toEmbeddedLocation(
+		for (const tsLoc of context.vueDocuments.toEmbeddedLocation(
 			uri,
 			range.start,
 			range.end,
@@ -90,7 +90,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			for (const tsCodeAction of tsCodeActions) {
 				if (tsCodeAction.title.indexOf('__VLS_') >= 0) continue
 
-				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, false, tsCodeAction.edit, context.sourceFiles, () => true) : undefined;
+				const vueEdit = tsCodeAction.edit ? tsEditToVueEdit(tsLoc.lsType, false, tsCodeAction.edit, context.vueDocuments, () => true) : undefined;
 				if (tsCodeAction.edit && !vueEdit) continue;
 
 				const data: Data = {
@@ -113,7 +113,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		let result: vscode.CodeAction[] = [];
 
-		const sourceFile = context.sourceFiles.get(uri);
+		const sourceFile = context.vueDocuments.get(uri);
 		if (!sourceFile)
 			return result;
 

@@ -74,7 +74,7 @@ export function register(
 		const languageService = await getLanguageService(handler.textDocument.uri);
 		if (!languageService) return;
 
-		const sourceFile = languageService.__internal__.context.sourceFiles.get(handler.textDocument.uri);
+		const sourceFile = languageService.__internal__.context.vueDocuments.get(handler.textDocument.uri);
 		if (!sourceFile) return;
 
 		const options = await lsConfigs?.getCodeLensConfigs();
@@ -96,7 +96,7 @@ export function register(
 
 		return result;
 
-		function getScriptSetupConvertConvert(sourceFile: vue.SourceFile) {
+		function getScriptSetupConvertConvert(sourceFile: vue.VueDocument) {
 
 			const ranges = sourceFile.getSfcRefSugarRanges();
 			if (ranges?.refs.length)
@@ -132,7 +132,7 @@ export function register(
 			}
 			return result;
 		}
-		function getRefSugarConvert(sourceFile: vue.SourceFile) {
+		function getRefSugarConvert(sourceFile: vue.VueDocument) {
 			const result: vscode.CodeLens[] = [];
 			const descriptor = sourceFile.getDescriptor();
 			const ranges = sourceFile.getSfcRefSugarRanges();
@@ -151,7 +151,7 @@ export function register(
 			}
 			return result;
 		}
-		function getHtmlPugResult(sourceFile: vue.SourceFile) {
+		function getHtmlPugResult(sourceFile: vue.VueDocument) {
 			const sourceMaps = sourceFile.getTemplateSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				for (const maped of sourceMap.mappings) {

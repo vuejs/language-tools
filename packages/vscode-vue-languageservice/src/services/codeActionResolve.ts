@@ -3,7 +3,7 @@ import type { CodeAction } from 'vscode-languageserver-protocol';
 import { tsEditToVueEdit } from './rename';
 import { Data } from './codeAction';
 
-export function register({ sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
+export function register({ vueDocuments: sourceFiles, getTsLs }: LanguageServiceRuntimeContext) {
 	return async (codeAction: CodeAction) => {
 		const data: Data = codeAction.data as any;
 		const tsCodeAction: CodeAction = {
