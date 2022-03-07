@@ -1,7 +1,7 @@
 import type { CodeAction } from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
-import { PluginCodeActionData } from './codeAction';
-import { tsEditToVueEdit } from './rename';
+import { PluginCodeActionData } from './codeActions';
+import { tsEditToVueEdit } from '../services/rename';
 
 export function register(context: LanguageServiceRuntimeContext) {
 	return async (item: CodeAction) => {

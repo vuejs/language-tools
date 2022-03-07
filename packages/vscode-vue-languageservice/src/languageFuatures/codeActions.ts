@@ -4,7 +4,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { tsEditToVueEdit } from './rename';
+import { tsEditToVueEdit } from '../services/rename';
 
 export interface PluginCodeActionData {
 	uri: string,

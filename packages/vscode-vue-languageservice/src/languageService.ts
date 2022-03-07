@@ -28,8 +28,8 @@ import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugi
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
-import * as codeActions from './services/codeAction';
-import * as codeActionResolve from './services/codeActionResolve';
+import * as codeActions from './languageFuatures/codeActions';
+import * as codeActionResolve from './languageFuatures/codeActionResolve';
 import * as d3 from './services/d3';
 import * as definitions from './services/definition';
 import * as diagnostics from './services/diagnostics';
