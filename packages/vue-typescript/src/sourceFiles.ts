@@ -102,6 +102,78 @@ export function createVueDocuments() {
 		}),
 	};
 	const dirs = computed(() => [...new Set(uris.value.map(shared.uriToFsPath).map(path.dirname))]);
+	const refs = {
+		fromEmbeddedLocation: function* <T extends vscode.Position | number>(
+			lsType: 'script' | 'template' | undefined,
+			uri: string,
+			start: T,
+			end?: T,
+			filter?: (data: EmbeddedDocumentMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
+		) {
+
+			if (uri.endsWith(`/${localTypes.typesFileName}`))
+				return;
+
+			if (end === undefined)
+				end = start;
+
+			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
+
+			if (!sourceMap) {
+				if (lsType === 'script') {
+					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
+				}
+				else if (lsType === 'template') {
+					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
+				}
+			}
+
+			if (sourceMap) {
+
+				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+					return;
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
+					yield {
+						type: 'embedded-ts' as const,
+						sourceMap,
+						uri: sourceMap.sourceDocument.uri,
+						range: vueRange[0],
+						data: vueRange[1],
+					};
+				}
+			}
+			else {
+				yield {
+					type: 'source-ts' as const,
+					uri,
+					range: {
+						start,
+						end,
+					},
+				};
+			}
+		},
+		fromEmbeddedDocumentUri: function (
+			lsType: 'script' | 'template' | undefined,
+			uri: string,
+		) {
+
+			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
+
+			if (!sourceMap) {
+				if (lsType === 'script') {
+					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
+				}
+				else if (lsType === 'template') {
+					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
+				}
+			}
+
+			return sourceMap;
+		},
+	};
 
 	return {
 		getUris: untrack(() => uris.value),
@@ -177,80 +249,14 @@ export function createVueDocuments() {
 				};
 			}
 		}),
-		fromEmbeddedLocation: untrack(function* <T extends vscode.Position | number>(
-			lsType: 'script' | 'template' | undefined,
-			uri: string,
-			start: T,
-			end?: T,
-			filter?: (data: EmbeddedDocumentMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
-		) {
-
-			if (uri.endsWith(`/${localTypes.typesFileName}`))
-				return;
-
-			if (end === undefined)
-				end = start;
-
-			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
-
-			if (!sourceMap) {
-				if (lsType === 'script') {
-					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
-				}
-				else if (lsType === 'template') {
-					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
-				}
-			}
-
-			if (sourceMap) {
-
-				if (sourceMapFilter && !sourceMapFilter(sourceMap))
-					return;
-
-				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
-					yield {
-						type: 'embedded-ts' as const,
-						sourceMap,
-						uri: sourceMap.sourceDocument.uri,
-						range: vueRange[0],
-						data: vueRange[1],
-					};
-				}
-			}
-			else {
-				yield {
-					type: 'source-ts' as const,
-					uri,
-					range: {
-						start,
-						end,
-					},
-				};
-			}
-		}),
+		fromEmbeddedLocation: untrack(refs.fromEmbeddedLocation),
 		fromEmbeddedDocument: untrack(function (
 			document: TextDocument,
 		) {
 			return embeddedDocumentsMap.value.get(document);
 		}),
-		fromEmbeddedDocumentUri: untrack(function (
-			lsType: 'script' | 'template' | undefined,
-			uri: string,
-		) {
+		fromEmbeddedDocumentUri: untrack(refs.fromEmbeddedDocumentUri),
 
-			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
-
-			if (!sourceMap) {
-				if (lsType === 'script') {
-					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
-				}
-				else if (lsType === 'template') {
-					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
-				}
-			}
-
-			return sourceMap;
-		}),
+		refs,
 	};
 }

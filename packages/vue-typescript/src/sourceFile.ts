@@ -193,18 +193,6 @@ export function createVueDocument(
 		sfcTemplateScript.sourceMap.value,
 		sfcEntryForTemplateLs.sourceMap.value,
 	].filter(shared.notEmpty));
-	const scriptLsSourceMaps = computed(() => [
-		sfcScriptForScriptLs.sourceMap.value,
-	].filter(shared.notEmpty));
-	const templateLsDocuments = computed(() => [
-		sfcEntryForTemplateLs.textDocument.value,
-		sfcScriptForTemplateLs.textDocument.value,
-		sfcScriptForTemplateLs.textDocumentTs.value,
-		sfcTemplateScript.textDocument.value,
-	].filter(shared.notEmpty));
-	const scriptLsDocuments = computed(() => [
-		sfcScriptForScriptLs.textDocument.value,
-	].filter(shared.notEmpty));
 	const tsSourceMaps = computed(() => [
 		sfcScriptForScriptLs.sourceMap.value,
 		...templateLsSourceMaps.value,

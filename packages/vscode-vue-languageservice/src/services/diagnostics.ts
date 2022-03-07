@@ -1,8 +1,8 @@
 import * as shared from '@volar/shared';
+import type { VueDocument } from '@volar/vue-typescript';
 import { computed, ComputedRef, ref, Ref } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { VueDocument, EmbeddedDocumentSourceMap, SourceMap } from '@volar/vue-typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { untrack } from '../utils/untrack';
@@ -636,7 +636,7 @@ export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptT
 	function toSourceDiags(lsType: 'template' | 'script' | undefined, uri: string, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
-		const sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
+		const sourceMap = vueDocuments.refs.fromEmbeddedDocumentUri(lsType, uri);
 
 		if (!sourceMap)
 			return result;
@@ -657,7 +657,7 @@ export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptT
 					const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 					for (const info of vueError.relatedInformation) {
-						for (const vueLoc of vueDocuments.fromEmbeddedLocation(
+						for (const vueLoc of vueDocuments.refs.fromEmbeddedLocation(
 							lsType,
 							info.location.uri,
 							info.location.range.start,

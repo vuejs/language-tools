@@ -188,7 +188,7 @@ export function createLanguageService(
 		useAutoDotValuePlugin({
 			ts,
 			getTsLs: () => tsRuntime.context.scriptTsLs,
-			isEnabled: async () => getSettings?.('volar.autoCompleteRefs'),
+			isEnabled: async () => await getSettings?.('volar.autoCompleteRefs'),
 		}),
 	);
 
