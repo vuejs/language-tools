@@ -97,7 +97,7 @@ export async function documentArgFeatureWorker<T, K>(
 		}
 	}
 
-	if (combineResult && results.length > 1) {
+	if (combineResult && results.length > 0) {
 		return combineResult(results);
 	}
 	else if (results.length > 0) {
@@ -171,7 +171,7 @@ export async function languageFeatureWorker<T, K>(
 		}
 	}
 
-	if (combineResult && results.length > 1) {
+	if (combineResult && results.length > 0) {
 		return combineResult(results);
 	}
 	else if (results.length > 0) {
