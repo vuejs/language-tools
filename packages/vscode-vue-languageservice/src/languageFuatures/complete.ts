@@ -123,7 +123,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				await visitEmbedded(embeddeds, async sourceMap => {
 
-					const plugins = context.getPlugins(sourceMap.lsType);
+					const plugins = context.getPlugins(sourceMap.lsType).sort(sortPlugins);
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
@@ -179,7 +179,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (document) {
 
-				const plugins = context.getPlugins('script');
+				const plugins = context.getPlugins('script').sort(sortPlugins);
 
 				for (const plugin of plugins) {
 
@@ -224,6 +224,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
+
+		function sortPlugins(a: LanguageServicePlugin, b: LanguageServicePlugin) {
+			return (b.context?.isAdditionalCompletion ? -1 : 1) - (a.context?.isAdditionalCompletion ? -1 : 1);
+		}
 
 		function combineCompletionList(lists: vscode.CompletionList[]) {
 			return {
