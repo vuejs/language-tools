@@ -18,7 +18,7 @@ export function useSfcCustomBlocks(
 			const customBlock = customBlocks.value[i];
 			const lang = customBlock.lang;
 			const content = customBlock.content;
-			const uri = vueUri + '.' + i + '.' + lang;
+			const uri = vueUri + '.' + i + '.' + customBlock.type + '.' + lang;
 			const document = TextDocument.create(uri, lang, version++, content);
 			documents.push({
 				index: i,

@@ -224,7 +224,7 @@ export function register(
 		const uri = handler.textDocument.uri;
 		const languageService = await getLanguageService(uri);
 		if (languageService) {
-			const codeActions = await languageService.getCodeActions(uri, handler.range, handler.context);
+			const codeActions = await languageService.getCodeActions(uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
 					(codeAction.data as any).uri = uri;

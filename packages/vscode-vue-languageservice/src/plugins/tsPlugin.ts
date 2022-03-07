@@ -86,6 +86,10 @@ export default definePlugin((host: {
             }
         },
 
+        doCodeActionResolve(codeAction) {
+            return host.getTsLs().doCodeActionResolve(codeAction);
+        },
+
         doRenamePrepare(document, position) {
             if (isTsDocument(document)) {
                 return host.getTsLs().prepareRename(document.uri, position);

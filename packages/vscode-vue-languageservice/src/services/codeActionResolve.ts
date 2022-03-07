@@ -1,19 +1,49 @@
-import type { LanguageServiceRuntimeContext } from '../types';
 import type { CodeAction } from 'vscode-languageserver-protocol';
+import type { LanguageServiceRuntimeContext } from '../types';
+import { PluginCodeActionData } from './codeAction';
 import { tsEditToVueEdit } from './rename';
-import { Data } from './codeAction';
 
-export function register({ vueDocuments, getTsLs }: LanguageServiceRuntimeContext) {
-	return async (codeAction: CodeAction) => {
-		const data: Data = codeAction.data as any;
-		const tsCodeAction: CodeAction = {
-			...codeAction,
-			data: data.tsData,
-		};
-		codeAction = await getTsLs(data.lsType).doCodeActionResolve(tsCodeAction);
-		if (codeAction.edit) {
-			codeAction.edit = tsEditToVueEdit(data.lsType, false, codeAction.edit, vueDocuments, () => true);
+export function register(context: LanguageServiceRuntimeContext) {
+	return async (item: CodeAction) => {
+
+		const data: PluginCodeActionData = item.data as any;
+
+		if (data) {
+
+			const plugin = context.getPluginById(data.pluginId);
+
+			if (!plugin)
+				return item;
+
+			if (!plugin.doCodeActionResolve)
+				return item;
+
+			const originalItem = data.originalItem;
+
+			if (data.sourceMapId !== undefined && data.embeddedDocumentUri !== undefined) {
+
+				const sourceMap = context.vueDocuments.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
+
+				if (sourceMap) {
+
+					const resolvedItem = await plugin.doCodeActionResolve(originalItem);
+
+					if (resolvedItem.edit) {
+
+						const edit = tsEditToVueEdit(sourceMap.lsType, false, resolvedItem.edit, context.vueDocuments, () => true);
+
+						if (edit) {
+							resolvedItem.edit = edit;
+							return resolvedItem;
+						}
+					}
+				}
+			}
+			else {
+				item = await plugin.doCodeActionResolve(item);
+			}
 		}
-		return codeAction;
+
+		return item;
 	}
 }

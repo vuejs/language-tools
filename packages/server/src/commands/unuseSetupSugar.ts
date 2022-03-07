@@ -51,7 +51,7 @@ export async function execute(
 		}, {
 			diagnostics: [],
 			only: [`${vscode.CodeActionKind.Source}.addMissingImports.ts`],
-		});
+		}) ?? [];
 
 		for (const codeAction of codeActions) {
 			const newCodeAction = await vueLs.doCodeActionResolve(codeAction);
