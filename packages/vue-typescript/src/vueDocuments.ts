@@ -1,7 +1,7 @@
 import { computed, shallowReactive } from '@vue/reactivity';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { VueDocument } from './sourceFile';
+import type { VueDocument } from './vueDocument';
 import type { EmbeddedDocumentSourceMap, TeleportSourceMap } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';

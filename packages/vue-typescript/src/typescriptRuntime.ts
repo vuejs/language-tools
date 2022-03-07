@@ -5,8 +5,8 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as ts2 from 'vscode-typescript-languageservice';
 import { BasicRuntimeContext } from '.';
-import { createVueDocument } from './sourceFile';
-import { createVueDocuments } from './sourceFiles';
+import { createVueDocument } from './vueDocument';
+import { createVueDocuments } from './vueDocuments';
 import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext } from './types';
 import * as localTypes from './utils/localTypes';
 
