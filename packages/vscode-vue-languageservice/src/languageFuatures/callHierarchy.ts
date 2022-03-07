@@ -84,25 +84,36 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						const _calls = await plugin.callHierarchy.getIncomingCalls(originalItem);
 
-						for (const call of _calls) {
+						for (const _call of _calls) {
 
-							const vueResult = transformCallHierarchyItem(sourceMap.lsType, call.from, call.fromRanges);
+							const calls = transformCallHierarchyItem(sourceMap.lsType, _call.from, _call.fromRanges);
 
-							if (!vueResult)
+							if (!calls)
 								continue;
 
 							incomingItems.push({
-								from: vueResult[0],
-								fromRanges: vueResult[1],
+								from: calls[0],
+								fromRanges: calls[1],
 							});
 						}
 					}
 				}
 				else {
 
-					const calls = await plugin.callHierarchy.getIncomingCalls(item);
+					const _calls = await plugin.callHierarchy.getIncomingCalls(item);
 
-					incomingItems = incomingItems.concat(calls);
+					for (const _call of _calls) {
+
+						const calls = transformCallHierarchyItem('script', _call.from, _call.fromRanges);
+
+						if (!calls)
+							continue;
+
+						incomingItems.push({
+							from: calls[0],
+							fromRanges: calls[1],
+						});
+					}
 				}
 			}
 
@@ -136,23 +147,34 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						for (const call of _calls) {
 
-							const vueResult = transformCallHierarchyItem(sourceMap.lsType, call.to, call.fromRanges);
+							const calls = transformCallHierarchyItem(sourceMap.lsType, call.to, call.fromRanges);
 
-							if (!vueResult)
+							if (!calls)
 								continue;
 
 							items.push({
-								to: vueResult[0],
-								fromRanges: vueResult[1],
+								to: calls[0],
+								fromRanges: calls[1],
 							});
 						}
 					}
 				}
 				else {
 
-					const calls = await plugin.callHierarchy.getOutgoingCalls(item);
+					const _calls = await plugin.callHierarchy.getOutgoingCalls(item);
 
-					items = items.concat(calls);
+					for (const call of _calls) {
+
+						const calls = transformCallHierarchyItem('script', call.to, call.fromRanges);
+
+						if (!calls)
+							continue;
+
+						items.push({
+							to: calls[0],
+							fromRanges: calls[1],
+						});
+					}
 				}
 			}
 
