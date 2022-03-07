@@ -19,7 +19,7 @@ export function entriesToLocations(entries: { fileName: string, textSpan: ts.Tex
 	}
 	return locations;
 }
-export function entriesToLocationLinks(entries: ts.DefinitionInfo[], getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
+export function entriesToLocationLinks<T extends ts.DocumentSpan>(entries: T[], getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
 	const locations: vscode.LocationLink[] = [];
 	for (const entry of entries) {
 		const entryUri = shared.fsPathToUri(entry.fileName);

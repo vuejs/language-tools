@@ -52,6 +52,12 @@ export default definePlugin((host: {
             }
         },
 
+        findImplementations(document, position) {
+            if (isTsDocument(document)) {
+                return host.getTsLs().findImplementations(document.uri, position);
+            }
+        },
+
         findReferences(document, position) {
             if (isTsDocument(document) || isJsonDocument(document)) {
                 return host.getTsLs().findReferences(document.uri, position);

@@ -23,6 +23,7 @@ import * as formatting from './services/formatting';
 import * as semanticTokens from './services/semanticTokens';
 import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
+import * as implementation from './services/implementation';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -45,6 +46,7 @@ export function createLanguageService(ts: typeof import('typescript/lib/tsserver
 		findDefinition: definitions.register(languageService, getValidTextDocument, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument, getTextDocument),
 		findReferences: references.register(languageService, getValidTextDocument, getTextDocument),
+		findImplementations: implementation.register(languageService, getValidTextDocument, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
 		doRename: rename.register(languageService, getValidTextDocument, host),
 		getEditsForFileRename: fileRename.register(languageService, getValidTextDocument, host),

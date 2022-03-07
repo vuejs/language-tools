@@ -250,6 +250,10 @@ export function register(
 		const languageService = await getLanguageService(handler.textDocument.uri);
 		return languageService?.findReferences(handler.textDocument.uri, handler.position);
 	});
+	connection.onImplementation(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findImplementations(handler.textDocument.uri, handler.position);
+	});
 	connection.onDefinition(async handler => {
 		const languageService = await getLanguageService(handler.textDocument.uri);
 		return languageService?.findDefinition(handler.textDocument.uri, handler.position);

@@ -19,6 +19,7 @@ export interface ServerInitializationOptions {
 	 */
 	languageFeatures?: {
 		references?: boolean
+		implementation?: boolean
 		definition?: boolean
 		typeDefinition?: boolean
 		callHierarchy?: boolean

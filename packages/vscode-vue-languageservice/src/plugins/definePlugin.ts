@@ -19,6 +19,7 @@ export type EmbeddedLanguagePlugin = {
     doHover?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Hover>,
     findDefinition?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
     findTypeDefinition?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
+    findImplementations?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
     findReferences?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Location[]>;
     findDocumentHighlights?(document: TextDocument, position: vscode.Position): NullableResult<vscode.DocumentHighlight[]>;
     findDocumentLinks?(document: TextDocument): NullableResult<vscode.DocumentLink[]>;

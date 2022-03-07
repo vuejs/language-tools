@@ -13,6 +13,7 @@ import * as documentHighlight from './languageFuatures/documentHighlights';
 import * as documentLink from './languageFuatures/documentLinks';
 import * as semanticTokens from './languageFuatures/documentSemanticTokens';
 import * as hover from './languageFuatures/hover';
+import * as implementations from './languageFuatures/implementation';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
 import useAutoDotValuePlugin from './plugins/autoDotValuePlugin';
@@ -250,6 +251,7 @@ export function createLanguageService(
 		findDefinition: defineApi(findDefinition.on, isTemplateScriptPosition),
 		findReferences: defineApi(references.register(context), true),
 		findTypeDefinition: defineApi(findDefinition.onType, isTemplateScriptPosition),
+		findImplementations: defineApi(implementations.register(context), false),
 		prepareRename: defineApi(renames.prepareRename, isTemplateScriptPosition),
 		doRename: defineApi(renames.doRename, true),
 		getEditsForFileRename: defineApi(renames.onRenameFile, false),
