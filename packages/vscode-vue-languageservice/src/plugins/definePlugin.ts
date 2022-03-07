@@ -5,6 +5,8 @@ import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 type NotNullableResult<T> = T | Thenable<T>;
 type NullableResult<T> = T | undefined | null | Thenable<T | undefined | null>;
 
+export type SemanticToken = [number, number, number, number, number];
+
 export type EmbeddedLanguagePlugin = {
     doValidation?(document: TextDocument, options: {
         semantic?: boolean;
@@ -21,7 +23,7 @@ export type EmbeddedLanguagePlugin = {
     findDocumentHighlights?(document: TextDocument, position: vscode.Position): NullableResult<vscode.DocumentHighlight[]>;
     findDocumentLinks?(document: TextDocument): NullableResult<vscode.DocumentLink[]>;
     findDocumentSymbols?(document: TextDocument): NullableResult<vscode.SymbolInformation[]>;
-    findDocumentSemanticTokens?(document: TextDocument, range?: vscode.Range, cancleToken?: vscode.CancellationToken): NullableResult<[number, number, number, number, number][]>;
+    findDocumentSemanticTokens?(document: TextDocument, range?: vscode.Range, cancleToken?: vscode.CancellationToken): NullableResult<SemanticToken[]>;
     findWorkspaceSymbols?(query: string): NullableResult<vscode.SymbolInformation[]>;
     doCodeActions?(document: TextDocument, range: vscode.Range, context: vscode.CodeActionContext): NullableResult<vscode.CodeAction[]>;
     findDocumentColors?(document: TextDocument): NullableResult<vscode.ColorInformation[]>;

@@ -113,6 +113,7 @@ export async function languageFeatureWorker<T, K>(
 	worker: (plugin: EmbeddedLanguagePlugin, document: TextDocument, arg: K) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap, plugin: LanguageServicePlugin) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
+	reportProgress?: (result: NonNullable<Awaited<T>>) => void,
 ) {
 
 	const document = context.getTextDocument(uri);
@@ -146,6 +147,12 @@ export async function languageFeatureWorker<T, K>(
 
 					if (!combineResult)
 						return false;
+
+					const isEmptyArray = Array.isArray(result) && result.length === 0;
+
+					if (reportProgress && !isEmptyArray) {
+						reportProgress(combineResult(results))
+					}
 				}
 			}
 
@@ -168,6 +175,12 @@ export async function languageFeatureWorker<T, K>(
 
 			if (!combineResult)
 				break;
+
+			const isEmptyArray = Array.isArray(result) && result.length === 0;
+
+			if (reportProgress && !isEmptyArray) {
+				reportProgress(combineResult(results))
+			}
 		}
 	}
 

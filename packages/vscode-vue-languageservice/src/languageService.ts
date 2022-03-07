@@ -6,8 +6,11 @@ import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as autoInsert from './languageFuatures/autoInsert';
+import * as callHierarchy from './languageFuatures/callHierarchy';
 import * as completions from './languageFuatures/complete';
 import * as completionResolve from './languageFuatures/completeResolve';
+import * as documentHighlight from './languageFuatures/documentHighlights';
+import * as documentLink from './languageFuatures/documentLinks';
 import * as hover from './languageFuatures/hover';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
@@ -20,22 +23,19 @@ import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './plu
 import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './plugins/jsDocPlugin';
 import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plugins/jsonPlugin';
 import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pugPlugin';
-import useTsPlugin, { getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
+import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
-import useVueTemplateLanguagePlugin, { getTsCompletions, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
-import * as callHierarchy from './languageFuatures/callHierarchy';
+import useVueTemplateLanguagePlugin, { getTsCompletions, semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
 import * as codeActions from './services/codeAction';
 import * as codeActionResolve from './services/codeActionResolve';
 import * as d3 from './services/d3';
 import * as definitions from './services/definition';
 import * as diagnostics from './services/diagnostics';
-import * as documentHighlight from './languageFuatures/documentHighlights';
-import * as documentLink from './languageFuatures/documentLinks';
 import * as references from './services/references';
 import * as codeLens from './services/referencesCodeLens';
 import * as codeLensResolve from './services/referencesCodeLensResolve';
 import * as rename from './services/rename';
-import * as semanticTokens from './services/semanticTokens';
+import * as semanticTokens from './languageFuatures/documentSemanticTokens';
 import * as tagNameCase from './services/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 
@@ -54,6 +54,21 @@ function defineLanguageServicePlugin(plugin: EmbeddedLanguagePlugin, context?: {
 		...plugin,
 		context,
 	};
+}
+
+export function getSemanticTokenLegend() {
+
+	const tsLegend = getTsSemanticTokenLegend();
+	const tokenTypesLegend = [
+		...tsLegend.tokenTypes,
+		...vueTemplateSemanticTokenTypes,
+	];
+	const semanticTokenLegend: vscode.SemanticTokensLegend = {
+		tokenTypes: tokenTypesLegend,
+		tokenModifiers: tsLegend.tokenModifiers,
+	};
+
+	return semanticTokenLegend;
 }
 
 export function getTriggerCharacters(tsVersion: string) {
@@ -230,7 +245,7 @@ export function createLanguageService(
 		prepareRename: defineApi(renames.prepareRename, isTemplateScriptPosition),
 		doRename: defineApi(renames.doRename, true),
 		getEditsForFileRename: defineApi(renames.onRenameFile, false),
-		getSemanticTokens: defineApi(semanticTokens.register(context, () => tsRuntime.update(true)), false),
+		getSemanticTokens: defineApi(semanticTokens.register(context), false),
 		doHover: defineApi(hover.register(context), isTemplateScriptPosition),
 		doComplete: defineApi(completions.register(context), isTemplateScriptPosition),
 		getCodeActions: defineApi(codeActions.register(context), false),
@@ -269,6 +284,18 @@ export function createLanguageService(
 			useVueTemplateLanguagePlugin({
 				ts,
 				htmlLs: services.htmlLs,
+				getSemanticTokenLegend,
+				getScanner: (document) => {
+					if (document.languageId === 'html') {
+						return services.htmlLs.createScanner(document.getText());
+					}
+					else if (document.languageId === 'jade') {
+						const pugDocument = services.getPugDocument(document);
+						if (pugDocument) {
+							return services.pugLs.createScanner(pugDocument);
+						}
+					}
+				},
 				scriptTsLs: tsRuntime.context.scriptTsLs,
 				templateTsLs: tsRuntime.context.templateTsLs,
 				templateLanguagePlugin: templateLanguagePlugin,
@@ -279,6 +306,7 @@ export function createLanguageService(
 				getHtmlDataProviders: services.getHtmlDataProviders,
 				vueHost,
 				vueDocuments: tsRuntime.context.vueDocuments,
+				updateTemplateScripts: () => tsRuntime.update(true),
 			}),
 			{
 				triggerCharacters: [...triggerCharacters, ...vueTemplateLanguageTriggerCharacters],

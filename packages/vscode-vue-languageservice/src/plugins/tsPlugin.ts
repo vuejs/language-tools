@@ -3,9 +3,7 @@ import { definePlugin } from './definePlugin';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from 'vscode-typescript-languageservice';
 
-export function getTriggerCharacters(tsVersion: string) {
-    return ts2.getTriggerCharacters(tsVersion);
-}
+export { getSemanticTokenLegend, getTriggerCharacters } from 'vscode-typescript-languageservice';
 
 export default definePlugin((host: {
     getTsLs: () => ts2.LanguageService,

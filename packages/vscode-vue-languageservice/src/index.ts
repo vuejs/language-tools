@@ -1,7 +1,7 @@
-export { getSemanticTokenLegend } from './services/semanticTokens';
-export { margeWorkspaceEdits } from './services/rename';
-export { isRefType, isBlacklistNode } from './plugins/autoDotValuePlugin';
+export * from '@volar/vue-typescript';
 export * from './documentService';
 export * from './languageService';
+export { isBlacklistNode, isRefType } from './plugins/autoDotValuePlugin';
+export { SemanticToken } from './plugins/definePlugin';
+export { margeWorkspaceEdits } from './services/rename';
 export * from './types';
-export * from '@volar/vue-typescript';

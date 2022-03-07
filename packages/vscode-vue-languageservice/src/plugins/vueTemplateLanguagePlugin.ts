@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { SearchTexts, VueDocument, VueDocuments } from '@volar/vue-typescript';
 import { computed, pauseTracking, ref, resetTracking } from '@vue/reactivity';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { camelize, capitalize, hyphenate, isHTMLTag } from '@vue/shared';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -12,6 +12,11 @@ import type { Data } from 'vscode-typescript-languageservice/src/services/comple
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
 import { definePlugin, EmbeddedLanguagePlugin } from './definePlugin';
+
+export const semanticTokenTypes = [
+    'componentTag',
+    'operator', // namespaced component accessor: '.'
+];
 
 export const triggerCharacters = [
     '@', // vue event shorthand
@@ -56,6 +61,8 @@ interface AutoImportCompletionData {
 export default definePlugin((host: {
     ts: typeof import('typescript/lib/tsserverlibrary'),
     htmlLs: html.LanguageService,
+    getSemanticTokenLegend(): vscode.SemanticTokensLegend,
+    getScanner(document: TextDocument): html.Scanner | undefined,
     scriptTsLs: ts2.LanguageService,
     templateTsLs: ts2.LanguageService,
     templateLanguagePlugin: EmbeddedLanguagePlugin,
@@ -69,14 +76,80 @@ export default definePlugin((host: {
     getHtmlDataProviders: () => html.IHTMLDataProvider[],
     vueHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
+    updateTemplateScripts: () => void,
 }) => {
 
     const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
     const autoImportPositions = new WeakSet<vscode.Position>();
+    const tokenTypes = new Map(host.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
 
     return {
 
         ...host.templateLanguagePlugin,
+
+        async findDocumentSemanticTokens(document, range) {
+
+            if (!host.isSupportedDocument(document))
+                return;
+
+            const result = await host.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range) ?? [];
+            const vueDocument = host.vueDocuments.fromEmbeddedDocument(document);
+            const scanner = host.getScanner(document);
+
+            if (vueDocument && scanner) {
+
+                host.updateTemplateScripts();
+
+                const templateScriptData = vueDocument.getTemplateScriptData();
+                const components = new Set([
+                    ...templateScriptData.components,
+                    ...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
+                ]);
+                const offsetRange = range ? {
+                    start: document.offsetAt(range.start),
+                    end: document.offsetAt(range.end),
+                } : {
+                    start: 0,
+                    end: document.getText().length,
+                };
+
+                let token = scanner.scan();
+
+                while (token !== html.TokenType.EOS) {
+
+                    const tokenOffset = scanner.getTokenOffset();
+
+                    // TODO: fix source map perf and break in while condition
+                    if (tokenOffset > offsetRange.end)
+                        break;
+
+                    if (tokenOffset >= offsetRange.start && (token === html.TokenType.StartTag || token === html.TokenType.EndTag)) {
+
+                        const tokenText = scanner.getTokenText();
+
+                        if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
+
+                            const tokenLength = scanner.getTokenLength();
+                            const tokenPosition = document.positionAt(tokenOffset);
+
+                            if (components.has(tokenText)) {
+                                result.push([tokenPosition.line, tokenPosition.character, tokenLength, tokenTypes.get('componentTag') ?? -1, 0]);
+                            }
+                            else if (tokenText.indexOf('.') >= 0) {
+                                for (let i = 0; i < tokenText.length; i++) {
+                                    if (tokenText[i] === '.') {
+                                        result.push([tokenPosition.line, tokenPosition.character + i, 1, tokenTypes.get('operator') ?? -1, 0]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    token = scanner.scan();
+                }
+            }
+
+            return result;
+        },
 
         async doComplete(document, position, context) {
 

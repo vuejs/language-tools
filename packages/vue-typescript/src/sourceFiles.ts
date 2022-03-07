@@ -14,28 +14,28 @@ export interface VueDocuments extends ReturnType<typeof createVueDocuments> { }
 
 export function createVueDocuments() {
 
-	const _sourceFiles = shallowReactive<Record<string, VueDocument>>({});
-	const sourceFiles = shared.createPathMap<VueDocument>({
-		delete: key => delete _sourceFiles[key],
-		get: key => _sourceFiles[key],
-		has: key => !!_sourceFiles[key],
-		set: (key, value) => _sourceFiles[key] = value,
+	const _vueDocuments = shallowReactive<Record<string, VueDocument>>({});
+	const vueDocuments = shared.createPathMap<VueDocument>({
+		delete: key => delete _vueDocuments[key],
+		get: key => _vueDocuments[key],
+		has: key => !!_vueDocuments[key],
+		set: (key, value) => _vueDocuments[key] = value,
 		clear: () => {
-			for (var key in _sourceFiles) {
-				if (_sourceFiles.hasOwnProperty(key)) {
-					delete _sourceFiles[key];
+			for (var key in _vueDocuments) {
+				if (_vueDocuments.hasOwnProperty(key)) {
+					delete _vueDocuments[key];
 				}
 			}
 		},
-		values: () => new Set(Object.values(_sourceFiles)).values(),
+		values: () => new Set(Object.values(_vueDocuments)).values(),
 	});
 
-	const all = computed(() => Object.values(_sourceFiles));
+	const all = computed(() => Object.values(_vueDocuments));
 	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
 	const sourceMapsById = computed(() => {
 		const map = new Map<string, EmbeddedDocumentSourceMap>();
-		for (const key in _sourceFiles) {
-			const sourceFile = _sourceFiles[key]!;
+		for (const key in _vueDocuments) {
+			const sourceFile = _vueDocuments[key]!;
 			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
 				map.set(sourceMap.id + ':' + sourceMap.mappedDocument.uri, sourceMap);
 			}
@@ -44,7 +44,7 @@ export function createVueDocuments() {
 	});
 	const embeddedDocumentsMap = computed(() => {
 
-		const map = new Map<TextDocument, VueDocument>();
+		const map = new WeakMap<TextDocument, VueDocument>();
 
 		for (const sourceFile of all.value) {
 			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
@@ -83,8 +83,8 @@ export function createVueDocuments() {
 	const tsTeleports = {
 		template: computed(() => {
 			const map = new Map<string, TeleportSourceMap>();
-			for (const key in _sourceFiles) {
-				const sourceFile = _sourceFiles[key]!;
+			for (const key in _vueDocuments) {
+				const sourceFile = _vueDocuments[key]!;
 				for (const sourceMap of sourceFile.refs.templateLsTeleports.value) {
 					map.set(sourceMap.mappedDocument.uri, sourceMap);
 				}
@@ -93,8 +93,8 @@ export function createVueDocuments() {
 		}),
 		script: computed(() => {
 			const map = new Map<string, TeleportSourceMap>();
-			for (const key in _sourceFiles) {
-				const sourceFile = _sourceFiles[key]!;
+			for (const key in _vueDocuments) {
+				const sourceFile = _vueDocuments[key]!;
 				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
 			}
@@ -107,9 +107,9 @@ export function createVueDocuments() {
 		getUris: untrack(() => uris.value),
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
-		get: untrack(sourceFiles.uriGet),
-		set: untrack(sourceFiles.uriSet),
-		delete: untrack(sourceFiles.uriDelete),
+		get: untrack(vueDocuments.uriGet),
+		set: untrack(vueDocuments.uriSet),
+		delete: untrack(vueDocuments.uriDelete),
 
 		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
 
@@ -145,7 +145,7 @@ export function createVueDocuments() {
 			if (end === undefined)
 				end = start;
 
-			const sourceFile = sourceFiles.uriGet(uri);
+			const sourceFile = vueDocuments.uriGet(uri);
 
 			if (sourceFile) {
 				for (const sourceMap of sourceFile.getSourceMaps()) {

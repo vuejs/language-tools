@@ -5,7 +5,6 @@ import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 import type { createLsConfigs } from '../configs';
-import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
 import { getDocumentSafely } from '../utils';
 import { Commands } from '../commands';
 import * as convertTagNameCase from '../commands/convertTagNameCase';
@@ -15,11 +14,11 @@ import * as useSetupSugar from '../commands/useSetupSugar';
 import * as unuseSetupSugar from '../commands/unuseSetupSugar';
 import * as useRefSugar from '../commands/useRefSugar';
 import * as unuseRefSugar from '../commands/unuseRefSugar';
+import type { SemanticToken } from 'vscode-vue-languageservice';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	connection: vscode.Connection,
-	configuration: Configuration | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
@@ -399,10 +398,11 @@ export function register(
 
 		return buildTokens(result);
 
-		function buildTokens(tokens: [number, number, number, number, number | undefined][]) {
+		function buildTokens(tokens: SemanticToken[]) {
 			const builder = new vscode.SemanticTokensBuilder();
-			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
-				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+			const sortedTokens = tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0]);
+			for (const token of sortedTokens) {
+				builder.push(...token);
 			}
 			return builder.build();
 		}
