@@ -1,3 +1,4 @@
+import * as shared from '@volar/shared';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
 import type * as emmet from '@vscode/emmet-helper';
 import { isGloballyWhitelisted } from '@vue/shared';
@@ -11,6 +12,7 @@ import * as completions from './languageFuatures/complete';
 import * as completionResolve from './languageFuatures/completeResolve';
 import * as documentHighlight from './languageFuatures/documentHighlights';
 import * as documentLink from './languageFuatures/documentLinks';
+import * as semanticTokens from './languageFuatures/documentSemanticTokens';
 import * as hover from './languageFuatures/hover';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
@@ -25,7 +27,7 @@ import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plu
 import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pugPlugin';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
-import useVueTemplateLanguagePlugin, { getTsCompletions, semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
+import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
 import * as codeActions from './services/codeAction';
 import * as codeActionResolve from './services/codeActionResolve';
 import * as d3 from './services/d3';
@@ -35,7 +37,6 @@ import * as references from './services/references';
 import * as codeLens from './services/referencesCodeLens';
 import * as codeLensResolve from './services/referencesCodeLensResolve';
 import * as rename from './services/rename';
-import * as semanticTokens from './languageFuatures/documentSemanticTokens';
 import * as tagNameCase from './services/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 
@@ -330,7 +331,7 @@ export function createLanguageService(
 				const tsComplete = await _languageSupportPlugin.doComplete?.(textDocument, position, context);
 
 				if (tsComplete) {
-					const sortTexts = getTsCompletions(ts)?.SortText;
+					const sortTexts = shared.getTsCompletions(ts)?.SortText;
 					if (sortTexts) {
 						tsComplete.items = tsComplete.items.filter(tsItem => {
 							if (
