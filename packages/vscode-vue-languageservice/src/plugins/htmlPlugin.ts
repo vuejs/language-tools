@@ -39,7 +39,8 @@ export function htmlPluginBase(
             autoClosingTags: boolean,
         } | undefined>,
         getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
-        getCompletionConfiguration?(): Promise<html.CompletionConfiguration | undefined>, // TODO
+        getCompletionConfiguration?(uri: string): Promise<html.CompletionConfiguration | undefined>,
+        getFormatConfiguration?(uri: string): Promise<html.HTMLFormatConfiguration | undefined>,
         documentContext?: html.DocumentContext,
     },
     getHtmlDocument: (document: TextDocument) => html.HTMLDocument | undefined,
@@ -107,8 +108,14 @@ export function htmlPluginBase(
         },
 
         format(document, range, options) {
-            return worker(document, (htmlDocument) => {
-                return host.getHtmlLs().format(document, range, options);
+            return worker(document, async (htmlDocument) => {
+
+                const formatConfiguration = await host.getFormatConfiguration?.(document.uri);
+
+                return host.getHtmlLs().format(document, range, {
+                    ...formatConfiguration,
+                    ...options,
+                });
             });
         },
 
@@ -135,7 +142,7 @@ export function htmlPluginBase(
 
                     if (enabled) {
 
-                        const text = host.getHtmlLs().doQuoteComplete(document, position, htmlDocument, await host.getCompletionConfiguration?.());
+                        const text = host.getHtmlLs().doQuoteComplete(document, position, htmlDocument, await host.getCompletionConfiguration?.(document.uri));
 
                         if (text) {
                             return text;

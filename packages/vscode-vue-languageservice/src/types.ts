@@ -1,4 +1,4 @@
-import { BasicRuntimeContext, VueDocument, TypeScriptFeaturesRuntimeContext, LanguageServiceHostBase as LanguageServiceHostBase, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import { BasicRuntimeContext, VueDocument, TypeScriptFeaturesRuntimeContext, LanguageServiceHostBase } from '@volar/vue-typescript';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';

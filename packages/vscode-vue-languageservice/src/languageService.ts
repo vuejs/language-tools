@@ -1,13 +1,12 @@
 import * as shared from '@volar/shared';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
-import type * as emmet from '@vscode/emmet-helper';
 import { isGloballyWhitelisted } from '@vue/shared';
-import type * as css from 'vscode-css-languageservice';
-import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as ts2 from 'vscode-typescript-languageservice';
 import * as autoInsert from './languageFuatures/autoInsert';
 import * as callHierarchy from './languageFuatures/callHierarchy';
+import * as codeActionResolve from './languageFuatures/codeActionResolve';
+import * as codeActions from './languageFuatures/codeActions';
 import * as completions from './languageFuatures/complete';
 import * as completionResolve from './languageFuatures/completeResolve';
 import * as documentHighlight from './languageFuatures/documentHighlights';
@@ -28,8 +27,6 @@ import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugi
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/tsPlugin';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vuePlugin';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguagePlugin';
-import * as codeActions from './languageFuatures/codeActions';
-import * as codeActionResolve from './languageFuatures/codeActionResolve';
 import * as d3 from './services/d3';
 import * as definitions from './services/definition';
 import * as diagnostics from './services/diagnostics';
@@ -39,6 +36,9 @@ import * as codeLensResolve from './services/referencesCodeLensResolve';
 import * as rename from './services/rename';
 import * as tagNameCase from './services/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
+
+import type * as _0 from 'vscode-html-languageservice';
+import type * as _1 from 'vscode-css-languageservice';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -111,6 +111,10 @@ export function createLanguageService(
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
+			getSettings: async () => getSettings?.('html'),
+			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
+			getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
+			getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		{
@@ -121,7 +125,10 @@ export function createLanguageService(
 		'html',
 		useHtmlPlugin({
 			getHtmlLs: () => services.htmlLs,
-			getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+			getSettings: async () => getSettings?.('html'),
+			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
+			getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
+			getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		htmlTriggerCharacters,
@@ -130,7 +137,7 @@ export function createLanguageService(
 		'jade',
 		usePugPlugin({
 			getPugLs: () => services.pugLs,
-			getHoverSettings: async (uri) => getSettings?.<html.HoverSettings>('html.hover', uri),
+			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		pugTriggerCharacters,
@@ -138,7 +145,7 @@ export function createLanguageService(
 	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
 			getCssLs: services.getCssLs,
-			getLanguageSettings: async (languageId, uri) => getSettings?.<css.LanguageSettings>(languageId, uri),
+			getLanguageSettings: async (languageId, uri) => getSettings?.(languageId, uri),
 			getStylesheet: services.getStylesheet,
 			documentContext: tsRuntime.context.documentContext,
 		}),
@@ -158,7 +165,7 @@ export function createLanguageService(
 	);
 	const emmetPlugin = defineLanguageServicePlugin(
 		useEmmetPlugin({
-			getEmmetConfig: async () => getSettings?.<emmet.VSCodeEmmetConfig>('emmet'),
+			getEmmetConfig: async () => getSettings?.('emmet'),
 		}),
 		{
 			triggerCharacters: emmetTriggerCharacters,
@@ -188,7 +195,7 @@ export function createLanguageService(
 		useAutoDotValuePlugin({
 			ts,
 			getTsLs: () => tsRuntime.context.scriptTsLs,
-			isEnabled: async () => await getSettings?.('volar.autoCompleteRefs'),
+			isEnabled: async () => getSettings?.('volar.autoCompleteRefs'),
 		}),
 	);
 

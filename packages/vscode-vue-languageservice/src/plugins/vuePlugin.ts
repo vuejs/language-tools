@@ -93,9 +93,8 @@ const dataProvider = html.newHTMLDataProvider('vue', {
     ]
 });
 
-export default definePlugin((host: {
+export default definePlugin((host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHtmlLs'> & {
     getVueDocument(document: TextDocument): VueDocument | undefined,
-    documentContext?: html.DocumentContext,
 }) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
@@ -105,8 +104,8 @@ export default definePlugin((host: {
     return {
 
         ...htmlPluginBase({
+            ...host,
             getHtmlLs: () => htmlLs,
-            documentContext: host.documentContext,
         }, getHtmlDocument),
 
         findDocumentLinks(document) {

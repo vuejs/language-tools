@@ -40,8 +40,20 @@ export function getDocumentService(
 	let tsLs: ts2.LanguageService;
 
 	// language support plugins
-	const vuePlugin = useVuePlugin({ getVueDocument });
-	const htmlPlugin = patchHtmlFormat(useHtmlPlugin({ getHtmlLs: () => services.htmlLs }));
+	const vuePlugin = useVuePlugin({
+		getVueDocument,
+		getSettings: async () => getSettings?.('html'),
+		getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
+		getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
+		getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
+	});
+	const htmlPlugin = patchHtmlFormat(useHtmlPlugin({
+		getHtmlLs: () => services.htmlLs,
+		getSettings: async () => getSettings?.('html'),
+		getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
+		getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
+		getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
+	}));
 	const pugPlugin = usePugPlugin({ getPugLs: () => services.pugLs });
 	const cssPlugin = useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet });
 	const jsonPlugin = useJsonPlugin({ getJsonLs: () => services.jsonLs });

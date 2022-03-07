@@ -118,15 +118,16 @@ export function createVueDocuments() {
 			if (end === undefined)
 				end = start;
 
-			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
+			let sourceMap: EmbeddedDocumentSourceMap | undefined;
 
-			if (!sourceMap) {
-				if (lsType === 'script') {
-					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
-				}
-				else if (lsType === 'template') {
-					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
-				}
+			if (lsType === 'nonTs') {
+				sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
+			}
+			else if (lsType === 'script') {
+				sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
+			}
+			else if (lsType === 'template') {
+				sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
 			}
 
 			if (sourceMap) {
