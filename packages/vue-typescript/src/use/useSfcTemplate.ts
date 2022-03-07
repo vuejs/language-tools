@@ -25,6 +25,7 @@ export function useSfcTemplate(
 				sourceMapId,
 				vueDoc.value,
 				textDocument.value,
+				'nonTs'
 			);
 			sourceMap.mappings.push({
 				data: {

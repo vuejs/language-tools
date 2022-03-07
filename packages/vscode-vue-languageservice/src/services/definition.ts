@@ -42,7 +42,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: Lan
 			data => !!data.capabilities.definitions,
 		)) {
 
-			if (tsLoc.lsType === undefined)
+			if (tsLoc.lsType === 'nonTs')
 				continue;
 
 			if (tsLoc.type === 'source-ts' && tsLoc.lsType !== 'script')
@@ -125,6 +125,9 @@ export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: Lan
 					: tsLs.findDefinition(uri, position)
 				) {
 
+					if (tsLoc.lsType === 'nonTs')
+						continue;
+
 					loopChecker.add({ uri: location.targetUri, range: location.targetSelectionRange });
 
 					const teleport = vueDocuments.getTsTeleports(tsLoc.lsType!).get(location.targetUri);
@@ -197,7 +200,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: Lan
 		// css -> vue
 		for (const cssLoc of cssResult) {
 
-			const sourceMap = vueDocuments.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri('nonTs', cssLoc.uri);
 			if (!sourceMap)
 				continue;
 

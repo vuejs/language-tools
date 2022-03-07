@@ -27,7 +27,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: Lan
 			data => !!data.capabilities.references,
 		)) {
 
-			if (tsLoc.lsType === undefined)
+			if (tsLoc.lsType === 'nonTs')
 				continue;
 
 			const loopChecker = dedupe.createLocationSet();
@@ -61,7 +61,12 @@ export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: Lan
 					uri,
 					position,
 				)) {
+
+					if (tsLoc.lsType === 'nonTs')
+						continue;
+
 					loopChecker.add({ uri: tsLoc_2.uri, range: tsLoc_2.range });
+
 					const teleport = vueDocuments.getTsTeleports(tsLoc.lsType!).get(tsLoc_2.uri);
 
 					if (!teleport) {
@@ -123,7 +128,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, getStylesheet }: Lan
 		// css -> vue
 		for (const cssLoc of cssResult) {
 
-			const sourceMap = vueDocuments.fromEmbeddedDocumentUri(undefined, cssLoc.uri);
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri('nonTs', cssLoc.uri);
 			if (!sourceMap)
 				continue;
 

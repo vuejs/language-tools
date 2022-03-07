@@ -160,7 +160,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		},
 	};
 
-	function transformCallHierarchyItem(lsType: 'script' | 'template' | undefined, tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
+	function transformCallHierarchyItem(lsType: 'script' | 'template' | 'nonTs', tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
 
 		const sourceMap = context.vueDocuments.fromEmbeddedDocumentUri(lsType, tsItem.uri);
 		if (!sourceMap)

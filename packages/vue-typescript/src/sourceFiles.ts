@@ -104,7 +104,7 @@ export function createVueDocuments() {
 	const dirs = computed(() => [...new Set(uris.value.map(shared.uriToFsPath).map(path.dirname))]);
 	const refs = {
 		fromEmbeddedLocation: function* <T extends vscode.Position | number>(
-			lsType: 'script' | 'template' | undefined,
+			lsType: 'script' | 'template' | 'nonTs',
 			uri: string,
 			start: T,
 			end?: T,
@@ -156,22 +156,18 @@ export function createVueDocuments() {
 			}
 		},
 		fromEmbeddedDocumentUri: function (
-			lsType: 'script' | 'template' | undefined,
+			lsType: 'script' | 'template' | 'nonTs',
 			uri: string,
 		) {
-
-			let sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
-
-			if (!sourceMap) {
-				if (lsType === 'script') {
-					sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
-				}
-				else if (lsType === 'template') {
-					sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
-				}
+			if (lsType === 'nonTs') {
+				return sourceMapsByUriAndLsType.value.noLsType.get(uri);
 			}
-
-			return sourceMap;
+			else if (lsType === 'script') {
+				return sourceMapsByUriAndLsType.value.script.get(uri);
+			}
+			else if (lsType === 'template') {
+				return sourceMapsByUriAndLsType.value.template.get(uri);
+			}
 		},
 	};
 

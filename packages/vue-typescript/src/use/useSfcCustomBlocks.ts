@@ -36,6 +36,7 @@ export function useSfcCustomBlocks(
 				sourceMapsId,
 				vueDoc.value,
 				doc.textDocument,
+				'nonTs',
 			);
 			sourceMap.mappings.push({
 				data: {

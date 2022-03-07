@@ -20,6 +20,6 @@ export type DocumentServiceRuntimeContext = BasicRuntimeContext & {
 export type LanguageServiceRuntimeContext = BasicRuntimeContext & TypeScriptFeaturesRuntimeContext & {
 	vueHost: LanguageServiceHost,
 	getTextDocument(uri: string): TextDocument | undefined,
-	getPlugins(lsType: 'template' | 'script' | undefined): LanguageServicePlugin[],
+	getPlugins(lsType: 'template' | 'script' | 'nonTs'): LanguageServicePlugin[],
 	getPluginById(id: number): LanguageServicePlugin | undefined,
 }

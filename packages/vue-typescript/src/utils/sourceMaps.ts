@@ -13,7 +13,7 @@ export function getEmbeddedDocumentSourceMapId() {
 export function useEmbeddedDocumentSourceMap(
 	sourceDocument: Ref<TextDocument>,
 	mappedDocument: Ref<TextDocument>,
-	lsType?: 'template' | 'script',
+	lsType: 'template' | 'script' | 'nonTs',
 	capabilities = {
 		foldingRanges: true,
 		formatting: true,
@@ -38,7 +38,7 @@ export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedDocu
 		public id: number,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public lsType?: 'template' | 'script',
+		public lsType: 'template' | 'script' | 'nonTs',
 		public capabilities = {
 			foldingRanges: true,
 			formatting: true,

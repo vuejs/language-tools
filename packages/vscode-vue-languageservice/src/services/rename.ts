@@ -57,7 +57,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, scriptTsLs, getStyle
 			data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.in),
 		)) {
 
-			if (tsLoc.lsType === undefined)
+			if (tsLoc.lsType === 'nonTs')
 				continue;
 
 			const tsLs = getTsLs(tsLoc.lsType);
@@ -102,7 +102,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, scriptTsLs, getStyle
 			data => data.capabilities.rename === true || (typeof data.capabilities.rename === 'object' && data.capabilities.rename.in),
 		)) {
 
-			if (tsLoc.lsType === undefined)
+			if (tsLoc.lsType === 'nonTs')
 				continue;
 
 			let newName_2 = newName;
@@ -227,7 +227,7 @@ export function register({ vueDocuments, getCssLs, getTsLs, scriptTsLs, getStyle
 		// css -> vue
 		for (const cssUri in cssResult.changes) {
 
-			const sourceMap = vueDocuments.fromEmbeddedDocumentUri(undefined, cssUri);
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri('nonTs', cssUri);
 			if (!sourceMap)
 				continue;
 
@@ -298,7 +298,7 @@ export function margeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
  *    -> Yes: Only access template results
  *    -> No: Access all results
  */
-export function tsEditToVueEdit(lsType: 'script' | 'template' | undefined, ignoreScriptLsResult: boolean, tsResult: vscode.WorkspaceEdit, sourceFiles: VueDocuments, isValidRange: (data: EmbeddedDocumentMappingData) => boolean) {
+export function tsEditToVueEdit(lsType: 'script' | 'template' | 'nonTs', ignoreScriptLsResult: boolean, tsResult: vscode.WorkspaceEdit, sourceFiles: VueDocuments, isValidRange: (data: EmbeddedDocumentMappingData) => boolean) {
 
 	const vueResult: vscode.WorkspaceEdit = {};
 	let hasResult = false;

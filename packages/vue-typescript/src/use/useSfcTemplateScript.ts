@@ -394,7 +394,7 @@ export function useSfcTemplateScript(
 				cssSourceMapId,
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
-				undefined,
+				'nonTs',
 				{
 					foldingRanges: false,
 					formatting: false,

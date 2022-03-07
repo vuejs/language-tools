@@ -43,6 +43,7 @@ export function useSfcStyles(
 				sourceMapsId,
 				vueDoc.value,
 				cssData.textDocument,
+				'nonTs',
 			);
 			sourceMap.mappings.push({
 				data: {

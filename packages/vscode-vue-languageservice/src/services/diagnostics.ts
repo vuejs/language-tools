@@ -353,8 +353,8 @@ export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptT
 			const cacheWithSourceMap = computed(() => {
 				if (!sfcTemplate.textDocument.value) return [];
 				return [
-					...toSourceDiags(undefined, sfcTemplate.textDocument.value.uri, htmlErrors.value),
-					...toSourceDiags(undefined, sfcTemplate.textDocument.value.uri, pugErrors.value),
+					...toSourceDiags('nonTs', sfcTemplate.textDocument.value.uri, htmlErrors.value),
+					...toSourceDiags('nonTs', sfcTemplate.textDocument.value.uri, pugErrors.value),
 				];
 			});
 			return {
@@ -410,7 +410,7 @@ export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptT
 			const cacheWithSourceMap = computed(() => {
 				let result: vscode.Diagnostic[] = [];
 				for (const [uri, errs] of errors_cache.value) {
-					result = result.concat(toSourceDiags(undefined, uri, errs));
+					result = result.concat(toSourceDiags('nonTs', uri, errs));
 				}
 				return result as vscode.Diagnostic[];
 			});
@@ -458,7 +458,7 @@ export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptT
 				let result: vscode.Diagnostic[] = [];
 				if (errors_cache.value) {
 					for (const [uri, errs] of await errors_cache.value) {
-						result = result.concat(toSourceDiags(undefined, uri, errs));
+						result = result.concat(toSourceDiags('nonTs', uri, errs));
 					}
 				}
 				return result as vscode.Diagnostic[];
@@ -633,7 +633,7 @@ export function register({ vueDocuments, getCssLs, jsonLs, templateTsLs, scriptT
 		}
 	}
 
-	function toSourceDiags(lsType: 'template' | 'script' | undefined, uri: string, errors: vscode.Diagnostic[]) {
+	function toSourceDiags(lsType: 'template' | 'script' | 'nonTs', uri: string, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
 		const sourceMap = vueDocuments.refs.fromEmbeddedDocumentUri(lsType, uri);
