@@ -51,6 +51,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			),
 			(tokens, sourceMap) => tokens.map(_token => {
 
+				if (!sourceMap)
+					return _token;
+
 				const _start = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] });
 				const _end = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] + _token[2] });
 				const range = sourceMap.getSourceRange(_start, _end, data => !!data.capabilities.semanticTokens)?.[0];

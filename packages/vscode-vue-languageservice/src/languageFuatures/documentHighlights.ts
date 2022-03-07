@@ -23,6 +23,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(plugin, document, position) => plugin.findDocumentHighlights?.(document, position),
 			(data, sourceMap) => data.map(highlisht => {
 
+				if (!sourceMap)
+					return highlisht;
+
 				const range = sourceMap.getSourceRange(highlisht.range.start, highlisht.range.end)?.[0];
 
 				if (range) {

@@ -71,32 +71,40 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				return [];
 			},
-			(plugin, document, arg) => plugin.doCodeActions?.(document, arg.range, arg.codeActionContext),
-			(_codeActions, sourceMap, plugin) => _codeActions.map(_codeAction => {
+			async (plugin, document, arg, sourceMap) => {
 
-				const data: PluginCodeActionData = {
-					uri,
-					originalItem: _codeAction,
-					pluginId: plugin.id,
-					sourceMapId: sourceMap.id,
-					embeddedDocumentUri: sourceMap.mappedDocument.uri,
-				};
+				const codeActions = await plugin.doCodeActions?.(document, arg.range, arg.codeActionContext);
+
+				return codeActions?.map(_codeAction => {
+
+					const data: PluginCodeActionData = {
+						uri,
+						originalItem: _codeAction,
+						pluginId: plugin.id,
+						sourceMapId: sourceMap?.id,
+						embeddedDocumentUri: sourceMap?.mappedDocument.uri,
+					};
+
+					return <vscode.CodeAction>{
+						..._codeAction,
+						data: data as any,
+					};
+				});
+			},
+			(_codeActions, sourceMap) => _codeActions.map(_codeAction => {
+
+				if (!sourceMap)
+					return _codeAction;
 
 				if (_codeAction.edit) {
 					const edit = tsEditToVueEdit(sourceMap.lsType, false, _codeAction.edit, context.vueDocuments, () => true);
 					if (edit) {
-						return {
-							..._codeAction,
-							edit,
-							data: data as any,
-						};
+						_codeAction.edit = edit;
+						return _codeAction;
 					}
 				}
 				else {
-					return {
-						..._codeAction,
-						data: data as any,
-					};
+					return _codeAction;
 				}
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),

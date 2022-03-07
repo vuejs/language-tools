@@ -23,6 +23,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(plugin, document, position) => plugin.doHover?.(document, position),
 			(data, sourceMap) => {
 
+				if (!sourceMap)
+					return data;
+
 				if (!data.range)
 					return data;
 

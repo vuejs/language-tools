@@ -16,6 +16,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 			(data, sourceMap) => transformSymbolInformations(
 				data,
 				location => {
+
+					if (!sourceMap)
+						return location;
+
 					const sourceRange = sourceMap.getSourceRange(location.range.start, location.range.end)?.[0];
 					if (sourceRange) {
 						return vscode.Location.create(sourceMap.sourceDocument.uri, sourceRange);

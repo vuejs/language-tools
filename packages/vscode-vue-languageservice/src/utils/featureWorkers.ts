@@ -9,7 +9,7 @@ export async function documentFeatureWorker<T>(
 	document: TextDocument,
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 	worker: (plugin: EmbeddedLanguagePlugin, document: TextDocument) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 	return documentArgFeatureWorker(
@@ -31,7 +31,7 @@ export async function documentArgFeatureWorker<T, K>(
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | [K],
 	worker: (plugin: EmbeddedLanguagePlugin, document: TextDocument, arg: K) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
@@ -85,7 +85,12 @@ export async function documentArgFeatureWorker<T, K>(
 
 		for (const plugin of plugins) {
 
-			const result = await worker(plugin, document, arg);
+			const embeddedResult = await worker(plugin, document, arg);
+
+			if (!embeddedResult)
+				continue;
+
+			const result = await transform(embeddedResult!, undefined);
 
 			if (!result)
 				continue;
@@ -110,8 +115,8 @@ export async function languageFeatureWorker<T, K>(
 	uri: string,
 	arg: K,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
-	worker: (plugin: EmbeddedLanguagePlugin, document: TextDocument, arg: K) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap, plugin: LanguageServicePlugin) => T | undefined,
+	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined) => T,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,
 ) {
@@ -133,12 +138,12 @@ export async function languageFeatureWorker<T, K>(
 
 				for (const plugin of plugins) {
 
-					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mapedArg);
+					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mapedArg, sourceMap);
 
 					if (!embeddedResult)
 						continue;
 
-					const result = await transform(embeddedResult!, sourceMap, plugin);
+					const result = transform(embeddedResult!, sourceMap);
 
 					if (!result)
 						continue;
@@ -166,7 +171,12 @@ export async function languageFeatureWorker<T, K>(
 
 		for (const plugin of plugins) {
 
-			const result = await worker(plugin, document, arg);
+			const embeddedResult = await worker(plugin, document, arg, undefined);
+
+			if (!embeddedResult)
+				continue;
+
+			const result = transform(embeddedResult!, undefined);
 
 			if (!result)
 				continue;

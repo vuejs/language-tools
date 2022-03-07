@@ -20,6 +20,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 			},
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
 			(data, sourceMap) => data.map(cp => {
+
+				if (!sourceMap)
+					return cp;
+
 				if (cp.textEdit) {
 
 					const editRange = sourceMap.getSourceRange(cp.textEdit.range.start, cp.textEdit.range.end)?.[0];
@@ -29,6 +33,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 					cp.textEdit.range = editRange;
 				}
+				
 				if (cp.additionalTextEdits) {
 					for (const textEdit of cp.additionalTextEdits) {
 

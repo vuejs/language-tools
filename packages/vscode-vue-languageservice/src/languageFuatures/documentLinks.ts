@@ -15,6 +15,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(arg, sourceMap) => [arg],
 			(plugin, document, arg) => plugin.findDocumentLinks?.(document),
 			(data, sourceMap) => data.map(link => {
+
+				if (!sourceMap)
+					return link;
+
 				const range = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
 				if (range) {
 					return {

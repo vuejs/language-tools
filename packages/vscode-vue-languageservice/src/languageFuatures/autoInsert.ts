@@ -23,6 +23,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
 			(data, sourceMap) => {
 
+				if (!sourceMap)
+					return data;
+
 				if (typeof data === 'string')
 					return data;
 

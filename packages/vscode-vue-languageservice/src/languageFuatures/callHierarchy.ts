@@ -32,20 +32,29 @@ export function register(context: LanguageServiceRuntimeContext) {
 						yield mapedRange.start;
 					}
 				},
-				(plugin, document, position) => plugin.callHierarchy?.doPrepare?.(document, position),
-				(data, sourceMap, plugin) => data
-					.map(item => transformCallHierarchyItem(sourceMap.lsType, item, [])?.[0])
-					.filter(shared.notEmpty)
-					.map(item => ({
-						...item,
-						data: <PluginCallHierarchyData>{
+				async (plugin, document, position, sourceMap) => {
+
+					const items = await plugin.callHierarchy?.doPrepare(document, position);
+
+					return items?.map(item => {
+
+						const data: PluginCallHierarchyData = {
 							uri,
 							originalItem: item,
 							pluginId: plugin.id,
-							sourceMapId: sourceMap.id,
-							embeddedDocumentUri: sourceMap.mappedDocument.uri,
-						} as any,
-					})),
+							sourceMapId: sourceMap?.id,
+							embeddedDocumentUri: sourceMap?.mappedDocument.uri,
+						};
+
+						return <vscode.CallHierarchyItem>{
+							...item,
+							data: data as any,
+						};
+					});
+				},
+				(data, sourceMap) => !sourceMap ? data : data
+					.map(item => transformCallHierarchyItem(sourceMap.lsType, item, [])?.[0])
+					.filter(shared.notEmpty),
 				arr => dedupe.withLocations(arr.flat()),
 			);
 		},

@@ -15,7 +15,13 @@ export function register(context: DocumentServiceRuntimeContext) {
 			(plugin, document) => plugin.getFoldingRanges?.(document),
 			(data, sourceMap) => transformFoldingRanges(
 				data,
-				range => sourceMap.getSourceRange(range.start, range.end)?.[0],
+				range => {
+
+					if (!sourceMap)
+						return range;
+
+					return sourceMap.getSourceRange(range.start, range.end)?.[0]
+				},
 			),
 			arr => arr.flat(),
 		);

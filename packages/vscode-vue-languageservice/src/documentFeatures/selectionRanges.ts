@@ -20,7 +20,13 @@ export function register(context: DocumentServiceRuntimeContext) {
 			(plugin, document, positions) => plugin.getSelectionRanges?.(document, positions),
 			(data, sourceMap) => transformSelectionRanges(
 				data,
-				range => sourceMap.getSourceRange(range.start, range.end)?.[0],
+				range => {
+
+					if (!sourceMap)
+						return range;
+
+					return sourceMap.getSourceRange(range.start, range.end)?.[0]
+				},
 			),
 			arr => arr.flat(),
 		);
