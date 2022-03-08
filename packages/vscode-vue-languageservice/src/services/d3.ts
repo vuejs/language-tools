@@ -1,15 +1,15 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as references from './references';
-import * as definitions from './definition';
+import * as references from '../languageFuatures/references';
+import * as definitions from '../languageFuatures/difinition';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
 export function register({ typescript: ts, vueDocuments, templateTsLs }: LanguageServiceRuntimeContext) {
 
 	const findReferences = references.register(arguments[0]);
-	const findDefinition = definitions.register(arguments[0]);
+	const findDefinition = definitions.register(arguments[0], 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions);
 
 	return async (document: TextDocument) => {
 
@@ -59,9 +59,9 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 				const virtualCode = sourceMap.mappedDocument.getText();
 				const scriptAst = ts.createSourceFile('foo.' + shared.languageIdToSyntax(sourceMap.mappedDocument.languageId), virtualCode, ts.ScriptTarget.Latest);
 
-				nodeWalker(scriptAst);
+				await nodeWalker(scriptAst);
 
-				function nodeWalker(node: ts.Node) {
+				async function nodeWalker(node: ts.Node) {
 					if (
 						ts.isVariableDeclaration(node)
 						&& ts.isIdentifier(node.name)
@@ -91,7 +91,7 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 									start: argsStartRange.start,
 									end: argsEndRange.start,
 								},
-								references: findReferences(sourceMap.sourceDocument.uri, range.start),
+								references: await findReferences(sourceMap.sourceDocument.uri, range.start) ?? [],
 							});
 						}
 						for (const arg of node.initializer.arguments) {
@@ -187,7 +187,7 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 								funcCalls.push({
 									name: sourceMap.sourceDocument.getText(range),
 									range: range,
-									definitions: findDefinition.on(sourceMap.sourceDocument.uri, range.start),
+									definitions: await findDefinition(sourceMap.sourceDocument.uri, range.start) ?? [],
 								});
 							}
 						}
@@ -204,9 +204,9 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 			const virtualCode = tsDoc.getText();
 			const scriptAst = ts.createSourceFile('foo.' + shared.languageIdToSyntax(tsDoc.languageId), virtualCode, ts.ScriptTarget.Latest);
 
-			nodeWalker(scriptAst, tsDoc);
+			await nodeWalker(scriptAst, tsDoc);
 
-			function nodeWalker(node: ts.Node, tsDoc: TextDocument) {
+			async function nodeWalker(node: ts.Node, tsDoc: TextDocument) {
 				if (
 					ts.isVariableDeclaration(node)
 					&& ts.isIdentifier(node.name)
@@ -236,7 +236,7 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 								start: argsStartLoc.start,
 								end: argsEndLoc.start,
 							},
-							references: findReferences(tsDoc.uri, loc.start),
+							references: await findReferences(tsDoc.uri, loc.start) ?? [],
 						});
 					}
 					for (const arg of node.initializer.arguments) {
@@ -328,7 +328,7 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 							funcCalls.push({
 								name: tsDoc.getText(loc),
 								range: loc,
-								definitions: findDefinition.on(tsDoc.uri, loc.start),
+								definitions: await findDefinition(tsDoc.uri, loc.start) ?? [],
 							});
 						}
 					}

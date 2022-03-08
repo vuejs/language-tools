@@ -38,7 +38,7 @@ export async function execute(
 			progress.report(i++ / Object.keys(resolvedTags).length * 100, tagName);
 
 			const offset = template.startTagEnd + resolvedTag.offsets[0];
-			const refs = await vueLs.findReferences(uri, sourceFile.getTextDocument().positionAt(offset));
+			const refs = await vueLs.findReferences(uri, sourceFile.getTextDocument().positionAt(offset)) ?? [];
 
 			for (const vueLoc of refs) {
 				if (

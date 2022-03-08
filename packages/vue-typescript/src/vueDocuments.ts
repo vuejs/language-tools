@@ -184,14 +184,14 @@ export function createVueDocuments() {
 
 		getTsTeleports: untrack((lsType: 'script' | 'template') => tsTeleports[lsType].value),
 		getEmbeddeds: untrack(function* (
-			lsType: 'script' | 'template' | undefined,
+			lsType: 'script' | 'template' | 'nonTs',
 		) {
-
-			for (const sourceMap of sourceMapsByUriAndLsType.value.noLsType) {
-				yield sourceMap[1];
+			if (lsType === 'nonTs') {
+				for (const sourceMap of sourceMapsByUriAndLsType.value.noLsType) {
+					yield sourceMap[1];
+				}
 			}
-
-			if (lsType === 'script') {
+			else if (lsType === 'script') {
 				for (const sourceMap of sourceMapsByUriAndLsType.value.script) {
 					yield sourceMap[1];
 				}

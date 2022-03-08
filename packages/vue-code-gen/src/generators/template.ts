@@ -186,39 +186,42 @@ export function generate(
 		}
 
 		if (!isNamespacedTag) {
-			tsCodeGen.addText(`// @ts-ignore\n`);
-			tsCodeGen.addText(`({ `);
-			writeObjectProperty2(
-				tagName,
-				tagRanges,
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.tagHover,
-				},
-			);
-			tsCodeGen.addText(`: {} as `);
-			tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
-			const names = [...componentNames];
-			for (let i = 0; i < names.length; i++) {
-				if (i > 0) {
-					tsCodeGen.addText(', ');
-				}
-				tsCodeGen.addText(`typeof __VLS_rawComponents`);
-				writePropertyAccess2(
-					names[i],
-					tagRanges,
+			// split tagRanges to fix end tag difinition original select range mapping to start tag
+			for (const tagRange of tagRanges) {
+				tsCodeGen.addText(`// @ts-ignore\n`);
+				tsCodeGen.addText(`({ `);
+				writeObjectProperty2(
+					tagName,
+					[tagRange],
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.tagReference,
-						beforeRename: tagName === names[i] ? undefined : unHyphenatComponentName,
-						doRename: keepHyphenateName,
+						capabilities: capabilitiesSet.tagHover,
 					},
 				);
-				if (i > 0) {
-					tsCodeGen.addText('>');
+				tsCodeGen.addText(`: {} as `);
+				tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
+				const names = [...componentNames];
+				for (let i = 0; i < names.length; i++) {
+					if (i > 0) {
+						tsCodeGen.addText(', ');
+					}
+					tsCodeGen.addText(`typeof __VLS_rawComponents`);
+					writePropertyAccess2(
+						names[i],
+						[tagRange],
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.tagReference,
+							beforeRename: tagName === names[i] ? undefined : unHyphenatComponentName,
+							doRename: keepHyphenateName,
+						},
+					);
+					if (i > 0) {
+						tsCodeGen.addText('>');
+					}
 				}
+				tsCodeGen.addText(` });\n`);
 			}
-			tsCodeGen.addText(` });\n`);
 		}
 
 		writeOptionReferences();

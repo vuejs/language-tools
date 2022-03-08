@@ -1,13 +1,13 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { ReferencesCodeLensData } from './referencesCodeLens';
-import * as findReferences from './references';
+import * as findReferences from '../languageFuatures/references';
 
 export function register({ vueDocuments, getTsLs }: LanguageServiceRuntimeContext) {
 
 	const _findReferences = findReferences.register(arguments[0]);
 
-	return (codeLens: vscode.CodeLens, showReferencesCommand?: string) => {
+	return async (codeLens: vscode.CodeLens, showReferencesCommand?: string) => {
 
 		// @ts-expect-error
 		const data = codeLens.data as ReferencesCodeLensData;
@@ -18,7 +18,7 @@ export function register({ vueDocuments, getTsLs }: LanguageServiceRuntimeContex
 
 		if (data.uri && doc && tsDoc && data.offset !== undefined && data.tsOffset !== undefined) {
 			const pos = doc.positionAt(data.offset);
-			const vueReferences = _findReferences(data.uri, pos);
+			const vueReferences = await _findReferences(data.uri, pos) ?? [];
 			let references = vueReferences;
 			if (sourceFile) {
 				let isCssLocation = false;
