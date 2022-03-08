@@ -27,6 +27,16 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				return data;
 			},
+			prepares => {
+
+				for (const prepare of prepares) {
+					if (vscode.Range.is(prepare)) {
+						return prepare; // if has any valid range, ignore other errors
+					}
+				}
+
+				return prepares[0];
+			},
 		);
 	}
 }
