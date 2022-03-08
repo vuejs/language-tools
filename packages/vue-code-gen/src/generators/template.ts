@@ -186,7 +186,7 @@ export function generate(
 		}
 
 		if (!isNamespacedTag) {
-			// split tagRanges to fix end tag difinition original select range mapping to start tag
+			// split tagRanges to fix end tag definition original select range mapping to start tag
 			for (const tagRange of tagRanges) {
 				tsCodeGen.addText(`// @ts-ignore\n`);
 				tsCodeGen.addText(`({ `);

@@ -13,7 +13,7 @@ import * as documentHighlight from './languageFuatures/documentHighlights';
 import * as documentLink from './languageFuatures/documentLinks';
 import * as semanticTokens from './languageFuatures/documentSemanticTokens';
 import * as hover from './languageFuatures/hover';
-import * as difinition from './languageFuatures/difinition';
+import * as definition from './languageFuatures/definition';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
 import useAutoDotValuePlugin from './plugins/autoDotValuePlugin';
@@ -247,9 +247,9 @@ export function createLanguageService(
 	return {
 		doValidation: defineApi(diagnostics.register(context, () => tsRuntime.update(true)), false, false),
 		findReferences: defineApi(references.register(context), true),
-		findDefinition: defineApi(difinition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
-		findTypeDefinition: defineApi(difinition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
-		findImplementations: defineApi(difinition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false), false),
+		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
+		findTypeDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
+		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false), false),
 		prepareRename: defineApi(renames.prepareRename, isTemplateScriptPosition),
 		doRename: defineApi(renames.doRename, true),
 		getEditsForFileRename: defineApi(renames.onRenameFile, false),

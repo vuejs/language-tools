@@ -2,7 +2,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as references from '../languageFuatures/references';
-import * as definitions from '../languageFuatures/difinition';
+import * as definitions from '../languageFuatures/definition';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 

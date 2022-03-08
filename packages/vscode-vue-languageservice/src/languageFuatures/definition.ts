@@ -37,7 +37,7 @@ export function register(
 
 				return result;
 
-				async function withTeleports(document: TextDocument, position: vscode.Position, originDifinition: vscode.LocationLink | undefined) {
+				async function withTeleports(document: TextDocument, position: vscode.Position, originDefinition: vscode.LocationLink | undefined) {
 
 					if (!plugin[api])
 						return;
@@ -47,23 +47,23 @@ export function register(
 
 					recursiveChecker.add({ uri: document.uri, range: { start: position, end: position } });
 
-					const difinitions = await plugin[api]?.(document, position) ?? [];
+					const definitions = await plugin[api]?.(document, position) ?? [];
 
-					for (const difinition of difinitions) {
+					for (const definition of definitions) {
 
 						let foundTeleport = false;
 
 						if (sourceMap?.lsType !== 'nonTs') {
 
-							recursiveChecker.add({ uri: difinition.targetUri, range: { start: difinition.targetRange.start, end: difinition.targetRange.start } });
+							recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-							const teleport = context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(difinition.targetUri);
+							const teleport = context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(definition.targetUri);
 
 							if (teleport) {
 
 								for (const [teleRange] of teleport.findTeleports(
-									difinition.targetSelectionRange.start,
-									difinition.targetSelectionRange.end,
+									definition.targetSelectionRange.start,
+									definition.targetSelectionRange.end,
 									isValidTeleportSideData,
 								)) {
 
@@ -72,20 +72,20 @@ export function register(
 
 									foundTeleport = true;
 
-									await withTeleports(teleport.document, teleRange.start, difinition);
+									await withTeleports(teleport.document, teleRange.start, definition);
 								}
 							}
 						}
 
 						if (!foundTeleport) {
-							if (originDifinition) {
+							if (originDefinition) {
 								result.push({
-									...difinition,
-									originSelectionRange: originDifinition.originSelectionRange,
+									...definition,
+									originSelectionRange: originDefinition.originSelectionRange,
 								});
 							}
 							else {
-								result.push(difinition);
+								result.push(definition);
 							}
 						}
 					}
