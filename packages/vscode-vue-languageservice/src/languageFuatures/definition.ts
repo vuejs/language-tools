@@ -72,7 +72,7 @@ export function register(
 
 									foundTeleport = true;
 
-									await withTeleports(teleport.document, teleRange.start, definition);
+									await withTeleports(teleport.document, teleRange.start, originDefinition ?? definition);
 								}
 							}
 						}
@@ -110,11 +110,11 @@ export function register(
 					const targetRange = targetSourceMap.getSourceRange(link.targetRange.start, link.targetRange.end)?.[0];
 					const targetSelectionRange = targetSourceMap.getSourceRange(link.targetSelectionRange.start, link.targetSelectionRange.end)?.[0];
 
-					if (!targetRange || !targetSelectionRange)
+					if (!targetSelectionRange)
 						return;
 
 					link.targetUri = targetSourceMap.sourceDocument.uri;
-					link.targetRange = targetRange;
+					link.targetRange = targetRange ?? targetSelectionRange; // loose range mapping to for template slots, slot properties
 					link.targetSelectionRange = targetSelectionRange;
 				}
 
