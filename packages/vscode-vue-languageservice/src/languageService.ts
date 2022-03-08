@@ -16,7 +16,7 @@ import * as hover from './languageFuatures/hover';
 import * as definition from './languageFuatures/definition';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
-import useReferencesCodeLensPlugin from './plugins/vueReferencesCodeLens';
+import useReferencesCodeLensPlugin from './plugins/referencesCodeLens';
 import useAutoDotValuePlugin from './plugins/autoCompleteRefs';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/css';
 import { EmbeddedLanguagePlugin } from './utils/definePlugin';
