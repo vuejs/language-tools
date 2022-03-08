@@ -88,7 +88,6 @@ export async function createProject(
 				const vueLs = vue.createLanguageService(
 					{ typescript: ts },
 					languageServiceHost,
-					Commands.SHOW_REFERENCES,
 					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
 
@@ -105,6 +104,7 @@ export async function createProject(
 							attr: options.languageFeatures!.completion!.defaultAttrNameCase,
 						};
 					} : undefined,
+					Commands.SHOW_REFERENCES,
 				);
 				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
