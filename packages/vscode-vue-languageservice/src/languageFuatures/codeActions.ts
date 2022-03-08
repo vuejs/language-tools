@@ -4,7 +4,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { tsEditToVueEdit } from '../services/rename';
+import { embeddedEditToSourceEdit } from './rename';
 
 export interface PluginCodeActionData {
 	uri: string,
@@ -97,7 +97,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					return _codeAction;
 
 				if (_codeAction.edit) {
-					const edit = tsEditToVueEdit(sourceMap.lsType, false, _codeAction.edit, context.vueDocuments, () => true);
+					const edit = embeddedEditToSourceEdit(sourceMap.lsType, false, _codeAction.edit, context.vueDocuments, () => true);
 					if (edit) {
 						_codeAction.edit = edit;
 						return _codeAction;

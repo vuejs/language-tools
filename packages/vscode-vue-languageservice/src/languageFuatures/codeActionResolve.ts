@@ -1,7 +1,7 @@
 import type { CodeAction } from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { PluginCodeActionData } from './codeActions';
-import { tsEditToVueEdit } from '../services/rename';
+import { embeddedEditToSourceEdit } from './rename';
 
 export function register(context: LanguageServiceRuntimeContext) {
 	return async (item: CodeAction) => {
@@ -30,7 +30,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					if (resolvedItem.edit) {
 
-						const edit = tsEditToVueEdit(sourceMap.lsType, false, resolvedItem.edit, context.vueDocuments, () => true);
+						const edit = embeddedEditToSourceEdit(sourceMap.lsType, false, resolvedItem.edit, context.vueDocuments, () => true);
 
 						if (edit) {
 							resolvedItem.edit = edit;

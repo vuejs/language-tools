@@ -34,7 +34,7 @@ export type EmbeddedLanguagePlugin = {
     getColorPresentations?(document: TextDocument, color: vscode.Color, range: vscode.Range): NullableResult<vscode.ColorPresentation[]>;
     doRenamePrepare?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Range | vscode.ResponseError<void>>;
     doRename?(document: TextDocument, position: vscode.Position, newName: string): NullableResult<vscode.WorkspaceEdit>;
-    getEditsForFileRename?(oldUri: string, newUri: string): NullableResult<vscode.WorkspaceEdit>;
+    doFileRename?(oldUri: string, newUri: string): NullableResult<vscode.WorkspaceEdit>;
     getFoldingRanges?(document: TextDocument): NullableResult<vscode.FoldingRange[]>;
     getSelectionRanges?(document: TextDocument, positions: vscode.Position[]): NullableResult<vscode.SelectionRange[]>;
     getSignatureHelp?(document: TextDocument, position: vscode.Position, context?: vscode.SignatureHelpContext): NullableResult<vscode.SignatureHelp>;

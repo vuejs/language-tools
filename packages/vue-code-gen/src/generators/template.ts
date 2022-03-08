@@ -212,8 +212,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.tagReference,
-							beforeRename: tagName === names[i] ? undefined : unHyphenatComponentName,
-							doRename: keepHyphenateName,
+							normalizeNewName: tagName === names[i] ? undefined : unHyphenatComponentName,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					if (i > 0) {
@@ -270,8 +270,8 @@ export function generate(
 								...capabilitiesSet.attrReference,
 								rename: propName === prop.argName,
 							},
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					tsCodeGen.addText(`;\n`);
@@ -296,8 +296,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.attrReference,
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					tsCodeGen.addText(`;\n`);
@@ -312,10 +312,10 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.attrReference,
-							beforeRename(newName) {
+							normalizeNewName(newName) {
 								return camelize('on-' + newName);
 							},
-							doRename(oldName, newName) {
+							applyNewName(oldName, newName) {
 								const hName = hyphenate(newName);
 								if (hyphenate(newName).startsWith('on-')) {
 									return camelize(hName.substr('on-'.length));
@@ -699,10 +699,10 @@ export function generate(
 										{
 											vueTag: 'template',
 											capabilities: capabilitiesSet.attrReference,
-											beforeRename(newName) {
+											normalizeNewName(newName) {
 												return camelize('on-' + newName);
 											},
-											doRename(oldName, newName) {
+											applyNewName(oldName, newName) {
 												const hName = hyphenate(newName);
 												if (hyphenate(newName).startsWith('on-')) {
 													return camelize(hName.substr('on-'.length));
@@ -905,8 +905,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 				}
@@ -921,8 +921,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 				}
@@ -975,8 +975,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					writePropValuePrefix(isStatic);
@@ -1016,8 +1016,8 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: getCaps(capabilitiesSet.attr),
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 					},
 				);
 				writePropValuePrefix(true);
@@ -1058,8 +1058,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					writePropValuePrefix(true);
@@ -1365,8 +1365,8 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.noDiagnostic,
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 					},
 				);
 				tsCodeGen.addText(`)(`);
@@ -1558,8 +1558,8 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 						capabilities: capabilitiesSet.attrReference,
 					},
 				);
@@ -1593,8 +1593,8 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 						capabilities: capabilitiesSet.attr,
 					},
 				);

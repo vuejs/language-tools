@@ -7,36 +7,38 @@ import * as autoInsert from './languageFuatures/autoInsert';
 import * as callHierarchy from './languageFuatures/callHierarchy';
 import * as codeActionResolve from './languageFuatures/codeActionResolve';
 import * as codeActions from './languageFuatures/codeActions';
+import * as codeLens from './languageFuatures/codeLens';
+import * as codeLensResolve from './languageFuatures/codeLensResolve';
 import * as completions from './languageFuatures/complete';
 import * as completionResolve from './languageFuatures/completeResolve';
+import * as definition from './languageFuatures/definition';
 import * as documentHighlight from './languageFuatures/documentHighlights';
 import * as documentLink from './languageFuatures/documentLinks';
 import * as semanticTokens from './languageFuatures/documentSemanticTokens';
+import * as fileRename from './languageFuatures/fileRename';
 import * as hover from './languageFuatures/hover';
-import * as definition from './languageFuatures/definition';
+import * as references from './languageFuatures/references';
+import * as rename from './languageFuatures/rename';
+import * as renamePrepare from './languageFuatures/renamePrepare';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
-import useReferencesCodeLensPlugin from './plugins/referencesCodeLens';
 import useAutoDotValuePlugin from './plugins/autoCompleteRefs';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/css';
-import { EmbeddedLanguagePlugin } from './utils/definePlugin';
 import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './plugins/directiveComment';
 import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './plugins/emmet';
 import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './plugins/html';
 import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './plugins/jsDoc';
 import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plugins/json';
 import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pug';
+import useReferencesCodeLensPlugin from './plugins/referencesCodeLens';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/typescript';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguage';
 import * as d3 from './services/d3';
 import * as diagnostics from './services/diagnostics';
-import * as references from './languageFuatures/references';
-import * as codeLens from './languageFuatures/codeLens';
-import * as codeLensResolve from './languageFuatures/codeLensResolve';
-import * as rename from './services/rename';
 import * as tagNameCase from './services/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
+import { EmbeddedLanguagePlugin } from './utils/definePlugin';
 
 import type * as _0 from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
@@ -253,7 +255,6 @@ export function createLanguageService(
 		getPluginById: id => allPlugins.get(id),
 	};
 	const _callHierarchy = callHierarchy.register(context);
-	const renames = rename.register(context);
 	const _findReferences = defineApi(references.register(context), true);
 
 	return {
@@ -262,9 +263,9 @@ export function createLanguageService(
 		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
 		findTypeDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
 		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false), false),
-		prepareRename: defineApi(renames.prepareRename, isTemplateScriptPosition),
-		doRename: defineApi(renames.doRename, true),
-		getEditsForFileRename: defineApi(renames.onRenameFile, false),
+		prepareRename: defineApi(renamePrepare.register(context), isTemplateScriptPosition),
+		doRename: defineApi(rename.register(context), true),
+		getEditsForFileRename: defineApi(fileRename.register(context), false),
 		getSemanticTokens: defineApi(semanticTokens.register(context), false),
 		doHover: defineApi(hover.register(context), isTemplateScriptPosition),
 		doComplete: defineApi(completions.register(context), isTemplateScriptPosition),

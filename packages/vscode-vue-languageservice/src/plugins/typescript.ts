@@ -108,7 +108,7 @@ export default definePlugin((host: {
             }
         },
 
-        getEditsForFileRename(oldUri, newUri) {
+        doFileRename(oldUri, newUri) {
             return host.getTsLs().getEditsForFileRename(oldUri, newUri);
         },
 

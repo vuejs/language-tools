@@ -1,8 +1,8 @@
 export interface EmbeddedDocumentMappingData {
 	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | undefined,
 	vueTagIndex?: number,
-	beforeRename?: (newName: string) => string,
-	doRename?: (oldName: string, newName: string) => string,
+	normalizeNewName?: (newName: string) => string,
+	applyNewName?: (oldName: string, newName: string) => string,
 	capabilities: {
 		basic?: boolean,
 		references?: boolean,
@@ -20,7 +20,7 @@ export interface EmbeddedDocumentMappingData {
 }
 
 export interface TeleportSideData {
-	editRenameText?: (newName: string) => string,
+	transformNewName?: (newName: string) => string,
 	capabilities: {
 		references?: boolean,
 		definitions?: boolean,

@@ -343,8 +343,8 @@ export function useSfcTemplateScript(
 									rename: true,
 									referencesCodeLens: maped.mode === SourceMaps.Mode.Totally, // has 2 modes
 								},
-								beforeRename: maped.patchRename ? beforeCssRename : undefined,
-								doRename: maped.patchRename ? doCssRename : undefined,
+								normalizeNewName: maped.patchRename ? beforeCssRename : undefined,
+								applyNewName: maped.patchRename ? doCssRename : undefined,
 							},
 							mode: maped.mode,
 							sourceRange: vueRange,

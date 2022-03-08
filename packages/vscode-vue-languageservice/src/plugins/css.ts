@@ -4,7 +4,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 
-export const wordPatterns: { [lang: string]: RegExp } = {
+const wordPatterns: { [lang: string]: RegExp } = {
     css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
     less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
     scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
@@ -123,6 +123,16 @@ export default definePlugin((host: {
         getColorPresentations(document, color, range) {
             return worker(document, (stylesheet, cssLs) => {
                 return cssLs.getColorPresentations(document, stylesheet, color, range);
+            });
+        },
+
+        doRenamePrepare(document, position) {
+            return worker(document, (stylesheet, cssLs) => {
+
+                const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
+                const wordRange = shared.getWordRange(wordPattern, position, document);
+
+                return wordRange;
             });
         },
 
