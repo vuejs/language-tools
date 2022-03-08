@@ -1,7 +1,7 @@
 import { transformCompletionItem } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
-import { visitEmbedded } from '../plugins/definePlugin';
+import { visitEmbedded } from '../utils/definePlugin';
 import { LanguageServicePlugin } from '../languageService';
 
 export interface PluginCompletionData {

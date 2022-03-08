@@ -1,4 +1,4 @@
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 import * as emmet from '@vscode/emmet-helper';
 
 export const triggerCharacters = []; // TODO

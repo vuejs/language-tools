@@ -11,7 +11,7 @@ import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data } from 'vscode-typescript-languageservice/src/services/completion';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
-import { definePlugin, EmbeddedLanguagePlugin } from './definePlugin';
+import { definePlugin, EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
 export const semanticTokenTypes = [
     'componentTag',

@@ -3,7 +3,7 @@ import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import { LanguageServicePlugin } from './languageService';
-import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
+import { EmbeddedLanguagePlugin } from './utils/definePlugin';
 
 export type LanguageServiceHost = LanguageServiceHostBase & {
 	schemaRequestService?: json.SchemaRequestService,

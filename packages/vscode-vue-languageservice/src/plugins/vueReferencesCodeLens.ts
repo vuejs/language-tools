@@ -1,7 +1,7 @@
 import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 
 export interface ReferencesCodeLensData {
     uri: string,

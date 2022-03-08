@@ -1,4 +1,4 @@
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';

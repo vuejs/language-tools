@@ -1,4 +1,4 @@
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from 'vscode-pug-languageservice';

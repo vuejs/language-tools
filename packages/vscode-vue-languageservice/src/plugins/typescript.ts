@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from 'vscode-typescript-languageservice';
 

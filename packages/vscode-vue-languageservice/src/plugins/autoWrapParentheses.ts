@@ -1,8 +1,8 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 import { VueDocument } from '@volar/vue-typescript';
-import { isCharacterTyping } from './autoDotValuePlugin';
+import { isCharacterTyping } from './autoCompleteRefs';
 import * as shared from '@volar/shared';
 
 export default definePlugin((host: {

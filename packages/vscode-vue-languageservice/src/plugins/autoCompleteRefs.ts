@@ -4,8 +4,8 @@ import * as shared from '@volar/shared';
 import * as ts2 from 'vscode-typescript-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
-import { isTsDocument } from './tsPlugin';
-import { definePlugin, EmbeddedLanguagePlugin } from './definePlugin';
+import { isTsDocument } from './typescript';
+import { definePlugin, EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
 export default definePlugin((host: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),

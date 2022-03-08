@@ -1,6 +1,6 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 
 export default definePlugin((host: {
     getPrintWidth: (uri: string) => number | Promise<number>,

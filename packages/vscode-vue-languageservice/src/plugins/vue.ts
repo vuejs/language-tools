@@ -1,12 +1,12 @@
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
-import { htmlPluginBase } from './htmlPlugin';
+import { htmlPluginBase } from './html';
 import * as vscode from 'vscode-languageserver-protocol';
 
-export { triggerCharacters } from './htmlPlugin';
+export { triggerCharacters } from './html';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
     version: 1.1,

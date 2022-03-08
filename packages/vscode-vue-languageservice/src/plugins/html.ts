@@ -1,4 +1,4 @@
-import { definePlugin, EmbeddedLanguagePlugin } from './definePlugin';
+import { definePlugin, EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 

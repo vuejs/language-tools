@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 
 const pugBeautify = require('pug-beautify');
 

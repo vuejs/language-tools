@@ -1,6 +1,6 @@
 import * as prettier from 'prettier';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from './definePlugin';
+import { definePlugin } from '../utils/definePlugin';
 
 export default definePlugin(() => {
 
