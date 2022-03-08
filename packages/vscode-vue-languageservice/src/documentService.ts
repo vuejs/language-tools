@@ -14,7 +14,7 @@ import useCssPlugin from './plugins/css';
 import { EmbeddedLanguagePlugin } from './utils/definePlugin';
 import useHtmlPlugin from './plugins/html';
 import useJsonPlugin from './plugins/json';
-import useCssFormatPlugin from './plugins/prettierCss';
+import usePrettierPlugin from './plugins/prettier';
 import useHtmlFormatPlugin from './plugins/prettyhtml';
 import usePugFormatPlugin from './plugins/pugBeautify';
 import usePugPlugin from './plugins/pug';
@@ -61,7 +61,7 @@ export function getDocumentService(
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({ ts, getVueDocument, isEnabled: async () => getSettings?.('volar.autoWrapParentheses') });
 
 	// formatter plugins
-	const cssFormatPlugin = useCssFormatPlugin({});
+	const cssFormatPlugin = usePrettierPlugin({ allowLanguageIds: ['css', 'less', 'scss', 'postcss'] });
 	const htmlFormatPlugin = patchHtmlFormat(useHtmlFormatPlugin({ getPrintWidth }));
 	const pugFormatPlugin = usePugFormatPlugin({});
 	const sassFormatPlugin = useSassFormatPlugin({});
