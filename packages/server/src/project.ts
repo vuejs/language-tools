@@ -7,6 +7,7 @@ import type { createLsConfigs } from './configs';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
 import { RuntimeEnvironment } from './common';
+import { Commands } from './commands';
 
 export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
@@ -87,6 +88,7 @@ export async function createProject(
 				const vueLs = vue.createLanguageService(
 					{ typescript: ts },
 					languageServiceHost,
+					Commands.SHOW_REFERENCES,
 					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
 

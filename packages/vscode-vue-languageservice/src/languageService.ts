@@ -16,6 +16,7 @@ import * as hover from './languageFuatures/hover';
 import * as definition from './languageFuatures/definition';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
+import useReferencesCodeLensPlugin from './plugins/referencesCodeLensPlugin';
 import useAutoDotValuePlugin from './plugins/autoDotValuePlugin';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/cssPlugin';
 import { EmbeddedLanguagePlugin } from './plugins/definePlugin';
@@ -31,8 +32,8 @@ import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemantic
 import * as d3 from './services/d3';
 import * as diagnostics from './services/diagnostics';
 import * as references from './languageFuatures/references';
-import * as codeLens from './services/referencesCodeLens';
-import * as codeLensResolve from './services/referencesCodeLensResolve';
+import * as codeLens from './languageFuatures/codeLens';
+import * as codeLensResolve from './languageFuatures/codeLensResolve';
 import * as rename from './services/rename';
 import * as tagNameCase from './services/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
@@ -90,6 +91,7 @@ export function getTriggerCharacters(tsVersion: string) {
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	vueHost: LanguageServiceHost,
+	clientShowReferenceCommand: string,
 	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
@@ -198,6 +200,13 @@ export function createLanguageService(
 			isEnabled: async () => getSettings?.('volar.autoCompleteRefs'),
 		}),
 	);
+	const referencesCodeLensPlugin = defineLanguageServicePlugin(
+		useReferencesCodeLensPlugin({
+			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			findReference: async (document, position) => _findReferences(document, position),
+			clientShowReferenceCommand,
+		}),
+	);
 
 	const allPlugins = new Map<number, LanguageServicePlugin>();
 
@@ -209,6 +218,7 @@ export function createLanguageService(
 		jsonPlugin,
 		emmetPlugin,
 		autoDotValuePlugin,
+		referencesCodeLensPlugin,
 		...scriptTsPlugins,
 		...templateTsPlugins,
 	]) {
@@ -229,6 +239,7 @@ export function createLanguageService(
 				vueTemplatePugPlugin,
 				jsonPlugin,
 				emmetPlugin,
+				referencesCodeLensPlugin,
 			];
 			if (lsType === 'template') {
 				plugins = plugins.concat(templateTsPlugins);
@@ -243,10 +254,11 @@ export function createLanguageService(
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const renames = rename.register(context);
+	const _findReferences = defineApi(references.register(context), true);
 
 	return {
 		doValidation: defineApi(diagnostics.register(context, () => tsRuntime.update(true)), false, false),
-		findReferences: defineApi(references.register(context), true),
+		findReferences: _findReferences,
 		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
 		findTypeDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
 		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false), false),
@@ -259,9 +271,9 @@ export function createLanguageService(
 		getCodeActions: defineApi(codeActions.register(context), false),
 		doCodeActionResolve: defineApi(codeActionResolve.register(context), false),
 		doCompletionResolve: defineApi(completionResolve.register(context), false),
-		doReferencesCodeLensResolve: defineApi(codeLensResolve.register(context), false),
 		getSignatureHelp: defineApi(signatureHelp.register(context), false),
-		getReferencesCodeLens: defineApi(codeLens.register(context), false),
+		getCodeLens: defineApi(codeLens.register(context), false),
+		doCodeLensResolve: defineApi(codeLensResolve.register(context), false),
 		findDocumentHighlights: defineApi(documentHighlight.register(context), false),
 		findDocumentLinks: defineApi(documentLink.register(context), false),
 		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context), false),

@@ -82,8 +82,8 @@ export function register(
 		let result: vscode.CodeLens[] = [];
 
 		if (options?.references) {
-			const referencesCodeLens = await languageService.getReferencesCodeLens(handler.textDocument.uri);
-			result = result.concat(referencesCodeLens);
+			const codeLens = await languageService.getCodeLens(handler.textDocument.uri);
+			result = result.concat(codeLens);
 		}
 		if (options?.pugTool) {
 			result = result.concat(getHtmlPugResult(sourceFile));
@@ -176,7 +176,7 @@ export function register(
 		const uri = (codeLens.data as any)?.uri as string | undefined; // TODO
 		if (!uri) return codeLens;
 		const languageService = await getLanguageService(uri);
-		return languageService?.doReferencesCodeLensResolve(codeLens, Commands.SHOW_REFERENCES) ?? codeLens;
+		return languageService?.doCodeLensResolve(codeLens) ?? codeLens;
 	});
 	connection.onExecuteCommand(async handler => {
 

@@ -28,6 +28,8 @@ export type EmbeddedLanguagePlugin = {
     findWorkspaceSymbols?(query: string): NullableResult<vscode.SymbolInformation[]>;
     doCodeActions?(document: TextDocument, range: vscode.Range, context: vscode.CodeActionContext): NullableResult<vscode.CodeAction[]>;
     doCodeActionResolve?(codeAction: vscode.CodeAction): NotNullableResult<vscode.CodeAction>;
+    doCodeLens?(document: TextDocument): NullableResult<vscode.CodeLens[]>;
+    doCodeLensResolve?(codeLens: vscode.CodeLens): NotNullableResult<vscode.CodeLens>;
     findDocumentColors?(document: TextDocument): NullableResult<vscode.ColorInformation[]>;
     getColorPresentations?(document: TextDocument, color: vscode.Color, range: vscode.Range): NullableResult<vscode.ColorPresentation[]>;
     doRenamePrepare?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Range | vscode.ResponseError<void>>;
