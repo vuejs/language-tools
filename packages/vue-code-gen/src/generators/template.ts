@@ -1560,7 +1560,7 @@ export function generate(
 						vueTag: 'template',
 						beforeRename: camelize,
 						doRename: keepHyphenateName,
-						capabilities: capabilitiesSet.attr,
+						capabilities: capabilitiesSet.attrReference,
 					},
 				);
 				tsCodeGen.addText(`: (`);
