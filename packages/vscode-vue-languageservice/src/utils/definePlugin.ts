@@ -48,7 +48,7 @@ export type EmbeddedLanguagePlugin = {
 
     // html
     findLinkedEditingRanges?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LinkedEditingRanges>;
-    doAutoInsert?(document: TextDocument, position: vscode.Position, options: {
+    doAutoInsert?(document: TextDocument, position: vscode.Position, context: {
         lastChange: {
             range: vscode.Range;
             rangeOffset: number;

@@ -17,12 +17,12 @@ export default definePlugin((host: {
 
 	return {
 
-		async doAutoInsert(document, position, options) {
+		async doAutoInsert(document, position, context) {
 
 			if (!isTsDocument(document))
 				return;
 
-			if (!isCharacterTyping(document, options))
+			if (!isCharacterTyping(document, context))
 				return;
 
 			const enabled = await host.isEnabled() ?? true;

@@ -131,12 +131,12 @@ export function htmlPluginBase(
             });
         },
 
-        doAutoInsert(document, position, options) {
+        doAutoInsert(document, position, context) {
             return worker(document, async (htmlDocument) => {
 
-                const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
+                const lastCharacter = context.lastChange.text[context.lastChange.text.length - 1];
 
-                if (options.lastChange.rangeLength === 0 && lastCharacter === '=') {
+                if (context.lastChange.rangeLength === 0 && lastCharacter === '=') {
 
                     const enabled = (await host.getSettings?.())?.autoCreateQuotes ?? true;
 
@@ -150,7 +150,7 @@ export function htmlPluginBase(
                     }
                 }
 
-                if (options.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
+                if (context.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
 
                     const enabled = (await host.getSettings?.())?.autoClosingTags ?? true;
 

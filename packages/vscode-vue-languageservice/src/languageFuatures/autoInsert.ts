@@ -5,22 +5,32 @@ import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return (uri: string, position: vscode.Position, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) => {
+	return (uri: string, position: vscode.Position, autoInsertContext: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) => {
 
 		return languageFeatureWorker(
 			context,
 			uri,
-			position,
-			function* (position, sourceMap) {
-				for (const [mapedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.capabilities.completion,
-				)) {
-					yield mapedRange.start;
+			{ position, autoInsertContext },
+			function* (arg, sourceMap) {
+
+				const position = sourceMap.getMappedRange(arg.position, arg.position, data => !!data.capabilities.completion)?.[0].start;
+				const rangeOffset = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.rangeOffset, arg.autoInsertContext.lastChange.rangeOffset, data => !!data.capabilities.completion)?.[0].start;
+				const range = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.range.start, arg.autoInsertContext.lastChange.range.end, data => !!data.capabilities.completion)?.[0];
+
+				if (position && rangeOffset !== undefined && range) {
+					yield {
+						position,
+						autoInsertContext: {
+							lastChange: {
+								...arg.autoInsertContext.lastChange,
+								rangeOffset,
+								range,
+							},
+						},
+					}
 				}
 			},
-			(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
+			(plugin, document, arg) => plugin.doAutoInsert?.(document, arg.position, arg.autoInsertContext),
 			(data, sourceMap) => {
 
 				if (!sourceMap)
