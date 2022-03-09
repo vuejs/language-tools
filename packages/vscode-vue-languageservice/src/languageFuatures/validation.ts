@@ -206,7 +206,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const sourceLoc of context.vueDocuments.refs.fromEmbeddedLocation(
+					for (const sourceLoc of context.vueDocuments.fromEmbeddedLocation(
 						sourceMap?.lsType ?? 'script',
 						info.location.uri,
 						info.location.range.start,

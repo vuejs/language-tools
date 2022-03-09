@@ -34,9 +34,9 @@ import useReferencesCodeLensPlugin from './plugins/referencesCodeLens';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/typescript';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguage';
-import * as d3 from './services/d3';
+import * as d3 from './ideFeatures/d3';
 import * as diagnostics from './languageFuatures/validation';
-import * as tagNameCase from './services/tagNameCase';
+import * as tagNameCase from './ideFeatures/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 import { EmbeddedLanguagePlugin } from './utils/definePlugin';
 

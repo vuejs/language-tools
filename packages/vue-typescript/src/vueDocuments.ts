@@ -102,8 +102,39 @@ export function createVueDocuments() {
 		}),
 	};
 	const dirs = computed(() => [...new Set(uris.value.map(shared.uriToFsPath).map(path.dirname))]);
-	const refs = {
-		fromEmbeddedLocation: function* <T extends vscode.Position | number>(
+
+	return {
+		getUris: untrack(() => uris.value),
+		getDirs: untrack(() => dirs.value),
+		getAll: untrack(() => all.value),
+		get: untrack(vueDocuments.uriGet),
+		set: untrack(vueDocuments.uriSet),
+		delete: untrack(vueDocuments.uriDelete),
+
+		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
+
+		getTsTeleports: untrack((lsType: 'script' | 'template') => tsTeleports[lsType].value),
+		getEmbeddeds: untrack(function* (
+			lsType: 'script' | 'template' | 'nonTs',
+		) {
+			if (lsType === 'nonTs') {
+				for (const sourceMap of sourceMapsByUriAndLsType.value.noLsType) {
+					yield sourceMap[1];
+				}
+			}
+			else if (lsType === 'script') {
+				for (const sourceMap of sourceMapsByUriAndLsType.value.script) {
+					yield sourceMap[1];
+				}
+			}
+			else if (lsType === 'template') {
+				for (const sourceMap of sourceMapsByUriAndLsType.value.template) {
+					yield sourceMap[1];
+				}
+			}
+		}),
+
+		fromEmbeddedLocation: untrack(function* <T extends vscode.Position | number>(
 			lsType: 'script' | 'template' | 'nonTs',
 			uri: string,
 			start: T,
@@ -155,8 +186,13 @@ export function createVueDocuments() {
 					},
 				};
 			}
-		},
-		fromEmbeddedDocumentUri: function (
+		}),
+		fromEmbeddedDocument: untrack(function (
+			document: TextDocument,
+		) {
+			return embeddedDocumentsMap.value.get(document);
+		}),
+		fromEmbeddedDocumentUri: untrack(function (
 			lsType: 'script' | 'template' | 'nonTs',
 			uri: string,
 		) {
@@ -169,91 +205,6 @@ export function createVueDocuments() {
 			else if (lsType === 'template') {
 				return sourceMapsByUriAndLsType.value.template.get(uri);
 			}
-		},
-	};
-
-	return {
-		getUris: untrack(() => uris.value),
-		getDirs: untrack(() => dirs.value),
-		getAll: untrack(() => all.value),
-		get: untrack(vueDocuments.uriGet),
-		set: untrack(vueDocuments.uriSet),
-		delete: untrack(vueDocuments.uriDelete),
-
-		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
-
-		getTsTeleports: untrack((lsType: 'script' | 'template') => tsTeleports[lsType].value),
-		getEmbeddeds: untrack(function* (
-			lsType: 'script' | 'template' | 'nonTs',
-		) {
-			if (lsType === 'nonTs') {
-				for (const sourceMap of sourceMapsByUriAndLsType.value.noLsType) {
-					yield sourceMap[1];
-				}
-			}
-			else if (lsType === 'script') {
-				for (const sourceMap of sourceMapsByUriAndLsType.value.script) {
-					yield sourceMap[1];
-				}
-			}
-			else if (lsType === 'template') {
-				for (const sourceMap of sourceMapsByUriAndLsType.value.template) {
-					yield sourceMap[1];
-				}
-			}
 		}),
-
-		toEmbeddedLocation: untrack(function* (
-			uri: string,
-			start: vscode.Position,
-			end?: vscode.Position,
-			filter?: (data: EmbeddedDocumentMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
-		) {
-
-			if (end === undefined)
-				end = start;
-
-			const sourceFile = vueDocuments.uriGet(uri);
-
-			if (sourceFile) {
-				for (const sourceMap of sourceFile.getSourceMaps()) {
-
-					if (sourceMapFilter && !sourceMapFilter(sourceMap))
-						continue;
-
-					for (const tsRange of sourceMap.getMappedRanges(start, end, filter)) {
-						yield {
-							lsType: sourceMap.lsType,
-							type: 'embedded-ts' as const,
-							sourceMap,
-							uri: sourceMap.mappedDocument.uri,
-							range: tsRange[0],
-							data: tsRange[1],
-						};
-					}
-				}
-			}
-			else {
-				yield {
-					lsType: 'script' as const,
-					type: 'source-ts' as const,
-					uri,
-					range: {
-						start,
-						end,
-					},
-				};
-			}
-		}),
-		fromEmbeddedLocation: untrack(refs.fromEmbeddedLocation),
-		fromEmbeddedDocument: untrack(function (
-			document: TextDocument,
-		) {
-			return embeddedDocumentsMap.value.get(document);
-		}),
-		fromEmbeddedDocumentUri: untrack(refs.fromEmbeddedDocumentUri),
-
-		refs,
 	};
 }
