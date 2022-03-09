@@ -3,7 +3,7 @@
 	"include": [],
 	"references": [
 		{
-			"path": "./packages/client/tsconfig.build.json"
+			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
 		},
 		{
 			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"

@@ -1,10 +1,10 @@
 require('esbuild').build({
     entryPoints: {
-        client: './node_modules/@volar/client/out/browserClientMain.js',
+        client: './out/browserClientMain.js',
         // server: './node_modules/@volar/server/out/browser.js', // TODO: fix node depends
     },
     bundle: true,
-    outdir: './out/browser',
+    outdir: './dist/browser',
     external: ['vscode'],
     format: 'cjs',
     platform: 'browser',

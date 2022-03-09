@@ -36,40 +36,31 @@ importers:
 
   extensions/vscode-vue-language-features:
     specifiers:
-      '@volar/client': 0.32.1
-      '@volar/server': 0.32.1
-      esbuild: latest
-      vsce: latest
-    devDependencies:
-      '@volar/client': link:../../packages/client
-      '@volar/server': link:../../packages/server
-      esbuild: 0.14.25
-      vsce: 2.6.7
-
-  packages/client:
-    specifiers:
       '@types/vscode': 1.61.0
       '@volar/server': 0.32.1
       '@volar/shared': 0.32.1
       '@vue/compiler-dom': ^3.2.27
       '@vue/reactivity': ^3.2.27
+      esbuild: latest
       upath: ^2.0.1
+      vsce: latest
       vscode-html-languageservice: ^4.2.1
       vscode-languageclient: ^8.0.0-next.8
       vscode-languageserver-textdocument: ^1.0.3
       vscode-nls: 5.0.0
-    dependencies:
-      '@volar/server': link:../server
-      '@volar/shared': link:../shared
+    devDependencies:
+      '@types/vscode': 1.61.0
+      '@volar/server': link:../../packages/server
+      '@volar/shared': link:../../packages/shared
       '@vue/compiler-dom': 3.2.31
       '@vue/reactivity': 3.2.31
+      esbuild: 0.14.25
       upath: 2.0.1
+      vsce: 2.6.7
       vscode-html-languageservice: 4.2.1
       vscode-languageclient: 8.0.0-next.12
       vscode-languageserver-textdocument: 1.0.4
       vscode-nls: 5.0.0
-    devDependencies:
-      '@types/vscode': 1.61.0
 
   packages/code-gen:
     specifiers:
@@ -9213,7 +9204,7 @@ packages:
       minimatch: 3.1.1
       semver: 7.3.5
       vscode-languageserver-protocol: 3.17.0-next.14
-    dev: false
+    dev: true
 
   /vscode-languageserver-protocol/3.17.0-next.14:
     resolution: {integrity: sha512-iangobY8dL6sFZkOx4OhRPJM9gN0I1caUsOVR+MnPozsqQUtwMXmbIcfaIf0Akp0pd3KhJDPf/tdwRX68QGeeA==}

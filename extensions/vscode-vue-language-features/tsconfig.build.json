@@ -1,0 +1,23 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src",
+		"src/**/*.json"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../../packages/server/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/shared/tsconfig.build.json"
+		}
+	]
+}
