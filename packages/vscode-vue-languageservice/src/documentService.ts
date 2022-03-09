@@ -42,6 +42,7 @@ export function getDocumentService(
 	// language support plugins
 	const vuePlugin = useVuePlugin({
 		getVueDocument,
+		scriptTsLs: undefined,
 		getSettings: async () => getSettings?.('html'),
 		getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
 		getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),

@@ -44,6 +44,13 @@ export function useSfcStyles(
 				vueDoc.value,
 				cssData.textDocument,
 				'nonTs',
+				{
+					diagnostics: true,
+					foldingRanges: true,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: true,
+				},
 			);
 			sourceMap.mappings.push({
 				data: {

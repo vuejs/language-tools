@@ -23,6 +23,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
 ) {
 
+	let lastDocumentText = '';
 	let version = 0;
 
 	const htmlGen = computed(() => {
@@ -61,20 +62,25 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 					: 'js'
 	});
 	const textDocument = computed(() => {
+
+		const nowText = codeGen.value.codeGen.getText();
+		const nowVersion = nowText === lastDocumentText ? version : ++version;
+		lastDocumentText = nowText;
+
 		if (lsType === 'script') {
 			return TextDocument.create(
 				`${vueUri}.${lang.value}`,
 				shared.syntaxToLanguageId(lang.value),
-				version++,
-				codeGen.value.codeGen.getText(),
+				nowVersion,
+				nowText,
 			);
 		}
 		else if (script.value || scriptSetup.value) {
 			return TextDocument.create(
 				`${vueUri}.__VLS_script.${lang.value}`,
 				shared.syntaxToLanguageId(lang.value),
-				version++,
-				codeGen.value.codeGen.getText(),
+				nowVersion,
+				nowText,
 			);
 		}
 	});
@@ -98,6 +104,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				textDocument.value,
 				lsType,
 				{
+					diagnostics: !script.value?.src && lsType === 'script',
 					foldingRanges: false,
 					formatting: false,
 					documentSymbol: false,

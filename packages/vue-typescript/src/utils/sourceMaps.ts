@@ -14,11 +14,12 @@ export function useEmbeddedDocumentSourceMap(
 	sourceDocument: Ref<TextDocument>,
 	mappedDocument: Ref<TextDocument>,
 	lsType: 'template' | 'script' | 'nonTs',
-	capabilities = {
-		foldingRanges: true,
-		formatting: true,
-		documentSymbol: true,
-		codeActions: true,
+	capabilities: {
+		diagnostics: boolean,
+		foldingRanges: boolean,
+		formatting: boolean,
+		documentSymbol: boolean,
+		codeActions: boolean,
 	},
 	mappings?: SourceMaps.Mapping<EmbeddedDocumentMappingData>[],
 ) {
@@ -39,11 +40,12 @@ export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedDocu
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
 		public lsType: 'template' | 'script' | 'nonTs',
-		public capabilities = {
-			foldingRanges: true,
-			formatting: true,
-			documentSymbol: true,
-			codeActions: true,
+		public capabilities: {
+			diagnostics: boolean,
+			foldingRanges: boolean,
+			formatting: boolean,
+			documentSymbol: boolean,
+			codeActions: boolean,
 		},
 		mappings?: SourceMaps.Mapping<EmbeddedDocumentMappingData>[],
 	) {

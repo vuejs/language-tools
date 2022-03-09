@@ -15,6 +15,23 @@ export default definePlugin((host: {
 
     return {
 
+        doValidation(document) {
+            return worker(document, (pugDocument) => {
+
+                if (pugDocument.error) {
+
+                    return [{
+                        code: pugDocument.error.code,
+                        message: pugDocument.error.msg,
+                        range: {
+                            start: { line: pugDocument.error.line, character: pugDocument.error.column },
+                            end: { line: pugDocument.error.line, character: pugDocument.error.column },
+                        },
+                    }];
+                }
+            });
+        },
+
         doComplete(document, position, context) {
             return worker(document, (pugDocument) => {
 

@@ -35,7 +35,7 @@ import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTri
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguage';
 import * as d3 from './services/d3';
-import * as diagnostics from './services/diagnostics';
+import * as diagnostics from './languageFuatures/validation';
 import * as tagNameCase from './services/tagNameCase';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 import { EmbeddedLanguagePlugin } from './utils/definePlugin';
@@ -115,6 +115,7 @@ export function createLanguageService(
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
+			scriptTsLs: tsRuntime.context.scriptTsLs,
 			getSettings: async () => getSettings?.('html'),
 			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
 			getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),

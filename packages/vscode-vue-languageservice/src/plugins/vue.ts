@@ -5,6 +5,7 @@ import { VueDocument } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import { htmlPluginBase } from './html';
 import * as vscode from 'vscode-languageserver-protocol';
+import type * as ts2 from 'vscode-typescript-languageservice';
 
 export { triggerCharacters } from './html';
 
@@ -95,6 +96,7 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 
 export default definePlugin((host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHtmlLs'> & {
     getVueDocument(document: TextDocument): VueDocument | undefined,
+    scriptTsLs: ts2.LanguageService | undefined,
 }) => {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
@@ -107,6 +109,53 @@ export default definePlugin((host: Omit<Parameters<typeof htmlPluginBase>[0], 'g
             ...host,
             getHtmlLs: () => htmlLs,
         }, getHtmlDocument),
+
+        doValidation(document, options) {
+            return worker(document, (vueDocument) => {
+
+                const result: vscode.Diagnostic[] = [];
+                const sfc = vueDocument.getDescriptor();
+                const scriptSetupRanges = vueDocument.getScriptSetupRanges();
+
+                if (scriptSetupRanges && sfc.scriptSetup) {
+                    for (const range of scriptSetupRanges.notOnTopTypeExports) {
+                        result.push(vscode.Diagnostic.create(
+                            {
+                                start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
+                                end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
+                            },
+                            'type and interface export statements must be on the top in <script setup>',
+                            vscode.DiagnosticSeverity.Warning,
+                            undefined,
+                            'volar',
+                        ));
+                    }
+                }
+
+                if (host.scriptTsLs && !host.scriptTsLs.__internal__.getValidTextDocument(vueDocument.getScriptTsDocument().uri)) {
+                    for (const script of [sfc.script, sfc.scriptSetup]) {
+
+                        if (!script || script.content === '')
+                            continue;
+
+                        const error = vscode.Diagnostic.create(
+                            {
+                                start: document.positionAt(script.startTagEnd),
+                                end: document.positionAt(script.startTagEnd + script.content.length),
+                            },
+                            'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+                            vscode.DiagnosticSeverity.Information,
+                            undefined,
+                            'volar',
+                        );
+                        error.tags = [vscode.DiagnosticTag.Unnecessary];
+                        result.push(error);
+                    }
+                }
+
+                return result;
+            });
+        },
 
         findDocumentLinks(document) {
             return worker(document, (vueDocument) => {

@@ -28,6 +28,7 @@ export function useSfcScript(
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(sourceMapId, vueDoc.value, textDocument.value, 'template', {
+				diagnostics: false,
 				foldingRanges: true,
 				formatting: true,
 				documentSymbol: true,

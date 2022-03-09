@@ -98,13 +98,13 @@ export function createBasicRuntime() {
 
     function compileTemplate(templateDocument: TextDocument): {
         htmlTextDocument: TextDocument,
-        htmlToTemplate: (start: number, end: number) => number | undefined,
+        htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
     } | undefined {
 
         if (templateDocument.languageId === 'html') {
             return {
                 htmlTextDocument: templateDocument,
-                htmlToTemplate: (htmlStart: number, _: number) => htmlStart,
+                htmlToTemplate: (htmlStart: number, htmlEnd: number) => ({ start: htmlStart, end: htmlEnd }),
             };
         }
 
@@ -118,7 +118,16 @@ export function createBasicRuntime() {
                     htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
                         const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
                         if (pugRange) {
-                            return pugRange.start;
+                            return pugRange;
+                        }
+                        else {
+
+                            const pugStart = pugDoc.sourceMap.getSourceRange(htmlStart, htmlStart, data => !data?.isEmptyTagCompletion)?.[0]?.start;
+                            const pugEnd = pugDoc.sourceMap.getSourceRange(htmlEnd, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0]?.end;
+
+                            if (pugStart !== undefined && pugEnd !== undefined) {
+                                return { start: pugStart, end: pugEnd };
+                            }
                         }
                     },
                 };

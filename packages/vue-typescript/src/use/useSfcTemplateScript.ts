@@ -26,7 +26,7 @@ export function useSfcTemplateScript(
 	styleSourceMaps: Ref<SourceMaps.EmbeddedDocumentSourceMap[]>,
 	templateData: Ref<{
 		lang: string,
-		htmlToTemplate: (start: number, end: number) => number | undefined,
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
@@ -317,6 +317,7 @@ export function useSfcTemplateScript(
 				textDoc.value,
 				'template',
 				{
+					diagnostics: true,
 					foldingRanges: false,
 					formatting: false,
 					documentSymbol: false,
@@ -366,6 +367,7 @@ export function useSfcTemplateScript(
 				formatTextDoc.value,
 				'template',
 				{
+					diagnostics: false,
 					foldingRanges: false,
 					formatting: true,
 					documentSymbol: true,
@@ -396,6 +398,7 @@ export function useSfcTemplateScript(
 				cssTextDocument.value.textDocument,
 				'nonTs',
 				{
+					diagnostics: false,
 					foldingRanges: false,
 					formatting: false,
 					codeActions: false,

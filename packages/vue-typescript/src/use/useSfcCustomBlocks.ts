@@ -37,6 +37,13 @@ export function useSfcCustomBlocks(
 				vueDoc.value,
 				doc.textDocument,
 				'nonTs',
+				{
+					diagnostics: true,
+					foldingRanges: true,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: true,
+				},
 			);
 			sourceMap.mappings.push({
 				data: {

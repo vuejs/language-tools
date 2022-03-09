@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
-import { computed, reactive, ref, shallowReactive } from '@vue/reactivity';
+import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from 'vscode-typescript-languageservice';
 import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
@@ -37,7 +37,7 @@ export function createVueDocument(
 	htmlLs: html.LanguageService,
 	compileTemplate: (document: TextDocument) => {
 		htmlTextDocument: TextDocument,
-		htmlToTemplate: (start: number, end: number) => number | undefined,
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	} | undefined,
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -79,10 +79,10 @@ export function createVueDocument(
 	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
 	const sfcCustomBlocks = useSfcCustomBlocks(uri, document, computed(() => sfc.customBlocks));
 	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
-	const sfcTemplateData = computed<undefined | {
+	const sfcTemplateCompiled = computed<undefined | {
 		lang: string,
 		htmlTextDocument: TextDocument,
-		htmlToTemplate: (start: number, end: number) => number | undefined,
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	}>(() => {
 		if (sfc.template && sfcTemplate.textDocument.value) {
 			const compiledHtml = compileTemplate(sfcTemplate.textDocument.value);
@@ -96,7 +96,7 @@ export function createVueDocument(
 		}
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
-		computed(() => sfcTemplateData.value?.htmlTextDocument),
+		computed(() => sfcTemplateCompiled.value?.htmlTextDocument),
 		compilerOptions,
 	);
 	const sfcScript = useSfcScript(
@@ -166,7 +166,7 @@ export function createVueDocument(
 		templateScriptData,
 		sfcStyles.textDocuments,
 		sfcStyles.sourceMaps,
-		sfcTemplateData,
+		sfcTemplateCompiled,
 		sfcTemplateCompileResult,
 		computed(() => sfcStyles.textDocuments.value),
 		sfcScriptForScriptLs.lang,
@@ -180,14 +180,6 @@ export function createVueDocument(
 	} : undefined));
 
 	// getters
-	const cssLsDocuments = computed(() => [
-		sfcTemplateScript.cssTextDocument.value,
-		...sfcStyles.textDocuments.value,
-	].filter(shared.notEmpty));
-	const cssLsSourceMaps = computed(() => [
-		sfcTemplateScript.cssSourceMap.value,
-		...sfcStyles.sourceMaps.value,
-	].filter(shared.notEmpty));
 	const templateLsSourceMaps = computed(() => [
 		sfcScriptForTemplateLs.sourceMap.value,
 		sfcTemplateScript.sourceMap.value,
@@ -294,6 +286,8 @@ export function createVueDocument(
 
 	return {
 		uri,
+		getSfcTemplateLanguageCompiled: untrack(() => sfcTemplateCompiled.value),
+		getSfcVueTemplateCompiled: untrack(() => sfcTemplateCompileResult.value),
 		getVersion: untrack(() => version.value),
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
@@ -302,7 +296,6 @@ export function createVueDocument(
 		updateTemplateScript: untrack(updateTemplateScript),
 		getScriptTsDocument: untrack(() => sfcScriptForScriptLs.textDocument.value),
 		getTsSourceMaps: untrack(() => tsSourceMaps.value),
-		getCssSourceMaps: untrack(() => cssLsSourceMaps.value),
 		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive
@@ -315,26 +308,16 @@ export function createVueDocument(
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
 		getSourceMaps: untrack(() => sourceMaps.value),
-
+		getLastUpdated: untrack(() => unref(lastUpdated)),
+		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
+		getSfcTemplateDocument: untrack(() => sfcTemplate.textDocument.value),
 
 		refs: {
-			document,
-			descriptor: sfc,
-			lastUpdated,
 			sourceMaps,
-
-			scriptSetupRanges,
-			sfcCustomBlocks,
-			sfcTemplate,
-			sfcTemplateData,
-			sfcTemplateCompileResult,
 			sfcTemplateScript,
 			sfcEntryForTemplateLs,
 			sfcScriptForScriptLs,
-			sfcScriptForTemplateLs,
 			templateScriptData,
-
-			cssLsDocuments,
 			templateLsTeleports,
 		},
 	};

@@ -25,7 +25,14 @@ export function useSfcTemplate(
 				sourceMapId,
 				vueDoc.value,
 				textDocument.value,
-				'nonTs'
+				'nonTs',
+				{
+					diagnostics: true,
+					foldingRanges: true,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: true,
+				},
 			);
 			sourceMap.mappings.push({
 				data: {

@@ -48,7 +48,7 @@ export function generate(
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
 	cssScopedClasses: string[] = [],
-	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
+	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number } | undefined,
 	isScriptSetup: boolean,
 	searchTexts: {
 		getEmitCompletion(tag: string): string,
@@ -244,7 +244,7 @@ export function generate(
 			emit: var_emit,
 			slots: var_slots,
 			events: var_events,
-			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
+			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(shared.notEmpty),
 		};
 
 		function writeOptionReferences() {
@@ -1222,7 +1222,7 @@ export function generate(
 					end: prop.arg.loc.start.offset + end,
 				};
 
-				const newStart = htmlToTemplate(sourceRange.start, sourceRange.end);
+				const newStart = htmlToTemplate(sourceRange.start, sourceRange.end)?.start;
 				if (newStart === undefined) continue;
 				const offset = newStart - sourceRange.start;
 				sourceRange.start += offset;
@@ -1822,7 +1822,7 @@ export function generate(
 	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<EmbeddedDocumentMappingData>) {
 		const newMapping = { ...mapping };
 
-		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);
+		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end)?.start;
 		if (templateStart === undefined) return; // not found
 		const offset = templateStart - mapping.sourceRange.start;
 		newMapping.sourceRange = {
@@ -1833,7 +1833,7 @@ export function generate(
 		if (mapping.additional) {
 			newMapping.additional = [];
 			for (const other of mapping.additional) {
-				let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end);
+				let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end)?.start;
 				if (otherTemplateStart === undefined) continue;
 				const otherOffset = otherTemplateStart - other.sourceRange.start;
 				newMapping.additional.push({

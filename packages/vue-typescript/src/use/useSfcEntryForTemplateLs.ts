@@ -60,6 +60,7 @@ export function useSfcEntryForTemplateLs(
 		if (textDocument.value) {
 			const docText = textDocument.value.getText();
 			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(sourceMapId, vueDoc.value, textDocument.value, 'template', {
+				diagnostics: false,
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,

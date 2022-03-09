@@ -87,6 +87,66 @@ export default definePlugin((host: {
 
         ...host.templateLanguagePlugin,
 
+        async doValidation(document, options) {
+
+            if (!host.isSupportedDocument(document))
+                return;
+
+            const originalResult = await host.templateLanguagePlugin.doValidation?.(document, options);
+            const vueDocument = host.vueDocuments.fromEmbeddedDocument(document);
+
+            if (vueDocument) {
+
+                const templateErrors: vscode.Diagnostic[] = [];
+                const sfcVueTemplateCompiled = vueDocument.getSfcVueTemplateCompiled();
+                const sfcTemplateLanguageCompiled = vueDocument.getSfcTemplateLanguageCompiled();
+                const sfcTemplate = vueDocument.getSfcTemplateDocument();
+
+                if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled && sfcTemplate) {
+
+                    for (const error of sfcVueTemplateCompiled.errors) {
+                        onCompilerError(error, vscode.DiagnosticSeverity.Error);
+                    }
+
+                    for (const warning of sfcVueTemplateCompiled.warnings) {
+                        onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
+                    }
+
+                    function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
+
+                        const templateHtmlRange = {
+                            start: error.loc?.start.offset ?? 0,
+                            end: error.loc?.end.offset ?? 0,
+                        };
+                        let sourceRange = sfcTemplateLanguageCompiled!.htmlToTemplate(templateHtmlRange.start, templateHtmlRange.end);
+                        let errorMessage = error.message;
+
+                        if (!sourceRange) {
+                            const htmlText = sfcTemplateLanguageCompiled!.htmlTextDocument.getText().substring(templateHtmlRange.start, templateHtmlRange.end);
+                            errorMessage += '\n```html\n' + htmlText.trim() + '\n```';
+                            sourceRange = { start: 0, end: 0 };
+                        }
+
+                        templateErrors.push({
+                            range: {
+                                start: document.positionAt(sourceRange.start),
+                                end: document.positionAt(sourceRange.end),
+                            },
+                            severity,
+                            code: error.code,
+                            source: 'vue',
+                            message: errorMessage,
+                        });
+                    }
+                }
+
+                return [
+                    ...originalResult ?? [],
+                    ...templateErrors,
+                ];
+            }
+        },
+
         async findDocumentSemanticTokens(document, range) {
 
             if (!host.isSupportedDocument(document))

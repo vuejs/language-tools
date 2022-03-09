@@ -216,9 +216,13 @@ export function createProjects(
 			if (!project) return;
 
 			const languageService = await project.getLanguageService();
-			await languageService.doValidation(uri, async result => {
+			const errors = await languageService.doValidation(uri, async result => {
 				connection.sendDiagnostics({ uri: uri, diagnostics: result });
 			}, isCancel);
+
+			if (errors) {
+				connection.sendDiagnostics({ uri: uri, diagnostics: errors });
+			}
 		}
 	}
 	async function getProject(uri: string) {

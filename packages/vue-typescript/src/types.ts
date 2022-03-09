@@ -34,7 +34,7 @@ export type BasicRuntimeContext = {
 	compilerOptions: VueCompilerOptions,
 	compileTemplate(templateTextDocument: TextDocument): {
 		htmlTextDocument: TextDocument;
-		htmlToTemplate: (start: number, end: number) => number | undefined;
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
 	} | undefined
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
 	getCssClasses: (documrnt: TextDocument) => Record<string, [number, number][]>,
