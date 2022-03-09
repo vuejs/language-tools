@@ -3,14 +3,14 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function getSemanticTokenLegend() {
+export function getSemanticTokenLegend(): vscode.SemanticTokensLegend {
 	if (tokenTypes.length !== TokenType._) {
 		console.warn('TokenType has added new entries.');
 	}
 	if (tokenModifiers.length !== TokenModifier._) {
 		console.warn('TokenModifier has added new entries.');
 	}
-	return { types: tokenTypes, modifiers: tokenModifiers };
+	return { tokenTypes, tokenModifiers };
 }
 
 export function register(

@@ -4,7 +4,7 @@ import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import * as shared from '@volar/shared';
-import { TsMappingData } from '../types';
+import { EmbeddedDocumentMappingData } from '../types';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -48,7 +48,7 @@ export function generate(
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
 	cssScopedClasses: string[] = [],
-	htmlToTemplate: (htmlStart: number, htmlEnd: number) => number | undefined,
+	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number } | undefined,
 	isScriptSetup: boolean,
 	searchTexts: {
 		getEmitCompletion(tag: string): string,
@@ -56,9 +56,9 @@ export function generate(
 	},
 ) {
 
-	const tsCodeGen = new CodeGen<TsMappingData>();
-	const tsFormatCodeGen = new CodeGen<TsMappingData>();
-	const cssCodeGen = new CodeGen<undefined>();
+	const tsCodeGen = new CodeGen<EmbeddedDocumentMappingData>();
+	const tsFormatCodeGen = new CodeGen<EmbeddedDocumentMappingData>();
+	const cssCodeGen = new CodeGen<EmbeddedDocumentMappingData>();
 	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
@@ -186,39 +186,42 @@ export function generate(
 		}
 
 		if (!isNamespacedTag) {
-			tsCodeGen.addText(`// @ts-ignore\n`);
-			tsCodeGen.addText(`({ `);
-			writeObjectProperty2(
-				tagName,
-				tagRanges,
-				{
-					vueTag: 'template',
-					capabilities: capabilitiesSet.tagHover,
-				},
-			);
-			tsCodeGen.addText(`: {} as `);
-			tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
-			const names = [...componentNames];
-			for (let i = 0; i < names.length; i++) {
-				if (i > 0) {
-					tsCodeGen.addText(', ');
-				}
-				tsCodeGen.addText(`typeof __VLS_rawComponents`);
-				writePropertyAccess2(
-					names[i],
-					tagRanges,
+			// split tagRanges to fix end tag definition original select range mapping to start tag
+			for (const tagRange of tagRanges) {
+				tsCodeGen.addText(`// @ts-ignore\n`);
+				tsCodeGen.addText(`({ `);
+				writeObjectProperty2(
+					tagName,
+					[tagRange],
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.tagReference,
-						beforeRename: tagName === names[i] ? undefined : unHyphenatComponentName,
-						doRename: keepHyphenateName,
+						capabilities: capabilitiesSet.tagHover,
 					},
 				);
-				if (i > 0) {
-					tsCodeGen.addText('>');
+				tsCodeGen.addText(`: {} as `);
+				tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
+				const names = [...componentNames];
+				for (let i = 0; i < names.length; i++) {
+					if (i > 0) {
+						tsCodeGen.addText(', ');
+					}
+					tsCodeGen.addText(`typeof __VLS_rawComponents`);
+					writePropertyAccess2(
+						names[i],
+						[tagRange],
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.tagReference,
+							normalizeNewName: tagName === names[i] ? undefined : unHyphenatComponentName,
+							applyNewName: keepHyphenateName,
+						},
+					);
+					if (i > 0) {
+						tsCodeGen.addText('>');
+					}
 				}
+				tsCodeGen.addText(` });\n`);
 			}
-			tsCodeGen.addText(` });\n`);
 		}
 
 		writeOptionReferences();
@@ -241,7 +244,7 @@ export function generate(
 			emit: var_emit,
 			slots: var_slots,
 			events: var_events,
-			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)).filter(shared.notEmpty),
+			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(shared.notEmpty),
 		};
 
 		function writeOptionReferences() {
@@ -267,8 +270,8 @@ export function generate(
 								...capabilitiesSet.attrReference,
 								rename: propName === prop.argName,
 							},
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					tsCodeGen.addText(`;\n`);
@@ -293,8 +296,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.attrReference,
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					tsCodeGen.addText(`;\n`);
@@ -309,10 +312,10 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.attrReference,
-							beforeRename(newName) {
+							normalizeNewName(newName) {
 								return camelize('on-' + newName);
 							},
-							doRename(oldName, newName) {
+							applyNewName(oldName, newName) {
 								const hName = hyphenate(newName);
 								if (hyphenate(newName).startsWith('on-')) {
 									return camelize(hName.substr('on-'.length));
@@ -695,11 +698,11 @@ export function generate(
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 										{
 											vueTag: 'template',
-											capabilities: capabilitiesSet.attr,
-											beforeRename(newName) {
+											capabilities: capabilitiesSet.attrReference,
+											normalizeNewName(newName) {
 												return camelize('on-' + newName);
 											},
-											doRename(oldName, newName) {
+											applyNewName(oldName, newName) {
 												const hName = hyphenate(newName);
 												if (hyphenate(newName).startsWith('on-')) {
 													return camelize(hName.substr('on-'.length));
@@ -902,8 +905,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 				}
@@ -918,8 +921,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 				}
@@ -972,8 +975,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					writePropValuePrefix(isStatic);
@@ -1013,8 +1016,8 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: getCaps(capabilitiesSet.attr),
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 					},
 				);
 				writePropValuePrefix(true);
@@ -1055,8 +1058,8 @@ export function generate(
 						{
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
-							beforeRename: camelize,
-							doRename: keepHyphenateName,
+							normalizeNewName: camelize,
+							applyNewName: keepHyphenateName,
 						},
 					);
 					writePropValuePrefix(true);
@@ -1111,7 +1114,7 @@ export function generate(
 
 		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: TsMappingData) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedDocumentMappingData) {
 			if (mode === 'props' && isStatic) {
 				writeCode(
 					name,
@@ -1161,7 +1164,7 @@ export function generate(
 				tsCodeGen.addText(', ');
 			}
 		}
-		function getCaps(caps: TsMappingData['capabilities']): TsMappingData['capabilities'] {
+		function getCaps(caps: EmbeddedDocumentMappingData['capabilities']): EmbeddedDocumentMappingData['capabilities'] {
 			if (mode === 'props') {
 				return caps;
 			}
@@ -1219,7 +1222,7 @@ export function generate(
 					end: prop.arg.loc.start.offset + end,
 				};
 
-				const newStart = htmlToTemplate(sourceRange.start, sourceRange.end);
+				const newStart = htmlToTemplate(sourceRange.start, sourceRange.end)?.start;
 				if (newStart === undefined) continue;
 				const offset = newStart - sourceRange.start;
 				sourceRange.start += offset;
@@ -1230,7 +1233,18 @@ export function generate(
 					content,
 					sourceRange,
 					SourceMaps.Mode.Offset,
-					undefined,
+					{
+						vueTag: 'template',
+						capabilities: {
+							basic: true,
+							references: true,
+							definitions: true,
+							diagnostic: true,
+							rename: true,
+							completion: true,
+							semanticTokens: true,
+						},
+					},
 				);
 				cssCodeGen.addText(` }\n`);
 			}
@@ -1351,8 +1365,8 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.noDiagnostic,
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 					},
 				);
 				tsCodeGen.addText(`)(`);
@@ -1544,9 +1558,9 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
-						capabilities: capabilitiesSet.attr,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
+						capabilities: capabilitiesSet.attrReference,
 					},
 				);
 				tsCodeGen.addText(`: (`);
@@ -1579,8 +1593,8 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						beforeRename: camelize,
-						doRename: keepHyphenateName,
+						normalizeNewName: camelize,
+						applyNewName: keepHyphenateName,
 						capabilities: capabilitiesSet.attr,
 					},
 				);
@@ -1644,7 +1658,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
+	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: EmbeddedDocumentMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writeObjectProperty(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 
@@ -1684,7 +1698,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: TsMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: EmbeddedDocumentMappingData) {
 		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
 			writeCode(mapCode, sourceRange, mapMode, data);
 			return 1;
@@ -1694,7 +1708,7 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: TsMappingData) {
+	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: EmbeddedDocumentMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writePropertyAccess(mapCode, sourceRange, data);
 
@@ -1734,7 +1748,7 @@ export function generate(
 			}
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: TsMappingData, checkValid = true) {
+	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: EmbeddedDocumentMappingData, checkValid = true) {
 		if (checkValid && validTsVar.test(mapCode)) {
 			tsCodeGen.addText(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
@@ -1756,7 +1770,7 @@ export function generate(
 			return 3;
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: TsMappingData) {
+	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: EmbeddedDocumentMappingData) {
 		const addText = `'${mapCode}'`;
 		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
 			addMapping(tsCodeGen, {
@@ -1781,7 +1795,7 @@ export function generate(
 		}
 		tsCodeGen.addText(addText);
 	}
-	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: TsMappingData, formatWrapper?: [string, string]) {
+	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: EmbeddedDocumentMappingData, formatWrapper?: [string, string]) {
 		if (formatWrapper) {
 			tsFormatCodeGen.addText(formatWrapper[0]);
 			const targetRange = tsFormatCodeGen.addText(mapCode);
@@ -1791,9 +1805,7 @@ export function generate(
 				mode,
 				data: {
 					vueTag: 'template',
-					capabilities: {
-						formatting: true,
-					},
+					capabilities: {},
 				},
 			});
 			tsFormatCodeGen.addText(formatWrapper[1]);
@@ -1807,10 +1819,10 @@ export function generate(
 			data,
 		});
 	}
-	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<TsMappingData>) {
+	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<EmbeddedDocumentMappingData>) {
 		const newMapping = { ...mapping };
 
-		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end);
+		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end)?.start;
 		if (templateStart === undefined) return; // not found
 		const offset = templateStart - mapping.sourceRange.start;
 		newMapping.sourceRange = {
@@ -1821,7 +1833,7 @@ export function generate(
 		if (mapping.additional) {
 			newMapping.additional = [];
 			for (const other of mapping.additional) {
-				let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end);
+				let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end)?.start;
 				if (otherTemplateStart === undefined) continue;
 				const otherOffset = otherTemplateStart - other.sourceRange.start;
 				newMapping.additional.push({

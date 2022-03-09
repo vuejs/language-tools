@@ -3,7 +3,7 @@ import type * as html from 'vscode-html-languageservice';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
-	return (docDoc: PugDocument, pos: html.Position) => {
+	return (docDoc: PugDocument, pos: html.Position, options?: html.HoverSettings | undefined) => {
 
 		const htmlRange = docDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion)?.[0];
 		if (!htmlRange) return;
@@ -12,7 +12,7 @@ export function register(htmlLs: html.LanguageService) {
 			docDoc.sourceMap.mappedDocument,
 			htmlRange.start,
 			docDoc.htmlDocument,
-			// {references: false}
+			options,
 		);
 		if (!htmlResult) return;
 

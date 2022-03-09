@@ -11,7 +11,7 @@ export function register(
 	connection.onDocumentFormatting(handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return noStateLs.doFormatting(document, handler.options);
+		return noStateLs.format(document, handler.options);
 	});
 	connection.onSelectionRanges(handler => {
 		const document = documents.get(handler.textDocument.uri);
@@ -43,19 +43,9 @@ export function register(
 		if (!document) return;
 		return noStateLs.getColorPresentations(document, handler.color, handler.range);
 	});
-	connection.onRequest(shared.GetAutoQuoteEditsRequest.type, handler => {
+	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
 		const document = documents.get(handler.textDocument.uri);
 		if (!document) return;
-		return noStateLs.doQuoteComplete(document, handler.position);
-	});
-	connection.onRequest(shared.GetTagCloseEditsRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return noStateLs.doTagComplete(document, handler.position);
-	});
-	connection.onRequest(shared.GetWrapParenthesesEditsRequest.type, handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		return noStateLs.doParentheseWrap(document, handler.position);
+		return noStateLs.doAutoInsert(document, handler.position, handler.options);
 	});
 }

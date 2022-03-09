@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref, ComputedRef } from '@vue/reactivity';
-import { TsSourceMap, TeleportSourceMap, TsMappingData, Range } from '../utils/sourceMaps';
+import { EmbeddedDocumentSourceMap, TeleportSourceMap, EmbeddedDocumentMappingData, Range, getEmbeddedDocumentSourceMapId } from '../utils/sourceMaps';
 import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template_scriptSetup';
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
@@ -23,6 +23,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
 ) {
 
+	let lastDocumentText = '';
 	let version = 0;
 
 	const htmlGen = computed(() => {
@@ -61,20 +62,25 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 					: 'js'
 	});
 	const textDocument = computed(() => {
+
+		const nowText = codeGen.value.codeGen.getText();
+		const nowVersion = nowText === lastDocumentText ? version : ++version;
+		lastDocumentText = nowText;
+
 		if (lsType === 'script') {
 			return TextDocument.create(
 				`${vueUri}.${lang.value}`,
 				shared.syntaxToLanguageId(lang.value),
-				version++,
-				codeGen.value.codeGen.getText(),
+				nowVersion,
+				nowText,
 			);
 		}
 		else if (script.value || scriptSetup.value) {
 			return TextDocument.create(
 				`${vueUri}.__VLS_script.${lang.value}`,
 				shared.syntaxToLanguageId(lang.value),
-				version++,
-				codeGen.value.codeGen.getText(),
+				nowVersion,
+				nowText,
 			);
 		}
 	});
@@ -89,14 +95,16 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			);
 		}
 	});
+	const sourceMapId = getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDocument.value) {
-			const sourceMap = new TsSourceMap(
+			const sourceMap = new EmbeddedDocumentSourceMap(
+				sourceMapId,
 				vueDoc.value,
 				textDocument.value,
 				lsType,
-				false,
 				{
+					diagnostics: !script.value?.src && lsType === 'script',
 					foldingRanges: false,
 					formatting: false,
 					documentSymbol: false,
@@ -123,11 +131,11 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		lang,
 		textDocument: textDocument as T extends 'script' ? ComputedRef<TextDocument> : ComputedRef<TextDocument | undefined>,
 		textDocumentTs,
-		sourceMap: sourceMap as T extends 'script' ? ComputedRef<TsSourceMap> : ComputedRef<TsSourceMap | undefined>,
+		sourceMap: sourceMap as T extends 'script' ? ComputedRef<EmbeddedDocumentSourceMap> : ComputedRef<EmbeddedDocumentSourceMap | undefined>,
 		teleportSourceMap: teleportSourceMap as T extends 'script' ? ComputedRef<TeleportSourceMap> : ComputedRef<TeleportSourceMap | undefined>,
 	};
 
-	function parseMappingSourceRange(data: TsMappingData, sourceRange: Range) {
+	function parseMappingSourceRange(data: EmbeddedDocumentMappingData, sourceRange: Range) {
 		if (data.vueTag === 'scriptSrc' && script.value?.src) {
 			const vueStart = vueDoc.value.getText().substring(0, script.value.startTagEnd).lastIndexOf(script.value.src);
 			const vueEnd = vueStart + script.value.src.length;

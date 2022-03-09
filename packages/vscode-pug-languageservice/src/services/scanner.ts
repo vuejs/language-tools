@@ -16,7 +16,8 @@ export function register(htmlLs: html.LanguageService) {
 		let offset: number | undefined;
 		let end: number | undefined;
 
-		return {
+		// @ts-expect-error
+		const scanner: html.Scanner = {
 			scan: () => {
 				offset = undefined;
 				end = undefined;
@@ -35,6 +36,8 @@ export function register(htmlLs: html.LanguageService) {
 			getTokenError: htmlScanner.getTokenError,
 			getScannerState: htmlScanner.getScannerState,
 		};
+
+		return scanner;
 
 		function getTokenRange() {
 			if (offset === undefined || end === undefined) {

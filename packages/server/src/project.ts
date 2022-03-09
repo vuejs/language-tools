@@ -7,6 +7,7 @@ import type { createLsConfigs } from './configs';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
 import { RuntimeEnvironment } from './common';
+import { Commands } from './commands';
 
 export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
@@ -84,7 +85,27 @@ export async function createProject(
 		if (!vueLs) {
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
-				const vueLs = vue.createLanguageService({ typescript: ts }, languageServiceHost);
+				const vueLs = vue.createLanguageService(
+					{ typescript: ts },
+					languageServiceHost,
+					lsConfigs?.getSettings,
+					options.languageFeatures?.completion ? async (uri) => {
+
+						if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
+							const res = await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
+							return {
+								tag: res.tagNameCase,
+								attr: res.attrNameCase,
+							};
+						}
+
+						return {
+							tag: options.languageFeatures!.completion!.defaultTagNameCase,
+							attr: options.languageFeatures!.completion!.defaultAttrNameCase,
+						};
+					} : undefined,
+					Commands.SHOW_REFERENCES,
+				);
 				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {
 						workDoneProgress.begin(getMessageText());
@@ -171,7 +192,6 @@ export async function createProject(
 
 		const host: vue.LanguageServiceHost = {
 			// vue
-			getEmmetConfig: lsConfigs?.getEmmetConfiguration,
 			schemaRequestService(uri) {
 
 				const protocol = uri.substr(0, uri.indexOf(':'));
@@ -195,7 +215,6 @@ export async function createProject(
 			getPreferences: lsConfigs?.getTsPreferences,
 			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
-			getHtmlHoverSettings: lsConfigs?.getHtmlHoverSettings,
 			// ts
 			getNewLine: () => projectSys.newLine,
 			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,

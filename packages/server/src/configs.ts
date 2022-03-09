@@ -1,4 +1,3 @@
-import type * as emmet from '@vscode/emmet-helper';
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as tsConfigs from './tsConfigs';
@@ -10,11 +9,9 @@ import type * as ts from 'typescript/lib/tsserverlibrary'; // fix build failed
 
 export function createLsConfigs(rootFolders: string[], connection: vscode.Connection) {
 
-	let emmetConfig: any | undefined;
 	let tsPreferences: Record<string, Promise<ts.UserPreferences>> = {};
 	let tsFormatOptions: Record<string, Promise<ts.FormatCodeSettings>> = {};
 	let cssLanguageSettings: Record<string, Promise<css.LanguageSettings>> = {};
-	let htmlHoverSettings: Record<string, Promise<html.HoverSettings>> = {};
 	let codeLensConfigs: {
 		references: boolean,
 		pugTool: boolean,
@@ -23,15 +20,16 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	let htmlCustomData: { [id: string]: html.HTMLDataV1 } | undefined;
 	let cssCustomData: css.CSSDataV1[] | undefined;
 
+	let settings: Record<string, Record<string, Promise<any>>> = {};
+
 	const vueLsArr: vue.LanguageService[] = [];
 
 	connection.onDidChangeConfiguration(async () => {
-		emmetConfig = undefined;
 		codeLensConfigs = undefined;
 		tsPreferences = {};
 		tsFormatOptions = {};
 		cssLanguageSettings = {};
-		htmlHoverSettings = {};
+		settings = {};
 		htmlCustomData = undefined;
 		cssCustomData = undefined;
 
@@ -43,11 +41,10 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 
 	return {
 		getCodeLensConfigs,
-		getEmmetConfiguration,
 		getCssLanguageSettings,
 		getTsPreferences,
 		getTsFormatOptions,
-		getHtmlHoverSettings,
+		getSettings,
 		registerCustomData,
 	};
 
@@ -116,11 +113,15 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 		}
 		return cssCustomData;
 	}
-	async function getHtmlHoverSettings(textDocument: TextDocument) {
-		if (!htmlHoverSettings[textDocument.uri]) {
-			htmlHoverSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: 'html.hover' }) ?? {})();
+	async function getSettings(section: string, scopeUri?: string) {
+		if (!settings[section]) {
+			settings[section] = {};
 		}
-		return htmlHoverSettings[textDocument.uri];
+		const uri = scopeUri ?? '';
+		if (!settings[section][uri]) {
+			settings[section][uri] = (async () => await connection.workspace.getConfiguration({ scopeUri, section }) ?? undefined)();
+		}
+		return settings[section][uri];
 	}
 	function getTsPreferences(textDocument: TextDocument) {
 		return tsPreferences[textDocument.uri]
@@ -154,37 +155,5 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 			};
 		}
 		return codeLensConfigs;
-	}
-	async function getEmmetConfiguration(syntax: string): Promise<emmet.VSCodeEmmetConfig> {
-
-		if (!emmetConfig) {
-			emmetConfig = (await connection.workspace.getConfiguration('emmet')) ?? {};
-		}
-
-		const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
-		const preferences = Object.assign({}, emmetConfig['preferences'] || {});
-		// jsx, xml and xsl syntaxes need to have self closing tags unless otherwise configured by user
-		if (syntax === 'jsx' || syntax === 'xml' || syntax === 'xsl') {
-			syntaxProfiles[syntax] = syntaxProfiles[syntax] || {};
-			if (typeof syntaxProfiles[syntax] === 'object'
-				&& !syntaxProfiles[syntax].hasOwnProperty('self_closing_tag') // Old Emmet format
-				&& !syntaxProfiles[syntax].hasOwnProperty('selfClosingStyle') // Emmet 2.0 format
-			) {
-				syntaxProfiles[syntax] = {
-					...syntaxProfiles[syntax],
-					selfClosingStyle: 'xml'
-				};
-			}
-		}
-
-		return {
-			preferences,
-			showExpandedAbbreviation: emmetConfig['showExpandedAbbreviation'],
-			showAbbreviationSuggestions: emmetConfig['showAbbreviationSuggestions'],
-			syntaxProfiles,
-			variables: emmetConfig['variables'],
-			excludeLanguages: emmetConfig['excludeLanguages'],
-			showSuggestionsAsSnippets: emmetConfig['showSuggestionsAsSnippets']
-		};
 	}
 }

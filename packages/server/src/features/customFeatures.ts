@@ -9,12 +9,6 @@ export function register(
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 ) {
-	connection.onRequest(shared.GetRefCompleteEditsRequest.type, async handler => {
-		const document = documents.get(handler.textDocument.uri);
-		if (!document) return;
-		const languageService = await getLanguageService(document.uri);
-		return languageService?.__internal__.doRefAutoClose(document, handler.position);
-	});
 	connection.onRequest(shared.D3Request.type, async handler => {
 		const document = documents.get(handler.uri);
 		if (!document) return;
@@ -48,15 +42,15 @@ export function register(
 						}
 					});
 				}
-				const { sourceFiles } = await ls.__internal__.getContext();
-				for (const [_, doc] of sourceFiles.getTsDocuments(lsType)) {
+				const { vueDocuments } = await ls.__internal__.getContext();
+				for (const sourceMap of vueDocuments.getEmbeddeds(lsType)) {
 					connection.workspace.applyEdit({
 						edit: {
 							documentChanges: [
-								vscode.CreateFile.create(doc.uri),
+								vscode.CreateFile.create(sourceMap.mappedDocument.uri),
 								vscode.TextDocumentEdit.create(
-									vscode.OptionalVersionedTextDocumentIdentifier.create(doc.uri, null),
-									[{ range: vscode.Range.create(0, 0, 0, 0), newText: doc.getText() }],
+									vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
+									[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
 								),
 							]
 						}
@@ -80,8 +74,8 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const { sourceFiles } = await ls.__internal__.getContext();
-				const allFiles = sourceFiles.getAll();
+				const { vueDocuments } = await ls.__internal__.getContext();
+				const allFiles = vueDocuments.getAll();
 				let i = 0;
 				for (const sourceFile of allFiles) {
 					progress.report(i++ / allFiles.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(sourceFile.uri)));

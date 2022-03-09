@@ -38,7 +38,7 @@ export function createTester(root: string) {
 		getScriptVersion,
 		getScriptSnapshot,
 	}
-	const languageService = createLanguageService({ typescript: ts }, host);
+	const languageService = createLanguageService({ typescript: ts }, host, undefined);
 
 	return {
 		host,

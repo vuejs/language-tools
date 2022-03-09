@@ -9,7 +9,7 @@ export async function execute(
 	uri: string,
 ) {
 
-	const sourceFile = vueLs.__internal__.context.sourceFiles.get(uri);
+	const sourceFile = vueLs.__internal__.context.vueDocuments.get(uri);
 	if (!sourceFile) return;
 
 	const descriptor = sourceFile.getDescriptor();
@@ -58,7 +58,7 @@ export async function execute(
 		}, {
 			diagnostics: [],
 			only: [`${vscode.CodeActionKind.Source}.addMissingImports.ts`],
-		});
+		}) ?? [];
 
 		for (const codeAction of codeActions) {
 			const newCodeAction = await vueLs.doCodeActionResolve(codeAction);

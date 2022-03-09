@@ -217,6 +217,7 @@ function getInitializationOptions(
 		languageFeatures: (mode === 'api' || mode === 'doc') ? {
 			...(mode === 'api' ? {
 				references: true,
+				implementation: true,
 				definition: true,
 				typeDefinition: true,
 				callHierarchy: true,

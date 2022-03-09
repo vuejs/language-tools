@@ -55,10 +55,12 @@ export function useSfcEntryForTemplateLs(
 		content += `};\n`;
 		return TextDocument.create(uri, 'typescript', version++, content);
 	});
+	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDocument.value) {
 			const docText = textDocument.value.getText();
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(sourceMapId, vueDoc.value, textDocument.value, 'template', {
+				diagnostics: false,
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,

@@ -23,10 +23,10 @@ export function useSfcTemplateScript(
 		module: string | undefined;
 		scoped: boolean;
 	}[]>,
-	styleSourceMaps: Ref<SourceMaps.CssSourceMap[]>,
+	styleSourceMaps: Ref<SourceMaps.EmbeddedDocumentSourceMap[]>,
 	templateData: Ref<{
 		lang: string,
-		htmlToTemplate: (start: number, end: number) => number | undefined,
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
@@ -78,7 +78,7 @@ export function useSfcTemplateScript(
 	});
 	const data = computed(() => {
 
-		const codeGen = new CodeGen<SourceMaps.TsMappingData>();
+		const codeGen = new CodeGen<SourceMaps.EmbeddedDocumentMappingData>();
 
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
 		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
@@ -308,14 +308,16 @@ export function useSfcTemplateScript(
 			}
 		}
 	});
+	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDoc.value) {
-			const sourceMap = new SourceMaps.TsSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				sourceMapId,
 				vueDoc.value,
 				textDoc.value,
 				'template',
-				true,
 				{
+					diagnostics: true,
 					foldingRanges: false,
 					formatting: false,
 					documentSymbol: false,
@@ -342,8 +344,8 @@ export function useSfcTemplateScript(
 									rename: true,
 									referencesCodeLens: maped.mode === SourceMaps.Mode.Totally, // has 2 modes
 								},
-								beforeRename: maped.patchRename ? beforeCssRename : undefined,
-								doRename: maped.patchRename ? doCssRename : undefined,
+								normalizeNewName: maped.patchRename ? beforeCssRename : undefined,
+								applyNewName: maped.patchRename ? doCssRename : undefined,
 							},
 							mode: maped.mode,
 							sourceRange: vueRange,
@@ -356,14 +358,16 @@ export function useSfcTemplateScript(
 			return sourceMap;
 		}
 	});
+	const formatSourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const formatSourceMap = computed(() => {
 		if (templateCodeGens.value && formatTextDoc.value && template.value) {
-			const sourceMap = new SourceMaps.TsSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				formatSourceMapId,
 				vueDoc.value,
 				formatTextDoc.value,
 				'template',
-				true,
 				{
+					diagnostics: false,
 					foldingRanges: false,
 					formatting: true,
 					documentSymbol: true,
@@ -385,14 +389,21 @@ export function useSfcTemplateScript(
 			};
 		}
 	});
+	const cssSourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const cssSourceMap = computed(() => {
 		if (templateCodeGens.value && cssTextDocument.value && template.value) {
-			const sourceMap = new SourceMaps.CssSourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				cssSourceMapId,
 				vueDoc.value,
 				cssTextDocument.value.textDocument,
-				undefined,
-				false,
-				{ foldingRanges: false, formatting: false },
+				'nonTs',
+				{
+					diagnostics: false,
+					foldingRanges: false,
+					formatting: false,
+					codeActions: false,
+					documentSymbol: false,
+				},
 				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange),
 			);
 			return sourceMap;
@@ -414,7 +425,7 @@ export function useSfcTemplateScript(
 		update, // TODO: cheapComputed
 	};
 
-	function parseMappingSourceRange(data: any /* TODO */, range: SourceMaps.Range) {
+	function parseMappingSourceRange(data: SourceMaps.EmbeddedDocumentMappingData, range: SourceMaps.Range) {
 		if (data?.vueTag === 'style' && data?.vueTagIndex !== undefined) {
 			return {
 				start: styles.value[data.vueTagIndex].startTagEnd + range.start,

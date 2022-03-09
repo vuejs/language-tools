@@ -66,7 +66,10 @@ export function getWordRange(wordPattern: RegExp, position: vscode.Position, doc
 	return undefined;
 }
 
-export function getOverlapRange(range1: vscode.Range, range2: vscode.Range): vscode.Range | undefined {
+export function getOverlapRange(
+	range1: vscode.Range,
+	range2: vscode.Range,
+): vscode.Range | undefined {
 
 	const start: vscode.Position = {
 		line: Math.max(range1.start.line, range2.start.line),
@@ -78,6 +81,23 @@ export function getOverlapRange(range1: vscode.Range, range2: vscode.Range): vsc
 	};
 
 	if (start.line > end.line || (start.line === end.line && start.character > end.character))
+		return undefined;
+
+	return {
+		start,
+		end,
+	};
+}
+
+export function getOverlapRange2(
+	range1: { start: number, end: number },
+	range2: { start: number, end: number },
+): { start: number, end: number } | undefined {
+
+	const start = Math.max(range1.start, range2.start);
+	const end = Math.min(range1.end, range2.end);
+
+	if (start > end)
 		return undefined;
 
 	return {

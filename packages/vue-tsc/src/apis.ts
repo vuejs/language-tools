@@ -4,7 +4,10 @@ import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
 
 const lsTypes = ['script', 'template'] as const;
 
-export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext) {
+export function register(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	{ vueDocuments, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
+) {
 
 	return {
 		getRootFileNames,
@@ -58,7 +61,7 @@ export function register({ typescript: ts, sourceFiles, templateTsLsRaw, scriptT
 				&& diagnostic.length !== undefined
 			) {
 				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
-				for (const tsOrVueLoc of sourceFiles.fromTsLocation2(
+				for (const tsOrVueLoc of vueDocuments.fromEmbeddedLocation(
 					lsType,
 					shared.fsPathToUri(fileName),
 					diagnostic.start,

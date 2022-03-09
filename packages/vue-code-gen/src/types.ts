@@ -1,28 +1,26 @@
-export interface TsMappingData {
-	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style',
+export interface EmbeddedDocumentMappingData {
+	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | undefined,
 	vueTagIndex?: number,
-	beforeRename?: (newName: string) => string,
-	doRename?: (oldName: string, newName: string) => string,
+	normalizeNewName?: (newName: string) => string,
+	applyNewName?: (oldName: string, newName: string) => string,
 	capabilities: {
 		basic?: boolean,
 		references?: boolean,
 		definitions?: boolean,
 		diagnostic?: boolean,
-		formatting?: boolean,
 		rename?: boolean | {
 			in: boolean,
 			out: boolean,
 		},
 		completion?: boolean,
 		semanticTokens?: boolean,
-		foldingRanges?: boolean,
 		referencesCodeLens?: boolean,
 		displayWithLink?: boolean,
 	},
 }
 
 export interface TeleportSideData {
-	editRenameText?: (newName: string) => string,
+	transformNewName?: (newName: string) => string,
 	capabilities: {
 		references?: boolean,
 		definitions?: boolean,

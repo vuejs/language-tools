@@ -1,37 +1,53 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as SourceMaps from '@volar/source-map';
-import { TsMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
+import { EmbeddedDocumentMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
+import { Ref, computed } from '@vue/reactivity';
 
-export class TsSourceMap extends SourceMaps.SourceMap<TsMappingData> {
+let _id = 0;
+
+export function getEmbeddedDocumentSourceMapId() {
+	return _id++;
+}
+
+export function useEmbeddedDocumentSourceMap(
+	sourceDocument: Ref<TextDocument>,
+	mappedDocument: Ref<TextDocument>,
+	lsType: 'template' | 'script' | 'nonTs',
+	capabilities: {
+		diagnostics: boolean,
+		foldingRanges: boolean,
+		formatting: boolean,
+		documentSymbol: boolean,
+		codeActions: boolean,
+	},
+	mappings?: SourceMaps.Mapping<EmbeddedDocumentMappingData>[],
+) {
+	const id = _id++;
+	return computed(() => new EmbeddedDocumentSourceMap(
+		id,
+		sourceDocument.value,
+		mappedDocument.value,
+		lsType,
+		capabilities,
+		mappings,
+	));
+}
+
+export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedDocumentMappingData> {
 	constructor(
+		public id: number,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public lsType: 'template' | 'script',
-		public isInterpolation: boolean,
+		public lsType: 'template' | 'script' | 'nonTs',
 		public capabilities: {
+			diagnostics: boolean,
 			foldingRanges: boolean,
 			formatting: boolean,
 			documentSymbol: boolean,
 			codeActions: boolean,
 		},
-		mappings?: SourceMaps.Mapping<TsMappingData>[],
-	) {
-		super(sourceDocument, mappedDocument, mappings);
-	}
-}
-
-export class CssSourceMap extends SourceMaps.SourceMap<undefined> {
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public module: string | undefined,
-		public scoped: boolean,
-		public capabilities: {
-			foldingRanges: boolean,
-			formatting: boolean,
-		},
-		mappings?: SourceMaps.Mapping<undefined>[],
+		mappings?: SourceMaps.Mapping<EmbeddedDocumentMappingData>[],
 	) {
 		super(sourceDocument, mappedDocument, mappings);
 	}

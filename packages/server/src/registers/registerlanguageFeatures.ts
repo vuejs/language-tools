@@ -12,6 +12,9 @@ export function register(
 	if (features.references) {
 		server.referencesProvider = true;
 	}
+	if (features.implementation) {
+		server.implementationProvider = true;
+	}
 	if (features.definition) {
 		server.definitionProvider = true;
 	}

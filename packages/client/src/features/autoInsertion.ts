@@ -3,78 +3,16 @@ import * as shared from '@volar/shared';
 import type { CommonLanguageClient } from 'vscode-languageclient';
 
 export async function activate(context: vscode.ExtensionContext, htmlClient: CommonLanguageClient, tsClient: CommonLanguageClient) {
-	await htmlClient.onReady();
-	context.subscriptions.push(activateAutoInsertion(
-		(document, position) => {
-			const params = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return htmlClient.sendRequest(shared.GetAutoQuoteEditsRequest.type, params);
-		},
-		{ vue: true },
-		'html.autoCreateQuotes',
-		(lastChange, lastCharacter) => lastChange.rangeLength === 0 && lastCharacter === '=',
-	));
-	context.subscriptions.push(activateAutoInsertion(
-		(document, position) => {
-			const params = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return htmlClient.sendRequest(shared.GetTagCloseEditsRequest.type, params);
-		},
-		{ vue: true },
-		'html.autoClosingTags',
-		(lastChange, lastCharacter) => lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/'),
-	));
-	context.subscriptions.push(activateAutoInsertion(
-		async (document, position) => {
-			const params = htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			const result = await htmlClient.sendRequest(shared.GetWrapParenthesesEditsRequest.type, params);
-			if (result) {
-				return {
-					text: result.text,
-					range: htmlClient.protocol2CodeConverter.asRange(result.range),
-				};
-			}
-		},
-		{ vue: true },
-		'volar.autoWrapParentheses',
-		isCharacterTyping,
-	));
-	context.subscriptions.push(activateAutoInsertion(
-		(document, position) => {
-			const params = tsClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position);
-			return tsClient.sendRequest(shared.GetRefCompleteEditsRequest.type, params);
-		},
-		{
-			vue: true,
-			javascript: true,
-			typescript: true,
-			javascriptreact: true,
-			typescriptreact: true,
-		},
-		'volar.autoCompleteRefs',
-		isCharacterTyping,
-	));
 
-	function isCharacterTyping(lastChange: vscode.TextDocumentContentChangeEvent, lastCharacter: string, document: vscode.TextDocument) {
+	await Promise.all([htmlClient.onReady, tsClient.onReady]);
 
-		const rangeStart = lastChange.range.start;
-		const position = new vscode.Position(rangeStart.line, rangeStart.character + lastChange.text.length);
-		const nextCharacter = document.getText(new vscode.Range(position, document.positionAt(document.offsetAt(position) + 1)));
-
-		if (lastCharacter === undefined) { // delete text
-			return false;
-		}
-		if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
-			return false;
-		}
-		return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter)
-	}
-}
-
-function activateAutoInsertion(
-	provider: (document: vscode.TextDocument, position: vscode.Position) => Thenable<string | { text: string, range: vscode.Range } | null | undefined>,
-	supportedLanguages: { [id: string]: boolean },
-	configName: string,
-	changeValid: (lastChange: vscode.TextDocumentContentChangeEvent, lastCharacter: string, document: vscode.TextDocument) => boolean,
-): vscode.Disposable {
+	const supportedLanguages: Record<string, boolean> = {
+		vue: true,
+		javascript: true,
+		typescript: true,
+		javascriptreact: true,
+		typescriptreact: true,
+	};
 
 	let disposables: vscode.Disposable[] = [];
 	vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument, null, disposables);
@@ -95,9 +33,6 @@ function activateAutoInsertion(
 		if (!supportedLanguages[document.languageId]) {
 			return;
 		}
-		if (!vscode.workspace.getConfiguration(undefined, document.uri).get<boolean>(configName, true)) {
-			return;
-		}
 		isEnabled = true;
 	}
 
@@ -115,18 +50,41 @@ function activateAutoInsertion(
 		}
 
 		const lastChange = contentChanges[contentChanges.length - 1];
-		const lastCharacter = lastChange.text[lastChange.text.length - 1];
-		if (changeValid(lastChange, lastCharacter, document)) {
-			doAutoInsert(document, lastChange);
-		}
+
+		doAutoInsert(document, lastChange, async (document, position, lastChange) => {
+
+			const params = {
+				...htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position),
+				options: {
+					lastChange: {
+						...lastChange,
+						range: htmlClient.code2ProtocolConverter.asRange(lastChange.range),
+					},
+				},
+			};
+
+			const result = await htmlClient.sendRequest(shared.AutoInsertRequest.type, params)
+				?? await tsClient.sendRequest(shared.AutoInsertRequest.type, params);
+
+			if (typeof result === 'string') {
+				return result;
+			}
+			else {
+				return htmlClient.protocol2CodeConverter.asTextEdit(result);
+			}
+		});
 	}
 
-	function doAutoInsert(document: vscode.TextDocument, lastChange: vscode.TextDocumentContentChangeEvent) {
+	function doAutoInsert(
+		document: vscode.TextDocument,
+		lastChange: vscode.TextDocumentContentChangeEvent,
+		provider: (document: vscode.TextDocument, position: vscode.Position, lastChange: vscode.TextDocumentContentChangeEvent) => Thenable<string | vscode.TextEdit | null | undefined>,
+	) {
 		const rangeStart = lastChange.range.start;
 		const version = document.version;
 		timeout = setTimeout(() => {
 			const position = new vscode.Position(rangeStart.line, rangeStart.character + lastChange.text.length);
-			provider(document, position).then(text => {
+			provider(document, position, lastChange).then(text => {
 				if (text && isEnabled) {
 					const activeEditor = vscode.window.activeTextEditor;
 					if (activeEditor) {
@@ -141,7 +99,7 @@ function activateAutoInsertion(
 								}
 							}
 							else {
-								activeEditor.insertSnippet(new vscode.SnippetString(text.text), text.range);
+								activeEditor.insertSnippet(new vscode.SnippetString(text.newText), text.range);
 							}
 						}
 					}
@@ -150,5 +108,6 @@ function activateAutoInsertion(
 			timeout = undefined;
 		}, 100);
 	}
+
 	return vscode.Disposable.from(...disposables);
 }

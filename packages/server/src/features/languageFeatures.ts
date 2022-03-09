@@ -5,7 +5,6 @@ import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 import type { createLsConfigs } from '../configs';
-import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
 import { getDocumentSafely } from '../utils';
 import { Commands } from '../commands';
 import * as convertTagNameCase from '../commands/convertTagNameCase';
@@ -15,11 +14,11 @@ import * as useSetupSugar from '../commands/useSetupSugar';
 import * as unuseSetupSugar from '../commands/unuseSetupSugar';
 import * as useRefSugar from '../commands/useRefSugar';
 import * as unuseRefSugar from '../commands/unuseRefSugar';
+import type { SemanticToken } from 'vscode-vue-languageservice';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	connection: vscode.Connection,
-	configuration: Configuration | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
@@ -32,16 +31,6 @@ export function register(
 			handler.textDocument.uri,
 			handler.position,
 			handler.context,
-			async () => await configuration?.getConfiguration('volar.completion.autoImportComponent') ?? true,
-			async (uri) => {
-				if (features.completion?.getDocumentNameCasesRequest) {
-					return await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
-				}
-				return {
-					tagNameCase: features.completion!.defaultTagNameCase,
-					attrNameCase: features.completion!.defaultAttrNameCase,
-				};
-			},
 		);
 		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
 		if (!insertReplaceSupport && list) {
@@ -54,7 +43,7 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri = (item.data as any)?.uri as string | undefined;
+		const uri = (item.data as { uri?: string } | undefined)?.uri;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
@@ -84,7 +73,7 @@ export function register(
 		const languageService = await getLanguageService(handler.textDocument.uri);
 		if (!languageService) return;
 
-		const sourceFile = languageService.__internal__.context.sourceFiles.get(handler.textDocument.uri);
+		const sourceFile = languageService.__internal__.context.vueDocuments.get(handler.textDocument.uri);
 		if (!sourceFile) return;
 
 		const options = await lsConfigs?.getCodeLensConfigs();
@@ -93,8 +82,8 @@ export function register(
 		let result: vscode.CodeLens[] = [];
 
 		if (options?.references) {
-			const referencesCodeLens = await languageService.getReferencesCodeLens(handler.textDocument.uri);
-			result = result.concat(referencesCodeLens);
+			const codeLens = await languageService.getCodeLens(handler.textDocument.uri);
+			result = result.concat(codeLens);
 		}
 		if (options?.pugTool) {
 			result = result.concat(getHtmlPugResult(sourceFile));
@@ -106,7 +95,7 @@ export function register(
 
 		return result;
 
-		function getScriptSetupConvertConvert(sourceFile: vue.SourceFile) {
+		function getScriptSetupConvertConvert(sourceFile: vue.VueDocument) {
 
 			const ranges = sourceFile.getSfcRefSugarRanges();
 			if (ranges?.refs.length)
@@ -142,7 +131,7 @@ export function register(
 			}
 			return result;
 		}
-		function getRefSugarConvert(sourceFile: vue.SourceFile) {
+		function getRefSugarConvert(sourceFile: vue.VueDocument) {
 			const result: vscode.CodeLens[] = [];
 			const descriptor = sourceFile.getDescriptor();
 			const ranges = sourceFile.getSfcRefSugarRanges();
@@ -161,7 +150,7 @@ export function register(
 			}
 			return result;
 		}
-		function getHtmlPugResult(sourceFile: vue.SourceFile) {
+		function getHtmlPugResult(sourceFile: vue.VueDocument) {
 			const sourceMaps = sourceFile.getTemplateSourceMaps();
 			for (const sourceMap of sourceMaps) {
 				for (const maped of sourceMap.mappings) {
@@ -187,7 +176,7 @@ export function register(
 		const uri = (codeLens.data as any)?.uri as string | undefined; // TODO
 		if (!uri) return codeLens;
 		const languageService = await getLanguageService(uri);
-		return languageService?.doReferencesCodeLensResolve(codeLens, Commands.SHOW_REFERENCES) ?? codeLens;
+		return languageService?.doCodeLensResolve(codeLens) ?? codeLens;
 	});
 	connection.onExecuteCommand(async handler => {
 
@@ -235,7 +224,7 @@ export function register(
 		const uri = handler.textDocument.uri;
 		const languageService = await getLanguageService(uri);
 		if (languageService) {
-			const codeActions = await languageService.getCodeActions(uri, handler.range, handler.context);
+			const codeActions = await languageService.getCodeActions(uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
 					(codeAction.data as any).uri = uri;
@@ -260,6 +249,10 @@ export function register(
 	connection.onReferences(async handler => {
 		const languageService = await getLanguageService(handler.textDocument.uri);
 		return languageService?.findReferences(handler.textDocument.uri, handler.position);
+	});
+	connection.onImplementation(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.findImplementations(handler.textDocument.uri, handler.position);
 	});
 	connection.onDefinition(async handler => {
 		const languageService = await getLanguageService(handler.textDocument.uri);
@@ -388,6 +381,10 @@ export function register(
 			return null;
 		}
 	});
+	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.doAutoInsert(handler.textDocument.uri, handler.position, handler.options);
+	});
 
 	async function onSemanticTokens(
 		handler: vscode.SemanticTokensParams | vscode.SemanticTokensRangeParams,
@@ -405,10 +402,11 @@ export function register(
 
 		return buildTokens(result);
 
-		function buildTokens(tokens: [number, number, number, number, number | undefined][]) {
+		function buildTokens(tokens: SemanticToken[]) {
 			const builder = new vscode.SemanticTokensBuilder();
-			for (const token of tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0])) {
-				builder.push(token[0], token[1], token[2], token[3], token[4] ?? 0);
+			const sortedTokens = tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0]);
+			for (const token of sortedTokens) {
+				builder.push(...token);
 			}
 			return builder.build();
 		}

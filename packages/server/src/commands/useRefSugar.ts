@@ -9,7 +9,7 @@ export async function execute(
 	uri: string,
 ) {
 
-	const sourceFile = vueLs.__internal__.context.sourceFiles.get(uri);
+	const sourceFile = vueLs.__internal__.context.vueDocuments.get(uri);
 	if (!sourceFile) return;
 
 	const descriptor = sourceFile.getDescriptor();
@@ -49,7 +49,7 @@ export async function execute(
 
 			for (const binding of declaration.leftBindings) {
 
-				const definitions = await vueLs.findTypeDefinition(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end));
+				const definitions = await vueLs.findTypeDefinition(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end)) ?? [];
 				const _isRefType = vue.isRefType(definitions, vueLs.__internal__.context.scriptTsLs);
 
 				if (!_isRefType)
@@ -57,7 +57,7 @@ export async function execute(
 
 				isRefDeclaration = true;
 
-				let references = await vueLs.findReferences(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end));
+				let references = await vueLs.findReferences(uri, document.positionAt(_scriptSetup.startTagEnd + binding.end)) ?? [];
 
 				references = references.filter(reference => {
 

@@ -5,7 +5,7 @@ import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from 'vscode-pug-languageservice';
 import type * as ts2 from 'vscode-typescript-languageservice';
-import type { SourceFiles } from './sourceFiles';
+import type { VueDocuments } from './vueDocuments';
 import type { TextRange } from './utils/sourceMaps';
 
 export type LanguageServiceHostBase = ts2.LanguageServiceHost & {
@@ -34,7 +34,7 @@ export type BasicRuntimeContext = {
 	compilerOptions: VueCompilerOptions,
 	compileTemplate(templateTextDocument: TextDocument): {
 		htmlTextDocument: TextDocument;
-		htmlToTemplate: (start: number, end: number) => number | undefined;
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
 	} | undefined
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
 	getCssClasses: (documrnt: TextDocument) => Record<string, [number, number][]>,
@@ -47,11 +47,10 @@ export type BasicRuntimeContext = {
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
 	getJsonDocument: (documrnt: TextDocument) => json.JSONDocument | undefined,
 	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
-	getHtmlDataProviders: () => html.IHTMLDataProvider[],
 }
 
-export type TypeScriptFeaturesRuntimeContext = BasicRuntimeContext & {
-	sourceFiles: SourceFiles;
+export type TypeScriptFeaturesRuntimeContext = {
+	vueDocuments: VueDocuments;
 	vueHost: LanguageServiceHostBase;
 	documentContext: DocumentContext;
 	scriptTsHost: ts.LanguageServiceHost;

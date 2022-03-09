@@ -60,13 +60,13 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 		if (options.documentFeatures) {
 
+			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
 			const ts = runtimeEnv.loadTypescript(options);
-			const formatters = await import('./formatters');
 			const noStateLs = vue.getDocumentService(
 				{ typescript: ts },
 				(document) => tsConfigs.getPreferences(configuration, document),
 				(document, options) => tsConfigs.getFormatOptions(configuration, document, options),
-				formatters.getFormatters(async (uri) => {
+				async (uri) => {
 					if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
 						const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
 						if (response !== undefined) {
@@ -74,7 +74,8 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 						}
 					}
 					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
-				}),
+				},
+				lsConfigs?.getSettings,
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);
@@ -89,7 +90,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 			const ts = runtimeEnv.loadTypescript(options);
 
 			(await import('./features/customFeatures')).register(connection, documents, () => projects);
-			(await import('./features/languageFeatures')).register(ts, connection, configuration, documents, () => projects, options.languageFeatures, lsConfigs, params);
+			(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, lsConfigs, params);
 			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, ts.version);
 
 			connection.onInitialized(async () => {

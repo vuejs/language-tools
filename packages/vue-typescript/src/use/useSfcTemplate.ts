@@ -18,14 +18,35 @@ export function useSfcTemplate(
 			return document;
 		}
 	});
+	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDocument.value && template.value) {
-			const sourceMap = new SourceMaps.SourceMap(
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
+				sourceMapId,
 				vueDoc.value,
 				textDocument.value,
+				'nonTs',
+				{
+					diagnostics: true,
+					foldingRanges: true,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: true,
+				},
 			);
 			sourceMap.mappings.push({
-				data: undefined,
+				data: {
+					vueTag: 'template',
+					capabilities: {
+						basic: true,
+						references: true,
+						definitions: true,
+						diagnostic: true,
+						rename: true,
+						completion: true,
+						semanticTokens: true,
+					},
+				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: template.value.startTagEnd,

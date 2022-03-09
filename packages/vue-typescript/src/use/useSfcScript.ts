@@ -24,9 +24,11 @@ export function useSfcScript(
 			return TextDocument.create(uri, shared.syntaxToLanguageId(lang), version++, script.value.content);
 		}
 	});
+	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
 	const sourceMap = computed(() => {
 		if (textDocument.value && script.value) {
-			const sourceMap = new SourceMaps.TsSourceMap(vueDoc.value, textDocument.value, 'template', false, {
+			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(sourceMapId, vueDoc.value, textDocument.value, 'template', {
+				diagnostics: false,
 				foldingRanges: true,
 				formatting: true,
 				documentSymbol: true,
@@ -35,10 +37,7 @@ export function useSfcScript(
 			sourceMap.mappings.push({
 				data: {
 					vueTag: 'script',
-					capabilities: {
-						formatting: true,
-						foldingRanges: true,
-					},
+					capabilities: {},
 				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
