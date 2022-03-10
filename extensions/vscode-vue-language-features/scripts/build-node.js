@@ -1,7 +1,7 @@
 require('esbuild').build({
     entryPoints: {
         client: './out/nodeClientMain.js',
-        server: './node_modules/@volar/server/out/node.js',
+        server: './node_modules/@volar/vue-language-server/out/node.js',
     },
     bundle: true,
     outdir: './dist/node',

@@ -5,13 +5,20 @@ export declare let __requests: typeof Requests; // keep this code for jsdoc link
 export interface ServerInitializationOptions {
 	typescript: {
 		/**
-		 * Path of tsserverlibrary.js / tsserver.js / typescript.js
+		 * Path to tsserverlibrary.js / tsserver.js / typescript.js
 		 * @example
 		 * '/usr/local/lib/node_modules/typescript/lib/tsserverlibrary.js' // use global typescript install
-		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in `@volar/server` itself node_modules directory
-		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/server/out/index.js
+		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
+		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/vue-language-server/out/index.js
 		 */
 		serverPath: string
+		/**
+		 * Path to lib/xxx/diagnosticMessages.generated.json
+		 * @example
+		 * '/usr/local/lib/node_modules/typescript/lib/ja/diagnosticMessages.generated.json' // use global typescript install
+		 * 'typescript/lib/ja/diagnosticMessages.generated.json' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
+		 * '../../../typescript/lib/ja/diagnosticMessages.generated.json' // relative path to @volar/vue-language-server/out/index.js
+		 */
 		localizedPath?: string
 	}
 	/**

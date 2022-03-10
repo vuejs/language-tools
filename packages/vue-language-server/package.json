@@ -1,5 +1,5 @@
 {
-	"name": "@volar/server",
+	"name": "@volar/vue-language-server",
 	"version": "0.32.1",
 	"license": "MIT",
 	"files": [
@@ -9,12 +9,12 @@
 		"out/**/*.d.ts"
 	],
 	"bin": {
-		"volar-server": "./bin/volar-server.js"
+		"vue-language-server": "./bin/vue-language-server.js"
 	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "packages/server"
+		"directory": "packages/vue-language-server"
 	},
 	"devDependencies": {
 		"@vscode/emmet-helper": "^2.8.3",

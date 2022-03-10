@@ -37,8 +37,8 @@ importers:
   extensions/vscode-vue-language-features:
     specifiers:
       '@types/vscode': 1.61.0
-      '@volar/server': 0.32.1
       '@volar/shared': 0.32.1
+      '@volar/vue-language-server': 0.32.1
       '@vue/compiler-dom': ^3.2.27
       '@vue/reactivity': ^3.2.27
       esbuild: latest
@@ -50,8 +50,8 @@ importers:
       vscode-nls: 5.0.0
     devDependencies:
       '@types/vscode': 1.61.0
-      '@volar/server': link:../../packages/server
       '@volar/shared': link:../../packages/shared
+      '@volar/vue-language-server': link:../../packages/vue-language-server
       '@vue/compiler-dom': 3.2.31
       '@vue/reactivity': 3.2.31
       esbuild: 0.14.25
@@ -121,41 +121,6 @@ importers:
       vscode-languageserver-types: 3.17.0-next.7
     devDependencies:
       vscode-html-languageservice: 4.2.1
-
-  packages/server:
-    specifiers:
-      '@volar/html2pug': 0.32.1
-      '@volar/shared': 0.32.1
-      '@volar/vue-code-gen': 0.32.1
-      '@volar/vue-language-service': 0.32.1
-      '@vscode/emmet-helper': ^2.8.3
-      '@vue/shared': ^3.2.27
-      request-light: ^0.5.7
-      upath: ^2.0.1
-      vscode-css-languageservice: ^5.1.9
-      vscode-html-languageservice: ^4.2.1
-      vscode-json-languageservice: ^4.1.10
-      vscode-languageserver: ^8.0.0-next.6
-      vscode-languageserver-protocol: ^3.17.0-next.12
-      vscode-languageserver-textdocument: ^1.0.3
-      vscode-uri: ^3.0.3
-    dependencies:
-      '@volar/html2pug': link:../html2pug
-      '@volar/shared': link:../shared
-      '@volar/vue-code-gen': link:../vue-code-gen
-      '@volar/vue-language-service': link:../vue-language-service
-      '@vue/shared': 3.2.31
-      request-light: 0.5.7
-      upath: 2.0.1
-      vscode-languageserver: 8.0.0-next.8
-      vscode-languageserver-protocol: 3.17.0-next.14
-      vscode-languageserver-textdocument: 1.0.4
-      vscode-uri: 3.0.3
-    devDependencies:
-      '@vscode/emmet-helper': 2.8.4
-      vscode-css-languageservice: 5.1.13
-      vscode-html-languageservice: 4.2.1
-      vscode-json-languageservice: 4.2.0
 
   packages/shared:
     specifiers:
@@ -246,6 +211,41 @@ importers:
       upath: 2.0.1
     devDependencies:
       typescript: 4.6.2
+
+  packages/vue-language-server:
+    specifiers:
+      '@volar/html2pug': 0.32.1
+      '@volar/shared': 0.32.1
+      '@volar/vue-code-gen': 0.32.1
+      '@volar/vue-language-service': 0.32.1
+      '@vscode/emmet-helper': ^2.8.3
+      '@vue/shared': ^3.2.27
+      request-light: ^0.5.7
+      upath: ^2.0.1
+      vscode-css-languageservice: ^5.1.9
+      vscode-html-languageservice: ^4.2.1
+      vscode-json-languageservice: ^4.1.10
+      vscode-languageserver: ^8.0.0-next.6
+      vscode-languageserver-protocol: ^3.17.0-next.12
+      vscode-languageserver-textdocument: ^1.0.3
+      vscode-uri: ^3.0.3
+    dependencies:
+      '@volar/html2pug': link:../html2pug
+      '@volar/shared': link:../shared
+      '@volar/vue-code-gen': link:../vue-code-gen
+      '@volar/vue-language-service': link:../vue-language-service
+      '@vue/shared': 3.2.31
+      request-light: 0.5.7
+      upath: 2.0.1
+      vscode-languageserver: 8.0.0-next.8
+      vscode-languageserver-protocol: 3.17.0-next.14
+      vscode-languageserver-textdocument: 1.0.4
+      vscode-uri: 3.0.3
+    devDependencies:
+      '@vscode/emmet-helper': 2.8.4
+      vscode-css-languageservice: 5.1.13
+      vscode-html-languageservice: 4.2.1
+      vscode-json-languageservice: 4.2.0
 
   packages/vue-language-service:
     specifiers:
