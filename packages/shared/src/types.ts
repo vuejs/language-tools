@@ -8,8 +8,8 @@ export interface ServerInitializationOptions {
 		 * Path of tsserverlibrary.js / tsserver.js / typescript.js
 		 * @example
 		 * '/usr/local/lib/node_modules/typescript/lib/tsserverlibrary.js' // use global typescript install
-		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in `@volar/server` itself node_modules directory
-		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/server/out/index.js
+		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
+		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/vue-language-server/out/index.js
 		 */
 		serverPath: string
 		localizedPath?: string

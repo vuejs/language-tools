@@ -639,7 +639,7 @@
 		"@volar/shared": "0.32.1",
 		"@vue/compiler-dom": "^3.2.27",
 		"@vue/reactivity": "^3.2.27",
-		"@volar/server": "0.32.1",
+		"@volar/vue-language-server": "0.32.1",
 		"esbuild": "latest",
 		"upath": "^2.0.1",
 		"vsce": "latest",
