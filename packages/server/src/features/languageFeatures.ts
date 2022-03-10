@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-language-service';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
@@ -14,7 +14,6 @@ import * as useSetupSugar from '../commands/useSetupSugar';
 import * as unuseSetupSugar from '../commands/unuseSetupSugar';
 import * as useRefSugar from '../commands/useRefSugar';
 import * as unuseRefSugar from '../commands/unuseRefSugar';
-import type { SemanticToken } from 'vscode-vue-languageservice';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -402,7 +401,7 @@ export function register(
 
 		return buildTokens(result);
 
-		function buildTokens(tokens: SemanticToken[]) {
+		function buildTokens(tokens: vue.SemanticToken[]) {
 			const builder = new vscode.SemanticTokensBuilder();
 			const sortedTokens = tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0]);
 			for (const token of sortedTokens) {

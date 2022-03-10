@@ -21,9 +21,6 @@
 			"vscode-typescript-languageservice": [
 				"packages/vscode-typescript-languageservice/src"
 			],
-			"vscode-vue-languageservice": [
-				"packages/vscode-vue-languageservice/src"
-			],
 			"@volar/*": [
 				"packages/*/src"
 			]

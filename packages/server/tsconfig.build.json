@@ -22,7 +22,7 @@
 			"path": "../vue-code-gen/tsconfig.build.json"
 		},
 		{
-			"path": "../vscode-vue-languageservice/tsconfig.build.json"
+			"path": "../vue-language-service/tsconfig.build.json"
 		},
 	]
 }

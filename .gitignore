@@ -1,4 +1,5 @@
 out
+dist
 node_modules
 *.tsbuildinfo
 *.vsix

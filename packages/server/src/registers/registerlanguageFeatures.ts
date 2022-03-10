@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { Commands } from '../commands';
 

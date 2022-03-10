@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-language-service';
 
 export function register(
 	connection: vscode.Connection,

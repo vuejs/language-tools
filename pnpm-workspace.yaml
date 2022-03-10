@@ -1,4 +1,4 @@
 packages:
   - 'extensions/*'
   - 'packages/*'
-  - 'packages/vscode-vue-languageservice/testCases'
+  - 'packages/vue-language-service/testCases'

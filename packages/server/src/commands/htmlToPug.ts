@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type { Connection } from 'vscode-languageserver';
 import { htmlToPug } from '@volar/html2pug';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-language-service';
 
 export async function execute(
 	vueLs: vue.LanguageService,

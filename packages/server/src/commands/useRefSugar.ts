@@ -1,7 +1,7 @@
 import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import type { Connection } from 'vscode-languageserver';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-language-service';
 
 export async function execute(
 	vueLs: vue.LanguageService,

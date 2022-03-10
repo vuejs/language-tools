@@ -3,7 +3,7 @@ import { parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scrip
 import type { TextRange } from '@volar/vue-code-gen/out/types';
 import type { Connection } from 'vscode-languageserver';
 import * as vscode from 'vscode-languageserver-protocol';
-import type * as vue from 'vscode-vue-languageservice';
+import type * as vue from '@volar/vue-language-service';
 
 export async function execute(
 	vueLs: vue.LanguageService,

@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import * as vue from 'vscode-vue-languageservice';
+import * as vue from '@volar/vue-language-service';
 import { createLsConfigs } from './configs';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
