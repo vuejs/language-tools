@@ -11,10 +11,12 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 		string,
 		{
 			nonTs: vscode.Diagnostic[],
-			templateTs_1: vscode.Diagnostic[],
-			templateTs_2: vscode.Diagnostic[],
-			scriptTs_1: vscode.Diagnostic[],
-			scriptTs_2: vscode.Diagnostic[],
+			templateTs_semantic: vscode.Diagnostic[],
+			templateTs_syntactic: vscode.Diagnostic[],
+			templateTs_suggestion: vscode.Diagnostic[],
+			scriptTs_semantic: vscode.Diagnostic[],
+			scriptTs_syntactic: vscode.Diagnostic[],
+			scriptTs_suggestion: vscode.Diagnostic[],
 		}
 	>();
 	const nonTsCache = new Map<
@@ -28,19 +30,23 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 			}
 		>
 	>();
-	const templateTsCache_1: typeof nonTsCache = new Map();
-	const templateTsCache_2: typeof nonTsCache = new Map();
-	const scriptTsCache_1: typeof nonTsCache = new Map();
-	const scriptTsCache_2: typeof nonTsCache = new Map();
+	const templateTsCache_semantic: typeof nonTsCache = new Map();
+	const templateTsCache_syntactic: typeof nonTsCache = new Map();
+	const templateTsCache_suggestion: typeof nonTsCache = new Map();
+	const scriptTsCache_semantic: typeof nonTsCache = new Map();
+	const scriptTsCache_syntactic: typeof nonTsCache = new Map();
+	const scriptTsCache_suggestion: typeof nonTsCache = new Map();
 
 	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
 			nonTs: [],
-			templateTs_1: [],
-			templateTs_2: [],
-			scriptTs_1: [],
-			scriptTs_2: [],
+			templateTs_semantic: [],
+			templateTs_suggestion: [],
+			templateTs_syntactic: [],
+			scriptTs_semantic: [],
+			scriptTs_suggestion: [],
+			scriptTs_syntactic: [],
 		}).get(uri)!;
 
 		let errorsDirty = false; // avoid cache error range jitter
@@ -88,25 +94,29 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 		async function templateWorker() {
 
-			cache.templateTs_2 = await worker('template', { syntactic: true, suggestion: true }, templateTsCache_2) ?? [];
+			cache.templateTs_syntactic = await worker('template', { syntactic: true }, templateTsCache_syntactic) ?? [];
+			cache.templateTs_suggestion = await worker('template', { suggestion: true }, templateTsCache_suggestion) ?? [];
 			doResponse();
 			updateTemplateScripts();
-			cache.templateTs_1 = await worker('template', { semantic: true }, templateTsCache_1) ?? [];
+			cache.templateTs_semantic = await worker('template', { semantic: true }, templateTsCache_semantic) ?? [];
 		}
 
 		async function scriptWorker() {
-			cache.scriptTs_2 = await worker('script', { syntactic: true, suggestion: true }, scriptTsCache_2) ?? [];
+			cache.scriptTs_syntactic = await worker('script', { syntactic: true }, scriptTsCache_syntactic) ?? [];
+			cache.scriptTs_suggestion = await worker('script', { suggestion: true }, scriptTsCache_suggestion) ?? [];
 			doResponse();
-			cache.scriptTs_1 = await worker('script', { semantic: true }, scriptTsCache_1) ?? [];
+			cache.scriptTs_semantic = await worker('script', { semantic: true }, scriptTsCache_semantic) ?? [];
 		}
 
 		function getErrors() {
 			return [
 				...cache.nonTs,
-				...cache.templateTs_1,
-				...cache.templateTs_2,
-				...cache.scriptTs_1,
-				...cache.scriptTs_2,
+				...cache.templateTs_syntactic,
+				...cache.templateTs_suggestion,
+				...cache.templateTs_semantic,
+				...cache.scriptTs_syntactic,
+				...cache.scriptTs_suggestion,
+				...cache.scriptTs_semantic,
 			];
 		}
 
