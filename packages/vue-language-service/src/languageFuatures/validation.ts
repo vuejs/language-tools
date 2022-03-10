@@ -51,12 +51,12 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 		let errorsDirty = false; // avoid cache error range jitter
 
-		cache.nonTs = await worker('nonTs', {
+		await worker('nonTs', {
 			declaration: true,
 			semantic: true,
 			suggestion: true,
 			syntactic: true,
-		}, nonTsCache) ?? [];
+		}, nonTsCache, errors => cache.nonTs = errors ?? []);
 		doResponse();
 
 		const vueDocument = context.vueDocuments.get(uri);
@@ -94,19 +94,19 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 		async function templateWorker() {
 
-			cache.templateTs_syntactic = await worker('template', { syntactic: true }, templateTsCache_syntactic) ?? [];
-			cache.templateTs_suggestion = await worker('template', { suggestion: true }, templateTsCache_suggestion) ?? [];
+			await worker('template', { syntactic: true }, templateTsCache_syntactic, errors => cache.templateTs_syntactic = errors ?? []);
+			await worker('template', { suggestion: true }, templateTsCache_suggestion, errors => cache.templateTs_suggestion = errors ?? []);
 			doResponse();
 			if (!await isCancel?.())
 				updateTemplateScripts();
-			cache.templateTs_semantic = await worker('template', { semantic: true }, templateTsCache_semantic) ?? [];
+			await worker('template', { semantic: true }, templateTsCache_semantic, errors => cache.templateTs_semantic = errors ?? []);
 		}
 
 		async function scriptWorker() {
-			cache.scriptTs_syntactic = await worker('script', { syntactic: true }, scriptTsCache_syntactic) ?? [];
-			cache.scriptTs_suggestion = await worker('script', { suggestion: true }, scriptTsCache_suggestion) ?? [];
+			await worker('script', { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
+			await worker('script', { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
 			doResponse();
-			cache.scriptTs_semantic = await worker('script', { semantic: true }, scriptTsCache_semantic) ?? [];
+			await worker('script', { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
 		}
 
 		function getErrors() {
@@ -121,7 +121,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 			];
 		}
 
-		function worker(
+		async function worker(
 			lsType: 'script' | 'template' | 'nonTs',
 			options: {
 				declaration?: boolean,
@@ -130,8 +130,9 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				syntactic?: boolean,
 			},
 			cacheMap: typeof nonTsCache,
+			response: (result: vscode.Diagnostic[] | undefined) => void,
 		) {
-			return languageFeatureWorker(
+			const result = await languageFeatureWorker(
 				context,
 				uri,
 				true,
@@ -191,6 +192,8 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				(errors, sourceMap) => transformErrorRange(sourceMap, errors),
 				arr => dedupe.withDiagnostics(arr.flat()),
 			);
+			if (!await isCancel?.())
+				response(result);
 		}
 	};
 
