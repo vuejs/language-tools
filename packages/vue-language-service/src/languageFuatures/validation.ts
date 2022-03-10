@@ -97,7 +97,8 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 			cache.templateTs_syntactic = await worker('template', { syntactic: true }, templateTsCache_syntactic) ?? [];
 			cache.templateTs_suggestion = await worker('template', { suggestion: true }, templateTsCache_suggestion) ?? [];
 			doResponse();
-			updateTemplateScripts();
+			if (!await isCancel?.())
+				updateTemplateScripts();
 			cache.templateTs_semantic = await worker('template', { semantic: true }, templateTsCache_semantic) ?? [];
 		}
 
