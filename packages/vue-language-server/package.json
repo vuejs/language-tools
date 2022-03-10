@@ -9,7 +9,7 @@
 		"out/**/*.d.ts"
 	],
 	"bin": {
-		"volar-server": "./bin/volar-server.js"
+		"vue-language-server": "./bin/vue-language-server.js"
 	},
 	"repository": {
 		"type": "git",
