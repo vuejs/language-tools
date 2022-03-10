@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 		port,
 	) => {
 
-		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'out', 'node', 'server');
+		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'node', 'server');
 		const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 		const serverOptions: lsp.ServerOptions = {
 			run: { module: serverModule.fsPath, transport: lsp.TransportKind.ipc },
