@@ -1,9 +1,9 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { definePlugin } from '../utils/definePlugin';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as ts2 from 'vscode-typescript-languageservice';
+import * as ts2 from '@volar/typescript-language-service';
 
-export { getSemanticTokenLegend, getTriggerCharacters } from 'vscode-typescript-languageservice';
+export { getSemanticTokenLegend, getTriggerCharacters } from '@volar/typescript-language-service';
 
 export default definePlugin((host: {
     getTsLs: () => ts2.LanguageService,

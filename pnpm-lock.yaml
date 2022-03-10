@@ -169,6 +169,27 @@ importers:
       '@volar/shared': link:../shared
       vscode-languageserver-types: 3.17.0-next.7
 
+  packages/typescript-language-service:
+    specifiers:
+      '@types/semver': ^7.3.8
+      '@volar/shared': 0.32.1
+      semver: ^7.3.5
+      typescript: latest
+      upath: ^2.0.1
+      vscode-languageserver-protocol: ^3.17.0-next.12
+      vscode-languageserver-textdocument: ^1.0.3
+      vscode-nls: ^5.0.0
+    dependencies:
+      '@volar/shared': link:../shared
+      semver: 7.3.5
+      upath: 2.0.1
+      vscode-languageserver-protocol: 3.17.0-next.14
+      vscode-languageserver-textdocument: 1.0.4
+      vscode-nls: 5.0.0
+    devDependencies:
+      '@types/semver': 7.3.9
+      typescript: 4.6.2
+
   packages/typescript-vue-plugin:
     specifiers:
       '@volar/shared': 0.32.1
@@ -205,27 +226,6 @@ importers:
     devDependencies:
       vscode-html-languageservice: 4.2.1
 
-  packages/vscode-typescript-languageservice:
-    specifiers:
-      '@types/semver': ^7.3.8
-      '@volar/shared': 0.32.1
-      semver: ^7.3.5
-      typescript: latest
-      upath: ^2.0.1
-      vscode-languageserver-protocol: ^3.17.0-next.12
-      vscode-languageserver-textdocument: ^1.0.3
-      vscode-nls: ^5.0.0
-    dependencies:
-      '@volar/shared': link:../shared
-      semver: 7.3.5
-      upath: 2.0.1
-      vscode-languageserver-protocol: 3.17.0-next.14
-      vscode-languageserver-textdocument: 1.0.4
-      vscode-nls: 5.0.0
-    devDependencies:
-      '@types/semver': 7.3.9
-      typescript: 4.6.2
-
   packages/vue-code-gen:
     specifiers:
       '@volar/code-gen': 0.32.1
@@ -254,6 +254,7 @@ importers:
       '@volar/shared': 0.32.1
       '@volar/source-map': 0.32.1
       '@volar/transforms': 0.32.1
+      '@volar/typescript-language-service': 0.32.1
       '@volar/vue-code-gen': 0.32.1
       '@volar/vue-typescript': 0.32.1
       '@vscode/emmet-helper': ^2.8.3
@@ -270,12 +271,12 @@ importers:
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
       vscode-pug-languageservice: 0.32.1
-      vscode-typescript-languageservice: 0.32.1
     dependencies:
       '@starptech/prettyhtml': 0.10.0
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
+      '@volar/typescript-language-service': link:../typescript-language-service
       '@volar/vue-code-gen': link:../vue-code-gen
       '@volar/vue-typescript': link:../vue-typescript
       '@vscode/emmet-helper': 2.8.4
@@ -291,7 +292,6 @@ importers:
       vscode-languageserver-protocol: 3.17.0-next.14
       vscode-languageserver-textdocument: 1.0.4
       vscode-pug-languageservice: link:../vscode-pug-languageservice
-      vscode-typescript-languageservice: link:../vscode-typescript-languageservice
     devDependencies:
       '@types/prettier': 1.19.1
       typescript: 4.6.2
@@ -315,6 +315,7 @@ importers:
       '@volar/code-gen': 0.32.1
       '@volar/shared': 0.32.1
       '@volar/source-map': 0.32.1
+      '@volar/typescript-language-service': 0.32.1
       '@volar/vue-code-gen': 0.32.1
       '@vue/reactivity': ^3.2.27
       typescript: latest
@@ -325,11 +326,11 @@ importers:
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
       vscode-pug-languageservice: 0.32.1
-      vscode-typescript-languageservice: 0.32.1
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
+      '@volar/typescript-language-service': link:../typescript-language-service
       '@volar/vue-code-gen': link:../vue-code-gen
       '@vue/reactivity': 3.2.31
       upath: 2.0.1
@@ -339,7 +340,6 @@ importers:
       vscode-languageserver-protocol: 3.17.0-next.14
       vscode-languageserver-textdocument: 1.0.4
       vscode-pug-languageservice: link:../vscode-pug-languageservice
-      vscode-typescript-languageservice: link:../vscode-typescript-languageservice
     devDependencies:
       typescript: 4.6.2
 

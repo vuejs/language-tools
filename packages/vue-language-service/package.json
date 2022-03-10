@@ -21,6 +21,7 @@
 		"@volar/shared": "0.32.1",
 		"@volar/source-map": "0.32.1",
 		"@volar/transforms": "0.32.1",
+		"@volar/typescript-language-service": "0.32.1",
 		"@volar/vue-code-gen": "0.32.1",
 		"@volar/vue-typescript": "0.32.1",
 		"@vscode/emmet-helper": "^2.8.3",
@@ -35,7 +36,6 @@
 		"vscode-json-languageservice": "^4.1.10",
 		"vscode-languageserver-protocol": "^3.17.0-next.12",
 		"vscode-languageserver-textdocument": "^1.0.3",
-		"vscode-pug-languageservice": "0.32.1",
-		"vscode-typescript-languageservice": "0.32.1"
+		"vscode-pug-languageservice": "0.32.1"
 	}
 }

@@ -5,7 +5,7 @@ import { VueDocument } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import { htmlPluginBase } from './html';
 import * as vscode from 'vscode-languageserver-protocol';
-import type * as ts2 from 'vscode-typescript-languageservice';
+import type * as ts2 from '@volar/typescript-language-service';
 
 export { triggerCharacters } from './html';
 

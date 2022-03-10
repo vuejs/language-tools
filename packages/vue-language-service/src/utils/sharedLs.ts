@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts2 from 'vscode-typescript-languageservice';
+import type * as ts2 from '@volar/typescript-language-service';
 
 // Fast dummy TS language service, only has one script.
 let dummyProjectVersion = 0;
@@ -9,7 +9,7 @@ let doc: TextDocument;
 
 export function getDummyTsLs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	ts2: typeof import('vscode-typescript-languageservice'),
+	ts2: typeof import('@volar/typescript-language-service'),
 	_doc: TextDocument,
 	getPreferences: ts2.LanguageServiceHost['getPreferences'],
 	getFormatOptions: ts2.LanguageServiceHost['getFormatOptions'],

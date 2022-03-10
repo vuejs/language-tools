@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as ts2 from 'vscode-typescript-languageservice';
+import * as ts2 from '@volar/typescript-language-service';
 import { BasicRuntimeContext } from '.';
 import { createVueDocument } from './vueDocument';
 import { createVueDocuments } from './vueDocuments';

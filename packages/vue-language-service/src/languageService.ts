@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as ts2 from 'vscode-typescript-languageservice';
+import * as ts2 from '@volar/typescript-language-service';
 import * as autoInsert from './languageFuatures/autoInsert';
 import * as callHierarchy from './languageFuatures/callHierarchy';
 import * as codeActionResolve from './languageFuatures/codeActionResolve';

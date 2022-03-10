@@ -4,8 +4,8 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts2 from 'vscode-typescript-languageservice';
-import type { Data as TsCompletionData } from 'vscode-typescript-languageservice/src/services/completion';
+import type * as ts2 from '@volar/typescript-language-service';
+import type { Data as TsCompletionData } from '@volar/typescript-language-service/src/services/completion';
 import { BasicRuntimeContext, ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';

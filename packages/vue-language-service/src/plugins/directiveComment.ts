@@ -1,5 +1,5 @@
 import { definePlugin } from '../utils/definePlugin';
-import * as ts2 from 'vscode-typescript-languageservice';
+import * as ts2 from '@volar/typescript-language-service';
 import { isTsDocument } from './typescript';
 
 export const triggerCharacters = ['@'];

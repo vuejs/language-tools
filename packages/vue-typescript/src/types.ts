@@ -4,7 +4,7 @@ import type * as html from 'vscode-html-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from 'vscode-pug-languageservice';
-import type * as ts2 from 'vscode-typescript-languageservice';
+import type * as ts2 from '@volar/typescript-language-service';
 import type { VueDocuments } from './vueDocuments';
 import type { TextRange } from './utils/sourceMaps';
 

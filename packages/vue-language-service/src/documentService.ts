@@ -1,6 +1,6 @@
 import { createBasicRuntime, createVueDocument, VueDocument } from '@volar/vue-typescript';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as ts2 from 'vscode-typescript-languageservice';
+import * as ts2 from '@volar/typescript-language-service';
 import * as autoInsert from './documentFeatures/autoInsert';
 import * as colorPresentations from './documentFeatures/colorPresentations';
 import * as documentColors from './documentFeatures/documentColors';
