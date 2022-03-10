@@ -99,6 +99,29 @@ importers:
     devDependencies:
       '@types/pug': 2.0.6
 
+  packages/pug-language-service:
+    specifiers:
+      '@volar/code-gen': 0.32.1
+      '@volar/shared': 0.32.1
+      '@volar/source-map': 0.32.1
+      '@volar/transforms': 0.32.1
+      pug-lexer: ^5.0.1
+      pug-parser: ^6.0.0
+      vscode-html-languageservice: ^4.2.1
+      vscode-languageserver-textdocument: ^1.0.3
+      vscode-languageserver-types: ^3.17.0-next.6
+    dependencies:
+      '@volar/code-gen': link:../code-gen
+      '@volar/shared': link:../shared
+      '@volar/source-map': link:../source-map
+      '@volar/transforms': link:../transforms
+      pug-lexer: 5.0.1
+      pug-parser: 6.0.0
+      vscode-languageserver-textdocument: 1.0.4
+      vscode-languageserver-types: 3.17.0-next.7
+    devDependencies:
+      vscode-html-languageservice: 4.2.1
+
   packages/server:
     specifiers:
       '@volar/html2pug': 0.32.1
@@ -203,29 +226,6 @@ importers:
     devDependencies:
       typescript: 4.6.2
 
-  packages/vscode-pug-languageservice:
-    specifiers:
-      '@volar/code-gen': 0.32.1
-      '@volar/shared': 0.32.1
-      '@volar/source-map': 0.32.1
-      '@volar/transforms': 0.32.1
-      pug-lexer: ^5.0.1
-      pug-parser: ^6.0.0
-      vscode-html-languageservice: ^4.2.1
-      vscode-languageserver-textdocument: ^1.0.3
-      vscode-languageserver-types: ^3.17.0-next.6
-    dependencies:
-      '@volar/code-gen': link:../code-gen
-      '@volar/shared': link:../shared
-      '@volar/source-map': link:../source-map
-      '@volar/transforms': link:../transforms
-      pug-lexer: 5.0.1
-      pug-parser: 6.0.0
-      vscode-languageserver-textdocument: 1.0.4
-      vscode-languageserver-types: 3.17.0-next.7
-    devDependencies:
-      vscode-html-languageservice: 4.2.1
-
   packages/vue-code-gen:
     specifiers:
       '@volar/code-gen': 0.32.1
@@ -251,6 +251,7 @@ importers:
     specifiers:
       '@starptech/prettyhtml': ^0.10.0
       '@types/prettier': ^1.16.4
+      '@volar/pug-language-service': 0.32.1
       '@volar/shared': 0.32.1
       '@volar/source-map': 0.32.1
       '@volar/transforms': 0.32.1
@@ -270,9 +271,9 @@ importers:
       vscode-json-languageservice: ^4.1.10
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
-      vscode-pug-languageservice: 0.32.1
     dependencies:
       '@starptech/prettyhtml': 0.10.0
+      '@volar/pug-language-service': link:../pug-language-service
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
@@ -291,7 +292,6 @@ importers:
       vscode-json-languageservice: 4.2.0
       vscode-languageserver-protocol: 3.17.0-next.14
       vscode-languageserver-textdocument: 1.0.4
-      vscode-pug-languageservice: link:../vscode-pug-languageservice
     devDependencies:
       '@types/prettier': 1.19.1
       typescript: 4.6.2
@@ -313,6 +313,7 @@ importers:
   packages/vue-typescript:
     specifiers:
       '@volar/code-gen': 0.32.1
+      '@volar/pug-language-service': 0.32.1
       '@volar/shared': 0.32.1
       '@volar/source-map': 0.32.1
       '@volar/typescript-language-service': 0.32.1
@@ -325,9 +326,9 @@ importers:
       vscode-json-languageservice: ^4.1.10
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
-      vscode-pug-languageservice: 0.32.1
     dependencies:
       '@volar/code-gen': link:../code-gen
+      '@volar/pug-language-service': link:../pug-language-service
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/typescript-language-service': link:../typescript-language-service
@@ -339,7 +340,6 @@ importers:
       vscode-json-languageservice: 4.2.0
       vscode-languageserver-protocol: 3.17.0-next.14
       vscode-languageserver-textdocument: 1.0.4
-      vscode-pug-languageservice: link:../vscode-pug-languageservice
     devDependencies:
       typescript: 4.6.2
 

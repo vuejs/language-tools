@@ -15,9 +15,6 @@
 		"skipLibCheck": true,
 		"baseUrl": "./",
 		"paths": {
-			"vscode-pug-languageservice": [
-				"packages/vscode-pug-languageservice/src"
-			],
 			"@volar/*": [
 				"packages/*/src"
 			]

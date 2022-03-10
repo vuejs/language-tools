@@ -1,7 +1,7 @@
 import { definePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as pug from 'vscode-pug-languageservice';
+import * as pug from '@volar/pug-language-service';
 
 export const triggerCharacters: string[] = []; // TODO
 

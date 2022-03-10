@@ -6,7 +6,7 @@ import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as pug from 'vscode-pug-languageservice';
+import * as pug from '@volar/pug-language-service';
 import { findClassNames } from './parsers/cssClasses';
 
 interface StylesheetNode {
