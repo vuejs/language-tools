@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
-import { isTsDocument } from './typescript';
+import { isTsDocument } from '../commonPlugins/typescript';
 import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
 export default function (host: {

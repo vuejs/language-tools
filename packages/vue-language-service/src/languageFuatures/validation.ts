@@ -1,6 +1,6 @@
 import type { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
-import { isTsDocument } from '../plugins/typescript';
+import { isTsDocument } from '../commonPlugins/typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';

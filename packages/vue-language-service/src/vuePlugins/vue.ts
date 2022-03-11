@@ -3,11 +3,11 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
-import { htmlPluginBase } from './html';
+import { htmlPluginBase } from '../commonPlugins/html';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 
-export { triggerCharacters } from './html';
+export { triggerCharacters } from '../commonPlugins/html';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
     version: 1.1,
