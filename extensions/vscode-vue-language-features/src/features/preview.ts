@@ -254,7 +254,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		const viteProxyPath = require.resolve('./bin/vite', { paths: [context.extensionPath] });
 
 		terminal.sendText(`cd ${viteDir}`);
-		terminal.sendText(`node ${viteProxyPath} --port=${port}`);
+		terminal.sendText(`node ${JSON.stringify(viteProxyPath)} --port=${port}`);
 
 		const start = Date.now();
 		while (Date.now() - start < 10000 && !(await shared.isLocalHostPortUsing(port))) {
