@@ -31,7 +31,7 @@
 		"onLanguage:typescriptreact",
 		"onWebviewPanel:preview"
 	],
-	"main": "dist/node/client",
+	"main": "client",
 	"browser": "dist/browser/client",
 	"capabilities": {
 		"untrustedWorkspaces": {

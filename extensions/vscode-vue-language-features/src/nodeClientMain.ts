@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 		port,
 	) => {
 
-		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'node', 'server');
+		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server');
 		const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 		const serverOptions: lsp.ServerOptions = {
 			run: { module: serverModule.fsPath, transport: lsp.TransportKind.ipc },
@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 			clientOptions,
 		);
 		context.subscriptions.push(client.start());
-	
+
 		return client;
 	});
 }
