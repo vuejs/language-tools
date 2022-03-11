@@ -17,6 +17,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
+		"@johnsoncodehk/pug-beautify": "^0.2.2",
 		"@starptech/prettyhtml": "^0.10.0",
 		"@volar/html2pug": "0.32.1",
 		"@volar/pug-language-service": "0.32.1",
@@ -30,7 +31,6 @@
 		"@vue/reactivity": "^3.2.27",
 		"@vue/shared": "^3.2.27",
 		"prettier": "^1.16.4",
-		"pug-beautify": "^0.1.1",
 		"sass-formatter": "^0.7.2",
 		"upath": "^2.0.1",
 		"vscode-css-languageservice": "^5.1.9",

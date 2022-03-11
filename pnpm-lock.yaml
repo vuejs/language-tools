@@ -32,7 +32,7 @@ importers:
     devDependencies:
       esbuild: 0.14.25
       typescript-vue-plugin: link:../../packages/typescript-vue-plugin
-      vsce: 2.6.7
+      vsce: 2.7.0
 
   extensions/vscode-vue-language-features:
     specifiers:
@@ -56,7 +56,7 @@ importers:
       '@vue/reactivity': 3.2.31
       esbuild: 0.14.25
       upath: 2.0.1
-      vsce: 2.6.7
+      vsce: 2.7.0
       vscode-html-languageservice: 4.2.1
       vscode-languageclient: 8.0.0-next.12
       vscode-languageserver-textdocument: 1.0.4
@@ -245,6 +245,7 @@ importers:
 
   packages/vue-language-service:
     specifiers:
+      '@johnsoncodehk/pug-beautify': ^0.2.2
       '@starptech/prettyhtml': ^0.10.0
       '@types/prettier': ^1.16.4
       '@volar/html2pug': 0.32.1
@@ -259,7 +260,6 @@ importers:
       '@vue/reactivity': ^3.2.27
       '@vue/shared': ^3.2.27
       prettier: ^1.16.4
-      pug-beautify: ^0.1.1
       sass-formatter: ^0.7.2
       typescript: latest
       upath: ^2.0.1
@@ -269,6 +269,7 @@ importers:
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
     dependencies:
+      '@johnsoncodehk/pug-beautify': 0.2.2
       '@starptech/prettyhtml': 0.10.0
       '@volar/html2pug': link:../html2pug
       '@volar/pug-language-service': link:../pug-language-service
@@ -282,7 +283,6 @@ importers:
       '@vue/reactivity': 3.2.31
       '@vue/shared': 3.2.31
       prettier: 1.19.1
-      pug-beautify: 0.1.1
       sass-formatter: 0.7.3
       upath: 2.0.1
       vscode-css-languageservice: 5.1.13
@@ -896,6 +896,10 @@ packages:
       '@types/yargs': 16.0.4
       chalk: 4.1.2
     dev: true
+
+  /@johnsoncodehk/pug-beautify/0.2.2:
+    resolution: {integrity: sha512-qqNS/YD0Nck5wtQLCPHAfGVgWbbGafxSPjNh0ekYPFSNNqnDH2kamnduzYly8IiADmeVx/MfAE1njMEjVeHTMA==}
+    dev: false
 
   /@jridgewell/resolve-uri/3.0.5:
     resolution: {integrity: sha512-VPeQ7+wH0itvQxnG+lIzWgkysKIr3L9sslimFW55rHMdGu/qCQ5z5h9zq4gI8uBtqkpHhsF4Z/OwExufUCThew==}
@@ -7448,10 +7452,6 @@ packages:
       pug-runtime: 3.0.1
     dev: false
 
-  /pug-beautify/0.1.1:
-    resolution: {integrity: sha1-33+8cO6AwYpkIt/6sv5QgYjNzBg=}
-    dev: false
-
   /pug-code-gen/3.0.2:
     resolution: {integrity: sha512-nJMhW16MbiGRiyR4miDTQMRWDgKplnHyeLvioEJYbk1RsPI3FuA3saEP8uwnTb2nTJEKBU90NFVWJBk4OU5qyg==}
     dependencies:
@@ -9139,8 +9139,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /vsce/2.6.7:
-    resolution: {integrity: sha512-5dEtdi/yzWQbOU7JDUSOs8lmSzzkewBR5P122BUkmXE6A/DEdFsKNsg2773NGXJTwwF1MfsOgUR6QVF3cLLJNQ==}
+  /vsce/2.7.0:
+    resolution: {integrity: sha512-CKU34wrQlbKDeJCRBkd1a8iwF9EvNxcYMg9hAUH6AxFGR6Wo2IKWwt3cJIcusHxx6XdjDHWlfAS/fJN30uvVnA==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:

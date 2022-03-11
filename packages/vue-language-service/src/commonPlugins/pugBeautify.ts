@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
-const pugBeautify = require('pug-beautify');
+const pugBeautify = require('@johnsoncodehk/pug-beautify');
 
 export default function (): EmbeddedLanguagePlugin {
 
