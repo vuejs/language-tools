@@ -1,10 +1,10 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
-export default definePlugin((host: {
+export default function (host: {
     getPrintWidth: (uri: string) => number | Promise<number>,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     return {
 
@@ -33,4 +33,4 @@ export default definePlugin((host: {
             return [htmlEdit];
         },
     }
-});
+}

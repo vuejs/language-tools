@@ -2,6 +2,7 @@ import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
+import { executePluginCommand, ExecutePluginCommandArgs } from './executeCommand';
 
 export interface PluginCodeLensData {
 	uri: string,
@@ -23,8 +24,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const codeLens = await plugin.doCodeLens?.(document);
 
 				if (codeLens) {
-					return codeLens.map(item => ({
+					return codeLens.map(item => (<vscode.CodeLens>{
 						...item,
+						command: item.command ? {
+							...item.command,
+							command: executePluginCommand,
+							arguments: <ExecutePluginCommandArgs>[uri, plugin.id, item.command],
+						} : undefined,
 						data: <PluginCodeLensData>{
 							uri,
 							originalItem: item,

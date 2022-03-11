@@ -11,7 +11,7 @@ import type * as ts2 from '@volar/typescript-language-service';
 import type { Data } from '@volar/typescript-language-service/src/services/completion';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
-import { definePlugin, EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
 export const semanticTokenTypes = [
     'componentTag',
@@ -58,7 +58,8 @@ interface AutoImportCompletionData {
     importUri: string,
 }
 
-export default definePlugin((host: {
+export default function (host: {
+    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     ts: typeof import('typescript/lib/tsserverlibrary'),
     htmlLs: html.LanguageService,
     getSemanticTokenLegend(): vscode.SemanticTokensLegend,
@@ -72,12 +73,11 @@ export default definePlugin((host: {
         attr: 'kebabCase' | 'camelCase',
     }>,
     getScriptContentVersion: () => number,
-    isEnabledComponentAutoImport: () => Promise<boolean>,
     getHtmlDataProviders: () => html.IHTMLDataProvider[],
     vueHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
     updateTemplateScripts: () => void,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
     const autoImportPositions = new WeakSet<vscode.Position>();
@@ -549,7 +549,7 @@ export default definePlugin((host: {
         }
 
         const descriptor = vueDocument.getDescriptor();
-        const enabledComponentAutoImport = await host.isEnabledComponentAutoImport();
+        const enabledComponentAutoImport = await host.getSettings<boolean>('volar.completion.autoImportComponent') ?? true;
 
         if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
             for (const vueFile of host.vueDocuments.getAll()) {
@@ -813,7 +813,7 @@ export default definePlugin((host: {
             return result.value;
         };
     }
-});
+}
 
 function createInternalItemId(type: 'importFile' | 'vueDirective' | 'componentEvent' | 'componentProp' | 'component', args: string[]) {
     return '__VLS_::' + type + '::' + args.join(',');

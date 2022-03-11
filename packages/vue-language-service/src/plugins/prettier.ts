@@ -1,16 +1,14 @@
 import * as prettier from 'prettier';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
-export default definePlugin((host: {
-    allowLanguageIds: prettier.BuiltInParserName[]
-}) => {
+export default function (allowLanguageIds: prettier.BuiltInParserName[]): EmbeddedLanguagePlugin {
 
     return {
 
         format(document, range, options) {
 
-            if (!host.allowLanguageIds.includes(document.languageId as prettier.BuiltInParserName))
+            if (!allowLanguageIds.includes(document.languageId as prettier.BuiltInParserName))
                 return;
 
             const newStyleText = prettier.format(document.getText(), {
@@ -33,4 +31,4 @@ export default definePlugin((host: {
             return [cssEdit];
         },
     }
-});
+}

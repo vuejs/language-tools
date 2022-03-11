@@ -1,22 +1,34 @@
 import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import * as shared from '@volar/shared';
+
+const showReferencesCommand = 'volar.show-references';
+
+export const commands = [showReferencesCommand];
+
+type CommandArgs = [string, vscode.Position, vscode.Location[]];
 
 export interface ReferencesCodeLensData {
     uri: string,
     position: vscode.Position,
 }
 
-export default definePlugin((host: {
+export default function (host: {
+    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getVueDocument(uri: string): VueDocument | undefined,
     findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
-    clientShowReferenceCommand?: string,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     return {
 
         doCodeLens(document) {
-            return worker(document.uri, (vueDocument) => {
+            return worker(document.uri, async (vueDocument) => {
+
+                const isEnabled = await host.getSettings<boolean>('volar.codeLens.references') ?? true;
+
+                if (!isEnabled)
+                    return;
 
                 const result: vscode.CodeLens[] = [];
 
@@ -67,11 +79,25 @@ export default definePlugin((host: {
 
             codeLens.command = {
                 title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
-                command: host.clientShowReferenceCommand ?? '',
-                arguments: [data.uri, codeLens.range.start, references],
+                command: showReferencesCommand,
+                arguments: <CommandArgs>[data.uri, codeLens.range.start, references],
             };
 
             return codeLens;
+        },
+
+        doExecuteCommand(command, args, context) {
+
+            if (command === showReferencesCommand) {
+
+                const [uri, position, references] = args as CommandArgs;
+
+                context.sendNotification(shared.ShowReferencesNotification.type, {
+                    textDocument: { uri },
+                    position,
+                    references,
+                });
+            }
         },
     };
 
@@ -83,4 +109,4 @@ export default definePlugin((host: {
 
         return callback(vueDocument);
     }
-});
+}

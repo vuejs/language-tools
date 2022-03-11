@@ -1,9 +1,9 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
 const pugBeautify = require('pug-beautify');
 
-export default definePlugin(() => {
+export default function (): EmbeddedLanguagePlugin {
 
     return {
 
@@ -41,4 +41,4 @@ export default definePlugin(() => {
             return [pugEdit];
         },
     }
-});
+}

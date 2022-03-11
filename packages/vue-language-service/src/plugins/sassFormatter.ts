@@ -1,8 +1,8 @@
 import { SassFormatter } from 'sass-formatter';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
-export default definePlugin(() => {
+export default function (): EmbeddedLanguagePlugin {
 
     return {
 
@@ -34,4 +34,4 @@ export default definePlugin(() => {
             return [cssEdit];
         },
     }
-});
+}

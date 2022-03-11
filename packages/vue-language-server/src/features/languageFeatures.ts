@@ -4,16 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
-import type { createLsConfigs } from '../configs';
 import { getDocumentSafely } from '../utils';
-import { Commands } from '../commands';
-import * as convertTagNameCase from '../commands/convertTagNameCase';
-import * as htmlToPug from '../commands/htmlToPug';
-import * as pugToHtml from '../commands/pugToHtml';
-import * as useSetupSugar from '../commands/useSetupSugar';
-import * as unuseSetupSugar from '../commands/unuseSetupSugar';
-import * as useRefSugar from '../commands/useRefSugar';
-import * as unuseRefSugar from '../commands/unuseRefSugar';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -21,7 +12,6 @@ export function register(
 	documents: vscode.TextDocuments<TextDocument>,
 	getProjects: () => Projects | undefined,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
-	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	params: vscode.InitializeParams,
 ) {
 	connection.onCompletion(async handler => {
@@ -68,108 +58,8 @@ export function register(
 		return languageService?.doRename(handler.textDocument.uri, handler.position, handler.newName);
 	});
 	connection.onCodeLens(async handler => {
-
 		const languageService = await getLanguageService(handler.textDocument.uri);
-		if (!languageService) return;
-
-		const sourceFile = languageService.__internal__.context.vueDocuments.get(handler.textDocument.uri);
-		if (!sourceFile) return;
-
-		const options = await lsConfigs?.getCodeLensConfigs();
-		const document = sourceFile.getTextDocument();
-
-		let result: vscode.CodeLens[] = [];
-
-		if (options?.references) {
-			const codeLens = await languageService.getCodeLens(handler.textDocument.uri);
-			result = result.concat(codeLens);
-		}
-		if (options?.pugTool) {
-			result = result.concat(getHtmlPugResult(sourceFile));
-		}
-		if (options?.scriptSetupTool) {
-			result = result.concat(getScriptSetupConvertConvert(sourceFile));
-			result = result.concat(getRefSugarConvert(sourceFile));
-		}
-
-		return result;
-
-		function getScriptSetupConvertConvert(sourceFile: vue.VueDocument) {
-
-			const ranges = sourceFile.getSfcRefSugarRanges();
-			if (ranges?.refs.length)
-				return [];
-
-			const result: vscode.CodeLens[] = [];
-			const descriptor = sourceFile.getDescriptor();
-			if (descriptor.scriptSetup) {
-				result.push({
-					range: {
-						start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-						end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-					},
-					command: {
-						title: 'setup sugar ☑',
-						command: Commands.UNUSE_SETUP_SUGAR,
-						arguments: [handler.textDocument.uri],
-					},
-				});
-			}
-			else if (descriptor.script) {
-				result.push({
-					range: {
-						start: document.positionAt(descriptor.script.startTagEnd),
-						end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
-					},
-					command: {
-						title: 'setup sugar ☐',
-						command: Commands.USE_SETUP_SUGAR,
-						arguments: [handler.textDocument.uri],
-					},
-				});
-			}
-			return result;
-		}
-		function getRefSugarConvert(sourceFile: vue.VueDocument) {
-			const result: vscode.CodeLens[] = [];
-			const descriptor = sourceFile.getDescriptor();
-			const ranges = sourceFile.getSfcRefSugarRanges();
-			if (descriptor.scriptSetup && ranges) {
-				result.push({
-					range: {
-						start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-						end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-					},
-					command: {
-						title: 'ref sugar (take 2) ' + (ranges.refs.length ? '☑' : '☐'),
-						command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
-						arguments: [handler.textDocument.uri],
-					},
-				});
-			}
-			return result;
-		}
-		function getHtmlPugResult(sourceFile: vue.VueDocument) {
-			const sourceMaps = sourceFile.getTemplateSourceMaps();
-			for (const sourceMap of sourceMaps) {
-				for (const maped of sourceMap.mappings) {
-					if (sourceMap.mappedDocument.languageId === 'html' || sourceMap.mappedDocument.languageId === 'jade') {
-						return [{
-							range: {
-								start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-								end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-							},
-							command: {
-								title: 'pug ' + (sourceMap.mappedDocument.languageId === 'jade' ? '☑' : '☐'),
-								command: sourceMap.mappedDocument.languageId === 'jade' ? Commands.PUG_TO_HTML : Commands.HTML_TO_PUG,
-								arguments: [handler.textDocument.uri],
-							},
-						}];
-					}
-				}
-			}
-			return [];
-		}
+		return languageService?.doCodeLens(handler.textDocument.uri);
 	});
 	connection.onCodeLensResolve(async codeLens => {
 		const uri = (codeLens.data as any)?.uri as string | undefined; // TODO
@@ -177,53 +67,57 @@ export function register(
 		const languageService = await getLanguageService(uri);
 		return languageService?.doCodeLensResolve(codeLens) ?? codeLens;
 	});
-	connection.onExecuteCommand(async handler => {
+	connection.onExecuteCommand(async (handler, token, workDoneProgress) => {
 
-		if (handler.command === Commands.SHOW_REFERENCES && handler.arguments) {
-			connection.sendNotification(shared.ShowReferencesNotification.type, {
-				textDocument: { uri: handler.arguments[0] as string },
-				position: handler.arguments[1] as vscode.Position,
-				references: handler.arguments[2] as vscode.Location[],
+		if (handler.command === vue.executePluginCommand) {
+
+			const args = handler.arguments as vue.ExecutePluginCommandArgs | undefined;
+			if (!args) return;
+
+			const vueLs = await getLanguageService(args[0]);
+			if (!vueLs) return;
+
+			return vueLs.doExecuteCommand(handler.command, args, {
+				token,
+				workDoneProgress,
+				applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
+				sendNotification: (type, params) => connection.sendNotification(type, params),
 			});
-			return;
 		}
 
-		const uri = handler.arguments?.[0] as string | undefined;
-		if (!uri) return;
+		if (handler.command === 'volar.server.convertTagNameCasing') {
 
-		const vueLs = await getLanguageService(uri);
-		if (!vueLs) return;
+			const args = handler.arguments as [string, 'kebab' | 'pascal'] | undefined;
+			if (!args) return;
 
-		if (handler.command === Commands.USE_SETUP_SUGAR) {
-			await useSetupSugar.execute(vueLs, connection, uri);
-		}
-		if (handler.command === Commands.UNUSE_SETUP_SUGAR) {
-			await unuseSetupSugar.execute(vueLs, connection, uri);
-		}
-		if (handler.command === Commands.USE_REF_SUGAR) {
-			await useRefSugar.execute(vueLs, connection, uri);
-		}
-		if (handler.command === Commands.UNUSE_REF_SUGAR) {
-			await unuseRefSugar.execute(vueLs, connection, uri);
-		}
-		if (handler.command === Commands.HTML_TO_PUG) {
-			await htmlToPug.execute(vueLs, connection, uri);
-		}
-		if (handler.command === Commands.PUG_TO_HTML) {
-			await pugToHtml.execute(vueLs, connection, uri);
-		}
-		if (handler.command === Commands.CONVERT_TO_KEBAB_CASE) {
-			await convertTagNameCase.execute(vueLs, connection, uri, 'kebab');
-		}
-		if (handler.command === Commands.CONVERT_TO_PASCAL_CASE) {
-			await convertTagNameCase.execute(vueLs, connection, uri, 'pascal');
+			const vueLs = await getLanguageService(args[0]);
+			if (!vueLs) return;
+
+			return vueLs.doExecuteCommand(
+				vue.executePluginCommand,
+				[
+					args[0],
+					undefined,
+					vscode.Command.create(
+						'',
+						vue.convertTagNameCasingCommand,
+						...<vue.ConvertTagNameCasingCommandArgs>[
+							args[0],
+							args[1],
+						]),
+				], {
+				token,
+				workDoneProgress,
+				applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
+				sendNotification: (type, params) => connection.sendNotification(type, params),
+			});
 		}
 	});
 	connection.onCodeAction(async handler => {
 		const uri = handler.textDocument.uri;
 		const languageService = await getLanguageService(uri);
 		if (languageService) {
-			const codeActions = await languageService.getCodeActions(uri, handler.range, handler.context) ?? [];
+			const codeActions = await languageService.doCodeActions(uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
 					(codeAction.data as any).uri = uri;

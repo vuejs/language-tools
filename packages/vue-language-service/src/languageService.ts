@@ -22,6 +22,7 @@ import * as rename from './languageFuatures/rename';
 import * as renamePrepare from './languageFuatures/renamePrepare';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
+import * as executeCommand from './languageFuatures/executeCommand';
 import useAutoDotValuePlugin from './plugins/autoCompleteRefs';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './plugins/css';
 import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './plugins/directiveComment';
@@ -31,6 +32,10 @@ import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './p
 import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './plugins/json';
 import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './plugins/pug';
 import useReferencesCodeLensPlugin from './plugins/referencesCodeLens';
+import useHtmlPugConversionsPlugin from './plugins/htmlPugConversions';
+import useScriptSetupConversionsPlugin from './plugins/scriptSetupConversions';
+import useRefSugarConversionsPlugin from './plugins/refSugarConversions';
+import useTagNameCasingConversionsPlugin from './plugins/tagNameCasingConversions';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './plugins/typescript';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './plugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './plugins/vueTemplateLanguage';
@@ -98,7 +103,6 @@ export function createLanguageService(
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	clientShowReferenceCommand?: string,
 ) {
 
 	const compilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
@@ -112,14 +116,12 @@ export function createLanguageService(
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
 
 	// plugins
+	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
+			getSettings: _getSettings,
 			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
 			scriptTsLs: tsRuntime.context.scriptTsLs,
-			getSettings: async () => getSettings?.('html'),
-			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
-			getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
-			getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		{
@@ -129,11 +131,8 @@ export function createLanguageService(
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
 		useHtmlPlugin({
+			getSettings: _getSettings,
 			getHtmlLs: () => services.htmlLs,
-			getSettings: async () => getSettings?.('html'),
-			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
-			getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
-			getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		htmlTriggerCharacters,
@@ -141,16 +140,16 @@ export function createLanguageService(
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',
 		usePugPlugin({
+			getSettings: _getSettings,
 			getPugLs: () => services.pugLs,
-			getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		pugTriggerCharacters,
 	);
 	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
+			getSettings: _getSettings,
 			getCssLs: services.getCssLs,
-			getLanguageSettings: async (languageId, uri) => getSettings?.(languageId, uri),
 			getStylesheet: services.getStylesheet,
 			documentContext: tsRuntime.context.documentContext,
 		}),
@@ -161,7 +160,6 @@ export function createLanguageService(
 	const jsonPlugin = defineLanguageServicePlugin(
 		useJsonPlugin({
 			getJsonLs: () => services.jsonLs,
-			getDocumentLanguageSettings: async () => undefined, // TODO
 			schema: undefined, // TODO
 		}),
 		{
@@ -170,7 +168,7 @@ export function createLanguageService(
 	);
 	const emmetPlugin = defineLanguageServicePlugin(
 		useEmmetPlugin({
-			getEmmetConfig: async () => getSettings?.('emmet'),
+			getSettings: _getSettings,
 		}),
 		{
 			triggerCharacters: emmetTriggerCharacters,
@@ -198,16 +196,51 @@ export function createLanguageService(
 	)
 	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
+			getSettings: _getSettings,
 			ts,
 			getTsLs: () => tsRuntime.context.scriptTsLs,
-			isEnabled: async () => getSettings?.('volar.autoCompleteRefs'),
 		}),
 	);
 	const referencesCodeLensPlugin = defineLanguageServicePlugin(
 		useReferencesCodeLensPlugin({
+			getSettings: _getSettings,
 			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
-			findReference: async (document, position) => _findReferences(document, position),
-			clientShowReferenceCommand,
+			findReference: async (...args) => findReferences_internal(...args),
+		}),
+	);
+	const htmlPugConversionsPlugin = defineLanguageServicePlugin(
+		useHtmlPugConversionsPlugin({
+			getSettings: _getSettings,
+			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+		}),
+	);
+	const scriptSetupConversionsPlugin = defineLanguageServicePlugin(
+		useScriptSetupConversionsPlugin({
+			getSettings: _getSettings,
+			ts,
+			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			doCodeActions: async (...args) => doCodeActions_internal(...args),
+			doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
+		}),
+	);
+	const refSugarConversionsPlugin = defineLanguageServicePlugin(
+		useRefSugarConversionsPlugin({
+			getSettings: _getSettings,
+			ts,
+			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			doCodeActions: async (...args) => doCodeActions_internal(...args),
+			doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
+			findReferences: async (...args) => findReferences_internal(...args),
+			doValidation: async (...args) => doValidation_internal(...args),
+			doRename: async (...args) => doRename_internal(...args),
+			findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
+			scriptTsLs: tsRuntime.context.scriptTsLs,
+		}),
+	);
+	const tagNameCasingConversionsPlugin = defineLanguageServicePlugin(
+		useTagNameCasingConversionsPlugin({
+			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			findReferences: async (...args) => findReferences_internal(...args),
 		}),
 	);
 
@@ -222,6 +255,10 @@ export function createLanguageService(
 		emmetPlugin,
 		autoDotValuePlugin,
 		referencesCodeLensPlugin,
+		htmlPugConversionsPlugin,
+		scriptSetupConversionsPlugin,
+		refSugarConversionsPlugin,
+		tagNameCasingConversionsPlugin,
 		...scriptTsPlugins,
 		...templateTsPlugins,
 	]) {
@@ -243,6 +280,10 @@ export function createLanguageService(
 				jsonPlugin,
 				emmetPlugin,
 				referencesCodeLensPlugin,
+				htmlPugConversionsPlugin,
+				scriptSetupConversionsPlugin,
+				refSugarConversionsPlugin,
+				tagNameCasingConversionsPlugin,
 			];
 			if (lsType === 'template') {
 				plugins = plugins.concat(templateTsPlugins);
@@ -256,13 +297,18 @@ export function createLanguageService(
 		getPluginById: id => allPlugins.get(id),
 	};
 	const _callHierarchy = callHierarchy.register(context);
-	const _findReferences = defineApi(references.register(context), true);
+	const findReferences_internal = defineInternalApi(references.register(context), true);
+	const doCodeActions_internal = defineInternalApi(codeActions.register(context), false);
+	const doCodeActionResolve_internal = defineInternalApi(codeActionResolve.register(context), false);
+	const doValidation_internal = defineInternalApi(diagnostics.register(context, () => tsRuntime.update(true)), false);
+	const doRename_internal = defineInternalApi(rename.register(context), true);
+	const findTypeDefinition_internal = defineInternalApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition);
 
 	return {
 		doValidation: defineApi(diagnostics.register(context, () => tsRuntime.update(true)), false, false),
-		findReferences: _findReferences,
+		findReferences: defineApi(references.register(context), true),
 		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
-		findTypeDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
+		findTypeDefinition: defineApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
 		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false), false),
 		prepareRename: defineApi(renamePrepare.register(context), isTemplateScriptPosition),
 		doRename: defineApi(rename.register(context), true),
@@ -270,16 +316,17 @@ export function createLanguageService(
 		getSemanticTokens: defineApi(semanticTokens.register(context), false),
 		doHover: defineApi(hover.register(context), isTemplateScriptPosition),
 		doComplete: defineApi(completions.register(context), isTemplateScriptPosition),
-		getCodeActions: defineApi(codeActions.register(context), false),
+		doCodeActions: defineApi(codeActions.register(context), false),
 		doCodeActionResolve: defineApi(codeActionResolve.register(context), false),
 		doCompletionResolve: defineApi(completionResolve.register(context), false),
 		getSignatureHelp: defineApi(signatureHelp.register(context), false),
-		getCodeLens: defineApi(codeLens.register(context), false),
+		doCodeLens: defineApi(codeLens.register(context), false),
 		doCodeLensResolve: defineApi(codeLensResolve.register(context), false),
 		findDocumentHighlights: defineApi(documentHighlight.register(context), false),
 		findDocumentLinks: defineApi(documentLink.register(context), false),
 		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context), false),
 		doAutoInsert: defineApi(autoInsert.register(context), false),
+		doExecuteCommand: defineApi(executeCommand.register(context), false),
 		callHierarchy: {
 			doPrepare: defineApi(_callHierarchy.doPrepare, isTemplateScriptPosition),
 			getIncomingCalls: defineApi(_callHierarchy.getIncomingCalls, true),
@@ -304,6 +351,7 @@ export function createLanguageService(
 	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguagePlugin, triggerCharacters: string[]) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
+				getSettings: _getSettings,
 				ts,
 				htmlLs: services.htmlLs,
 				getSemanticTokenLegend,
@@ -324,7 +372,6 @@ export function createLanguageService(
 				isSupportedDocument: (document) => document.languageId === languageId,
 				getNameCases,
 				getScriptContentVersion: tsRuntime.getScriptContentVersion,
-				isEnabledComponentAutoImport: async () => (await getSettings?.('volar.completion.autoImportComponent')) ?? true,
 				getHtmlDataProviders: services.getHtmlDataProviders,
 				vueHost,
 				vueDocuments: tsRuntime.context.vueDocuments,
@@ -437,6 +484,19 @@ export function createLanguageService(
 					runner.then(() => blockingRequests.delete(runner));
 				}
 				return runner;
+			}
+		};
+		return new Proxy<T>(api, handler);
+	}
+	function defineInternalApi<T extends (...args: any) => any>(
+		api: T,
+		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean),
+	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+		const handler = {
+			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
+				const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
+				tsRuntime.update(_shouldUpdateTemplateScript);
+				return target.apply(thisArg, argumentsList);
 			}
 		};
 		return new Proxy<T>(api, handler);

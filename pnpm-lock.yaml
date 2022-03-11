@@ -214,9 +214,7 @@ importers:
 
   packages/vue-language-server:
     specifiers:
-      '@volar/html2pug': 0.32.1
       '@volar/shared': 0.32.1
-      '@volar/vue-code-gen': 0.32.1
       '@volar/vue-language-service': 0.32.1
       '@vscode/emmet-helper': ^2.8.3
       '@vue/shared': ^3.2.27
@@ -230,9 +228,7 @@ importers:
       vscode-languageserver-textdocument: ^1.0.3
       vscode-uri: ^3.0.3
     dependencies:
-      '@volar/html2pug': link:../html2pug
       '@volar/shared': link:../shared
-      '@volar/vue-code-gen': link:../vue-code-gen
       '@volar/vue-language-service': link:../vue-language-service
       '@vue/shared': 3.2.31
       request-light: 0.5.7
@@ -251,6 +247,7 @@ importers:
     specifiers:
       '@starptech/prettyhtml': ^0.10.0
       '@types/prettier': ^1.16.4
+      '@volar/html2pug': 0.32.1
       '@volar/pug-language-service': 0.32.1
       '@volar/shared': 0.32.1
       '@volar/source-map': 0.32.1
@@ -273,6 +270,7 @@ importers:
       vscode-languageserver-textdocument: ^1.0.3
     dependencies:
       '@starptech/prettyhtml': 0.10.0
+      '@volar/html2pug': link:../html2pug
       '@volar/pug-language-service': link:../pug-language-service
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map

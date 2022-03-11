@@ -1,11 +1,11 @@
-import { definePlugin, EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
 export const triggerCharacters = ['.', ':', '<', '"', '=', '/'];
 
-export default definePlugin((host: Parameters<typeof htmlPluginBase>[0]) => {
+export default function (host: Parameters<typeof htmlPluginBase>[0]): EmbeddedLanguagePlugin {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
@@ -29,18 +29,12 @@ export default definePlugin((host: Parameters<typeof htmlPluginBase>[0]) => {
 
         return doc;
     }
-});
+}
 
 export function htmlPluginBase(
     host: {
+        getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
         getHtmlLs(): html.LanguageService,
-        getSettings?(): Promise<{
-            autoCreateQuotes: boolean,
-            autoClosingTags: boolean,
-        } | undefined>,
-        getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
-        getCompletionConfiguration?(uri: string): Promise<html.CompletionConfiguration | undefined>,
-        getFormatConfiguration?(uri: string): Promise<html.HTMLFormatConfiguration | undefined>,
         documentContext?: html.DocumentContext,
     },
     getHtmlDocument: (document: TextDocument) => html.HTMLDocument | undefined,
@@ -61,7 +55,7 @@ export function htmlPluginBase(
         doHover(document, position) {
             return worker(document, async (htmlDocument) => {
 
-                const hoverSettings = await host.getHoverSettings?.(document.uri);
+                const hoverSettings = await host.getSettings<html.HoverSettings>('html.hover', document.uri);
 
                 return host.getHtmlLs().doHover(document, position, htmlDocument, hoverSettings);
             });
@@ -110,7 +104,7 @@ export function htmlPluginBase(
         format(document, range, options) {
             return worker(document, async (htmlDocument) => {
 
-                const formatConfiguration = await host.getFormatConfiguration?.(document.uri);
+                const formatConfiguration = await host.getSettings<html.HTMLFormatConfiguration>('html.format', document.uri);
 
                 return host.getHtmlLs().format(document, range, {
                     ...formatConfiguration,
@@ -138,11 +132,11 @@ export function htmlPluginBase(
 
                 if (context.lastChange.rangeLength === 0 && lastCharacter === '=') {
 
-                    const enabled = (await host.getSettings?.())?.autoCreateQuotes ?? true;
+                    const enabled = (await host.getSettings<boolean>('html.autoCreateQuotes')) ?? true;
 
                     if (enabled) {
 
-                        const text = host.getHtmlLs().doQuoteComplete(document, position, htmlDocument, await host.getCompletionConfiguration?.(document.uri));
+                        const text = host.getHtmlLs().doQuoteComplete(document, position, htmlDocument, await host.getSettings<html.CompletionConfiguration>('html.completion', document.uri));
 
                         if (text) {
                             return text;
@@ -152,7 +146,7 @@ export function htmlPluginBase(
 
                 if (context.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
 
-                    const enabled = (await host.getSettings?.())?.autoClosingTags ?? true;
+                    const enabled = (await host.getSettings<boolean>('html.autoClosingTags')) ?? true;
 
                     if (enabled) {
 

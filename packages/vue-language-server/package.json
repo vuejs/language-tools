@@ -23,9 +23,7 @@
 		"vscode-json-languageservice": "^4.1.10"
 	},
 	"dependencies": {
-		"@volar/html2pug": "0.32.1",
 		"@volar/shared": "0.32.1",
-		"@volar/vue-code-gen": "0.32.1",
 		"@volar/vue-language-service": "0.32.1",
 		"@vue/shared": "^3.2.27",
 		"request-light": "^0.5.7",

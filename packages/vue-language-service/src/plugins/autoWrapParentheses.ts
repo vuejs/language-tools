@@ -1,21 +1,21 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import { VueDocument } from '@volar/vue-typescript';
 import { isCharacterTyping } from './autoCompleteRefs';
 import * as shared from '@volar/shared';
 
-export default definePlugin((host: {
+export default function (host: {
+	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument: (document: TextDocument) => VueDocument | undefined,
-	isEnabled: () => Promise<boolean | undefined>,
-}) => {
+}): EmbeddedLanguagePlugin {
 
 	return {
 
 		async doAutoInsert(document, position, options) {
 
-			const enabled = await host.isEnabled() ?? true;
+			const enabled = await host.getSettings<boolean>('volar.autoWrapParentheses') ?? true;
 			if (!enabled)
 				return;
 
@@ -58,4 +58,4 @@ export default definePlugin((host: {
 			}
 		},
 	}
-});
+}

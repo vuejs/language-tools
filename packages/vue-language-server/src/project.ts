@@ -7,7 +7,6 @@ import type { createLsConfigs } from './configs';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
 import { RuntimeEnvironment } from './common';
-import { Commands } from './commands';
 
 export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
@@ -104,7 +103,6 @@ export async function createProject(
 							attr: options.languageFeatures!.completion!.defaultAttrNameCase,
 						};
 					} : undefined,
-					Commands.SHOW_REFERENCES,
 				);
 				vueLs.__internal__.tsRuntime.onInitProgress(p => {
 					if (p === 0) {

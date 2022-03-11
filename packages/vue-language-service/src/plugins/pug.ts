@@ -1,15 +1,15 @@
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 
 export const triggerCharacters: string[] = []; // TODO
 
-export default definePlugin((host: {
+export default function (host: {
+    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getPugLs(): pug.LanguageService,
-    getHoverSettings?(uri: string): Promise<html.HoverSettings | undefined>,
     documentContext?: html.DocumentContext,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
@@ -45,7 +45,7 @@ export default definePlugin((host: {
         doHover(document, position) {
             return worker(document, async (pugDocument) => {
 
-                const hoverSettings = await host.getHoverSettings?.(document.uri);
+                const hoverSettings = await host.getSettings<html.HoverSettings>('html.hover', document.uri);
 
                 return host.getPugLs().doHover(pugDocument, position, hoverSettings);
             });
@@ -113,4 +113,4 @@ export default definePlugin((host: {
 
         return doc;
     }
-});
+}

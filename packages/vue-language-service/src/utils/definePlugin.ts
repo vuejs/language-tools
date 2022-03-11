@@ -3,9 +3,22 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 
 type NotNullableResult<T> = T | Thenable<T>;
-type NullableResult<T> = T | undefined | null | Thenable<T | undefined | null>;
+type NullableResult<T> = NotNullableResult<T | undefined | null>;
 
 export type SemanticToken = [number, number, number, number, number];
+
+export interface ExecuteCommandContext {
+    token: vscode.CancellationToken;
+    workDoneProgress: {
+        begin(title: string, percentage?: number, message?: string, cancellable?: boolean): void;
+        report(percentage: number): void;
+        report(message: string): void;
+        report(percentage: number, message: string): void;
+        done(): void;
+    };
+    sendNotification<P>(type: vscode.NotificationType<P>, params: P): Promise<void>;
+    applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
+}
 
 export type EmbeddedLanguagePlugin = {
     doValidation?(document: TextDocument, options: {
@@ -30,6 +43,7 @@ export type EmbeddedLanguagePlugin = {
     doCodeActionResolve?(codeAction: vscode.CodeAction): NotNullableResult<vscode.CodeAction>;
     doCodeLens?(document: TextDocument): NullableResult<vscode.CodeLens[]>;
     doCodeLensResolve?(codeLens: vscode.CodeLens): NotNullableResult<vscode.CodeLens>;
+    doExecuteCommand?(command: string, args: any[], context: ExecuteCommandContext): NotNullableResult<void>;
     findDocumentColors?(document: TextDocument): NullableResult<vscode.ColorInformation[]>;
     getColorPresentations?(document: TextDocument, color: vscode.Color, range: vscode.Range): NullableResult<vscode.ColorPresentation[]>;
     doRenamePrepare?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Range | vscode.ResponseError<void>>;
@@ -64,10 +78,6 @@ export type EmbeddedLanguagePlugin = {
 
     // findMatchingTagPosition?(document: TextDocument, position: vscode.Position, htmlDocument: HTMLDocument): vscode.Position | null;
 };
-
-export function definePlugin<T>(_: (host: T) => EmbeddedLanguagePlugin) {
-    return _;
-}
 
 export async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
     for (const embedded of embeddeds) {

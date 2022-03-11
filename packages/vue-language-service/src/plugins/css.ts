@@ -1,4 +1,4 @@
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
@@ -14,19 +14,19 @@ const wordPatterns: { [lang: string]: RegExp } = {
 // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 export const triggerCharacters = ['/', '-', ':'];
 
-export default definePlugin((host: {
+export default function (host: {
+    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getCssLs(lang: string): css.LanguageService | undefined,
     getStylesheet(document: TextDocument): css.Stylesheet | undefined,
-    getLanguageSettings?(languageId: string, uri: string): Promise<css.LanguageSettings | undefined>,
     documentContext?: css.DocumentContext,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     return {
 
         doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                const settings = await host.getLanguageSettings?.(document.languageId, document.uri);
+                const settings = await host.getSettings<css.LanguageSettings>(document.languageId, document.uri);
 
                 return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
             });
@@ -41,7 +41,7 @@ export default definePlugin((host: {
                 const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
                 const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
                 const wordRange = vscode.Range.create(wordStart ?? position, position);
-                const settings = await host.getLanguageSettings?.(document.languageId, document.uri);
+                const settings = await host.getSettings<css.LanguageSettings>(document.languageId, document.uri);
                 const cssResult = await cssLs.doComplete2(document, position, stylesheet, host.documentContext, settings?.completion);
 
                 if (cssResult) {
@@ -63,7 +63,7 @@ export default definePlugin((host: {
         doHover(document, position) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                const settings = await host.getLanguageSettings?.(document.languageId, document.uri);
+                const settings = await host.getSettings<css.LanguageSettings>(document.languageId, document.uri);
 
                 return cssLs.doHover(document, position, stylesheet, settings?.hover);
             });
@@ -167,4 +167,4 @@ export default definePlugin((host: {
 
         return callback(stylesheet, cssLs);
     }
-});
+};

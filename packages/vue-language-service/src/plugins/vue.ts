@@ -1,4 +1,4 @@
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument } from '@volar/vue-typescript';
@@ -94,10 +94,11 @@ const dataProvider = html.newHTMLDataProvider('vue', {
     ]
 });
 
-export default definePlugin((host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHtmlLs'> & {
+export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHtmlLs'> & {
+    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getVueDocument(document: TextDocument): VueDocument | undefined,
     scriptTsLs: ts2.LanguageService | undefined,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
     const htmlLs = html.getLanguageService();
@@ -281,7 +282,7 @@ export default definePlugin((host: Omit<Parameters<typeof htmlPluginBase>[0], 'g
 
         return doc;
     }
-});
+}
 
 function getSfcCodeWithEmptyBlocks(vueDocument: VueDocument, sfcCode: string) {
 

@@ -12,11 +12,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	let tsPreferences: Record<string, Promise<ts.UserPreferences>> = {};
 	let tsFormatOptions: Record<string, Promise<ts.FormatCodeSettings>> = {};
 	let cssLanguageSettings: Record<string, Promise<css.LanguageSettings>> = {};
-	let codeLensConfigs: {
-		references: boolean,
-		pugTool: boolean,
-		scriptSetupTool: boolean,
-	} | undefined;
 	let htmlCustomData: { [id: string]: html.HTMLDataV1 } | undefined;
 	let cssCustomData: css.CSSDataV1[] | undefined;
 
@@ -25,7 +20,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	const vueLsArr: vue.LanguageService[] = [];
 
 	connection.onDidChangeConfiguration(async () => {
-		codeLensConfigs = undefined;
 		tsPreferences = {};
 		tsFormatOptions = {};
 		cssLanguageSettings = {};
@@ -40,7 +34,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	});
 
 	return {
-		getCodeLensConfigs,
 		getCssLanguageSettings,
 		getTsPreferences,
 		getTsFormatOptions,
@@ -136,24 +129,5 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 			cssLanguageSettings[textDocument.uri] = (async () => await connection.workspace.getConfiguration({ scopeUri: textDocument.uri, section: textDocument.languageId }))();
 		}
 		return cssLanguageSettings[textDocument.uri];
-	}
-	async function getCodeLensConfigs() {
-		if (!codeLensConfigs) {
-			const [
-				codeLensReferences,
-				codeLensPugTool,
-				codeLensRefScriptSetupTool,
-			]: (boolean | null | undefined)[] = await Promise.all([
-				connection.workspace.getConfiguration('volar.codeLens.references'),
-				connection.workspace.getConfiguration('volar.codeLens.pugTools'),
-				connection.workspace.getConfiguration('volar.codeLens.scriptSetupTools'),
-			]);
-			codeLensConfigs = {
-				references: !!codeLensReferences,
-				pugTool: !!codeLensPugTool,
-				scriptSetupTool: !!codeLensRefScriptSetupTool,
-			};
-		}
-		return codeLensConfigs;
 	}
 }

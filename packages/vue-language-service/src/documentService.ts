@@ -40,32 +40,42 @@ export function getDocumentService(
 	let tsLs: ts2.LanguageService;
 
 	// language support plugins
+	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const vuePlugin = useVuePlugin({
+		getSettings: _getSettings,
 		getVueDocument,
 		scriptTsLs: undefined,
-		getSettings: async () => getSettings?.('html'),
-		getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
-		getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
-		getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
 	});
 	const htmlPlugin = patchHtmlFormat(useHtmlPlugin({
+		getSettings: _getSettings,
 		getHtmlLs: () => services.htmlLs,
-		getSettings: async () => getSettings?.('html'),
-		getHoverSettings: async (uri) => getSettings?.('html.hover', uri),
-		getCompletionConfiguration: async (uri) => getSettings?.('html.completion', uri),
-		getFormatConfiguration: async (uri) => getSettings?.('html.format', uri),
 	}));
-	const pugPlugin = usePugPlugin({ getPugLs: () => services.pugLs });
-	const cssPlugin = useCssPlugin({ getCssLs: services.getCssLs, getStylesheet: services.getStylesheet });
-	const jsonPlugin = useJsonPlugin({ getJsonLs: () => services.jsonLs });
-	const tsPlugin = useTsPlugin({ getTsLs: () => tsLs });
-	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({ ts, getVueDocument, isEnabled: async () => getSettings?.('volar.autoWrapParentheses') });
+	const pugPlugin = usePugPlugin({
+		getSettings: _getSettings,
+		getPugLs: () => services.pugLs
+	});
+	const cssPlugin = useCssPlugin({
+		getSettings: _getSettings,
+		getCssLs: services.getCssLs,
+		getStylesheet: services.getStylesheet
+	});
+	const jsonPlugin = useJsonPlugin({
+		getJsonLs: () => services.jsonLs,
+	});
+	const tsPlugin = useTsPlugin({
+		getTsLs: () => tsLs,
+	});
+	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
+		getSettings: _getSettings,
+		ts,
+		getVueDocument,
+	});
 
 	// formatter plugins
-	const cssFormatPlugin = usePrettierPlugin({ allowLanguageIds: ['css', 'less', 'scss', 'postcss'] });
+	const cssFormatPlugin = usePrettierPlugin(['css', 'less', 'scss', 'postcss']);
 	const htmlFormatPlugin = patchHtmlFormat(useHtmlFormatPlugin({ getPrintWidth }));
-	const pugFormatPlugin = usePugFormatPlugin({});
-	const sassFormatPlugin = useSassFormatPlugin({});
+	const pugFormatPlugin = usePugFormatPlugin();
+	const sassFormatPlugin = useSassFormatPlugin();
 
 	const context: DocumentServiceRuntimeContext = {
 		compilerOptions: {},

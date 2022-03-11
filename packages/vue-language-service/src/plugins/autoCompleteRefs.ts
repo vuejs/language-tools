@@ -5,13 +5,13 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from './typescript';
-import { definePlugin, EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 
-export default definePlugin((host: {
+export default function (host: {
+	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getTsLs: () => ts2.LanguageService,
-	isEnabled: () => Promise<boolean | undefined>,
-}) => {
+}): EmbeddedLanguagePlugin {
 
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 
@@ -25,7 +25,7 @@ export default definePlugin((host: {
 			if (!isCharacterTyping(document, context))
 				return;
 
-			const enabled = await host.isEnabled() ?? true;
+			const enabled = await host.getSettings<boolean>('volar.autoCompleteRefs') ?? true;
 			if (!enabled)
 				return;
 
@@ -48,7 +48,7 @@ export default definePlugin((host: {
 		}
 		return ast;
 	}
-});
+}
 
 export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) {
 

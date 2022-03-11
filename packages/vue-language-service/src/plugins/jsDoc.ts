@@ -1,12 +1,12 @@
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import * as ts2 from '@volar/typescript-language-service';
 import { isTsDocument } from './typescript';
 
 export const triggerCharacters = ['*'];
 
-export default definePlugin((host: {
+export default function (host: {
     getTsLs(): ts2.LanguageService,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     return {
 
@@ -24,4 +24,4 @@ export default definePlugin((host: {
             }
         },
     };
-});
+}

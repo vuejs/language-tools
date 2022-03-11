@@ -67,14 +67,14 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	});
 	const d_4 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToKebabCase', async () => {
 		if (vscode.window.activeTextEditor) {
-			await vscode.commands.executeCommand('volar.server.executeConvertToKebabCase', vscode.window.activeTextEditor.document.uri.toString());
+			await vscode.commands.executeCommand('volar.server.convertTagNameCasing', vscode.window.activeTextEditor.document.uri.toString(), 'kebab');
 			tagCases.uriSet(vscode.window.activeTextEditor.document.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
 	});
 	const d_5 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToPascalCase', async () => {
 		if (vscode.window.activeTextEditor) {
-			await vscode.commands.executeCommand('volar.server.executeConvertToPascalCase', vscode.window.activeTextEditor.document.uri.toString());
+			await vscode.commands.executeCommand('volar.server.convertTagNameCasing', vscode.window.activeTextEditor.document.uri.toString(), 'pascal');
 			tagCases.uriSet(vscode.window.activeTextEditor.document.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}

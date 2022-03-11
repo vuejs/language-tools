@@ -1,14 +1,14 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 
 export { getSemanticTokenLegend, getTriggerCharacters } from '@volar/typescript-language-service';
 
-export default definePlugin((host: {
+export default function (host: {
     getTsLs: () => ts2.LanguageService,
     baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
-}) => {
+}): EmbeddedLanguagePlugin {
 
     return {
 
@@ -153,7 +153,7 @@ export default definePlugin((host: {
             },
         },
     };
-});
+}
 
 export function isTsDocument(document: TextDocument) {
     return document.languageId === 'javascript' ||

@@ -1,11 +1,11 @@
-import { definePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
 import * as emmet from '@vscode/emmet-helper';
 
 export const triggerCharacters = []; // TODO
 
-export default definePlugin((host: {
-    getEmmetConfig(): Promise<emmet.VSCodeEmmetConfig | undefined>,
-}) => {
+export default function (host: {
+    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+}): EmbeddedLanguagePlugin {
 
     let emmetConfig: any;
 
@@ -25,9 +25,7 @@ export default definePlugin((host: {
 
     async function getEmmetConfig(syntax: string): Promise<emmet.VSCodeEmmetConfig> {
 
-        if (!emmetConfig) {
-            emmetConfig = (await host.getEmmetConfig) ?? {};
-        }
+        emmetConfig = await host.getSettings<emmet.VSCodeEmmetConfig>('emmet') ?? {};
 
         const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
         const preferences = Object.assign({}, emmetConfig['preferences'] || {});
@@ -55,4 +53,4 @@ export default definePlugin((host: {
             showSuggestionsAsSnippets: emmetConfig['showSuggestionsAsSnippets']
         };
     }
-});
+}
