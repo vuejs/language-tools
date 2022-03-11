@@ -691,7 +691,7 @@ export function generate(
 								tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 								tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]},\n`);
 								{
-									tsCodeGen.addText(`(typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Omit<__VLS_types.GlobalAttrs, keyof Props> & Record<string, unknown> : __VLS_types.GlobalAttrs & Record<string, unknown>)[`);
+									tsCodeGen.addText(`(typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Omit<__VLS_types.GlobalAttrs, keyof Props> & Record<string, unknown> : typeof ${tagResolves[node.tag].rawComponent} & Record<string, unknown>)[`);
 									const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
 									writeCodeWithQuotes(
 										key_2,

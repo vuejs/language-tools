@@ -18,9 +18,12 @@
 	<!-- $emit has high priority then $props -->
 	<C6 @foo="exactType($event, {} as number)" />
 
-	<!-- override original event -->
+	<!-- override native event -->
 	<C7 @click="exactType($event, {} as number)" />
 	<C8 @click="exactType($event, {} as number)" />
+
+	<!-- invalid component type don't fallback to native event type -->
+	<C9 @click="exactType($event, {} as any)" />
 </template>
 
 <script lang="ts" setup>
@@ -41,4 +44,5 @@ declare const C4: new <T>(props: { value: T }) => {
 	$props: typeof props;
 	$emit: { (event: 'fooBar', e: T): void; };
 };
+declare const C9: new () => {};
 </script>
