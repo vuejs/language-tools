@@ -1,5 +1,5 @@
 import type { LanguageServiceRuntimeContext } from '../types';
-import { ExecuteCommandContext } from '../utils/definePlugin';
+import { ExecuteCommandContext } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export const executePluginCommand = 'volar.executtePluginCommand';

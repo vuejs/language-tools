@@ -1,6 +1,6 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export default function (host: {
     getPrintWidth: (uri: string) => number | Promise<number>,
@@ -13,14 +13,14 @@ export default function (host: {
             if (document.languageId !== 'html')
                 return;
 
-            let newHtml = prettyhtml(document.getText(), {
+            const newHtml = prettyhtml(document.getText(), {
                 tabWidth: options.tabSize,
                 useTabs: !options.insertSpaces,
                 printWidth: await host.getPrintWidth(document.uri),
             }).contents;
 
             if (newHtml === document.getText())
-                return;
+                return [];
 
             const htmlEdit = vscode.TextEdit.replace(
                 vscode.Range.create(

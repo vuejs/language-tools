@@ -1,0 +1,20 @@
+{
+	"name": "@volar/vue-language-service-types",
+	"version": "0.32.1",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vue-language-service-types"
+	},
+	"dependencies": {
+		"@volar/vue-typescript": "0.32.1",
+		"vscode-languageserver-protocol": "^3.17.0-next.12",
+		"vscode-languageserver-textdocument": "^1.0.3"
+	}
+}

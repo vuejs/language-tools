@@ -255,6 +255,7 @@ importers:
       '@volar/transforms': 0.32.1
       '@volar/typescript-language-service': 0.32.1
       '@volar/vue-code-gen': 0.32.1
+      '@volar/vue-language-service-types': 0.32.1
       '@volar/vue-typescript': 0.32.1
       '@vscode/emmet-helper': ^2.8.3
       '@vue/reactivity': ^3.2.27
@@ -278,6 +279,7 @@ importers:
       '@volar/transforms': link:../transforms
       '@volar/typescript-language-service': link:../typescript-language-service
       '@volar/vue-code-gen': link:../vue-code-gen
+      '@volar/vue-language-service-types': link:../vue-language-service-types
       '@volar/vue-typescript': link:../vue-typescript
       '@vscode/emmet-helper': 2.8.4
       '@vue/reactivity': 3.2.31
@@ -293,6 +295,16 @@ importers:
     devDependencies:
       '@types/prettier': 1.19.1
       typescript: 4.6.2
+
+  packages/vue-language-service-types:
+    specifiers:
+      '@volar/vue-typescript': 0.32.1
+      vscode-languageserver-protocol: ^3.17.0-next.12
+      vscode-languageserver-textdocument: ^1.0.3
+    dependencies:
+      '@volar/vue-typescript': link:../vue-typescript
+      vscode-languageserver-protocol: 3.17.0-next.14
+      vscode-languageserver-textdocument: 1.0.4
 
   packages/vue-language-service/testCases:
     specifiers:

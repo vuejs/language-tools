@@ -1,7 +1,7 @@
 import type { DocumentServiceRuntimeContext } from '../types';
 import { documentArgFeatureWorker } from '../utils/featureWorkers';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export function register(context: DocumentServiceRuntimeContext) {

@@ -1,6 +1,6 @@
 import { SassFormatter } from 'sass-formatter';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export default function (): EmbeddedLanguagePlugin {
 
@@ -21,7 +21,7 @@ export default function (): EmbeddedLanguagePlugin {
             const newStyleText = SassFormatter.Format(document.getText(), _options);
 
             if (newStyleText === document.getText())
-                return;
+                return [];
 
             const cssEdit = vscode.TextEdit.replace(
                 vscode.Range.create(

@@ -3,7 +3,7 @@ import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-css-languageservice';
 import type * as json from 'vscode-json-languageservice';
 import { LanguageServicePlugin } from './languageService';
-import { EmbeddedLanguagePlugin } from './utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export type LanguageServiceHost = LanguageServiceHostBase & {
 	schemaRequestService?: json.SchemaRequestService,

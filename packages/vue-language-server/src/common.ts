@@ -33,8 +33,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 	async function onInitialize(params: vscode.InitializeParams) {
 
-		// @ts-expect-error
-		const options: shared.ServerInitializationOptions = params.initializationOptions;
+		const options: shared.ServerInitializationOptions = params.initializationOptions as any;
 		let folders: string[] = [];
 		let rootUri: URI;
 
@@ -76,6 +75,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
 				},
 				lsConfigs?.getSettings,
+				folders[0],
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);

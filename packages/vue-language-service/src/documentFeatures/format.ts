@@ -136,7 +136,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				const edits = await plugin.format(document, undefined, options);
 
-				if (!edits || edits.length === 0)
+				if (!edits)
 					continue;
 
 				return edits;

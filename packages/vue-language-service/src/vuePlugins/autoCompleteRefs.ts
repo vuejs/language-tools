@@ -5,7 +5,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '../commonPlugins/typescript';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export default function (host: {
 	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
