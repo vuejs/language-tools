@@ -1,6 +1,5 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-typescript';
-import * as path from 'path';
 import * as shared from '@volar/shared';
 import * as apis from './apis';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
@@ -13,32 +12,16 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 	if (!options.host)
 		return doThrow('!options.host');
 
-	if (!options.host.readDirectory)
-		return doThrow('!options.host.readDirectory');
-
 	const host = options.host;
-	const readDirectory = options.host.readDirectory;
-	const parseConfigHost: ts.ParseConfigHost = {
-		useCaseSensitiveFileNames: host.useCaseSensitiveFileNames(),
-		readDirectory: (path, extensions, exclude, include, depth) => {
-			return readDirectory(path, ['.vue'], exclude, include, depth);
-		},
-		fileExists: fileName => host.fileExists(fileName),
-		readFile: fileName => host.readFile(fileName),
-	};
-
-	const fileNames = [
-		...options.rootNames,
-		...getVueFileNames(),
-	];
 	const vueCompilerOptions = getVueCompilerOptions();
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const vueLsHost: vue.LanguageServiceHostBase = {
 		...host,
+		resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
 		writeFile: undefined,
 		getCompilationSettings: () => options.options,
 		getVueCompilationSettings: () => vueCompilerOptions,
-		getScriptFileNames: () => fileNames,
+		getScriptFileNames: () => options.rootNames as string[],
 		getScriptVersion: () => '',
 		getScriptSnapshot,
 		getProjectVersion: () => '',
@@ -51,30 +34,15 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 	if (!tsProgram) throw '!tsProgram';
 
 	const tsProgramApis_2 = apis.register(ts, tsRuntime.context);
-	const tsProgramApis_3: Partial<typeof tsProgram> = {
-		emit: tsRuntime.apiHook(tsProgramApis_2.emit),
-		getRootFileNames: tsRuntime.apiHook(tsProgramApis_2.getRootFileNames),
-		getSemanticDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getSemanticDiagnostics),
-		getSyntacticDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getSyntacticDiagnostics),
-		getGlobalDiagnostics: tsRuntime.apiHook(tsProgramApis_2.getGlobalDiagnostics),
-	};
 	const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
-		get: (target: any, property: keyof typeof tsProgram) => {
-			return tsProgramApis_3[property] || target[property];
+		get: (target: any, property: keyof typeof tsProgramApis_2) => {
+			tsRuntime.update(true);
+			return tsProgramApis_2[property] || target[property];
 		},
 	});
 
 	return tsProgramProxy;
 
-	function getVueFileNames() {
-		const tsConfig = options.options.configFilePath;
-		if (typeof tsConfig === 'string') {
-			const tsConfigFile = ts.readJsonConfigFile(tsConfig, host.readFile);
-			const { fileNames } = ts.parseJsonSourceFileConfigFileContent(tsConfigFile, parseConfigHost, path.dirname(tsConfig), options.options, path.basename(tsConfig));
-			return fileNames;
-		}
-		return [];
-	}
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
 		const tsConfig = options.options.configFilePath;
 		if (typeof tsConfig === 'string') {
