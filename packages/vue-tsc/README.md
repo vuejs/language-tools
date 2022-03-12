@@ -13,7 +13,7 @@ Roadmap:
 - [x] Make `typescript` as peerDependencies
 - [x] Cleaner dependencies (remove `prettyhtml`, `prettier` etc.) (with `vscode-vue-languageservice` version >= 0.26.4)
 - [x] dts emit support
-- [ ] Watch mode support
+- [x] Watch mode support
 
 ## Using
 

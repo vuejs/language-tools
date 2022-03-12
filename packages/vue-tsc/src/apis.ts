@@ -15,6 +15,7 @@ export function register(
 		getSyntacticDiagnostics,
 		getSemanticDiagnostics,
 		getGlobalDiagnostics,
+		getBindAndCheckDiagnostics,
 	};
 
 	function getRootFileNames() {
@@ -24,12 +25,62 @@ export function register(
 		]);
 		return [...set.values()];
 	}
-	function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.DiagnosticWithLocation[] {
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSyntacticDiagnostics(sourceFile, cancellationToken))).flat();
+
+	// for vue-tsc --noEmit --watch
+	function getBindAndCheckDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken) {
+		return getSourceFileDiagnosticsWorker(sourceFile, cancellationToken, 'getBindAndCheckDiagnostics');
 	}
-	function getSemanticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getSemanticDiagnostics(sourceFile, cancellationToken))).flat();
+
+	// for vue-tsc --noEmit
+	function getSyntacticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken) {
+		return getSourceFileDiagnosticsWorker(sourceFile, cancellationToken, 'getSyntacticDiagnostics');
 	}
+	function getSemanticDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken) {
+		return getSourceFileDiagnosticsWorker(sourceFile, cancellationToken, 'getSemanticDiagnostics');
+	}
+
+	function getSourceFileDiagnosticsWorker(
+		sourceFile: ts.SourceFile | undefined,
+		cancellationToken: ts.CancellationToken | undefined,
+		api: 'getBindAndCheckDiagnostics' | 'getSyntacticDiagnostics' | 'getSemanticDiagnostics',
+	): readonly ts.DiagnosticWithLocation[] | readonly ts.Diagnostic[] {
+
+		if (sourceFile) {
+
+			const sourceMap = vueDocuments.fromEmbeddedDocumentUri('script', shared.fsPathToUri(sourceFile.fileName));
+			const vueDocument = sourceMap ? vueDocuments.get(sourceMap.sourceDocument.uri) : undefined;
+
+			if (vueDocument) {
+
+				let results: any[] = [];
+
+				const sourceMaps = vueDocument.getSourceMaps();
+
+				for (const sourceMap of sourceMaps) {
+
+					if (sourceMap.lsType === 'nonTs' || !sourceMap.capabilities.diagnostics)
+						continue;
+
+					const program = getProgram(sourceMap.lsType);
+					const embeddedSourceFile = program.getSourceFile(shared.uriToFsPath(sourceMap.mappedDocument.uri));
+
+					if (embeddedSourceFile) {
+
+						const errors = transformDiagnostics(sourceMap.lsType, (program as any)[api](embeddedSourceFile, cancellationToken));
+						results = results.concat(errors);
+					}
+				}
+
+				return results;
+			}
+			else {
+				return (getProgram('script') as any)[api](sourceFile, cancellationToken);
+			}
+		}
+
+		return lsTypes.map(lsType => transformDiagnostics(lsType, (getProgram(lsType) as any)[api](sourceFile, cancellationToken))).flat();
+	}
+
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
 		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getGlobalDiagnostics(cancellationToken))).flat();
 	}
