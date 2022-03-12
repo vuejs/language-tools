@@ -1,4 +1,4 @@
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as emmet from '@vscode/emmet-helper';
 
 export const triggerCharacters = []; // TODO

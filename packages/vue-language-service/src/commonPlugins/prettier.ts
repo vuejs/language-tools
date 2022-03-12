@@ -1,6 +1,6 @@
 import * as prettier from 'prettier';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export default function (allowLanguageIds: prettier.BuiltInParserName[]): EmbeddedLanguagePlugin {
 
@@ -18,7 +18,7 @@ export default function (allowLanguageIds: prettier.BuiltInParserName[]): Embedd
             });
 
             if (newStyleText === document.getText())
-                return;
+                return [];
 
             const cssEdit = vscode.TextEdit.replace(
                 vscode.Range.create(

@@ -19,11 +19,12 @@ import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
 import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
-import { EmbeddedLanguagePlugin } from './utils/definePlugin';
 import * as sharedServices from './utils/sharedLs';
 import useAutoWrapParenthesesPlugin from './vuePlugins/autoWrapParentheses';
 import useVuePlugin from './vuePlugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
+import { loadCustomPlugins } from './languageService';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -33,6 +34,7 @@ export function getDocumentService(
 	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
+	rootPath: string,
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
@@ -41,6 +43,7 @@ export function getDocumentService(
 
 	// language support plugins
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
+	const customPlugins = loadCustomPlugins(rootPath);
 	const vuePlugin = useVuePlugin({
 		getSettings: _getSettings,
 		getVueDocument,
@@ -73,9 +76,18 @@ export function getDocumentService(
 
 	// formatter plugins
 	const cssFormatPlugin = usePrettierPlugin(['css', 'less', 'scss', 'postcss']);
-	const htmlFormatPlugin = patchHtmlFormat(useHtmlFormatPlugin({ getPrintWidth }));
+	const htmlFormatPlugin = useHtmlFormatPlugin({ getPrintWidth });
 	const pugFormatPlugin = usePugFormatPlugin();
 	const sassFormatPlugin = useSassFormatPlugin();
+	const formatPlugns = [
+		...customPlugins,
+		cssFormatPlugin,
+		htmlFormatPlugin,
+		pugFormatPlugin,
+		sassFormatPlugin,
+		jsonPlugin,
+		tsPlugin,
+	].map(patchHtmlFormat);
 
 	const context: DocumentServiceRuntimeContext = {
 		compilerOptions: {},
@@ -84,6 +96,7 @@ export function getDocumentService(
 		getVueDocument,
 		getPlugins() {
 			return [
+				...customPlugins,
 				vuePlugin,
 				htmlPlugin,
 				pugPlugin,
@@ -94,14 +107,7 @@ export function getDocumentService(
 			];
 		},
 		getFormatPlugins() {
-			return [
-				cssFormatPlugin,
-				htmlFormatPlugin,
-				pugFormatPlugin,
-				sassFormatPlugin,
-				jsonPlugin,
-				tsPlugin,
-			];
+			return formatPlugns;
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
@@ -162,22 +168,27 @@ function patchHtmlFormat(htmlPlugin: EmbeddedLanguagePlugin) {
 
 		htmlPlugin.format = async (document, range, options) => {
 
-			const prefixes = '<template>';
-			const suffixes = '</template>';
+			if (document.languageId === 'html') {
 
-			const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
-			const result = await originalFormat?.(patchDocument, range, options);
+				const prefixes = '<template>';
+				const suffixes = '</template>';
 
-			if (result) {
-				for (const edit of result) {
-					if (document.offsetAt(edit.range.start) === 0 && document.offsetAt(edit.range.end) === document.getText().length) {
-						edit.newText = edit.newText.trim();
-						edit.newText = edit.newText.substring(prefixes.length, edit.newText.length - suffixes.length);
+				const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
+				const result = await originalFormat?.(patchDocument, range, options);
+
+				if (result) {
+					for (const edit of result) {
+						if (document.offsetAt(edit.range.start) === 0 && document.offsetAt(edit.range.end) === document.getText().length) {
+							edit.newText = edit.newText.trim();
+							edit.newText = edit.newText.substring(prefixes.length, edit.newText.length - suffixes.length);
+						}
 					}
 				}
+
+				return result;
 			}
 
-			return result;
+			return originalFormat?.(document, range, options);
 		};
 	}
 

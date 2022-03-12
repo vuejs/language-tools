@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 

@@ -3,7 +3,7 @@ import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/v
 import type { TextRange } from '@volar/vue-code-gen/out/types';
 import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 
 enum Commands {
     USE_SETUP_SUGAR = 'scriptSetupConversions.use',

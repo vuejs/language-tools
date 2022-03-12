@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SemanticToken } from '../utils/definePlugin';
+import { SemanticToken } from '@volar/vue-language-service-types';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 

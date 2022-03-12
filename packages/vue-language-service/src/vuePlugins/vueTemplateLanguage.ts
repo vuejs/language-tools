@@ -11,7 +11,7 @@ import type * as ts2 from '@volar/typescript-language-service';
 import type { Data } from '@volar/typescript-language-service/src/services/completion';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 export const semanticTokenTypes = [
     'componentTag',

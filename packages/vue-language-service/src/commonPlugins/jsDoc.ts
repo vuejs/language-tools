@@ -1,4 +1,4 @@
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as ts2 from '@volar/typescript-language-service';
 import { isTsDocument } from './typescript';
 

@@ -1,6 +1,6 @@
 import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import { htmlToPug, pugToHtml } from '@volar/html2pug';
 
 const toggleConvertCommand = 'htmlPugConversions.toggle';

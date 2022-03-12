@@ -4,7 +4,7 @@ import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen
 import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { margeWorkspaceEdits } from '../languageFuatures/rename';
-import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 import { isBlacklistNode, isRefType } from './autoCompleteRefs';
 import { getAddMissingImportsEdits } from './scriptSetupConversions';
 

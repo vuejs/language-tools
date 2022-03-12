@@ -34,6 +34,9 @@
 			"path": "../vue-code-gen/tsconfig.build.json"
 		},
 		{
+			"path": "../vue-language-service-types/tsconfig.build.json"
+		},
+		{
 			"path": "../vue-typescript/tsconfig.build.json"
 		},
 	],

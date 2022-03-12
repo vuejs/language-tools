@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '../utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 
 const pugBeautify = require('@johnsoncodehk/pug-beautify');
 
@@ -28,7 +28,7 @@ export default function (): EmbeddedLanguagePlugin {
             });
 
             if (newPugCode === document.getText())
-                return;
+                return [];
 
             const pugEdit = vscode.TextEdit.replace(
                 vscode.Range.create(

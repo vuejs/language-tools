@@ -26,6 +26,7 @@
 		"@volar/transforms": "0.32.1",
 		"@volar/typescript-language-service": "0.32.1",
 		"@volar/vue-code-gen": "0.32.1",
+		"@volar/vue-language-service-types": "0.32.1",
 		"@volar/vue-typescript": "0.32.1",
 		"@vscode/emmet-helper": "^2.8.3",
 		"@vue/reactivity": "^3.2.27",

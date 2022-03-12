@@ -35,7 +35,7 @@ import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as diagnostics from './languageFuatures/validation';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
-import { EmbeddedLanguagePlugin } from './utils/definePlugin';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import useAutoDotValuePlugin from './vuePlugins/autoCompleteRefs';
 import useHtmlPugConversionsPlugin from './vuePlugins/htmlPugConversions';
 import useReferencesCodeLensPlugin from './vuePlugins/referencesCodeLens';
@@ -117,6 +117,7 @@ export function createLanguageService(
 
 	// plugins
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
+	const customPlugins = loadCustomPlugins(vueHost.getCurrentDirectory()).map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getSettings: _getSettings,
@@ -247,6 +248,7 @@ export function createLanguageService(
 	const allPlugins = new Map<number, LanguageServicePlugin>();
 
 	for (const plugin of [
+		...customPlugins,
 		vuePlugin,
 		cssPlugin,
 		vueTemplateHtmlPlugin,
@@ -273,6 +275,7 @@ export function createLanguageService(
 		getTextDocument: tsRuntime.getHostDocument,
 		getPlugins: lsType => {
 			let plugins = [
+				...customPlugins,
 				vuePlugin,
 				cssPlugin,
 				vueTemplateHtmlPlugin,
@@ -500,5 +503,17 @@ export function createLanguageService(
 			}
 		};
 		return new Proxy<T>(api, handler);
+	}
+}
+
+export function loadCustomPlugins(dir: string) {
+	try {
+		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
+		const config: { plugins?: EmbeddedLanguagePlugin[] } = require(configPath);
+		return config.plugins ?? []
+	}
+	catch (err) {
+		console.error('load volar.config.js failed:', err);
+		return [];
 	}
 }
