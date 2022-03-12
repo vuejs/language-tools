@@ -37,25 +37,6 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 ## Sponsors
 
-If you want to support the sustainability of this project, please consider becoming a sponsor, thank you!
-
-This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
-
-<table>
-  <tr>
-    <td>
-      <a href="https://github.com/Leniolabs">
-        <img itemprop="image" src="https://github.com/Leniolabs.png" width="100" height="100">
-      </a>
-    </td>
-    <td>
-      <h3>Leniolabs_</h3>
-      <p>Scale your Front-end development with our unique approach</p>
-      <p>
-        <a href="https://www.leniolabs.com/">https://www.leniolabs.com/</a>
-        ・<a href="https://twitter.com/Leniolabs_">@Leniolabs_</a>
-        ・<a href="mailto:info@leniolabs.com">info@leniolabs.com</a>
-      </p>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src='https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/sponsors.svg'/>
+</p>
