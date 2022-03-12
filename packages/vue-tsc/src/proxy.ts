@@ -4,7 +4,13 @@ import * as shared from '@volar/shared';
 import * as apis from './apis';
 import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
 
-export function createProgramProxy(options: ts.CreateProgramOptions) {
+export function createProgramProxy(
+	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
+	_options?: ts.CompilerOptions,
+	_host?: ts.CompilerHost,
+	_oldProgram?: ts.Program,
+	_configFileParsingDiagnostics?: readonly ts.Diagnostic[],
+) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
 		return doThrow('js emit is not support');
@@ -14,7 +20,10 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 
 	const host = options.host;
 	const vueCompilerOptions = getVueCompilerOptions();
-	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
+	const scripts = new Map<string, {
+		scriptSnapshot: ts.IScriptSnapshot,
+		version: string,
+	}>();
 	const vueLsHost: vue.LanguageServiceHostBase = {
 		...host,
 		resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
@@ -22,7 +31,7 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		getCompilationSettings: () => options.options,
 		getVueCompilationSettings: () => vueCompilerOptions,
 		getScriptFileNames: () => options.rootNames as string[],
-		getScriptVersion: () => '',
+		getScriptVersion: (fileName) => scripts.get(fileName)?.version ?? '',
 		getScriptSnapshot,
 		getProjectVersion: () => '',
 		getVueProjectVersion: () => '',
@@ -41,6 +50,11 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		},
 	});
 
+	for (const rootName of options.rootNames) {
+		// register file watchers
+		host.getSourceFile(rootName, ts.ScriptTarget.ESNext);
+	}
+
 	return tsProgramProxy;
 
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
@@ -51,15 +65,18 @@ export function createProgramProxy(options: ts.CreateProgramOptions) {
 		return {};
 	}
 	function getScriptSnapshot(fileName: string) {
-		const scriptSnapshot = scriptSnapshots.get(fileName);
-		if (scriptSnapshot) {
-			return scriptSnapshot;
+		const script = scripts.get(fileName);
+		if (script) {
+			return script.scriptSnapshot;
 		}
 		if (host.fileExists(fileName)) {
 			const fileContent = host.readFile(fileName);
 			if (fileContent !== undefined) {
 				const scriptSnapshot = ts.ScriptSnapshot.fromString(fileContent);
-				scriptSnapshots.set(fileName, scriptSnapshot);
+				scripts.set(fileName, {
+					scriptSnapshot: scriptSnapshot,
+					version: ts.sys.createHash?.(fileContent) ?? fileContent,
+				});
 				return scriptSnapshot;
 			}
 		}

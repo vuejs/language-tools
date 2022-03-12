@@ -513,7 +513,7 @@ export function loadCustomPlugins(dir: string) {
 		return config.plugins ?? []
 	}
 	catch (err) {
-		console.error('load volar.config.js failed:', err);
+		console.log('load volar.config.js failed in', dir);
 		return [];
 	}
 }

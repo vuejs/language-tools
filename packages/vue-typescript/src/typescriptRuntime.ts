@@ -33,6 +33,7 @@ export function createTypeScriptRuntime(
     let templateProjectVersion = 0;
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
     const documents = shared.createPathMap<TextDocument>(); // TODO: remove this
+    const documentVersionToVueHost = new WeakMap<TextDocument, string>();
     const vueDocuments = createVueDocuments();
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
@@ -208,7 +209,9 @@ export function createTypeScriptRuntime(
         }
     }
     function createTsLsHost(lsType: 'template' | 'script') {
+
         const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
+        const documentVersions = new WeakMap<TextDocument, string>();
         const tsHost: ts2.LanguageServiceHost = {
             ...vueHost,
             fileExists: vueHost.fileExists
@@ -298,11 +301,18 @@ export function createTypeScriptRuntime(
             const uri = shared.fsPathToUri(fileName);
             const basename = upath.basename(fileName);
             if (basename === localTypes.typesFileName) {
-                return '0';
+                return '';
             }
             let sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
             if (sourceMap) {
-                return sourceMap.mappedDocument.version.toString();
+                if (documentVersions.has(sourceMap.mappedDocument)) {
+                    return documentVersions.get(sourceMap.mappedDocument)!;
+                }
+                else {
+                    const version = ts.sys.createHash?.(sourceMap.mappedDocument.getText()) ?? sourceMap.mappedDocument.getText();
+                    documentVersions.set(sourceMap.mappedDocument, version);
+                    return version;
+                }
             }
             return vueHost.getScriptVersion(fileName);
         }
@@ -338,18 +348,23 @@ export function createTypeScriptRuntime(
         }
     }
     function getHostDocument(uri: string): TextDocument | undefined {
+
         const fileName = shared.uriToFsPath(uri);
-        const version = Number(vueHost.getScriptVersion(fileName));
-        if (!documents.uriHas(uri) || documents.uriGet(uri)!.version !== version) {
+        const version = vueHost.getScriptVersion(fileName);
+        const document = documents.uriGet(uri);
+
+        if (document && documentVersionToVueHost.get(document) === version) {
+            return document;
+        }
+        else {
             const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
             if (scriptSnapshot) {
                 const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-                const document = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', version, scriptText);
-                documents.uriSet(uri, document);
+                const newDocument = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', document?.version ?? 0, scriptText);
+                documents.uriSet(uri, newDocument);
+                documentVersionToVueHost.set(newDocument, version);
+                return newDocument;
             }
-        }
-        if (documents.uriHas(uri)) {
-            return documents.uriGet(uri);
         }
     }
     function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
