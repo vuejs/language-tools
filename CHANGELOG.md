@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.33.0
+
+- feat: reduce vue-tsc depends
+- feat: support more language features for `lang="json"` custom block
+- feat: support for goto implementations
+  - if you're not using VSCode, you should config new option `languageFeatures.implementation = true` in initializationOptions to enable it
+- feat: support custom language service plugins for ([#1028](https://github.com/johnsoncodehk/volar/pull/1028)):
+  - change built-in formatters
+  - add language support for custom block with any other language yourself
+- feat: support vue-tsc watch ([#1030](https://github.com/johnsoncodehk/volar/pull/1030))
+- feat: preview features not longer needed authentication
+- fix: pug formatting broken ([#1002](https://github.com/johnsoncodehk/volar/issues/1002))
+- fix: vite app preview not working on windows ([#1013](https://github.com/johnsoncodehk/volar/issues/1013))
+- fix: fallback event type behavior for invalid type components ([#1001](https://github.com/johnsoncodehk/volar/issues/1001)) ([#1026](https://github.com/johnsoncodehk/volar/issues/1026))
+
+**Breaking changes**
+
+- `@volar/server` renamed to `@volar/vue-language-server`
+  - cli command `vue-server` changed to `vue-language-server`
+- `vscode-vue-languageservice` renamed to `@volar/vue-language-service`
+- `vscode-typescript-languageservice` renamed to `@volar/typescript-language-service`
+- `vscode-json-languageservice` renamed to `@volar/json-language-service`
+
 ## 0.32.1
 
 - feat: support generic events with props ([#981](https://github.com/johnsoncodehk/volar/issues/981))
