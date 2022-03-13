@@ -207,7 +207,11 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 			if (sourceMap) {
 
-				const sourceRange = sourceMap.getSourceRange(error.range.start, error.range.end)?.[0];
+				const sourceRange = sourceMap.getSourceRange(
+					error.range.start,
+					error.range.end,
+					data => !!data.capabilities.diagnostic,
+				)?.[0];
 
 				if (!sourceRange)
 					continue;
