@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.1
+
+- feat: improve formatting error tolerance ([#1033](https://github.com/johnsoncodehk/volar/issues/1033))
+- fix: template report unexpected errors ([#1036](https://github.com/johnsoncodehk/volar/issues/1036)) ([#1037](https://github.com/johnsoncodehk/volar/issues/1037))
+- fix: can't extract template context in js ([#1035](https://github.com/johnsoncodehk/volar/issues/1035))
+
 ## 0.33.0
 
 - feat: reduce vue-tsc depends
