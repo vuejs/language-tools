@@ -285,11 +285,6 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar.showWelcomePage": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show welcome page when open webview."
-				},
 				"volar.lowPowerMode": {
 					"type": "boolean",
 					"default": false,

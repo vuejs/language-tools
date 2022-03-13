@@ -1,13 +1,3 @@
-/**
- * This project is open source, so I can't stop you from hacking the client code to use experimental features.
- * If you decide to do this, please don't share it, sponsorships are the only income for this project.
- * If income gets interrupted, the project may have to be stop open source or even stopped to maintenance.
- * 
- * 这个项目是开源的，因此我无法阻止你破解客户端代码以使用实验性功能。
- * 如果你决定这样做，请不要對外分享。
- * 赞助是这个项目唯一的收入，如果被中断，这个项目可能不得不改为闭源， 甚至停止维护。
- */
-
 import * as vscode from 'vscode';
 import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'upath';
@@ -197,10 +187,6 @@ export async function activate(context: vscode.ExtensionContext) {
 					statusBar.text = url;
 					break;
 				}
-				case 'dontShowAgain': {
-					vscode.workspace.getConfiguration('volar').update('showWelcomePage', false);
-					break;
-				}
 				case 'log': {
 					const text = message.data;
 					vscode.window.showInformationMessage(text);
@@ -255,11 +241,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		terminal.sendText(`cd ${viteDir}`);
 		terminal.sendText(`node ${JSON.stringify(viteProxyPath)} --port=${port}`);
-
-		const start = Date.now();
-		while (Date.now() - start < 10000 && !(await shared.isLocalHostPortUsing(port))) {
-			await shared.sleep(100);
-		}
 
 		return {
 			port,
@@ -348,8 +329,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	function getWebviewContent(url: string, state: PreviewState, bg?: string) {
 		const configs = vscode.workspace.getConfiguration('volar');
-		const autoBack = !vscode.workspace.getConfiguration('volar').get<boolean>('showWelcomePage');
-		return `
+
+		let html = `
 			<style>
 			body {
 				padding: 0;
@@ -359,19 +340,91 @@ export async function activate(context: vscode.ExtensionContext) {
 			</style>
 
 			<script>
+
 			const vscode = acquireVsCodeApi();
-			vscode.setState(${JSON.stringify(state)});
+			${state ? `vscode.setState(${JSON.stringify(state)});` : ''}
+
+			let preview;
+
 			window.addEventListener('message', e => {
 				if (e.data.sender === 'volar') {
-					document.getElementById('preview').contentWindow.postMessage(e.data, '*');
+					preview.contentWindow.postMessage(e.data, '*');
 				}
 				else {
 					vscode.postMessage(e.data);
 				}
 			});
+
+			const start = Date.now();
+
+			(async () => {
+
+				while (Date.now() - start < 10000 && !(await isServerStart())) {
+					await sleep(250);
+				}
+
+				console.log('server started');
+
+				preview = document.createElement('iframe');
+				preview.src = '${url}';
+				preview.onload = previewFrameLoaded;
+				preview.frameBorder = '0';
+				preview.style.display = 'block';
+				preview.style.margin = '0';
+				preview.style.overflow = 'hidden';
+				preview.style.width = '100%';
+				preview.style.height = '0';
+
+				document.body.append(preview);
+			})();
+
+			function previewFrameLoaded() {
+				console.log('myframe is loaded', Date.now() - start);
+				preview.style.height = '100vh';
+				document.getElementById('loading').remove();
+			};
+			function sleep(ms) {
+				return new Promise(resolve => setTimeout(resolve, ms));
+			}
+			function isServerStart() {
+				return new Promise(resolve => {
+					fetch('${url}',{method: 'GET', headers: { accept: '*/*' } })
+						.then(() => resolve(true))
+						.catch(() => resolve(false))
+				});
+			}
 			</script>
 
-			<iframe id="preview" src="https://volar-authentication.herokuapp.com/?backUrl=${encodeURIComponent(url)}&autoBack=${autoBack}&lang=${vscode.env.language}" frameborder="0" style="display: block; margin: 0px; overflow: hidden; width: 100%; height: 100vh;" />
+			<div id="loading">
+				<p align="center">
+					<embed src='https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg' />
+				</p>
+
+				<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block; shape-rendering: auto;" width="200px" height="100px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+					<g transform="translate(20 50)">
+						<circle cx="0" cy="0" r="6" fill="#41b883">
+							<animateTransform attributeName="transform" type="scale" begin="-0.375s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>
+						</circle>
+					</g>
+					<g transform="translate(40 50)">
+						<circle cx="0" cy="0" r="6" fill="#34495e">
+							<animateTransform attributeName="transform" type="scale" begin="-0.25s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>
+						</circle>
+					</g>
+					<g transform="translate(60 50)">
+						<circle cx="0" cy="0" r="6" fill="#34495e">
+							<animateTransform attributeName="transform" type="scale" begin="-0.125s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>
+						</circle>
+					</g>
+					<g transform="translate(80 50)">
+						<circle cx="0" cy="0" r="6" fill="#41b883">
+							<animateTransform attributeName="transform" type="scale" begin="0s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>
+						</circle>
+					</g>
+				</svg>
+			</div>
 		`;
+
+		return html;
 	}
 }
