@@ -238,6 +238,10 @@ export function createVueDocument(
 					sourceMap: sfcScriptForTemplateLs.sourceMap.value,
 					embeddeds: [],
 				},
+				{
+					sourceMap: sfcScriptForTemplateLs.sourceMapTs.value,
+					embeddeds: [],
+				},
 			],
 		})
 

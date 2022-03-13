@@ -116,6 +116,32 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			return sourceMap;
 		}
 	});
+	const sourceMapTs = computed(() => {
+		if (textDocumentTs.value && sourceMap.value) {
+			const _sourceMap = new EmbeddedDocumentSourceMap(
+				sourceMapId,
+				vueDoc.value,
+				textDocumentTs.value,
+				lsType,
+				{
+					diagnostics: false,
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: false,
+					codeActions: false,
+				},
+				sourceMap.value.mappings.map(mapping => ({
+					...mapping,
+					data: {
+						...mapping.data,
+						capabilities: {}
+					},
+				})),
+			);
+
+			return _sourceMap;
+		}
+	});
 	const teleportSourceMap = computed(() => {
 		if (textDocument.value) {
 			const sourceMap = new TeleportSourceMap(textDocument.value);
@@ -132,6 +158,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		textDocument: textDocument as T extends 'script' ? ComputedRef<TextDocument> : ComputedRef<TextDocument | undefined>,
 		textDocumentTs,
 		sourceMap: sourceMap as T extends 'script' ? ComputedRef<EmbeddedDocumentSourceMap> : ComputedRef<EmbeddedDocumentSourceMap | undefined>,
+		sourceMapTs,
 		teleportSourceMap: teleportSourceMap as T extends 'script' ? ComputedRef<TeleportSourceMap> : ComputedRef<TeleportSourceMap | undefined>,
 	};
 
