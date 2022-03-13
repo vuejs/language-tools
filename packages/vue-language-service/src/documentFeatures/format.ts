@@ -134,7 +134,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!plugin.format)
 					continue;
 
-				const edits = await plugin.format(document, undefined, options);
+				let edits: vscode.TextEdit[] | null | undefined;
+
+				try {
+					edits = await plugin.format(document, undefined, options);
+				}
+				catch (err) {
+					console.error(err);
+				}
 
 				if (!edits)
 					continue;
