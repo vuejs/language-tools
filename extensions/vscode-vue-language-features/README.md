@@ -8,14 +8,6 @@ VueLF is a Language Support plugin built specifically for Vue 3. It's based on [
 
 [[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
 
-## Sponsors
-
-This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
-
-<a href="https://github.com/Leniolabs">
-  <img itemprop="image" src="https://github.com/Leniolabs.png" width="100" height="100">
-</a>
-
 ## Quick Start
 
 - [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-vue-ts)
@@ -169,6 +161,14 @@ const Bar = defineAsyncComponent<DefineComponent<Props>>(
 defineProps<Props>()
 </script>
 ```
+
+## Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg'/>
+  </a>
+</p>
 
 ## Credits
 

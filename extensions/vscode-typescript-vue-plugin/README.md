@@ -15,8 +15,8 @@ This plugin proxies TS server requests to provide some extra functionality:
 
 ## Sponsors
 
-This company is [sponsoring this project](https://github.com/sponsors/johnsoncodehk) to improve your DX. 💪
-
-<a href="https://github.com/Leniolabs">
-  <img itemprop="image" src="https://github.com/Leniolabs.png" width="100" height="100">
-</a>
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg'/>
+  </a>
+</p>

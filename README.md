@@ -38,5 +38,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 ## Sponsors
 
 <p align="center">
-  <img src='https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/sponsors.svg'/>
+  <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
+    <img src='https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg'/>
+  </a>
 </p>
