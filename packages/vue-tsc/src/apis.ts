@@ -20,8 +20,8 @@ export function register(
 
 	function getRootFileNames() {
 		const set = new Set([
-			...getProgram('script').getRootFileNames().filter(fileName => scriptTsHost.fileExists?.(fileName)),
-			...getProgram('template').getRootFileNames().filter(fileName => templateTsHost.fileExists?.(fileName)),
+			...getProgram('script')?.getRootFileNames().filter(fileName => scriptTsHost.fileExists?.(fileName)) ?? [],
+			...getProgram('template')?.getRootFileNames().filter(fileName => templateTsHost?.fileExists?.(fileName)) ?? [],
 		]);
 		return [...set.values()];
 	}
@@ -62,7 +62,7 @@ export function register(
 						continue;
 
 					const program = getProgram(sourceMap.lsType);
-					const embeddedSourceFile = program.getSourceFile(shared.uriToFsPath(sourceMap.mappedDocument.uri));
+					const embeddedSourceFile = program?.getSourceFile(shared.uriToFsPath(sourceMap.mappedDocument.uri));
 
 					if (embeddedSourceFile) {
 
@@ -82,24 +82,22 @@ export function register(
 	}
 
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType).getGlobalDiagnostics(cancellationToken))).flat();
+		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType)?.getGlobalDiagnostics(cancellationToken) ?? [])).flat();
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram('script').emit(targetSourceFile, (vueHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
-		const templateResult = getProgram('template').emit(targetSourceFile, undefined, cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram('script')!.emit(targetSourceFile, (vueHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const templateResult = getProgram('template')?.emit(targetSourceFile, undefined, cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
 			diagnostics: [
 				...transformDiagnostics('script', scriptResult.diagnostics),
-				...transformDiagnostics('template', templateResult.diagnostics),
+				...transformDiagnostics('template', templateResult?.diagnostics ?? []),
 			],
 		};
 	}
 	function getProgram(lsType: 'script' | 'template') {
-		const program = (lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw).getProgram();
-		if (!program) throw '!program';
-		return program;
+		return (lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw)?.getProgram();
 	}
 
 	// transform

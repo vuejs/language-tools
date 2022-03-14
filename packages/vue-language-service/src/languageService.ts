@@ -183,8 +183,8 @@ export function createLanguageService(
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		},
-	)
-	const templateTsPlugins = useTsPlugins(
+	);
+	const templateTsPlugins = tsRuntime.context.templateTsLs ? useTsPlugins(
 		tsRuntime.context.templateTsLs,
 		true,
 		{
@@ -194,7 +194,7 @@ export function createLanguageService(
 			includeCompletionsForModuleExports: false,
 			includeCompletionsForImportStatements: false,
 		},
-	)
+	) : [];
 	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
 			getSettings: _getSettings,

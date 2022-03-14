@@ -35,7 +35,7 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 		}[] = [];
 
 		const sourceFile = vueDocuments.get(document.uri);
-		const tsDoc = templateTsLs.__internal__.getTextDocument(document.uri);
+		const tsDoc = templateTsLs?.__internal__.getTextDocument(document.uri);
 
 		if (sourceFile) {
 

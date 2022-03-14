@@ -65,7 +65,7 @@ export default function (host: {
     getSemanticTokenLegend(): vscode.SemanticTokensLegend,
     getScanner(document: TextDocument): html.Scanner | undefined,
     scriptTsLs: ts2.LanguageService,
-    templateTsLs: ts2.LanguageService,
+    templateTsLs: ts2.LanguageService | undefined,
     templateLanguagePlugin: EmbeddedLanguagePlugin,
     isSupportedDocument: (document: TextDocument) => boolean,
     getNameCases?: (uri: string) => Promise<{
@@ -261,7 +261,12 @@ export default function (host: {
     async function resolveHtmlItem(item: vscode.CompletionItem, data: HtmlCompletionData) {
 
         let tsItem: vscode.CompletionItem | undefined = data.tsItem;
-        if (!tsItem) return item;
+
+        if (!tsItem)
+            return item;
+
+        if (!host.templateTsLs)
+            return item;
 
         tsItem = await host.templateTsLs.doCompletionResolve(tsItem);
         item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
@@ -750,11 +755,16 @@ export default function (host: {
         const projectVersion = ref<number>();
         const usedTags = ref(new Set<string>());
         const result = computed(() => {
+
+            const result = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
+
+            if (!host.templateTsLs)
+                return result;
+
             { // watching
                 projectVersion.value;
                 usedTags.value;
             }
-            const result = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
 
             pauseTracking();
             const doc = sfcTemplateScript.textDocument.value;

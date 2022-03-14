@@ -9,8 +9,8 @@ import type { VueDocuments } from './vueDocuments';
 import type { TextRange } from './utils/sourceMaps';
 
 export type LanguageServiceHostBase = ts2.LanguageServiceHost & {
-    getVueCompilationSettings?(): VueCompilerOptions,
-    getVueProjectVersion?(): string;
+	getVueCompilationSettings?(): VueCompilerOptions,
+	getVueProjectVersion?(): string;
 };
 
 export interface ITemplateScriptData {
@@ -27,6 +27,7 @@ export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
 	experimentalTemplateCompilerOptions?: any;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
+	experimentalDisableTemplateSupport?: boolean;
 }
 
 export type BasicRuntimeContext = {
@@ -54,10 +55,10 @@ export type TypeScriptFeaturesRuntimeContext = {
 	vueHost: LanguageServiceHostBase;
 	documentContext: DocumentContext;
 	scriptTsHost: ts.LanguageServiceHost;
-	templateTsHost: ts.LanguageServiceHost;
+	templateTsHost: ts.LanguageServiceHost | undefined;
 	scriptTsLsRaw: ts.LanguageService;
-	templateTsLsRaw: ts.LanguageService;
+	templateTsLsRaw: ts.LanguageService | undefined;
 	scriptTsLs: ts2.LanguageService;
-	templateTsLs: ts2.LanguageService;
-	getTsLs: (lsType: 'template' | 'script') => ts2.LanguageService;
+	templateTsLs: ts2.LanguageService | undefined;
+	getTsLs: <T extends 'template' | 'script'>(lsType: T) => T extends 'script' ? ts2.LanguageService : (ts2.LanguageService | undefined);
 }

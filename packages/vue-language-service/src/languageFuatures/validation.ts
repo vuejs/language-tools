@@ -157,7 +157,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 					const pluginCache = cacheMap.get(plugin.id) ?? cacheMap.set(plugin.id, new Map()).get(plugin.id)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = _lsType === 'nonTs' ? undefined : context.getTsLs(_lsType).__internal__.host.getProjectVersion?.();
+					const tsProjectVersion = _lsType === 'nonTs' ? undefined : context.getTsLs(_lsType)?.__internal__.host.getProjectVersion?.();
 
 					if (_lsType === 'nonTs') {
 						if (cache && cache.documentVersion === document.version) {

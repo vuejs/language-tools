@@ -23,6 +23,10 @@
 				"experimentalTemplateCompilerOptionsRequirePath": {
 					"type": "string",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
+				},
+				"experimentalDisableTemplateSupport": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				}
 			}
 		}

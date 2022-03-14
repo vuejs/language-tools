@@ -55,10 +55,13 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
 			const loopChecker = new Set<string>();
 			let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
-			withTeleports(fileName, position);
+
+			if (tsLs)
+				withTeleports(fileName, position, tsLs);
+
 			return symbols.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty);
 
-			function withTeleports(fileName: string, position: number) {
+			function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
 				if (loopChecker.has(fileName + ':' + position))
 					return;
 				loopChecker.add(fileName + ':' + position);
@@ -92,7 +95,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;
-						withTeleports(ref.fileName, teleRange.start);
+						withTeleports(ref.fileName, teleRange.start, tsLs);
 					}
 				}
 			}
@@ -108,14 +111,17 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 			const loopChecker = new Set<string>();
 			let textSpan: ts.TextSpan | undefined;
 			let symbols: ts.DefinitionInfo[] = [];
-			withTeleports(fileName, position);
+
+			if (tsLs)
+				withTeleports(fileName, position, tsLs);
+
 			if (!textSpan) return;
 			return {
 				textSpan: textSpan,
 				definitions: symbols?.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty),
 			};
 
-			function withTeleports(fileName: string, position: number) {
+			function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
 				if (loopChecker.has(fileName + ':' + position))
 					return;
 				loopChecker.add(fileName + ':' + position);
@@ -141,7 +147,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;
-						withTeleports(ref.fileName, teleRange.start);
+						withTeleports(ref.fileName, teleRange.start, tsLs);
 					}
 				}
 			}
@@ -161,10 +167,13 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
 			const loopChecker = new Set<string>();
 			let symbols: ts.ReferencedSymbol[] = [];
-			withTeleports(fileName, position);
+
+			if (tsLs)
+				withTeleports(fileName, position, tsLs);
+
 			return symbols.map(s => transformReferencedSymbol(lsType, s)).filter(shared.notEmpty);
 
-			function withTeleports(fileName: string, position: number) {
+			function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
 				if (loopChecker.has(fileName + ':' + position))
 					return;
 				loopChecker.add(fileName + ':' + position);
@@ -187,7 +196,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 						)) {
 							if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 								continue;
-							withTeleports(ref.fileName, teleRange.start);
+							withTeleports(ref.fileName, teleRange.start, tsLs);
 						}
 					}
 				}

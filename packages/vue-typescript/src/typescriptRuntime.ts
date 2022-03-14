@@ -38,15 +38,17 @@ export function createTypeScriptRuntime(
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
 
-    const templateTsHost = createTsLsHost('template');
+    const templateTsHost = options.compilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
     const scriptTsHost = createTsLsHost('script');
-    const templateTsLsRaw = ts.createLanguageService(templateTsHost);
+    const templateTsLsRaw = templateTsHost ? ts.createLanguageService(templateTsHost) : undefined;
     const scriptTsLsRaw = ts.createLanguageService(scriptTsHost);
 
-    shared.injectCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
+    if (templateTsHost && templateTsLsRaw) {
+        shared.injectCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
+    }
     shared.injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
 
-    const templateTsLs = ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw);
+    const templateTsLs = templateTsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw) : undefined;
     const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
     const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
@@ -102,7 +104,7 @@ export function createTypeScriptRuntime(
         templateTsLs,
         scriptTsLs,
         documentContext,
-        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs : scriptTsLs,
+        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs! : scriptTsLs,
     };
 
     return {
@@ -113,7 +115,7 @@ export function createTypeScriptRuntime(
         getScriptContentVersion: () => scriptContentVersion,
         dispose: () => {
             scriptTsLs.dispose();
-            templateTsLs.dispose();
+            templateTsLs?.dispose();
         },
         onInitProgress(cb: (p: number) => void) {
             initProgressCallback.push(cb);
@@ -422,7 +424,7 @@ export function createTypeScriptRuntime(
             lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
             let currentNums = 0;
             for (const uri of templateScriptUpdateUris) {
-                if (vueDocuments.get(uri)?.updateTemplateScript(templateTsLs)) {
+                if (templateTsLs && vueDocuments.get(uri)?.updateTemplateScript(templateTsLs)) {
                     templateScriptUpdated = true;
                 }
                 currentNums++;
