@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.2
+
+- feat: add option `vueCompilerOptions.experimentalDisableTemplateSupport` to disable template type-check and intellisense ([#577](https://github.com/johnsoncodehk/volar/issues/577))
+- fix: avoid props jsdoc erase by `withDefaults`
+- fix: sponsors svg never update
+
 ## 0.33.1
 
 - feat: improve formatting error tolerance ([#1033](https://github.com/johnsoncodehk/volar/issues/1033))
