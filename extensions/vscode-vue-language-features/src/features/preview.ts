@@ -401,7 +401,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			<div id="loading">
 				<p align="center">
 					<a href="#" onclick="onClickSvg()">
-						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg" />
+						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
 					</a>
 				</p>
 
