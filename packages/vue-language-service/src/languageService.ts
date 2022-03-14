@@ -44,6 +44,7 @@ import useScriptSetupConversionsPlugin from './vuePlugins/scriptSetupConversions
 import useTagNameCasingConversionsPlugin from './vuePlugins/tagNameCasingConversions';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './vuePlugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './vuePlugins/vueTemplateLanguage';
+import * as json from 'vscode-json-languageservice';
 
 import type * as _0 from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
@@ -115,6 +116,8 @@ export function createLanguageService(
 	const blockingRequests = new Set<Promise<any>>();
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
 
+	const jsonLs = json.getLanguageService({ schemaRequestService: vueHost?.schemaRequestService });
+
 	// plugins
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const customPlugins = loadCustomPlugins(vueHost.getCurrentDirectory()).map(plugin => defineLanguageServicePlugin(plugin));
@@ -160,7 +163,7 @@ export function createLanguageService(
 	);
 	const jsonPlugin = defineLanguageServicePlugin(
 		useJsonPlugin({
-			getJsonLs: () => services.jsonLs,
+			getJsonLs: () => jsonLs,
 			schema: undefined, // TODO
 		}),
 		{

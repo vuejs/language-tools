@@ -42,11 +42,9 @@ export type BasicRuntimeContext = {
 
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,
-	jsonLs: json.LanguageService,
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
-	getJsonDocument: (documrnt: TextDocument) => json.JSONDocument | undefined,
 	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
 }
 

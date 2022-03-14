@@ -4,7 +4,6 @@ import { TextRange } from '@volar/vue-code-gen/out/types';
 import * as fs from 'fs';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
-import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import { findClassNames } from './parsers/cssClasses';
@@ -58,7 +57,6 @@ export function createBasicRuntime() {
     const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
     const lessLs = css.getLESSLanguageService({ fileSystemProvider });
     const pugLs = pug.getLanguageService(htmlLs);
-    const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
     const postcssLs: css.LanguageService = {
         ...scssLs,
         doValidation: (document, stylesheet, documentSettings) => {
@@ -75,20 +73,17 @@ export function createBasicRuntime() {
     const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
     const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, [number, number][]>>();
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
-    const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
         fileSystemProvider,
         htmlLs,
         pugLs,
-        jsonLs,
         getCssLs,
         getStylesheet,
         getCssVBindRanges,
         getCssClasses,
         getHtmlDocument,
-        getJsonDocument,
         getPugDocument,
         updateHtmlCustomData,
         updateCssCustomData,
@@ -249,24 +244,6 @@ export function createBasicRuntime() {
 
         const doc = htmlLs.parseHTMLDocument(document);
         htmlDocuments.set(document, [document.version, doc]);
-
-        return doc;
-    }
-    function getJsonDocument(document: TextDocument) {
-
-        if (document.languageId !== 'json' && document.languageId !== 'jsonc')
-            return;
-
-        const cache = jsonDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
-
-        const doc = jsonLs.parseJSONDocument(document);
-        jsonDocuments.set(document, [document.version, doc]);
 
         return doc;
     }

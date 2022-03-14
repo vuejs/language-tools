@@ -25,6 +25,7 @@ import useVuePlugin from './vuePlugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
 import { loadCustomPlugins } from './languageService';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import * as json from 'vscode-json-languageservice';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -40,6 +41,8 @@ export function getDocumentService(
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
+
+    const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
 
 	// language support plugins
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
@@ -63,7 +66,7 @@ export function getDocumentService(
 		getStylesheet: services.getStylesheet
 	});
 	const jsonPlugin = useJsonPlugin({
-		getJsonLs: () => services.jsonLs,
+		getJsonLs: () => jsonLs,
 	});
 	const tsPlugin = useTsPlugin({
 		getTsLs: () => tsLs,
