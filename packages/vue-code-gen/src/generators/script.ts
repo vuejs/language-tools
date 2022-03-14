@@ -61,7 +61,8 @@ export function generate(
 	}
 	if (usedTypes.mergePropDefaults) {
 		codeGen.addText(`type __VLS_WithDefaults<P, D> = {
-			[K in keyof P]: K extends keyof D ? P[K] & {
+			// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
+			[K in keyof Pick<P, keyof P>]: K extends keyof D ? P[K] & {
 				default: D[K]
 			} : P[K]
 		};\n`);
