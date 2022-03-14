@@ -180,15 +180,6 @@ export function createVueDocument(
 	} : undefined));
 
 	// getters
-	const templateLsSourceMaps = computed(() => [
-		sfcScriptForTemplateLs.sourceMap.value,
-		sfcTemplateScript.sourceMap.value,
-		sfcEntryForTemplateLs.sourceMap.value,
-	].filter(shared.notEmpty));
-	const tsSourceMaps = computed(() => [
-		sfcScriptForScriptLs.sourceMap.value,
-		...templateLsSourceMaps.value,
-	]);
 	const templateLsTeleports = computed(() => [
 		sfcTemplateScript.teleportSourceMap.value,
 		sfcScriptForTemplateLs.teleportSourceMap.value,
@@ -299,7 +290,6 @@ export function createVueDocument(
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
 		getScriptTsDocument: untrack(() => sfcScriptForScriptLs.textDocument.value),
-		getTsSourceMaps: untrack(() => tsSourceMaps.value),
 		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
 		getTemplateScriptData: untrack(() => templateScriptData),
 		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive

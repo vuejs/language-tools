@@ -55,7 +55,11 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 				});
 			}
 
-			for (const sourceMap of sourceFile.getTsSourceMaps()) {
+			for (const sourceMap of sourceFile.getSourceMaps()) {
+
+				if (sourceMap.lsType === 'nonTs')
+					continue;
+
 				const virtualCode = sourceMap.mappedDocument.getText();
 				const scriptAst = ts.createSourceFile('foo.' + shared.languageIdToSyntax(sourceMap.mappedDocument.languageId), virtualCode, ts.ScriptTarget.Latest);
 
