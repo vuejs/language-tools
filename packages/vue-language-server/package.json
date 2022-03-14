@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-server",
-	"version": "0.33.1",
+	"version": "0.33.2",
 	"license": "MIT",
 	"files": [
 		"*.js",
@@ -23,8 +23,8 @@
 		"vscode-json-languageservice": "^4.1.10"
 	},
 	"dependencies": {
-		"@volar/shared": "0.33.1",
-		"@volar/vue-language-service": "0.33.1",
+		"@volar/shared": "0.33.2",
+		"@volar/vue-language-service": "0.33.2",
 		"@vue/shared": "^3.2.27",
 		"request-light": "^0.5.7",
 		"upath": "^2.0.1",
