@@ -378,6 +378,9 @@ export async function activate(context: vscode.ExtensionContext) {
 				document.body.append(preview);
 			})();
 
+			function onClickSvg() {
+				vscode.postMessage({ command: 'openUrl', data: 'https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg' });
+			}
 			function previewFrameLoaded() {
 				console.log('myframe is loaded', Date.now() - start);
 				preview.style.height = '100vh';
@@ -397,7 +400,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			<div id="loading">
 				<p align="center">
-					<embed src='https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg' />
+					<a href="#" onclick="onClickSvg()">
+						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg" />
+					</a>
 				</p>
 
 				<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block; shape-rendering: auto;" width="200px" height="100px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
