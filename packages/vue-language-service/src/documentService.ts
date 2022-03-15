@@ -93,7 +93,7 @@ export function getDocumentService(
 	].map(patchHtmlFormat);
 
 	const context: DocumentServiceRuntimeContext = {
-		compilerOptions: {},
+		vueCompilerOptions: {},
 		typescript: ts,
 		...services,
 		getVueDocument,
@@ -153,7 +153,7 @@ export function getDocumentService(
 			document.version.toString(),
 			context.htmlLs,
 			context.compileTemplate,
-			context.compilerOptions,
+			context.vueCompilerOptions,
 			context.typescript,
 			context.getCssVBindRanges,
 			context.getCssClasses,

@@ -15,7 +15,7 @@ export function createTypeScriptRuntime(
         typescript: typeof import('typescript/lib/tsserverlibrary'),
         htmlLs: html.LanguageService,
         compileTemplate: BasicRuntimeContext['compileTemplate'],
-        compilerOptions: BasicRuntimeContext['compilerOptions'],
+        vueCompilerOptions: BasicRuntimeContext['vueCompilerOptions'],
         getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
         getCssClasses: BasicRuntimeContext['getCssClasses'],
     },
@@ -38,7 +38,7 @@ export function createTypeScriptRuntime(
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
 
-    const templateTsHost = options.compilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
+    const templateTsHost = options.vueCompilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
     const scriptTsHost = createTsLsHost('script');
     const templateTsLsRaw = templateTsHost ? ts.createLanguageService(templateTsHost) : undefined;
     const scriptTsLsRaw = ts.createLanguageService(scriptTsHost);
@@ -391,7 +391,7 @@ export function createTypeScriptRuntime(
                     doc.version.toString(),
                     options.htmlLs,
                     options.compileTemplate,
-                    options.compilerOptions,
+                    options.vueCompilerOptions,
                     options.typescript,
                     options.getCssVBindRanges,
                     options.getCssClasses,

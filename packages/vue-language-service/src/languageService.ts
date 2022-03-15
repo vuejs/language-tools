@@ -106,12 +106,12 @@ export function createLanguageService(
 	}>,
 ) {
 
-	const compilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
+	const vueCompilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
 	const services = createBasicRuntime();
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
 		...services,
-		compilerOptions,
+		vueCompilerOptions,
 	}, vueHost, false);
 	const blockingRequests = new Set<Promise<any>>();
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
@@ -274,7 +274,7 @@ export function createLanguageService(
 		...services,
 		...tsRuntime.context,
 		typescript: ts,
-		compilerOptions,
+		vueCompilerOptions,
 		getTextDocument: tsRuntime.getHostDocument,
 		getPlugins: lsType => {
 			let plugins = [
