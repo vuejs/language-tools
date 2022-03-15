@@ -58,7 +58,6 @@ flowchart LR
     VSC_TS[typescript-language-features]
 
     %% LSP
-    LSP[Language Server Protocol]
     VUE_SERVER_API[volar-server-api]
     VUE_SERVER_DOC[volar-server-doc]
     VUE_SERVER_HTML[volar-server-html]
@@ -68,7 +67,7 @@ flowchart LR
     VSC_TSVP[vscode-typescript-vue-plugin]
 
     %% Volar - Packages
-    VUE_SEVER["@volar/vue-language-server"]
+    VUE_SERVER["@volar/vue-language-server"]
     VTS["@volar/vue-typescript"]
     VUE_SERVICE["@volar/vue-language-service"]
     PUG_SERVICE["@volar/pug-language-service"]
@@ -114,13 +113,12 @@ flowchart LR
     EMACS_VUE --> VUE_SERVERS
     VIM_LSP_VUE --> VUE_SERVERS
 
-    VUE_SERVERS --> LSP
-    LSP --> VUE_SEVER
+    VUE_SERVERS -- Language Server Protocol --> VUE_SERVER
 
     VSC --> VSC_TS
     VSC_TS --> VSC_TSVP
     VSC_TSVP --> TSVP
-    VUE_SEVER --> VUE_SERVICE
+    VUE_SERVER --> VUE_SERVICE
     VTSC --> VTS
     TSVP --> VTS
 
