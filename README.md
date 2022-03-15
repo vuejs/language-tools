@@ -69,6 +69,7 @@ flowchart LR
     %% Volar - Packages
     VUE_SERVER["@volar/vue-language-server"]
     VTS["@volar/vue-typescript"]
+    VUE_CG["@volar/vue-code-gen"]
     VUE_SERVICE["@volar/vue-language-service"]
     PUG_SERVICE["@volar/pug-language-service"]
     TS_SERVICE["@volar/typescript-language-service"]
@@ -128,6 +129,8 @@ flowchart LR
     VUE_SERVICE --> HTML_SERVICE
     VUE_SERVICE --> CSS_SERVICE
     VUE_SERVICE --> JSON_SERVICE
+
+    VTS --> VUE_CG
 ```
 
 ## Sponsors
