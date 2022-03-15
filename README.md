@@ -38,7 +38,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 ## High Level System Overview
 
 ```mermaid
-graph LR
+flowchart LR
     %% IDEs
     VSC[VSCode]
     COC[coc.nvim]
@@ -59,7 +59,6 @@ graph LR
 
     %% LSP
     LSP[Language Server Protocol]
-    VUE_SERVERS[vue-language-servers]
     VUE_SERVER_API[volar-server-api]
     VUE_SERVER_DOC[volar-server-doc]
     VUE_SERVER_HTML[volar-server-html]
@@ -83,6 +82,22 @@ graph LR
     JSON_SERVICE[vscode-json-languageservice]
     TS[typescript]
 
+    subgraph VUE_SERVERS
+      direction LR
+      VUE_SERVER_API
+      VUE_SERVER_DOC
+      VUE_SERVER_HTML
+    end
+
+    subgraph EMBEDDED_LANGUAGE_SERVICES
+      direction LR
+      TS_SERVICE --> TS
+      PUG_SERVICE
+      HTML_SERVICE
+      CSS_SERVICE
+      JSON_SERVICE
+    end
+
     VSC --> VSC_VUE
     COC --> COC_VUE
     NEO --> NEO_VUE
@@ -99,13 +114,7 @@ graph LR
     EMACS_VUE --> VUE_SERVERS
     VIM_LSP_VUE --> VUE_SERVERS
 
-    VUE_SERVERS --> VUE_SERVER_API
-    VUE_SERVERS --> VUE_SERVER_DOC
-    VUE_SERVERS --> VUE_SERVER_HTML
-
-    VUE_SERVER_API --> LSP
-    VUE_SERVER_DOC --> LSP
-    VUE_SERVER_HTML --> LSP
+    VUE_SERVERS --> LSP
     LSP --> VUE_SEVER
 
     VSC --> VSC_TS
@@ -121,7 +130,6 @@ graph LR
     VUE_SERVICE --> HTML_SERVICE
     VUE_SERVICE --> CSS_SERVICE
     VUE_SERVICE --> JSON_SERVICE
-    TS_SERVICE --> TS
 ```
 
 ## Sponsors
