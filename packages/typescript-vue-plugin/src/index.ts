@@ -25,8 +25,8 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			const proxyHost = createProxyHost(ts, info);
 			const services = createBasicRuntime();
-			const compilerOptions = proxyHost.host.getVueCompilationSettings?.() ?? {};
-			const tsRuntime = vue.createTypeScriptRuntime({ typescript: ts, ...services, compilerOptions }, proxyHost.host, true);
+			const vueCompilerOptions = proxyHost.host.getVueCompilationSettings?.() ?? {};
+			const tsRuntime = vue.createTypeScriptRuntime({ typescript: ts, ...services, vueCompilerOptions }, proxyHost.host, true);
 			const _tsPluginApis = apis.register(tsRuntime.context);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
 				getSemanticDiagnostics: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getSemanticDiagnostics, false),

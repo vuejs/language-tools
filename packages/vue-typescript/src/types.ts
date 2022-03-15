@@ -31,7 +31,7 @@ export interface VueCompilerOptions {
 
 export type BasicRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
-	compilerOptions: VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	compileTemplate(templateTextDocument: TextDocument): {
 		htmlTextDocument: TextDocument;
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
