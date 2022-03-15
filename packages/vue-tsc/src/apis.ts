@@ -28,7 +28,7 @@ export function register(
 
 	// for vue-tsc --noEmit --watch
 	function getBindAndCheckDiagnostics(sourceFile?: ts.SourceFile, cancellationToken?: ts.CancellationToken) {
-		return getSourceFileDiagnosticsWorker(sourceFile, cancellationToken, 'getBindAndCheckDiagnostics');
+		return getSourceFileDiagnosticsWorker(sourceFile, cancellationToken, 'getBindAndCheckDiagnostics' as 'getSemanticDiagnostics');
 	}
 
 	// for vue-tsc --noEmit
@@ -42,7 +42,7 @@ export function register(
 	function getSourceFileDiagnosticsWorker(
 		sourceFile: ts.SourceFile | undefined,
 		cancellationToken: ts.CancellationToken | undefined,
-		api: 'getBindAndCheckDiagnostics' | 'getSyntacticDiagnostics' | 'getSemanticDiagnostics',
+		api: 'getSyntacticDiagnostics' | 'getSemanticDiagnostics',
 	): readonly ts.DiagnosticWithLocation[] | readonly ts.Diagnostic[] {
 
 		if (sourceFile) {
@@ -66,7 +66,7 @@ export function register(
 
 					if (embeddedSourceFile) {
 
-						const errors = transformDiagnostics(sourceMap.lsType, (program as any)[api](embeddedSourceFile, cancellationToken));
+						const errors = transformDiagnostics(sourceMap.lsType, program?.[api](embeddedSourceFile, cancellationToken) ?? []);
 						results = results.concat(errors);
 					}
 				}
@@ -74,11 +74,11 @@ export function register(
 				return results;
 			}
 			else {
-				return (getProgram('script') as any)[api](sourceFile, cancellationToken);
+				return getProgram('script')?.[api](sourceFile, cancellationToken) ?? [];
 			}
 		}
 
-		return lsTypes.map(lsType => transformDiagnostics(lsType, (getProgram(lsType) as any)[api](sourceFile, cancellationToken))).flat();
+		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType)?.[api](sourceFile, cancellationToken) ?? [])).flat();
 	}
 
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
