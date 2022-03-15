@@ -43,7 +43,7 @@ flowchart LR
     VSC[VSCode]
     COC[coc.nvim]
     NEO[Neovim]
-    VIM_LSP[vim-lsp]
+    VIM[vim-lsp]
     SUBLIME[Sublime]
     ATOM[Atom]
     EMACS[Emacs]
@@ -51,16 +51,11 @@ flowchart LR
     %% Language Clients
     COC_VUE[yaegassy/coc-volar]
     NEO_VUE[neovim/nvim-lspconfig]
-    VIM_LSP_VUE[mattn/vim-lsp-settings]
+    VIM_VUE[mattn/vim-lsp-settings]
     SUBLIME_VUE[sublimelsp/LSP-volar]
     ATOM_VUE[kabiaa/atom-ide-volar]
     EMACS_VUE[jadestrong/lsp-volar]
-    VSC_TS[typescript-language-features]
-
-    %% LSP
-    VUE_SERVER_API[volar-server-api]
-    VUE_SERVER_DOC[volar-server-doc]
-    VUE_SERVER_HTML[volar-server-html]
+    VSC_TS[vscode.typescript-language-features]
 
     %% Volar - Extensions
     VSC_VUE[vscode-vue-language-features]
@@ -82,14 +77,14 @@ flowchart LR
     JSON_SERVICE[vscode-json-languageservice]
     TS[typescript]
 
-    subgraph VUE_SERVERS
+    subgraph VUE_CLIENTS[Language Clients]
       direction LR
-      VUE_SERVER_API
-      VUE_SERVER_DOC
-      VUE_SERVER_HTML
+      VUE_CLIENT_API[api]
+      VUE_CLIENT_DOC[doc]
+      VUE_CLIENT_HTML[html]
     end
 
-    subgraph EMBEDDED_LANGUAGE_SERVICES
+    subgraph Embedded Language Services
       direction LR
       TS_SERVICE
       PUG_SERVICE
@@ -104,17 +99,17 @@ flowchart LR
     SUBLIME --> SUBLIME_VUE
     ATOM --> ATOM_VUE
     EMACS --> EMACS_VUE
-    VIM_LSP --> VIM_LSP_VUE
+    VIM --> VIM_VUE
 
-    VSC_VUE --> VUE_SERVERS
-    COC_VUE --> VUE_SERVERS
-    NEO_VUE --> VUE_SERVERS
-    SUBLIME_VUE --> VUE_SERVERS
-    ATOM_VUE --> VUE_SERVERS
-    EMACS_VUE --> VUE_SERVERS
-    VIM_LSP_VUE --> VUE_SERVERS
+    VSC_VUE --> VUE_CLIENTS
+    COC_VUE --> VUE_CLIENTS
+    NEO_VUE --> VUE_CLIENTS
+    SUBLIME_VUE --> VUE_CLIENTS
+    ATOM_VUE --> VUE_CLIENTS
+    EMACS_VUE --> VUE_CLIENTS
+    VIM_VUE --> VUE_CLIENTS
 
-    VUE_SERVERS -- Language Server Protocol --> VUE_SERVER
+    VUE_CLIENTS -- Language Server Protocol --> VUE_SERVER
 
     VSC --> VSC_TS
     VSC_TS --> VSC_TSVP
