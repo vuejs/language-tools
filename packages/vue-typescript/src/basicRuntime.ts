@@ -72,7 +72,6 @@ export function createBasicRuntime() {
     const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
     const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
     const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, [number, number][]>>();
-    const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
     return {
         fileSystemProvider,
@@ -82,7 +81,6 @@ export function createBasicRuntime() {
         getStylesheet,
         getCssVBindRanges,
         getCssClasses,
-        getHtmlDocument,
         updateHtmlCustomData,
         updateCssCustomData,
         getHtmlDataProviders: () => htmlDataProviders,
@@ -226,23 +224,5 @@ export function createBasicRuntime() {
         }
 
         return classes;
-    }
-    function getHtmlDocument(document: TextDocument) {
-
-        if (document.languageId !== 'vue' && document.languageId !== 'html')
-            return;
-
-        const cache = htmlDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
-
-        const doc = htmlLs.parseHTMLDocument(document);
-        htmlDocuments.set(document, [document.version, doc]);
-
-        return doc;
     }
 }

@@ -43,7 +43,6 @@ export type BasicRuntimeContext = {
 	pugLs: pug.LanguageService,
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
-	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
 }
 
 export type TypeScriptFeaturesRuntimeContext = {
