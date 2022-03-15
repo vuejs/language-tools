@@ -91,7 +91,7 @@ flowchart LR
 
     subgraph EMBEDDED_LANGUAGE_SERVICES
       direction LR
-      TS_SERVICE --> TS
+      TS_SERVICE
       PUG_SERVICE
       HTML_SERVICE
       CSS_SERVICE
@@ -130,6 +130,7 @@ flowchart LR
     VUE_SERVICE --> CSS_SERVICE
     VUE_SERVICE --> JSON_SERVICE
 
+    VTS --> TS
     VTS --> VUE_CG
 ```
 
