@@ -393,8 +393,8 @@ export function generate(
 						? prop.arg.content
 						: prop.arg.loc.source
 
-					if (prop.modifiers.some(m => m === 'prop')) {
-						propName = propName.substr(1);
+					if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
+						propName = propName.substring(1);
 					}
 
 					if (prop.name === 'bind' || prop.name === 'model') {
@@ -858,8 +858,8 @@ export function generate(
 							: prop.arg.loc.source
 						: getModelValuePropName(node, isVue2);
 
-				if (prop.modifiers.some(m => m === 'prop')) {
-					propName_1 = propName_1.substr(1);
+				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
+					propName_1 = propName_1.substring(1);
 				}
 
 				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
