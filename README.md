@@ -35,6 +35,95 @@ Discord: https://discord.gg/5bnSSSSBbK
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
 
+## High Level System Overview
+
+```mermaid
+graph LR
+    %% IDEs
+    VSC[VSCode]
+    COC[coc.nvim]
+    NEO[Neovim]
+    VIM_LSP[vim-lsp]
+    SUBLIME[Sublime]
+    ATOM[Atom]
+    EMACS[Emacs]
+
+    %% Language Clients
+    COC_VUE[yaegassy/coc-volar]
+    NEO_VUE[neovim/nvim-lspconfig]
+    VIM_LSP_VUE[mattn/vim-lsp-settings]
+    SUBLIME_VUE[sublimelsp/LSP-volar]
+    ATOM_VUE[kabiaa/atom-ide-volar]
+    EMACS_VUE[jadestrong/lsp-volar]
+    VSC_TS[typescript-language-features]
+
+    %% LSP
+    LSP[Language Server Protocol]
+    VUE_SERVERS[vue-language-servers]
+    VUE_SERVER_API[volar-server-api]
+    VUE_SERVER_DOC[volar-server-doc]
+    VUE_SERVER_HTML[volar-server-html]
+
+    %% Volar - Extensions
+    VSC_VUE[vscode-vue-language-features]
+    VSC_TSVP[vscode-typescript-vue-plugin]
+
+    %% Volar - Packages
+    VUE_SEVER["@volar/vue-language-server"]
+    VTS["@volar/vue-typescript"]
+    VUE_SERVICE["@volar/vue-language-service"]
+    PUG_SERVICE["@volar/pug-language-service"]
+    TS_SERVICE["@volar/typescript-language-service"]
+    VTSC[vue-tsc]
+    TSVP[typescript-vue-plugin]
+
+    %% Language Services
+    HTML_SERVICE[vscode-html-languageservice]
+    CSS_SERVICE[vscode-css-languageservice]
+    JSON_SERVICE[vscode-json-languageservice]
+    TS[typescript]
+
+    VSC --> VSC_VUE
+    COC --> COC_VUE
+    NEO --> NEO_VUE
+    SUBLIME --> SUBLIME_VUE
+    ATOM --> ATOM_VUE
+    EMACS --> EMACS_VUE
+    VIM_LSP --> VIM_LSP_VUE
+
+    VSC_VUE --> VUE_SERVERS
+    COC_VUE --> VUE_SERVERS
+    NEO_VUE --> VUE_SERVERS
+    SUBLIME_VUE --> VUE_SERVERS
+    ATOM_VUE --> VUE_SERVERS
+    EMACS_VUE --> VUE_SERVERS
+    VIM_LSP_VUE --> VUE_SERVERS
+
+    VUE_SERVERS --> VUE_SERVER_API
+    VUE_SERVERS --> VUE_SERVER_DOC
+    VUE_SERVERS --> VUE_SERVER_HTML
+
+    VUE_SERVER_API --> LSP
+    VUE_SERVER_DOC --> LSP
+    VUE_SERVER_HTML --> LSP
+    LSP --> VUE_SEVER
+
+    VSC --> VSC_TS
+    VSC_TS --> VSC_TSVP
+    VSC_TSVP --> TSVP
+    VUE_SEVER --> VUE_SERVICE
+    VTSC --> VTS
+    TSVP --> VTS
+
+    VUE_SERVICE --> VTS
+    VUE_SERVICE --> TS_SERVICE
+    VUE_SERVICE --> PUG_SERVICE
+    VUE_SERVICE --> HTML_SERVICE
+    VUE_SERVICE --> CSS_SERVICE
+    VUE_SERVICE --> JSON_SERVICE
+    TS_SERVICE --> TS
+```
+
 ## Sponsors
 
 <p align="center">
