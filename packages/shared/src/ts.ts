@@ -139,7 +139,7 @@ function resolveVueCompilerOptions(rawOptions: {
 		try {
 			result.experimentalTemplateCompilerOptions = require(templateOptionsPath).default;
 		} catch (error) {
-			console.log('Failed to require "experimentalTemplateCompilerOptionsRequirePath":', templateOptionsPath);
+			console.warn('Failed to require "experimentalTemplateCompilerOptionsRequirePath":', templateOptionsPath);
 			console.error(error);
 		}
 	}
