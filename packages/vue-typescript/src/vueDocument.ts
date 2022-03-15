@@ -35,8 +35,8 @@ export function createVueDocument(
 	_content: string,
 	_version: string,
 	htmlLs: html.LanguageService,
-	compileTemplate: (document: TextDocument) => {
-		htmlTextDocument: TextDocument,
+	compileTemplate: (template: string, lang: string) => {
+		htmlText: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	} | undefined,
 	compilerOptions: VueCompilerOptions,
@@ -81,22 +81,22 @@ export function createVueDocument(
 	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
 	const sfcTemplateCompiled = computed<undefined | {
 		lang: string,
-		htmlTextDocument: TextDocument,
+		htmlText: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	}>(() => {
-		if (sfc.template && sfcTemplate.textDocument.value) {
-			const compiledHtml = compileTemplate(sfcTemplate.textDocument.value);
+		if (sfc.template) {
+			const compiledHtml = compileTemplate(sfc.template.content, sfc.template.lang);
 			if (compiledHtml) {
 				return {
 					lang: sfc.template.lang,
-					htmlTextDocument: compiledHtml.htmlTextDocument,
+					htmlText: compiledHtml.htmlText,
 					htmlToTemplate: compiledHtml.htmlToTemplate,
 				};
 			};
 		}
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
-		computed(() => sfcTemplateCompiled.value?.htmlTextDocument),
+		computed(() => sfcTemplateCompiled.value?.htmlText),
 		compilerOptions,
 	);
 	const sfcScript = useSfcScript(

@@ -73,7 +73,6 @@ export function createBasicRuntime() {
     const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
     const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, [number, number][]>>();
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
-    const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
         fileSystemProvider,
@@ -84,32 +83,31 @@ export function createBasicRuntime() {
         getCssVBindRanges,
         getCssClasses,
         getHtmlDocument,
-        getPugDocument,
         updateHtmlCustomData,
         updateCssCustomData,
         getHtmlDataProviders: () => htmlDataProviders,
         compileTemplate,
     };
 
-    function compileTemplate(templateDocument: TextDocument): {
-        htmlTextDocument: TextDocument,
+    function compileTemplate(template: string, lang: string): {
+        htmlText: string,
         htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
     } | undefined {
 
-        if (templateDocument.languageId === 'html') {
+        if (lang === 'html') {
             return {
-                htmlTextDocument: templateDocument,
+                htmlText: template,
                 htmlToTemplate: (htmlStart: number, htmlEnd: number) => ({ start: htmlStart, end: htmlEnd }),
             };
         }
 
-        if (templateDocument.languageId === 'jade') {
+        if (lang === 'pug') {
 
-            const pugDoc = getPugDocument(templateDocument);
+            const pugDoc = pugLs.parsePugDocument(template)
 
             if (pugDoc) {
                 return {
-                    htmlTextDocument: pugDoc.htmlTextDocument,
+                    htmlText: pugDoc.htmlTextDocument.getText(),
                     htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
                         const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
                         if (pugRange) {
@@ -244,24 +242,6 @@ export function createBasicRuntime() {
 
         const doc = htmlLs.parseHTMLDocument(document);
         htmlDocuments.set(document, [document.version, doc]);
-
-        return doc;
-    }
-    function getPugDocument(document: TextDocument) {
-
-        if (document.languageId !== 'jade')
-            return;
-
-        const cache = pugDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
-
-        const doc = pugLs.parsePugDocument(document);
-        pugDocuments.set(document, [document.version, doc]);
 
         return doc;
     }

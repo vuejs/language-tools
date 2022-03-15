@@ -5,13 +5,13 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, initialOffset = 0) => {
 
 		let htmlRange = pugDoc.sourceMap.getMappedRange(initialOffset, initialOffset, data => !data?.isEmptyTagCompletion)?.[0];
-		while (!htmlRange && initialOffset < pugDoc.pugCode.length) {
+		while (!htmlRange && initialOffset < pugDoc.pugTextDocument.getText().length) {
 			initialOffset++;
 			htmlRange = pugDoc.sourceMap.getMappedRange(initialOffset, initialOffset, data => !data?.isEmptyTagCompletion)?.[0];
 		}
 		if (!htmlRange) return;
 
-		const htmlScanner = htmlLs.createScanner(pugDoc.htmlCode, htmlRange.start);
+		const htmlScanner = htmlLs.createScanner(pugDoc.htmlTextDocument.getText(), htmlRange.start);
 
 		let offset: number | undefined;
 		let end: number | undefined;

@@ -1,6 +1,5 @@
 import type * as html from 'vscode-html-languageservice';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { parsePugDocument } from './pugDocument';
+import { register as registerParsePugDocument } from './pugDocument';
 import { register as registerCompletion } from './services/completion';
 import { register as registerDocumentHighlight } from './services/documentHighlight';
 import { register as registerDocumentLinks } from './services/documentLinks';
@@ -16,7 +15,7 @@ export interface LanguageService extends ReturnType<typeof getLanguageService> {
 
 export function getLanguageService(htmlLs: html.LanguageService) {
 	return {
-		parsePugDocument: (doc: TextDocument) => parsePugDocument(doc, htmlLs),
+		parsePugDocument: registerParsePugDocument(htmlLs),
 		doComplete: registerCompletion(htmlLs),
 		findDocumentHighlights: registerDocumentHighlight(htmlLs),
 		findDocumentLinks: registerDocumentLinks(htmlLs),

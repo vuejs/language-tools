@@ -9,7 +9,7 @@ import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './c
 import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './commonPlugins/html';
 import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './commonPlugins/jsDoc';
 import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './commonPlugins/json';
-import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './commonPlugins/pug';
+import usePugPlugin, { triggerCharacters as pugTriggerCharacters, createPugDocuments } from './commonPlugins/pug';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './commonPlugins/typescript';
 import * as d3 from './ideFeatures/d3';
 import * as tagNameCase from './ideFeatures/tagNameCase';
@@ -118,6 +118,9 @@ export function createLanguageService(
 
 	const jsonLs = json.getLanguageService({ schemaRequestService: vueHost?.schemaRequestService });
 
+	// embedded documents
+	const pugDocuments = createPugDocuments(services.pugLs);
+
 	// plugins
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const customPlugins = loadCustomPlugins(vueHost.getCurrentDirectory()).map(plugin => defineLanguageServicePlugin(plugin));
@@ -147,6 +150,7 @@ export function createLanguageService(
 			getSettings: _getSettings,
 			getPugLs: () => services.pugLs,
 			documentContext: tsRuntime.context.documentContext,
+			pugDocuments,
 		}),
 		pugTriggerCharacters,
 	);
@@ -366,7 +370,7 @@ export function createLanguageService(
 						return services.htmlLs.createScanner(document.getText());
 					}
 					else if (document.languageId === 'jade') {
-						const pugDocument = services.getPugDocument(document);
+						const pugDocument = pugDocuments.get(document);
 						if (pugDocument) {
 							return services.pugLs.createScanner(pugDocument);
 						}

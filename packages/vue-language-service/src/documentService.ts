@@ -6,7 +6,7 @@ import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
 import usePrettierPlugin from './commonPlugins/prettier';
 import useHtmlFormatPlugin from './commonPlugins/prettyhtml';
-import usePugPlugin from './commonPlugins/pug';
+import usePugPlugin, { createPugDocuments } from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
 import useSassFormatPlugin from './commonPlugins/sassFormatter';
 import useTsPlugin, { isTsDocument } from './commonPlugins/typescript';
@@ -44,6 +44,9 @@ export function getDocumentService(
 
     const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
 
+	// embedded documents
+	const pugDocuments = createPugDocuments(services.pugLs);
+
 	// language support plugins
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const customPlugins = loadCustomPlugins(rootPath);
@@ -58,7 +61,8 @@ export function getDocumentService(
 	}));
 	const pugPlugin = usePugPlugin({
 		getSettings: _getSettings,
-		getPugLs: () => services.pugLs
+		getPugLs: () => services.pugLs,
+		pugDocuments,
 	});
 	const cssPlugin = useCssPlugin({
 		getSettings: _getSettings,

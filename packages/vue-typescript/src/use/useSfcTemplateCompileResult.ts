@@ -1,19 +1,18 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
 import { compileSFCTemplate } from '@volar/vue-code-gen';
 import { VueCompilerOptions } from '../types';
 
 export function useSfcTemplateCompileResult(
-	htmlDocument: Ref<TextDocument | undefined>,
+	html: Ref<string | undefined>,
 	compilerOptions: VueCompilerOptions,
 ) {
 	return computed(() => {
 
-		if (!htmlDocument.value)
+		if (html.value === undefined)
 			return;
 
 		const compiled = compileSFCTemplate(
-			htmlDocument.value.getText(),
+			html.value,
 			compilerOptions.experimentalTemplateCompilerOptions,
 			compilerOptions.experimentalCompatMode ?? 3,
 		);

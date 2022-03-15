@@ -5,13 +5,42 @@ import * as pug from '@volar/pug-language-service';
 
 export const triggerCharacters: string[] = []; // TODO
 
+export type PugDocuments = ReturnType<typeof createPugDocuments>;
+
+export function createPugDocuments(pugLs: pug.LanguageService) {
+
+    const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
+
+    return {
+        get: getPugDocument,
+    };
+
+    function getPugDocument(document: TextDocument) {
+
+        if (document.languageId !== 'jade')
+            return;
+
+        const cache = pugDocuments.get(document);
+        if (cache) {
+            const [cacheVersion, cacheDoc] = cache;
+            if (cacheVersion === document.version) {
+                return cacheDoc;
+            }
+        }
+
+        const doc = pugLs.parsePugDocument(document.getText());
+        pugDocuments.set(document, [document.version, doc]);
+
+        return doc;
+    }
+}
+
 export default function (host: {
     getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getPugLs(): pug.LanguageService,
     documentContext?: html.DocumentContext,
+    pugDocuments: PugDocuments,
 }): EmbeddedLanguagePlugin {
-
-    const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
 
@@ -88,29 +117,10 @@ export default function (host: {
 
     function worker<T>(document: TextDocument, callback: (pugDocument: pug.PugDocument) => T) {
 
-        const pugDocument = getPugDocument(document);
+        const pugDocument = host.pugDocuments.get(document);
         if (!pugDocument)
             return;
 
         return callback(pugDocument);
-    }
-
-    function getPugDocument(document: TextDocument) {
-
-        if (document.languageId !== 'jade')
-            return;
-
-        const cache = pugDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
-
-        const doc = host.getPugLs().parsePugDocument(document);
-        pugDocuments.set(document, [document.version, doc]);
-
-        return doc;
     }
 }

@@ -122,7 +122,7 @@ export default function (host: {
                         let errorMessage = error.message;
 
                         if (!sourceRange) {
-                            const htmlText = sfcTemplateLanguageCompiled!.htmlTextDocument.getText().substring(templateHtmlRange.start, templateHtmlRange.end);
+                            const htmlText = sfcTemplateLanguageCompiled!.htmlText.substring(templateHtmlRange.start, templateHtmlRange.end);
                             errorMessage += '\n```html\n' + htmlText.trim() + '\n```';
                             sourceRange = { start: 0, end: 0 };
                         }

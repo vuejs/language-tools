@@ -32,8 +32,8 @@ export interface VueCompilerOptions {
 export type BasicRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	vueCompilerOptions: VueCompilerOptions,
-	compileTemplate(templateTextDocument: TextDocument): {
-		htmlTextDocument: TextDocument;
+	compileTemplate(templateText: string, templateLang: string): {
+		htmlText: string;
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
 	} | undefined
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
@@ -44,7 +44,6 @@ export type BasicRuntimeContext = {
 	getCssLs: (lang: string) => css.LanguageService | undefined,
 	getStylesheet: (documrnt: TextDocument) => css.Stylesheet | undefined,
 	getHtmlDocument: (documrnt: TextDocument) => html.HTMLDocument | undefined,
-	getPugDocument: (documrnt: TextDocument) => pug.PugDocument | undefined,
 }
 
 export type TypeScriptFeaturesRuntimeContext = {
