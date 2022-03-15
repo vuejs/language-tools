@@ -55,11 +55,20 @@ flowchart LR
     SUBLIME_VUE[sublimelsp/LSP-volar]
     ATOM_VUE[kabiaa/atom-ide-volar]
     EMACS_VUE[jadestrong/lsp-volar]
-    VSC_TS[vscode.typescript-language-features]
+
+    click COC_VUE "https://github.com/yaegassy/coc-volar"
+    click NEO_VUE "https://github.com/neovim/nvim-lspconfig"
+    click VIM_VUE "https://github.com/mattn/vim-lsp-settings"
+    click SUBLIME_VUE "https://github.com/sublimelsp/LSP-volar"
+    click ATOM_VUE "https://github.com/kabiaa/atom-ide-volar"
+    click EMACS_VUE "https://github.com/jadestrong/lsp-volar"
 
     %% Volar - Extensions
     VSC_VUE[vscode-vue-language-features]
     VSC_TSVP[vscode-typescript-vue-plugin]
+
+    click VSC_VUE "https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features"
+    click VSC_TSVP "https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin"
 
     %% Volar - Packages
     VUE_SERVER["@volar/vue-language-server"]
@@ -71,11 +80,27 @@ flowchart LR
     VTSC[vue-tsc]
     TSVP[typescript-vue-plugin]
 
-    %% Language Services
+    click VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
+    click VTS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
+    click VUE_CG "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-code-gen"
+    click VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
+    click PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
+    click TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
+    click VTSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
+    click TSVP "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
+
+    %% Extrnal Packages
     HTML_SERVICE[vscode-html-languageservice]
     CSS_SERVICE[vscode-css-languageservice]
     JSON_SERVICE[vscode-json-languageservice]
     TS[typescript]
+    VSC_TS[vscode.typescript-language-features]
+
+    click HTML_SERVICE "https://github.com/microsoft/vscode-html-languageservice"
+    click CSS_SERVICE "https://github.com/microsoft/vscode-css-languageservice"
+    click JSON_SERVICE "https://github.com/microsoft/vscode-json-languageservice"
+    click TS "https://github.com/microsoft/TypeScript"
+    click VSC_TS "https://github.com/microsoft/vscode/tree/main/extensions/typescript-language-features"
 
     subgraph VUE_CLIENTS[Language Clients]
       direction LR
@@ -83,6 +108,10 @@ flowchart LR
       VUE_CLIENT_DOC[doc]
       VUE_CLIENT_HTML[html]
     end
+
+    click VUE_CLIENT_API "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
+    click VUE_CLIENT_DOC "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
+    click VUE_CLIENT_HTML "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
 
     subgraph Embedded Language Services
       direction LR
