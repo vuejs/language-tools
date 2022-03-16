@@ -1,5 +1,6 @@
 import type * as html from 'vscode-html-languageservice';
-import type { PugDocument, Node } from '../pugDocument';
+import type { PugDocument } from '../pugDocument';
+import type { Node } from '../baseParse';
 import * as vscode from 'vscode-languageserver-types';
 
 export function register() {
