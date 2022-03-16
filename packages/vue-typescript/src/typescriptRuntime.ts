@@ -109,7 +109,6 @@ export function createTypeScriptRuntime(
 
     return {
         context,
-        apiHook,
         update,
         getHostDocument,
         getScriptContentVersion: () => scriptContentVersion,
@@ -134,19 +133,6 @@ export function createTypeScriptRuntime(
         if (lsType === 'script')
             return [];
         return vueDocuments.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
-    }
-    function apiHook<T extends (...args: any) => any>(
-        api: T,
-        shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
-    ) {
-        const handler = {
-            apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-                const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
-                update(_shouldUpdateTemplateScript);
-                return target.apply(thisArg, argumentsList);
-            }
-        };
-        return new Proxy<T>(api, handler);
     }
     function update(shouldUpdateTemplateScript: boolean) {
         const newVueProjectVersion = vueHost.getVueProjectVersion?.();
