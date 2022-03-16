@@ -1,12 +1,10 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import * as path from 'upath';
-import { createTester } from './createTester';
+import { tester } from './createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 
 const volarRoot = path.resolve(__dirname, '../../../..');
-const testRoot = path.resolve(__dirname, '../../testCases');
-const tester = createTester(testRoot);
 
 export function defineRename(action: {
 	fileName: string,
