@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configs';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
-import { RuntimeEnvironment } from './common';
+import { loadCustomPlugins, RuntimeEnvironment } from './common';
 
 export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
@@ -84,10 +84,12 @@ export async function createProject(
 		if (!vueLs) {
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
+				const customPlugins = loadCustomPlugins(languageServiceHost.getCurrentDirectory());
 				const vueLs = vue.createLanguageService(
 					{ typescript: ts },
 					languageServiceHost,
 					runtimeEnv.fileSystemProvide,
+					customPlugins,
 					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
 

@@ -23,7 +23,6 @@ import * as sharedServices from './utils/sharedLs';
 import useAutoWrapParenthesesPlugin from './vuePlugins/autoWrapParentheses';
 import useVuePlugin from './vuePlugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
-import { loadCustomPlugins } from './languageService';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as json from 'vscode-json-languageservice';
 import { getTsSettings } from './tsConfigs';
@@ -37,8 +36,8 @@ export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
-	rootPath: string,
 	fileSystemProvider: html.FileSystemProvider | undefined,
+	customPlugins: EmbeddedLanguagePlugin[],
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
@@ -53,7 +52,6 @@ export function getDocumentService(
 	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// language support plugins
-	const customPlugins = loadCustomPlugins(rootPath);
 	const vuePlugin = useVuePlugin({
 		getSettings: _getSettings,
 		getVueDocument,

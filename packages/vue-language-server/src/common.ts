@@ -7,6 +7,7 @@ import { createLsConfigs } from './configs';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service';
 
 export interface RuntimeEnvironment {
 	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
@@ -74,8 +75,8 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
 				},
 				lsConfigs?.getSettings,
-				folders[0],
 				runtimeEnv.fileSystemProvide,
+				loadCustomPlugins(folders[0]),
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);
@@ -122,5 +123,17 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 		}
 
 		return result;
+	}
+}
+
+export function loadCustomPlugins(dir: string) {
+	try {
+		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
+		const config: { plugins?: EmbeddedLanguagePlugin[] } = require(configPath);
+		return config.plugins ?? []
+	}
+	catch (err) {
+		console.warn('load volar.config.js failed in', dir);
+		return [];
 	}
 }

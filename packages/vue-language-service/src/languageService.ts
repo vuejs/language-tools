@@ -105,6 +105,7 @@ export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	vueHost: LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
+	_customPlugins: EmbeddedLanguagePlugin[],
 	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
@@ -176,7 +177,7 @@ export function createLanguageService(
 	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// plugins
-	const customPlugins = loadCustomPlugins(vueHost.getCurrentDirectory()).map(plugin => defineLanguageServicePlugin(plugin));
+	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getSettings: _getSettings,
@@ -590,17 +591,5 @@ export function createLanguageService(
 			}
 		};
 		return new Proxy<T>(api, handler);
-	}
-}
-
-export function loadCustomPlugins(dir: string) {
-	try {
-		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
-		const config: { plugins?: EmbeddedLanguagePlugin[] } = require(configPath);
-		return config.plugins ?? []
-	}
-	catch (err) {
-		console.warn('load volar.config.js failed in', dir);
-		return [];
 	}
 }
