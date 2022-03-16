@@ -4,7 +4,7 @@ import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
-import { findClassNames } from '../../vue-typescript/src/parsers/cssClasses';
+import { findClassNames } from './utils/cssClasses';
 
 interface StylesheetNode {
     children: StylesheetNode[] | undefined,

@@ -1,7 +1,6 @@
 import { CodeGen, margeCodeGen } from '@volar/code-gen';
 import * as shared from '@volar/shared';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
-import * as cssClasses from '../parsers/cssClasses';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
 import * as upath from 'upath';
@@ -45,10 +44,10 @@ export function useSfcTemplateScript(
 				obj[style.module] = { [style.textDocument.uri]: classes };
 			}
 			return obj;
-		}, {} as Record<string, Record<string, ReturnType<typeof cssClasses.findClassNames>>>)
+		}, {} as Record<string, Record<string, Record<string, TextRange[]>>>)
 	);
 	const cssScopedClasses = computed(() => {
-		const obj: Record<string, ReturnType<typeof cssClasses.findClassNames>> = {};
+		const obj: Record<string, Record<string, TextRange[]>> = {};
 		for (const style of styleDocuments.value) {
 			if (style.scoped) {
 				const classes = getCssClasses(style.textDocument);
