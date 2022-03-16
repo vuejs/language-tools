@@ -35,7 +35,7 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
 
     const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
     const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
-    const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, [number, number][]>>();
+    const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, TextRange[]>>();
 
     return {
         fileSystemProvider,

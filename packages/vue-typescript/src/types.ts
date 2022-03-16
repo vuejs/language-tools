@@ -36,7 +36,7 @@ export type BasicRuntimeContext = {
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
 	} | undefined
 	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
-	getCssClasses: (documrnt: TextDocument) => Record<string, [number, number][]>,
+	getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
 
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,

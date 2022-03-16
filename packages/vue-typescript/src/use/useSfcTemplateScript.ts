@@ -9,6 +9,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ITemplateScriptData, BasicRuntimeContext, VueCompilerOptions } from '../types';
 import * as SourceMaps from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
+import type { TextRange } from '@volar/vue-code-gen';
 
 export function useSfcTemplateScript(
 	vueUri: string,
@@ -162,7 +163,7 @@ export function useSfcTemplateScript(
 			}
 			codeGen.addText(`} from './${vueFileName}.__VLS_script';\n`);
 		}
-		function writeCssClassProperties(data: Record<string, Record<string, [number, number][]>>, patchRename: boolean, propertyType: string, optional: boolean) {
+		function writeCssClassProperties(data: Record<string, Record<string, TextRange[]>>, patchRename: boolean, propertyType: string, optional: boolean) {
 			const mappings = new Map<string, {
 				tsRange: {
 					start: number,
@@ -187,10 +188,7 @@ export function useSfcTemplateScript(
 							start: codeGen.getText().length + 1, // + '
 							end: codeGen.getText().length + 1 + className.length,
 						},
-						cssRanges: [...ranges].map(range => ({
-							start: range[0],
-							end: range[1],
-						})),
+						cssRanges: ranges,
 						mode: SourceMaps.Mode.Offset,
 						patchRename,
 					});
@@ -199,10 +197,7 @@ export function useSfcTemplateScript(
 							start: codeGen.getText().length,
 							end: codeGen.getText().length + className.length + 2,
 						},
-						cssRanges: [...ranges].map(range => ({
-							start: range[0],
-							end: range[1],
-						})),
+						cssRanges: ranges,
 						mode: SourceMaps.Mode.Totally,
 						patchRename,
 					});
