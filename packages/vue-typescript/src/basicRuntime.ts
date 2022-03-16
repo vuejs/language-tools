@@ -1,7 +1,5 @@
-import * as shared from '@volar/shared';
 import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
 import { TextRange } from '@volar/vue-code-gen/out/types';
-import * as fs from 'fs';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -17,41 +15,7 @@ interface StylesheetNode {
     type: number,
 }
 
-export function createBasicRuntime() {
-    const fileSystemProvider: html.FileSystemProvider = {
-        stat: (uri) => {
-            return new Promise<html.FileStat>((resolve, reject) => {
-                fs.stat(shared.uriToFsPath(uri), (err, stats) => {
-                    if (stats) {
-                        resolve({
-                            type: stats.isFile() ? html.FileType.File
-                                : stats.isDirectory() ? html.FileType.Directory
-                                    : stats.isSymbolicLink() ? html.FileType.SymbolicLink
-                                        : html.FileType.Unknown,
-                            ctime: stats.ctimeMs,
-                            mtime: stats.mtimeMs,
-                            size: stats.size,
-                        });
-                    }
-                    else {
-                        reject(err);
-                    }
-                });
-            });
-        },
-        readDirectory: (uri) => {
-            return new Promise<[string, html.FileType][]>((resolve, reject) => {
-                fs.readdir(shared.uriToFsPath(uri), (err, files) => {
-                    if (files) {
-                        resolve(files.map(file => [file, html.FileType.File]));
-                    }
-                    else {
-                        reject(err);
-                    }
-                });
-            });
-        },
-    }
+export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider | undefined) {
     const htmlLs = html.getLanguageService({ fileSystemProvider });
     const cssLs = css.getCSSLanguageService({ fileSystemProvider });
     const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
@@ -101,7 +65,7 @@ export function createBasicRuntime() {
 
         if (lang === 'pug') {
 
-            const pugDoc = pugLs.parsePugDocument(template)
+            const pugDoc = pugLs.parsePugDocument(template);
 
             if (pugDoc) {
                 return {

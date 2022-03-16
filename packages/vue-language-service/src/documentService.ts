@@ -27,6 +27,7 @@ import { loadCustomPlugins } from './languageService';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as json from 'vscode-json-languageservice';
 import { getTsSettings } from './tsConfigs';
+import type * as html from 'vscode-html-languageservice';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -35,10 +36,11 @@ export function getDocumentService(
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 	rootPath: string,
+	fileSystemProvider: html.FileSystemProvider | undefined,
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
-	const services = createBasicRuntime();
+	const services = createBasicRuntime(fileSystemProvider);
 	let tsLs: ts2.LanguageService;
 
 	const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });

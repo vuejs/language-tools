@@ -24,7 +24,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 
 			const proxyHost = createProxyHost(ts, info);
-			const services = createBasicRuntime();
+			const services = createBasicRuntime(undefined);
 			const vueCompilerOptions = proxyHost.host.getVueCompilationSettings?.() ?? {};
 			const tsRuntime = vue.createTypeScriptRuntime({ typescript: ts, ...services, vueCompilerOptions }, proxyHost.host, true);
 			const _tsPluginApis = apis.register(tsRuntime.context);

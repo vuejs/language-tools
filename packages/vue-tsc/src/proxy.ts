@@ -37,7 +37,7 @@ export function createProgramProxy(
 		getVueProjectVersion: () => '',
 		getProjectReferences: () => options.projectReferences,
 	};
-	const services = createBasicRuntime();
+	const services = createBasicRuntime(undefined);
 	const tsRuntime = createTypeScriptRuntime({ typescript: ts, ...services, vueCompilerOptions }, vueLsHost, false);
 	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
 	if (!tsProgram) throw '!tsProgram';

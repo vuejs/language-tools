@@ -87,6 +87,7 @@ export async function createProject(
 				const vueLs = vue.createLanguageService(
 					{ typescript: ts },
 					languageServiceHost,
+					runtimeEnv.fileSystemProvide,
 					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
 

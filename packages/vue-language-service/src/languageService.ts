@@ -48,7 +48,7 @@ import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-import type * as _0 from 'vscode-html-languageservice';
+import type * as html from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
 import { getTsSettings } from './tsConfigs';
 
@@ -102,6 +102,7 @@ export function getTriggerCharacters(tsVersion: string) {
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	vueHost: LanguageServiceHost,
+	fileSystemProvider: html.FileSystemProvider | undefined,
 	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
@@ -110,7 +111,7 @@ export function createLanguageService(
 ) {
 
 	const vueCompilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
-	const services = createBasicRuntime();
+	const services = createBasicRuntime(fileSystemProvider);
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
 		...services,

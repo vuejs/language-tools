@@ -22,4 +22,5 @@ createLanguageServer(connection, {
     onDidChangeConfiguration(settings) {
         configureHttpRequests(settings.http && settings.http.proxy, settings.http && settings.http.proxyStrictSSL);
     },
+    fileSystemProvide: undefined, // TODO
 });

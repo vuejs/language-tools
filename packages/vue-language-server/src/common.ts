@@ -6,12 +6,14 @@ import * as vue from '@volar/vue-language-service';
 import { createLsConfigs } from './configs';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
+import type { FileSystemProvider } from 'vscode-html-languageservice';
 
 export interface RuntimeEnvironment {
 	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
 	loadTypescriptLocalized: (initOptions: shared.ServerInitializationOptions) => any,
 	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string> },
 	onDidChangeConfiguration?: (settings: any) => void,
+	fileSystemProvide: FileSystemProvider | undefined,
 }
 
 export function createLanguageServer(connection: vscode.Connection, runtimeEnv: RuntimeEnvironment) {
@@ -73,6 +75,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 				},
 				lsConfigs?.getSettings,
 				folders[0],
+				runtimeEnv.fileSystemProvide,
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, noStateLs);
