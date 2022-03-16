@@ -7,7 +7,7 @@ import * as templateGen from '@volar/vue-code-gen/out/generators/template_script
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { getVueLibraryName } from '../utils/localTypes';
-import type { BasicRuntimeContext } from '../types';
+import type { TextRange } from '@volar/vue-code-gen';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
@@ -20,7 +20,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
 	isVue2: boolean,
-	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
+	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
 ) {
 
 	let lastDocumentText = '';

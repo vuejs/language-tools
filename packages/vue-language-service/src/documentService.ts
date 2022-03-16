@@ -1,5 +1,5 @@
 import * as ts2 from '@volar/typescript-language-service';
-import { createBasicRuntime, createVueDocument, VueDocument } from '@volar/vue-typescript';
+import { createVueDocument, VueDocument } from '@volar/vue-typescript';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
@@ -28,6 +28,7 @@ import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as json from 'vscode-json-languageservice';
 import { getTsSettings } from './tsConfigs';
 import type * as html from 'vscode-html-languageservice';
+import { createBasicRuntime } from './basicRuntime';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -99,9 +100,7 @@ export function getDocumentService(
 	].map(patchHtmlFormat);
 
 	const context: DocumentServiceRuntimeContext = {
-		vueCompilerOptions: {},
 		typescript: ts,
-		...services,
 		getVueDocument,
 		getPlugins() {
 			return [
@@ -157,12 +156,12 @@ export function getDocumentService(
 			document.uri,
 			document.getText(),
 			document.version.toString(),
-			context.htmlLs,
-			context.compileTemplate,
-			context.vueCompilerOptions,
+			services.htmlLs,
+			services.compileTemplate,
+			{},
 			context.typescript,
-			context.getCssVBindRanges,
-			context.getCssClasses,
+			services.getCssVBindRanges,
+			services.getCssClasses,
 		);
 		vueDocuments.set(document, vueDoc);
 		return vueDoc;

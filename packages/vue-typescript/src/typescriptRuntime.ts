@@ -3,30 +3,30 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { BasicRuntimeContext } from '.';
 import { createVueDocument } from './vueDocument';
 import { createVueDocuments } from './vueDocuments';
-import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext } from './types';
+import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
+import type { TextRange } from '@volar/vue-code-gen';
 
 export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
-export function createTypeScriptRuntime(
-    options: {
-        typescript: typeof import('typescript/lib/tsserverlibrary'),
-        htmlLs: html.LanguageService,
-        compileTemplate: BasicRuntimeContext['compileTemplate'],
-        vueCompilerOptions: BasicRuntimeContext['vueCompilerOptions'],
-        getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
-        getCssClasses: BasicRuntimeContext['getCssClasses'],
-    },
+export function createTypeScriptRuntime(options: {
+    typescript: typeof import('typescript/lib/tsserverlibrary'),
+    vueCompilerOptions: VueCompilerOptions,
+    compileTemplate(templateText: string, templateLang: string): {
+        htmlText: string;
+        htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
+    } | undefined
+    getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
+    getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
     vueHost: LanguageServiceHostBase,
-    isTsPlugin = false,
-) {
+    isTsPlugin?: boolean,
+}) {
 
     const { typescript: ts } = options;
 
-    const isVue2 = vueHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
+    const isVue2 = options.vueHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
     let vueProjectVersion: string | undefined;
     let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
@@ -37,6 +37,7 @@ export function createTypeScriptRuntime(
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
 
+    const htmlLs = html.getLanguageService();
     const templateTsHost = options.vueCompilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
     const scriptTsHost = createTsLsHost('script');
     const templateTsLsRaw = templateTsHost ? ts.createLanguageService(templateTsHost) : undefined;
@@ -48,7 +49,7 @@ export function createTypeScriptRuntime(
     shared.injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
 
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
-    const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
+    const compilerHost = ts.createCompilerHost(options.vueHost.getCompilationSettings());
     const documentContext: html.DocumentContext = {
         resolveReference(ref: string, base: string) {
 
@@ -56,14 +57,14 @@ export function createTypeScriptRuntime(
             const resolveResult = ts.resolveModuleName(
                 ref,
                 isUri ? shared.uriToFsPath(base) : base,
-                vueHost.getCompilationSettings(),
+                options.vueHost.getCompilationSettings(),
                 compilerHost,
             );
             const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
             const dirs = new Set<string>();
 
-            const fileExists = vueHost.fileExists ?? ts.sys.fileExists;
-            const directoryExists = vueHost.directoryExists ?? ts.sys.directoryExists;
+            const fileExists = options.vueHost.fileExists ?? ts.sys.fileExists;
+            const directoryExists = options.vueHost.directoryExists ?? ts.sys.directoryExists;
 
             for (const failed of failedLookupLocations) {
                 let path = failed;
@@ -92,7 +93,7 @@ export function createTypeScriptRuntime(
     }
 
     const context: TypeScriptFeaturesRuntimeContext = {
-        vueHost,
+        vueHost: options.vueHost,
         vueDocuments,
         templateTsHost,
         scriptTsHost,
@@ -129,25 +130,25 @@ export function createTypeScriptRuntime(
         return vueDocuments.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
     }
     function update(shouldUpdateTemplateScript: boolean) {
-        const newVueProjectVersion = vueHost.getVueProjectVersion?.();
+        const newVueProjectVersion = options.vueHost.getVueProjectVersion?.();
         if (newVueProjectVersion === undefined || newVueProjectVersion !== vueProjectVersion) {
 
             vueProjectVersion = newVueProjectVersion;
 
-            const newFileUris = new Set([...vueHost.getScriptFileNames()].filter(file => file.endsWith('.vue')).map(shared.fsPathToUri));
+            const newFileUris = new Set([...options.vueHost.getScriptFileNames()].filter(file => file.endsWith('.vue')).map(shared.fsPathToUri));
             const removeUris: string[] = [];
             const addUris: string[] = [];
             const updateUris: string[] = [];
 
             for (const sourceFile of vueDocuments.getAll()) {
                 const fileName = shared.uriToFsPath(sourceFile.uri);
-                if (!newFileUris.has(sourceFile.uri) && !vueHost.fileExists?.(fileName)) {
+                if (!newFileUris.has(sourceFile.uri) && !options.vueHost.fileExists?.(fileName)) {
                     // delete
                     removeUris.push(sourceFile.uri);
                 }
                 else {
                     // update
-                    const newVersion = vueHost.getScriptVersion(fileName);
+                    const newVersion = options.vueHost.getScriptVersion(fileName);
                     if (sourceFile.getVersion() !== newVersion) {
                         updateUris.push(sourceFile.uri);
                     }
@@ -195,8 +196,8 @@ export function createTypeScriptRuntime(
         const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
         const documentVersions = new WeakMap<TextDocument, string>();
         const tsHost: ts.LanguageServiceHost = {
-            ...vueHost,
-            fileExists: vueHost.fileExists
+            ...options.vueHost,
+            fileExists: options.vueHost.fileExists
                 ? fileName => {
                     // .vue.js -> .vue
                     // .vue.ts -> .vue
@@ -206,7 +207,7 @@ export function createTypeScriptRuntime(
                         const uri = shared.fsPathToUri(fileNameTrim);
                         const sourceFile = vueDocuments.get(uri);
                         if (!sourceFile) {
-                            const fileExists = !!vueHost.fileExists?.(fileNameTrim);
+                            const fileExists = !!options.vueHost.fileExists?.(fileNameTrim);
                             if (fileExists) {
                                 updateSourceFiles([uri], false); // create virtual files
                             }
@@ -214,18 +215,18 @@ export function createTypeScriptRuntime(
                         return !!vueDocuments.fromEmbeddedDocumentUri(lsType, shared.fsPathToUri(fileName));
                     }
                     else {
-                        return !!vueHost.fileExists?.(fileName);
+                        return !!options.vueHost.fileExists?.(fileName);
                     }
                 }
                 : undefined,
             getProjectVersion: () => {
-                return vueHost.getProjectVersion?.() + '-' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
+                return options.vueHost.getProjectVersion?.() + '-' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
             },
             getScriptFileNames,
             getScriptVersion,
             getScriptSnapshot,
             readDirectory: (path, extensions, exclude, include, depth) => {
-                const result = vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
+                const result = options.vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
                 for (const uri of vueDocuments.getUris()) {
                     const vuePath = shared.uriToFsPath(uri);
                     const vuePath2 = upath.join(path, upath.basename(vuePath));
@@ -256,7 +257,7 @@ export function createTypeScriptRuntime(
 
         if (lsType === 'template') {
             tsHost.getCompilationSettings = () => ({
-                ...vueHost.getCompilationSettings(),
+                ...options.vueHost.getCompilationSettings(),
                 jsx: ts.JsxEmit.Preserve,
             });
         }
@@ -269,8 +270,8 @@ export function createTypeScriptRuntime(
             for (const sourceMap of vueDocuments.getEmbeddeds(lsType)) {
                 tsFileNames.push(shared.uriToFsPath(sourceMap.mappedDocument.uri)); // virtual .ts
             }
-            for (const fileName of vueHost.getScriptFileNames()) {
-                if (isTsPlugin) {
+            for (const fileName of options.vueHost.getScriptFileNames()) {
+                if (options.isTsPlugin) {
                     tsFileNames.push(fileName); // .vue + .ts
                 }
                 else if (!fileName.endsWith('.vue')) {
@@ -296,7 +297,7 @@ export function createTypeScriptRuntime(
                     return version;
                 }
             }
-            return vueHost.getScriptVersion(fileName);
+            return options.vueHost.getScriptVersion(fileName);
         }
         function getScriptSnapshot(fileName: string) {
             const version = getScriptVersion(fileName);
@@ -316,7 +317,7 @@ export function createTypeScriptRuntime(
                 scriptSnapshots.set(fileName, [version, snapshot]);
                 return snapshot;
             }
-            let tsScript = vueHost.getScriptSnapshot(fileName);
+            let tsScript = options.vueHost.getScriptSnapshot(fileName);
             if (tsScript) {
                 if (lsType === 'template' && basename === 'runtime-dom.d.ts') {
                     // allow arbitrary attributes
@@ -344,21 +345,21 @@ export function createTypeScriptRuntime(
 
             const fileName = shared.uriToFsPath(uri);
             const sourceFile = vueDocuments.get(uri);
-            const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
+            const scriptSnapshot = options.vueHost.getScriptSnapshot(fileName);
 
             if (!scriptSnapshot) {
                 continue;
             }
 
             const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-            const scriptVersion = vueHost.getScriptVersion(fileName);
+            const scriptVersion = options.vueHost.getScriptVersion(fileName);
 
             if (!sourceFile) {
                 vueDocuments.set(uri, createVueDocument(
                     uri,
                     scriptText,
                     scriptVersion,
-                    options.htmlLs,
+                    htmlLs,
                     options.compileTemplate,
                     options.vueCompilerOptions,
                     options.typescript,

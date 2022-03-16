@@ -10,6 +10,7 @@ import { register as registerSelectRanges } from './services/selectionRanges';
 import { register as registerFoldingRanges } from './services/foldingRanges';
 
 export { PugDocument } from './pugDocument';
+export { baseParse } from './baseParse';
 
 export interface LanguageService extends ReturnType<typeof getLanguageService> { }
 

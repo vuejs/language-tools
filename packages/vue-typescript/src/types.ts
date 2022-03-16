@@ -28,21 +28,6 @@ export interface VueCompilerOptions {
 	experimentalDisableTemplateSupport?: boolean;
 }
 
-export type BasicRuntimeContext = {
-	typescript: typeof import('typescript/lib/tsserverlibrary'),
-	vueCompilerOptions: VueCompilerOptions,
-	compileTemplate(templateText: string, templateLang: string): {
-		htmlText: string;
-		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
-	} | undefined
-	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
-	getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
-
-	htmlLs: html.LanguageService,
-	pugLs: pug.LanguageService,
-	getCssLs: (lang: string) => css.LanguageService | undefined,
-}
-
 export type TypeScriptFeaturesRuntimeContext = {
 	vueDocuments: VueDocuments;
 	vueHost: LanguageServiceHostBase;

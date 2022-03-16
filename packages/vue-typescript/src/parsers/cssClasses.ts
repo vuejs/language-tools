@@ -1,17 +1,14 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as css from 'vscode-css-languageservice';
-import { BasicRuntimeContext } from '../types';
 import type { TextRange } from '@volar/vue-code-gen';
 
 export function findClassNames(
 	css: typeof import('vscode-css-languageservice'),
 	doc: TextDocument,
 	ss: css.Stylesheet,
-	getCssLs: BasicRuntimeContext['getCssLs'],
+	cssLs: css.LanguageService,
 ) {
 	const result: Record<string, TextRange[]> = {};
-	const cssLs = getCssLs(doc.languageId);
-	if (!cssLs) return result;
 	const symbols = cssLs.findDocumentSymbols(doc, ss);
 	const usedNodes = new Set<number>();
 	for (const s of symbols) {

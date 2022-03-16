@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './commonPlugins/css';
@@ -47,10 +47,12 @@ import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemantic
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as pug from '@volar/pug-language-service';
 
 import type * as html from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
 import { getTsSettings } from './tsConfigs';
+import { createBasicRuntime } from './basicRuntime';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -114,9 +116,51 @@ export function createLanguageService(
 	const services = createBasicRuntime(fileSystemProvider);
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
-		...services,
 		vueCompilerOptions,
-	}, vueHost, false);
+		// TODO: move to plugin
+		compileTemplate(template: string, lang: string): {
+			htmlText: string,
+			htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
+		} | undefined {
+
+			if (lang === 'html') {
+				return {
+					htmlText: template,
+					htmlToTemplate: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
+				};
+			}
+
+			if (lang === 'pug') {
+
+				const pugDoc = pug.baseParse(template);
+
+				if (pugDoc) {
+					return {
+						htmlText: pugDoc.htmlCode,
+						htmlToTemplate: (htmlStart, htmlEnd) => {
+							const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
+							if (pugRange) {
+								return pugRange;
+							}
+							else {
+
+								const pugStart = pugDoc.sourceMap.getSourceRange(htmlStart, htmlStart, data => !data?.isEmptyTagCompletion)?.[0]?.start;
+								const pugEnd = pugDoc.sourceMap.getSourceRange(htmlEnd, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0]?.end;
+
+								if (pugStart !== undefined && pugEnd !== undefined) {
+									return { start: pugStart, end: pugEnd };
+								}
+							}
+						},
+					};
+				}
+			}
+		},
+		getCssClasses: services.getCssClasses,
+		getCssVBindRanges: services.getCssVBindRanges,
+		vueHost,
+		isTsPlugin: false,
+	});
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const tsSettings = getTsSettings(_getSettings);
 
@@ -284,14 +328,12 @@ export function createLanguageService(
 	}
 
 	const context: LanguageServiceRuntimeContext = {
-		...services,
 		vueHost,
 		tsRuntime,
 		scriptTsLs,
 		templateTsLs,
 		getTsLs: lsType => lsType === 'template' ? templateTsLs! : scriptTsLs,
 		typescript: ts,
-		vueCompilerOptions,
 		getTextDocument,
 		getPlugins: lsType => {
 			let plugins = [

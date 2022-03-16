@@ -2,7 +2,8 @@ import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import * as apis from './apis';
-import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import * as pug from '@volar/pug-language-service';
 
 export function createProgramProxy(
 	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
@@ -37,8 +38,53 @@ export function createProgramProxy(
 		getVueProjectVersion: () => '',
 		getProjectReferences: () => options.projectReferences,
 	};
-	const services = createBasicRuntime(undefined);
-	const tsRuntime = createTypeScriptRuntime({ typescript: ts, ...services, vueCompilerOptions }, vueLsHost, false);
+	const tsRuntime = createTypeScriptRuntime({
+		typescript: ts,
+		// TODO: move to plugin
+		compileTemplate(template: string, lang: string): {
+			htmlText: string,
+			htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
+		} | undefined {
+
+			if (lang === 'html') {
+				return {
+					htmlText: template,
+					htmlToTemplate: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
+				};
+			}
+
+			if (lang === 'pug') {
+
+				const pugDoc = pug.baseParse(template);
+
+				if (pugDoc) {
+					return {
+						htmlText: pugDoc.htmlCode,
+						htmlToTemplate: (htmlStart, htmlEnd) => {
+							const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
+							if (pugRange) {
+								return pugRange;
+							}
+							else {
+
+								const pugStart = pugDoc.sourceMap.getSourceRange(htmlStart, htmlStart, data => !data?.isEmptyTagCompletion)?.[0]?.start;
+								const pugEnd = pugDoc.sourceMap.getSourceRange(htmlEnd, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0]?.end;
+
+								if (pugStart !== undefined && pugEnd !== undefined) {
+									return { start: pugStart, end: pugEnd };
+								}
+							}
+						},
+					};
+				}
+			}
+		},
+		getCssClasses: () => ({}),
+		getCssVBindRanges: () => [],
+		vueCompilerOptions,
+		vueHost: vueLsHost,
+		isTsPlugin: false,
+	});
 	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
 	if (!tsProgram) throw '!tsProgram';
 

@@ -4,7 +4,7 @@ import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
-import { findClassNames } from './parsers/cssClasses';
+import { findClassNames } from '../../vue-typescript/src/parsers/cssClasses';
 
 interface StylesheetNode {
     children: StylesheetNode[] | undefined,
@@ -16,6 +16,7 @@ interface StylesheetNode {
 }
 
 export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider | undefined) {
+
     const htmlLs = html.getLanguageService({ fileSystemProvider });
     const cssLs = css.getCSSLanguageService({ fileSystemProvider });
     const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
@@ -38,7 +39,6 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
     const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, TextRange[]>>();
 
     return {
-        fileSystemProvider,
         htmlLs,
         pugLs,
         getCssLs,
@@ -48,47 +48,8 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
         updateHtmlCustomData,
         updateCssCustomData,
         getHtmlDataProviders: () => htmlDataProviders,
-        compileTemplate,
     };
 
-    function compileTemplate(template: string, lang: string): {
-        htmlText: string,
-        htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
-    } | undefined {
-
-        if (lang === 'html') {
-            return {
-                htmlText: template,
-                htmlToTemplate: (htmlStart: number, htmlEnd: number) => ({ start: htmlStart, end: htmlEnd }),
-            };
-        }
-
-        if (lang === 'pug') {
-
-            const pugDoc = pugLs.parsePugDocument(template);
-
-            if (pugDoc) {
-                return {
-                    htmlText: pugDoc.htmlTextDocument.getText(),
-                    htmlToTemplate: (htmlStart: number, htmlEnd: number) => {
-                        const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
-                        if (pugRange) {
-                            return pugRange;
-                        }
-                        else {
-
-                            const pugStart = pugDoc.sourceMap.getSourceRange(htmlStart, htmlStart, data => !data?.isEmptyTagCompletion)?.[0]?.start;
-                            const pugEnd = pugDoc.sourceMap.getSourceRange(htmlEnd, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0]?.end;
-
-                            if (pugStart !== undefined && pugEnd !== undefined) {
-                                return { start: pugStart, end: pugEnd };
-                            }
-                        }
-                    },
-                };
-            }
-        }
-    }
     function updateHtmlCustomData(customData: { [id: string]: html.HTMLDataV1 }) {
         htmlDataProviders = [];
         for (const id in customData) {
@@ -167,12 +128,15 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
     function getCssClasses(textDocument: TextDocument) {
 
         let classes = stylesheetClasses.get(textDocument);
+
         if (!classes) {
             classes = {};
 
             const stylesheet = getStylesheet(textDocument);
-            if (stylesheet) {
-                const classNames = findClassNames(css, textDocument, stylesheet, getCssLs);
+            const cssLs = getCssLs(textDocument.languageId);
+
+            if (stylesheet && cssLs) {
+                const classNames = findClassNames(css, textDocument, stylesheet, cssLs);
                 for (const className in classNames) {
                     const offsets = classNames[className];
                     for (const offset of offsets) {

@@ -4,7 +4,7 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { BasicRuntimeContext, ITemplateScriptData, VueCompilerOptions } from './types';
+import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
 import { useSfcScript } from './use/useSfcScript';
@@ -20,6 +20,7 @@ import type * as html from 'vscode-html-languageservice'; // fix TS2742
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
 import { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import type { TextRange } from '@volar/vue-code-gen';
 
 export interface VueDocument extends ReturnType<typeof createVueDocument> { }
 
@@ -39,8 +40,8 @@ export function createVueDocument(
 	} | undefined,
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getCssVBindRanges: BasicRuntimeContext['getCssVBindRanges'],
-	getCssClasses: BasicRuntimeContext['getCssClasses'],
+    getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
+    getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
 ) {
 
 	// refs
