@@ -47,6 +47,7 @@ import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemantic
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as upath from 'upath';
 
 import type * as html from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
@@ -124,6 +125,7 @@ export function createLanguageService(
 	});
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const tsSettings = getTsSettings(_getSettings);
+	const documentContext = getDocumentContext();
 
 	const scriptTsLs = ts2.createLanguageService(ts, tsRuntime.context.scriptTsHost, tsRuntime.context.scriptTsLsRaw, tsSettings);
 	const templateTsLs = tsRuntime.context.templateTsHost && tsRuntime.context.templateTsLsRaw ? ts2.createLanguageService(ts, tsRuntime.context.templateTsHost, tsRuntime.context.templateTsLsRaw, tsSettings) : undefined;
@@ -143,7 +145,7 @@ export function createLanguageService(
 			getSettings: _getSettings,
 			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
 			scriptTsLs,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
 		}),
 		{
 			triggerCharacters: vueTriggerCharacters,
@@ -154,7 +156,7 @@ export function createLanguageService(
 		useHtmlPlugin({
 			getSettings: _getSettings,
 			getHtmlLs: () => services.htmlLs,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
 		}),
 		htmlTriggerCharacters,
 	);
@@ -163,7 +165,7 @@ export function createLanguageService(
 		usePugPlugin({
 			getSettings: _getSettings,
 			getPugLs: () => services.pugLs,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
 			pugDocuments,
 		}),
 		pugTriggerCharacters,
@@ -173,7 +175,7 @@ export function createLanguageService(
 			getSettings: _getSettings,
 			getCssLs: services.getCssLs,
 			getStylesheet: services.getStylesheet,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
 		}),
 		{
 			triggerCharacters: cssTriggerCharacters,
@@ -374,6 +376,51 @@ export function createLanguageService(
 		},
 	};
 
+	function getDocumentContext() {
+		const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
+		const documentContext: html.DocumentContext = {
+			resolveReference(ref: string, base: string) {
+
+				const isUri = base.indexOf('://') >= 0;
+				const resolveResult = ts.resolveModuleName(
+					ref,
+					isUri ? shared.uriToFsPath(base) : base,
+					vueHost.getCompilationSettings(),
+					compilerHost,
+				);
+				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+				const dirs = new Set<string>();
+
+				const fileExists = vueHost.fileExists ?? ts.sys.fileExists;
+				const directoryExists = vueHost.directoryExists ?? ts.sys.directoryExists;
+
+				for (const failed of failedLookupLocations) {
+					let path = failed;
+					const fileName = upath.basename(path);
+					if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
+						dirs.add(upath.dirname(path));
+					}
+					if (path.endsWith('.d.ts')) {
+						path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
+					}
+					else {
+						continue;
+					}
+					if (fileExists(path)) {
+						return isUri ? shared.fsPathToUri(path) : path;
+					}
+				}
+				for (const dir of dirs) {
+					if (directoryExists(dir)) {
+						return isUri ? shared.fsPathToUri(dir) : dir;
+					}
+				}
+
+				return undefined;
+			},
+		};
+		return documentContext;
+	}
 	function getTextDocument(uri: string) {
 
 		const fileName = shared.uriToFsPath(uri);

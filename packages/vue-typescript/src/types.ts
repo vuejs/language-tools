@@ -1,9 +1,4 @@
-import type * as css from 'vscode-css-languageservice';
-import type { DocumentContext, TextDocument } from 'vscode-css-languageservice';
-import type * as html from 'vscode-html-languageservice';
-import type * as pug from '@volar/pug-language-service';
 import type { VueDocuments } from './vueDocuments';
-import type { TextRange } from './utils/sourceMaps';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export type LanguageServiceHostBase = ts.LanguageServiceHost & {
@@ -31,7 +26,6 @@ export interface VueCompilerOptions {
 export type TypeScriptFeaturesRuntimeContext = {
 	vueDocuments: VueDocuments;
 	vueHost: LanguageServiceHostBase;
-	documentContext: DocumentContext;
 	scriptTsHost: ts.LanguageServiceHost;
 	templateTsHost: ts.LanguageServiceHost | undefined;
 	scriptTsLsRaw: ts.LanguageService;

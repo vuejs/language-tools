@@ -58,48 +58,6 @@ export function createTypeScriptRuntime(options: {
     shared.injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
 
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
-    const compilerHost = ts.createCompilerHost(options.vueHost.getCompilationSettings());
-    const documentContext: html.DocumentContext = {
-        resolveReference(ref: string, base: string) {
-
-            const isUri = base.indexOf('://') >= 0;
-            const resolveResult = ts.resolveModuleName(
-                ref,
-                isUri ? shared.uriToFsPath(base) : base,
-                options.vueHost.getCompilationSettings(),
-                compilerHost,
-            );
-            const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
-            const dirs = new Set<string>();
-
-            const fileExists = options.vueHost.fileExists ?? ts.sys.fileExists;
-            const directoryExists = options.vueHost.directoryExists ?? ts.sys.directoryExists;
-
-            for (const failed of failedLookupLocations) {
-                let path = failed;
-                const fileName = upath.basename(path);
-                if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
-                    dirs.add(upath.dirname(path));
-                }
-                if (path.endsWith('.d.ts')) {
-                    path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
-                }
-                else {
-                    continue;
-                }
-                if (fileExists(path)) {
-                    return isUri ? shared.fsPathToUri(path) : path;
-                }
-            }
-            for (const dir of dirs) {
-                if (directoryExists(dir)) {
-                    return isUri ? shared.fsPathToUri(dir) : dir;
-                }
-            }
-
-            return undefined;
-        },
-    }
 
     const context: TypeScriptFeaturesRuntimeContext = {
         vueHost: options.vueHost,
@@ -108,7 +66,6 @@ export function createTypeScriptRuntime(options: {
         scriptTsHost,
         templateTsLsRaw,
         scriptTsLsRaw,
-        documentContext,
         getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLsRaw! : scriptTsLsRaw,
     };
 
