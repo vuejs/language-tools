@@ -45,6 +45,8 @@ import useTagNameCasingConversionsPlugin from './vuePlugins/tagNameCasingConvers
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './vuePlugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './vuePlugins/vueTemplateLanguage';
 import * as json from 'vscode-json-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 import type * as _0 from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
@@ -115,6 +117,7 @@ export function createLanguageService(
 	}, vueHost, false);
 	const blockingRequests = new Set<Promise<any>>();
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
+	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
 	const jsonLs = json.getLanguageService({ schemaRequestService: vueHost?.schemaRequestService });
 
@@ -279,7 +282,7 @@ export function createLanguageService(
 		...tsRuntime.context,
 		typescript: ts,
 		vueCompilerOptions,
-		getTextDocument: tsRuntime.getHostDocument,
+		getTextDocument,
 		getPlugins: lsType => {
 			let plugins = [
 				...customPlugins,
@@ -358,6 +361,29 @@ export function createLanguageService(
 		},
 	};
 
+	function getTextDocument(uri: string) {
+
+		const fileName = shared.uriToFsPath(uri);
+		const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
+
+		if (scriptSnapshot) {
+
+			let document = documents.get(scriptSnapshot);
+
+			if (!document) {
+
+				document = TextDocument.create(
+					uri,
+					uri.endsWith('.vue') ? 'vue' : 'typescript', // TODO
+					0, // TODO
+					scriptSnapshot.getText(0, scriptSnapshot.getLength()),
+				);
+				documents.set(scriptSnapshot, document);
+			}
+
+			return document;
+		}
+	}
 	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguagePlugin, triggerCharacters: string[]) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({

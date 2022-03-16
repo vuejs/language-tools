@@ -32,8 +32,6 @@ export function createTypeScriptRuntime(
     let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
     let templateProjectVersion = 0;
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
-    const documents = shared.createPathMap<TextDocument>(); // TODO: remove this
-    const documentVersionToVueHost = new WeakMap<TextDocument, string>();
     const vueDocuments = createVueDocuments();
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
@@ -110,7 +108,6 @@ export function createTypeScriptRuntime(
     return {
         context,
         update,
-        getHostDocument,
         getScriptContentVersion: () => scriptContentVersion,
         dispose: () => {
             scriptTsLs.dispose();
@@ -335,26 +332,6 @@ export function createTypeScriptRuntime(
             }
         }
     }
-    function getHostDocument(uri: string): TextDocument | undefined {
-
-        const fileName = shared.uriToFsPath(uri);
-        const version = vueHost.getScriptVersion(fileName);
-        const document = documents.uriGet(uri);
-
-        if (document && documentVersionToVueHost.get(document) === version) {
-            return document;
-        }
-        else {
-            const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
-            if (scriptSnapshot) {
-                const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-                const newDocument = TextDocument.create(uri, uri.endsWith('.vue') ? 'vue' : 'typescript', document?.version ?? 0, scriptText);
-                documents.uriSet(uri, newDocument);
-                documentVersionToVueHost.set(newDocument, version);
-                return newDocument;
-            }
-        }
-    }
     function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
 
         let vueScriptContentsUpdate = false;
@@ -367,14 +344,23 @@ export function createTypeScriptRuntime(
             }
         }
         for (const uri of uris) {
+
+            const fileName = shared.uriToFsPath(uri);
             const sourceFile = vueDocuments.get(uri);
-            const doc = getHostDocument(uri);
-            if (!doc) continue;
+            const scriptSnapshot = vueHost.getScriptSnapshot(fileName);
+
+            if (!scriptSnapshot) {
+                continue;
+            }
+
+            const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
+            const scriptVersion = vueHost.getScriptVersion(fileName);
+
             if (!sourceFile) {
                 vueDocuments.set(uri, createVueDocument(
-                    doc.uri,
-                    doc.getText(),
-                    doc.version.toString(),
+                    uri,
+                    scriptText,
+                    scriptVersion,
                     options.htmlLs,
                     options.compileTemplate,
                     options.vueCompilerOptions,
@@ -386,7 +372,7 @@ export function createTypeScriptRuntime(
                 vueScriptsUpdated = true;
             }
             else {
-                const updates = sourceFile.update(doc.getText(), doc.version.toString());
+                const updates = sourceFile.update(scriptText, scriptVersion);
                 if (updates.scriptContentUpdated) {
                     vueScriptContentsUpdate = true;
                 }
