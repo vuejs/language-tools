@@ -21,6 +21,7 @@ import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
 import { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type { TextRange } from '@volar/vue-code-gen';
+import { VuePlugin } from './typescriptRuntime';
 
 export interface VueDocument extends ReturnType<typeof createVueDocument> { }
 
@@ -34,14 +35,11 @@ export function createVueDocument(
 	_content: string,
 	_version: string,
 	htmlLs: html.LanguageService,
-	compileTemplate: (template: string, lang: string) => {
-		htmlText: string,
-		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
-	} | undefined,
+	plugins: VuePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-    getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
-    getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
+	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
+	getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
 ) {
 
 	// refs
@@ -84,14 +82,16 @@ export function createVueDocument(
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	}>(() => {
 		if (sfc.template) {
-			const compiledHtml = compileTemplate(sfc.template.content, sfc.template.lang);
-			if (compiledHtml) {
-				return {
-					lang: sfc.template.lang,
-					htmlText: compiledHtml.htmlText,
-					htmlToTemplate: compiledHtml.htmlToTemplate,
+			for (const plugin of plugins) {
+				const compiledHtml = plugin.compileTemplate?.(sfc.template.content, sfc.template.lang);
+				if (compiledHtml) {
+					return {
+						lang: sfc.template.lang,
+						htmlText: compiledHtml.html,
+						htmlToTemplate: compiledHtml.htmlToTemplate,
+					};
 				};
-			};
+			}
 		}
 	});
 	const sfcTemplateCompileResult = useSfcTemplateCompileResult(

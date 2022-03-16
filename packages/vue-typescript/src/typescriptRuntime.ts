@@ -8,16 +8,22 @@ import { createVueDocuments } from './vueDocuments';
 import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import type { TextRange } from '@volar/vue-code-gen';
+import useHtmlPlugin from './plugins/html';
+import usePugPlugin from './plugins/pug';
+
+export interface VuePlugin {
+
+    compileTemplate?(tmplate: string, lang: string): {
+        html: string,
+        htmlToTemplate(htmlStart: number, htmlEnd: number): { start: number, end: number } | undefined,
+    } | undefined
+}
 
 export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
 export function createTypeScriptRuntime(options: {
     typescript: typeof import('typescript/lib/tsserverlibrary'),
     vueCompilerOptions: VueCompilerOptions,
-    compileTemplate(templateText: string, templateLang: string): {
-        htmlText: string;
-        htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined;
-    } | undefined
     getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
     getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
     vueHost: LanguageServiceHostBase,
@@ -36,7 +42,10 @@ export function createTypeScriptRuntime(options: {
     const vueDocuments = createVueDocuments();
     const templateScriptUpdateUris = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
-
+    const plugins = [
+        useHtmlPlugin(),
+        usePugPlugin(),
+    ];
     const htmlLs = html.getLanguageService();
     const templateTsHost = options.vueCompilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
     const scriptTsHost = createTsLsHost('script');
@@ -360,7 +369,7 @@ export function createTypeScriptRuntime(options: {
                     scriptText,
                     scriptVersion,
                     htmlLs,
-                    options.compileTemplate,
+                    plugins,
                     options.vueCompilerOptions,
                     options.typescript,
                     options.getCssVBindRanges,

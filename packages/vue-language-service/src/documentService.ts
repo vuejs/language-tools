@@ -1,5 +1,5 @@
 import * as ts2 from '@volar/typescript-language-service';
-import { createVueDocument, VueDocument } from '@volar/vue-typescript';
+import * as vueTs from '@volar/vue-typescript';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
@@ -28,7 +28,6 @@ import * as json from 'vscode-json-languageservice';
 import { getTsSettings } from './tsConfigs';
 import type * as html from 'vscode-html-languageservice';
 import { createBasicRuntime } from './basicRuntime';
-import * as pug from '@volar/pug-language-service';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -40,7 +39,7 @@ export function getDocumentService(
 	customPlugins: EmbeddedLanguagePlugin[],
 ) {
 
-	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
+	const vueDocuments = new WeakMap<TextDocument, vueTs.VueDocument>();
 	const services = createBasicRuntime(fileSystemProvider);
 	let tsLs: ts2.LanguageService;
 
@@ -97,6 +96,10 @@ export function getDocumentService(
 		jsonPlugin,
 		tsPlugin,
 	].map(patchHtmlFormat);
+	const vueTsPlugins = [
+		vueTs.useHtmlPlugin(),
+		vueTs.usePugPlugin(),
+	];
 
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
@@ -151,50 +154,12 @@ export function getDocumentService(
 
 			return cacheVueDoc;
 		}
-		const vueDoc = createVueDocument(
+		const vueDoc = vueTs.createVueDocument(
 			document.uri,
 			document.getText(),
 			document.version.toString(),
 			services.htmlLs,
-			// TODO: move to plugin
-			(template: string, lang: string): {
-				htmlText: string,
-				htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
-			} | undefined => {
-
-				if (lang === 'html') {
-					return {
-						htmlText: template,
-						htmlToTemplate: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
-					};
-				}
-
-				if (lang === 'pug') {
-
-					const pugDoc = pug.baseParse(template);
-
-					if (pugDoc) {
-						return {
-							htmlText: pugDoc.htmlCode,
-							htmlToTemplate: (htmlStart, htmlEnd) => {
-								const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
-								if (pugRange) {
-									return pugRange;
-								}
-								else {
-
-									const pugStart = pugDoc.sourceMap.getSourceRange(htmlStart, htmlStart, data => !data?.isEmptyTagCompletion)?.[0]?.start;
-									const pugEnd = pugDoc.sourceMap.getSourceRange(htmlEnd, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0]?.end;
-
-									if (pugStart !== undefined && pugEnd !== undefined) {
-										return { start: pugStart, end: pugEnd };
-									}
-								}
-							},
-						};
-					}
-				}
-			},
+			vueTsPlugins,
 			{},
 			context.typescript,
 			services.getCssVBindRanges,
