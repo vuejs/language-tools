@@ -6,13 +6,13 @@ import { handleKindModifiers } from './completion';
 import type { Data } from './completion';
 import * as previewer from '../utils/previewer';
 import * as shared from '@volar/shared';
-import type { LanguageServiceHost } from '../';
+import type { Settings } from '../';
 
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getTextDocument2: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
+	settings: Settings,
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
@@ -29,8 +29,8 @@ export function register(
 		}
 
 		const [formatOptions, preferences] = document ? await Promise.all([
-			host.getFormatOptions?.(document) ?? {},
-			host.getPreferences?.(document) ?? {},
+			settings.getFormatOptions?.(document) ?? {},
+			settings.getPreferences?.(document) ?? {},
 		]) : [{}, {}];
 
 		let details: ts.CompletionEntryDetails | undefined;

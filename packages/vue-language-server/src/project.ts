@@ -210,8 +210,6 @@ export async function createProject(
 					return Promise.reject('clientHandledGetDocumentContentRequest is false');
 				}
 			},
-			getPreferences: lsConfigs?.getTsPreferences,
-			getFormatOptions: lsConfigs?.getTsFormatOptions,
 			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
 			// ts
 			getNewLine: () => projectSys.newLine,

@@ -20,7 +20,6 @@
 		"@volar/pug-language-service": "0.33.2",
 		"@volar/shared": "0.33.2",
 		"@volar/source-map": "0.33.2",
-		"@volar/typescript-language-service": "0.33.2",
 		"@volar/vue-code-gen": "0.33.2",
 		"@vue/reactivity": "^3.2.27",
 		"upath": "^2.0.1",

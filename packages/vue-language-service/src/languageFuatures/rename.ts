@@ -69,7 +69,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 									recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-									const teleport = context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(editUri);
+									const teleport = context.tsRuntime.context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(editUri);
 
 									if (teleport) {
 
@@ -129,14 +129,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => {
 
-				const vueDocument = context.vueDocuments.get(uri);
+				const vueDocument = context.tsRuntime.context.vueDocuments.get(uri);
 				const renameFromScriptContent = !vueDocument || !vueDocument.getSourceMaps().some(sourceMap => sourceMap.lsType === 'template' && sourceMap.getMappedRange(position));
 
 				return embeddedEditToSourceEdit(
 					sourceMap?.lsType ?? 'script',
 					sourceMap?.lsType === 'template' && renameFromScriptContent,
 					data,
-					context.vueDocuments,
+					context.tsRuntime.context.vueDocuments,
 					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename,
 				);
 			},

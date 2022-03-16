@@ -6,7 +6,6 @@ import * as vue from '@volar/vue-language-service';
 import { createLsConfigs } from './configs';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
-import * as tsConfigs from './tsConfigs';
 
 export interface RuntimeEnvironment {
 	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
@@ -63,8 +62,6 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 			const ts = runtimeEnv.loadTypescript(options);
 			const noStateLs = vue.getDocumentService(
 				{ typescript: ts },
-				(document) => tsConfigs.getPreferences(configuration, document),
-				(document, options) => tsConfigs.getFormatOptions(configuration, document, options),
 				async (uri) => {
 					if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
 						const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });

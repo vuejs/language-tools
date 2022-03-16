@@ -50,6 +50,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 import type * as _0 from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
+import { getTsSettings } from './tsConfigs';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -115,6 +116,11 @@ export function createLanguageService(
 		...services,
 		vueCompilerOptions,
 	}, vueHost, false);
+	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
+	const tsSettings = getTsSettings(_getSettings);
+
+	const scriptTsLs = ts2.createLanguageService(ts, tsRuntime.context.scriptTsHost, tsRuntime.context.scriptTsLsRaw, tsSettings);
+	const templateTsLs = tsRuntime.context.templateTsHost && tsRuntime.context.templateTsLsRaw ? ts2.createLanguageService(ts, tsRuntime.context.templateTsHost, tsRuntime.context.templateTsLsRaw, tsSettings) : undefined;
 	const blockingRequests = new Set<Promise<any>>();
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
@@ -125,13 +131,12 @@ export function createLanguageService(
 	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// plugins
-	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const customPlugins = loadCustomPlugins(vueHost.getCurrentDirectory()).map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getSettings: _getSettings,
 			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
-			scriptTsLs: tsRuntime.context.scriptTsLs,
+			scriptTsLs,
 			documentContext: tsRuntime.context.documentContext,
 		}),
 		{
@@ -187,15 +192,15 @@ export function createLanguageService(
 		},
 	);
 	const scriptTsPlugins = useTsPlugins(
-		tsRuntime.context.scriptTsLs,
+		scriptTsLs,
 		false,
 		{
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		},
 	);
-	const templateTsPlugins = tsRuntime.context.templateTsLs ? useTsPlugins(
-		tsRuntime.context.templateTsLs,
+	const templateTsPlugins = templateTsLs ? useTsPlugins(
+		templateTsLs,
 		true,
 		{
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
@@ -209,7 +214,7 @@ export function createLanguageService(
 		useAutoDotValuePlugin({
 			getSettings: _getSettings,
 			ts,
-			getTsLs: () => tsRuntime.context.scriptTsLs,
+			getTsLs: () => scriptTsLs,
 		}),
 	);
 	const referencesCodeLensPlugin = defineLanguageServicePlugin(
@@ -245,7 +250,7 @@ export function createLanguageService(
 			doValidation: async (...args) => doValidation_internal(...args),
 			doRename: async (...args) => doRename_internal(...args),
 			findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
-			scriptTsLs: tsRuntime.context.scriptTsLs,
+			scriptTsLs: scriptTsLs,
 		}),
 	);
 	const tagNameCasingConversionsPlugin = defineLanguageServicePlugin(
@@ -279,7 +284,11 @@ export function createLanguageService(
 
 	const context: LanguageServiceRuntimeContext = {
 		...services,
-		...tsRuntime.context,
+		vueHost,
+		tsRuntime,
+		scriptTsLs,
+		templateTsLs,
+		getTsLs: lsType => lsType === 'template' ? templateTsLs! : scriptTsLs,
 		typescript: ts,
 		vueCompilerOptions,
 		getTextDocument,
@@ -402,8 +411,8 @@ export function createLanguageService(
 						}
 					}
 				},
-				scriptTsLs: tsRuntime.context.scriptTsLs,
-				templateTsLs: tsRuntime.context.templateTsLs,
+				scriptTsLs: scriptTsLs,
+				templateTsLs: templateTsLs,
 				templateLanguagePlugin: templateLanguagePlugin,
 				isSupportedDocument: (document) => document.languageId === languageId,
 				getNameCases,
@@ -412,6 +421,8 @@ export function createLanguageService(
 				vueHost,
 				vueDocuments: tsRuntime.context.vueDocuments,
 				updateTemplateScripts: () => tsRuntime.update(true),
+				tsSettings,
+				tsRuntime,
 			}),
 			{
 				triggerCharacters: [...triggerCharacters, ...vueTemplateLanguageTriggerCharacters],

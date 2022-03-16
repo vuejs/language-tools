@@ -3,12 +3,13 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as ts2 from '@volar/typescript-language-service';
 import { BasicRuntimeContext } from '.';
 import { createVueDocument } from './vueDocument';
 import { createVueDocuments } from './vueDocuments';
 import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext } from './types';
 import * as localTypes from './utils/localTypes';
+
+export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
 export function createTypeScriptRuntime(
     options: {
@@ -46,8 +47,6 @@ export function createTypeScriptRuntime(
     }
     shared.injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
 
-    const templateTsLs = templateTsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsHost, templateTsLsRaw) : undefined;
-    const scriptTsLs = ts2.createLanguageService(ts, scriptTsHost, scriptTsLsRaw);
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
     const compilerHost = ts.createCompilerHost(vueHost.getCompilationSettings());
     const documentContext: html.DocumentContext = {
@@ -99,10 +98,8 @@ export function createTypeScriptRuntime(
         scriptTsHost,
         templateTsLsRaw,
         scriptTsLsRaw,
-        templateTsLs,
-        scriptTsLs,
         documentContext,
-        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLs! : scriptTsLs,
+        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLsRaw! : scriptTsLsRaw,
     };
 
     return {
@@ -110,8 +107,8 @@ export function createTypeScriptRuntime(
         update,
         getScriptContentVersion: () => scriptContentVersion,
         dispose: () => {
-            scriptTsLs.dispose();
-            templateTsLs?.dispose();
+            scriptTsLsRaw.dispose();
+            templateTsLsRaw?.dispose();
         },
         onInitProgress(cb: (p: number) => void) {
             initProgressCallback.push(cb);
@@ -197,7 +194,7 @@ export function createTypeScriptRuntime(
 
         const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
         const documentVersions = new WeakMap<TextDocument, string>();
-        const tsHost: ts2.LanguageServiceHost = {
+        const tsHost: ts.LanguageServiceHost = {
             ...vueHost,
             fileExists: vueHost.fileExists
                 ? fileName => {
@@ -396,7 +393,7 @@ export function createTypeScriptRuntime(
             lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
             let currentNums = 0;
             for (const uri of templateScriptUpdateUris) {
-                if (templateTsLs && vueDocuments.get(uri)?.updateTemplateScript(templateTsLs)) {
+                if (templateTsLsRaw && templateTsHost && vueDocuments.get(uri)?.updateTemplateScript(templateTsLsRaw, templateTsHost)) {
                     templateScriptUpdated = true;
                 }
                 currentNums++;

@@ -6,7 +6,7 @@ import * as definitions from '../languageFuatures/definition';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ typescript: ts, vueDocuments, templateTsLs }: LanguageServiceRuntimeContext) {
+export function register({ typescript: ts, tsRuntime, templateTsLs }: LanguageServiceRuntimeContext) {
 
 	const findReferences = references.register(arguments[0]);
 	const findDefinition = definitions.register(arguments[0], 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions);
@@ -34,7 +34,7 @@ export function register({ typescript: ts, vueDocuments, templateTsLs }: Languag
 			definitions: (vscode.Location | vscode.LocationLink)[],
 		}[] = [];
 
-		const sourceFile = vueDocuments.get(document.uri);
+		const sourceFile = tsRuntime.context.vueDocuments.get(document.uri);
 		const tsDoc = templateTsLs?.__internal__.getTextDocument(document.uri);
 
 		if (sourceFile) {

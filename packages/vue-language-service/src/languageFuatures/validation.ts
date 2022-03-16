@@ -59,7 +59,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 		}, nonTsCache, errors => cache.nonTs = errors ?? []);
 		doResponse();
 
-		const vueDocument = context.vueDocuments.get(uri);
+		const vueDocument = context.tsRuntime.context.vueDocuments.get(uri);
 
 		if (vueDocument) {
 
@@ -224,7 +224,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const sourceLoc of context.vueDocuments.fromEmbeddedLocation(
+					for (const sourceLoc of context.tsRuntime.context.vueDocuments.fromEmbeddedLocation(
 						sourceMap?.lsType ?? 'script',
 						info.location.uri,
 						info.location.range.start,

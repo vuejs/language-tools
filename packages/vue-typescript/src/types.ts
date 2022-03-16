@@ -1,13 +1,12 @@
 import type * as css from 'vscode-css-languageservice';
 import type { DocumentContext, TextDocument } from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice';
-import type * as vscode from 'vscode-languageserver-protocol';
 import type * as pug from '@volar/pug-language-service';
-import type * as ts2 from '@volar/typescript-language-service';
 import type { VueDocuments } from './vueDocuments';
 import type { TextRange } from './utils/sourceMaps';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export type LanguageServiceHostBase = ts2.LanguageServiceHost & {
+export type LanguageServiceHostBase = ts.LanguageServiceHost & {
 	getVueCompilationSettings?(): VueCompilerOptions,
 	getVueProjectVersion?(): string;
 };
@@ -15,9 +14,9 @@ export type LanguageServiceHostBase = ts2.LanguageServiceHost & {
 export interface ITemplateScriptData {
 	projectVersion: string | undefined;
 	context: string[];
-	contextItems: vscode.CompletionItem[];
+	contextItems: ts.CompletionEntry[];
 	components: string[];
-	componentItems: vscode.CompletionItem[];
+	componentItems: ts.CompletionEntry[];
 	props: string[];
 	setupReturns: string[];
 }
@@ -53,7 +52,5 @@ export type TypeScriptFeaturesRuntimeContext = {
 	templateTsHost: ts.LanguageServiceHost | undefined;
 	scriptTsLsRaw: ts.LanguageService;
 	templateTsLsRaw: ts.LanguageService | undefined;
-	scriptTsLs: ts2.LanguageService;
-	templateTsLs: ts2.LanguageService | undefined;
-	getTsLs: <T extends 'template' | 'script'>(lsType: T) => T extends 'script' ? ts2.LanguageService : (ts2.LanguageService | undefined);
+	getTsLs: <T extends 'template' | 'script'>(lsType: T) => T extends 'script' ? ts.LanguageService : (ts.LanguageService | undefined);
 }

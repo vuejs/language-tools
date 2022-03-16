@@ -6,7 +6,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (oldUri: string, newUri: string) => {
 
-		const vueDocument = context.vueDocuments.get(oldUri);
+		const vueDocument = context.tsRuntime.context.vueDocuments.get(oldUri);
 
 		if (vueDocument) {
 			oldUri += '.ts';
@@ -27,7 +27,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					'script',
 					false,
 					workspaceEdit,
-					context.vueDocuments,
+					context.tsRuntime.context.vueDocuments,
 					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename,
 				)
 			}

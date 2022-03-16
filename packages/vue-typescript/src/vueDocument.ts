@@ -4,8 +4,6 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts2 from '@volar/typescript-language-service';
-import type { Data as TsCompletionData } from '@volar/typescript-language-service/src/services/completion';
 import { BasicRuntimeContext, ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
@@ -413,8 +411,8 @@ export function createVueDocument(
 			}
 		}
 	}
-	function updateTemplateScript(templateTsLs: ts2.LanguageService) {
-		const newVersion = templateTsLs.__internal__.host.getProjectVersion?.();
+	function updateTemplateScript(templateTsLs: ts.LanguageService, tempalteTsHost: ts.LanguageServiceHost) {
+		const newVersion = tempalteTsHost.getProjectVersion?.();
 		if (templateScriptData.projectVersion === newVersion) {
 			return false;
 		}
@@ -426,20 +424,20 @@ export function createVueDocument(
 
 		const doc = sfcEntryForTemplateLs.textDocument.value;
 		const docText = doc.getText();
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Context)), options)?.items ?? [] : [];
-		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Components)), options)?.items ?? [] : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.Props)), options)?.items ?? [] : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(docText.indexOf(SearchTexts.SetupReturns)), options)?.items ?? [] : [];
+		const docFileName = shared.uriToFsPath(doc.uri);
+		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
+		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
+		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.Props), options)?.entries ?? [] : [];
+		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.SetupReturns), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
-			const data: TsCompletionData = entry.data as any;
-			return data.name.indexOf('$') === -1 && !data.name.startsWith('_');
+			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');
 		});
 
-		const contextNames = context.map(entry => (entry.data as any as TsCompletionData).name);
-		const componentNames = components.map(entry => (entry.data as any as TsCompletionData).name);
-		const propNames = props.map(entry => (entry.data as any as TsCompletionData).name);
-		const setupReturnNames = setupReturns.map(entry => (entry.data as any as TsCompletionData).name);
+		const contextNames = context.map(entry => entry.name);
+		const componentNames = components.map(entry => entry.name);
+		const propNames = props.map(entry => entry.name);
+		const setupReturnNames = setupReturns.map(entry => entry.name);
 
 		let dirty = false;
 

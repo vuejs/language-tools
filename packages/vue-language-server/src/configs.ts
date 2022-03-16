@@ -1,6 +1,5 @@
 import * as vscode from 'vscode-languageserver';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as tsConfigs from './tsConfigs';
 import type * as css from 'vscode-css-languageservice';
 import type * as html from 'vscode-html-languageservice'
 import type * as vue from '@volar/vue-language-service';
@@ -35,8 +34,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 
 	return {
 		getCssLanguageSettings,
-		getTsPreferences,
-		getTsFormatOptions,
 		getSettings,
 		registerCustomData,
 	};
@@ -115,14 +112,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 			settings[section][uri] = (async () => await connection.workspace.getConfiguration({ scopeUri, section }) ?? undefined)();
 		}
 		return settings[section][uri];
-	}
-	function getTsPreferences(textDocument: TextDocument) {
-		return tsPreferences[textDocument.uri]
-			?? (tsPreferences[textDocument.uri] = tsConfigs.getPreferences(connection.workspace, textDocument));
-	}
-	function getTsFormatOptions(textDocument: TextDocument, options?: vscode.FormattingOptions) {
-		return tsFormatOptions[textDocument.uri]
-			?? (tsFormatOptions[textDocument.uri] = tsConfigs.getFormatOptions(connection.workspace, textDocument, options));
 	}
 	function getCssLanguageSettings(textDocument: TextDocument): Promise<css.LanguageSettings> {
 		if (!cssLanguageSettings[textDocument.uri]) {

@@ -1,12 +1,13 @@
 import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { SearchTexts, VueDocument, VueDocuments } from '@volar/vue-typescript';
+import { SearchTexts, TypeScriptRuntime, VueDocument, VueDocuments } from '@volar/vue-typescript';
 import { computed, pauseTracking, ref, resetTracking } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isHTMLTag } from '@vue/shared';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
 import type { Data } from '@volar/typescript-language-service/src/services/completion';
 import type { LanguageServiceHost } from '../types';
@@ -77,6 +78,8 @@ export default function (host: {
     vueHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
     updateTemplateScripts: () => void,
+    tsSettings: ts2.Settings,
+    tsRuntime: TypeScriptRuntime,
 }): EmbeddedLanguagePlugin {
 
     const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
@@ -407,8 +410,8 @@ export default function (host: {
             const scriptDoc = sourceFile.getScriptTsDocument();
             const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
             const [formatOptions, preferences] = await Promise.all([
-                host.vueHost.getFormatOptions?.(scriptDoc) ?? {},
-                host.vueHost.getPreferences?.(scriptDoc) ?? {},
+                host.tsSettings.getFormatOptions?.(scriptDoc) ?? {},
+                host.tsSettings.getPreferences?.(scriptDoc) ?? {},
             ]);
             const tsDetail = host.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptDoc.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
             if (tsDetail?.codeActions) {
@@ -446,7 +449,7 @@ export default function (host: {
         };
         const componentCompletion = getComponentCompletionData(vueDocument);
         const tags: html.ITagData[] = [];
-        const tsItems = new Map<string, vscode.CompletionItem>();
+        const tsItems = new Map<string, ts.CompletionEntry>();
         const globalAttributes: html.IAttributeData[] = [];
         const { contextItems } = vueDocument.getTemplateScriptData();
 
@@ -594,7 +597,7 @@ export default function (host: {
         return tsItems;
     }
 
-    function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
+    function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, ts.CompletionEntry>) {
 
         const replacement = getReplacement(completionList, vueDocument.getTextDocument());
 
@@ -756,7 +759,7 @@ export default function (host: {
         const usedTags = ref(new Set<string>());
         const result = computed(() => {
 
-            const result = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[] }>();
+            const result = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>();
 
             if (!host.templateTsLs)
                 return result;
@@ -770,10 +773,12 @@ export default function (host: {
             const doc = sfcTemplateScript.textDocument.value;
             const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
             const entryDoc = sfcEntryForTemplateLs.textDocument.value;
+            const entryDocFileName = shared.fsPathToUri(entryDoc.uri);
             resetTracking();
 
             if (doc && entryDoc) {
 
+                const docFileName = shared.uriToFsPath(doc.uri);
                 const text = doc.getText();
                 const tags_1 = templateScriptData.componentItems.map(item => {
                     // @ts-expect-error
@@ -789,14 +794,14 @@ export default function (host: {
                     if (result.has(tag.name))
                         continue;
 
-                    let bind: vscode.CompletionItem[] = [];
-                    let on: vscode.CompletionItem[] = [];
+                    let bind: ts.CompletionEntry[] = [];
+                    let on: ts.CompletionEntry[] = [];
                     {
                         const searchText = SearchTexts.PropsCompletion(tag.name);
                         let offset = text.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            bind = host.templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset))?.items ?? [];
+                            bind = host.tsRuntime.context.templateTsLsRaw?.getCompletionsAtPosition(docFileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     {
@@ -804,12 +809,12 @@ export default function (host: {
                         let offset = text.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            on = host.templateTsLs.__internal__.doCompleteSync(doc.uri, doc.positionAt(offset))?.items ?? [];
+                            on = host.tsRuntime.context.templateTsLsRaw?.getCompletionsAtPosition(docFileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     result.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = host.templateTsLs.__internal__.doCompleteSync(entryDoc.uri, entryDoc.positionAt(entryDoc.getText().indexOf(SearchTexts.GlobalAttrs)))?.items ?? [];
+                const globalBind = host.tsRuntime.context.templateTsLsRaw?.getCompletionsAtPosition(entryDocFileName, entryDoc.getText().indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
                 result.set('*', { item: undefined, bind: globalBind, on: [] });
             }
             return result;

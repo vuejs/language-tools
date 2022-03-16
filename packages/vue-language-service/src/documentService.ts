@@ -18,7 +18,7 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
+import { DocumentServiceRuntimeContext } from './types';
 import * as sharedServices from './utils/sharedLs';
 import useAutoWrapParenthesesPlugin from './vuePlugins/autoWrapParentheses';
 import useVuePlugin from './vuePlugins/vue';
@@ -26,13 +26,12 @@ import type * as _ from 'vscode-languageserver-protocol';
 import { loadCustomPlugins } from './languageService';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as json from 'vscode-json-languageservice';
+import { getTsSettings } from './tsConfigs';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
 export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
-	getPreferences: LanguageServiceHost['getPreferences'],
-	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 	rootPath: string,
@@ -42,13 +41,14 @@ export function getDocumentService(
 	const services = createBasicRuntime();
 	let tsLs: ts2.LanguageService;
 
-    const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
+	const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
+	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
+	const tsSettings = getTsSettings(_getSettings);
 
 	// embedded documents
 	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// language support plugins
-	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const customPlugins = loadCustomPlugins(rootPath);
 	const vuePlugin = useVuePlugin({
 		getSettings: _getSettings,
@@ -118,7 +118,7 @@ export function getDocumentService(
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
-				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, getPreferences, getFormatOptions);
+				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, tsSettings);
 			}
 		},
 	};

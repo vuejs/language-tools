@@ -51,7 +51,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-							const teleport = context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(reference.uri);
+							const teleport = context.tsRuntime.context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(reference.uri);
 
 							if (teleport) {
 
@@ -79,7 +79,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.vueDocuments.fromEmbeddedDocumentUri(sourceMap?.lsType ?? 'script', reference.uri);
+				const referenceSourceMap = context.tsRuntime.context.vueDocuments.fromEmbeddedDocumentUri(sourceMap?.lsType ?? 'script', reference.uri);
 
 				if (referenceSourceMap) {
 

@@ -29,7 +29,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		) ?? [];
-		const vueDocument = context.vueDocuments.get(uri);
+		const vueDocument = context.tsRuntime.context.vueDocuments.get(uri);
 		const fictitiousLinks = vueDocument ? getFictitiousLinks(vueDocument) : [];
 
 		return [

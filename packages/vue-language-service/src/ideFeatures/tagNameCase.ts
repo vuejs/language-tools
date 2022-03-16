@@ -2,13 +2,13 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
 import { VueDocument } from '@volar/vue-typescript';
 
-export function register({ vueDocuments }: LanguageServiceRuntimeContext) {
+export function register({ tsRuntime }: LanguageServiceRuntimeContext) {
 	return (uri: string): {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
 	} => {
 
-		const sourceFile = vueDocuments.get(uri);
+		const sourceFile = tsRuntime.context.vueDocuments.get(uri);
 		if (!sourceFile) return {
 			tag: 'unsure',
 			attr: 'unsure',
