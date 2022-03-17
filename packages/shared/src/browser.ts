@@ -5,4 +5,3 @@ export * from './requests';
 export * from './types';
 export * from './uriMap';
 export * from './browser';
-export * from './vue';

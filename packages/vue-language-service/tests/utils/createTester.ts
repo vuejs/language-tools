@@ -2,7 +2,10 @@ import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 
-export function createTester(root: string) {
+const testRoot = path.resolve(__dirname, '../../testCases');
+export const tester = createTester(testRoot);
+
+function createTester(root: string) {
 
 	const parseConfigHost: ts.ParseConfigHost = {
 		...ts.sys,
@@ -38,7 +41,7 @@ export function createTester(root: string) {
 		getScriptVersion,
 		getScriptSnapshot,
 	}
-	const languageService = createLanguageService({ typescript: ts }, host, undefined);
+	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, []);
 
 	return {
 		host,
@@ -46,11 +49,7 @@ export function createTester(root: string) {
 	}
 
 	function getScriptVersion(fileName: string) {
-		const version = scriptVersions.get(fileName);
-		if (version !== undefined) {
-			return version.toString();
-		}
-		return '';
+		return scriptVersions.get(fileName) ?? '';
 	}
 	function getScriptSnapshot(fileName: string) {
 		const version = getScriptVersion(fileName);

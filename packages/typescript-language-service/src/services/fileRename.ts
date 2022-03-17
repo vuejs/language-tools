@@ -3,19 +3,19 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { fileTextChangesToWorkspaceEdit } from './rename';
-import type { LanguageServiceHost } from '../';
+import type { Settings } from '../';
 
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
+	settings: Settings,
 ) {
 	return async (oldUri: string, newUri: string): Promise<vscode.WorkspaceEdit | undefined> => {
 
 		const document = getTextDocument(oldUri);
 		const [formatOptions, preferences] = document ? await Promise.all([
-			host.getFormatOptions?.(document) ?? {},
-			host.getPreferences?.(document) ?? {},
+			settings.getFormatOptions?.(document) ?? {},
+			settings.getPreferences?.(document) ?? {},
 		]) : [{}, {}];
 
 		const fileToRename = shared.uriToFsPath(oldUri);

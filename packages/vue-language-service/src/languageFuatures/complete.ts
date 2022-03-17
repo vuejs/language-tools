@@ -8,8 +8,10 @@ export interface PluginCompletionData {
 	uri: string,
 	originalItem: vscode.CompletionItem,
 	pluginId: number,
-	sourceMapId: number | undefined,
-	embeddedDocumentUri: string | undefined,
+	sourceMap: {
+		lsType: 'script' | 'template' | 'nonTs',
+		embeddedDocumentUri: string
+	} | undefined,
 }
 
 export function register(context: LanguageServiceRuntimeContext) {
@@ -17,8 +19,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 	let cache: {
 		uri: string,
 		data: {
-			sourceMapId: number | undefined,
-			embeddedDocumentUri: string | undefined,
+			sourceMap: {
+				lsType: 'script' | 'template' | 'nonTs',
+				embeddedDocumentUri: string
+			} | undefined,
 			plugin: LanguageServicePlugin,
 			list: vscode.CompletionList,
 		}[],
@@ -41,9 +45,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!cacheData.list.isIncomplete)
 					continue;
 
-				if (cacheData.sourceMapId !== undefined && cacheData.embeddedDocumentUri !== undefined) {
+				if (cacheData.sourceMap) {
 
-					const sourceMap = context.vueDocuments.getSourceMap(cacheData.sourceMapId, cacheData.embeddedDocumentUri);
+					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(cacheData.sourceMap.lsType, cacheData.sourceMap.embeddedDocumentUri);
 
 					if (!sourceMap)
 						continue;
@@ -71,8 +75,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 									uri,
 									originalItem: item,
 									pluginId: cacheData.plugin.id,
-									sourceMapId: sourceMap.id,
-									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+									sourceMap: {
+										lsType: sourceMap.embeddedFile.lsType,
+										embeddedDocumentUri: sourceMap.mappedDocument.uri,
+									},
 								} as any,
 							})),
 						};
@@ -99,8 +105,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								uri,
 								originalItem: item,
 								pluginId: cacheData.plugin.id,
-								sourceMapId: undefined,
-								embeddedDocumentUri: undefined,
+								sourceMap: undefined,
 							} as any,
 						}))
 					};
@@ -119,11 +124,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (vueDocument) {
 
-				const embeddeds = vueDocument.getEmbeddeds();
+				const embeddeds = vueDocument.file.getEmbeddeds();
 
-				await visitEmbedded(embeddeds, async sourceMap => {
+				await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
-					const plugins = context.getPlugins(sourceMap.lsType).sort(sortPlugins);
+					const plugins = context.getPlugins(sourceMap.embeddedFile.lsType).sort(sortPlugins);
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
@@ -158,15 +163,19 @@ export function register(context: LanguageServiceRuntimeContext) {
 										uri,
 										originalItem: item,
 										pluginId: plugin.id,
-										sourceMapId: sourceMap.id,
-										embeddedDocumentUri: sourceMap.mappedDocument.uri,
+										sourceMap: {
+											lsType: sourceMap.embeddedFile.lsType,
+											embeddedDocumentUri: sourceMap.mappedDocument.uri,
+										}
 									} as any,
 								})),
 							};
 
 							cache!.data.push({
-								sourceMapId: sourceMap.id,
-								embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								sourceMap: {
+									lsType: sourceMap.embeddedFile.lsType,
+									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								},
 								plugin,
 								list: completionList,
 							});
@@ -202,8 +211,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 
 					cache.data.push({
-						sourceMapId: undefined,
-						embeddedDocumentUri: undefined,
+						sourceMap: undefined,
 						plugin,
 						list: {
 							...completionList,
@@ -213,8 +221,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									uri,
 									originalItem: item,
 									pluginId: plugin.id,
-									sourceMapId: undefined,
-									embeddedDocumentUri: undefined,
+									sourceMap: undefined,
 								} as any,
 							}))
 						},

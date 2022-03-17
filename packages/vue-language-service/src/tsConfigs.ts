@@ -1,18 +1,23 @@
-import * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
+import type * as vscode from 'vscode-languageserver-protocol';
+import * as ts2 from '@volar/typescript-language-service';
+
+export function getTsSettings(_getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>)) {
+	const tsSettings: ts2.Settings = {
+		getFormatOptions: (document, options) => getFormatOptions(_getSettings, document, options),
+		getPreferences: (document) => getPreferences(_getSettings, document),
+	};
+	return tsSettings;
+}
 
 export async function getFormatOptions(
-	configuration: Configuration | undefined,
+	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
 	document: TextDocument,
 	options?: vscode.FormattingOptions
 ): Promise<ts.FormatCodeSettings> {
 
-	let config = await configuration?.getConfiguration({
-		section: isTypeScriptDocument(document) ? 'typescript.format' : 'javascript.format',
-		scopeUri: document.uri
-	});
+	let config = await getSettings<any>(isTypeScriptDocument(document) ? 'typescript.format' : 'javascript.format', document.uri);
 
 	config = config ?? {};
 
@@ -43,19 +48,12 @@ export async function getFormatOptions(
 }
 
 export async function getPreferences(
-	configuration: Configuration | undefined,
+	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
 	document: TextDocument
 ): Promise<ts.UserPreferences> {
-	let [config, preferencesConfig] = await configuration?.getConfiguration([
-		{
-			section: isTypeScriptDocument(document) ? 'typescript' : 'javascript',
-			scopeUri: document.uri
-		},
-		{
-			section: isTypeScriptDocument(document) ? 'typescript.preferences' : 'javascript.preferences',
-			scopeUri: document.uri
-		}
-	]) ?? [undefined, undefined];
+
+	let config = await getSettings<any>(isTypeScriptDocument(document) ? 'typescript' : 'javascript', document.uri);
+	let preferencesConfig = await getSettings<any>(isTypeScriptDocument(document) ? 'typescript.preferences' : 'javascript.preferences', document.uri);
 
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};

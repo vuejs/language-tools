@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import * as fixNames from '../utils/fixNames';
-import type { LanguageServiceHost } from '../';
+import type { Settings } from '../';
 
 export interface FixAllData {
 	type: 'fixAll',
@@ -32,7 +32,7 @@ export type Data = FixAllData | RefactorData | OrganizeImportsData;
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
+	settings: Settings,
 ) {
 	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
 
@@ -40,8 +40,8 @@ export function register(
 		if (!document) return;
 
 		const [formatOptions, preferences] = await Promise.all([
-			host.getFormatOptions?.(document) ?? {},
-			host.getPreferences?.(document) ?? {},
+			settings.getFormatOptions?.(document) ?? {},
+			settings.getPreferences?.(document) ?? {},
 		]);
 
 		const fileName = shared.uriToFsPath(document.uri);

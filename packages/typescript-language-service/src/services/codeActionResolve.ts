@@ -3,12 +3,12 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import { Data } from './codeAction';
-import type { LanguageServiceHost } from '../';
+import type { Settings } from '../';
 
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
+	settings: Settings,
 ) {
 	return async (codeAction: vscode.CodeAction) => {
 
@@ -17,8 +17,8 @@ export function register(
 
 		const document = getTextDocument(data.uri);
 		const [formatOptions, preferences] = document ? await Promise.all([
-			host.getFormatOptions?.(document) ?? {},
-			host.getPreferences?.(document) ?? {},
+			settings.getFormatOptions?.(document) ?? {},
+			settings.getPreferences?.(document) ?? {},
 		]) : [{}, {}];
 
 		if (data?.type === 'fixAll') {

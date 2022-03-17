@@ -1,14 +1,19 @@
-import { Embedded, EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import { EmbeddedStructure } from '@volar/vue-typescript';
+import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
 
-export async function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
+export async function visitEmbedded(vueDocument: VueDocument, embeddeds: EmbeddedStructure[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
+
     for (const embedded of embeddeds) {
 
-        if (!await visitEmbedded(embedded.embeddeds, cb)) {
+        if (!await visitEmbedded(vueDocument, embedded.embeddeds, cb)) {
             return false;
         }
 
-        if (embedded.sourceMap) {
-            if (!await cb(embedded.sourceMap)) {
+        if (embedded.self) {
+
+            const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
+
+            if (!await cb(sourceMap)) {
                 return false;
             }
         }

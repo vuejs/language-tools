@@ -1,12 +1,12 @@
 import * as ts2 from '@volar/typescript-language-service';
-import { createBasicRuntime, createVueDocument, VueDocument } from '@volar/vue-typescript';
+import * as vueTs from '@volar/vue-typescript';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
 import usePrettierPlugin from './commonPlugins/prettier';
 import useHtmlFormatPlugin from './commonPlugins/prettyhtml';
-import usePugPlugin from './commonPlugins/pug';
+import usePugPlugin, { createPugDocuments } from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
 import useSassFormatPlugin from './commonPlugins/sassFormatter';
 import useTsPlugin, { isTsDocument } from './commonPlugins/typescript';
@@ -18,35 +18,41 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { DocumentServiceRuntimeContext, LanguageServiceHost } from './types';
+import { DocumentServiceRuntimeContext } from './types';
 import * as sharedServices from './utils/sharedLs';
 import useAutoWrapParenthesesPlugin from './vuePlugins/autoWrapParentheses';
 import useVuePlugin from './vuePlugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
-import { loadCustomPlugins } from './languageService';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as json from 'vscode-json-languageservice';
+import { getTsSettings } from './tsConfigs';
+import type * as html from 'vscode-html-languageservice';
+import { createBasicRuntime } from './basicRuntime';
+import * as shared from '@volar/shared';
+import { parseVueDocument, VueDocument } from './vueDocuments';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
 export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
-	getPreferences: LanguageServiceHost['getPreferences'],
-	getFormatOptions: LanguageServiceHost['getFormatOptions'],
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
-	rootPath: string,
+	fileSystemProvider: html.FileSystemProvider | undefined,
+	customPlugins: EmbeddedLanguagePlugin[],
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
-	const services = createBasicRuntime();
+	const services = createBasicRuntime(fileSystemProvider);
 	let tsLs: ts2.LanguageService;
 
-    const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
+	const jsonLs = json.getLanguageService({});
+	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
+	const tsSettings = getTsSettings(_getSettings);
+
+	// embedded documents
+	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// language support plugins
-	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
-	const customPlugins = loadCustomPlugins(rootPath);
 	const vuePlugin = useVuePlugin({
 		getSettings: _getSettings,
 		getVueDocument,
@@ -58,7 +64,8 @@ export function getDocumentService(
 	}));
 	const pugPlugin = usePugPlugin({
 		getSettings: _getSettings,
-		getPugLs: () => services.pugLs
+		getPugLs: () => services.pugLs,
+		pugDocuments,
 	});
 	const cssPlugin = useCssPlugin({
 		getSettings: _getSettings,
@@ -91,11 +98,13 @@ export function getDocumentService(
 		jsonPlugin,
 		tsPlugin,
 	].map(patchHtmlFormat);
+	const vueTsPlugins = [
+		vueTs.useHtmlPlugin(),
+		vueTs.usePugPlugin(),
+	];
 
 	const context: DocumentServiceRuntimeContext = {
-		vueCompilerOptions: {},
 		typescript: ts,
-		...services,
 		getVueDocument,
 		getPlugins() {
 			return [
@@ -114,7 +123,7 @@ export function getDocumentService(
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
-				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, getPreferences, getFormatOptions);
+				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, tsSettings);
 			}
 		},
 	};
@@ -135,30 +144,25 @@ export function getDocumentService(
 		if (document.languageId !== 'vue')
 			return;
 
-		const cacheVueDoc = vueDocuments.get(document);
-		if (cacheVueDoc) {
+		let vueDoc = vueDocuments.get(document);
 
-			const oldText = cacheVueDoc.getTextDocument().getText();
-			const newText = document.getText();
+		if (!vueDoc) {
 
-			if (oldText.length !== newText.length || oldText !== newText) {
-				cacheVueDoc.update(document.getText(), document.version.toString());
-			}
+			const vueFile = vueTs.createVueFile(
+				shared.uriToFsPath(document.uri),
+				document.getText(),
+				document.version.toString(),
+				vueTsPlugins,
+				{},
+				context.typescript,
+				services.getCssVBindRanges,
+				services.getCssClasses,
+			);
+			vueDoc = parseVueDocument(vueFile);
 
-			return cacheVueDoc;
+			vueDocuments.set(document, vueDoc);
 		}
-		const vueDoc = createVueDocument(
-			document.uri,
-			document.getText(),
-			document.version.toString(),
-			context.htmlLs,
-			context.compileTemplate,
-			context.vueCompilerOptions,
-			context.typescript,
-			context.getCssVBindRanges,
-			context.getCssClasses,
-		);
-		vueDocuments.set(document, vueDoc);
+
 		return vueDoc;
 	}
 }

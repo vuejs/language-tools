@@ -1,9 +1,9 @@
-import type { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { LanguageServicePlugin } from '../languageService';
 import { visitEmbedded } from './definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
 
 export async function documentFeatureWorker<T>(
 	context: DocumentServiceRuntimeContext,
@@ -42,9 +42,9 @@ export async function documentArgFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument.getEmbeddeds();
+		const embeddeds = vueDocument.file.getEmbeddeds();
 
-		await visitEmbedded(embeddeds, async sourceMap => {
+		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
 			if (!isValidSourceMap(sourceMap))
 				return true;
@@ -116,7 +116,7 @@ export async function languageFeatureWorker<T, K>(
 	uri: string,
 	arg: K,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
-	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined) => T,
+	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: VueDocument | undefined) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,
@@ -129,17 +129,17 @@ export async function languageFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument.getEmbeddeds();
+		const embeddeds = vueDocument.file.getEmbeddeds();
 
-		await visitEmbedded(embeddeds, async sourceMap => {
+		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
-			const plugins = context.getPlugins(sourceMap.lsType);
+			const plugins = context.getPlugins(sourceMap.embeddedFile.lsType);
 
 			for (const mapedArg of transformArg(arg, sourceMap)) {
 
 				for (const plugin of plugins) {
 
-					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mapedArg, sourceMap);
+					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mapedArg, sourceMap, vueDocument);
 
 					if (!embeddedResult)
 						continue;
@@ -172,7 +172,7 @@ export async function languageFeatureWorker<T, K>(
 
 		for (const plugin of plugins) {
 
-			const embeddedResult = await worker(plugin, document, arg, undefined);
+			const embeddedResult = await worker(plugin, document, arg, undefined, undefined);
 
 			if (!embeddedResult)
 				continue;

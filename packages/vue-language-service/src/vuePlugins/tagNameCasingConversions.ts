@@ -1,7 +1,7 @@
-import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import { hyphenate } from '@vue/shared';
+import { VueDocument } from '../vueDocuments';
 
 export const convertTagNameCasingCommand = 'tagNameCasingConversions';
 
@@ -25,17 +25,17 @@ export default function (host: {
 
                 return worker(uri, async vueDocument => {
 
-                    const desc = vueDocument.getDescriptor();
+                    const desc = vueDocument.file.getDescriptor();
                     if (!desc.template)
                         return;
 
                     context.workDoneProgress.begin('Convert Tag Name', 0, '', true);
 
                     const template = desc.template;
-                    const document = vueDocument.getTextDocument();
+                    const document = vueDocument.getDocument();
                     const edits: vscode.TextEdit[] = [];
-                    const components = new Set(vueDocument.getTemplateScriptData().components);
-                    const resolvedTags = vueDocument.refs.sfcTemplateScript.templateCodeGens.value?.tagNames ?? {};
+                    const components = new Set(vueDocument.file.getTemplateScriptData().components);
+                    const resolvedTags = vueDocument.file.refs.sfcTemplateScript.templateCodeGens.value?.tagNames ?? {};
                     let i = 0;
 
                     for (const tagName in resolvedTags) {
@@ -48,7 +48,7 @@ export default function (host: {
                             context.workDoneProgress.report(i++ / Object.keys(resolvedTags).length * 100, tagName);
 
                             const offset = template.startTagEnd + resolvedTag.offsets[0];
-                            const refs = await host.findReferences(uri, vueDocument.getTextDocument().positionAt(offset)) ?? [];
+                            const refs = await host.findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
 
                             for (const vueLoc of refs) {
                                 if (

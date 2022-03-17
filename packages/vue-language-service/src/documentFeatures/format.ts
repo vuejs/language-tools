@@ -1,7 +1,8 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { Embedded, EmbeddedDocumentSourceMap, VueDocument } from '@volar/vue-typescript';
+import type { EmbeddedStructure } from '@volar/vue-typescript';
 import type { DocumentServiceRuntimeContext } from '../types';
+import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
@@ -31,28 +32,30 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			let edits: vscode.TextEdit[] = [];
 			let toPatchIndent: {
-				sourceMapId: number,
+				lsType: string,
 				sourceMapEmbeddedDocumentUri: string,
 			} | undefined;
 
 			for (const embedded of embeddeds) {
 
-				if (!embedded.sourceMap?.capabilities.formatting)
+				if (!embedded.self?.file.capabilities.formatting)
 					continue;
 
-				if (embedded.sourceMap.lsType === 'template')
+				const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
+
+				if (embedded.self.file.lsType === 'template')
 					toPatchIndent = {
-						sourceMapId: embedded.sourceMap.id,
-						sourceMapEmbeddedDocumentUri: embedded.sourceMap.mappedDocument.uri,
+						lsType: sourceMap.embeddedFile.lsType,
+						sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
 					};
 
-				const _edits = await tryFormat(embedded.sourceMap.mappedDocument);
+				const _edits = await tryFormat(sourceMap.mappedDocument);
 
 				if (!_edits)
 					continue;
 
 				for (const textEdit of _edits) {
-					for (const [range] of embedded.sourceMap.getSourceRanges(
+					for (const [range] of sourceMap.getSourceRanges(
 						textEdit.range.start,
 						textEdit.range.end,
 					)) {
@@ -72,7 +75,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				tryUpdateVueDocument();
 
-				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.id === toPatchIndent?.sourceMapId && sourceMap.mappedDocument.uri === toPatchIndent.sourceMapEmbeddedDocumentUri);
+				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.embeddedFile.lsType === toPatchIndent?.lsType && sourceMap.mappedDocument.uri === toPatchIndent.sourceMapEmbeddedDocumentUri);
 
 				if (sourceMap) {
 
@@ -97,22 +100,22 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument?.getTextDocument().getText() !== document.getText()) {
-				vueDocument?.update(document.getText(), document.version.toString());
+			if (vueDocument?.getDocument().getText() !== document.getText()) {
+				vueDocument?.file.update(document.getText(), document.version.toString());
 			}
 		}
 
 		function getEmbeddedsByLevel(vueDocument: VueDocument, level: number) {
 
-			const embeddeds = vueDocument.getEmbeddeds();
-			const embeddedsLevels: Embedded[][] = [embeddeds];
+			const embeddeds = vueDocument.file.getEmbeddeds();
+			const embeddedsLevels: EmbeddedStructure[][] = [embeddeds];
 
 			while (true) {
 
 				if (embeddedsLevels.length > level)
 					return embeddedsLevels[level];
 
-				let nextEmbeddeds: Embedded[] = [];
+				let nextEmbeddeds: EmbeddedStructure[] = [];
 
 				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
 
@@ -164,7 +167,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedDocumentSourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
-	const document = vueDocument.getTextDocument();
+	const document = vueDocument.getDocument();
 
 	for (const maped of sourceMap.mappings) {
 

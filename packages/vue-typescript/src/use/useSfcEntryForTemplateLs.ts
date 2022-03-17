@@ -1,36 +1,36 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import * as SourceMaps from '../utils/sourceMaps';
+import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '@volar/source-map';
 import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
-import * as shared from '@volar/shared';
 import { getVueLibraryName } from '../utils/localTypes';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 
 export function useSfcEntryForTemplateLs(
-	vueUri: string,
-	vueDoc: Ref<TextDocument>,
-	script: Ref<shared.Sfc['script']>,
-	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
-	template: Ref<shared.Sfc['template']>,
+	fileName: string,
+	script: Ref<Sfc['script']>,
+	scriptSetup: Ref<Sfc['scriptSetup']>,
+	template: Ref<Sfc['template']>,
 	hasTsDoc: Ref<boolean>,
 	isVue2: boolean,
 ) {
-	let version = 0;
-	const textDocument = computed(() => {
-		const uri = `${vueUri}.ts`;
-		const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
+
+	const file = computed(() => {
+
+		const baseFileName = upath.basename(fileName);
 		const tsScriptFileName = hasTsDoc.value ? '__VLS_script_ts' : '__VLS_script';
+
 		let content = '';
 		content += '// @ts-nocheck\n';
 		content += `import * as __VLS_types from './__VLS_types';\n`;
 		if (script.value || scriptSetup.value) {
-			content += `import { __VLS_options as __VLS_options_ts } from './${vueFileName}.${tsScriptFileName}';\n`;
-			content += `import { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
-			content += `export { __VLS_options, __VLS_name } from './${vueFileName}.__VLS_script';\n`;
-			content += `export * from './${vueFileName}.__VLS_script';\n`;
-				content += `import __VLS_component_ts from './${vueFileName}.${tsScriptFileName}';\n`;
-				content += `import __VLS_component from './${vueFileName}.__VLS_script';\n`;
-				content += `export { default as __VLS_component } from './${vueFileName}.__VLS_script';\n`;
+			content += `import { __VLS_options as __VLS_options_ts } from './${baseFileName}.${tsScriptFileName}';\n`;
+			content += `import { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`;
+			content += `export { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`;
+			content += `export * from './${baseFileName}.__VLS_script';\n`;
+			content += `import __VLS_component_ts from './${baseFileName}.${tsScriptFileName}';\n`;
+			content += `import __VLS_component from './${baseFileName}.__VLS_script';\n`;
+			content += `export { default as __VLS_component } from './${baseFileName}.__VLS_script';\n`;
 		}
 		else {
 			content += `export var __VLS_name = undefined;\n`;
@@ -51,41 +51,54 @@ export function useSfcEntryForTemplateLs(
 		content += `export default {} as typeof __VLS_component & {\n`;
 		content += `__VLS_raw: typeof __VLS_component\n`;
 		content += `__VLS_options: typeof __VLS_options,\n`;
-		content += template.value ? `__VLS_slots: typeof import ('./${vueFileName}.__VLS_template').default,\n` : `// no template\n`;
+		content += template.value ? `__VLS_slots: typeof import ('./${baseFileName}.__VLS_template').default,\n` : `// no template\n`;
 		content += `};\n`;
-		return TextDocument.create(uri, 'typescript', version++, content);
-	});
-	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const sourceMap = computed(() => {
-		if (textDocument.value) {
-			const docText = textDocument.value.getText();
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(sourceMapId, vueDoc.value, textDocument.value, 'template', {
+
+		const file: EmbeddedFile = {
+			fileName: fileName + '.ts',
+			lang: 'ts',
+			content,
+			lsType: 'template',
+			capabilities: {
 				diagnostics: false,
 				foldingRanges: false,
 				formatting: false,
 				documentSymbol: false,
 				codeActions: false,
-			});
-			sourceMap.mappings.push({
-				data: {
-					vueTag: 'sfc',
-					capabilities: {},
-				},
-				mode: SourceMaps.Mode.Expand,
-				sourceRange: {
-					start: 0,
-					end: 0,
-				},
-				mappedRange: {
-					start: 0,
-					end: docText.length,
-				},
-			});
-			return sourceMap;
-		}
+			},
+			data: undefined,
+		};
+
+		return file;
 	});
+	const embedded = computed<Embedded | undefined>(() => {
+
+		const sourceMap = new EmbeddedFileSourceMap();
+
+		sourceMap.mappings.push({
+			data: {
+				vueTag: 'sfc',
+				capabilities: {},
+			},
+			mode: SourceMaps.Mode.Expand,
+			sourceRange: {
+				start: 0,
+				end: 0,
+			},
+			mappedRange: {
+				start: 0,
+				end: file.value.content.length,
+			},
+		});
+
+		return {
+			file: file.value,
+			sourceMap,
+		};
+	});
+
 	return {
-		textDocument,
-		sourceMap,
+		file,
+		embedded,
 	};
 }

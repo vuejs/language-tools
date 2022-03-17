@@ -11,15 +11,12 @@ export function getDummyTsLs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ts2: typeof import('@volar/typescript-language-service'),
 	_doc: TextDocument,
-	getPreferences: ts2.LanguageServiceHost['getPreferences'],
-	getFormatOptions: ts2.LanguageServiceHost['getFormatOptions'],
+	settings: ts2.Settings,
 ): ts2.LanguageService {
 	if (!dummyTsLs) {
-		const host: ts2.LanguageServiceHost = {
+		const host: ts.LanguageServiceHost = {
 			getProjectVersion: () => dummyProjectVersion.toString(),
 			getScriptVersion: () => dummyProjectVersion.toString(),
-			getPreferences,
-			getFormatOptions,
 			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),
 			getScriptFileNames: () => [shared.uriToFsPath(doc.uri)],
 			getScriptSnapshot: fileName => {
@@ -34,6 +31,7 @@ export function getDummyTsLs(
 			ts,
 			host,
 			ts.createLanguageService(host),
+			settings,
 		);
 	}
 	dummyProjectVersion++;

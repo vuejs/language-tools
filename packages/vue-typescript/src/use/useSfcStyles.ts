@@ -1,57 +1,55 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { computed, Ref } from '@vue/reactivity';
-import * as SourceMaps from '../utils/sourceMaps';
-import * as shared from '@volar/shared';
+import * as SourceMaps from '@volar/source-map';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
+import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 
 export function useSfcStyles(
-	vueUri: string,
-	vueDoc: Ref<TextDocument>,
-	styles: Ref<shared.Sfc['styles']>,
+	fileName: string,
+	styles: Ref<Sfc['styles']>,
 ) {
 
-	let version = 0;
+	const files = computed(() => {
 
-	const textDocuments = computed(() => {
-		const documents: {
-			textDocument: TextDocument,
+		const _files: EmbeddedFile<{
 			module: string | undefined,
 			scoped: boolean,
-		}[] = [];
+		}>[] = [];
+
 		for (let i = 0; i < styles.value.length; i++) {
-			const style = styles.value[i];
-			const lang = style.lang;
-			let content = style.content;
-			const documentUri = vueUri + '.' + i + '.' + lang;
-			const document = TextDocument.create(documentUri, lang, version++, content);
-			documents.push({
-				textDocument: document,
-				module: style.module,
-				scoped: style.scoped,
-			});
-		}
-		return documents;
-	});
-	const sourceMapsId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.EmbeddedDocumentSourceMap[] = [];
-		for (let i = 0; i < styles.value.length && i < textDocuments.value.length; i++) {
 
-			const cssData = textDocuments.value[i];
 			const style = styles.value[i];
 
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
-				sourceMapsId,
-				vueDoc.value,
-				cssData.textDocument,
-				'nonTs',
-				{
+			_files.push({
+				fileName: fileName + '.' + i + '.' + style.lang,
+				lang: style.lang,
+				content: style.content,
+				lsType: 'nonTs',
+				capabilities: {
 					diagnostics: true,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
 				},
-			);
+				data: {
+					module: style.module,
+					scoped: style.scoped,
+				},
+			});
+		}
+
+		return _files;
+	});
+	const embeddeds = computed(() => {
+
+		const _embeddeds: Embedded[] = [];
+
+		for (let i = 0; i < styles.value.length && i < files.value.length; i++) {
+
+			const file = files.value[i];
+			const style = styles.value[i];
+			const sourceMap = new EmbeddedFileSourceMap();
+
 			sourceMap.mappings.push({
 				data: {
 					vueTag: 'style',
@@ -76,12 +74,15 @@ export function useSfcStyles(
 					end: style.content.length,
 				},
 			});
-			sourceMaps.push(sourceMap);
+
+			_embeddeds.push({ file, sourceMap });
 		}
-		return sourceMaps;
+
+		return _embeddeds;
 	});
+
 	return {
-		textDocuments,
-		sourceMaps,
+		files,
+		embeddeds,
 	};
 }

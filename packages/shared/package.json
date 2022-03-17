@@ -15,7 +15,6 @@
 	},
 	"dependencies": {
 		"upath": "^2.0.1",
-		"vscode-html-languageservice": "^4.2.1",
 		"vscode-jsonrpc": "^8.0.0-next.5",
 		"vscode-uri": "^3.0.3"
 	},

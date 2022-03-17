@@ -5,7 +5,7 @@ import * as path from 'upath';
 import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import type { TeleportMappingData, EmbeddedDocumentMappingData } from '../types';
+import type { TeleportMappingData, EmbeddedFileMappingData } from '../types';
 
 export function generate(
 	lsType: 'template' | 'script',
@@ -24,7 +24,7 @@ export function generate(
 	vueLibName: string,
 ) {
 
-	const codeGen = new CodeGen<EmbeddedDocumentMappingData>();
+	const codeGen = new CodeGen<EmbeddedFileMappingData>();
 	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
 	const usedTypes = {
 		DefinePropsToOptions: false,

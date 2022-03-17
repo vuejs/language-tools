@@ -6,7 +6,8 @@ import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configs';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
-import { RuntimeEnvironment } from './common';
+import { loadCustomPlugins, RuntimeEnvironment } from './common';
+import { tsShared } from '@volar/vue-typescript';
 
 export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
@@ -84,9 +85,32 @@ export async function createProject(
 		if (!vueLs) {
 			vueLs = (async () => {
 				const workDoneProgress = await connection.window.createWorkDoneProgress();
+				const customPlugins = loadCustomPlugins(languageServiceHost.getCurrentDirectory());
 				const vueLs = vue.createLanguageService(
 					{ typescript: ts },
 					languageServiceHost,
+					runtimeEnv.fileSystemProvide,
+					(uri) => {
+
+						const protocol = uri.substr(0, uri.indexOf(':'));
+
+						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
+						if (builtInHandler) {
+							return builtInHandler(uri);
+						}
+
+						if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
+							return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
+								return responseText;
+							}, error => {
+								return Promise.reject(error.message);
+							});
+						}
+						else {
+							return Promise.reject('clientHandledGetDocumentContentRequest is false');
+						}
+					},
+					customPlugins,
 					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
 
@@ -189,30 +213,6 @@ export async function createProject(
 	function createLanguageServiceHost() {
 
 		const host: vue.LanguageServiceHost = {
-			// vue
-			schemaRequestService(uri) {
-
-				const protocol = uri.substr(0, uri.indexOf(':'));
-
-				const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
-				if (builtInHandler) {
-					return builtInHandler(uri);
-				}
-
-				if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-					return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
-						return responseText;
-					}, error => {
-						return Promise.reject(error.message);
-					});
-				}
-				else {
-					return Promise.reject('clientHandledGetDocumentContentRequest is false');
-				}
-			},
-			getPreferences: lsConfigs?.getTsPreferences,
-			getFormatOptions: lsConfigs?.getTsFormatOptions,
-			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
 			// ts
 			getNewLine: () => projectSys.newLine,
 			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,
@@ -280,7 +280,7 @@ export async function createProject(
 		scripts.clear();
 		disposables.length = 0;
 	}
-	function createParsedCommandLine(): ReturnType<typeof shared.createParsedCommandLine> {
+	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
@@ -290,7 +290,7 @@ export async function createProject(
 			readFile: projectSys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
-			return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
 		}
 		else {
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');

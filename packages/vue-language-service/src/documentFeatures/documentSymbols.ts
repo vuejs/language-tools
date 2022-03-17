@@ -11,7 +11,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentFeatureWorker(
 			context,
 			document,
-			sourceMap => sourceMap.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			sourceMap => sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentSymbols?.(document),
 			(data, sourceMap) => transformSymbolInformations(
 				data,

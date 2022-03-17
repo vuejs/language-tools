@@ -1,8 +1,7 @@
 import * as vue from '@volar/vue-typescript';
-import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as apis from './apis';
-import { createBasicRuntime } from '@volar/vue-typescript';
+import { tsShared } from '@volar/vue-typescript';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -24,40 +23,46 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 
 			const proxyHost = createProxyHost(ts, info);
-			const services = createBasicRuntime();
 			const vueCompilerOptions = proxyHost.host.getVueCompilationSettings?.() ?? {};
-			const tsRuntime = vue.createTypeScriptRuntime({ typescript: ts, ...services, vueCompilerOptions }, proxyHost.host, true);
-			const _tsPluginApis = apis.register(tsRuntime.context);
+			const tsRuntime = vue.createTypeScriptRuntime({
+				typescript: ts,
+				vueCompilerOptions,
+				getCssClasses: () => ({}),
+				getCssVBindRanges: () => [],
+				vueLsHost: proxyHost.host,
+				isTsPlugin: true
+			});
+			const _tsPluginApis = apis.register(tsRuntime);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getSemanticDiagnostics, false),
-				getEncodedSemanticClassifications: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getEncodedSemanticClassifications, false),
-				getCompletionsAtPosition: tsRuntime.apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-				getCompletionEntryDetails: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getCompletionEntryDetails, false), // not sure
-				getCompletionEntrySymbol: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getCompletionEntrySymbol, false), // not sure
-				getQuickInfoAtPosition: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getQuickInfoAtPosition, false),
-				getSignatureHelpItems: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getSignatureHelpItems, false),
-				getRenameInfo: tsRuntime.apiHook(tsRuntime.context.scriptTsLsRaw.getRenameInfo, false),
+				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs('script').getSemanticDiagnostics, false),
+				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs('script').getEncodedSemanticClassifications, false),
+				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
+				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs('script').getCompletionEntryDetails, false), // not sure
+				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs('script').getCompletionEntrySymbol, false), // not sure
+				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs('script').getQuickInfoAtPosition, false),
+				getSignatureHelpItems: apiHook(tsRuntime.getTsLs('script').getSignatureHelpItems, false),
+				getRenameInfo: apiHook(tsRuntime.getTsLs('script').getRenameInfo, false),
 
-				findRenameLocations: tsRuntime.apiHook(_tsPluginApis.findRenameLocations, true),
-				getDefinitionAtPosition: tsRuntime.apiHook(_tsPluginApis.getDefinitionAtPosition, false),
-				getDefinitionAndBoundSpan: tsRuntime.apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
-				getTypeDefinitionAtPosition: tsRuntime.apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
-				getImplementationAtPosition: tsRuntime.apiHook(_tsPluginApis.getImplementationAtPosition, false),
-				getReferencesAtPosition: tsRuntime.apiHook(_tsPluginApis.getReferencesAtPosition, true),
-				findReferences: tsRuntime.apiHook(_tsPluginApis.findReferences, true),
+				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
+				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
+				getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
+				getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
+				getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition, false),
+				getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition, true),
+				findReferences: apiHook(_tsPluginApis.findReferences, true),
 
 				// TODO: now is handle by vue server
-				// prepareCallHierarchy: tsRuntime.apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
-				// provideCallHierarchyIncomingCalls: tsRuntime.apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
-				// provideCallHierarchyOutgoingCalls: tsRuntime.apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
-				// getEditsForFileRename: tsRuntime.apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
+				// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
+				// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
+				// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
+				// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
 
 				// TODO
-				// getCodeFixesAtPosition: tsRuntime.apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
-				// getCombinedCodeFix: tsRuntime.apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
-				// applyCodeActionCommand: tsRuntime.apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
-				// getApplicableRefactors: tsRuntime.apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
-				// getEditsForRefactor: tsRuntime.apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
+				// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
+				// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
+				// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
+				// getApplicableRefactors: apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
+				// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
 			};
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
@@ -67,6 +72,20 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 					return tsPluginProxy[property] || target[property];
 				},
 			});
+
+			function apiHook<T extends (...args: any) => any>(
+				api: T,
+				shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
+			) {
+				const handler = {
+					apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
+						const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
+						tsRuntime.update(_shouldUpdateTemplateScript);
+						return target.apply(thisArg, argumentsList);
+					}
+				};
+				return new Proxy<T>(api, handler);
+			}
 		},
 		getExternalFiles(project) {
 			const getVueFiles = vueFilesGetter.get(project);
@@ -94,7 +113,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		snapshots: ts.IScriptSnapshot | undefined,
 		snapshotsVersion: string | undefined,
 	}>();
-	const host: vue.LanguageServiceHostBase = {
+	const host: vue.LanguageServiceHost = {
 		getNewLine: () => info.project.getNewLine(),
 		useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 		readFile: path => info.project.readFile(path),
@@ -127,11 +146,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
-			parsedCommandLine = shared.createParsedCommandLine(ts, ts.sys, projectName);
+			parsedCommandLine = tsShared.createParsedCommandLine(ts, ts.sys, projectName);
 		})
 		: undefined;
 	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
-		? shared.createParsedCommandLine(ts, ts.sys, projectName)
+		? tsShared.createParsedCommandLine(ts, ts.sys, projectName)
 		: undefined;
 
 	return {
@@ -147,7 +166,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	}
 	async function onConfigUpdated() {
 		const seq = ++reloadVueFilesSeq;
-		await shared.sleep(100);
+		await sleep(100);
 		if (seq === reloadVueFilesSeq && !disposed) {
 			update();
 		}
@@ -240,7 +259,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	async function onProjectUpdated() {
 		projectVersion++;
 		const seq = ++sendDiagSeq;
-		await shared.sleep(100);
+		await sleep(100);
 		if (seq === sendDiagSeq) {
 			info.project.refreshDiagnostics();
 		}
@@ -255,4 +274,8 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		}
 		disposed = true;
 	}
+}
+
+function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -1,13 +1,13 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { LanguageServiceHost } from '..';
+import type { Settings } from '..';
 import * as completion from './completion';
 
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost,
+	settings: Settings,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const worker = completion.register(languageService, getTextDocument, ts);
@@ -16,7 +16,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const preferences = await host.getPreferences?.(document) ?? {};
+		const preferences = await settings.getPreferences?.(document) ?? {};
 
 		return worker(uri, position, {
 			...preferences,

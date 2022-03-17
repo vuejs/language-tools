@@ -9,7 +9,7 @@ export function register(htmlLs: html.LanguageService) {
 		if (!htmlRange) return;
 
 		const htmlComplete = await htmlLs.doComplete2(
-			pugDoc.sourceMap.mappedDocument,
+			pugDoc.htmlTextDocument,
 			htmlRange.start,
 			pugDoc.htmlDocument,
 			documentContext,

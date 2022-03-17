@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './commonPlugins/css';
@@ -9,9 +9,9 @@ import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './c
 import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './commonPlugins/html';
 import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './commonPlugins/jsDoc';
 import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './commonPlugins/json';
-import usePugPlugin, { triggerCharacters as pugTriggerCharacters } from './commonPlugins/pug';
+import usePugPlugin, { triggerCharacters as pugTriggerCharacters, createPugDocuments } from './commonPlugins/pug';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './commonPlugins/typescript';
-import * as d3 from './ideFeatures/d3';
+// import * as d3 from './ideFeatures/d3';
 import * as tagNameCase from './ideFeatures/tagNameCase';
 import * as autoInsert from './languageFuatures/autoInsert';
 import * as callHierarchy from './languageFuatures/callHierarchy';
@@ -45,9 +45,15 @@ import useTagNameCasingConversionsPlugin from './vuePlugins/tagNameCasingConvers
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './vuePlugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './vuePlugins/vueTemplateLanguage';
 import * as json from 'vscode-json-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as upath from 'upath';
 
-import type * as _0 from 'vscode-html-languageservice';
+import type * as html from 'vscode-html-languageservice';
 import type * as _1 from 'vscode-css-languageservice';
+import { getTsSettings } from './tsConfigs';
+import { createBasicRuntime } from './basicRuntime';
+import { parseVueDocuments } from './vueDocuments';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -98,7 +104,10 @@ export function getTriggerCharacters(tsVersion: string) {
 
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
-	vueHost: LanguageServiceHost,
+	vueLsHost: LanguageServiceHost,
+	fileSystemProvider: html.FileSystemProvider | undefined,
+	schemaRequestService: json.SchemaRequestService | undefined,
+	_customPlugins: EmbeddedLanguagePlugin[],
 	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
@@ -106,27 +115,42 @@ export function createLanguageService(
 	}>,
 ) {
 
-	const vueCompilerOptions = vueHost.getVueCompilationSettings?.() ?? {};
-	const services = createBasicRuntime();
+	const vueCompilerOptions = vueLsHost.getVueCompilationSettings?.() ?? {};
+	const services = createBasicRuntime(fileSystemProvider);
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
-		...services,
 		vueCompilerOptions,
-	}, vueHost, false);
+		getCssClasses: services.getCssClasses,
+		getCssVBindRanges: services.getCssVBindRanges,
+		vueLsHost: vueLsHost,
+		isTsPlugin: false,
+	});
+	const vueDocuments = parseVueDocuments(tsRuntime.vueFiles);
+	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
+	const tsSettings = getTsSettings(_getSettings);
+	const documentContext = getDocumentContext();
+
+	const scriptTsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost('script'), tsRuntime.getTsLs('script'), tsSettings);
+	const templateTsLsRaw = tsRuntime.getTsLs('template');
+	const templateTsLsHost = tsRuntime.getTsLsHost('template');
+	const templateTsLs = templateTsLsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsLsHost, templateTsLsRaw, tsSettings) : undefined;
 	const blockingRequests = new Set<Promise<any>>();
 	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
+	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
-	const jsonLs = json.getLanguageService({ schemaRequestService: vueHost?.schemaRequestService });
+	const jsonLs = json.getLanguageService({ schemaRequestService });
+
+	// embedded documents
+	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// plugins
-	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
-	const customPlugins = loadCustomPlugins(vueHost.getCurrentDirectory()).map(plugin => defineLanguageServicePlugin(plugin));
+	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getSettings: _getSettings,
-			getVueDocument: (document) => tsRuntime.context.vueDocuments.get(document.uri),
-			scriptTsLs: tsRuntime.context.scriptTsLs,
-			documentContext: tsRuntime.context.documentContext,
+			getVueDocument: (document) => vueDocuments.get(document.uri),
+			scriptTsLs,
+			documentContext,
 		}),
 		{
 			triggerCharacters: vueTriggerCharacters,
@@ -137,7 +161,7 @@ export function createLanguageService(
 		useHtmlPlugin({
 			getSettings: _getSettings,
 			getHtmlLs: () => services.htmlLs,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
 		}),
 		htmlTriggerCharacters,
 	);
@@ -146,7 +170,8 @@ export function createLanguageService(
 		usePugPlugin({
 			getSettings: _getSettings,
 			getPugLs: () => services.pugLs,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
+			pugDocuments,
 		}),
 		pugTriggerCharacters,
 	);
@@ -155,7 +180,7 @@ export function createLanguageService(
 			getSettings: _getSettings,
 			getCssLs: services.getCssLs,
 			getStylesheet: services.getStylesheet,
-			documentContext: tsRuntime.context.documentContext,
+			documentContext,
 		}),
 		{
 			triggerCharacters: cssTriggerCharacters,
@@ -180,15 +205,15 @@ export function createLanguageService(
 		},
 	);
 	const scriptTsPlugins = useTsPlugins(
-		tsRuntime.context.scriptTsLs,
+		scriptTsLs,
 		false,
 		{
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		},
 	);
-	const templateTsPlugins = tsRuntime.context.templateTsLs ? useTsPlugins(
-		tsRuntime.context.templateTsLs,
+	const templateTsPlugins = templateTsLs ? useTsPlugins(
+		templateTsLs,
 		true,
 		{
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
@@ -202,27 +227,27 @@ export function createLanguageService(
 		useAutoDotValuePlugin({
 			getSettings: _getSettings,
 			ts,
-			getTsLs: () => tsRuntime.context.scriptTsLs,
+			getTsLs: () => scriptTsLs,
 		}),
 	);
 	const referencesCodeLensPlugin = defineLanguageServicePlugin(
 		useReferencesCodeLensPlugin({
 			getSettings: _getSettings,
-			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			getVueDocument: (uri) => vueDocuments.get(uri),
 			findReference: async (...args) => findReferences_internal(...args),
 		}),
 	);
 	const htmlPugConversionsPlugin = defineLanguageServicePlugin(
 		useHtmlPugConversionsPlugin({
 			getSettings: _getSettings,
-			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			getVueDocument: (uri) => vueDocuments.get(uri),
 		}),
 	);
 	const scriptSetupConversionsPlugin = defineLanguageServicePlugin(
 		useScriptSetupConversionsPlugin({
 			getSettings: _getSettings,
 			ts,
-			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			getVueDocument: (uri) => vueDocuments.get(uri),
 			doCodeActions: async (...args) => doCodeActions_internal(...args),
 			doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
 		}),
@@ -231,19 +256,19 @@ export function createLanguageService(
 		useRefSugarConversionsPlugin({
 			getSettings: _getSettings,
 			ts,
-			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			getVueDocument: (uri) => vueDocuments.get(uri),
 			doCodeActions: async (...args) => doCodeActions_internal(...args),
 			doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
 			findReferences: async (...args) => findReferences_internal(...args),
 			doValidation: async (...args) => doValidation_internal(...args),
 			doRename: async (...args) => doRename_internal(...args),
 			findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
-			scriptTsLs: tsRuntime.context.scriptTsLs,
+			scriptTsLs: scriptTsLs,
 		}),
 	);
 	const tagNameCasingConversionsPlugin = defineLanguageServicePlugin(
 		useTagNameCasingConversionsPlugin({
-			getVueDocument: (uri) => tsRuntime.context.vueDocuments.get(uri),
+			getVueDocument: (uri) => vueDocuments.get(uri),
 			findReferences: async (...args) => findReferences_internal(...args),
 		}),
 	);
@@ -271,11 +296,11 @@ export function createLanguageService(
 	}
 
 	const context: LanguageServiceRuntimeContext = {
-		...services,
-		...tsRuntime.context,
+		vueLsHost: vueLsHost,
+		vueDocuments,
+		getTsLs: lsType => lsType === 'template' ? templateTsLs! : scriptTsLs,
 		typescript: ts,
-		vueCompilerOptions,
-		getTextDocument: tsRuntime.getHostDocument,
+		getTextDocument,
 		getPlugins: lsType => {
 			let plugins = [
 				...customPlugins,
@@ -346,14 +371,82 @@ export function createLanguageService(
 
 		__internal__: {
 			tsRuntime,
-			rootPath: vueHost.getCurrentDirectory(),
+			rootPath: vueLsHost.getCurrentDirectory(),
 			context,
 			getContext: defineApi(() => context, true),
-			getD3: defineApi(d3.register(context), true),
+			// getD3: defineApi(d3.register(context), true), // unused for now
 			detectTagNameCase: defineApi(tagNameCase.register(context), true),
 		},
 	};
 
+	function getDocumentContext() {
+		const compilerHost = ts.createCompilerHost(vueLsHost.getCompilationSettings());
+		const documentContext: html.DocumentContext = {
+			resolveReference(ref: string, base: string) {
+
+				const isUri = base.indexOf('://') >= 0;
+				const resolveResult = ts.resolveModuleName(
+					ref,
+					isUri ? shared.uriToFsPath(base) : base,
+					vueLsHost.getCompilationSettings(),
+					compilerHost,
+				);
+				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+				const dirs = new Set<string>();
+
+				const fileExists = vueLsHost.fileExists ?? ts.sys.fileExists;
+				const directoryExists = vueLsHost.directoryExists ?? ts.sys.directoryExists;
+
+				for (const failed of failedLookupLocations) {
+					let path = failed;
+					const fileName = upath.basename(path);
+					if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
+						dirs.add(upath.dirname(path));
+					}
+					if (path.endsWith('.d.ts')) {
+						path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
+					}
+					else {
+						continue;
+					}
+					if (fileExists(path)) {
+						return isUri ? shared.fsPathToUri(path) : path;
+					}
+				}
+				for (const dir of dirs) {
+					if (directoryExists(dir)) {
+						return isUri ? shared.fsPathToUri(dir) : dir;
+					}
+				}
+
+				return undefined;
+			},
+		};
+		return documentContext;
+	}
+	function getTextDocument(uri: string) {
+
+		const fileName = shared.uriToFsPath(uri);
+		const scriptSnapshot = vueLsHost.getScriptSnapshot(fileName);
+
+		if (scriptSnapshot) {
+
+			let document = documents.get(scriptSnapshot);
+
+			if (!document) {
+
+				document = TextDocument.create(
+					uri,
+					uri.endsWith('.vue') ? 'vue' : 'typescript', // TODO
+					0, // TODO
+					scriptSnapshot.getText(0, scriptSnapshot.getLength()),
+				);
+				documents.set(scriptSnapshot, document);
+			}
+
+			return document;
+		}
+	}
 	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguagePlugin, triggerCharacters: string[]) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
@@ -366,22 +459,24 @@ export function createLanguageService(
 						return services.htmlLs.createScanner(document.getText());
 					}
 					else if (document.languageId === 'jade') {
-						const pugDocument = services.getPugDocument(document);
+						const pugDocument = pugDocuments.get(document);
 						if (pugDocument) {
 							return services.pugLs.createScanner(pugDocument);
 						}
 					}
 				},
-				scriptTsLs: tsRuntime.context.scriptTsLs,
-				templateTsLs: tsRuntime.context.templateTsLs,
+				scriptTsLs: scriptTsLs,
+				templateTsLs: templateTsLs,
 				templateLanguagePlugin: templateLanguagePlugin,
 				isSupportedDocument: (document) => document.languageId === languageId,
 				getNameCases,
 				getScriptContentVersion: tsRuntime.getScriptContentVersion,
 				getHtmlDataProviders: services.getHtmlDataProviders,
-				vueHost,
-				vueDocuments: tsRuntime.context.vueDocuments,
+				vueLsHost,
+				vueDocuments,
 				updateTemplateScripts: () => tsRuntime.update(true),
+				tsSettings,
+				tsRuntime,
 			}),
 			{
 				triggerCharacters: [...triggerCharacters, ...vueTemplateLanguageTriggerCharacters],
@@ -448,13 +543,13 @@ export function createLanguageService(
 	}
 	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
 
-		const sourceFile = tsRuntime.context.vueDocuments.get(uri);
-		if (!sourceFile) {
+		const vueDocument = vueDocuments.get(uri);
+		if (!vueDocument) {
 			return false;
 		}
 
-		for (const sourceMap of sourceFile.getSourceMaps()) {
-			if (sourceMap.lsType === 'template') {
+		for (const sourceMap of vueDocument.getSourceMaps()) {
+			if (sourceMap.embeddedFile.lsType === 'template') {
 				for (const _ of sourceMap.getMappedRanges(pos, pos, data =>
 					data.vueTag === 'template'
 					|| data.vueTag === 'style' // handle CSS variable injection to fix https://github.com/johnsoncodehk/volar/issues/777
@@ -464,7 +559,9 @@ export function createLanguageService(
 			}
 		}
 
-		for (const sourceMap of sourceFile.getTemplateSourceMaps()) {
+		const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
+		if (embeddedTemplate) {
+			const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
 			for (const _ of sourceMap.getMappedRanges(pos)) {
 				return true;
 			}
@@ -506,17 +603,5 @@ export function createLanguageService(
 			}
 		};
 		return new Proxy<T>(api, handler);
-	}
-}
-
-export function loadCustomPlugins(dir: string) {
-	try {
-		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
-		const config: { plugins?: EmbeddedLanguagePlugin[] } = require(configPath);
-		return config.plugins ?? []
-	}
-	catch (err) {
-		console.warn('load volar.config.js failed in', dir);
-		return [];
 	}
 }

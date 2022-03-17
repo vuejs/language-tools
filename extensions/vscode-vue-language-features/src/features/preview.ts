@@ -3,8 +3,8 @@ import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'upath';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { htmlLs, userPick } from './splitEditors';
+import { userPick } from './splitEditors';
+import { parse } from '@vue/compiler-sfc';
 
 interface PreviewState { port: number, fileName: string }
 
@@ -213,8 +213,8 @@ export async function activate(context: vscode.ExtensionContext) {
 					if (req !== goToTemplateReq)
 						return;
 
-					const sfc = shared.parseSfc(doc.getText(), htmlLs.parseHTMLDocument(TextDocument.create(doc.uri.toString(), doc.languageId, doc.version, doc.getText())));
-					const offset = sfc.template?.startTagEnd ?? 0;
+					const sfc = parse(doc.getText(), { sourceMap: false, ignoreEmpty: false });
+					const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 					const start = doc.positionAt(data.range[0] + offset);
 					const end = doc.positionAt(data.range[1] + offset);
 					await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
@@ -273,13 +273,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	function createQuery(vueCode: string, fileName: string) {
 
-		const sfc = shared.parseSfc(vueCode, htmlLs.parseHTMLDocument(TextDocument.create('', '', 0, vueCode)));
+		const sfc = parse(vueCode, { sourceMap: false, ignoreEmpty: false });
 		let query = '';
 
-		for (const customBlock of sfc.customBlocks) {
+		for (const customBlock of sfc.descriptor.customBlocks) {
 			if (customBlock.type === 'preview') {
-				const previewTagStart = vueCode.substring(0, customBlock.startTagEnd).lastIndexOf('<preview');
-				const previewTag = vueCode.substring(previewTagStart, customBlock.startTagEnd);
+				const previewTagStart = vueCode.substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
+				const previewTag = vueCode.substring(previewTagStart, customBlock.loc.start.offset);
 				const previewGen = compile(previewTag + '</preview>').ast;
 				const props: Record<string, string> = {};
 				for (const previewNode of previewGen.children) {

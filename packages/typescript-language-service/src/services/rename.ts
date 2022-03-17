@@ -4,12 +4,12 @@ import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'upath';
 import { renameInfoOptions } from './prepareRename';
-import type { LanguageServiceHost } from '../';
+import type { Settings } from '../';
 
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	host: LanguageServiceHost
+	settings: Settings,
 ) {
 
 	return async (uri: string, position: vscode.Position, newName: string): Promise<vscode.WorkspaceEdit | undefined> => {
@@ -25,13 +25,13 @@ export function register(
 
 		if (renameInfo.fileToRename) {
 			const [formatOptions, preferences] = await Promise.all([
-				host.getFormatOptions?.(document) ?? {},
-				host.getPreferences?.(document) ?? {},
+				settings.getFormatOptions?.(document) ?? {},
+				settings.getPreferences?.(document) ?? {},
 			]);
 			return renameFile(renameInfo.fileToRename, newName, formatOptions, preferences);
 		}
 
-		const { providePrefixAndSuffixTextForRename } = await host.getPreferences?.(document) ?? { providePrefixAndSuffixTextForRename: true };
+		const { providePrefixAndSuffixTextForRename } = await settings.getPreferences?.(document) ?? { providePrefixAndSuffixTextForRename: true };
 		const entries = languageService.findRenameLocations(fileName, offset, false, false, providePrefixAndSuffixTextForRename);
 		if (!entries)
 			return;

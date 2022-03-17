@@ -13,7 +13,6 @@
 		"directory": "packages/code-gen"
 	},
 	"dependencies": {
-		"@volar/shared": "0.33.2",
 		"@volar/source-map": "0.33.2"
 	}
 }

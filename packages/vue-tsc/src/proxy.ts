@@ -1,8 +1,8 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-typescript';
-import * as shared from '@volar/shared';
 import * as apis from './apis';
-import { createBasicRuntime, createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import { tsShared } from '@volar/vue-typescript';
 
 export function createProgramProxy(
 	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
@@ -24,7 +24,7 @@ export function createProgramProxy(
 		scriptSnapshot: ts.IScriptSnapshot,
 		version: string,
 	}>();
-	const vueLsHost: vue.LanguageServiceHostBase = {
+	const vueLsHost: vue.LanguageServiceHost = {
 		...host,
 		resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
 		writeFile: undefined,
@@ -37,12 +37,18 @@ export function createProgramProxy(
 		getVueProjectVersion: () => '',
 		getProjectReferences: () => options.projectReferences,
 	};
-	const services = createBasicRuntime();
-	const tsRuntime = createTypeScriptRuntime({ typescript: ts, ...services, vueCompilerOptions }, vueLsHost, false);
-	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
+	const tsRuntime = createTypeScriptRuntime({
+		typescript: ts,
+		getCssClasses: () => ({}),
+		getCssVBindRanges: () => [],
+		vueCompilerOptions,
+		vueLsHost: vueLsHost,
+		isTsPlugin: false,
+	});
+	const tsProgram = tsRuntime.getTsLs('script').getProgram();
 	if (!tsProgram) throw '!tsProgram';
 
-	const tsProgramApis_2 = apis.register(ts, tsRuntime.context);
+	const tsProgramApis_2 = apis.register(ts, tsRuntime);
 	const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
 		get: (target: any, property: keyof typeof tsProgramApis_2) => {
 			tsRuntime.update(true);
@@ -60,7 +66,7 @@ export function createProgramProxy(
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
 		const tsConfig = options.options.configFilePath;
 		if (typeof tsConfig === 'string') {
-			return shared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
+			return tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 		}
 		return {};
 	}
