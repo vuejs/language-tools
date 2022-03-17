@@ -1,6 +1,7 @@
 import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { SearchTexts, TypeScriptRuntime, VueDocument, VueDocuments } from '@volar/vue-typescript';
+import { SearchTexts, TypeScriptRuntime } from '@volar/vue-typescript';
+import { VueDocument, VueDocuments } from '../vueDocuments';
 import { computed, pauseTracking, ref, resetTracking } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isHTMLTag } from '@vue/shared';
 import * as path from 'upath';
@@ -75,7 +76,7 @@ export default function (host: {
     }>,
     getScriptContentVersion: () => number,
     getHtmlDataProviders: () => html.IHTMLDataProvider[],
-    vueHost: LanguageServiceHost,
+    vueLsHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
     updateTemplateScripts: () => void,
     tsSettings: ts2.Settings,
@@ -101,9 +102,9 @@ export default function (host: {
             if (vueDocument) {
 
                 const templateErrors: vscode.Diagnostic[] = [];
-                const sfcVueTemplateCompiled = vueDocument.getSfcVueTemplateCompiled();
-                const sfcTemplateLanguageCompiled = vueDocument.getSfcTemplateLanguageCompiled();
-                const sfcTemplate = vueDocument.getSfcTemplateDocument();
+                const sfcVueTemplateCompiled = vueDocument.file.getSfcVueTemplateCompiled();
+                const sfcTemplateLanguageCompiled = vueDocument.file.getSfcTemplateLanguageCompiled();
+                const sfcTemplate = vueDocument.file.getSfcTemplateDocument();
 
                 if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled && sfcTemplate) {
 
@@ -163,7 +164,7 @@ export default function (host: {
 
                 host.updateTemplateScripts();
 
-                const templateScriptData = vueDocument.getTemplateScriptData();
+                const templateScriptData = vueDocument.file.getTemplateScriptData();
                 const components = new Set([
                     ...templateScriptData.components,
                     ...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
@@ -252,12 +253,9 @@ export default function (host: {
             return item;
         },
 
-        resolveEmbeddedRange(range, sourceMap) {
-
+        resolveEmbeddedRange(range) {
             if (autoImportPositions.has(range.start) && autoImportPositions.has(range.end))
                 return range;
-
-            return sourceMap.getSourceRange(range.start, range.end)?.[0];
         },
     };
 
@@ -297,16 +295,16 @@ export default function (host: {
 
     async function resolveAutoImportItem(item: vscode.CompletionItem, data: AutoImportCompletionData) {
 
-        const _sourceFile = host.vueDocuments.get(data.vueDocumentUri);
-        if (!_sourceFile)
+        const _vueDocument = host.vueDocuments.get(data.vueDocumentUri);
+        if (!_vueDocument)
             return item;
 
-        const sourceFile = _sourceFile;
+        const vueDocument = _vueDocument;
         const importFile = shared.uriToFsPath(data.importUri);
-        const rPath = path.relative(host.vueHost.getCurrentDirectory(), importFile);
-        const descriptor = sourceFile.getDescriptor();
-        const scriptAst = sourceFile.getScriptAst();
-        const scriptSetupAst = sourceFile.getScriptSetupAst();
+        const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), importFile);
+        const descriptor = vueDocument.file.getDescriptor();
+        const scriptAst = vueDocument.file.getScriptAst();
+        const scriptSetupAst = vueDocument.file.getScriptSetupAst();
 
         let importPath = path.relative(path.dirname(data.vueDocumentUri), data.importUri);
         if (!importPath.startsWith('.')) {
@@ -327,7 +325,7 @@ export default function (host: {
         const scriptImport = scriptAst ? getLastImportNode(scriptAst) : undefined;
         const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
         const componentName = capitalize(camelize(item.label));
-        const textDoc = sourceFile.getTextDocument();
+        const textDoc = vueDocument.file.getTextDocument();
         let insertText = '';
         const planAResult = await planAInsertText();
         if (planAResult) {
@@ -407,13 +405,14 @@ export default function (host: {
         return item;
 
         async function planAInsertText() {
-            const scriptDoc = sourceFile.getScriptTsDocument();
+            const embeddedScriptFile = vueDocument.file.getScriptTsFile();
+            const embeddedScriptDocument = vueDocument.embeddedDocumentsMap.get(embeddedScriptFile);
             const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
             const [formatOptions, preferences] = await Promise.all([
-                host.tsSettings.getFormatOptions?.(scriptDoc) ?? {},
-                host.tsSettings.getPreferences?.(scriptDoc) ?? {},
+                host.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
+                host.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
             ]);
-            const tsDetail = host.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(scriptDoc.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+            const tsDetail = host.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
             if (tsDetail?.codeActions) {
                 for (const action of tsDetail.codeActions) {
                     for (const change of action.changes) {
@@ -451,7 +450,7 @@ export default function (host: {
         const tags: html.ITagData[] = [];
         const tsItems = new Map<string, ts.CompletionEntry>();
         const globalAttributes: html.IAttributeData[] = [];
-        const { contextItems } = vueDocument.getTemplateScriptData();
+        const { contextItems } = vueDocument.file.getTemplateScriptData();
 
         for (const item of contextItems) {
             // @ts-expect-error
@@ -556,14 +555,14 @@ export default function (host: {
             }
         }
 
-        const descriptor = vueDocument.getDescriptor();
+        const descriptor = vueDocument.file.getDescriptor();
         const enabledComponentAutoImport = await host.getSettings<boolean>('volar.completion.autoImportComponent') ?? true;
 
         if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
-            for (const vueFile of host.vueDocuments.getAll()) {
-                let baseName = path.basename(vueFile.uri, '.vue');
+            for (const vueDocument of host.vueDocuments.getAll()) {
+                let baseName = path.basename(vueDocument.uri, '.vue');
                 if (baseName.toLowerCase() === 'index') {
-                    baseName = path.basename(path.dirname(vueFile.uri));
+                    baseName = path.basename(path.dirname(vueDocument.uri));
                 }
                 const componentName_1 = hyphenate(baseName);
                 const componentName_2 = capitalize(camelize(baseName));
@@ -576,7 +575,7 @@ export default function (host: {
                 }
                 tags.push({
                     name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
-                    description: createInternalItemId('importFile', [vueFile.uri]),
+                    description: createInternalItemId('importFile', [vueDocument.uri]),
                     attributes: [],
                 });
             }
@@ -599,7 +598,7 @@ export default function (host: {
 
     function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, ts.CompletionEntry>) {
 
-        const replacement = getReplacement(completionList, vueDocument.getTextDocument());
+        const replacement = getReplacement(completionList, vueDocument.file.getTextDocument());
 
         if (replacement) {
 
@@ -646,7 +645,7 @@ export default function (host: {
 
                 const [fileUri] = itemId.args;
                 const filePath = shared.uriToFsPath(fileUri);
-                const rPath = path.relative(host.vueHost.getCurrentDirectory(), filePath);
+                const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), filePath);
                 item.labelDetails = { description: rPath };
                 item.filterText = item.label + ' ' + rPath;
                 item.detail = rPath;
@@ -753,7 +752,7 @@ export default function (host: {
             sfcTemplateScript,
             templateScriptData,
             sfcEntryForTemplateLs,
-        } = sourceFile.refs;
+        } = sourceFile.file.refs;
 
         const projectVersion = ref<number>();
         const usedTags = ref(new Set<string>());
@@ -770,16 +769,13 @@ export default function (host: {
             }
 
             pauseTracking();
-            const doc = sfcTemplateScript.textDocument.value;
+            const file = sfcTemplateScript.file.value;
             const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
-            const entryDoc = sfcEntryForTemplateLs.textDocument.value;
-            const entryDocFileName = shared.fsPathToUri(entryDoc.uri);
+            const entryFile = sfcEntryForTemplateLs.file.value;
             resetTracking();
 
-            if (doc && entryDoc) {
+            if (file) {
 
-                const docFileName = shared.uriToFsPath(doc.uri);
-                const text = doc.getText();
                 const tags_1 = templateScriptData.componentItems.map(item => {
                     // @ts-expect-error
                     const data: TsCompletionData = item.data;
@@ -798,23 +794,23 @@ export default function (host: {
                     let on: ts.CompletionEntry[] = [];
                     {
                         const searchText = SearchTexts.PropsCompletion(tag.name);
-                        let offset = text.indexOf(searchText);
+                        let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            bind = host.tsRuntime.context.templateTsLsRaw?.getCompletionsAtPosition(docFileName, offset, undefined)?.entries ?? [];
+                            bind = host.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     {
                         const searchText = SearchTexts.EmitCompletion(tag.name);
-                        let offset = text.indexOf(searchText);
+                        let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            on = host.tsRuntime.context.templateTsLsRaw?.getCompletionsAtPosition(docFileName, offset, undefined)?.entries ?? [];
+                            on = host.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     result.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = host.tsRuntime.context.templateTsLsRaw?.getCompletionsAtPosition(entryDocFileName, entryDoc.getText().indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
+                const globalBind = host.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
                 result.set('*', { item: undefined, bind: globalBind, on: [] });
             }
             return result;

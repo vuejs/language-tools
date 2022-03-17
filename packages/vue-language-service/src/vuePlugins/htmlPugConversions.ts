@@ -1,7 +1,7 @@
-import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import { htmlToPug, pugToHtml } from '@volar/html2pug';
+import { VueDocument } from '../vueDocuments';
 
 const toggleConvertCommand = 'htmlPugConversions.toggle';
 
@@ -28,23 +28,24 @@ export default function (host: {
                     return;
 
                 const result: vscode.CodeLens[] = [];
-                const sourceMaps = vueDocument.getTemplateSourceMaps();
+                const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
 
-                for (const sourceMap of sourceMaps) {
+                if (embeddedTemplate && (embeddedTemplate.file.lang === 'html' || embeddedTemplate.file.lang === 'pug')) {
+
+                    const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
+
                     for (const maped of sourceMap.mappings) {
-                        if (sourceMap.mappedDocument.languageId === 'html' || sourceMap.mappedDocument.languageId === 'jade') {
-                            return [{
-                                range: {
-                                    start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-                                    end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-                                },
-                                command: {
-                                    title: 'pug ' + (sourceMap.mappedDocument.languageId === 'jade' ? '☑' : '☐'),
-                                    command: toggleConvertCommand,
-                                    arguments: <CommandArgs>[document.uri],
-                                },
-                            }];
-                        }
+                        return [{
+                            range: {
+                                start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+                                end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+                            },
+                            command: {
+                                title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),
+                                command: toggleConvertCommand,
+                                arguments: <CommandArgs>[document.uri],
+                            },
+                        }];
                     }
                 }
 
@@ -60,8 +61,8 @@ export default function (host: {
 
                 return worker(uri, vueDocument => {
 
-                    const document = vueDocument.getTextDocument();
-                    const desc = vueDocument.getDescriptor();
+                    const document = vueDocument.file.getTextDocument();
+                    const desc = vueDocument.file.getDescriptor();
                     if (!desc.template)
                         return;
 

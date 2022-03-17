@@ -89,6 +89,26 @@ export async function createProject(
 					{ typescript: ts },
 					languageServiceHost,
 					runtimeEnv.fileSystemProvide,
+					(uri) => {
+
+						const protocol = uri.substr(0, uri.indexOf(':'));
+
+						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
+						if (builtInHandler) {
+							return builtInHandler(uri);
+						}
+
+						if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
+							return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
+								return responseText;
+							}, error => {
+								return Promise.reject(error.message);
+							});
+						}
+						else {
+							return Promise.reject('clientHandledGetDocumentContentRequest is false');
+						}
+					},
 					customPlugins,
 					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
@@ -192,28 +212,6 @@ export async function createProject(
 	function createLanguageServiceHost() {
 
 		const host: vue.LanguageServiceHost = {
-			// vue
-			schemaRequestService(uri) {
-
-				const protocol = uri.substr(0, uri.indexOf(':'));
-
-				const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
-				if (builtInHandler) {
-					return builtInHandler(uri);
-				}
-
-				if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-					return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
-						return responseText;
-					}, error => {
-						return Promise.reject(error.message);
-					});
-				}
-				else {
-					return Promise.reject('clientHandledGetDocumentContentRequest is false');
-				}
-			},
-			getCssLanguageSettings: lsConfigs?.getCssLanguageSettings,
 			// ts
 			getNewLine: () => projectSys.newLine,
 			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,

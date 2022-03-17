@@ -29,19 +29,19 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				vueCompilerOptions,
 				getCssClasses: () => ({}),
 				getCssVBindRanges: () => [],
-				vueHost: proxyHost.host,
+				vueLsHost: proxyHost.host,
 				isTsPlugin: true
 			});
-			const _tsPluginApis = apis.register(tsRuntime.context);
+			const _tsPluginApis = apis.register(tsRuntime);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: apiHook(tsRuntime.context.scriptTsLsRaw.getSemanticDiagnostics, false),
-				getEncodedSemanticClassifications: apiHook(tsRuntime.context.scriptTsLsRaw.getEncodedSemanticClassifications, false),
+				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs('script').getSemanticDiagnostics, false),
+				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs('script').getEncodedSemanticClassifications, false),
 				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-				getCompletionEntryDetails: apiHook(tsRuntime.context.scriptTsLsRaw.getCompletionEntryDetails, false), // not sure
-				getCompletionEntrySymbol: apiHook(tsRuntime.context.scriptTsLsRaw.getCompletionEntrySymbol, false), // not sure
-				getQuickInfoAtPosition: apiHook(tsRuntime.context.scriptTsLsRaw.getQuickInfoAtPosition, false),
-				getSignatureHelpItems: apiHook(tsRuntime.context.scriptTsLsRaw.getSignatureHelpItems, false),
-				getRenameInfo: apiHook(tsRuntime.context.scriptTsLsRaw.getRenameInfo, false),
+				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs('script').getCompletionEntryDetails, false), // not sure
+				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs('script').getCompletionEntrySymbol, false), // not sure
+				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs('script').getQuickInfoAtPosition, false),
+				getSignatureHelpItems: apiHook(tsRuntime.getTsLs('script').getSignatureHelpItems, false),
+				getRenameInfo: apiHook(tsRuntime.getTsLs('script').getRenameInfo, false),
 
 				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
 				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
@@ -113,7 +113,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		snapshots: ts.IScriptSnapshot | undefined,
 		snapshotsVersion: string | undefined,
 	}>();
-	const host: vue.LanguageServiceHostBase = {
+	const host: vue.LanguageServiceHost = {
 		getNewLine: () => info.project.getNewLine(),
 		useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 		readFile: path => info.project.readFile(path),

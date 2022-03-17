@@ -28,6 +28,8 @@ import * as json from 'vscode-json-languageservice';
 import { getTsSettings } from './tsConfigs';
 import type * as html from 'vscode-html-languageservice';
 import { createBasicRuntime } from './basicRuntime';
+import * as shared from '@volar/shared';
+import { parseVueDocument, VueDocument } from './vueDocuments';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -39,11 +41,11 @@ export function getDocumentService(
 	customPlugins: EmbeddedLanguagePlugin[],
 ) {
 
-	const vueDocuments = new WeakMap<TextDocument, vueTs.VueDocument>();
+	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
 	const services = createBasicRuntime(fileSystemProvider);
 	let tsLs: ts2.LanguageService;
 
-	const jsonLs = json.getLanguageService({ /* schemaRequestService: vueHost?.schemaRequestService */ });
+	const jsonLs = json.getLanguageService({});
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const tsSettings = getTsSettings(_getSettings);
 
@@ -142,30 +144,26 @@ export function getDocumentService(
 		if (document.languageId !== 'vue')
 			return;
 
-		const cacheVueDoc = vueDocuments.get(document);
-		if (cacheVueDoc) {
+		let vueDoc = vueDocuments.get(document);
 
-			const oldText = cacheVueDoc.getTextDocument().getText();
-			const newText = document.getText();
+		if (!vueDoc) {
 
-			if (oldText.length !== newText.length || oldText !== newText) {
-				cacheVueDoc.update(document.getText(), document.version.toString());
-			}
+			const vueFile = vueTs.createVueFile(
+				shared.uriToFsPath(document.uri),
+				document.getText(),
+				document.version.toString(),
+				services.htmlLs,
+				vueTsPlugins,
+				{},
+				context.typescript,
+				services.getCssVBindRanges,
+				services.getCssClasses,
+			);
+			vueDoc = parseVueDocument(vueFile);
 
-			return cacheVueDoc;
+			vueDocuments.set(document, vueDoc);
 		}
-		const vueDoc = vueTs.createVueDocument(
-			document.uri,
-			document.getText(),
-			document.version.toString(),
-			services.htmlLs,
-			vueTsPlugins,
-			{},
-			context.typescript,
-			services.getCssVBindRanges,
-			services.getCssClasses,
-		);
-		vueDocuments.set(document, vueDoc);
+
 		return vueDoc;
 	}
 }

@@ -1,9 +1,8 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
-import { VueDocument } from '@volar/vue-typescript';
 import { isCharacterTyping } from './autoCompleteRefs';
-import * as shared from '@volar/shared';
+import { VueDocument } from '../vueDocuments';
 
 export default function (host: {
 	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
@@ -26,8 +25,8 @@ export default function (host: {
 			if (!vueDocument)
 				return;
 
-			const templateFormatScript = vueDocument.getTemplateFormattingScript();
-			if (!templateFormatScript.document || !templateFormatScript.sourceMap)
+			const templateFormatScript = vueDocument.file.getTemplateFormattingScript();
+			if (!templateFormatScript)
 				return;
 
 			const offset = document.offsetAt(position);
@@ -35,7 +34,7 @@ export default function (host: {
 			for (const mapedRange of templateFormatScript.sourceMap.mappings) {
 				if (mapedRange.sourceRange.end === offset) {
 					const text = document.getText().substring(mapedRange.sourceRange.start, mapedRange.sourceRange.end);
-					const ast = host.ts.createSourceFile(shared.uriToFsPath(templateFormatScript.document.uri), text, host.ts.ScriptTarget.Latest);
+					const ast = host.ts.createSourceFile(templateFormatScript.file.fileName, text, host.ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (

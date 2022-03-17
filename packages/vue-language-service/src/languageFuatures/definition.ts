@@ -4,12 +4,12 @@ import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedDocumentMappingData, TeleportSideData } from '@volar/vue-typescript';
+import { EmbeddedFileMappingData, TeleportSideData } from '@volar/vue-code-gen';
 
 export function register(
 	context: LanguageServiceRuntimeContext,
 	api: 'findDefinition' | 'findTypeDefinition' | 'findImplementations',
-	isValidMappingData: (data: EmbeddedDocumentMappingData) => boolean,
+	isValidMappingData: (data: EmbeddedFileMappingData) => boolean,
 	isValidTeleportSideData: (sideData: TeleportSideData) => boolean,
 ) {
 
@@ -53,11 +53,11 @@ export function register(
 
 						let foundTeleport = false;
 
-						if (sourceMap?.lsType !== 'nonTs') {
+						if (sourceMap?.embeddedFile.lsType !== 'nonTs') {
 
 							recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-							const teleport = context.tsRuntime.context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(definition.targetUri);
+							const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', definition.targetUri);
 
 							if (teleport) {
 
@@ -103,7 +103,7 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.tsRuntime.context.vueDocuments.fromEmbeddedDocumentUri(sourceMap?.lsType ?? 'script', link.targetUri);
+				const targetSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', link.targetUri);
 
 				if (targetSourceMap) {
 

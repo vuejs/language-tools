@@ -1,5 +1,5 @@
-export interface EmbeddedDocumentMappingData {
-	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | undefined,
+export interface EmbeddedFileMappingData {
+	vueTag: 'sfc' | 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
 	vueTagIndex?: number,
 	normalizeNewName?: (newName: string) => string,
 	applyNewName?: (oldName: string, newName: string) => string,

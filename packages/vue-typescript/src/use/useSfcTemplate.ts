@@ -1,39 +1,42 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import * as SourceMaps from '../utils/sourceMaps';
+import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '@volar/source-map';
+import { Embedded, EmbeddedFile } from '../vueDocument';
 
 export function useSfcTemplate(
-	vueUri: string,
-	vueDoc: Ref<TextDocument>,
+	fileName: string,
 	template: Ref<shared.Sfc['template']>,
 ) {
-	let version = 0;
-	const textDocument = computed(() => {
+
+	const file = computed(() => {
+
 		if (template.value) {
-			const langId = shared.syntaxToLanguageId(template.value.lang);
-			const uri = vueUri + '.' + template.value.lang;
-			const content = template.value.content;
-			const document = TextDocument.create(uri, langId, version++, content);
-			return document;
-		}
-	});
-	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const sourceMap = computed(() => {
-		if (textDocument.value && template.value) {
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
-				sourceMapId,
-				vueDoc.value,
-				textDocument.value,
-				'nonTs',
-				{
+
+			const file: EmbeddedFile = {
+				fileName: fileName + '.' + template.value.lang,
+				lang: template.value.lang,
+				content: template.value.content,
+				lsType: 'nonTs',
+				capabilities: {
 					diagnostics: true,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
 				},
-			);
+				data: undefined,
+			};
+
+			return file;
+		}
+	});
+	const embedded = computed<Embedded | undefined>(() => {
+
+		if (template.value && file.value) {
+
+			const sourceMap = new EmbeddedFileSourceMap();
+
 			sourceMap.mappings.push({
 				data: {
 					vueTag: 'template',
@@ -57,11 +60,16 @@ export function useSfcTemplate(
 					end: template.value.content.length,
 				},
 			});
-			return sourceMap;
+
+			return {
+				file: file.value,
+				sourceMap,
+			};
 		}
 	});
+
 	return {
-		textDocument,
-		sourceMap,
+		file,
+		embedded,
 	};
 }

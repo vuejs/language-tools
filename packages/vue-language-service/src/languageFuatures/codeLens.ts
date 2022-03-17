@@ -35,8 +35,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 							uri,
 							originalItem: item,
 							pluginId: plugin.id,
-							sourceMapId: sourceMap?.id,
-							embeddedDocumentUri: sourceMap?.mappedDocument.uri,
 						} as any,
 					}));
 				}

@@ -1,12 +1,12 @@
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
+import type { TypeScriptRuntime } from '@volar/vue-typescript';
 
 const lsTypes = ['script', 'template'] as const;
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	{ vueDocuments, templateTsLsRaw, scriptTsLsRaw, templateTsHost, scriptTsHost, vueHost }: TypeScriptFeaturesRuntimeContext,
+	context: TypeScriptRuntime,
 ) {
 
 	return {
@@ -20,8 +20,8 @@ export function register(
 
 	function getRootFileNames() {
 		const set = new Set([
-			...getProgram('script')?.getRootFileNames().filter(fileName => scriptTsHost.fileExists?.(fileName)) ?? [],
-			...getProgram('template')?.getRootFileNames().filter(fileName => templateTsHost?.fileExists?.(fileName)) ?? [],
+			...getProgram('script')?.getRootFileNames().filter(fileName => context.getTsLsHost('script').fileExists?.(fileName)) ?? [],
+			...getProgram('template')?.getRootFileNames().filter(fileName => context.getTsLsHost('template')?.fileExists?.(fileName)) ?? [],
 		]);
 		return [...set.values()];
 	}
@@ -47,26 +47,26 @@ export function register(
 
 		if (sourceFile) {
 
-			const sourceMap = vueDocuments.fromEmbeddedDocumentUri('script', shared.fsPathToUri(sourceFile.fileName));
-			const vueDocument = sourceMap ? vueDocuments.get(sourceMap.sourceDocument.uri) : undefined;
+			const embedded = context.vueFiles.fromEmbeddedFileName('script', sourceFile.fileName);
+			const vueFile = embedded ? context.vueFiles.fromEmbeddedFile(embedded.file) : undefined;
 
-			if (vueDocument) {
+			if (vueFile) {
 
 				let results: any[] = [];
 
-				const sourceMaps = vueDocument.getSourceMaps();
+				const embeddeds = vueFile.getAllEmbeddeds();
 
-				for (const sourceMap of sourceMaps) {
+				for (const embedded of embeddeds) {
 
-					if (sourceMap.lsType === 'nonTs' || !sourceMap.capabilities.diagnostics)
+					if (embedded.file.lsType === 'nonTs' || !embedded.file.capabilities.diagnostics)
 						continue;
 
-					const program = getProgram(sourceMap.lsType);
-					const embeddedSourceFile = program?.getSourceFile(shared.uriToFsPath(sourceMap.mappedDocument.uri));
+					const program = getProgram(embedded.file.lsType);
+					const embeddedSourceFile = program?.getSourceFile(embedded.file.fileName);
 
 					if (embeddedSourceFile) {
 
-						const errors = transformDiagnostics(sourceMap.lsType, program?.[api](embeddedSourceFile, cancellationToken) ?? []);
+						const errors = transformDiagnostics(embedded.file.lsType, program?.[api](embeddedSourceFile, cancellationToken) ?? []);
 						results = results.concat(errors);
 					}
 				}
@@ -85,7 +85,7 @@ export function register(
 		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType)?.getGlobalDiagnostics(cancellationToken) ?? [])).flat();
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram('script')!.emit(targetSourceFile, (vueHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram('script')!.emit(targetSourceFile, (context.vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		const templateResult = getProgram('template')?.emit(targetSourceFile, undefined, cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
@@ -97,7 +97,7 @@ export function register(
 		};
 	}
 	function getProgram(lsType: 'script' | 'template') {
-		return (lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw)?.getProgram();
+		return context.getTsLs(lsType)?.getProgram();
 	}
 
 	// transform
@@ -110,7 +110,7 @@ export function register(
 				&& diagnostic.length !== undefined
 			) {
 				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
-				for (const tsOrVueLoc of vueDocuments.fromEmbeddedLocation(
+				for (const tsOrVueLoc of context.vueFiles.fromEmbeddedLocation(
 					lsType,
 					shared.fsPathToUri(fileName),
 					diagnostic.start,
@@ -118,28 +118,27 @@ export function register(
 					data => !!data.capabilities.diagnostic,
 				)) {
 
-					if (!vueHost.fileExists?.(shared.uriToFsPath(tsOrVueLoc.uri)))
+					if (!context.vueLsHost.fileExists?.(tsOrVueLoc.fileName))
 						continue;
 
-					if (tsOrVueLoc.type === 'source-ts' && lsType !== 'script')
+					if (!('embedded' in tsOrVueLoc) && lsType !== 'script')
 						continue;
 
-					let file = shared.uriToFsPath(tsOrVueLoc.uri) === fileName
+					let file = tsOrVueLoc.fileName === fileName
 						? diagnostic.file
 						: undefined;
 					if (!file) {
 
-						let docText = tsOrVueLoc.sourceMap?.sourceDocument.getText();
+						let docText = tsOrVueLoc.embedded?.file.content;
 
 						if (docText === undefined) {
-							const snapshot = vueHost.getScriptSnapshot(shared.uriToFsPath(tsOrVueLoc.uri));
+							const snapshot = context.vueLsHost.getScriptSnapshot(tsOrVueLoc.fileName);
 							if (snapshot) {
 								docText = snapshot.getText(0, snapshot.getLength());
 							}
 						}
-
-						if (docText !== undefined) {
-							file = ts.createSourceFile(shared.uriToFsPath(tsOrVueLoc.uri), docText, tsOrVueLoc.uri.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
+						else {
+							file = ts.createSourceFile(tsOrVueLoc.fileName, docText, tsOrVueLoc.fileName.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
 						}
 					}
 					const newDiagnostic: T = {

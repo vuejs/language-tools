@@ -10,10 +10,11 @@ export function register(
 	getProjects: () => Projects | undefined,
 ) {
 	connection.onRequest(shared.D3Request.type, async handler => {
-		const document = documents.get(handler.uri);
-		if (!document) return;
-		const languageService = await getLanguageService(document.uri);
-		return languageService?.__internal__.getD3(document);
+		// const document = documents.get(handler.uri);
+		// if (!document) return;
+		// const languageService = await getLanguageService(document.uri);
+		// return languageService?.__internal__.getD3(document);
+		return undefined; // disable for now
 	});
 	connection.onRequest(shared.GetMatchTsConfigRequest.type, async handler => {
 		const projects = getProjects();
@@ -42,19 +43,23 @@ export function register(
 						}
 					});
 				}
-				const { tsRuntime } = await ls.__internal__.getContext();
-				for (const sourceMap of tsRuntime.context.vueDocuments.getEmbeddeds(lsType)) {
-					connection.workspace.applyEdit({
-						edit: {
-							documentChanges: [
-								vscode.CreateFile.create(sourceMap.mappedDocument.uri),
-								vscode.TextDocumentEdit.create(
-									vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
-									[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
-								),
-							]
+				const context = await ls.__internal__.getContext();
+				for (const vueDocument of context.vueDocuments.getAll()) {
+					for (const sourceMap of vueDocument.getSourceMaps()) {
+						if (sourceMap.embeddedFile.lsType === lsType) {
+							connection.workspace.applyEdit({
+								edit: {
+									documentChanges: [
+										vscode.CreateFile.create(sourceMap.mappedDocument.uri),
+										vscode.TextDocumentEdit.create(
+											vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
+											[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
+										),
+									]
+								}
+							});
 						}
-					});
+					}
 				}
 			}
 		}
@@ -74,17 +79,17 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const { tsRuntime } = await ls.__internal__.getContext();
-				const allFiles = tsRuntime.context.vueDocuments.getAll();
+				const context = await ls.__internal__.getContext();
+				const allVueDocuments = context.vueDocuments.getAll();
 				let i = 0;
-				for (const sourceFile of allFiles) {
-					progress.report(i++ / allFiles.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(sourceFile.uri)));
+				for (const vueFile of allVueDocuments) {
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(vueFile.uri)));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}
 					let _result: vscode.Diagnostic[] = [];
-					await ls.doValidation(sourceFile.uri, result => {
-						connection.sendDiagnostics({ uri: sourceFile.uri, diagnostics: result });
+					await ls.doValidation(vueFile.uri, result => {
+						connection.sendDiagnostics({ uri: vueFile.uri, diagnostics: result });
 						_result = result;
 					});
 					errors += _result.filter(error => error.severity === vscode.DiagnosticSeverity.Error).length;

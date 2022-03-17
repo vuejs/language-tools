@@ -10,8 +10,10 @@ export interface PluginCodeActionData {
 	uri: string,
 	originalItem: vscode.CodeAction,
 	pluginId: number,
-	sourceMapId: number | undefined,
-	embeddedDocumentUri: string | undefined,
+	sourceMap: {
+		lsType: 'script' | 'template' | 'nonTs',
+		embeddedDocumentUri: string
+	} | undefined,
 }
 
 export function register(context: LanguageServiceRuntimeContext) {
@@ -34,7 +36,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			{ range, codeActionContext },
 			(arg, sourceMap) => {
 
-				if (!sourceMap.capabilities.codeActions)
+				if (!sourceMap.embeddedFile.capabilities.codeActions)
 					return [];
 
 				const _codeActionContext: vscode.CodeActionContext = {
@@ -81,8 +83,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 						uri,
 						originalItem: _codeAction,
 						pluginId: plugin.id,
-						sourceMapId: sourceMap?.id,
-						embeddedDocumentUri: sourceMap?.mappedDocument.uri,
+						sourceMap: sourceMap ? {
+							lsType: sourceMap.embeddedFile.lsType,
+							embeddedDocumentUri: sourceMap.mappedDocument.uri,
+						} : undefined,
 					};
 
 					return <vscode.CodeAction>{
@@ -97,7 +101,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					return _codeAction;
 
 				if (_codeAction.edit) {
-					const edit = embeddedEditToSourceEdit(sourceMap.lsType, false, _codeAction.edit, context.tsRuntime.context.vueDocuments, () => true);
+					const edit = embeddedEditToSourceEdit(sourceMap.embeddedFile.lsType, false, _codeAction.edit, context.vueDocuments, () => true);
 					if (edit) {
 						_codeAction.edit = edit;
 						return _codeAction;

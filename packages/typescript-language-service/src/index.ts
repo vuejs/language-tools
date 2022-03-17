@@ -81,18 +81,24 @@ export function createLanguageService(
 			raw: languageService,
 			getTextDocument,
 			getValidTextDocument,
+			isValidFile,
 			doCompleteSync: completions.register(languageService, getValidTextDocument, ts),
 		},
 	};
 
 	function getValidTextDocument(uri: string) {
 		const fileName = shared.uriToFsPath(uri);
-		if (!languageService.getProgram()?.getSourceFile(fileName)) {
+		if (!isValidFile(fileName)) {
 			return;
 		}
 		return getTextDocument(uri);
 	}
-
+	function isValidFile(fileName: string) {
+		if (!languageService.getProgram()?.getSourceFile(fileName)) {
+			return false;
+		}
+		return true;
+	}
 	function getTextDocument(uri: string) {
 		const fileName = shared.uriToFsPath(uri);
 		const version = host.getScriptVersion(fileName);

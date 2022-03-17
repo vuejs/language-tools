@@ -1,9 +1,9 @@
-import type { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { isTsDocument } from '../commonPlugins/typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
+import { EmbeddedDocumentSourceMap } from '../vueDocuments';
 
 export function register(context: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
 
@@ -59,11 +59,11 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 		}, nonTsCache, errors => cache.nonTs = errors ?? []);
 		doResponse();
 
-		const vueDocument = context.tsRuntime.context.vueDocuments.get(uri);
+		const vueDocument = context.vueDocuments.get(uri);
 
 		if (vueDocument) {
 
-			const lastUpdated = vueDocument.getLastUpdated();
+			const lastUpdated = vueDocument.file.getLastUpdated();
 
 			const isScriptChanged = lastUpdated.script || lastUpdated.scriptSetup;
 			if (isScriptChanged) {
@@ -137,7 +137,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				uri,
 				true,
 				function* (arg, sourceMap) {
-					if (sourceMap.capabilities.diagnostics && sourceMap.lsType === lsType) {
+					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.lsType === lsType) {
 						yield arg;
 					}
 				},
@@ -150,7 +150,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 					if (await isCancel?.())
 						return;
 
-					const _lsType = sourceMap?.lsType ?? 'script';
+					const _lsType = sourceMap?.embeddedFile.lsType ?? 'script';
 
 					if (lsType !== _lsType)
 						return;
@@ -224,8 +224,8 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const sourceLoc of context.tsRuntime.context.vueDocuments.fromEmbeddedLocation(
-						sourceMap?.lsType ?? 'script',
+					for (const sourceLoc of context.vueDocuments.fromEmbeddedLocation(
+						sourceMap?.embeddedFile.lsType ?? 'script',
 						info.location.uri,
 						info.location.range.start,
 						info.location.range.end,

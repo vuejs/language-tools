@@ -1,53 +1,54 @@
-import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as SourceMaps from '../utils/sourceMaps';
+import * as SourceMaps from '@volar/source-map';
+import * as shared from '@volar/shared';
+import { Embedded, EmbeddedFile } from '../vueDocument';
+import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 
 export function useSfcCustomBlocks(
-	vueUri: string,
-	vueDoc: Ref<TextDocument>,
+	fileName: string,
 	customBlocks: Ref<shared.Sfc['customBlocks']>,
 ) {
-	let version = 0;
-	const textDocuments = computed(() => {
-		const documents: {
-			index: number,
-			textDocument: TextDocument,
-		}[] = [];
+
+	const files = computed(() => {
+
+		const _files: EmbeddedFile[] = [];
+
 		for (let i = 0; i < customBlocks.value.length; i++) {
+
 			const customBlock = customBlocks.value[i];
-			const lang = customBlock.lang;
-			const content = customBlock.content;
-			const uri = vueUri + '.' + i + '.' + customBlock.type + '.' + lang;
-			const document = TextDocument.create(uri, lang, version++, content);
-			documents.push({
-				index: i,
-				textDocument: document,
-			});
-		}
-		return documents;
-	});
-	const sourceMapsId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const sourceMaps = computed(() => {
-		const sourceMaps: SourceMaps.EmbeddedDocumentSourceMap[] = [];
-		for (const doc of textDocuments.value) {
-			const customBlock = customBlocks.value[doc.index];
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
-				sourceMapsId,
-				vueDoc.value,
-				doc.textDocument,
-				'nonTs',
-				{
+
+			_files.push({
+				fileName: fileName + '.' + i + '.' + customBlock.lang,
+				lang: customBlock.lang,
+				content: customBlock.content,
+				lsType: 'nonTs',
+				capabilities: {
 					diagnostics: true,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
 				},
-			);
+				data: undefined,
+			});
+		}
+
+		return _files;
+	});
+	const embeddeds = computed(() => {
+
+		const _embeddeds: Embedded[] = [];
+
+		for (let i = 0; i < customBlocks.value.length && i < files.value.length; i++) {
+
+			const file = files.value[i];
+			const customBlock = customBlocks.value[i];
+			const sourceMap = new EmbeddedFileSourceMap();
+
 			sourceMap.mappings.push({
 				data: {
-					vueTag: undefined,
+					vueTag: 'customBlock',
+					vueTagIndex: i,
 					capabilities: {
 						basic: true,
 						references: true,
@@ -68,12 +69,15 @@ export function useSfcCustomBlocks(
 					end: customBlock.content.length,
 				},
 			});
-			sourceMaps.push(sourceMap);
+
+			_embeddeds.push({ file, sourceMap });
 		}
-		return sourceMaps;
+
+		return _embeddeds;
 	});
+
 	return {
-		textDocuments,
-		sourceMaps,
+		files,
+		embeddeds,
 	};
 }

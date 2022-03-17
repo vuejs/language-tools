@@ -1,11 +1,11 @@
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { VueDocument } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import { htmlPluginBase } from '../commonPlugins/html';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
+import { VueDocument } from '../vueDocuments';
 
 export { triggerCharacters } from '../commonPlugins/html';
 
@@ -115,8 +115,8 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
             return worker(document, (vueDocument) => {
 
                 const result: vscode.Diagnostic[] = [];
-                const sfc = vueDocument.getDescriptor();
-                const scriptSetupRanges = vueDocument.getScriptSetupRanges();
+                const sfc = vueDocument.file.getDescriptor();
+                const scriptSetupRanges = vueDocument.file.getScriptSetupRanges();
 
                 if (scriptSetupRanges && sfc.scriptSetup) {
                     for (const range of scriptSetupRanges.notOnTopTypeExports) {
@@ -133,7 +133,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
                     }
                 }
 
-                if (host.scriptTsLs && !host.scriptTsLs.__internal__.getValidTextDocument(vueDocument.getScriptTsDocument().uri)) {
+                if (host.scriptTsLs && !host.scriptTsLs.__internal__.getValidTextDocument(vueDocument.file.getScriptTsFile().fileName)) {
                     for (const script of [sfc.script, sfc.scriptSetup]) {
 
                         if (!script || script.content === '')
@@ -175,7 +175,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
             return worker(document, (vueDocument) => {
 
                 const result: vscode.SymbolInformation[] = [];
-                const descriptor = vueDocument.getDescriptor();
+                const descriptor = vueDocument.file.getDescriptor();
 
                 if (descriptor.template) {
                     result.push({
@@ -286,7 +286,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
 
 function getSfcCodeWithEmptyBlocks(vueDocument: VueDocument, sfcCode: string) {
 
-    const descriptor = vueDocument.getDescriptor();
+    const descriptor = vueDocument.file.getDescriptor();
     const blocks = [
         descriptor.template, // relate to below
         descriptor.script,

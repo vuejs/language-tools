@@ -3,55 +3,52 @@ import * as shared from '@volar/shared';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
-import * as upath from 'upath';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ITemplateScriptData, VueCompilerOptions } from '../types';
-import * as SourceMaps from '../utils/sourceMaps';
+import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
-import type { TextRange } from '@volar/vue-code-gen';
+import type { TeleportMappingData, TextRange } from '@volar/vue-code-gen';
+import { Embedded, EmbeddedFile } from '../vueDocument';
+import { useSfcStyles } from './useSfcStyles';
+import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
+import * as SourceMaps from '@volar/source-map';
+import * as upath from 'upath';
 
 export function useSfcTemplateScript(
-	vueUri: string,
-	vueDoc: Ref<TextDocument>,
+	fileName: string,
 	template: Ref<shared.Sfc['template']>,
 	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	styles: Ref<shared.Sfc['styles']>,
 	templateScriptData: ITemplateScriptData,
-	styleDocuments: Ref<{
-		textDocument: TextDocument;
-		module: string | undefined;
-		scoped: boolean;
-	}[]>,
-	styleSourceMaps: Ref<SourceMaps.EmbeddedDocumentSourceMap[]>,
+	styleFiles: ReturnType<typeof useSfcStyles>['files'],
+	styleEmbeddeds: ReturnType<typeof useSfcStyles>['embeddeds'],
 	templateData: Ref<{
 		lang: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
-	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['textDocuments'],
+	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
-    getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
-    getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
+	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
+	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 ) {
-	let version = 0;
-	const vueFileName = upath.basename(shared.uriToFsPath(vueUri));
+	const baseFileName = upath.basename(fileName);
 	const cssModuleClasses = computed(() =>
-		styleDocuments.value.reduce((obj, style) => {
-			if (style.module) {
-				const classes = getCssClasses(style.textDocument);
-				obj[style.module] = { [style.textDocument.uri]: classes };
+		styleFiles.value.reduce((obj, style) => {
+			if (style.data.module) {
+				const classes = getCssClasses(style);
+				obj[style.data.module] = { [style.fileName]: classes };
 			}
 			return obj;
 		}, {} as Record<string, Record<string, Record<string, TextRange[]>>>)
 	);
 	const cssScopedClasses = computed(() => {
 		const obj: Record<string, Record<string, TextRange[]>> = {};
-		for (const style of styleDocuments.value) {
-			if (style.scoped) {
-				const classes = getCssClasses(style.textDocument);
-				obj[style.textDocument.uri] = classes;
+		for (const style of styleFiles.value) {
+			if (style.data.scoped) {
+				const classes = getCssClasses(style);
+				obj[style.fileName] = classes;
 			}
 		}
 		return obj;
@@ -78,10 +75,10 @@ export function useSfcTemplateScript(
 	});
 	const data = computed(() => {
 
-		const codeGen = new CodeGen<SourceMaps.EmbeddedDocumentMappingData>();
+		const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
-		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${vueFileName}';\n`);
+		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${baseFileName}';\n`);
 
 		writeImportTypes();
 
@@ -160,7 +157,7 @@ export function useSfcTemplateScript(
 					codeGen.addText(`__VLS_types_${text} as ${text},\n`);
 				}
 			}
-			codeGen.addText(`} from './${vueFileName}.__VLS_script';\n`);
+			codeGen.addText(`} from './${baseFileName}.__VLS_script';\n`);
 		}
 		function writeCssClassProperties(data: Record<string, Record<string, TextRange[]>>, patchRename: boolean, propertyType: string, optional: boolean) {
 			const mappings = new Map<string, {
@@ -207,7 +204,7 @@ export function useSfcTemplateScript(
 		}
 		function writeProps() {
 			const propsSet = new Set(templateScriptData.props);
-			const mappings: SourceMaps.Mapping<SourceMaps.TeleportMappingData>[] = [];
+			const mappings: SourceMaps.Mapping<TeleportMappingData>[] = [];
 			for (const propName of templateScriptData.context) {
 				codeGen.addText(`declare let `);
 				const templateSideRange = codeGen.addText(propName);
@@ -274,11 +271,10 @@ export function useSfcTemplateScript(
 			for (let i = 0; i < sfcStyles.value.length; i++) {
 
 				const style = sfcStyles.value[i];
-				const binds = getCssVBindRanges(style.textDocument);
-				const docText = style.textDocument.getText();
+				const binds = getCssVBindRanges(style);
 
 				for (const cssBind of binds) {
-					const bindText = docText.substring(cssBind.start, cssBind.end);
+					const bindText = style.content.substring(cssBind.start, cssBind.end);
 					codeGen.addCode(
 						bindText,
 						cssBind,
@@ -302,28 +298,18 @@ export function useSfcTemplateScript(
 			}
 		}
 	});
-	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const sourceMap = computed(() => {
-		if (textDoc.value) {
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
-				sourceMapId,
-				vueDoc.value,
-				textDoc.value,
-				'template',
-				{
-					diagnostics: true,
-					foldingRanges: false,
-					formatting: false,
-					documentSymbol: false,
-					codeActions: false,
-				},
-				data.value.codeGen.getMappings(parseMappingSourceRange),
+	const embedded = computed<Embedded | undefined>(() => {
+
+		if (file.value) {
+			const sourceMap = new SourceMaps.SourceMapBase<EmbeddedFileMappingData>(
+				data.value.codeGen.getMappings(parseMappingSourceRange)
 			);
-			for (const [uri, mappings] of [
+
+			for (const [fileName, mappings] of [
 				...data.value.cssModuleMappingsArr.flatMap(m => [...m]),
 				...data.value.cssScopedMappings,
 			]) {
-				const cssSourceMap = styleSourceMaps.value.find(sourceMap => sourceMap.mappedDocument.uri === uri);
+				const cssSourceMap = styleEmbeddeds.value.find(embedded => embedded.file.fileName === fileName)?.sourceMap;
 				if (!cssSourceMap) continue;
 				for (const maped of mappings) {
 					const tsRange = maped.tsRange;
@@ -349,77 +335,83 @@ export function useSfcTemplateScript(
 				}
 			}
 
-			return sourceMap;
-		}
-	});
-	const formatSourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const formatSourceMap = computed(() => {
-		if (templateCodeGens.value && formatTextDoc.value && template.value) {
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
-				formatSourceMapId,
-				vueDoc.value,
-				formatTextDoc.value,
-				'template',
-				{
-					diagnostics: false,
-					foldingRanges: false,
-					formatting: true,
-					documentSymbol: true,
-					codeActions: false,
-				},
-				templateCodeGens.value.formatCodeGen.getMappings(parseMappingSourceRange),
-			);
-			return sourceMap;
-		}
-	});
-	const cssTextDocument = computed(() => {
-		if (templateCodeGens.value && template.value) {
-			const textDocument = TextDocument.create(vueUri + '.template.css', 'css', 0, templateCodeGens.value.cssCodeGen.getText());
 			return {
-				textDocument,
-				links: [],
-				module: false,
-				scoped: false,
+				file: file.value,
+				sourceMap,
 			};
 		}
 	});
-	const cssSourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const cssSourceMap = computed(() => {
-		if (templateCodeGens.value && cssTextDocument.value && template.value) {
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(
-				cssSourceMapId,
-				vueDoc.value,
-				cssTextDocument.value.textDocument,
-				'nonTs',
-				{
+	const formatEmbedded = computed<Embedded | undefined>(() => {
+
+		if (templateCodeGens.value && formatFile.value) {
+
+			const sourceMap = new EmbeddedFileSourceMap(
+				templateCodeGens.value.formatCodeGen.getMappings(parseMappingSourceRange)
+			);
+
+			return {
+				file: formatFile.value,
+				sourceMap,
+			};
+		}
+	});
+	const inlineCssFile = computed(() => {
+
+		if (templateCodeGens.value) {
+
+			const file: EmbeddedFile = {
+				lsType: 'nonTs',
+				fileName: fileName + '.template.css',
+				lang: 'css',
+				content: templateCodeGens.value.cssCodeGen.getText(),
+				capabilities: {
 					diagnostics: false,
 					foldingRanges: false,
 					formatting: false,
 					codeActions: false,
 					documentSymbol: false,
 				},
-				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange),
-			);
-			return sourceMap;
+				data: undefined,
+				// data: {
+				// 	module: false,
+				// 	scoped: false,
+				// },
+			};
+
+			return file;
 		}
 	});
-	const textDoc = ref<TextDocument>();
-	const formatTextDoc = ref<TextDocument>();
-	const teleportSourceMap = ref<SourceMaps.TeleportSourceMap>();
+	const inlineCssEmbedded = computed<Embedded | undefined>(() => {
+
+		if (templateCodeGens.value && inlineCssFile.value) {
+
+			const sourceMap = new EmbeddedFileSourceMap(
+				templateCodeGens.value.cssCodeGen.getMappings(parseMappingSourceRange)
+			);
+
+			return {
+				file: inlineCssFile.value,
+				sourceMap,
+			};
+		}
+	});
+	const file = ref<EmbeddedFile>();
+	const formatFile = ref<EmbeddedFile>();
+	const teleport = ref<Teleport>();
 
 	return {
 		templateCodeGens,
-		sourceMap,
-		textDocument: textDoc,
-		textDocumentForFormatting: formatTextDoc,
-		sourceMapForFormatting: formatSourceMap,
-		teleportSourceMap,
-		cssTextDocument,
-		cssSourceMap,
+		embedded,
+		file,
+		formatFile,
+		formatEmbedded,
+		teleport,
+		inlineCssFile,
+		inlineCssEmbedded,
 		update, // TODO: cheapComputed
 	};
 
-	function parseMappingSourceRange(data: SourceMaps.EmbeddedDocumentMappingData, range: SourceMaps.Range) {
+	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: SourceMaps.Range) {
 		if (data?.vueTag === 'style' && data?.vueTagIndex !== undefined) {
 			return {
 				start: styles.value[data.vueTagIndex].startTagEnd + range.start,
@@ -435,26 +427,48 @@ export function useSfcTemplateScript(
 	function update() {
 
 		const newLang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
-		const newLangId = shared.syntaxToLanguageId(newLang);
 
-		if (data.value?.codeGen.getText() !== textDoc.value?.getText() || (textDoc.value && textDoc.value.languageId !== newLangId)) {
+		if (data.value?.codeGen.getText() !== file.value?.content || (file.value && file.value.lang !== newLang)) {
 			if (data.value) {
-				const _version = version++;
-				textDoc.value = TextDocument.create(vueUri + '.__VLS_template.' + newLang, newLangId, _version, data.value.codeGen.getText());
-				formatTextDoc.value = templateCodeGens.value
-					? TextDocument.create(vueUri + '.__VLS_template.format.' + newLang, newLangId, _version, templateCodeGens.value.formatCodeGen.getText())
-					: undefined;
+				file.value = {
+					lsType: 'template',
+					fileName: fileName + '.__VLS_template.' + newLang,
+					lang: newLang,
+					content: data.value.codeGen.getText(),
+					capabilities: {
+						diagnostics: true,
+						foldingRanges: false,
+						formatting: false,
+						documentSymbol: false,
+						codeActions: false,
+					},
+					data: undefined,
+				};
+				formatFile.value = templateCodeGens.value ? {
+					lsType: 'template',
+					fileName: fileName + '.__VLS_template.format.' + newLang,
+					lang: newLang,
+					content: templateCodeGens.value.formatCodeGen.getText(),
+					capabilities: {
+						diagnostics: false,
+						foldingRanges: false,
+						formatting: true,
+						documentSymbol: true,
+						codeActions: false,
+					},
+					data: undefined,
+				} : undefined;
 
-				const sourceMap = new SourceMaps.TeleportSourceMap(textDoc.value);
+				const sourceMap = new Teleport();
 				for (const maped of data.value.ctxMappings) {
 					sourceMap.mappings.push(maped);
 				}
-				teleportSourceMap.value = sourceMap;
+				teleport.value = sourceMap;
 			}
 			else {
-				textDoc.value = undefined;
-				teleportSourceMap.value = undefined;
-				formatTextDoc.value = undefined;
+				file.value = undefined;
+				teleport.value = undefined;
+				formatFile.value = undefined;
 			}
 		}
 	}

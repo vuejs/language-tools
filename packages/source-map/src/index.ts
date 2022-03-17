@@ -62,7 +62,7 @@ export type Mapping<T> = MappingBase & {
 
 export class SourceMapBase<Data = undefined> {
 
-	mappings: Mapping<Data>[];
+	public mappings: Mapping<Data>[];
 
 	constructor(
 		_mappings?: Mapping<Data>[],

@@ -1,39 +1,50 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
-import * as SourceMaps from '../utils/sourceMaps';
+import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
+import * as SourceMaps from '@volar/source-map';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
+import { Embedded, EmbeddedFile } from '../vueDocument';
 
 export function useSfcScript(
-	vueUri: string,
-	vueDoc: Ref<TextDocument>,
-	script: Ref<shared.Sfc['scriptSetup']>,
+	fileName: string,
+	script: Ref<shared.Sfc['script'] | shared.Sfc['scriptSetup']>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	let version = 0;
+
 	const ast = computed(() => {
 		if (script.value) {
-			return ts.createSourceFile('foo.' + script.value.lang, script.value.content, ts.ScriptTarget.Latest);
+			return ts.createSourceFile(fileName + '.' + script.value.lang, script.value.content, ts.ScriptTarget.Latest);
 		}
 	});
-	const textDocument = computed(() => {
+	const file = computed(() => {
+
 		if (script.value) {
-			const lang = script.value.lang;
-			const uri = `${vueUri}.${lang}`;
-			return TextDocument.create(uri, shared.syntaxToLanguageId(lang), version++, script.value.content);
+
+			const file: EmbeddedFile = {
+				fileName: fileName + '.' + script.value.lang,
+				lang: script.value.lang,
+				content: script.value.content,
+				lsType: 'nonTs',
+				capabilities: {
+					diagnostics: false,
+					foldingRanges: true,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: false,
+				},
+				data: undefined,
+			};
+
+			return file;
 		}
 	});
-	const sourceMapId = SourceMaps.getEmbeddedDocumentSourceMapId();
-	const sourceMap = computed(() => {
-		if (textDocument.value && script.value) {
-			const sourceMap = new SourceMaps.EmbeddedDocumentSourceMap(sourceMapId, vueDoc.value, textDocument.value, 'template', {
-				diagnostics: false,
-				foldingRanges: true,
-				formatting: true,
-				documentSymbol: true,
-				codeActions: false,
-			});
+	const embedded = computed<Embedded | undefined>(() => {
+
+		if (script.value && file.value) {
+
+			const sourceMap = new EmbeddedFileSourceMap();
+
 			sourceMap.mappings.push({
 				data: {
 					vueTag: 'script',
@@ -49,12 +60,16 @@ export function useSfcScript(
 					end: script.value.content.length,
 				},
 			});
-			return sourceMap;
+			return {
+				file: file.value,
+				sourceMap,
+			};
 		}
 	});
+
 	return {
 		ast,
-		textDocument,
-		sourceMap,
+		file,
+		embedded,
 	};
 }

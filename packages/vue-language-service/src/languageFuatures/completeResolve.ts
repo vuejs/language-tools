@@ -21,9 +21,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			const originalItem = data.originalItem;
 
-			if (data.sourceMapId !== undefined && data.embeddedDocumentUri !== undefined) {
+			if (data.sourceMap) {
 
-				const sourceMap = context.tsRuntime.context.vueDocuments.getSourceMap(data.sourceMapId, data.embeddedDocumentUri);
+				const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.lsType, data.sourceMap.embeddedDocumentUri);
 
 				if (sourceMap) {
 
@@ -34,9 +34,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					item = transformCompletionItem(
 						resolvedItem,
-						embeddedRange => plugin.resolveEmbeddedRange
-							? plugin.resolveEmbeddedRange(embeddedRange, sourceMap)
-							: sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+						embeddedRange => plugin.resolveEmbeddedRange?.(embeddedRange)
+							?? sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 					);
 				}
 			}
@@ -54,7 +53,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					&& edit.range.end.line === 0
 					&& edit.range.end.character === 0
 				) {
-					edit.newText = (context.vueHost.getNewLine?.() ?? '\n') + edit.newText;
+					edit.newText = (context.vueLsHost.getNewLine?.() ?? '\n') + edit.newText;
 				}
 			}
 		}

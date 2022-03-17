@@ -2,10 +2,9 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createVueDocument } from './vueDocument';
-import { createVueDocuments } from './vueDocuments';
-import { LanguageServiceHostBase, TypeScriptFeaturesRuntimeContext, VueCompilerOptions } from './types';
+import { createVueFile, EmbeddedFile } from './vueDocument';
+import { createVueFiles } from './vueDocuments';
+import { LanguageServiceHost, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import type { TextRange } from '@volar/vue-code-gen';
 import useHtmlPlugin from './plugins/html';
@@ -24,23 +23,23 @@ export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 export function createTypeScriptRuntime(options: {
     typescript: typeof import('typescript/lib/tsserverlibrary'),
     vueCompilerOptions: VueCompilerOptions,
-    getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
-    getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
-    vueHost: LanguageServiceHostBase,
+    getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
+    getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
+    vueLsHost: LanguageServiceHost,
     isTsPlugin?: boolean,
 }) {
 
     const { typescript: ts } = options;
 
-    const isVue2 = options.vueHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
+    const isVue2 = options.vueLsHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
     let vueProjectVersion: string | undefined;
     let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
     let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
     let templateProjectVersion = 0;
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
-    const vueDocuments = createVueDocuments();
-    const templateScriptUpdateUris = new Set<string>();
+    const vueFiles = createVueFiles();
+    const templateScriptUpdateFileNames = new Set<string>();
     const initProgressCallback: ((p: number) => void)[] = [];
     const plugins = [
         useHtmlPlugin(),
@@ -59,18 +58,11 @@ export function createTypeScriptRuntime(options: {
 
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
 
-    const context: TypeScriptFeaturesRuntimeContext = {
-        vueHost: options.vueHost,
-        vueDocuments,
-        templateTsHost,
-        scriptTsHost,
-        templateTsLsRaw,
-        scriptTsLsRaw,
-        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLsRaw! : scriptTsLsRaw,
-    };
-
     return {
-        context,
+        vueLsHost: options.vueLsHost,
+        vueFiles,
+        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLsRaw! : scriptTsLsRaw,
+        getTsLsHost: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsHost! : scriptTsHost,
         update,
         getScriptContentVersion: () => scriptContentVersion,
         dispose: () => {
@@ -93,38 +85,37 @@ export function createTypeScriptRuntime(options: {
     function getLocalTypesFiles(lsType: 'script' | 'template') {
         if (lsType === 'script')
             return [];
-        return vueDocuments.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
+        return vueFiles.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
     }
     function update(shouldUpdateTemplateScript: boolean) {
-        const newVueProjectVersion = options.vueHost.getVueProjectVersion?.();
+        const newVueProjectVersion = options.vueLsHost.getVueProjectVersion?.();
         if (newVueProjectVersion === undefined || newVueProjectVersion !== vueProjectVersion) {
 
             vueProjectVersion = newVueProjectVersion;
 
-            const newFileUris = new Set([...options.vueHost.getScriptFileNames()].filter(file => file.endsWith('.vue')).map(shared.fsPathToUri));
-            const removeUris: string[] = [];
-            const addUris: string[] = [];
-            const updateUris: string[] = [];
+            const nowFileNames = new Set([...options.vueLsHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
+            const fileNamesToRemove: string[] = [];
+            const fileNamesToCreate: string[] = [];
+            const fileNamesToUpdate: string[] = [];
 
-            for (const sourceFile of vueDocuments.getAll()) {
-                const fileName = shared.uriToFsPath(sourceFile.uri);
-                if (!newFileUris.has(sourceFile.uri) && !options.vueHost.fileExists?.(fileName)) {
+            for (const vueFile of vueFiles.getAll()) {
+                if (!nowFileNames.has(vueFile.fileName) && !options.vueLsHost.fileExists?.(vueFile.fileName)) {
                     // delete
-                    removeUris.push(sourceFile.uri);
+                    fileNamesToRemove.push(vueFile.fileName);
                 }
                 else {
                     // update
-                    const newVersion = options.vueHost.getScriptVersion(fileName);
-                    if (sourceFile.getVersion() !== newVersion) {
-                        updateUris.push(sourceFile.uri);
+                    const newVersion = options.vueLsHost.getScriptVersion(vueFile.fileName);
+                    if (vueFile.getVersion() !== newVersion) {
+                        fileNamesToUpdate.push(vueFile.fileName);
                     }
                 }
             }
 
-            for (const newUri of newFileUris) {
-                if (!vueDocuments.get(newUri)) {
+            for (const nowFileName of nowFileNames) {
+                if (!vueFiles.raw.fsPathGet(nowFileName)) {
                     // add
-                    addUris.push(newUri);
+                    fileNamesToCreate.push(nowFileName);
                 }
             }
 
@@ -144,57 +135,55 @@ export function createTypeScriptRuntime(options: {
             // 	// }
             // }
 
-            const finalUpdateUris = addUris.concat(updateUris);
+            const finalUpdateFileNames = fileNamesToCreate.concat(fileNamesToUpdate);
 
-            if (removeUris.length) {
-                unsetSourceFiles(removeUris);
+            if (fileNamesToRemove.length) {
+                unsetSourceFiles(fileNamesToRemove);
             }
-            if (finalUpdateUris.length) {
-                updateSourceFiles(finalUpdateUris, shouldUpdateTemplateScript)
+            if (finalUpdateFileNames.length) {
+                updateSourceFiles(finalUpdateFileNames, shouldUpdateTemplateScript)
             }
         }
-        else if (shouldUpdateTemplateScript && templateScriptUpdateUris.size) {
+        else if (shouldUpdateTemplateScript && templateScriptUpdateFileNames.size) {
             updateSourceFiles([], shouldUpdateTemplateScript)
         }
     }
     function createTsLsHost(lsType: 'template' | 'script') {
 
         const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-        const documentVersions = new WeakMap<TextDocument, string>();
+        const fileVersions = new WeakMap<EmbeddedFile, string>();
         const tsHost: ts.LanguageServiceHost = {
-            ...options.vueHost,
-            fileExists: options.vueHost.fileExists
+            ...options.vueLsHost,
+            fileExists: options.vueLsHost.fileExists
                 ? fileName => {
                     // .vue.js -> .vue
                     // .vue.ts -> .vue
                     // .vue.d.ts (never)
                     const fileNameTrim = upath.trimExt(fileName);
                     if (fileNameTrim.endsWith('.vue')) {
-                        const uri = shared.fsPathToUri(fileNameTrim);
-                        const sourceFile = vueDocuments.get(uri);
-                        if (!sourceFile) {
-                            const fileExists = !!options.vueHost.fileExists?.(fileNameTrim);
+                        const vueFile = vueFiles.raw.fsPathGet(fileNameTrim);
+                        if (!vueFile) {
+                            const fileExists = !!options.vueLsHost.fileExists?.(fileNameTrim);
                             if (fileExists) {
-                                updateSourceFiles([uri], false); // create virtual files
+                                updateSourceFiles([fileNameTrim], false); // create virtual files
                             }
                         }
-                        return !!vueDocuments.fromEmbeddedDocumentUri(lsType, shared.fsPathToUri(fileName));
+                        return !!vueFiles.fromEmbeddedFileName(lsType, fileName);
                     }
                     else {
-                        return !!options.vueHost.fileExists?.(fileName);
+                        return !!options.vueLsHost.fileExists?.(fileName);
                     }
                 }
                 : undefined,
             getProjectVersion: () => {
-                return options.vueHost.getProjectVersion?.() + '-' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
+                return options.vueLsHost.getProjectVersion?.() + '-' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
             },
             getScriptFileNames,
             getScriptVersion,
             getScriptSnapshot,
             readDirectory: (path, extensions, exclude, include, depth) => {
-                const result = options.vueHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
-                for (const uri of vueDocuments.getUris()) {
-                    const vuePath = shared.uriToFsPath(uri);
+                const result = options.vueLsHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
+                for (const vuePath of vueFiles.getFileNames()) {
                     const vuePath2 = upath.join(path, upath.basename(vuePath));
                     if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
                         continue;
@@ -223,7 +212,7 @@ export function createTypeScriptRuntime(options: {
 
         if (lsType === 'template') {
             tsHost.getCompilationSettings = () => ({
-                ...options.vueHost.getCompilationSettings(),
+                ...options.vueLsHost.getCompilationSettings(),
                 jsx: ts.JsxEmit.Preserve,
             });
         }
@@ -231,12 +220,14 @@ export function createTypeScriptRuntime(options: {
         return tsHost;
 
         function getScriptFileNames() {
+
             const tsFileNames = getLocalTypesFiles(lsType);
 
-            for (const sourceMap of vueDocuments.getEmbeddeds(lsType)) {
-                tsFileNames.push(shared.uriToFsPath(sourceMap.mappedDocument.uri)); // virtual .ts
+            for (const embedded of vueFiles.getEmbeddeds(lsType)) {
+                tsFileNames.push(embedded.file.fileName); // virtual .ts
             }
-            for (const fileName of options.vueHost.getScriptFileNames()) {
+
+            for (const fileName of options.vueLsHost.getScriptFileNames()) {
                 if (options.isTsPlugin) {
                     tsFileNames.push(fileName); // .vue + .ts
                 }
@@ -244,26 +235,26 @@ export function createTypeScriptRuntime(options: {
                     tsFileNames.push(fileName); // .ts
                 }
             }
+
             return tsFileNames;
         }
         function getScriptVersion(fileName: string) {
-            const uri = shared.fsPathToUri(fileName);
             const basename = upath.basename(fileName);
             if (basename === localTypes.typesFileName) {
                 return '';
             }
-            let sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
-            if (sourceMap) {
-                if (documentVersions.has(sourceMap.mappedDocument)) {
-                    return documentVersions.get(sourceMap.mappedDocument)!;
+            let embedded = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (embedded) {
+                if (fileVersions.has(embedded.file)) {
+                    return fileVersions.get(embedded.file)!;
                 }
                 else {
-                    const version = ts.sys.createHash?.(sourceMap.mappedDocument.getText()) ?? sourceMap.mappedDocument.getText();
-                    documentVersions.set(sourceMap.mappedDocument, version);
+                    const version = ts.sys.createHash?.(embedded.file.content) ?? embedded.file.content;
+                    fileVersions.set(embedded.file, version);
                     return version;
                 }
             }
-            return options.vueHost.getScriptVersion(fileName);
+            return options.vueLsHost.getScriptVersion(fileName);
         }
         function getScriptSnapshot(fileName: string) {
             const version = getScriptVersion(fileName);
@@ -275,15 +266,14 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return localTypesScript;
             }
-            const uri = shared.fsPathToUri(fileName);
-            const sourceMap = vueDocuments.fromEmbeddedDocumentUri(lsType, uri);
-            if (sourceMap) {
-                const text = sourceMap.mappedDocument.getText();
+            const embedded = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (embedded) {
+                const text = embedded.file.content;
                 const snapshot = ts.ScriptSnapshot.fromString(text);
                 scriptSnapshots.set(fileName, [version, snapshot]);
                 return snapshot;
             }
-            let tsScript = options.vueHost.getScriptSnapshot(fileName);
+            let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
             if (tsScript) {
                 if (lsType === 'template' && basename === 'runtime-dom.d.ts') {
                     // allow arbitrary attributes
@@ -296,7 +286,7 @@ export function createTypeScriptRuntime(options: {
             }
         }
     }
-    function updateSourceFiles(uris: string[], shouldUpdateTemplateScript: boolean) {
+    function updateSourceFiles(fileNames: string[], shouldUpdateTemplateScript: boolean) {
 
         let vueScriptContentsUpdate = false;
         let vueScriptsUpdated = false;
@@ -307,22 +297,21 @@ export function createTypeScriptRuntime(options: {
                 cb(0);
             }
         }
-        for (const uri of uris) {
+        for (const fileName of fileNames) {
 
-            const fileName = shared.uriToFsPath(uri);
-            const sourceFile = vueDocuments.get(uri);
-            const scriptSnapshot = options.vueHost.getScriptSnapshot(fileName);
+            const sourceFile = vueFiles.raw.fsPathGet(fileName);
+            const scriptSnapshot = options.vueLsHost.getScriptSnapshot(fileName);
 
             if (!scriptSnapshot) {
                 continue;
             }
 
             const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-            const scriptVersion = options.vueHost.getScriptVersion(fileName);
+            const scriptVersion = options.vueLsHost.getScriptVersion(fileName);
 
             if (!sourceFile) {
-                vueDocuments.set(uri, createVueDocument(
-                    uri,
+                vueFiles.raw.fsPathSet(fileName, createVueFile(
+                    fileName,
                     scriptText,
                     scriptVersion,
                     htmlLs,
@@ -347,7 +336,7 @@ export function createTypeScriptRuntime(options: {
                     templateScriptUpdated = true;
                 }
             }
-            templateScriptUpdateUris.add(uri);
+            templateScriptUpdateFileNames.add(fileName);
         }
         if (vueScriptContentsUpdate) {
             scriptContentVersion++;
@@ -359,16 +348,16 @@ export function createTypeScriptRuntime(options: {
         if (shouldUpdateTemplateScript && lastScriptProjectVersionWhenTemplateProjectVersionUpdate !== scriptContentVersion) {
             lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
             let currentNums = 0;
-            for (const uri of templateScriptUpdateUris) {
-                if (templateTsLsRaw && templateTsHost && vueDocuments.get(uri)?.updateTemplateScript(templateTsLsRaw, templateTsHost)) {
+            for (const fileName of templateScriptUpdateFileNames) {
+                if (templateTsLsRaw && templateTsHost && vueFiles.raw.fsPathGet(fileName)?.updateTemplateScript(templateTsLsRaw, templateTsHost)) {
                     templateScriptUpdated = true;
                 }
                 currentNums++;
                 for (const cb of initProgressCallback) {
-                    cb(currentNums / templateScriptUpdateUris.size);
+                    cb(currentNums / templateScriptUpdateFileNames.size);
                 }
             }
-            templateScriptUpdateUris.clear();
+            templateScriptUpdateFileNames.clear();
             for (const cb of initProgressCallback) {
                 cb(1);
             }
@@ -381,7 +370,7 @@ export function createTypeScriptRuntime(options: {
     function unsetSourceFiles(uris: string[]) {
         let updated = false;
         for (const uri of uris) {
-            if (vueDocuments.delete(uri)) {
+            if (vueFiles.raw.fsPathDelete(uri)) {
                 updated = true;
             }
         }

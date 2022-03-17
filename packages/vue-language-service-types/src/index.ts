@@ -1,4 +1,3 @@
-import type { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -74,7 +73,7 @@ export type EmbeddedLanguagePlugin = {
     /**
      * TODO: only support to doCompleteResolve for now
      */
-    resolveEmbeddedRange?(range: vscode.Range, sourceMap: EmbeddedDocumentSourceMap): vscode.Range | undefined;
+    resolveEmbeddedRange?(range: vscode.Range): vscode.Range | undefined;
 
     // findMatchingTagPosition?(document: TextDocument, position: vscode.Position, htmlDocument: HTMLDocument): vscode.Position | null;
-};
+}

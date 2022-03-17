@@ -22,7 +22,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					yield mapedRange.start;
 				}
 			},
-			async (plugin, document, position, sourceMap) => {
+			async (plugin, document, position, sourceMap, vueDocument) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				const result: vscode.Location[] = [];
@@ -47,11 +47,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						let foundTeleport = false;
 
-						if (sourceMap?.lsType !== 'nonTs') {
+						if (sourceMap?.embeddedFile.lsType !== 'nonTs') {
 
 							recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-							const teleport = context.tsRuntime.context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(reference.uri);
+							const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', reference.uri);
 
 							if (teleport) {
 
@@ -79,7 +79,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.tsRuntime.context.vueDocuments.fromEmbeddedDocumentUri(sourceMap?.lsType ?? 'script', reference.uri);
+				const referenceSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', reference.uri);
 
 				if (referenceSourceMap) {
 

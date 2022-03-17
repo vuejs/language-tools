@@ -1,15 +1,11 @@
-import { VueDocument, LanguageServiceHostBase, TypeScriptRuntime } from '@volar/vue-typescript';
-import type * as css from 'vscode-css-languageservice';
+import { LanguageServiceHost } from '@volar/vue-typescript';
 import type { TextDocument } from 'vscode-css-languageservice';
-import type * as json from 'vscode-json-languageservice';
 import { LanguageServicePlugin } from './languageService';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import type * as ts2 from '@volar/typescript-language-service';
+import { VueDocument, VueDocuments } from './vueDocuments';
 
-export type LanguageServiceHost = LanguageServiceHostBase & {
-	schemaRequestService?: json.SchemaRequestService,
-	getCssLanguageSettings?(document: TextDocument): Promise<css.LanguageSettings>,
-};
+export { LanguageServiceHost } from '@volar/vue-typescript';
 
 export type DocumentServiceRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
@@ -21,10 +17,8 @@ export type DocumentServiceRuntimeContext = {
 
 export type LanguageServiceRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
-	tsRuntime: TypeScriptRuntime,
-	vueHost: LanguageServiceHost,
-	scriptTsLs: ts2.LanguageService;
-	templateTsLs: ts2.LanguageService | undefined;
+	vueDocuments: VueDocuments,
+	vueLsHost: LanguageServiceHost,
 	getTextDocument(uri: string): TextDocument | undefined,
 	getPlugins(lsType: 'template' | 'script' | 'nonTs'): LanguageServicePlugin[],
 	getPluginById(id: number): LanguageServicePlugin | undefined,

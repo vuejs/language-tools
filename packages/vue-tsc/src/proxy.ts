@@ -24,7 +24,7 @@ export function createProgramProxy(
 		scriptSnapshot: ts.IScriptSnapshot,
 		version: string,
 	}>();
-	const vueLsHost: vue.LanguageServiceHostBase = {
+	const vueLsHost: vue.LanguageServiceHost = {
 		...host,
 		resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
 		writeFile: undefined,
@@ -42,13 +42,13 @@ export function createProgramProxy(
 		getCssClasses: () => ({}),
 		getCssVBindRanges: () => [],
 		vueCompilerOptions,
-		vueHost: vueLsHost,
+		vueLsHost: vueLsHost,
 		isTsPlugin: false,
 	});
-	const tsProgram = tsRuntime.context.scriptTsLsRaw.getProgram(); // TODO: handle template ls?
+	const tsProgram = tsRuntime.getTsLs('script').getProgram();
 	if (!tsProgram) throw '!tsProgram';
 
-	const tsProgramApis_2 = apis.register(ts, tsRuntime.context);
+	const tsProgramApis_2 = apis.register(ts, tsRuntime);
 	const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
 		get: (target: any, property: keyof typeof tsProgramApis_2) => {
 			tsRuntime.update(true);

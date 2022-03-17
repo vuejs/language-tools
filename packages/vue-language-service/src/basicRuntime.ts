@@ -5,6 +5,8 @@ import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import { findClassNames } from './utils/cssClasses';
+import { EmbeddedFile } from '@volar/vue-typescript';
+import * as shared from '@volar/shared';
 
 interface StylesheetNode {
     children: StylesheetNode[] | undefined,
@@ -34,6 +36,7 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
     };
     let htmlDataProviders: html.IHTMLDataProvider[] = [];
 
+    const embeddedDocuments = new WeakMap<EmbeddedFile, TextDocument>();
     const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
     const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
     const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, TextRange[]>>();
@@ -71,6 +74,7 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
             case 'postcss': return postcssLs;
         }
     }
+
     function getStylesheet(document: TextDocument) {
 
         const cache = stylesheets.get(document);
@@ -90,7 +94,9 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
 
         return stylesheet;
     }
-    function getCssVBindRanges(document: TextDocument) {
+    function getCssVBindRanges(embeddedFile: EmbeddedFile) {
+
+        const document = getDocumentFromEmbeddedFile(embeddedFile);
 
         const stylesheet = getStylesheet(document);
         if (!stylesheet)
@@ -98,11 +104,27 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
 
         let binds = stylesheetVBinds.get(stylesheet);
         if (!binds) {
-            binds = findStylesheetVBindRanges(document.getText(), stylesheet);
+            binds = findStylesheetVBindRanges(embeddedFile.content, stylesheet);
             stylesheetVBinds.set(stylesheet, binds)
         }
 
         return binds;
+    }
+    function getDocumentFromEmbeddedFile(embeddedFile: EmbeddedFile) {
+
+        let document = embeddedDocuments.get(embeddedFile);
+
+        if (!document) {
+            document = TextDocument.create(
+                shared.fsPathToUri(embeddedFile.fileName),
+                shared.syntaxToLanguageId(embeddedFile.lang),
+                0,
+                embeddedFile.content,
+            );
+            embeddedDocuments.set(embeddedFile, document);
+        }
+
+        return document;
     }
     function findStylesheetVBindRanges(docText: string, ss: css.Stylesheet) {
         const result: TextRange[] = [];
@@ -125,18 +147,20 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
         }
         return result;
     }
-    function getCssClasses(textDocument: TextDocument) {
+    function getCssClasses(embeddedFile: EmbeddedFile) {
 
-        let classes = stylesheetClasses.get(textDocument);
+        const document = getDocumentFromEmbeddedFile(embeddedFile);
+
+        let classes = stylesheetClasses.get(document);
 
         if (!classes) {
             classes = {};
 
-            const stylesheet = getStylesheet(textDocument);
-            const cssLs = getCssLs(textDocument.languageId);
+            const stylesheet = getStylesheet(document);
+            const cssLs = getCssLs(document.languageId);
 
             if (stylesheet && cssLs) {
-                const classNames = findClassNames(css, textDocument, stylesheet, cssLs);
+                const classNames = findClassNames(css, document, stylesheet, cssLs);
                 for (const className in classNames) {
                     const offsets = classNames[className];
                     for (const offset of offsets) {
@@ -148,7 +172,7 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
                 }
             }
 
-            stylesheetClasses.set(textDocument, classes);
+            stylesheetClasses.set(document, classes);
         }
 
         return classes;

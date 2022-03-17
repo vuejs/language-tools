@@ -1,9 +1,9 @@
 import * as shared from '@volar/shared';
 import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
 import type { TextRange } from '@volar/vue-code-gen/out/types';
-import { VueDocument } from '@volar/vue-typescript';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { VueDocument } from '../vueDocuments';
 
 enum Commands {
     USE_SETUP_SUGAR = 'scriptSetupConversions.use',
@@ -36,7 +36,7 @@ export default function (host: {
                     return;
 
                 const result: vscode.CodeLens[] = [];
-                const descriptor = vueDocument.getDescriptor();
+                const descriptor = vueDocument.file.getDescriptor();
 
                 if (descriptor.scriptSetup) {
                     result.push({
@@ -108,10 +108,10 @@ async function useSetupSugar(
     doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 ) {
 
-    const descriptor = vueDocument.getDescriptor();
+    const descriptor = vueDocument.file.getDescriptor();
     if (!descriptor.script) return;
 
-    const scriptAst = vueDocument.getScriptAst();
+    const scriptAst = vueDocument.file.getScriptAst();
     if (!scriptAst) return;
 
     const edits = await getEdits(
@@ -138,7 +138,7 @@ async function useSetupSugar(
     ) {
 
         const ranges = parseUseScriptSetupRanges(ts, _scriptAst);
-        const document = _vueDocument.getTextDocument();
+        const document = _vueDocument.file.getTextDocument();
         const edits: vscode.TextEdit[] = [];
         const scriptStartPos = document.positionAt(_script.startTagEnd);
         const startTagText = document.getText({
@@ -277,17 +277,17 @@ async function unuseSetupSugar(
     doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 ) {
 
-    const descriptor = vueDocument.getDescriptor();
+    const descriptor = vueDocument.file.getDescriptor();
     if (!descriptor.scriptSetup) return;
 
-    const scriptSetupAst = vueDocument.getScriptSetupAst();
+    const scriptSetupAst = vueDocument.file.getScriptSetupAst();
     if (!scriptSetupAst) return;
 
     const edits = await getEdits(
         vueDocument,
         descriptor.script,
         descriptor.scriptSetup,
-        vueDocument.getScriptAst(),
+        vueDocument.file.getScriptAst(),
         scriptSetupAst,
     );
 
@@ -307,7 +307,7 @@ async function unuseSetupSugar(
         _vueDocument: NonNullable<typeof vueDocument>,
     ) {
 
-        const document = _vueDocument.getTextDocument();
+        const document = _vueDocument.file.getTextDocument();
         const codeActions = await doCodeActions(document.uri, {
             start: document.positionAt(0),
             end: document.positionAt(document.getText().length),
@@ -334,7 +334,7 @@ async function unuseSetupSugar(
         const ranges = parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
         const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
 
-        const document = _vueDocument.getTextDocument();
+        const document = _vueDocument.file.getTextDocument();
         const edits: vscode.TextEdit[] = [];
         const removeSetupTextRanges: TextRange[] = [...ranges.imports];
 
@@ -567,7 +567,7 @@ export async function getAddMissingImportsEdits(
     doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 ) {
 
-    const document = _vueDocument.getTextDocument();
+    const document = _vueDocument.file.getTextDocument();
     const codeActions = await doCodeActions(document.uri, {
         start: document.positionAt(0),
         end: document.positionAt(document.getText().length),

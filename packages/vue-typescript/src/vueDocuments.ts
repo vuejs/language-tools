@@ -1,185 +1,146 @@
 import { computed, shallowReactive } from '@vue/reactivity';
-import type * as vscode from 'vscode-languageserver-protocol';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { VueDocument } from './vueDocument';
-import type { EmbeddedDocumentSourceMap, TeleportSourceMap } from './utils/sourceMaps';
+import type { Embedded, EmbeddedFile, VueFile } from './vueDocument';
+import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
-import type { EmbeddedDocumentMappingData } from '@volar/vue-code-gen';
+import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix build failed
 
-export interface VueDocuments extends ReturnType<typeof createVueDocuments> { }
+export interface VueFiles extends ReturnType<typeof createVueFiles> { }
 
-export function createVueDocuments() {
+export function createVueFiles() {
 
-	const _vueDocuments = shallowReactive<Record<string, VueDocument>>({});
-	const vueDocuments = shared.createPathMap<VueDocument>({
-		delete: key => delete _vueDocuments[key],
-		get: key => _vueDocuments[key],
-		has: key => !!_vueDocuments[key],
-		set: (key, value) => _vueDocuments[key] = value,
+	const _vueFiles = shallowReactive<Record<string, VueFile>>({});
+	const vueFiles = shared.createPathMap<VueFile>({
+		delete: key => delete _vueFiles[key],
+		get: key => _vueFiles[key],
+		has: key => !!_vueFiles[key],
+		set: (key, value) => _vueFiles[key] = value,
 		clear: () => {
-			for (var key in _vueDocuments) {
-				if (_vueDocuments.hasOwnProperty(key)) {
-					delete _vueDocuments[key];
+			for (var key in _vueFiles) {
+				if (_vueFiles.hasOwnProperty(key)) {
+					delete _vueFiles[key];
 				}
 			}
 		},
-		values: () => new Set(Object.values(_vueDocuments)).values(),
+		values: () => new Set(Object.values(_vueFiles)).values(),
 	});
 
-	const all = computed(() => Object.values(_vueDocuments));
-	const uris = computed(() => all.value.map(sourceFile => sourceFile.uri));
-	const sourceMapsById = computed(() => {
-		const map = new Map<string, EmbeddedDocumentSourceMap>();
-		for (const key in _vueDocuments) {
-			const sourceFile = _vueDocuments[key]!;
-			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
-				map.set(sourceMap.id + ':' + sourceMap.mappedDocument.uri, sourceMap);
-			}
-		}
-		return map;
-	});
+	const all = computed(() => Object.values(_vueFiles));
+	const fileNames = computed(() => all.value.map(sourceFile => sourceFile.fileName));
 	const embeddedDocumentsMap = computed(() => {
 
-		const map = new WeakMap<TextDocument, VueDocument>();
+		const map = new WeakMap<EmbeddedFile, VueFile>();
 
 		for (const sourceFile of all.value) {
-			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
-				map.set(sourceMap.mappedDocument, sourceFile);
+			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
+				map.set(embedded.file, sourceFile);
 			}
 		}
 
 		return map;
 	});
-	const sourceMapsByUriAndLsType = computed(() => {
+	const sourceMapsByFileNameAndLsType = computed(() => {
 
-		const noLsType = new Map<string, EmbeddedDocumentSourceMap>();
-		const script = new Map<string, EmbeddedDocumentSourceMap>();
-		const template = new Map<string, EmbeddedDocumentSourceMap>();
+		const nonTs = new Map<string, Embedded>();
+		const script = new Map<string, Embedded>();
+		const template = new Map<string, Embedded>();
 
 		for (const sourceFile of all.value) {
-			for (const sourceMap of sourceFile.refs.sourceMaps.value) {
-				if (sourceMap.lsType === 'nonTs') {
-					noLsType.set(sourceMap.mappedDocument.uri, sourceMap);
+			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
+				if (embedded.file.lsType === 'nonTs') {
+					nonTs.set(embedded.file.fileName, embedded);
 				}
-				else if (sourceMap.lsType === 'script') {
-					script.set(sourceMap.mappedDocument.uri, sourceMap);
+				else if (embedded.file.lsType === 'script') {
+					script.set(embedded.file.fileName, embedded);
 				}
-				else if (sourceMap.lsType === 'template') {
-					template.set(sourceMap.mappedDocument.uri, sourceMap);
+				else if (embedded.file.lsType === 'template') {
+					template.set(embedded.file.fileName, embedded);
 				}
 			}
 		}
 
 		return {
-			noLsType,
+			nonTs,
 			script,
 			template,
 		};
 	});
 	const tsTeleports = {
 		template: computed(() => {
-			const map = new Map<string, TeleportSourceMap>();
-			for (const key in _vueDocuments) {
-				const sourceFile = _vueDocuments[key]!;
-				for (const sourceMap of sourceFile.refs.templateLsTeleports.value) {
-					map.set(sourceMap.mappedDocument.uri, sourceMap);
+			const map = new Map<string, Teleport>();
+			for (const key in _vueFiles) {
+				const sourceFile = _vueFiles[key]!;
+				for (const { file, teleport } of sourceFile.refs.templateLsTeleports.value) {
+					map.set(file.fileName, teleport);
 				}
 			}
 			return map;
 		}),
 		script: computed(() => {
-			const map = new Map<string, TeleportSourceMap>();
-			for (const key in _vueDocuments) {
-				const sourceFile = _vueDocuments[key]!;
-				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleportSourceMap.value;
-				map.set(sourceMap.mappedDocument.uri, sourceMap);
+			const map = new Map<string, Teleport>();
+			for (const key in _vueFiles) {
+				const sourceFile = _vueFiles[key]!;
+				const embeddedFile = sourceFile.refs.sfcScriptForScriptLs.file.value;
+				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleport.value;
+				map.set(embeddedFile.fileName, sourceMap);
 			}
 			return map;
 		}),
 	};
-	const dirs = computed(() => [...new Set(uris.value.map(shared.uriToFsPath).map(path.dirname))]);
+	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
-		getUris: untrack(() => uris.value),
+		getFileNames: untrack(() => fileNames.value),
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
-		get: untrack(vueDocuments.uriGet),
-		set: untrack(vueDocuments.uriSet),
-		delete: untrack(vueDocuments.uriDelete),
+		raw: vueFiles,
 
-		getSourceMap: untrack((id: number, embeddedDocumentUri: string) => sourceMapsById.value.get(id + ':' + embeddedDocumentUri)),
-
-		getTsTeleports: untrack((lsType: 'script' | 'template') => tsTeleports[lsType].value),
+		getTsTeleport: untrack((lsType: 'script' | 'template', fileName: string) => tsTeleports[lsType].value.get(fileName)),
 		getEmbeddeds: untrack(function* (
 			lsType: 'script' | 'template' | 'nonTs',
 		) {
-			if (lsType === 'nonTs') {
-				for (const sourceMap of sourceMapsByUriAndLsType.value.noLsType) {
-					yield sourceMap[1];
-				}
-			}
-			else if (lsType === 'script') {
-				for (const sourceMap of sourceMapsByUriAndLsType.value.script) {
-					yield sourceMap[1];
-				}
-			}
-			else if (lsType === 'template') {
-				for (const sourceMap of sourceMapsByUriAndLsType.value.template) {
-					yield sourceMap[1];
-				}
+			for (const sourceMap of sourceMapsByFileNameAndLsType.value[lsType]) {
+				yield sourceMap[1];
 			}
 		}),
 
-		fromEmbeddedLocation: untrack(function* <T extends vscode.Position | number>(
+		fromEmbeddedLocation: untrack(function* (
 			lsType: 'script' | 'template' | 'nonTs',
-			uri: string,
-			start: T,
-			end?: T,
-			filter?: (data: EmbeddedDocumentMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
+			fileName: string,
+			start: number,
+			end?: number,
+			filter?: (data: EmbeddedFileMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
 		) {
 
-			if (uri.endsWith(`/${localTypes.typesFileName}`))
+			if (fileName.endsWith(`/${localTypes.typesFileName}`))
 				return;
 
 			if (end === undefined)
 				end = start;
 
-			let sourceMap: EmbeddedDocumentSourceMap | undefined;
+			const embedded = sourceMapsByFileNameAndLsType.value[lsType].get(fileName);
 
-			if (lsType === 'nonTs') {
-				sourceMap = sourceMapsByUriAndLsType.value.noLsType.get(uri);
-			}
-			else if (lsType === 'script') {
-				sourceMap = sourceMapsByUriAndLsType.value.script.get(uri);
-			}
-			else if (lsType === 'template') {
-				sourceMap = sourceMapsByUriAndLsType.value.template.get(uri);
-			}
+			if (embedded) {
 
-			if (sourceMap) {
-
-				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+				if (sourceMapFilter && !sourceMapFilter(embedded.sourceMap))
 					return;
 
-				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
+				for (const vueRange of embedded.sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
-						type: 'embedded-ts' as const,
-						sourceMap,
-						uri: sourceMap.sourceDocument.uri,
+						fileName: embedded.file.fileName,
 						range: vueRange[0],
+						embedded,
 						data: vueRange[1],
 					};
 				}
 			}
 			else {
 				yield {
-					type: 'source-ts' as const,
-					uri,
+					fileName,
 					range: {
 						start,
 						end,
@@ -187,24 +148,16 @@ export function createVueDocuments() {
 				};
 			}
 		}),
-		fromEmbeddedDocument: untrack(function (
-			document: TextDocument,
+		fromEmbeddedFile: untrack(function (
+			file: EmbeddedFile,
 		) {
-			return embeddedDocumentsMap.value.get(document);
+			return embeddedDocumentsMap.value.get(file);
 		}),
-		fromEmbeddedDocumentUri: untrack(function (
+		fromEmbeddedFileName: untrack(function (
 			lsType: 'script' | 'template' | 'nonTs',
-			uri: string,
+			fileName: string,
 		) {
-			if (lsType === 'nonTs') {
-				return sourceMapsByUriAndLsType.value.noLsType.get(uri);
-			}
-			else if (lsType === 'script') {
-				return sourceMapsByUriAndLsType.value.script.get(uri);
-			}
-			else if (lsType === 'template') {
-				return sourceMapsByUriAndLsType.value.template.get(uri);
-			}
+			return sourceMapsByFileNameAndLsType.value[lsType].get(fileName);
 		}),
 	};
 }

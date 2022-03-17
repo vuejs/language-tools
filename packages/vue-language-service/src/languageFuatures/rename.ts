@@ -3,7 +3,8 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedDocumentMappingData, VueDocuments } from '@volar/vue-typescript';
+import { VueDocuments } from '../vueDocuments';
+import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -65,11 +66,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								let foundTeleport = false;
 
-								if (sourceMap?.lsType !== 'nonTs') {
+								if (sourceMap?.embeddedFile.lsType !== 'nonTs') {
 
 									recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-									const teleport = context.tsRuntime.context.vueDocuments.getTsTeleports(sourceMap?.lsType ?? 'script').get(editUri);
+									const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', editUri);
 
 									if (teleport) {
 
@@ -129,14 +130,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => {
 
-				const vueDocument = context.tsRuntime.context.vueDocuments.get(uri);
-				const renameFromScriptContent = !vueDocument || !vueDocument.getSourceMaps().some(sourceMap => sourceMap.lsType === 'template' && sourceMap.getMappedRange(position));
+				const vueDocument = context.vueDocuments.get(uri);
+				const renameFromScriptContent = !vueDocument || !vueDocument.getSourceMaps().some(sourceMap => sourceMap.embeddedFile.lsType === 'template' && sourceMap.getMappedRange(position));
 
 				return embeddedEditToSourceEdit(
-					sourceMap?.lsType ?? 'script',
-					sourceMap?.lsType === 'template' && renameFromScriptContent,
+					sourceMap?.embeddedFile.lsType ?? 'script',
+					sourceMap?.embeddedFile.lsType === 'template' && renameFromScriptContent,
 					data,
-					context.tsRuntime.context.vueDocuments,
+					context.vueDocuments,
 					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename,
 				);
 			},
@@ -205,8 +206,8 @@ export function embeddedEditToSourceEdit(
 	lsType: 'script' | 'template' | 'nonTs',
 	ignoreScriptLsResult: boolean,
 	tsResult: vscode.WorkspaceEdit,
-	sourceFiles: VueDocuments,
-	isValidMapping: (data: EmbeddedDocumentMappingData) => boolean,
+	vueDocuments: VueDocuments,
+	isValidMapping: (data: EmbeddedFileMappingData) => boolean,
 ) {
 
 	const vueResult: vscode.WorkspaceEdit = {};
@@ -218,13 +219,13 @@ export function embeddedEditToSourceEdit(
 			vueResult.changeAnnotations = {};
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
-		const uri = sourceFiles.fromEmbeddedDocumentUri(lsType, tsUri)?.sourceDocument.uri ?? tsUri;
+		const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsUri)?.sourceDocument.uri ?? tsUri;
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of sourceFiles.fromEmbeddedLocation(
+			for (const vueLoc of vueDocuments.fromEmbeddedLocation(
 				lsType,
 				tsUri,
 				tsEdit.range.start,
@@ -233,7 +234,7 @@ export function embeddedEditToSourceEdit(
 			)) {
 
 				if (ignoreScriptLsResult) {
-					const isTemplateResult = vueLoc.type === 'embedded-ts' && (vueLoc.data.vueTag === 'template' || vueLoc.data.vueTag === 'style');
+					const isTemplateResult = vueLoc.sourceMap && (vueLoc.data.vueTag === 'template' || vueLoc.data.vueTag === 'style');
 					if (!isTemplateResult) {
 						continue;
 					}
@@ -241,7 +242,7 @@ export function embeddedEditToSourceEdit(
 
 				let newText_2 = tsEdit.newText;
 
-				if (vueLoc.type === 'embedded-ts' && vueLoc.data.applyNewName) {
+				if (vueLoc.sourceMap && vueLoc.data.applyNewName) {
 					const vueDoc = vueLoc.sourceMap.sourceDocument;
 					newText_2 = vueLoc.data.applyNewName(vueDoc.getText(vueLoc.range), tsEdit.newText);
 				}
@@ -269,7 +270,7 @@ export function embeddedEditToSourceEdit(
 			}
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
-				const sourceMap = sourceFiles.fromEmbeddedDocumentUri(lsType, tsDocEdit.textDocument.uri);
+				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsDocEdit.textDocument.uri);
 				if (sourceMap) {
 					vueDocEdit = vscode.TextDocumentEdit.create(
 						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
@@ -301,11 +302,11 @@ export function embeddedEditToSourceEdit(
 				vueDocEdit = tsDocEdit; // TODO: remove .ts?
 			}
 			else if (vscode.RenameFile.is(tsDocEdit) && !ignoreScriptLsResult) {
-				const oldUri = sourceFiles.fromEmbeddedDocumentUri(lsType, tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
+				const oldUri = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
 				vueDocEdit = vscode.RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			else if (vscode.DeleteFile.is(tsDocEdit) && !ignoreScriptLsResult) {
-				const uri = sourceFiles.fromEmbeddedDocumentUri(lsType, tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
+				const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
 				vueDocEdit = vscode.DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			if (vueDocEdit) {

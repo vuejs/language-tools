@@ -3,7 +3,7 @@ import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextDocument } from 'vscode-languageserver-textdocument'; // TODO: use vue SFC parser instead of
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
@@ -19,27 +19,48 @@ import type * as html from 'vscode-html-languageservice'; // fix TS2742
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
-import { EmbeddedDocumentSourceMap } from '@volar/vue-typescript';
+import { EmbeddedFileSourceMap } from '@volar/vue-typescript';
 import type { TextRange } from '@volar/vue-code-gen';
 import { VuePlugin } from './typescriptRuntime';
+import { Teleport } from './utils/sourceMaps';
 
-export interface VueDocument extends ReturnType<typeof createVueDocument> { }
+export interface VueFile extends ReturnType<typeof createVueFile> { }
 
-export type Embedded = {
-	sourceMap: EmbeddedDocumentSourceMap | undefined,
-	embeddeds: Embedded[]
+export interface EmbeddedStructure {
+	self: Embedded | undefined,
+	embeddeds: EmbeddedStructure[]
+}
+
+export interface Embedded {
+	file: EmbeddedFile,
+	sourceMap: EmbeddedFileSourceMap,
+}
+
+export interface EmbeddedFile<T = unknown> {
+	fileName: string,
+	lang: string,
+	content: string,
+	lsType: 'template' | 'script' | 'nonTs',
+	capabilities: {
+		diagnostics: boolean,
+		foldingRanges: boolean,
+		formatting: boolean,
+		documentSymbol: boolean,
+		codeActions: boolean,
+	},
+	data: T,
 };
 
-export function createVueDocument(
-	uri: string,
+export function createVueFile(
+	fileName: string,
 	_content: string,
 	_version: string,
 	htmlLs: html.LanguageService,
 	plugins: VuePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getCssVBindRanges: (documrnt: TextDocument) => TextRange[],
-	getCssClasses: (documrnt: TextDocument) => Record<string, TextRange[]>,
+	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
+	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 ) {
 
 	// refs
@@ -68,14 +89,14 @@ export function createVueDocument(
 	}) as ITemplateScriptData;
 
 	// computeds
-	const document = computed(() => TextDocument.create(uri, 'vue', 0, content.value));
+	const document = computed(() => TextDocument.create(shared.fsPathToUri(fileName), 'vue', 0, content.value));
 	const vueHtmlDocument = computed(() => htmlLs.parseHTMLDocument(document.value));
 	const parsedSfc = computed(() => shared.parseSfc(content.value, vueHtmlDocument.value));
 
 	// use
-	const sfcStyles = useSfcStyles(uri, document, computed(() => sfc.styles));
-	const sfcCustomBlocks = useSfcCustomBlocks(uri, document, computed(() => sfc.customBlocks));
-	const sfcTemplate = useSfcTemplate(uri, document, computed(() => sfc.template));
+	const sfcStyles = useSfcStyles(fileName, computed(() => sfc.styles));
+	const sfcCustomBlocks = useSfcCustomBlocks(fileName, computed(() => sfc.customBlocks));
+	const sfcTemplate = useSfcTemplate(fileName, computed(() => sfc.template));
 	const sfcTemplateCompiled = computed<undefined | {
 		lang: string,
 		htmlText: string,
@@ -99,14 +120,12 @@ export function createVueDocument(
 		compilerOptions,
 	);
 	const sfcScript = useSfcScript(
-		uri,
-		document,
+		fileName,
 		computed(() => sfc.script),
 		ts,
 	);
 	const sfcScriptSetup = useSfcScript(
-		uri,
-		document,
+		fileName,
 		computed(() => sfc.scriptSetup),
 		ts,
 	);
@@ -122,52 +141,50 @@ export function createVueDocument(
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
 		'template',
-		uri,
-		document,
+		fileName,
+		content,
 		computed(() => sfc.script),
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
-		computed(() => sfcStyles.textDocuments.value),
+		computed(() => sfcStyles.files.value),
 		compilerOptions.experimentalCompatMode === 2,
 		getCssVBindRanges,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
-		uri,
-		document,
+		fileName,
+		content,
 		computed(() => sfc.script),
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateCompileResult,
-		computed(() => sfcStyles.textDocuments.value),
+		computed(() => sfcStyles.files.value),
 		compilerOptions.experimentalCompatMode === 2,
 		getCssVBindRanges,
 	);
 	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
-		uri,
-		document,
+		fileName,
 		computed(() => sfc.script),
 		computed(() => sfc.scriptSetup),
 		computed(() => sfc.template),
-		computed(() => !!sfcScriptForTemplateLs.textDocumentTs.value),
+		computed(() => !!sfcScriptForTemplateLs.fileTs.value),
 		compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
-		uri,
-		document,
+		fileName,
 		computed(() => sfc.template),
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptSetupRanges.value),
 		computed(() => sfc.styles),
 		templateScriptData,
-		sfcStyles.textDocuments,
-		sfcStyles.sourceMaps,
+		sfcStyles.files,
+		sfcStyles.embeddeds,
 		sfcTemplateCompiled,
 		sfcTemplateCompileResult,
-		computed(() => sfcStyles.textDocuments.value),
+		sfcStyles.files,
 		sfcScriptForScriptLs.lang,
 		compilerOptions,
 		getCssVBindRanges,
@@ -179,57 +196,75 @@ export function createVueDocument(
 	} : undefined));
 
 	// getters
-	const templateLsTeleports = computed(() => [
-		sfcTemplateScript.teleportSourceMap.value,
-		sfcScriptForTemplateLs.teleportSourceMap.value,
-	].filter(shared.notEmpty));
+	const teleports = computed(() => {
 
+		const _all: {
+			file: EmbeddedFile,
+			teleport: Teleport,
+		}[] = [];
+
+		if (sfcTemplateScript.file.value && sfcTemplateScript.teleport.value) {
+			_all.push({
+				file: sfcTemplateScript.file.value,
+				teleport: sfcTemplateScript.teleport.value,
+			});
+		}
+
+		if (sfcScriptForTemplateLs.file.value && sfcScriptForTemplateLs.teleport.value) {
+			_all.push({
+				file: sfcScriptForTemplateLs.file.value,
+				teleport: sfcScriptForTemplateLs.teleport.value,
+			});
+		}
+
+		return _all;
+	});
 	const embeddeds = computed(() => {
 
-		const embeddeds: Embedded[] = [];
+		const embeddeds: EmbeddedStructure[] = [];
 
 		// styles
-		for (const style of sfcStyles.sourceMaps.value) {
+		for (const style of sfcStyles.embeddeds.value) {
 			embeddeds.push({
-				sourceMap: style,
+				self: style,
 				embeddeds: [],
 			});
 		}
 
 		// customBlocks
-		for (const customBlock of sfcCustomBlocks.sourceMaps.value) {
+		for (const customBlock of sfcCustomBlocks.embeddeds.value) {
 			embeddeds.push({
-				sourceMap: customBlock,
+				self: customBlock,
 				embeddeds: [],
 			});
 		}
 
 		// scripts - format
 		embeddeds.push({
-			sourceMap: sfcScript.sourceMap.value,
+			self: sfcScript.embedded.value,
 			embeddeds: [],
 		});
 		embeddeds.push({
-			sourceMap: sfcScriptSetup.sourceMap.value,
+			self: sfcScriptSetup.embedded.value,
 			embeddeds: [],
 		});
 
 		// scripts - script ls
 		embeddeds.push({
-			sourceMap: sfcScriptForScriptLs.sourceMap.value,
+			self: sfcScriptForScriptLs.embedded.value,
 			embeddeds: [],
 		});
 
 		// scripts - template ls
 		embeddeds.push({
-			sourceMap: sfcEntryForTemplateLs.sourceMap.value,
+			self: sfcEntryForTemplateLs.embedded.value,
 			embeddeds: [
 				{
-					sourceMap: sfcScriptForTemplateLs.sourceMap.value,
+					self: sfcScriptForTemplateLs.embedded.value,
 					embeddeds: [],
 				},
 				{
-					sourceMap: sfcScriptForTemplateLs.sourceMapTs.value,
+					self: sfcScriptForTemplateLs.embeddedTs.value,
 					embeddeds: [],
 				},
 			],
@@ -237,18 +272,18 @@ export function createVueDocument(
 
 		// template
 		embeddeds.push({
-			sourceMap: sfcTemplate.sourceMap.value,
+			self: sfcTemplate.embedded.value,
 			embeddeds: [
 				{
-					sourceMap: sfcTemplateScript.sourceMap.value,
+					self: sfcTemplateScript.embedded.value,
 					embeddeds: [],
 				},
 				{
-					sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
+					self: sfcTemplateScript.formatEmbedded.value,
 					embeddeds: [],
 				},
 				{
-					sourceMap: sfcTemplateScript.cssSourceMap.value,
+					self: sfcTemplateScript.inlineCssEmbedded.value,
 					embeddeds: [],
 				},
 			],
@@ -256,30 +291,31 @@ export function createVueDocument(
 
 		return embeddeds;
 	});
-	const sourceMaps = computed(() => {
+	const allEmbeddeds = computed(() => {
 
-		const _sourceMaps: EmbeddedDocumentSourceMap[] = [];
+		const all: Embedded[] = [];
 
-		visitEmbedded(embeddeds.value, sourceMap => _sourceMaps.push(sourceMap));
+		visitEmbedded(embeddeds.value, embedded => all.push(embedded));
 
-		function visitEmbedded(embeddeds: Embedded[], cb: (sourceMap: EmbeddedDocumentSourceMap) => void) {
+		return all;
+
+		function visitEmbedded(embeddeds: EmbeddedStructure[], cb: (embedded: Embedded) => void) {
 			for (const embedded of embeddeds) {
 
 				visitEmbedded(embedded.embeddeds, cb);
 
-				if (embedded.sourceMap) {
-					cb(embedded.sourceMap);
+				if (embedded.self) {
+					cb(embedded.self);
 				}
 			}
 		}
-
-		return _sourceMaps;
 	});
 
 	update(_content, _version);
 
 	return {
-		uri,
+		fileName,
+		getContent: untrack(() => content.value),
 		getSfcTemplateLanguageCompiled: untrack(() => sfcTemplateCompiled.value),
 		getSfcVueTemplateCompiled: untrack(() => sfcTemplateCompileResult.value),
 		getVersion: untrack(() => version.value),
@@ -288,38 +324,38 @@ export function createVueDocument(
 		getTextDocument: untrack(() => document.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
-		getScriptTsDocument: untrack(() => sfcScriptForScriptLs.textDocument.value),
-		getTemplateSourceMaps: untrack(() => sfcTemplate.sourceMap.value ? [sfcTemplate.sourceMap.value] : []),
+		getScriptTsFile: untrack(() => sfcScriptForScriptLs.file.value),
+		getEmbeddedTemplate: untrack(() => sfcTemplate.embedded.value),
 		getTemplateScriptData: untrack(() => templateScriptData),
-		getDescriptor: untrack(() => sfc), // TODO: untrack not working for reactive
+		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => sfcScript.ast.value),
 		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
-		getTemplateFormattingScript: untrack(() => ({
-			document: sfcTemplateScript.textDocumentForFormatting.value,
-			sourceMap: sfcTemplateScript.sourceMapForFormatting.value,
-		})),
+		getTemplateFormattingScript: untrack(() => sfcTemplateScript.formatEmbedded.value),
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
-		getSourceMaps: untrack(() => sourceMaps.value),
+		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
 		getLastUpdated: untrack(() => unref(lastUpdated)),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
-		getSfcTemplateDocument: untrack(() => sfcTemplate.textDocument.value),
+		getSfcTemplateDocument: untrack(() => sfcTemplate.file.value),
 
 		refs: {
-			sourceMaps,
+			document,
+			content,
+			allEmbeddeds,
+			teleports,
 			sfcTemplateScript,
 			sfcEntryForTemplateLs,
 			sfcScriptForScriptLs,
 			templateScriptData,
-			templateLsTeleports,
+			templateLsTeleports: teleports,
 		},
 	};
 
 	function update(newContent: string, newVersion: string) {
 
-		const scriptLang_1 = sfcScriptForScriptLs.textDocument.value.languageId;
-		const scriptText_1 = sfcScriptForScriptLs.textDocument.value.getText();
-		const templateScriptVersion_1 = sfcTemplateScript.textDocument.value?.version;
+		const scriptLang_1 = sfcScriptForScriptLs.file.value.lang;
+		const scriptText_1 = sfcScriptForScriptLs.file.value.content;
+		const templateScriptContent = sfcTemplateScript.file.value?.content;
 
 		content.value = newContent;
 		version.value = newVersion;
@@ -332,14 +368,14 @@ export function createVueDocument(
 
 		sfcTemplateScript.update(); // TODO
 
-		const scriptLang_2 = sfcScriptForScriptLs.textDocument.value.languageId;
-		const scriptText_2 = sfcScriptForScriptLs.textDocument.value.getText();
-		const templateScriptVersion_2 = sfcTemplateScript.textDocument.value?.version;
+		const scriptLang_2 = sfcScriptForScriptLs.file.value.lang;
+		const scriptText_2 = sfcScriptForScriptLs.file.value.content;
+		const templateScriptContent_2 = sfcTemplateScript.file.value?.content;
 
 		return {
 			scriptContentUpdated: lastUpdated.script || lastUpdated.scriptSetup,
 			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2, // TODO
-			templateScriptUpdated: templateScriptVersion_1 !== templateScriptVersion_2,
+			templateScriptUpdated: templateScriptContent !== templateScriptContent_2,
 		};
 
 		function updateTemplate(newData: shared.Sfc['template']) {
@@ -423,13 +459,11 @@ export function createVueDocument(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		};
 
-		const doc = sfcEntryForTemplateLs.textDocument.value;
-		const docText = doc.getText();
-		const docFileName = shared.uriToFsPath(doc.uri);
-		const context = docText.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
-		let components = docText.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
-		const props = docText.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.Props), options)?.entries ?? [] : [];
-		const setupReturns = docText.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.getCompletionsAtPosition(docFileName, docText.indexOf(SearchTexts.SetupReturns), options)?.entries ?? [] : [];
+		const file = sfcEntryForTemplateLs.file.value;
+		const context = file.content.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
+		let components = file.content.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
+		const props = file.content.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Props), options)?.entries ?? [] : [];
+		const setupReturns = file.content.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.SetupReturns), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');

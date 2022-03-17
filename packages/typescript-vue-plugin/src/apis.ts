@@ -1,8 +1,8 @@
-import type { TypeScriptFeaturesRuntimeContext } from '@volar/vue-typescript';
+import type { TypeScriptRuntime } from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeScriptFeaturesRuntimeContext) {
+export function register(context: TypeScriptRuntime) {
 
 	return {
 		getCompletionsAtPosition,
@@ -17,7 +17,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 
 	// apis
 	function getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ReturnType<ts.LanguageService['getCompletionsAtPosition']> {
-		const finalResult = scriptTsLsRaw.getCompletionsAtPosition(fileName, position, options);
+		const finalResult = context.getTsLs('script').getCompletionsAtPosition(fileName, position, options);
 		if (finalResult) {
 			finalResult.entries = finalResult.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
 		}
@@ -52,7 +52,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 
 		function worker(lsType: 'script' | 'template') {
 
-			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
+			const tsLs = context.getTsLs(lsType);
 			const loopChecker = new Set<string>();
 			let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
 
@@ -75,12 +75,12 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 				symbols = symbols.concat(_symbols);
 				for (const ref of _symbols) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-					const teleport = vueDocuments.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
+					const teleport = context.vueFiles.getTsTeleport(lsType, ref.fileName);
 
 					if (!teleport)
 						continue;
 
-					for (const [teleRange] of teleport.findTeleports2(
+					for (const [teleRange] of teleport.findTeleports(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
 						sideData => {
@@ -107,7 +107,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 
 		function worker(lsType: 'script' | 'template') {
 
-			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
+			const tsLs = context.getTsLs(lsType);
 			const loopChecker = new Set<string>();
 			let textSpan: ts.TextSpan | undefined;
 			let symbols: ts.DefinitionInfo[] = [];
@@ -136,11 +136,11 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const teleport = vueDocuments.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
+					const teleport = context.vueFiles.getTsTeleport(lsType, ref.fileName);
 					if (!teleport)
 						continue;
 
-					for (const [teleRange] of teleport.findTeleports2(
+					for (const [teleRange] of teleport.findTeleports(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
 						sideData => !!sideData.capabilities.definitions,
@@ -164,7 +164,7 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 
 		function worker(lsType: 'script' | 'template') {
 
-			const tsLs = lsType === 'script' ? scriptTsLsRaw : templateTsLsRaw;
+			const tsLs = context.getTsLs(lsType);
 			const loopChecker = new Set<string>();
 			let symbols: ts.ReferencedSymbol[] = [];
 
@@ -185,11 +185,11 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 
 						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-						const teleport = vueDocuments.getTsTeleports(lsType).get(shared.fsPathToUri(ref.fileName));
+						const teleport = context.vueFiles.getTsTeleport(lsType, ref.fileName);
 						if (!teleport)
 							continue;
 
-						for (const [teleRange] of teleport.findTeleports2(
+						for (const [teleRange] of teleport.findTeleports(
 							ref.textSpan.start,
 							ref.textSpan.start + ref.textSpan.length,
 							sideData => !!sideData.capabilities.references,
@@ -244,9 +244,9 @@ export function register({ vueDocuments, scriptTsLsRaw, templateTsLsRaw }: TypeS
 	function transformSpan(lsType: 'script' | 'template', fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of vueDocuments.fromEmbeddedLocation(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of context.vueFiles.fromEmbeddedLocation(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
 			return {
-				fileName: shared.uriToFsPath(vueLoc.uri),
+				fileName: vueLoc.fileName,
 				textSpan: {
 					start: vueLoc.range.start,
 					length: vueLoc.range.end - vueLoc.range.start,

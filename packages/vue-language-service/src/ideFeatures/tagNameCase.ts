@@ -1,27 +1,27 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { VueDocument } from '@volar/vue-typescript';
+import { VueDocument } from '../vueDocuments';
 
-export function register({ tsRuntime }: LanguageServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 	return (uri: string): {
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
 	} => {
 
-		const sourceFile = tsRuntime.context.vueDocuments.get(uri);
-		if (!sourceFile) return {
+		const vueDocument = context.vueDocuments.get(uri);
+		if (!vueDocument) return {
 			tag: 'unsure',
 			attr: 'unsure',
 		};
 
 		return {
-			tag: getTagNameCase(sourceFile),
-			attr: getAttrNameCase(sourceFile),
+			tag: getTagNameCase(vueDocument),
+			attr: getAttrNameCase(vueDocument),
 		};
 
 		function getAttrNameCase(sourceFile: VueDocument): 'kebabCase' | 'camelCase' | 'unsure' {
 
-			const attrNames = sourceFile.getTemplateAttrNames() ?? new Set();
+			const attrNames = sourceFile.file.getTemplateAttrNames() ?? new Set();
 
 			let hasCamelCase = false;
 			let hasKebabCase = false;
@@ -52,10 +52,10 @@ export function register({ tsRuntime }: LanguageServiceRuntimeContext) {
 			}
 			return 'unsure';
 		}
-		function getTagNameCase(sourceFile: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
+		function getTagNameCase(vueDocument: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
-			const components = sourceFile.getTemplateScriptData().components;
-			const tagNames = new Set(Object.keys(sourceFile.getTemplateTagNames() ?? {}));
+			const components = vueDocument.file.getTemplateScriptData().components;
+			const tagNames = new Set(Object.keys(vueDocument.file.getTemplateTagNames() ?? {}));
 
 			let anyComponentUsed = false;
 			let hasPascalCase = false;

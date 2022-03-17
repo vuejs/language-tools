@@ -20,7 +20,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				continue;
 
 			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
-				for (const vueLoc of context.tsRuntime.context.vueDocuments.fromEmbeddedLocation('script', loc.uri, loc.range.start, loc.range.end)) {
+				for (const vueLoc of context.vueDocuments.fromEmbeddedLocation('script', loc.uri, loc.range.start, loc.range.end)) {
 					return vscode.Location.create(vueLoc.uri, vueLoc.range);
 				}
 			});
