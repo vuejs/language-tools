@@ -10,7 +10,7 @@ export default function (): VuePlugin {
 
                 return {
                     html: template,
-                    htmlToTemplate: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
+                    mapping: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
                 };
             }
         }

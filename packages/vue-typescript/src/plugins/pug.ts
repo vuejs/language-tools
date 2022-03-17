@@ -14,7 +14,7 @@ export default function (): VuePlugin {
 				if (pugDoc) {
 					return {
 						html: pugDoc.htmlCode,
-						htmlToTemplate: (htmlStart, htmlEnd) => {
+						mapping: (htmlStart, htmlEnd) => {
 							const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
 							if (pugRange) {
 								return pugRange;

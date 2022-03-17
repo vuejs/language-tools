@@ -1,26 +1,25 @@
+import type { TextRange } from '@volar/vue-code-gen';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
+import { EmbeddedFileSourceMap } from '@volar/vue-typescript';
+import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
-import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
+import { VuePlugin } from './typescriptRuntime';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
+import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcScript } from './use/useSfcScript';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
 import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
+import { Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
-import { EmbeddedFileSourceMap } from '@volar/vue-typescript';
-import type { TextRange } from '@volar/vue-code-gen';
-import { VuePlugin } from './typescriptRuntime';
-import { Teleport } from './utils/sourceMaps';
 
 export interface VueFile extends ReturnType<typeof createVueFile> { }
 
@@ -128,7 +127,7 @@ export function createVueFile(
 					return {
 						lang: sfc.template.lang ?? 'html',
 						htmlText: compiledHtml.html,
-						htmlToTemplate: compiledHtml.htmlToTemplate,
+						htmlToTemplate: compiledHtml.mapping,
 					};
 				};
 			}

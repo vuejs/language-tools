@@ -1,11 +1,10 @@
+import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import { computed, shallowReactive } from '@vue/reactivity';
-import type { Embedded, EmbeddedFile, VueFile } from './vueFile';
-import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
-import { untrack } from './utils/untrack';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
-import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
-import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix build failed
+import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
+import { untrack } from './utils/untrack';
+import type { Embedded, EmbeddedFile, VueFile } from './vueFile';
 
 export interface VueFiles extends ReturnType<typeof createVueFiles> { }
 

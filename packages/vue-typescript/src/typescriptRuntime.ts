@@ -1,19 +1,19 @@
+import type { TextRange } from '@volar/vue-code-gen';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
-import { createVueFile, EmbeddedFile } from './vueFile';
-import { createVueFiles } from './vueFiles';
-import { LanguageServiceHost, VueCompilerOptions } from './types';
-import * as localTypes from './utils/localTypes';
-import type { TextRange } from '@volar/vue-code-gen';
 import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
+import { LanguageServiceHost, VueCompilerOptions } from './types';
+import * as localTypes from './utils/localTypes';
 import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
+import { createVueFile, EmbeddedFile } from './vueFile';
+import { createVueFiles } from './vueFiles';
 
 export interface VuePlugin {
 
     compileTemplate?(tmplate: string, lang: string): {
         html: string,
-        htmlToTemplate(htmlStart: number, htmlEnd: number): { start: number, end: number } | undefined,
+        mapping(htmlStart: number, htmlEnd: number): { start: number, end: number } | undefined,
     } | undefined
 }
 
