@@ -8,7 +8,7 @@ import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRa
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { getVueLibraryName } from '../utils/localTypes';
 import type { EmbeddedFileMappingData, TextRange } from '@volar/vue-code-gen';
-import { Embedded, EmbeddedFile } from '../vueDocument';
+import { Embedded, EmbeddedFile } from '../vueFile';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,

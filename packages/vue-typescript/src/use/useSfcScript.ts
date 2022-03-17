@@ -4,7 +4,7 @@ import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import { Embedded, EmbeddedFile } from '../vueDocument';
+import { Embedded, EmbeddedFile } from '../vueFile';
 
 export function useSfcScript(
 	fileName: string,

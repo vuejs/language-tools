@@ -1,5 +1,5 @@
 import { computed, shallowReactive } from '@vue/reactivity';
-import type { Embedded, EmbeddedFile, VueFile } from './vueDocument';
+import type { Embedded, EmbeddedFile, VueFile } from './vueFile';
 import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
 import * as shared from '@volar/shared';

@@ -7,7 +7,7 @@ import { ITemplateScriptData, VueCompilerOptions } from '../types';
 import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 import type { TeleportMappingData, TextRange } from '@volar/vue-code-gen';
-import { Embedded, EmbeddedFile } from '../vueDocument';
+import { Embedded, EmbeddedFile } from '../vueFile';
 import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';

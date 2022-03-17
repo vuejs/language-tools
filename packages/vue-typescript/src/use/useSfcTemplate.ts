@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
-import { Embedded, EmbeddedFile } from '../vueDocument';
+import { Embedded, EmbeddedFile } from '../vueFile';
 
 export function useSfcTemplate(
 	fileName: string,

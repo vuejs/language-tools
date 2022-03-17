@@ -1,7 +1,7 @@
 import { computed, Ref } from '@vue/reactivity';
 import * as SourceMaps from '@volar/source-map';
 import * as shared from '@volar/shared';
-import { Embedded, EmbeddedFile } from '../vueDocument';
+import { Embedded, EmbeddedFile } from '../vueFile';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 
 export function useSfcStyles(

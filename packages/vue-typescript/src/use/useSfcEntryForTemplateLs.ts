@@ -5,7 +5,7 @@ import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
 import * as shared from '@volar/shared';
 import { getVueLibraryName } from '../utils/localTypes';
-import { Embedded, EmbeddedFile } from '../vueDocument';
+import { Embedded, EmbeddedFile } from '../vueFile';
 
 export function useSfcEntryForTemplateLs(
 	fileName: string,
