@@ -40,7 +40,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		function getFictitiousLinks(vueDocument: VueDocument) {
 
 			const result: vscode.DocumentLink[] = [];
-			const document = vueDocument.file.getTextDocument();
+			const document = vueDocument.getDocument();
 
 			for (const sourceMap of vueDocument.getSourceMaps()) {
 

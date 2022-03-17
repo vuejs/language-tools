@@ -1,7 +1,7 @@
 import * as vue from '@volar/vue-typescript';
-import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as apis from './apis';
+import { tsShared } from '@volar/vue-typescript';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -146,11 +146,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
-			parsedCommandLine = shared.createParsedCommandLine(ts, ts.sys, projectName);
+			parsedCommandLine = tsShared.createParsedCommandLine(ts, ts.sys, projectName);
 		})
 		: undefined;
 	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
-		? shared.createParsedCommandLine(ts, ts.sys, projectName)
+		? tsShared.createParsedCommandLine(ts, ts.sys, projectName)
 		: undefined;
 
 	return {
@@ -166,7 +166,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	}
 	async function onConfigUpdated() {
 		const seq = ++reloadVueFilesSeq;
-		await shared.sleep(100);
+		await sleep(100);
 		if (seq === reloadVueFilesSeq && !disposed) {
 			update();
 		}
@@ -259,7 +259,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	async function onProjectUpdated() {
 		projectVersion++;
 		const seq = ++sendDiagSeq;
-		await shared.sleep(100);
+		await sleep(100);
 		if (seq === sendDiagSeq) {
 			info.project.refreshDiagnostics();
 		}
@@ -274,4 +274,8 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		}
 		disposed = true;
 	}
+}
+
+function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }

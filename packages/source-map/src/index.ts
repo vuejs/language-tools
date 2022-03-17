@@ -1,13 +1,6 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-
 export interface Range {
 	start: number,
 	end: number,
-}
-
-interface Position {
-	line: number,
-	character: number,
 }
 
 export enum Mode {
@@ -147,59 +140,6 @@ export class SourceMapBase<Data = undefined> {
 					end: Math.max(_start, _end),
 				}, data];
 			}
-		}
-	}
-}
-
-export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
-
-	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public _mappings?: Mapping<Data>[],
-	) {
-		super(_mappings);
-	}
-
-	public getSourceRange<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
-			return maped;
-		}
-	}
-	public getMappedRange<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
-			return maped;
-		}
-	}
-	public getSourceRanges<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		return this.getRanges(start, end ?? start, false, filter);
-	}
-	public getMappedRanges<T extends number | Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		return this.getRanges(start, end ?? start, true, filter);
-	}
-
-	protected * getRanges<T extends number | Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
-
-		const startIsNumber = typeof start === 'number';
-		const endIsNumber = typeof end === 'number';
-
-		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
-		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
-		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
-		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
-
-		for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
-			yield getMaped(maped);
-		}
-
-		function getMaped(maped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
-			if (startIsNumber) {
-				return maped as [{ start: T, end: T }, Data];
-			}
-			return [{
-				start: toDoc.positionAt(maped[0].start) as T,
-				end: toDoc.positionAt(maped[0].end) as T,
-			}, maped[1]];
 		}
 	}
 }

@@ -1,12 +1,11 @@
 import { computed, Ref } from '@vue/reactivity';
 import * as SourceMaps from '@volar/source-map';
-import * as shared from '@volar/shared';
-import { Embedded, EmbeddedFile } from '../vueFile';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 
 export function useSfcCustomBlocks(
 	fileName: string,
-	customBlocks: Ref<shared.Sfc['customBlocks']>,
+	customBlocks: Ref<Sfc['customBlocks']>,
 ) {
 
 	const files = computed(() => {

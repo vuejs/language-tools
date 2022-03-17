@@ -32,7 +32,7 @@ export default function (host: {
                     context.workDoneProgress.begin('Convert Tag Name', 0, '', true);
 
                     const template = desc.template;
-                    const document = vueDocument.file.getTextDocument();
+                    const document = vueDocument.getDocument();
                     const edits: vscode.TextEdit[] = [];
                     const components = new Set(vueDocument.file.getTemplateScriptData().components);
                     const resolvedTags = vueDocument.file.refs.sfcTemplateScript.templateCodeGens.value?.tagNames ?? {};
@@ -48,7 +48,7 @@ export default function (host: {
                             context.workDoneProgress.report(i++ / Object.keys(resolvedTags).length * 100, tagName);
 
                             const offset = template.startTagEnd + resolvedTag.offsets[0];
-                            const refs = await host.findReferences(uri, vueDocument.file.getTextDocument().positionAt(offset)) ?? [];
+                            const refs = await host.findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
 
                             for (const vueLoc of refs) {
                                 if (

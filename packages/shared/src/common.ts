@@ -106,12 +106,6 @@ export function getOverlapRange2(
 	};
 }
 
-export function eqSet<T>(as: Set<T>, bs: Set<T>) {
-	if (as.size !== bs.size) return false;
-	for (const a of as) if (!bs.has(a)) return false;
-	return true;
-}
-
 export function getLineText(document: TextDocument, line: number) {
 	const text = document.getText({
 		start: { line: line, character: 0 },

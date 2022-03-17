@@ -1,14 +1,13 @@
-import * as shared from '@volar/shared';
 import { computed, Ref } from '@vue/reactivity';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import { Embedded, EmbeddedFile } from '../vueFile';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 
 export function useSfcScript(
 	fileName: string,
-	script: Ref<shared.Sfc['script'] | shared.Sfc['scriptSetup']>,
+	script: Ref<Sfc['script'] | Sfc['scriptSetup']>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 

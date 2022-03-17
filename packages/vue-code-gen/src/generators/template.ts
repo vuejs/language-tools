@@ -3,7 +3,6 @@ import { CodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
-import * as shared from '@volar/shared';
 import { EmbeddedFileMappingData } from '../types';
 
 const capabilitiesSet = {
@@ -244,7 +243,7 @@ export function generate(
 			emit: var_emit,
 			slots: var_slots,
 			events: var_events,
-			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(shared.notEmpty),
+			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
 		};
 
 		function writeOptionReferences() {
@@ -1913,4 +1912,8 @@ export function getPatchForSlotNode(node: CompilerDOM.ElementNode) {
 			return forNode;
 		}
 	}
+}
+
+function notEmpty<T>(value: T | null | undefined): value is T {
+	return value !== null && value !== undefined;
 }

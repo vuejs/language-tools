@@ -7,6 +7,7 @@ import type { createLsConfigs } from './configs';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
 import { loadCustomPlugins, RuntimeEnvironment } from './common';
+import { tsShared } from '@volar/vue-typescript';
 
 export interface Project extends ReturnType<typeof createProject> { }
 export const fileRenamings = new Set<Promise<void>>();
@@ -279,7 +280,7 @@ export async function createProject(
 		scripts.clear();
 		disposables.length = 0;
 	}
-	function createParsedCommandLine(): ReturnType<typeof shared.createParsedCommandLine> {
+	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
@@ -289,7 +290,7 @@ export async function createProject(
 			readFile: projectSys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
-			return shared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
 		}
 		else {
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');

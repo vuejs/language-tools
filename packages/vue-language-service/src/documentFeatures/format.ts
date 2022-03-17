@@ -100,7 +100,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument?.file.getTextDocument().getText() !== document.getText()) {
+			if (vueDocument?.getDocument().getText() !== document.getText()) {
 				vueDocument?.file.update(document.getText(), document.version.toString());
 			}
 		}
@@ -167,7 +167,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedDocumentSourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
-	const document = vueDocument.file.getTextDocument();
+	const document = vueDocument.getDocument();
 
 	for (const maped of sourceMap.mappings) {
 

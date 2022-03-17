@@ -12,8 +12,5 @@
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "packages/source-map"
 	},
-	"dependencies": {
-		"@volar/shared": "0.33.2",
-		"vscode-languageserver-textdocument": "^1.0.3"
-	}
+	"dependencies": {}
 }

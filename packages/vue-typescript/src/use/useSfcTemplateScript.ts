@@ -1,5 +1,4 @@
 import { CodeGen, margeCodeGen } from '@volar/code-gen';
-import * as shared from '@volar/shared';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
@@ -7,7 +6,7 @@ import { ITemplateScriptData, VueCompilerOptions } from '../types';
 import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 import type { TeleportMappingData, TextRange } from '@volar/vue-code-gen';
-import { Embedded, EmbeddedFile } from '../vueFile';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
@@ -15,10 +14,10 @@ import * as upath from 'upath';
 
 export function useSfcTemplateScript(
 	fileName: string,
-	template: Ref<shared.Sfc['template']>,
-	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
+	template: Ref<Sfc['template']>,
+	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
-	styles: Ref<shared.Sfc['styles']>,
+	styles: Ref<Sfc['styles']>,
 	templateScriptData: ITemplateScriptData,
 	styleFiles: ReturnType<typeof useSfcStyles>['files'],
 	styleEmbeddeds: ReturnType<typeof useSfcStyles>['embeddeds'],

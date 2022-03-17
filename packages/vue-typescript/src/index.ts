@@ -5,5 +5,6 @@ export * from './vueFiles';
 export * from './types';
 export * from './typescriptRuntime';
 export * as localTypes from './utils/localTypes';
+export * as tsShared from './utils/ts';
 export { default as useHtmlPlugin } from './plugins/html';
 export { default as usePugPlugin } from './plugins/pug';

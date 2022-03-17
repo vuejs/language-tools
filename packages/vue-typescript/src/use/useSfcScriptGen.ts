@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import { computed, Ref, ComputedRef } from '@vue/reactivity';
 import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
@@ -8,14 +7,14 @@ import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRa
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { getVueLibraryName } from '../utils/localTypes';
 import type { EmbeddedFileMappingData, TextRange } from '@volar/vue-code-gen';
-import { Embedded, EmbeddedFile } from '../vueFile';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
 	fileName: string,
 	vueFileContent: Ref<string>,
-	script: Ref<shared.Sfc['script']>,
-	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
+	script: Ref<Sfc['script']>,
+	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptRanges: Ref<ReturnType<typeof parseScriptRanges> | undefined>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,

@@ -18,12 +18,10 @@
 	"dependencies": {
 		"@volar/code-gen": "0.33.2",
 		"@volar/pug-language-service": "0.33.2",
-		"@volar/shared": "0.33.2",
 		"@volar/source-map": "0.33.2",
 		"@volar/vue-code-gen": "0.33.2",
+		"@vue/compiler-sfc": "^3.2.27",
 		"@vue/reactivity": "^3.2.27",
-		"upath": "^2.0.1",
-		"vscode-html-languageservice": "^4.2.1",
-		"vscode-languageserver-textdocument": "^1.0.3"
+		"upath": "^2.0.1"
 	}
 }

@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TypeScriptRuntime } from '@volar/vue-typescript';
 
@@ -109,10 +108,9 @@ export function register(
 				&& diagnostic.start !== undefined
 				&& diagnostic.length !== undefined
 			) {
-				const fileName = shared.normalizeFileName(diagnostic.file.fileName);
 				for (const tsOrVueLoc of context.vueFiles.fromEmbeddedLocation(
 					lsType,
-					shared.fsPathToUri(fileName),
+					diagnostic.file.fileName,
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
 					data => !!data.capabilities.diagnostic,
@@ -124,7 +122,7 @@ export function register(
 					if (!('embedded' in tsOrVueLoc) && lsType !== 'script')
 						continue;
 
-					let file = tsOrVueLoc.fileName === fileName
+					let file = tsOrVueLoc.fileName === diagnostic.file.fileName
 						? diagnostic.file
 						: undefined;
 					if (!file) {

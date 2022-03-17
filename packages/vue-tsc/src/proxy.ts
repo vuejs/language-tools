@@ -1,8 +1,8 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-typescript';
-import * as shared from '@volar/shared';
 import * as apis from './apis';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import { tsShared } from '@volar/vue-typescript';
 
 export function createProgramProxy(
 	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
@@ -66,7 +66,7 @@ export function createProgramProxy(
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
 		const tsConfig = options.options.configFilePath;
 		if (typeof tsConfig === 'string') {
-			return shared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
+			return tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 		}
 		return {};
 	}

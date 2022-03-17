@@ -1,6 +1,5 @@
 import type { TypeScriptRuntime } from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as shared from '@volar/shared';
 
 export function register(context: TypeScriptRuntime) {
 
@@ -59,7 +58,7 @@ export function register(context: TypeScriptRuntime) {
 			if (tsLs)
 				withTeleports(fileName, position, tsLs);
 
-			return symbols.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty);
+			return symbols.map(s => transformDocumentSpanLike(lsType, s)).filter(notEmpty);
 
 			function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
 				if (loopChecker.has(fileName + ':' + position))
@@ -118,7 +117,7 @@ export function register(context: TypeScriptRuntime) {
 			if (!textSpan) return;
 			return {
 				textSpan: textSpan,
-				definitions: symbols?.map(s => transformDocumentSpanLike(lsType, s)).filter(shared.notEmpty),
+				definitions: symbols?.map(s => transformDocumentSpanLike(lsType, s)).filter(notEmpty),
 			};
 
 			function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
@@ -171,7 +170,7 @@ export function register(context: TypeScriptRuntime) {
 			if (tsLs)
 				withTeleports(fileName, position, tsLs);
 
-			return symbols.map(s => transformReferencedSymbol(lsType, s)).filter(shared.notEmpty);
+			return symbols.map(s => transformReferencedSymbol(lsType, s)).filter(notEmpty);
 
 			function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
 				if (loopChecker.has(fileName + ':' + position))
@@ -207,7 +206,7 @@ export function register(context: TypeScriptRuntime) {
 	// transforms
 	function transformReferencedSymbol(lsType: 'script' | 'template', symbol: ts.ReferencedSymbol): ts.ReferencedSymbol | undefined {
 		const definition = transformDocumentSpanLike(lsType, symbol.definition);
-		const references = symbol.references.map(r => transformDocumentSpanLike(lsType, r)).filter(shared.notEmpty);
+		const references = symbol.references.map(r => transformDocumentSpanLike(lsType, r)).filter(notEmpty);
 		if (definition) {
 			return {
 				definition,
@@ -244,7 +243,7 @@ export function register(context: TypeScriptRuntime) {
 	function transformSpan(lsType: 'script' | 'template', fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of context.vueFiles.fromEmbeddedLocation(lsType, shared.fsPathToUri(fileName), textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of context.vueFiles.fromEmbeddedLocation(lsType, fileName, textSpan.start, textSpan.start + textSpan.length)) {
 			return {
 				fileName: vueLoc.fileName,
 				textSpan: {
@@ -254,4 +253,8 @@ export function register(context: TypeScriptRuntime) {
 			}
 		}
 	}
+}
+
+function notEmpty<T>(value: T | null | undefined): value is T {
+	return value !== null && value !== undefined;
 }

@@ -135,7 +135,7 @@ async function useRefSugar(
 
         const ranges = parseDeclarationRanges(ts, _scriptSetupAst);
         const dotValueRanges = parseDotValueRanges(ts, _scriptSetupAst);
-        const document = _vueDocument.file.getTextDocument();
+        const document = _vueDocument.getDocument();
         const edits: vscode.TextEdit[] = [];
 
         for (const declaration of ranges) {
@@ -278,7 +278,7 @@ async function unuseRefSugar(
         errors: vscode.Diagnostic[],
     ) {
 
-        const document = _vueDocument.file.getTextDocument();
+        const document = _vueDocument.getDocument();
         const edits: vscode.TextEdit[] = [];
 
         for (const error of errors) {
@@ -307,7 +307,7 @@ async function unuseRefSugar(
     ) {
 
         const ranges = _vueDocument.file.getSfcRefSugarRanges();
-        const document = _vueDocument.file.getTextDocument();
+        const document = _vueDocument.getDocument();
         const edits: vscode.TextEdit[] = [];
 
         if (!ranges)

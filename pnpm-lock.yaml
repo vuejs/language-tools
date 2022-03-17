@@ -40,34 +40,30 @@ importers:
       '@volar/shared': 0.33.2
       '@volar/vue-language-server': 0.33.2
       '@vue/compiler-dom': ^3.2.27
+      '@vue/compiler-sfc': ^3.2.27
       '@vue/reactivity': ^3.2.27
       esbuild: latest
       upath: ^2.0.1
       vsce: latest
-      vscode-html-languageservice: ^4.2.1
       vscode-languageclient: ^8.0.0-next.8
-      vscode-languageserver-textdocument: ^1.0.3
       vscode-nls: 5.0.0
     devDependencies:
       '@types/vscode': 1.61.0
       '@volar/shared': link:../../packages/shared
       '@volar/vue-language-server': link:../../packages/vue-language-server
       '@vue/compiler-dom': 3.2.31
+      '@vue/compiler-sfc': 3.2.31
       '@vue/reactivity': 3.2.31
       esbuild: 0.14.27
       upath: 2.0.1
       vsce: 2.7.0
-      vscode-html-languageservice: 4.2.1
       vscode-languageclient: 8.0.0-next.12
-      vscode-languageserver-textdocument: 1.0.4
       vscode-nls: 5.0.0
 
   packages/code-gen:
     specifiers:
-      '@volar/shared': 0.33.2
       '@volar/source-map': 0.33.2
     dependencies:
-      '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
 
   packages/experimental:
@@ -126,14 +122,12 @@ importers:
     specifiers:
       typescript: latest
       upath: ^2.0.1
-      vscode-html-languageservice: ^4.2.1
       vscode-jsonrpc: ^8.0.0-next.5
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
       vscode-uri: ^3.0.3
     dependencies:
       upath: 2.0.1
-      vscode-html-languageservice: 4.2.1
       vscode-jsonrpc: 8.0.0-next.6
       vscode-uri: 3.0.3
     devDependencies:
@@ -142,12 +136,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.4
 
   packages/source-map:
-    specifiers:
-      '@volar/shared': 0.33.2
-      vscode-languageserver-textdocument: ^1.0.3
-    dependencies:
-      '@volar/shared': link:../shared
-      vscode-languageserver-textdocument: 1.0.4
+    specifiers: {}
 
   packages/transforms:
     specifiers:
@@ -180,12 +169,10 @@ importers:
 
   packages/typescript-vue-plugin:
     specifiers:
-      '@volar/shared': 0.33.2
       '@volar/vue-typescript': 0.33.2
       typescript: latest
       upath: ^2.0.1
     dependencies:
-      '@volar/shared': link:../shared
       '@volar/vue-typescript': link:../vue-typescript
       upath: 2.0.1
     devDependencies:
@@ -194,7 +181,6 @@ importers:
   packages/vue-code-gen:
     specifiers:
       '@volar/code-gen': 0.33.2
-      '@volar/shared': 0.33.2
       '@volar/source-map': 0.33.2
       '@vue/compiler-core': ^3.2.27
       '@vue/compiler-dom': ^3.2.27
@@ -203,7 +189,6 @@ importers:
       upath: ^2.0.1
     dependencies:
       '@volar/code-gen': link:../code-gen
-      '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@vue/compiler-core': 3.2.31
       '@vue/compiler-dom': 3.2.31
@@ -312,34 +297,28 @@ importers:
 
   packages/vue-tsc:
     specifiers:
-      '@volar/shared': 0.33.2
       '@volar/vue-typescript': 0.33.2
     dependencies:
-      '@volar/shared': link:../shared
       '@volar/vue-typescript': link:../vue-typescript
 
   packages/vue-typescript:
     specifiers:
       '@volar/code-gen': 0.33.2
       '@volar/pug-language-service': 0.33.2
-      '@volar/shared': 0.33.2
       '@volar/source-map': 0.33.2
       '@volar/vue-code-gen': 0.33.2
+      '@vue/compiler-sfc': ^3.2.27
       '@vue/reactivity': ^3.2.27
       typescript: latest
       upath: ^2.0.1
-      vscode-html-languageservice: ^4.2.1
-      vscode-languageserver-textdocument: ^1.0.3
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/pug-language-service': link:../pug-language-service
-      '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/vue-code-gen': link:../vue-code-gen
+      '@vue/compiler-sfc': 3.2.31
       '@vue/reactivity': 3.2.31
       upath: 2.0.1
-      vscode-html-languageservice: 4.2.1
-      vscode-languageserver-textdocument: 1.0.4
     devDependencies:
       typescript: 4.6.2
 
@@ -2166,14 +2145,12 @@ packages:
       magic-string: 0.25.7
       postcss: 8.4.6
       source-map: 0.6.1
-    dev: true
 
   /@vue/compiler-ssr/3.2.31:
     resolution: {integrity: sha512-mjN0rqig+A8TVDnsGPYJM5dpbjlXeHUm2oZHZwGyMYiGT/F4fhJf/cXy8QpjnLQK4Y9Et4GWzHn9PS8AHUnSkw==}
     dependencies:
       '@vue/compiler-dom': 3.2.31
       '@vue/shared': 3.2.31
-    dev: true
 
   /@vue/reactivity-transform/3.2.31:
     resolution: {integrity: sha512-uS4l4z/W7wXdI+Va5pgVxBJ345wyGFKvpPYtdSgvfJfX/x2Ymm6ophQlXXB6acqGHtXuBqNyyO3zVp9b1r0MOA==}
@@ -2183,7 +2160,6 @@ packages:
       '@vue/shared': 3.2.31
       estree-walker: 2.0.2
       magic-string: 0.25.7
-    dev: true
 
   /@vue/reactivity/3.2.31:
     resolution: {integrity: sha512-HVr0l211gbhpEKYr2hYe7hRsV91uIVGFYNHj73njbARVGHQvIojkImKMaZNDdoDZOIkMsBc9a1sMqR+WZwfSCw==}
@@ -6223,7 +6199,6 @@ packages:
     resolution: {integrity: sha512-4CrMT5DOHTDk4HYDlzmwu4FVCcIYI8gauveasrdCu2IKIFOJ3f0v/8MDGJCDL9oD2ppz/Av1b0Nj345H9M+XIA==}
     dependencies:
       sourcemap-codec: 1.4.8
-    dev: true
 
   /make-dir/1.3.0:
     resolution: {integrity: sha512-2w31R7SJtieJJnQtGc7RVL2StM2vGYVfqUOvUDxH6bC6aJTxPxTF0GnIgCyu7tjockiUWAYQRbxa7vKn34s5sQ==}
@@ -6618,7 +6593,6 @@ packages:
     resolution: {integrity: sha512-JzxqqT5u/x+/KOFSd7JP15DOo9nOoHpx6DYatqIHUW2+flybkm+mdcraotSQR5WcnZr+qhGVh8Ted0KdfSMxlg==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
-    dev: true
 
   /napi-build-utils/1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
@@ -7224,7 +7198,6 @@ packages:
 
   /picocolors/1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
-    dev: true
 
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
@@ -7325,7 +7298,6 @@ packages:
       nanoid: 3.3.0
       picocolors: 1.0.0
       source-map-js: 1.0.2
-    dev: true
 
   /prebuild-install/7.0.1:
     resolution: {integrity: sha512-QBSab31WqkyxpnMWQxubYAHR5S9B2+r81ucocew34Fkl98FhvKIF50jIJnNOBmAZfyNV7vE5T6gd3hTVWgY6tg==}
@@ -8095,7 +8067,6 @@ packages:
   /source-map-js/1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
     engines: {node: '>=0.10.0'}
-    dev: true
 
   /source-map-support/0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
@@ -8120,7 +8091,6 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
-    dev: true
 
   /space-separated-tokens/1.1.5:
     resolution: {integrity: sha512-q/JSVd1Lptzhf5bkYm4ob4iWPjx0KiRe3sRFBNrVqbJkFaBm5vbbowy1mymoPNLRa52+oadOhJ+K49wsSeSjTA==}

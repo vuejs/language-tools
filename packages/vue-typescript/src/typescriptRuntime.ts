@@ -1,7 +1,5 @@
-import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
-import * as html from 'vscode-html-languageservice';
 import { createVueFile, EmbeddedFile } from './vueFile';
 import { createVueFiles } from './vueFiles';
 import { LanguageServiceHost, VueCompilerOptions } from './types';
@@ -9,6 +7,7 @@ import * as localTypes from './utils/localTypes';
 import type { TextRange } from '@volar/vue-code-gen';
 import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
+import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
 
 export interface VuePlugin {
 
@@ -45,16 +44,15 @@ export function createTypeScriptRuntime(options: {
         useHtmlPlugin(),
         usePugPlugin(),
     ];
-    const htmlLs = html.getLanguageService();
     const templateTsHost = options.vueCompilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
     const scriptTsHost = createTsLsHost('script');
     const templateTsLsRaw = templateTsHost ? ts.createLanguageService(templateTsHost) : undefined;
     const scriptTsLsRaw = ts.createLanguageService(scriptTsHost);
 
     if (templateTsHost && templateTsLsRaw) {
-        shared.injectCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
+        injectCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
     }
-    shared.injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
+    injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
 
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
 
@@ -314,7 +312,6 @@ export function createTypeScriptRuntime(options: {
                     fileName,
                     scriptText,
                     scriptVersion,
-                    htmlLs,
                     plugins,
                     options.vueCompilerOptions,
                     options.typescript,

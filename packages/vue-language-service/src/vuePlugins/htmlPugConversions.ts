@@ -61,7 +61,7 @@ export default function (host: {
 
                 return worker(uri, vueDocument => {
 
-                    const document = vueDocument.file.getTextDocument();
+                    const document = vueDocument.getDocument();
                     const desc = vueDocument.file.getDescriptor();
                     if (!desc.template)
                         return;

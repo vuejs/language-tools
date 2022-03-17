@@ -1,7 +1,7 @@
 import { VueFiles, VueFile, EmbeddedFile, EmbeddedFileSourceMap, Teleport, Embedded, localTypes } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import { computed } from '@vue/reactivity';
-import * as SourceMaps from '@volar/source-map';
+import { SourceMapBase, Mapping } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen';
 import { untrack } from './utils/untrack';
@@ -12,7 +12,60 @@ import type * as _ from '@volar/vue-typescript/node_modules/@vue/reactivity'; //
 export type VueDocuments = ReturnType<typeof parseVueDocuments>;
 export type VueDocument = ReturnType<typeof parseVueDocument>;
 
-export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedFileMappingData> {
+export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
+
+    constructor(
+        public sourceDocument: TextDocument,
+        public mappedDocument: TextDocument,
+        public _mappings?: Mapping<Data>[],
+    ) {
+        super(_mappings);
+    }
+
+    public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+        for (const maped of this.getRanges(start, end ?? start, false, filter)) {
+            return maped;
+        }
+    }
+    public getMappedRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+        for (const maped of this.getRanges(start, end ?? start, true, filter)) {
+            return maped;
+        }
+    }
+    public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+        return this.getRanges(start, end ?? start, false, filter);
+    }
+    public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
+        return this.getRanges(start, end ?? start, true, filter);
+    }
+
+    protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
+
+        const startIsNumber = typeof start === 'number';
+        const endIsNumber = typeof end === 'number';
+
+        const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
+        const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
+        const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
+        const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
+
+        for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
+            yield getMaped(maped);
+        }
+
+        function getMaped(maped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
+            if (startIsNumber) {
+                return maped as [{ start: T, end: T }, Data];
+            }
+            return [{
+                start: toDoc.positionAt(maped[0].start) as T,
+                end: toDoc.positionAt(maped[0].end) as T,
+            }, maped[1]];
+        }
+    }
+}
+
+export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData> {
 
     constructor(
         public embeddedFile: EmbeddedFile,
@@ -24,7 +77,7 @@ export class EmbeddedDocumentSourceMap extends SourceMaps.SourceMap<EmbeddedFile
     }
 }
 
-export class TeleportSourceMap extends SourceMaps.SourceMap<TeleportMappingData> {
+export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
     constructor(
         public embeddedFile: EmbeddedFile,
         public document: TextDocument,
@@ -168,13 +221,14 @@ export function parseVueDocument(vueFile: VueFile) {
     const sourceMapsMap = useCacheMap<Embedded, EmbeddedDocumentSourceMap>(embedded => {
         return new EmbeddedDocumentSourceMap(
             embedded.file,
-            vueFile.refs.document.value,
+            document.value,
             embeddedDocumentsMap.get(embedded.file),
             embedded.sourceMap,
         );
     });
 
     // reactivity
+    const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), 'vue', 0, vueFile.refs.content.value));
     const sourceMaps = computed(() => {
         return vueFile.refs.allEmbeddeds.value.map(embedded => sourceMapsMap.get(embedded));
     });
@@ -196,6 +250,7 @@ export function parseVueDocument(vueFile: VueFile) {
         embeddedDocumentsMap,
         sourceMapsMap,
         getSourceMaps: untrack(() => sourceMaps.value),
+        getDocument: untrack(() => document.value),
 
         refs: {
             sourceMaps,

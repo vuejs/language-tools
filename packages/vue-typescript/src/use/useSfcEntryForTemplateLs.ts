@@ -3,15 +3,14 @@ import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
 import * as upath from 'upath';
 import { SearchTexts } from '../utils/string';
-import * as shared from '@volar/shared';
 import { getVueLibraryName } from '../utils/localTypes';
-import { Embedded, EmbeddedFile } from '../vueFile';
+import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 
 export function useSfcEntryForTemplateLs(
 	fileName: string,
-	script: Ref<shared.Sfc['script']>,
-	scriptSetup: Ref<shared.Sfc['scriptSetup']>,
-	template: Ref<shared.Sfc['template']>,
+	script: Ref<Sfc['script']>,
+	scriptSetup: Ref<Sfc['scriptSetup']>,
+	template: Ref<Sfc['template']>,
 	hasTsDoc: Ref<boolean>,
 	isVue2: boolean,
 ) {

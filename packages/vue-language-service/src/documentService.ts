@@ -152,7 +152,6 @@ export function getDocumentService(
 				shared.uriToFsPath(document.uri),
 				document.getText(),
 				document.version.toString(),
-				services.htmlLs,
 				vueTsPlugins,
 				{},
 				context.typescript,

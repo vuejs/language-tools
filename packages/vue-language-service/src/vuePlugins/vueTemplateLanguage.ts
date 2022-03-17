@@ -325,7 +325,7 @@ export default function (host: {
         const scriptImport = scriptAst ? getLastImportNode(scriptAst) : undefined;
         const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
         const componentName = capitalize(camelize(item.label));
-        const textDoc = vueDocument.file.getTextDocument();
+        const textDoc = vueDocument.getDocument();
         let insertText = '';
         const planAResult = await planAInsertText();
         if (planAResult) {
@@ -598,7 +598,7 @@ export default function (host: {
 
     function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, ts.CompletionEntry>) {
 
-        const replacement = getReplacement(completionList, vueDocument.file.getTextDocument());
+        const replacement = getReplacement(completionList, vueDocument.getDocument());
 
         if (replacement) {
 
@@ -818,12 +818,18 @@ export default function (host: {
         return () => {
             projectVersion.value = host.getScriptContentVersion();
             const nowUsedTags = new Set(Object.keys(sfcTemplateScript.templateCodeGens.value?.tagNames ?? {}));
-            if (!shared.eqSet(usedTags.value, nowUsedTags)) {
+            if (!eqSet(usedTags.value, nowUsedTags)) {
                 usedTags.value = nowUsedTags;
             }
             return result.value;
         };
     }
+}
+
+function eqSet<T>(as: Set<T>, bs: Set<T>) {
+	if (as.size !== bs.size) return false;
+	for (const a of as) if (!bs.has(a)) return false;
+	return true;
 }
 
 function createInternalItemId(type: 'importFile' | 'vueDirective' | 'componentEvent' | 'componentProp' | 'component', args: string[]) {

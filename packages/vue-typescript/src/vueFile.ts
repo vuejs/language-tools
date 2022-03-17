@@ -1,9 +1,7 @@
-import * as shared from '@volar/shared';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
-import { TextDocument } from 'vscode-languageserver-textdocument'; // TODO: use vue SFC parser instead of
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
@@ -15,7 +13,7 @@ import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import type * as html from 'vscode-html-languageservice'; // fix TS2742
+import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import type * as _2 from 'vscode-languageserver-types'; // fix TS2742
@@ -34,6 +32,30 @@ export interface EmbeddedStructure {
 export interface Embedded {
 	file: EmbeddedFile,
 	sourceMap: EmbeddedFileSourceMap,
+}
+
+export interface SfcBlock {
+	start: number;
+	end: number;
+	startTagEnd: number;
+	endTagStart: number;
+	lang: string;
+	content: string;
+}
+
+export interface Sfc {
+	template: SfcBlock | null;
+	script: (SfcBlock & {
+		src: string | undefined;
+	}) | null;
+	scriptSetup: SfcBlock | null;
+	styles: (SfcBlock & {
+		module: string | undefined;
+		scoped: boolean;
+	})[];
+	customBlocks: (SfcBlock & {
+		type: string;
+	})[];
 }
 
 export interface EmbeddedFile<T = unknown> {
@@ -55,7 +77,6 @@ export function createVueFile(
 	fileName: string,
 	_content: string,
 	_version: string,
-	htmlLs: html.LanguageService,
 	plugins: VuePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -66,13 +87,13 @@ export function createVueFile(
 	// refs
 	const content = ref('');
 	const version = ref('');
-	const sfc = reactive<shared.Sfc>({
+	const sfc = reactive<Sfc>({
 		template: null,
 		script: null,
 		scriptSetup: null,
 		styles: [],
 		customBlocks: [],
-	}) as shared.Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
+	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 	const lastUpdated = {
 		template: false,
 		script: false,
@@ -89,9 +110,7 @@ export function createVueFile(
 	}) as ITemplateScriptData;
 
 	// computeds
-	const document = computed(() => TextDocument.create(shared.fsPathToUri(fileName), 'vue', 0, content.value));
-	const vueHtmlDocument = computed(() => htmlLs.parseHTMLDocument(document.value));
-	const parsedSfc = computed(() => shared.parseSfc(content.value, vueHtmlDocument.value));
+	const parsedSfc = computed(() => parse(content.value, { sourceMap: false, ignoreEmpty: false }));
 
 	// use
 	const sfcStyles = useSfcStyles(fileName, computed(() => sfc.styles));
@@ -104,10 +123,10 @@ export function createVueFile(
 	}>(() => {
 		if (sfc.template) {
 			for (const plugin of plugins) {
-				const compiledHtml = plugin.compileTemplate?.(sfc.template.content, sfc.template.lang);
+				const compiledHtml = plugin.compileTemplate?.(sfc.template.content, sfc.template.lang ?? 'html');
 				if (compiledHtml) {
 					return {
-						lang: sfc.template.lang,
+						lang: sfc.template.lang ?? 'html',
 						htmlText: compiledHtml.html,
 						htmlToTemplate: compiledHtml.htmlToTemplate,
 					};
@@ -321,7 +340,6 @@ export function createVueFile(
 		getVersion: untrack(() => version.value),
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
-		getTextDocument: untrack(() => document.value),
 		update: untrack(update),
 		updateTemplateScript: untrack(updateTemplateScript),
 		getScriptTsFile: untrack(() => sfcScriptForScriptLs.file.value),
@@ -339,7 +357,6 @@ export function createVueFile(
 		getSfcTemplateDocument: untrack(() => sfcTemplate.file.value),
 
 		refs: {
-			document,
 			content,
 			allEmbeddeds,
 			teleports,
@@ -360,11 +377,11 @@ export function createVueFile(
 		content.value = newContent;
 		version.value = newVersion;
 
-		updateTemplate(parsedSfc.value['template']);
-		updateScript(parsedSfc.value['script']);
-		updateScriptSetup(parsedSfc.value['scriptSetup']);
-		updateStyles(parsedSfc.value['styles']);
-		updateCustomBlocks(parsedSfc.value['customBlocks']);
+		updateTemplate(parsedSfc.value.descriptor.template);
+		updateScript(parsedSfc.value.descriptor.script);
+		updateScriptSetup(parsedSfc.value.descriptor.scriptSetup);
+		updateStyles(parsedSfc.value.descriptor.styles);
+		updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
 
 		sfcTemplateScript.update(); // TODO
 
@@ -378,7 +395,16 @@ export function createVueFile(
 			templateScriptUpdated: templateScriptContent !== templateScriptContent_2,
 		};
 
-		function updateTemplate(newData: shared.Sfc['template']) {
+		function updateTemplate(block: SFCTemplateBlock | null) {
+
+			const newData: Sfc['template'] | null = block ? {
+				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				startTagEnd: block.loc.start.offset,
+				endTagStart: block.loc.end.offset,
+				content: block.content,
+				lang: block.lang ?? 'html',
+			} : null;
 
 			lastUpdated.template = sfc.template?.lang !== newData?.lang
 				|| sfc.template?.content !== newData?.content;
@@ -390,7 +416,17 @@ export function createVueFile(
 				sfc.template = newData;
 			}
 		}
-		function updateScript(newData: shared.Sfc['script']) {
+		function updateScript(block: SFCScriptBlock | null) {
+
+			const newData: Sfc['script'] | null = block ? {
+				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				startTagEnd: block.loc.start.offset,
+				endTagStart: block.loc.end.offset,
+				content: block.content,
+				lang: getValidScriptSyntax(block.lang ?? 'js'),
+				src: block.src,
+			} : null;
 
 			lastUpdated.script = sfc.script?.lang !== newData?.lang
 				|| sfc.script?.content !== newData?.content;
@@ -402,7 +438,16 @@ export function createVueFile(
 				sfc.script = newData;
 			}
 		}
-		function updateScriptSetup(newData: shared.Sfc['scriptSetup']) {
+		function updateScriptSetup(block: SFCScriptBlock | null) {
+
+			const newData: Sfc['scriptSetup'] | null = block ? {
+				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				startTagEnd: block.loc.start.offset,
+				endTagStart: block.loc.end.offset,
+				content: block.content,
+				lang: getValidScriptSyntax(block.lang ?? 'js'),
+			} : null;
 
 			lastUpdated.scriptSetup = sfc.scriptSetup?.lang !== newData?.lang
 				|| sfc.scriptSetup?.content !== newData?.content;
@@ -414,9 +459,21 @@ export function createVueFile(
 				sfc.scriptSetup = newData;
 			}
 		}
-		function updateStyles(newDataArr: shared.Sfc['styles']) {
-			for (let i = 0; i < newDataArr.length; i++) {
-				const newData = newDataArr[i];
+		function updateStyles(blocks: SFCStyleBlock[]) {
+			for (let i = 0; i < blocks.length; i++) {
+
+				const block = blocks[i];
+				const newData: Sfc['styles'][number] = {
+					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+					startTagEnd: block.loc.start.offset,
+					endTagStart: block.loc.end.offset,
+					content: block.content,
+					lang: block.lang ?? 'css',
+					module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
+					scoped: !!block.scoped,
+				};
+
 				if (sfc.styles.length > i) {
 					updateBlock(sfc.styles[i], newData);
 				}
@@ -424,13 +481,24 @@ export function createVueFile(
 					sfc.styles.push(newData);
 				}
 			}
-			while (sfc.styles.length > newDataArr.length) {
+			while (sfc.styles.length > blocks.length) {
 				sfc.styles.pop();
 			}
 		}
-		function updateCustomBlocks(newDataArr: shared.Sfc['customBlocks']) {
-			for (let i = 0; i < newDataArr.length; i++) {
-				const newData = newDataArr[i];
+		function updateCustomBlocks(blocks: SFCBlock[]) {
+			for (let i = 0; i < blocks.length; i++) {
+
+				const block = blocks[i];
+				const newData: Sfc['customBlocks'][number] = {
+					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+					startTagEnd: block.loc.start.offset,
+					endTagStart: block.loc.end.offset,
+					content: block.content,
+					lang: block.lang ?? 'txt',
+					type: block.type,
+				};
+
 				if (sfc.customBlocks.length > i) {
 					updateBlock(sfc.customBlocks[i], newData);
 				}
@@ -438,7 +506,7 @@ export function createVueFile(
 					sfc.customBlocks.push(newData);
 				}
 			}
-			while (sfc.customBlocks.length > newDataArr.length) {
+			while (sfc.customBlocks.length > blocks.length) {
 				sfc.customBlocks.pop();
 			}
 		}
@@ -476,24 +544,24 @@ export function createVueFile(
 
 		let dirty = false;
 
-		if (!shared.eqSet(new Set(contextNames), new Set(templateScriptData.context))) {
+		if (!eqSet(new Set(contextNames), new Set(templateScriptData.context))) {
 			templateScriptData.context = contextNames;
 			templateScriptData.contextItems = context;
 			dirty = true;
 		}
 
-		if (!shared.eqSet(new Set(componentNames), new Set(templateScriptData.components))) {
+		if (!eqSet(new Set(componentNames), new Set(templateScriptData.components))) {
 			templateScriptData.components = componentNames;
 			templateScriptData.componentItems = components;
 			dirty = true;
 		}
 
-		if (!shared.eqSet(new Set(propNames), new Set(templateScriptData.props))) {
+		if (!eqSet(new Set(propNames), new Set(templateScriptData.props))) {
 			templateScriptData.props = propNames;
 			dirty = true;
 		}
 
-		if (!shared.eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))) {
+		if (!eqSet(new Set(setupReturnNames), new Set(templateScriptData.setupReturns))) {
 			templateScriptData.setupReturns = setupReturnNames;
 			dirty = true;
 		}
@@ -504,4 +572,21 @@ export function createVueFile(
 
 		return dirty;
 	}
+}
+
+function eqSet<T>(as: Set<T>, bs: Set<T>) {
+	if (as.size !== bs.size) return false;
+	for (const a of as) if (!bs.has(a)) return false;
+	return true;
+}
+
+const validScriptSyntaxs = ['js', 'jsx', 'ts', 'tsx'] as const;
+
+type ValidScriptSyntax = typeof validScriptSyntaxs[number];
+
+function getValidScriptSyntax(syntax: string): ValidScriptSyntax {
+	if (validScriptSyntaxs.includes(syntax as ValidScriptSyntax)) {
+		return syntax as ValidScriptSyntax;
+	}
+	return 'js';
 }
