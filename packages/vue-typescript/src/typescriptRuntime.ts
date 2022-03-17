@@ -113,7 +113,7 @@ export function createTypeScriptRuntime(options: {
             }
 
             for (const nowFileName of nowFileNames) {
-                if (!vueFiles.raw.fsPathGet(nowFileName)) {
+                if (!vueFiles.get(nowFileName)) {
                     // add
                     fileNamesToCreate.push(nowFileName);
                 }
@@ -161,7 +161,7 @@ export function createTypeScriptRuntime(options: {
                     // .vue.d.ts (never)
                     const fileNameTrim = upath.trimExt(fileName);
                     if (fileNameTrim.endsWith('.vue')) {
-                        const vueFile = vueFiles.raw.fsPathGet(fileNameTrim);
+                        const vueFile = vueFiles.get(fileNameTrim);
                         if (!vueFile) {
                             const fileExists = !!options.vueLsHost.fileExists?.(fileNameTrim);
                             if (fileExists) {
@@ -299,7 +299,7 @@ export function createTypeScriptRuntime(options: {
         }
         for (const fileName of fileNames) {
 
-            const sourceFile = vueFiles.raw.fsPathGet(fileName);
+            const sourceFile = vueFiles.get(fileName);
             const scriptSnapshot = options.vueLsHost.getScriptSnapshot(fileName);
 
             if (!scriptSnapshot) {
@@ -310,7 +310,7 @@ export function createTypeScriptRuntime(options: {
             const scriptVersion = options.vueLsHost.getScriptVersion(fileName);
 
             if (!sourceFile) {
-                vueFiles.raw.fsPathSet(fileName, createVueFile(
+                vueFiles.set(fileName, createVueFile(
                     fileName,
                     scriptText,
                     scriptVersion,
@@ -349,7 +349,7 @@ export function createTypeScriptRuntime(options: {
             lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
             let currentNums = 0;
             for (const fileName of templateScriptUpdateFileNames) {
-                if (templateTsLsRaw && templateTsHost && vueFiles.raw.fsPathGet(fileName)?.updateTemplateScript(templateTsLsRaw, templateTsHost)) {
+                if (templateTsLsRaw && templateTsHost && vueFiles.get(fileName)?.updateTemplateScript(templateTsLsRaw, templateTsHost)) {
                     templateScriptUpdated = true;
                 }
                 currentNums++;
@@ -370,7 +370,7 @@ export function createTypeScriptRuntime(options: {
     function unsetSourceFiles(uris: string[]) {
         let updated = false;
         for (const uri of uris) {
-            if (vueFiles.raw.fsPathDelete(uri)) {
+            if (vueFiles.delete(uri)) {
                 updated = true;
             }
         }

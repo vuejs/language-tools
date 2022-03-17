@@ -2,7 +2,6 @@ import { computed, shallowReactive } from '@vue/reactivity';
 import type { Embedded, EmbeddedFile, VueFile } from './vueFile';
 import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
-import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as localTypes from './utils/localTypes';
 import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
@@ -12,23 +11,8 @@ export interface VueFiles extends ReturnType<typeof createVueFiles> { }
 
 export function createVueFiles() {
 
-	const _vueFiles = shallowReactive<Record<string, VueFile>>({});
-	const vueFiles = shared.createPathMap<VueFile>({
-		delete: key => delete _vueFiles[key],
-		get: key => _vueFiles[key],
-		has: key => !!_vueFiles[key],
-		set: (key, value) => _vueFiles[key] = value,
-		clear: () => {
-			for (var key in _vueFiles) {
-				if (_vueFiles.hasOwnProperty(key)) {
-					delete _vueFiles[key];
-				}
-			}
-		},
-		values: () => new Set(Object.values(_vueFiles)).values(),
-	});
-
-	const all = computed(() => Object.values(_vueFiles));
+	const vueFiles = shallowReactive<Record<string, VueFile>>({});
+	const all = computed(() => Object.values(vueFiles));
 	const fileNames = computed(() => all.value.map(sourceFile => sourceFile.fileName));
 	const embeddedDocumentsMap = computed(() => {
 
@@ -71,8 +55,8 @@ export function createVueFiles() {
 	const tsTeleports = {
 		template: computed(() => {
 			const map = new Map<string, Teleport>();
-			for (const key in _vueFiles) {
-				const sourceFile = _vueFiles[key]!;
+			for (const key in vueFiles) {
+				const sourceFile = vueFiles[key]!;
 				for (const { file, teleport } of sourceFile.refs.templateLsTeleports.value) {
 					map.set(file.fileName, teleport);
 				}
@@ -81,8 +65,8 @@ export function createVueFiles() {
 		}),
 		script: computed(() => {
 			const map = new Map<string, Teleport>();
-			for (const key in _vueFiles) {
-				const sourceFile = _vueFiles[key]!;
+			for (const key in vueFiles) {
+				const sourceFile = vueFiles[key]!;
 				const embeddedFile = sourceFile.refs.sfcScriptForScriptLs.file.value;
 				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleport.value;
 				map.set(embeddedFile.fileName, sourceMap);
@@ -93,10 +77,14 @@ export function createVueFiles() {
 	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
+		get: untrack((fileName: string) => vueFiles[fileName.toLocaleLowerCase()]),
+		delete: untrack((fileName: string) => delete vueFiles[fileName.toLocaleLowerCase()]),
+		has: untrack((fileName: string) => !!vueFiles[fileName.toLocaleLowerCase()]),
+		set: untrack((fileName: string, vueFile: VueFile) => vueFiles[fileName.toLocaleLowerCase()] = vueFile),
+
 		getFileNames: untrack(() => fileNames.value),
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
-		raw: vueFiles,
 
 		getTsTeleport: untrack((lsType: 'script' | 'template', fileName: string) => tsTeleports[lsType].value.get(fileName)),
 		getEmbeddeds: untrack(function* (

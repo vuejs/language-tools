@@ -91,7 +91,7 @@ export function parseVueDocuments(vueFiles: VueFiles) {
         get: untrack((uri: string) => {
 
             const fileName = shared.uriToFsPath(uri);
-            const vueFile = vueFiles.raw.fsPathGet(fileName);
+            const vueFile = vueFiles.get(fileName);
 
             if (vueFile) {
                 return vueDocuments.get(vueFile);
