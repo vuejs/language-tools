@@ -105,11 +105,3 @@ export function getOverlapRange2(
 		end,
 	};
 }
-
-export function getLineText(document: TextDocument, line: number) {
-	const text = document.getText({
-		start: { line: line, character: 0 },
-		end: { line: line + 1, character: 0 },
-	});
-	return text.substr(0, text.length - 1);
-}

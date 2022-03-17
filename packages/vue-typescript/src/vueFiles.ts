@@ -51,12 +51,12 @@ export function createVueFiles() {
 			template,
 		};
 	});
-	const tsTeleports = {
+	const teleports = {
 		template: computed(() => {
 			const map = new Map<string, Teleport>();
 			for (const key in vueFiles) {
 				const sourceFile = vueFiles[key]!;
-				for (const { file, teleport } of sourceFile.refs.templateLsTeleports.value) {
+				for (const { file, teleport } of sourceFile.refs.teleports.value) {
 					map.set(file.fileName, teleport);
 				}
 			}
@@ -85,7 +85,7 @@ export function createVueFiles() {
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
 
-		getTsTeleport: untrack((lsType: 'script' | 'template', fileName: string) => tsTeleports[lsType].value.get(fileName)),
+		getTeleport: untrack((lsType: 'script' | 'template', fileName: string) => teleports[lsType].value.get(fileName)),
 		getEmbeddeds: untrack(function* (
 			lsType: 'script' | 'template' | 'nonTs',
 		) {

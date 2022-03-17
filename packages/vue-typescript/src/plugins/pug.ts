@@ -1,7 +1,7 @@
 import * as pug from '@volar/pug-language-service';
-import { VuePlugin } from '../typescriptRuntime';
+import { VueLanguagePlugin } from '../typescriptRuntime';
 
-export default function (): VuePlugin {
+export default function (): VueLanguagePlugin {
 
     return {
 
@@ -13,7 +13,7 @@ export default function (): VuePlugin {
 
 				if (pugDoc) {
 					return {
-						html: pugDoc.htmlCode,
+						result: pugDoc.htmlCode,
 						mapping: (htmlStart, htmlEnd) => {
 							const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
 							if (pugRange) {

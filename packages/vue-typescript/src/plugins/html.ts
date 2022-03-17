@@ -1,6 +1,6 @@
-import { VuePlugin } from "../typescriptRuntime";
+import { VueLanguagePlugin } from "../typescriptRuntime";
 
-export default function (): VuePlugin {
+export default function (): VueLanguagePlugin {
 
     return {
 
@@ -9,7 +9,7 @@ export default function (): VuePlugin {
             if (lang === 'html') {
 
                 return {
-                    html: template,
+                    result: template,
                     mapping: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
                 };
             }

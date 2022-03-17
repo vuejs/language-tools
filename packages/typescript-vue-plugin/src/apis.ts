@@ -74,7 +74,7 @@ export function register(context: TypeScriptRuntime) {
 				symbols = symbols.concat(_symbols);
 				for (const ref of _symbols) {
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-					const teleport = context.vueFiles.getTsTeleport(lsType, ref.fileName);
+					const teleport = context.vueFiles.getTeleport(lsType, ref.fileName);
 
 					if (!teleport)
 						continue;
@@ -135,7 +135,7 @@ export function register(context: TypeScriptRuntime) {
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const teleport = context.vueFiles.getTsTeleport(lsType, ref.fileName);
+					const teleport = context.vueFiles.getTeleport(lsType, ref.fileName);
 					if (!teleport)
 						continue;
 
@@ -184,7 +184,7 @@ export function register(context: TypeScriptRuntime) {
 
 						loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-						const teleport = context.vueFiles.getTsTeleport(lsType, ref.fileName);
+						const teleport = context.vueFiles.getTeleport(lsType, ref.fileName);
 						if (!teleport)
 							continue;
 

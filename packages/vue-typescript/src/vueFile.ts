@@ -6,7 +6,7 @@ import { EmbeddedFileSourceMap } from '@volar/vue-typescript';
 import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
-import { VuePlugin } from './typescriptRuntime';
+import { VueLanguagePlugin } from './typescriptRuntime';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
 import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcScript } from './use/useSfcScript';
@@ -76,7 +76,7 @@ export function createVueFile(
 	fileName: string,
 	_content: string,
 	_version: string,
-	plugins: VuePlugin[],
+	plugins: VueLanguagePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
@@ -126,7 +126,7 @@ export function createVueFile(
 				if (compiledHtml) {
 					return {
 						lang: sfc.template.lang ?? 'html',
-						htmlText: compiledHtml.html,
+						htmlText: compiledHtml.result,
 						htmlToTemplate: compiledHtml.mapping,
 					};
 				};
@@ -363,7 +363,6 @@ export function createVueFile(
 			sfcEntryForTemplateLs,
 			sfcScriptForScriptLs,
 			templateScriptData,
-			templateLsTeleports: teleports,
 		},
 	};
 

@@ -9,10 +9,10 @@ import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
 import { createVueFile, EmbeddedFile } from './vueFile';
 import { createVueFiles } from './vueFiles';
 
-export interface VuePlugin {
+export interface VueLanguagePlugin {
 
     compileTemplate?(tmplate: string, lang: string): {
-        html: string,
+        result: string,
         mapping(htmlStart: number, htmlEnd: number): { start: number, end: number } | undefined,
     } | undefined
 }

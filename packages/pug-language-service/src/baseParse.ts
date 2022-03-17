@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import * as SourceMap from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { CodeGen } from '@volar/code-gen';
@@ -9,7 +8,7 @@ const pugParser = require('pug-parser');
 export function baseParse(pugCode: string) {
 
 	const fileName = 'foo.pug';
-	const pugTextDocument = TextDocument.create(shared.fsPathToUri('foo.pug'), 'jade', 0, pugCode);
+	const pugTextDocument = TextDocument.create('file:///' + fileName, 'jade', 0, pugCode);
 	const codeGen = new CodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
 	let error: {
 		code: string,
@@ -230,12 +229,12 @@ export function baseParse(pugCode: string) {
 		for (const token of tokens) {
 			if (token.type === 'newline' || token.type === 'outdent') {
 				let currentLine = token.loc.start.line - 2;
-				let prevLine = shared.getLineText(pugTextDocument, currentLine);
+				let prevLine = getLineText(pugTextDocument, currentLine);
 				while (prevLine.trim() === '') {
 					ends.push(pugTextDocument.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
 					if (currentLine <= 0) break;
 					currentLine--;
-					prevLine = shared.getLineText(pugTextDocument, currentLine);
+					prevLine = getLineText(pugTextDocument, currentLine);
 				}
 			}
 		}
@@ -327,6 +326,14 @@ export function baseParse(pugCode: string) {
 			end,
 		};
 	}
+}
+
+function getLineText(document: TextDocument, line: number) {
+	const text = document.getText({
+		start: { line: line, character: 0 },
+		end: { line: line + 1, character: 0 },
+	});
+	return text.substr(0, text.length - 1);
 }
 
 export type Node = BlockNode | TagNode | TextNode | CommentNode | BlockCommentNode;
