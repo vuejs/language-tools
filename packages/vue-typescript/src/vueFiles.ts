@@ -34,13 +34,13 @@ export function createVueFiles() {
 		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
 				if (embedded.file.lsType === 'nonTs') {
-					nonTs.set(embedded.file.fileName, embedded);
+					nonTs.set(embedded.file.fileName.toLowerCase(), embedded);
 				}
 				else if (embedded.file.lsType === 'script') {
-					script.set(embedded.file.fileName, embedded);
+					script.set(embedded.file.fileName.toLowerCase(), embedded);
 				}
 				else if (embedded.file.lsType === 'template') {
-					template.set(embedded.file.fileName, embedded);
+					template.set(embedded.file.fileName.toLowerCase(), embedded);
 				}
 			}
 		}
@@ -57,7 +57,7 @@ export function createVueFiles() {
 			for (const key in vueFiles) {
 				const sourceFile = vueFiles[key]!;
 				for (const { file, teleport } of sourceFile.refs.teleports.value) {
-					map.set(file.fileName, teleport);
+					map.set(file.fileName.toLowerCase(), teleport);
 				}
 			}
 			return map;
@@ -68,7 +68,7 @@ export function createVueFiles() {
 				const sourceFile = vueFiles[key]!;
 				const embeddedFile = sourceFile.refs.sfcScriptForScriptLs.file.value;
 				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleport.value;
-				map.set(embeddedFile.fileName, sourceMap);
+				map.set(embeddedFile.fileName.toLowerCase(), sourceMap);
 			}
 			return map;
 		}),
@@ -85,7 +85,7 @@ export function createVueFiles() {
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
 
-		getTeleport: untrack((lsType: 'script' | 'template', fileName: string) => teleports[lsType].value.get(fileName)),
+		getTeleport: untrack((lsType: 'script' | 'template', fileName: string) => teleports[lsType].value.get(fileName.toLowerCase())),
 		getEmbeddeds: untrack(function* (
 			lsType: 'script' | 'template' | 'nonTs',
 		) {
@@ -109,7 +109,7 @@ export function createVueFiles() {
 			if (end === undefined)
 				end = start;
 
-			const embedded = sourceMapsByFileNameAndLsType.value[lsType].get(fileName);
+			const embedded = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
 
 			if (embedded) {
 
@@ -144,7 +144,7 @@ export function createVueFiles() {
 			lsType: 'script' | 'template' | 'nonTs',
 			fileName: string,
 		) {
-			return sourceMapsByFileNameAndLsType.value[lsType].get(fileName);
+			return sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
 		}),
 	};
 }

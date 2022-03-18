@@ -256,7 +256,7 @@ export function createTypeScriptRuntime(options: {
         }
         function getScriptSnapshot(fileName: string) {
             const version = getScriptVersion(fileName);
-            const cache = scriptSnapshots.get(fileName);
+            const cache = scriptSnapshots.get(fileName.toLowerCase());
             if (cache && cache[0] === version) {
                 return cache[1];
             }
@@ -268,7 +268,7 @@ export function createTypeScriptRuntime(options: {
             if (embedded) {
                 const text = embedded.file.content;
                 const snapshot = ts.ScriptSnapshot.fromString(text);
-                scriptSnapshots.set(fileName, [version, snapshot]);
+                scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
                 return snapshot;
             }
             let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
@@ -279,7 +279,7 @@ export function createTypeScriptRuntime(options: {
                     tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any')
                     tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
                 }
-                scriptSnapshots.set(fileName, [version, tsScript]);
+                scriptSnapshots.set(fileName.toLowerCase(), [version, tsScript]);
                 return tsScript;
             }
         }
