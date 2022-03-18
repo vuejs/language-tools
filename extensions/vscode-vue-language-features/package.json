@@ -637,7 +637,7 @@
 		"@vue/compiler-sfc": "^3.2.27",
 		"@vue/reactivity": "^3.2.27",
 		"esbuild": "latest",
-		"upath": "^2.0.1",
+		"path-browserify": "^1.0.1",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.0-next.8",
 		"vscode-nls": "5.0.0"

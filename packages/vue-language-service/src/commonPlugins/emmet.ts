@@ -1,8 +1,6 @@
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as emmet from '@vscode/emmet-helper';
 
-export const triggerCharacters = []; // TODO
-
 export default function (host: {
     getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
 }): EmbeddedLanguageServicePlugin {

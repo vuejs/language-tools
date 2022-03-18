@@ -1,12 +1,16 @@
+import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vueTs from '@volar/vue-typescript';
+import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { createBasicRuntime } from './basicRuntime';
 import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
 import usePrettierPlugin from './commonPlugins/prettier';
 import useHtmlFormatPlugin from './commonPlugins/prettyhtml';
-import usePugPlugin, { createPugDocuments } from './commonPlugins/pug';
+import usePugPlugin from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
 import useSassFormatPlugin from './commonPlugins/sassFormatter';
 import useTsPlugin, { isTsDocument } from './commonPlugins/typescript';
@@ -18,18 +22,13 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
+import { getTsSettings } from './tsConfigs';
 import { DocumentServiceRuntimeContext } from './types';
 import * as sharedServices from './utils/sharedLs';
+import { parseVueDocument, VueDocument } from './vueDocuments';
 import useAutoWrapParenthesesPlugin from './vuePlugins/autoWrapParentheses';
 import useVuePlugin from './vuePlugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
-import * as json from 'vscode-json-languageservice';
-import { getTsSettings } from './tsConfigs';
-import type * as html from 'vscode-html-languageservice';
-import { createBasicRuntime } from './basicRuntime';
-import * as shared from '@volar/shared';
-import { parseVueDocument, VueDocument } from './vueDocuments';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -45,12 +44,8 @@ export function getDocumentService(
 	const services = createBasicRuntime(fileSystemProvider);
 	let tsLs: ts2.LanguageService;
 
-	const jsonLs = json.getLanguageService({});
 	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
 	const tsSettings = getTsSettings(_getSettings);
-
-	// embedded documents
-	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
@@ -64,17 +59,14 @@ export function getDocumentService(
 	}));
 	const pugPlugin = usePugPlugin({
 		getSettings: _getSettings,
-		getPugLs: () => services.pugLs,
-		pugDocuments,
+		htmlLs: services.htmlLs,
 	});
 	const cssPlugin = useCssPlugin({
 		getSettings: _getSettings,
 		getCssLs: services.getCssLs,
 		getStylesheet: services.getStylesheet
 	});
-	const jsonPlugin = useJsonPlugin({
-		getJsonLs: () => jsonLs,
-	});
+	const jsonPlugin = useJsonPlugin({});
 	const tsPlugin = useTsPlugin({
 		getTsLs: () => tsLs,
 	});

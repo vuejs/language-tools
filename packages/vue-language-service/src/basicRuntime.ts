@@ -3,7 +3,6 @@ import { TextRange } from '@volar/vue-code-gen/out/types';
 import * as css from 'vscode-css-languageservice';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as pug from '@volar/pug-language-service';
 import { findClassNames } from './utils/cssClasses';
 import { EmbeddedFile } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
@@ -23,7 +22,6 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
     const cssLs = css.getCSSLanguageService({ fileSystemProvider });
     const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
     const lessLs = css.getLESSLanguageService({ fileSystemProvider });
-    const pugLs = pug.getLanguageService(htmlLs);
     const postcssLs: css.LanguageService = {
         ...scssLs,
         doValidation: (document, stylesheet, documentSettings) => {
@@ -43,7 +41,6 @@ export function createBasicRuntime(fileSystemProvider: html.FileSystemProvider |
 
     return {
         htmlLs,
-        pugLs,
         getCssLs,
         getStylesheet,
         getCssVBindRanges,

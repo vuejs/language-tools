@@ -22,5 +22,8 @@
 		"@volar/vue-code-gen": "0.33.2",
 		"@vue/compiler-sfc": "^3.2.27",
 		"@vue/reactivity": "^3.2.27"
+	},
+	"browser": {
+		"./out/plugins/pug.js": "./out/plugins/empty.js"
 	}
 }

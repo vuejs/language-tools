@@ -3,15 +3,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
-// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
-export const triggerCharacters = ['"', ':'];
-
 export default function (host: {
-    getJsonLs: () => json.LanguageService,
     schema?: json.JSONSchema,
+    schemaRequestService?: json.SchemaRequestService,
 }): EmbeddedLanguageServicePlugin {
 
     const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
+    const jsonLs = json.getLanguageService({ schemaRequestService: host.schemaRequestService });
 
     return {
 
@@ -20,65 +18,65 @@ export default function (host: {
 
                 const documentLanguageSettings = undefined; // await getSettings(); // TODO
 
-                return host.getJsonLs().doValidation(document, jsonDocument, documentLanguageSettings, host.schema) as Promise<vscode.Diagnostic[]>;
+                return jsonLs.doValidation(document, jsonDocument, documentLanguageSettings, host.schema) as Promise<vscode.Diagnostic[]>;
             });
         },
 
         doComplete(document, position, context) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().doComplete(document, position, jsonDocument);
+                return jsonLs.doComplete(document, position, jsonDocument);
             });
         },
 
         doCompleteResolve(item) {
-            return host.getJsonLs().doResolve(item);
+            return jsonLs.doResolve(item);
         },
 
         doHover(document, position) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().doHover(document, position, jsonDocument);
+                return jsonLs.doHover(document, position, jsonDocument);
             });
         },
 
         findDefinition(document, position) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().findDefinition(document, position, jsonDocument);
+                return jsonLs.findDefinition(document, position, jsonDocument);
             });
         },
 
         findDocumentLinks(document) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().findLinks(document, jsonDocument);
+                return jsonLs.findLinks(document, jsonDocument);
             });
         },
 
         findDocumentSymbols(document) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().findDocumentSymbols(document, jsonDocument);
+                return jsonLs.findDocumentSymbols(document, jsonDocument);
             });
         },
 
         findDocumentColors(document) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().findDocumentColors(document, jsonDocument);
+                return jsonLs.findDocumentColors(document, jsonDocument);
             });
         },
 
         getColorPresentations(document, color, range) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().getColorPresentations(document, jsonDocument, color, range);
+                return jsonLs.getColorPresentations(document, jsonDocument, color, range);
             });
         },
 
         getFoldingRanges(document) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().getFoldingRanges(document);
+                return jsonLs.getFoldingRanges(document);
             });
         },
 
         getSelectionRanges(document, positions) {
             return worker(document, (jsonDocument) => {
-                return host.getJsonLs().getSelectionRanges(document, positions, jsonDocument);
+                return jsonLs.getSelectionRanges(document, positions, jsonDocument);
             });
         },
 
@@ -92,7 +90,7 @@ export default function (host: {
                     );
                 }
 
-                return host.getJsonLs().format(document, range, options);
+                return jsonLs.format(document, range, options);
             });
         },
     };
@@ -119,7 +117,7 @@ export default function (host: {
             }
         }
 
-        const doc = host.getJsonLs().parseJSONDocument(textDocument);
+        const doc = jsonLs.parseJSONDocument(textDocument);
         jsonDocuments.set(textDocument, [textDocument.version, doc]);
 
         return doc;

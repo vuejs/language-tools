@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { compile, NodeTypes } from '@vue/compiler-dom';
-import * as path from 'upath';
+import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
@@ -311,7 +311,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					query += encodeURIComponent(value);
 				}
 			}
-			else if (customBlock.type === 'preview-target' && customBlock.attrs.path) {
+			else if (customBlock.type === 'preview-target' && typeof customBlock.attrs.path === 'string') {
 				fileName = path.resolve(path.dirname(fileName), customBlock.attrs.path);
 			}
 		}

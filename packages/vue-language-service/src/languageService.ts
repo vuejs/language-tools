@@ -10,14 +10,14 @@ import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createBasicRuntime } from './basicRuntime';
-import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './commonPlugins/css';
-import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './commonPlugins/directiveComment';
-import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './commonPlugins/emmet';
-import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './commonPlugins/html';
-import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './commonPlugins/jsDoc';
-import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './commonPlugins/json';
-import usePugPlugin, { createPugDocuments, triggerCharacters as pugTriggerCharacters } from './commonPlugins/pug';
-import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './commonPlugins/typescript';
+import useCssPlugin from './commonPlugins/css';
+import useDirectiveCommentPlugin from './commonPlugins/directiveComment';
+import useEmmetPlugin from './commonPlugins/emmet';
+import useHtmlPlugin from './commonPlugins/html';
+import useJsDocPlugin from './commonPlugins/jsDoc';
+import useJsonPlugin from './commonPlugins/json';
+import usePugPlugin from './commonPlugins/pug';
+import useTsPlugin from './commonPlugins/typescript';
 import * as tagNameCase from './ideFeatures/tagNameCase';
 import * as autoInsert from './languageFuatures/autoInsert';
 import * as callHierarchy from './languageFuatures/callHierarchy';
@@ -49,13 +49,20 @@ import useReferencesCodeLensPlugin from './vuePlugins/referencesCodeLens';
 import useRefSugarConversionsPlugin from './vuePlugins/refSugarConversions';
 import useScriptSetupConversionsPlugin from './vuePlugins/scriptSetupConversions';
 import useTagNameCasingConversionsPlugin from './vuePlugins/tagNameCasingConversions';
-import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './vuePlugins/vue';
+import useVuePlugin from './vuePlugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './vuePlugins/vueTemplateLanguage';
 // import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
 export type LanguageServicePlugin = ReturnType<typeof defineLanguageServicePlugin>;
+
+const directiveCommentTriggerCharacters = ['@'];
+const jsDocTriggerCharacters = ['*'];
+const cssTriggerCharacters = ['/', '-', ':']; // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
+const htmlTriggerCharacters = ['.', ':', '<', '"', '=', '/']; // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
+const jsonTriggerCharacters = ['"', ':']; // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
+const vueTriggerCharacters = htmlTriggerCharacters;
 
 let pluginId = 0;
 
@@ -72,7 +79,7 @@ function defineLanguageServicePlugin(plugin: EmbeddedLanguageServicePlugin, cont
 
 export function getSemanticTokenLegend() {
 
-	const tsLegend = getTsSemanticTokenLegend();
+	const tsLegend = ts2.getSemanticTokenLegend();
 	const tokenTypesLegend = [
 		...tsLegend.tokenTypes,
 		...vueTemplateSemanticTokenTypes,
@@ -88,14 +95,12 @@ export function getSemanticTokenLegend() {
 export function getTriggerCharacters(tsVersion: string) {
 	return [...new Set([
 		...vueTriggerCharacters,
-		...getTsTriggerCharacters(tsVersion),
+		...ts2.getTriggerCharacters(tsVersion),
 		...jsonTriggerCharacters,
 		...jsDocTriggerCharacters,
 		...cssTriggerCharacters,
 		...htmlTriggerCharacters,
-		...pugTriggerCharacters,
 		...directiveCommentTriggerCharacters,
-		...emmetTriggerCharacters,
 		...vueTemplateLanguageTriggerCharacters,
 	])];
 }
@@ -133,13 +138,8 @@ export function createLanguageService(
 	const templateTsLsHost = tsRuntime.getTsLsHost('template');
 	const templateTsLs = templateTsLsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsLsHost, templateTsLsRaw, tsSettings) : undefined;
 	const blockingRequests = new Set<Promise<any>>();
-	const tsTriggerCharacters = getTsTriggerCharacters(ts.version);
+	const tsTriggerCharacters = ts2.getTriggerCharacters(ts.version);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
-
-	const jsonLs = json.getLanguageService({ schemaRequestService });
-
-	// embedded documents
-	const pugDocuments = createPugDocuments(services.pugLs);
 
 	// plugins
 	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
@@ -167,11 +167,10 @@ export function createLanguageService(
 		'jade',
 		usePugPlugin({
 			getSettings: _getSettings,
-			getPugLs: () => services.pugLs,
+			htmlLs: services.htmlLs,
 			documentContext,
-			pugDocuments,
 		}),
-		pugTriggerCharacters,
+		[],
 	);
 	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
@@ -186,8 +185,8 @@ export function createLanguageService(
 	);
 	const jsonPlugin = defineLanguageServicePlugin(
 		useJsonPlugin({
-			getJsonLs: () => jsonLs,
 			schema: undefined, // TODO
+			schemaRequestService,
 		}),
 		{
 			triggerCharacters: cssTriggerCharacters,
@@ -198,7 +197,7 @@ export function createLanguageService(
 			getSettings: _getSettings,
 		}),
 		{
-			triggerCharacters: emmetTriggerCharacters,
+			triggerCharacters: [],
 			isAdditionalCompletion: true,
 		},
 	);
@@ -443,21 +442,21 @@ export function createLanguageService(
 			return document;
 		}
 	}
-	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguageServicePlugin, triggerCharacters: string[]) {
+	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T, triggerCharacters: string[]) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
 				getSettings: _getSettings,
 				ts,
 				htmlLs: services.htmlLs,
 				getSemanticTokenLegend,
-				getScanner: (document) => {
+				getScanner: (document): html.Scanner | undefined => {
 					if (document.languageId === 'html') {
 						return services.htmlLs.createScanner(document.getText());
 					}
 					else if (document.languageId === 'jade') {
-						const pugDocument = pugDocuments.get(document);
+						const pugDocument = 'getPugDocument' in templateLanguagePlugin ? templateLanguagePlugin.getPugDocument(document) : undefined;
 						if (pugDocument) {
-							return services.pugLs.createScanner(pugDocument);
+							return 'pugLs' in templateLanguagePlugin ? templateLanguagePlugin.pugLs.createScanner(pugDocument) : undefined;
 						}
 					}
 				},

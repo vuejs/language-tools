@@ -43,7 +43,7 @@ importers:
       '@vue/compiler-sfc': ^3.2.27
       '@vue/reactivity': ^3.2.27
       esbuild: latest
-      upath: ^2.0.1
+      path-browserify: ^1.0.1
       vsce: latest
       vscode-languageclient: ^8.0.0-next.8
       vscode-nls: 5.0.0
@@ -55,7 +55,7 @@ importers:
       '@vue/compiler-sfc': 3.2.31
       '@vue/reactivity': 3.2.31
       esbuild: 0.14.27
-      upath: 2.0.1
+      path-browserify: 1.0.1
       vsce: 2.7.0
       vscode-languageclient: 8.0.0-next.12
       vscode-nls: 5.0.0
@@ -7139,6 +7139,10 @@ packages:
   /parseurl/1.3.3:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
+    dev: true
+
+  /path-browserify/1.0.1:
+    resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
     dev: true
 
   /path-exists/3.0.0:

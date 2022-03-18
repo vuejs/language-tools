@@ -7,8 +7,6 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 import { VueDocument } from '../vueDocuments';
 
-export { triggerCharacters } from '../commonPlugins/html';
-
 const dataProvider = html.newHTMLDataProvider('vue', {
     version: 1.1,
     tags: [

@@ -3,8 +3,6 @@ import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 
-export { getSemanticTokenLegend, getTriggerCharacters } from '@volar/typescript-language-service';
-
 export default function (host: {
     getTsLs: () => ts2.LanguageService,
     baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
