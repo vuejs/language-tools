@@ -128,7 +128,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 export function loadCustomPlugins(dir: string) {
 	try {
 		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
-		const config: { plugins?: vue.EmbeddedLanguagePlugin[] } = require(configPath);
+		const config: { plugins?: vue.EmbeddedLanguageServicePlugin[] } = require(configPath);
 		return config.plugins ?? []
 	}
 	catch (err) {

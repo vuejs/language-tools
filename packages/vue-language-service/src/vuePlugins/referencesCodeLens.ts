@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as shared from '@volar/shared';
 import { VueDocument } from '../vueDocuments';
 
@@ -18,7 +18,7 @@ export default function (host: {
     getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getVueDocument(uri: string): VueDocument | undefined,
     findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

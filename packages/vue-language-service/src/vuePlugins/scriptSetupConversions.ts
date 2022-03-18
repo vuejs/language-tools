@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
 import type { TextRange } from '@volar/vue-code-gen/out/types';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 import { VueDocument } from '../vueDocuments';
 
 enum Commands {
@@ -23,7 +23,7 @@ export default function (host: {
     getVueDocument(uri: string): VueDocument | undefined,
     doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
     doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

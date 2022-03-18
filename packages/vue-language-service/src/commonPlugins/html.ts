@@ -1,11 +1,11 @@
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
 export const triggerCharacters = ['.', ':', '<', '"', '=', '/'];
 
-export default function (host: Parameters<typeof htmlPluginBase>[0]): EmbeddedLanguagePlugin {
+export default function (host: Parameters<typeof htmlPluginBase>[0]): EmbeddedLanguageServicePlugin {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
 
@@ -38,7 +38,7 @@ export function htmlPluginBase(
         documentContext?: html.DocumentContext,
     },
     getHtmlDocument: (document: TextDocument) => html.HTMLDocument | undefined,
-): EmbeddedLanguagePlugin {
+): EmbeddedLanguageServicePlugin {
 
     return {
 

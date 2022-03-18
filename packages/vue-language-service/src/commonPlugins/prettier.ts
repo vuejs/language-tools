@@ -1,8 +1,8 @@
 import * as prettier from 'prettier';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
-export default function (allowLanguageIds: prettier.BuiltInParserName[]): EmbeddedLanguagePlugin {
+export default function (allowLanguageIds: prettier.BuiltInParserName[]): EmbeddedLanguageServicePlugin {
 
     return {
 

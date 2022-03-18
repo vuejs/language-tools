@@ -50,7 +50,7 @@ export function register(
 
 			if (maped) {
 
-				let results: any[] = [];
+				let results: ts.Diagnostic[] = [];
 
 				const embeddeds = maped.vueFile.getAllEmbeddeds();
 

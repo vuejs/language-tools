@@ -1,9 +1,9 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 const pugBeautify = require('@johnsoncodehk/pug-beautify');
 
-export default function (): EmbeddedLanguagePlugin {
+export default function (): EmbeddedLanguageServicePlugin {
 
     return {
 

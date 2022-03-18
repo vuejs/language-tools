@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -59,7 +59,7 @@ export type LanguageServicePlugin = ReturnType<typeof defineLanguageServicePlugi
 
 let pluginId = 0;
 
-function defineLanguageServicePlugin(plugin: EmbeddedLanguagePlugin, context?: {
+function defineLanguageServicePlugin(plugin: EmbeddedLanguageServicePlugin, context?: {
 	isAdditionalCompletion?: boolean,
 	triggerCharacters?: string[],
 }) {
@@ -105,7 +105,7 @@ export function createLanguageService(
 	vueLsHost: LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
-	_customPlugins: EmbeddedLanguagePlugin[],
+	_customPlugins: EmbeddedLanguageServicePlugin[],
 	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
@@ -443,7 +443,7 @@ export function createLanguageService(
 			return document;
 		}
 	}
-	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguagePlugin, triggerCharacters: string[]) {
+	function _useVueTemplateLanguagePlugin(languageId: string, templateLanguagePlugin: EmbeddedLanguageServicePlugin, triggerCharacters: string[]) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
 				getSettings: _getSettings,

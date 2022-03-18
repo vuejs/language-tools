@@ -1,4 +1,4 @@
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
@@ -40,7 +40,7 @@ export default function (host: {
     getPugLs(): pug.LanguageService,
     documentContext?: html.DocumentContext,
     pugDocuments: PugDocuments,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

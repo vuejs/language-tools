@@ -1,6 +1,6 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import { isCharacterTyping } from './autoCompleteRefs';
 import { VueDocument } from '../vueDocuments';
 
@@ -8,7 +8,7 @@ export default function (host: {
 	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument: (document: TextDocument) => VueDocument | undefined,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
 	return {
 

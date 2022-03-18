@@ -12,7 +12,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 export const semanticTokenTypes = [
     'componentTag',
@@ -67,7 +67,7 @@ export default function (host: {
     getScanner(document: TextDocument): html.Scanner | undefined,
     scriptTsLs: ts2.LanguageService,
     templateTsLs: ts2.LanguageService | undefined,
-    templateLanguagePlugin: EmbeddedLanguagePlugin,
+    templateLanguagePlugin: EmbeddedLanguageServicePlugin,
     isSupportedDocument: (document: TextDocument) => boolean,
     getNameCases?: (uri: string) => Promise<{
         tag: 'both' | 'kebabCase' | 'pascalCase',
@@ -80,7 +80,7 @@ export default function (host: {
     updateTemplateScripts: () => void,
     tsSettings: ts2.Settings,
     tsRuntime: TypeScriptRuntime,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
     const autoImportPositions = new WeakSet<vscode.Position>();

@@ -1,10 +1,10 @@
 import * as prettyhtml from '@starptech/prettyhtml';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 export default function (host: {
     getPrintWidth: (uri: string) => number | Promise<number>,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

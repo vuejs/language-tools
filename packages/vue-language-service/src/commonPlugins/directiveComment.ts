@@ -1,4 +1,4 @@
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as ts2 from '@volar/typescript-language-service';
 import { isTsDocument } from './typescript';
 
@@ -6,7 +6,7 @@ export const triggerCharacters = ['@'];
 
 export default function (host: {
     getTsLs(): ts2.LanguageService,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

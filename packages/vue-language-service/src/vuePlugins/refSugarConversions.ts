@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
 import { margeWorkspaceEdits } from '../languageFuatures/rename';
-import { EmbeddedLanguagePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 import { isBlacklistNode, isRefType } from './autoCompleteRefs';
 import { getAddMissingImportsEdits } from './scriptSetupConversions';
 import { VueDocument } from '../vueDocuments';
@@ -33,7 +33,7 @@ export default function (host: {
     doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
     doRename: (uri: string, position: vscode.Position, newName: string) => Promise<vscode.WorkspaceEdit | undefined>,
     doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

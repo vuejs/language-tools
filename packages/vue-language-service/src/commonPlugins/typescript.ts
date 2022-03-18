@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 
@@ -8,7 +8,7 @@ export { getSemanticTokenLegend, getTriggerCharacters } from '@volar/typescript-
 export default function (host: {
     getTsLs: () => ts2.LanguageService,
     baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

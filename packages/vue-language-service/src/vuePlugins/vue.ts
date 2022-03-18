@@ -1,4 +1,4 @@
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
@@ -98,7 +98,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
     getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
     getVueDocument(document: TextDocument): VueDocument | undefined,
     scriptTsLs: ts2.LanguageService | undefined,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
     const htmlLs = html.getLanguageService();

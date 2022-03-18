@@ -1,6 +1,6 @@
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
 // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
@@ -9,7 +9,7 @@ export const triggerCharacters = ['"', ':'];
 export default function (host: {
     getJsonLs: () => json.LanguageService,
     schema?: json.JSONSchema,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 

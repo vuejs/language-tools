@@ -5,13 +5,13 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '../commonPlugins/typescript';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 export default function (host: {
 	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getTsLs: () => ts2.LanguageService,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 
@@ -50,7 +50,7 @@ export default function (host: {
 	}
 }
 
-export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguagePlugin['doAutoInsert']>>[2]) {
+export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguageServicePlugin['doAutoInsert']>>[2]) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;

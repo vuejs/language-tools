@@ -23,7 +23,7 @@ import * as sharedServices from './utils/sharedLs';
 import useAutoWrapParenthesesPlugin from './vuePlugins/autoWrapParentheses';
 import useVuePlugin from './vuePlugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as json from 'vscode-json-languageservice';
 import { getTsSettings } from './tsConfigs';
 import type * as html from 'vscode-html-languageservice';
@@ -38,7 +38,7 @@ export function getDocumentService(
 	getPrintWidth: (uri: string) => Promise<number>,
 	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
-	customPlugins: EmbeddedLanguagePlugin[],
+	customPlugins: EmbeddedLanguageServicePlugin[],
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
@@ -173,7 +173,7 @@ export function getDocumentService(
 	}
 }
 
-function patchHtmlFormat(htmlPlugin: EmbeddedLanguagePlugin) {
+function patchHtmlFormat(htmlPlugin: EmbeddedLanguageServicePlugin) {
 
 	const originalFormat = htmlPlugin.format;
 

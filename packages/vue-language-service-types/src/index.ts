@@ -19,7 +19,7 @@ export interface ExecuteCommandContext {
     applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
 }
 
-export type EmbeddedLanguagePlugin = {
+export type EmbeddedLanguageServicePlugin = {
     doValidation?(document: TextDocument, options: {
         semantic?: boolean;
         syntactic?: boolean;

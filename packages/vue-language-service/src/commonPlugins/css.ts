@@ -1,4 +1,4 @@
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import type * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
@@ -19,7 +19,7 @@ export default function (host: {
     getCssLs(lang: string): css.LanguageService | undefined,
     getStylesheet(document: TextDocument): css.Stylesheet | undefined,
     documentContext?: css.DocumentContext,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 

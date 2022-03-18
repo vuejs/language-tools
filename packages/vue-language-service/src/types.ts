@@ -1,6 +1,6 @@
 import type { TextDocument } from 'vscode-css-languageservice';
 import { LanguageServicePlugin } from './languageService';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import type * as ts2 from '@volar/typescript-language-service';
 import { VueDocument, VueDocuments } from './vueDocuments';
 
@@ -9,8 +9,8 @@ export { LanguageServiceHost } from '@volar/vue-typescript';
 export type DocumentServiceRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument(document: TextDocument): VueDocument | undefined,
-	getPlugins(): EmbeddedLanguagePlugin[],
-	getFormatPlugins(): EmbeddedLanguagePlugin[],
+	getPlugins(): EmbeddedLanguageServicePlugin[],
+	getFormatPlugins(): EmbeddedLanguageServicePlugin[],
 	updateTsLs(document: TextDocument): void,
 }
 

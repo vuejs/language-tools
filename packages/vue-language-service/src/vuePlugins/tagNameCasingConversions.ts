@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import { hyphenate } from '@vue/shared';
 import { VueDocument } from '../vueDocuments';
 
@@ -13,7 +13,7 @@ export type ConvertTagNameCasingCommandArgs = [
 export default function (host: {
     getVueDocument(uri: string): VueDocument | undefined,
     findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
-}): EmbeddedLanguagePlugin {
+}): EmbeddedLanguageServicePlugin {
 
     return {
 
