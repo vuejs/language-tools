@@ -479,8 +479,8 @@ export default function (host: {
                     if (hyphenate(name).startsWith('on-')) {
 
                         const propNameBase = name.startsWith('on-')
-                            ? name.substr('on-'.length)
-                            : (name['on'.length].toLowerCase() + name.substr('onX'.length));
+                            ? name.slice('on-'.length)
+                            : (name['on'.length].toLowerCase() + name.slice('onX'.length));
                         const propKey = createInternalItemId('componentEvent', [componentName, propNameBase]);
 
                         attributes.push(

@@ -101,11 +101,11 @@ function installPreview(app: App) {
 				window.addEventListener('message', event => {
 					if (event.data?.command === 'updateUrl') {
 						url.value = new URL(event.data.data);
-						_file.value = url.value.hash.substr(1);
+						_file.value = url.value.hash.slice(1);
 					}
 				});
 				const url = ref(new URL(location.href));
-				const _file = ref(url.value.hash.substr(1));
+				const _file = ref(url.value.hash.slice(1));
 				const file = computed(() => {
 					// fix windows path for vite
 					let path = _file.value.replace(/\\/g, '/');

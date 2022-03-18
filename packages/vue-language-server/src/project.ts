@@ -92,7 +92,7 @@ export async function createProject(
 					runtimeEnv.fileSystemProvide,
 					(uri) => {
 
-						const protocol = uri.substr(0, uri.indexOf(':'));
+						const protocol = uri.substring(0, uri.indexOf(':'));
 
 						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
 						if (builtInHandler) {

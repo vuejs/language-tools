@@ -20,8 +20,8 @@ export default function (): EmbeddedLanguagePlugin {
 
             const prefixesLength = pugCode.length - pugCode.trimStart().length;
             const suffixesLength = pugCode.length - pugCode.trimEnd().length;
-            const prefixes = pugCode.substr(0, prefixesLength);
-            const suffixes = pugCode.substr(pugCode.length - suffixesLength);
+            const prefixes = pugCode.slice(0, prefixesLength);
+            const suffixes = pugCode.slice(pugCode.length - suffixesLength);
             const newPugCode: string = pugBeautify(pugCode, {
                 tab_size: options.tabSize,
                 fill_tab: !options.insertSpaces,

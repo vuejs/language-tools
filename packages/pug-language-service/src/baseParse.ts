@@ -214,7 +214,7 @@ export function baseParse(pugCode: string) {
 			if (typeof attr.val !== 'boolean') {
 				codeGen.addText(' ');
 				codeGen.addCode(
-					attr.val.substr(1, attr.val.length - 2), // remove "
+					attr.val.slice(1, -1), // remove "
 					getDocRange(attr.line, attr.column + 1, attr.val.length - 2),
 					SourceMap.Mode.Offset,
 					undefined
@@ -285,7 +285,7 @@ export function baseParse(pugCode: string) {
 						if (typeof attrToken.val === 'string' && attrText.indexOf('=') >= 0) {
 							let valText = attrToken.val;
 							if (valText.startsWith('`') && valText.endsWith('`')) {
-								valText = `"${valText.substr(1, valText.length - 2)}"`;
+								valText = `"${valText.slice(1, -1)}"`;
 							}
 							valText = valText.replace(/ \\\n/g, '//\n');
 							text += attrText.substring(0, attrText.lastIndexOf(attrToken.val)) + valText;

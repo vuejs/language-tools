@@ -111,5 +111,5 @@ export function getLineText(document: TextDocument, line: number) {
 		start: { line: line, character: 0 },
 		end: { line: line + 1, character: 0 },
 	});
-	return text.substr(0, text.length - 1);
+	return text.slice(0, -1);
 }

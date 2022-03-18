@@ -109,11 +109,11 @@ function __installPreview(app) {
                     var _a;
                     if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'updateUrl') {
                         url.value = new URL(event.data.data);
-                        _file.value = url.value.hash.substr(1);
+                        _file.value = url.value.hash.slice(1);
                     }
                 });
                 var url = ref(new URL(location.href));
-                var _file = ref(url.value.hash.substr(1));
+                var _file = ref(url.value.hash.slice(1));
                 var file = computed(function () {
                     // fix windows path for vite
                     var path = _file.value.replace(/\\\\\\\\/g, '/');
