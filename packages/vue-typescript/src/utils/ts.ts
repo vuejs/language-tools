@@ -1,7 +1,7 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
 import { createPackageJsonCache, canCreatePackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
-import * as path from 'upath';
+import * as path from 'path';
 
 export function injectCacheLogicToLanguageServiceHost(
 	ts: typeof import('typescript/lib/tsserverlibrary'),

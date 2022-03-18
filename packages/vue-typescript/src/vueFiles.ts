@@ -1,6 +1,6 @@
 import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import { computed, shallowReactive } from '@vue/reactivity';
-import * as path from 'upath';
+import * as path from 'path';
 import * as localTypes from './utils/localTypes';
 import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';

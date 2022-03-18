@@ -1,7 +1,7 @@
 import { computed, Ref } from '@vue/reactivity';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
-import * as upath from 'upath';
+import * as path from 'path';
 import { SearchTexts } from '../utils/string';
 import { getVueLibraryName } from '../utils/localTypes';
 import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
@@ -17,7 +17,7 @@ export function useSfcEntryForTemplateLs(
 
 	const file = computed(() => {
 
-		const baseFileName = upath.basename(fileName);
+		const baseFileName = path.basename(fileName);
 		const tsScriptFileName = hasTsDoc.value ? '__VLS_script_ts' : '__VLS_script';
 
 		let content = '';
