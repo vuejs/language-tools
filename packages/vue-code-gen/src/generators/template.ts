@@ -171,7 +171,7 @@ export function generate(
 
 		const name1 = tagName; // hello-world
 		const name2 = camelize(tagName); // helloWorld
-		const name3 = name2[0].toUpperCase() + name2.substr(1); // HelloWorld
+		const name3 = name2[0].toUpperCase() + name2.slice(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
 		if (!isScriptSetup) {
@@ -317,7 +317,7 @@ export function generate(
 							applyNewName(oldName, newName) {
 								const hName = hyphenate(newName);
 								if (hyphenate(newName).startsWith('on-')) {
-									return camelize(hName.substr('on-'.length));
+									return camelize(hName.slice('on-'.length));
 								}
 								return newName;
 							},
@@ -704,7 +704,7 @@ export function generate(
 											applyNewName(oldName, newName) {
 												const hName = hyphenate(newName);
 												if (hyphenate(newName).startsWith('on-')) {
-													return camelize(hName.substr('on-'.length));
+													return camelize(hName.slice('on-'.length));
 												}
 												return newName;
 											},

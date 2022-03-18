@@ -474,7 +474,7 @@ export function useSfcTemplateScript(
 }
 
 function beforeCssRename(newName: string) {
-	return newName.startsWith('.') ? newName.substr(1) : newName;
+	return newName.startsWith('.') ? newName.slice(1) : newName;
 }
 function doCssRename(oldName: string, newName: string) {
 	return '.' + newName;
