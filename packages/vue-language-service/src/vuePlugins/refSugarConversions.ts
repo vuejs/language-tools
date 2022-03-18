@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
 import { margeWorkspaceEdits } from '../languageFuatures/rename';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 import { isBlacklistNode, isRefType } from './autoCompleteRefs';
 import { getAddMissingImportsEdits } from './scriptSetupConversions';
 import { VueDocument } from '../vueDocuments';
@@ -21,7 +21,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (host: {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+    configurationHost: ConfigurationHost | undefined,
     getVueDocument(uri: string): VueDocument | undefined,
     // for use ref sugar
     ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -40,7 +40,7 @@ export default function (host: {
         doCodeLens(document) {
             return worker(document.uri, async (vueDocument) => {
 
-                const isEnabled = await host.getSettings<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+                const isEnabled = await host.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
                 if (!isEnabled)
                     return;

@@ -2,21 +2,28 @@ import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
+import useHtmlPlugin from './html';
 
 export default function (host: {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+    configurationHost: {
+        getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
+        onDidChangeConfiguration: (cb: () => void) => void,
+        rootUris: string[],
+    } | undefined,
     documentContext?: html.DocumentContext,
+    htmlPlugin: ReturnType<typeof useHtmlPlugin>,
+}): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
     htmlLs: html.LanguageService,
-}): EmbeddedLanguageServicePlugin & {
     pugLs: pug.LanguageService,
     getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
 } {
 
-    const pugLs = pug.getLanguageService(host.htmlLs);
+    const pugLs = pug.getLanguageService(host.htmlPlugin.htmlLs);
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
 
+        ...host.htmlPlugin,
         pugLs,
         getPugDocument,
 
@@ -50,7 +57,7 @@ export default function (host: {
         doHover(document, position) {
             return worker(document, async (pugDocument) => {
 
-                const hoverSettings = await host.getSettings<html.HoverSettings>('html.hover', document.uri);
+                const hoverSettings = await host.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
                 return pugLs.doHover(pugDocument, position, hoverSettings);
             });

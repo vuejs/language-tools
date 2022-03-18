@@ -198,13 +198,10 @@ importers:
       '@volar/shared': 0.33.2
       '@volar/vue-language-service': 0.33.2
       '@volar/vue-typescript': 0.33.2
-      '@vscode/emmet-helper': ^2.8.3
       '@vue/shared': ^3.2.27
       request-light: ^0.5.7
       upath: ^2.0.1
-      vscode-css-languageservice: ^5.1.9
       vscode-html-languageservice: ^4.2.1
-      vscode-json-languageservice: ^4.1.10
       vscode-languageserver: ^8.0.0-next.6
       vscode-languageserver-protocol: ^3.17.0-next.12
       vscode-languageserver-textdocument: ^1.0.3
@@ -216,15 +213,11 @@ importers:
       '@vue/shared': 3.2.31
       request-light: 0.5.7
       upath: 2.0.1
+      vscode-html-languageservice: 4.2.1
       vscode-languageserver: 8.0.0-next.8
       vscode-languageserver-protocol: 3.17.0-next.14
       vscode-languageserver-textdocument: 1.0.4
       vscode-uri: 3.0.3
-    devDependencies:
-      '@vscode/emmet-helper': 2.8.4
-      vscode-css-languageservice: 5.1.13
-      vscode-html-languageservice: 4.2.1
-      vscode-json-languageservice: 4.2.0
 
   packages/vue-language-service:
     specifiers:
@@ -649,14 +642,17 @@ packages:
     resolution: {integrity: sha512-87pltuCPt99aL+y9xS6GPZ+Wmmyhll2WXH73gG/xpGcQ84DRnptBsI2r0BeIQ0EB/SQTOe2ANPqFqj3Rj5FOGA==}
     dependencies:
       '@emmetio/scanner': 1.0.0
+    dev: false
 
   /@emmetio/css-abbreviation/2.1.4:
     resolution: {integrity: sha512-qk9L60Y+uRtM5CPbB0y+QNl/1XKE09mSO+AhhSauIfr2YOx/ta3NJw2d8RtCFxgzHeRqFRr8jgyzThbu+MZ4Uw==}
     dependencies:
       '@emmetio/scanner': 1.0.0
+    dev: false
 
   /@emmetio/scanner/1.0.0:
     resolution: {integrity: sha512-8HqW8EVqjnCmWXVpqAOZf+EGESdkR27odcMMMGefgKXtar00SoYNSryGv//TELI4T3QFsECo78p+0lmalk/CFA==}
+    dev: false
 
   /@gar/promisify/1.1.2:
     resolution: {integrity: sha512-82cpyJyKRoQoRi+14ibCeGPu0CwypgtBAdBhq1WfvagpCZNKqwXbKwXllYSMG91DhmG4jt9gN8eP6lGOtozuaw==}
@@ -2090,6 +2086,7 @@ packages:
       vscode-languageserver-types: 3.16.0
       vscode-nls: 5.0.0
       vscode-uri: 2.1.2
+    dev: false
 
   /@vscode/test-web/0.0.22:
     resolution: {integrity: sha512-sm4WYidw26eFb1AReC8w5y4aOMdBb5ma5x3ukRJcun9iUB1ajz2nM18rxiYAVimUzrIMQHr9WqC8HYBYP8aNKQ==}
@@ -3570,6 +3567,7 @@ packages:
     dependencies:
       '@emmetio/abbreviation': 2.2.3
       '@emmetio/css-abbreviation': 2.1.4
+    dev: false
 
   /emoji-regex/7.0.3:
     resolution: {integrity: sha512-CwBLREIQ7LvYFB0WyRvwhq5N5qPhc6PMjD6bYggFlI5YyDgl+0vxq5VHbMOFqLg7hfWzmu8T5Z1QofhmTIhItA==}
@@ -5862,9 +5860,11 @@ packages:
 
   /jsonc-parser/2.3.1:
     resolution: {integrity: sha512-H8jvkz1O50L3dMZCsLqiuB2tA7muqbSg1AtGEkN0leAqGjsUzDJir3Zwr02BhqdcITPg3ei3mZ+HjMocAknhhg==}
+    dev: false
 
   /jsonc-parser/3.0.0:
     resolution: {integrity: sha512-fQzRfAbIBnR0IQvftw9FJveWiHp72Fg20giDrHz6TdfB12UH/uue0D3hm57UB5KgAVuniLMCaS8P1IMj9NR7cA==}
+    dev: false
 
   /jsonfile/6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
@@ -9145,6 +9145,7 @@ packages:
       vscode-languageserver-types: 3.16.0
       vscode-nls: 5.0.0
       vscode-uri: 3.0.3
+    dev: false
 
   /vscode-html-languageservice/4.2.1:
     resolution: {integrity: sha512-PgaToZVXJ44nFWEBuSINdDgVV6EnpC3MnXBsysR3O5TKcAfywbYeRGRy+Y4dVR7YeUgDvtb+JkJoSkaYC0mxXQ==}
@@ -9162,6 +9163,7 @@ packages:
       vscode-languageserver-types: 3.16.0
       vscode-nls: 5.0.0
       vscode-uri: 3.0.3
+    dev: false
 
   /vscode-jsonrpc/8.0.0-next.6:
     resolution: {integrity: sha512-6Ld3RYjygn5Ih7CkAtcAwiDQC+rakj2O+PnASfNyYv3sLmm44eJpEKzuPUN30Iy2UB09AZg8T6LBKWTJTEJDVw==}
@@ -9203,6 +9205,7 @@ packages:
 
   /vscode-uri/2.1.2:
     resolution: {integrity: sha512-8TEXQxlldWAuIODdukIb+TR5s+9Ds40eSJrw+1iDDA9IFORPjMELarNQE3myz5XIkWWpdprmJjm1/SxMlWOC8A==}
+    dev: false
 
   /vscode-uri/3.0.3:
     resolution: {integrity: sha512-EcswR2S8bpR7fD0YPeS7r2xXExrScVMxg4MedACaWHEtx9ftCF/qHG1xGkolzTPcEmjTavCQgbVzHUIdTMzFGA==}

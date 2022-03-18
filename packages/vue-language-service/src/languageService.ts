@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -9,7 +9,7 @@ import type * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createBasicRuntime } from './basicRuntime';
+import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './commonPlugins/css';
 import useDirectiveCommentPlugin from './commonPlugins/directiveComment';
 import useEmmetPlugin from './commonPlugins/emmet';
@@ -66,7 +66,7 @@ const vueTriggerCharacters = htmlTriggerCharacters;
 
 let pluginId = 0;
 
-function defineLanguageServicePlugin(plugin: EmbeddedLanguageServicePlugin, context?: {
+function defineLanguageServicePlugin<T extends EmbeddedLanguageServicePlugin>(plugin: T, context?: {
 	isAdditionalCompletion?: boolean,
 	triggerCharacters?: string[],
 }) {
@@ -110,8 +110,8 @@ export function createLanguageService(
 	vueLsHost: LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
+	configurationHost: ConfigurationHost | undefined,
 	_customPlugins: EmbeddedLanguageServicePlugin[],
-	getSettings?: <T> (section: string, scopeUri?: string) => Promise<T | undefined>,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
@@ -119,18 +119,16 @@ export function createLanguageService(
 ) {
 
 	const vueCompilerOptions = vueLsHost.getVueCompilationSettings?.() ?? {};
-	const services = createBasicRuntime(fileSystemProvider);
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
 		vueCompilerOptions,
-		getCssClasses: services.getCssClasses,
-		getCssVBindRanges: services.getCssVBindRanges,
+		getCssClasses: ef => stylesheetExtra.getCssClasses(ef),
+		getCssVBindRanges: ef => stylesheetExtra.getCssVBindRanges(ef),
 		vueLsHost: vueLsHost,
 		isTsPlugin: false,
 	});
 	const vueDocuments = parseVueDocuments(tsRuntime.vueFiles);
-	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
-	const tsSettings = getTsSettings(_getSettings);
+	const tsSettings = getTsSettings(configurationHost);
 	const documentContext = getDocumentContext();
 
 	const scriptTsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost('script'), tsRuntime.getTsLs('script'), tsSettings);
@@ -145,7 +143,7 @@ export function createLanguageService(
 	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
-			getSettings: _getSettings,
+			configurationHost,
 			getVueDocument: (document) => vueDocuments.get(document.uri),
 			scriptTsLs,
 			documentContext,
@@ -157,27 +155,26 @@ export function createLanguageService(
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
 		useHtmlPlugin({
-			getSettings: _getSettings,
-			getHtmlLs: () => services.htmlLs,
+			configurationHost,
 			documentContext,
+			fileSystemProvider,
 		}),
 		htmlTriggerCharacters,
 	);
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',
 		usePugPlugin({
-			getSettings: _getSettings,
-			htmlLs: services.htmlLs,
+			configurationHost,
+			htmlPlugin: vueTemplateHtmlPlugin,
 			documentContext,
 		}),
 		[],
 	);
 	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
-			getSettings: _getSettings,
-			getCssLs: services.getCssLs,
-			getStylesheet: services.getStylesheet,
+			configurationHost,
 			documentContext,
+			fileSystemProvider,
 		}),
 		{
 			triggerCharacters: cssTriggerCharacters,
@@ -194,7 +191,7 @@ export function createLanguageService(
 	);
 	const emmetPlugin = defineLanguageServicePlugin(
 		useEmmetPlugin({
-			getSettings: _getSettings,
+			configurationHost,
 		}),
 		{
 			triggerCharacters: [],
@@ -222,27 +219,27 @@ export function createLanguageService(
 	) : [];
 	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
-			getSettings: _getSettings,
+			configurationHost,
 			ts,
 			getTsLs: () => scriptTsLs,
 		}),
 	);
 	const referencesCodeLensPlugin = defineLanguageServicePlugin(
 		useReferencesCodeLensPlugin({
-			getSettings: _getSettings,
+			configurationHost,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 			findReference: async (...args) => findReferences_internal(...args),
 		}),
 	);
 	const htmlPugConversionsPlugin = defineLanguageServicePlugin(
 		useHtmlPugConversionsPlugin({
-			getSettings: _getSettings,
+			configurationHost,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 		}),
 	);
 	const scriptSetupConversionsPlugin = defineLanguageServicePlugin(
 		useScriptSetupConversionsPlugin({
-			getSettings: _getSettings,
+			configurationHost,
 			ts,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 			doCodeActions: async (...args) => doCodeActions_internal(...args),
@@ -251,7 +248,7 @@ export function createLanguageService(
 	);
 	const refSugarConversionsPlugin = defineLanguageServicePlugin(
 		useRefSugarConversionsPlugin({
-			getSettings: _getSettings,
+			configurationHost,
 			ts,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 			doCodeActions: async (...args) => doCodeActions_internal(...args),
@@ -292,6 +289,7 @@ export function createLanguageService(
 		allPlugins.set(plugin.id, plugin);
 	}
 
+	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: LanguageServiceRuntimeContext = {
 		vueDocuments,
 		getTsLs: lsType => lsType === 'template' ? templateTsLs! : scriptTsLs,
@@ -361,8 +359,6 @@ export function createLanguageService(
 		dispose: () => {
 			tsRuntime.dispose();
 		},
-		updateHtmlCustomData: services.updateHtmlCustomData,
-		updateCssCustomData: services.updateCssCustomData,
 
 		__internal__: {
 			tsRuntime,
@@ -445,13 +441,13 @@ export function createLanguageService(
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T, triggerCharacters: string[]) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
-				getSettings: _getSettings,
+				configurationHost,
 				ts,
-				htmlLs: services.htmlLs,
+				templateLanguagePlugin,
 				getSemanticTokenLegend,
 				getScanner: (document): html.Scanner | undefined => {
 					if (document.languageId === 'html') {
-						return services.htmlLs.createScanner(document.getText());
+						return templateLanguagePlugin.htmlLs.createScanner(document.getText());
 					}
 					else if (document.languageId === 'jade') {
 						const pugDocument = 'getPugDocument' in templateLanguagePlugin ? templateLanguagePlugin.getPugDocument(document) : undefined;
@@ -462,11 +458,9 @@ export function createLanguageService(
 				},
 				scriptTsLs: scriptTsLs,
 				templateTsLs: templateTsLs,
-				templateLanguagePlugin: templateLanguagePlugin,
 				isSupportedDocument: (document) => document.languageId === languageId,
 				getNameCases,
 				getScriptContentVersion: tsRuntime.getScriptContentVersion,
-				getHtmlDataProviders: services.getHtmlDataProviders,
 				vueLsHost,
 				vueDocuments,
 				updateTemplateScripts: () => tsRuntime.update(true),

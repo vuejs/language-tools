@@ -1,10 +1,10 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vueTs from '@volar/vue-typescript';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createBasicRuntime } from './basicRuntime';
+import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
@@ -35,43 +35,40 @@ export interface DocumentService extends ReturnType<typeof getDocumentService> {
 export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
 	getPrintWidth: (uri: string) => Promise<number>,
-	getSettings: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>) | undefined,
+	configurationHost: ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
-	const services = createBasicRuntime(fileSystemProvider);
-	let tsLs: ts2.LanguageService;
+	const tsSettings = getTsSettings(configurationHost);
 
-	const _getSettings: <T>(section: string, scopeUri?: string | undefined) => Promise<T | undefined> = async (section, scopeUri) => getSettings?.(section, scopeUri);
-	const tsSettings = getTsSettings(_getSettings);
+	let tsLs: ts2.LanguageService;
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
-		getSettings: _getSettings,
+		configurationHost,
 		getVueDocument,
 		scriptTsLs: undefined,
 	});
 	const htmlPlugin = patchHtmlFormat(useHtmlPlugin({
-		getSettings: _getSettings,
-		getHtmlLs: () => services.htmlLs,
+		configurationHost,
+		fileSystemProvider,
 	}));
 	const pugPlugin = usePugPlugin({
-		getSettings: _getSettings,
-		htmlLs: services.htmlLs,
+		configurationHost,
+		htmlPlugin,
 	});
 	const cssPlugin = useCssPlugin({
-		getSettings: _getSettings,
-		getCssLs: services.getCssLs,
-		getStylesheet: services.getStylesheet
+		configurationHost,
+		fileSystemProvider,
 	});
 	const jsonPlugin = useJsonPlugin({});
 	const tsPlugin = useTsPlugin({
 		getTsLs: () => tsLs,
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		getSettings: _getSettings,
+		configurationHost,
 		ts,
 		getVueDocument,
 	});
@@ -95,6 +92,7 @@ export function getDocumentService(
 		vueTs.usePugPlugin(),
 	];
 
+	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		getVueDocument,
@@ -154,8 +152,8 @@ export function getDocumentService(
 			vueTsPlugins,
 			{},
 			context.typescript,
-			services.getCssVBindRanges,
-			services.getCssClasses,
+			stylesheetExtra.getCssVBindRanges,
+			stylesheetExtra.getCssClasses,
 		);
 		vueDoc = parseVueDocument(vueFile);
 
@@ -165,7 +163,7 @@ export function getDocumentService(
 	}
 }
 
-function patchHtmlFormat(htmlPlugin: EmbeddedLanguageServicePlugin) {
+function patchHtmlFormat<T extends EmbeddedLanguageServicePlugin>(htmlPlugin: T) {
 
 	const originalFormat = htmlPlugin.format;
 

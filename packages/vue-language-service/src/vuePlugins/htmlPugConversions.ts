@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import { htmlToPug, pugToHtml } from '@volar/html2pug';
 import { VueDocument } from '../vueDocuments';
 
@@ -13,7 +13,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (host: {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+    configurationHost: ConfigurationHost | undefined,
     getVueDocument(uri: string): VueDocument | undefined,
 }): EmbeddedLanguageServicePlugin {
 
@@ -22,7 +22,7 @@ export default function (host: {
         doCodeLens(document) {
             return worker(document.uri, async (vueDocument) => {
 
-                const isEnabled = await host.getSettings<boolean>('volar.codeLens.pugTools') ?? true;
+                const isEnabled = await host.configurationHost?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
 
                 if (!isEnabled)
                     return;

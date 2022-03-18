@@ -5,10 +5,10 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '../commonPlugins/typescript';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 export default function (host: {
-	getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+    configurationHost: ConfigurationHost | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getTsLs: () => ts2.LanguageService,
 }): EmbeddedLanguageServicePlugin {
@@ -25,7 +25,7 @@ export default function (host: {
 			if (!isCharacterTyping(document, context))
 				return;
 
-			const enabled = await host.getSettings<boolean>('volar.autoCompleteRefs') ?? true;
+			const enabled = await host.configurationHost?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
 			if (!enabled)
 				return;
 

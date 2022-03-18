@@ -4,7 +4,7 @@ import * as path from 'upath';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import type { createLsConfigs } from './configs';
+import type { createLsConfigs } from './configHost';
 import { getDocumentSafely } from './utils';
 import { RuntimeEnvironment } from './common';
 

@@ -1,11 +1,11 @@
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import { htmlPluginBase } from '../commonPlugins/html';
+import useHtmlPlugin from '../commonPlugins/html';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 import { VueDocument } from '../vueDocuments';
+import { ConfigurationHost } from '@volar/vue-language-service-types';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
     version: 1.1,
@@ -92,22 +92,17 @@ const dataProvider = html.newHTMLDataProvider('vue', {
     ]
 });
 
-export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHtmlLs'> & {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+export default function (host: Omit<Parameters<typeof useHtmlPlugin>[0], 'getHtmlLs'> & {
     getVueDocument(document: TextDocument): VueDocument | undefined,
     scriptTsLs: ts2.LanguageService | undefined,
-}): EmbeddedLanguageServicePlugin {
+}): ReturnType<typeof useHtmlPlugin> {
 
-    const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
-    const htmlLs = html.getLanguageService();
-    htmlLs.setDataProviders(false, [dataProvider]);
+    const htmlPlugin = useHtmlPlugin(host);
+    htmlPlugin.htmlLs.setDataProviders(false, [dataProvider]);
 
     return {
 
-        ...htmlPluginBase({
-            ...host,
-            getHtmlLs: () => htmlLs,
-        }, getHtmlDocument),
+        ...htmlPlugin,
 
         doValidation(document, options) {
             return worker(document, (vueDocument) => {
@@ -165,7 +160,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
                 const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
                 const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-                return htmlLs.findDocumentLinks(sfcWithEmptyBlocksDocument, host.documentContext);
+                return htmlPlugin.htmlLs.findDocumentLinks(sfcWithEmptyBlocksDocument, host.documentContext);
             });
         },
 
@@ -236,7 +231,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
                 const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
                 const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-                return htmlLs.getFoldingRanges(sfcWithEmptyBlocksDocument);
+                return htmlPlugin.htmlLs.getFoldingRanges(sfcWithEmptyBlocksDocument);
             });
         },
 
@@ -246,7 +241,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
                 const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
                 const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-                return htmlLs.getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
+                return htmlPlugin.htmlLs.getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
             });
         },
 
@@ -260,25 +255,6 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
             return;
 
         return callback(vueDocument);
-    }
-
-    function getHtmlDocument(document: TextDocument) {
-
-        if (document.languageId !== 'vue')
-            return;
-
-        const cache = htmlDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
-
-        const doc = htmlLs.parseHTMLDocument(document);
-        htmlDocuments.set(document, [document.version, doc]);
-
-        return doc;
     }
 }
 

@@ -3,7 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import * as vue from '@volar/vue-language-service';
-import { createLsConfigs } from './configs';
+import { createLsConfigs } from './configHost';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
@@ -60,7 +60,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 		if (options.documentFeatures) {
 
-			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
+			const configHost = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
 			const ts = runtimeEnv.loadTypescript(options);
 			const documentService = vue.getDocumentService(
 				{ typescript: ts },
@@ -73,7 +73,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 					}
 					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
 				},
-				lsConfigs?.getSettings,
+				configHost,
 				runtimeEnv.fileSystemProvide,
 				loadCustomPlugins(folders[0]),
 			);

@@ -1,8 +1,8 @@
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as emmet from '@vscode/emmet-helper';
 
 export default function (host: {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+    configurationHost: ConfigurationHost | undefined,
 }): EmbeddedLanguageServicePlugin {
 
     let emmetConfig: any;
@@ -23,7 +23,7 @@ export default function (host: {
 
     async function getEmmetConfig(syntax: string): Promise<emmet.VSCodeEmmetConfig> {
 
-        emmetConfig = await host.getSettings<emmet.VSCodeEmmetConfig>('emmet') ?? {};
+        emmetConfig = await host.configurationHost?.getConfiguration<emmet.VSCodeEmmetConfig>('emmet') ?? {};
 
         const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
         const preferences = Object.assign({}, emmetConfig['preferences'] || {});

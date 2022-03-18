@@ -12,7 +12,8 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import useHtmlPlugin from '../commonPlugins/html';
 
 export const semanticTokenTypes = [
     'componentTag',
@@ -59,28 +60,26 @@ interface AutoImportCompletionData {
     importUri: string,
 }
 
-export default function (host: {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
+    configurationHost: ConfigurationHost | undefined,
     ts: typeof import('typescript/lib/tsserverlibrary'),
-    htmlLs: html.LanguageService,
     getSemanticTokenLegend(): vscode.SemanticTokensLegend,
     getScanner(document: TextDocument): html.Scanner | undefined,
     scriptTsLs: ts2.LanguageService,
     templateTsLs: ts2.LanguageService | undefined,
-    templateLanguagePlugin: EmbeddedLanguageServicePlugin,
+    templateLanguagePlugin: T,
     isSupportedDocument: (document: TextDocument) => boolean,
     getNameCases?: (uri: string) => Promise<{
         tag: 'both' | 'kebabCase' | 'pascalCase',
         attr: 'kebabCase' | 'camelCase',
     }>,
     getScriptContentVersion: () => number,
-    getHtmlDataProviders: () => html.IHTMLDataProvider[],
     vueLsHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
     updateTemplateScripts: () => void,
     tsSettings: ts2.Settings,
     tsRuntime: TypeScriptRuntime,
-}): EmbeddedLanguageServicePlugin {
+}): EmbeddedLanguageServicePlugin & T {
 
     const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
     const autoImportPositions = new WeakSet<vscode.Position>();
@@ -550,7 +549,7 @@ export default function (host: {
         }
 
         const descriptor = vueDocument.file.getDescriptor();
-        const enabledComponentAutoImport = await host.getSettings<boolean>('volar.completion.autoImportComponent') ?? true;
+        const enabledComponentAutoImport = await host.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
         if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
             for (const vueDocument of host.vueDocuments.getAll()) {
@@ -581,8 +580,8 @@ export default function (host: {
             globalAttributes,
         });
 
-        host.htmlLs.setDataProviders(true, [
-            ...host.getHtmlDataProviders(),
+        host.templateLanguagePlugin.htmlLs.setDataProviders(true, [
+            ...host.templateLanguagePlugin.getHtmlDataProviders(),
             vueGlobalDirectiveProvider,
             dataProvider,
         ]);
@@ -718,7 +717,7 @@ export default function (host: {
             completionList.items = [...temp.values()];
         }
 
-        host.htmlLs.setDataProviders(true, host.getHtmlDataProviders());
+        host.templateLanguagePlugin.htmlLs.setDataProviders(true, host.templateLanguagePlugin.getHtmlDataProviders());
     }
 
     function getComponentCompletionData(sourceFile: VueDocument) {

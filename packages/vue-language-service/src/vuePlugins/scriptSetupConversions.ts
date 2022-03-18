@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
 import type { TextRange } from '@volar/vue-code-gen/out/types';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 import { VueDocument } from '../vueDocuments';
 
 enum Commands {
@@ -18,7 +18,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (host: {
-    getSettings: <S>(section: string, scopeUri?: string | undefined) => Promise<S | undefined>,
+    configurationHost: ConfigurationHost | undefined,
     ts: typeof import('typescript/lib/tsserverlibrary'),
     getVueDocument(uri: string): VueDocument | undefined,
     doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
@@ -30,7 +30,7 @@ export default function (host: {
         doCodeLens(document) {
             return worker(document.uri, async (vueDocument) => {
 
-                const isEnabled = await host.getSettings<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+                const isEnabled = await host.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
                 if (!isEnabled)
                     return;

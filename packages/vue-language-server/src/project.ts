@@ -3,7 +3,7 @@ import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import type { createLsConfigs } from './configs';
+import type { createLsConfigs } from './configHost';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
 import { loadCustomPlugins, RuntimeEnvironment } from './common';
@@ -110,8 +110,8 @@ export async function createProject(
 							return Promise.reject('clientHandledGetDocumentContentRequest is false');
 						}
 					},
+					lsConfigs,
 					customPlugins,
-					lsConfigs?.getSettings,
 					options.languageFeatures?.completion ? async (uri) => {
 
 						if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
@@ -139,7 +139,6 @@ export async function createProject(
 						workDoneProgress.done();
 					}
 				});
-				lsConfigs?.registerCustomData(vueLs);
 				return vueLs;
 			})();
 		}
