@@ -16,11 +16,8 @@ export function register(
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
-		// @ts-expect-error
-		const data: Data = item.data;
+		const data: Data = item.data as any;
 		const fileName = data.fileName;
-		const name = data.name;
-		const source = data.source;
 		let offset = data.offset;
 		const document = getTextDocument(data.uri);
 
@@ -35,7 +32,7 @@ export function register(
 
 		let details: ts.CompletionEntryDetails | undefined;
 		try {
-			details = languageService.getCompletionEntryDetails(fileName, offset, name, formatOptions, source, preferences, data.tsData);
+			details = languageService.getCompletionEntryDetails(fileName, offset, data.originalItem.name, formatOptions, data.originalItem.source, preferences, data.originalItem.data);
 		}
 		catch (err) {
 			item.detail = `[TS Error] ${err}`;

@@ -17,7 +17,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptRanges: Ref<ReturnType<typeof parseScriptRanges> | undefined>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
-	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
+	sfcTemplateCompileResult: Ref<ReturnType<(typeof import('@volar/vue-code-gen'))['compileSFCTemplate']> | undefined>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	isVue2: boolean,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],

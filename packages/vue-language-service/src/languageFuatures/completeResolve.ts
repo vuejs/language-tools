@@ -53,7 +53,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					&& edit.range.end.line === 0
 					&& edit.range.end.character === 0
 				) {
-					edit.newText = (context.vueLsHost.getNewLine?.() ?? '\n') + edit.newText;
+					edit.newText = '\n' + edit.newText;
 				}
 			}
 		}

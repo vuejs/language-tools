@@ -43,7 +43,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
 
-				if (embedded.self.file.lsType === 'template')
+				if (embedded.inheritParentIndent)
 					toPatchIndent = {
 						lsType: sourceMap.embeddedFile.lsType,
 						sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
@@ -71,7 +71,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				applyEdits(edits);
 			}
 
-			if (toPatchIndent !== undefined) {
+			if (toPatchIndent) {
 
 				tryUpdateVueDocument();
 

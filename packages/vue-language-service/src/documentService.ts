@@ -146,22 +146,28 @@ export function getDocumentService(
 
 		let vueDoc = vueDocuments.get(document);
 
-		if (!vueDoc) {
+		if (vueDoc) {
 
-			const vueFile = vueTs.createVueFile(
-				shared.uriToFsPath(document.uri),
-				document.getText(),
-				document.version.toString(),
-				vueTsPlugins,
-				{},
-				context.typescript,
-				services.getCssVBindRanges,
-				services.getCssClasses,
-			);
-			vueDoc = parseVueDocument(vueFile);
+			if (vueDoc.file.getVersion() !== document.version.toString()) {
+				vueDoc.file.update(document.getText(), document.version.toString());
+			}
 
-			vueDocuments.set(document, vueDoc);
+			return vueDoc;
 		}
+
+		const vueFile = vueTs.createVueFile(
+			shared.uriToFsPath(document.uri),
+			document.getText(),
+			document.version.toString(),
+			vueTsPlugins,
+			{},
+			context.typescript,
+			services.getCssVBindRanges,
+			services.getCssClasses,
+		);
+		vueDoc = parseVueDocument(vueFile);
+
+		vueDocuments.set(document, vueDoc);
 
 		return vueDoc;
 	}

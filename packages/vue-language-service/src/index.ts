@@ -6,4 +6,3 @@ export { margeWorkspaceEdits } from './languageFuatures/rename';
 export * from './languageService';
 export * from './types';
 export { convertTagNameCasingCommand, ConvertTagNameCasingCommandArgs } from './vuePlugins/tagNameCasingConversions';
-

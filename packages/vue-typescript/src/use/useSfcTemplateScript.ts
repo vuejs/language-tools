@@ -25,7 +25,7 @@ export function useSfcTemplateScript(
 		lang: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
 	} | undefined>,
-	sfcTemplateCompileResult: ReturnType<(typeof import('./useSfcTemplateCompileResult'))['useSfcTemplateCompileResult']>,
+	sfcTemplateCompileResult: Ref<ReturnType<(typeof import('@volar/vue-code-gen'))['compileSFCTemplate']> | undefined>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
@@ -444,7 +444,7 @@ export function useSfcTemplateScript(
 					data: undefined,
 				};
 				formatFile.value = templateCodeGens.value ? {
-					lsType: 'template',
+					lsType: 'nonTs',
 					fileName: fileName + '.__VLS_template.format.' + newLang,
 					lang: newLang,
 					content: templateCodeGens.value.formatCodeGen.getText(),

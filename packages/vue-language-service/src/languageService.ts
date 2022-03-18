@@ -1,17 +1,23 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
+import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as upath from 'upath';
+import type * as html from 'vscode-html-languageservice';
+import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { createBasicRuntime } from './basicRuntime';
 import useCssPlugin, { triggerCharacters as cssTriggerCharacters } from './commonPlugins/css';
 import useDirectiveCommentPlugin, { triggerCharacters as directiveCommentTriggerCharacters } from './commonPlugins/directiveComment';
 import useEmmetPlugin, { triggerCharacters as emmetTriggerCharacters } from './commonPlugins/emmet';
 import useHtmlPlugin, { triggerCharacters as htmlTriggerCharacters } from './commonPlugins/html';
 import useJsDocPlugin, { triggerCharacters as jsDocTriggerCharacters } from './commonPlugins/jsDoc';
 import useJsonPlugin, { triggerCharacters as jsonTriggerCharacters } from './commonPlugins/json';
-import usePugPlugin, { triggerCharacters as pugTriggerCharacters, createPugDocuments } from './commonPlugins/pug';
+import usePugPlugin, { createPugDocuments, triggerCharacters as pugTriggerCharacters } from './commonPlugins/pug';
 import useTsPlugin, { getSemanticTokenLegend as getTsSemanticTokenLegend, getTriggerCharacters as getTsTriggerCharacters } from './commonPlugins/typescript';
-// import * as d3 from './ideFeatures/d3';
 import * as tagNameCase from './ideFeatures/tagNameCase';
 import * as autoInsert from './languageFuatures/autoInsert';
 import * as callHierarchy from './languageFuatures/callHierarchy';
@@ -34,8 +40,9 @@ import * as renamePrepare from './languageFuatures/renamePrepare';
 import * as signatureHelp from './languageFuatures/signatureHelp';
 import * as diagnostics from './languageFuatures/validation';
 import * as workspaceSymbol from './languageFuatures/workspaceSymbols';
+import { getTsSettings } from './tsConfigs';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
-import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
+import { parseVueDocuments } from './vueDocuments';
 import useAutoDotValuePlugin from './vuePlugins/autoCompleteRefs';
 import useHtmlPugConversionsPlugin from './vuePlugins/htmlPugConversions';
 import useReferencesCodeLensPlugin from './vuePlugins/referencesCodeLens';
@@ -44,16 +51,7 @@ import useScriptSetupConversionsPlugin from './vuePlugins/scriptSetupConversions
 import useTagNameCasingConversionsPlugin from './vuePlugins/tagNameCasingConversions';
 import useVuePlugin, { triggerCharacters as vueTriggerCharacters } from './vuePlugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './vuePlugins/vueTemplateLanguage';
-import * as json from 'vscode-json-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as upath from 'upath';
-
-import type * as html from 'vscode-html-languageservice';
-import type * as _1 from 'vscode-css-languageservice';
-import { getTsSettings } from './tsConfigs';
-import { createBasicRuntime } from './basicRuntime';
-import { parseVueDocuments } from './vueDocuments';
+// import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -296,10 +294,8 @@ export function createLanguageService(
 	}
 
 	const context: LanguageServiceRuntimeContext = {
-		vueLsHost: vueLsHost,
 		vueDocuments,
 		getTsLs: lsType => lsType === 'template' ? templateTsLs! : scriptTsLs,
-		typescript: ts,
 		getTextDocument,
 		getPlugins: lsType => {
 			let plugins = [

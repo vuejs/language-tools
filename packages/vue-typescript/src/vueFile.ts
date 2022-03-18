@@ -1,4 +1,4 @@
-import type { TextRange } from '@volar/vue-code-gen';
+import { compileSFCTemplate, TextRange } from '@volar/vue-code-gen';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
@@ -13,7 +13,6 @@ import { useSfcScript } from './use/useSfcScript';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
 import { useSfcTemplate } from './use/useSfcTemplate';
-import { useSfcTemplateCompileResult } from './use/useSfcTemplateCompileResult';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
@@ -25,7 +24,8 @@ export interface VueFile extends ReturnType<typeof createVueFile> { }
 
 export interface EmbeddedStructure {
 	self: Embedded | undefined,
-	embeddeds: EmbeddedStructure[]
+	embeddeds: EmbeddedStructure[],
+	inheritParentIndent?: boolean,
 }
 
 export interface Embedded {
@@ -133,10 +133,15 @@ export function createVueFile(
 			}
 		}
 	});
-	const sfcTemplateCompileResult = useSfcTemplateCompileResult(
-		computed(() => sfcTemplateCompiled.value?.htmlText),
-		compilerOptions,
-	);
+	const sfcTemplateCompileResult = computed(() => {
+		if (sfcTemplateCompiled.value) {
+			return compileSFCTemplate(
+				sfcTemplateCompiled.value.htmlText,
+				compilerOptions.experimentalTemplateCompilerOptions,
+				compilerOptions.experimentalCompatMode ?? 3,
+			);
+		}
+	});
 	const sfcScript = useSfcScript(
 		fileName,
 		computed(() => sfc.script),
@@ -276,17 +281,16 @@ export function createVueFile(
 		// scripts - template ls
 		embeddeds.push({
 			self: sfcEntryForTemplateLs.embedded.value,
-			embeddeds: [
-				{
-					self: sfcScriptForTemplateLs.embedded.value,
-					embeddeds: [],
-				},
-				{
-					self: sfcScriptForTemplateLs.embeddedTs.value,
-					embeddeds: [],
-				},
-			],
-		})
+			embeddeds: [],
+		});
+		embeddeds.push({
+			self: sfcScriptForTemplateLs.embedded.value,
+			embeddeds: [],
+		});
+		embeddeds.push({
+			self: sfcScriptForTemplateLs.embeddedTs.value,
+			embeddeds: [],
+		});
 
 		// template
 		embeddeds.push({
@@ -294,14 +298,17 @@ export function createVueFile(
 			embeddeds: [
 				{
 					self: sfcTemplateScript.embedded.value,
+					inheritParentIndent: true,
 					embeddeds: [],
 				},
 				{
 					self: sfcTemplateScript.formatEmbedded.value,
+					inheritParentIndent: true,
 					embeddeds: [],
 				},
 				{
 					self: sfcTemplateScript.inlineCssEmbedded.value,
+					inheritParentIndent: true,
 					embeddeds: [],
 				},
 			],

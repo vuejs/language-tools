@@ -10,9 +10,7 @@ export interface Data {
 	uri: string,
 	fileName: string,
 	offset: number,
-	source: string | undefined,
-	name: string,
-	tsData: any,
+	originalItem: ts.CompletionEntry
 }
 
 export function getTriggerCharacters(tsVersion: string) {
@@ -133,14 +131,13 @@ export function register(
 					uri,
 					fileName,
 					offset,
-					source: tsEntry.source,
-					name: tsEntry.name,
-					tsData: tsEntry.data,
+					originalItem: tsEntry,
 				};
-				// @ts-expect-error
-				item.data = data;
 
-				return item;
+				return {
+					...item,
+					data: data as any,
+				};
 			});
 
 		return {

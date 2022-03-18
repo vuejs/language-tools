@@ -10,7 +10,6 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
-import type { Data } from '@volar/typescript-language-service/src/services/completion';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
 import { EmbeddedLanguagePlugin } from '@volar/vue-language-service-types';
@@ -51,7 +50,7 @@ const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective'
 
 interface HtmlCompletionData {
     mode: 'html',
-    tsItem: vscode.CompletionItem | undefined,
+    tsItem: ts.CompletionEntry | undefined,
 }
 
 interface AutoImportCompletionData {
@@ -259,36 +258,37 @@ export default function (host: {
         },
     };
 
+    // not supported for now
     async function resolveHtmlItem(item: vscode.CompletionItem, data: HtmlCompletionData) {
 
-        let tsItem: vscode.CompletionItem | undefined = data.tsItem;
+        // let tsItem = data.tsItem;
 
-        if (!tsItem)
-            return item;
+        // if (!tsItem)
+        //     return item;
 
-        if (!host.templateTsLs)
-            return item;
+        // if (!host.templateTsLs)
+        //     return item;
 
-        tsItem = await host.templateTsLs.doCompletionResolve(tsItem);
-        item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
+        // tsItem = await host.templateTsLs.doCompletionResolve(tsItem);
+        // item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
 
-        const details: string[] = [];
-        const documentations: string[] = [];
+        // const details: string[] = [];
+        // const documentations: string[] = [];
 
-        if (item.detail) details.push(item.detail);
-        if (tsItem.detail) details.push(tsItem.detail);
-        if (details.length) {
-            item.detail = details.join('\n\n');
-        }
+        // if (item.detail) details.push(item.detail);
+        // if (tsItem.detail) details.push(tsItem.detail);
+        // if (details.length) {
+        //     item.detail = details.join('\n\n');
+        // }
 
-        if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
-        if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
-        if (documentations.length) {
-            item.documentation = {
-                kind: vscode.MarkupKind.Markdown,
-                value: documentations.join('\n\n'),
-            };
-        }
+        // if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
+        // if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
+        // if (documentations.length) {
+        //     item.documentation = {
+        //         kind: vscode.MarkupKind.Markdown,
+        //         value: documentations.join('\n\n'),
+        //     };
+        // }
 
         return item;
     }
@@ -453,9 +453,7 @@ export default function (host: {
         const { contextItems } = vueDocument.file.getTemplateScriptData();
 
         for (const item of contextItems) {
-            // @ts-expect-error
-            const data: Data = item.data;
-            const dir = hyphenate(data.name);
+            const dir = hyphenate(item.name);
             if (dir.startsWith('v-')) {
                 const key = createInternalItemId('vueDirective', [dir]);
                 globalAttributes.push({ name: dir, description: key });
@@ -476,9 +474,7 @@ export default function (host: {
 
                 for (const prop of bind) {
 
-                    // @ts-expect-error
-                    const data: Data = prop.data;
-                    const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
+                    const name = nameCases.attr === 'camelCase' ? prop.name : hyphenate(prop.name);
 
                     if (hyphenate(name).startsWith('on-')) {
 
@@ -523,9 +519,7 @@ export default function (host: {
                 }
                 for (const event of on) {
 
-                    // @ts-expect-error
-                    const data: Data = event.data;
-                    const name = nameCases.attr === 'camelCase' ? data.name : hyphenate(data.name);
+                    const name = nameCases.attr === 'camelCase' ? event.name : hyphenate(event.name);
                     const propKey = createInternalItemId('componentEvent', [componentName, name]);
 
                     attributes.push({
@@ -646,16 +640,17 @@ export default function (host: {
                 const [fileUri] = itemId.args;
                 const filePath = shared.uriToFsPath(fileUri);
                 const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), filePath);
+                const data: AutoImportCompletionData = {
+                    mode: 'autoImport',
+                    vueDocumentUri: vueDocument.uri,
+                    importUri: fileUri,
+                };
                 item.labelDetails = { description: rPath };
                 item.filterText = item.label + ' ' + rPath;
                 item.detail = rPath;
                 item.kind = vscode.CompletionItemKind.File;
                 item.sortText = '\u0003' + item.sortText;
-                item.data = <AutoImportCompletionData>{
-                    mode: 'autoImport',
-                    vueDocumentUri: vueDocument.uri,
-                    importUri: fileUri,
-                } as any;
+                item.data = data as any;
             }
             else if (itemIdKey && itemId) {
 
@@ -695,10 +690,12 @@ export default function (host: {
                     item.sortText = '\u0001' + item.sortText;
                 }
 
-                item.data = <HtmlCompletionData>{
+                const data: HtmlCompletionData = {
                     mode: 'html',
                     tsItem: tsItem,
-                } as any;
+                };
+
+                item.data = data as any;
             }
         }
 
@@ -777,9 +774,7 @@ export default function (host: {
             if (file) {
 
                 const tags_1 = templateScriptData.componentItems.map(item => {
-                    // @ts-expect-error
-                    const data: TsCompletionData = item.data;
-                    return { item, name: data.name };
+                    return { item, name: item.name };
                 });
                 const tags_2 = templateTagNames
                     .filter(tag => tag.indexOf('.') >= 0)
@@ -827,9 +822,9 @@ export default function (host: {
 }
 
 function eqSet<T>(as: Set<T>, bs: Set<T>) {
-	if (as.size !== bs.size) return false;
-	for (const a of as) if (!bs.has(a)) return false;
-	return true;
+    if (as.size !== bs.size) return false;
+    for (const a of as) if (!bs.has(a)) return false;
+    return true;
 }
 
 function createInternalItemId(type: 'importFile' | 'vueDirective' | 'componentEvent' | 'componentProp' | 'component', args: string[]) {
