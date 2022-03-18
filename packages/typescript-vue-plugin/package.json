@@ -16,7 +16,6 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/vue-typescript": "0.33.2",
-		"upath": "^2.0.1"
+		"@volar/vue-typescript": "0.33.2"
 	}
 }
