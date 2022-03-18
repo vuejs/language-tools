@@ -26,30 +26,17 @@ export function createVueFiles() {
 		return map;
 	});
 	const sourceMapsByFileNameAndLsType = computed(() => {
-
-		const nonTs = new Map<string, Embedded>();
-		const script = new Map<string, Embedded>();
-		const template = new Map<string, Embedded>();
-
+		const maps = {
+			nonTs:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
+			script:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
+			template:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
+		};
 		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
-				if (embedded.file.lsType === 'nonTs') {
-					nonTs.set(embedded.file.fileName.toLowerCase(), embedded);
-				}
-				else if (embedded.file.lsType === 'script') {
-					script.set(embedded.file.fileName.toLowerCase(), embedded);
-				}
-				else if (embedded.file.lsType === 'template') {
-					template.set(embedded.file.fileName.toLowerCase(), embedded);
-				}
+				maps[embedded.file.lsType].set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
 		}
-
-		return {
-			nonTs,
-			script,
-			template,
-		};
+		return maps
 	});
 	const teleports = {
 		template: computed(() => {
@@ -109,18 +96,18 @@ export function createVueFiles() {
 			if (end === undefined)
 				end = start;
 
-			const embedded = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
+			const maped = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
 
-			if (embedded) {
+			if (maped) {
 
-				if (sourceMapFilter && !sourceMapFilter(embedded.sourceMap))
+				if (sourceMapFilter && !sourceMapFilter(maped.embedded.sourceMap))
 					return;
 
-				for (const vueRange of embedded.sourceMap.getSourceRanges(start, end, filter)) {
+				for (const vueRange of maped.embedded.sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
-						fileName: embedded.file.fileName,
+						fileName: maped.vueFile.fileName,
 						range: vueRange[0],
-						embedded,
+						maped: maped,
 						data: vueRange[1],
 					};
 				}

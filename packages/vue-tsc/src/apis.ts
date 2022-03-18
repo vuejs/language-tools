@@ -46,14 +46,13 @@ export function register(
 
 		if (sourceFile) {
 
-			const embedded = context.vueFiles.fromEmbeddedFileName('script', sourceFile.fileName);
-			const vueFile = embedded ? context.vueFiles.fromEmbeddedFile(embedded.file) : undefined;
+			const maped = context.vueFiles.fromEmbeddedFileName('script', sourceFile.fileName);
 
-			if (vueFile) {
+			if (maped) {
 
 				let results: any[] = [];
 
-				const embeddeds = vueFile.getAllEmbeddeds();
+				const embeddeds = maped.vueFile.getAllEmbeddeds();
 
 				for (const embedded of embeddeds) {
 
@@ -119,7 +118,7 @@ export function register(
 					if (!context.vueLsHost.fileExists?.(tsOrVueLoc.fileName))
 						continue;
 
-					if (!('embedded' in tsOrVueLoc) && lsType !== 'script')
+					if (!tsOrVueLoc.maped && lsType !== 'script')
 						continue;
 
 					let file = tsOrVueLoc.fileName === diagnostic.file.fileName
@@ -127,7 +126,7 @@ export function register(
 						: undefined;
 					if (!file) {
 
-						let docText = tsOrVueLoc.embedded?.file.content;
+						let docText = tsOrVueLoc.maped?.vueFile.getContent();
 
 						if (docText === undefined) {
 							const snapshot = context.vueLsHost.getScriptSnapshot(tsOrVueLoc.fileName);

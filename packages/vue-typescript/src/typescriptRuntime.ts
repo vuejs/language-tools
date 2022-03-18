@@ -221,8 +221,8 @@ export function createTypeScriptRuntime(options: {
 
             const tsFileNames = getLocalTypesFiles(lsType);
 
-            for (const embedded of vueFiles.getEmbeddeds(lsType)) {
-                tsFileNames.push(embedded.file.fileName); // virtual .ts
+            for (const maped of vueFiles.getEmbeddeds(lsType)) {
+                tsFileNames.push(maped.embedded.file.fileName); // virtual .ts
             }
 
             for (const fileName of options.vueLsHost.getScriptFileNames()) {
@@ -241,14 +241,14 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return '';
             }
-            let embedded = vueFiles.fromEmbeddedFileName(lsType, fileName);
-            if (embedded) {
-                if (fileVersions.has(embedded.file)) {
-                    return fileVersions.get(embedded.file)!;
+            let maped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (maped) {
+                if (fileVersions.has(maped.embedded.file)) {
+                    return fileVersions.get(maped.embedded.file)!;
                 }
                 else {
-                    const version = ts.sys.createHash?.(embedded.file.content) ?? embedded.file.content;
-                    fileVersions.set(embedded.file, version);
+                    const version = ts.sys.createHash?.(maped.embedded.file.content) ?? maped.embedded.file.content;
+                    fileVersions.set(maped.embedded.file, version);
                     return version;
                 }
             }
@@ -264,9 +264,9 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return localTypesScript;
             }
-            const embedded = vueFiles.fromEmbeddedFileName(lsType, fileName);
-            if (embedded) {
-                const text = embedded.file.content;
+            const maped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (maped) {
+                const text = maped.embedded.file.content;
                 const snapshot = ts.ScriptSnapshot.fromString(text);
                 scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
                 return snapshot;
