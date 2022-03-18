@@ -1,6 +1,6 @@
 import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import { computed, shallowReactive } from '@vue/reactivity';
-import * as path from 'upath';
+import * as path from 'path';
 import * as localTypes from './utils/localTypes';
 import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
@@ -26,30 +26,17 @@ export function createVueFiles() {
 		return map;
 	});
 	const sourceMapsByFileNameAndLsType = computed(() => {
-
-		const nonTs = new Map<string, Embedded>();
-		const script = new Map<string, Embedded>();
-		const template = new Map<string, Embedded>();
-
+		const maps = {
+			nonTs:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
+			script:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
+			template:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
+		};
 		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
-				if (embedded.file.lsType === 'nonTs') {
-					nonTs.set(embedded.file.fileName, embedded);
-				}
-				else if (embedded.file.lsType === 'script') {
-					script.set(embedded.file.fileName, embedded);
-				}
-				else if (embedded.file.lsType === 'template') {
-					template.set(embedded.file.fileName, embedded);
-				}
+				maps[embedded.file.lsType].set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
 		}
-
-		return {
-			nonTs,
-			script,
-			template,
-		};
+		return maps
 	});
 	const teleports = {
 		template: computed(() => {
@@ -57,7 +44,7 @@ export function createVueFiles() {
 			for (const key in vueFiles) {
 				const sourceFile = vueFiles[key]!;
 				for (const { file, teleport } of sourceFile.refs.teleports.value) {
-					map.set(file.fileName, teleport);
+					map.set(file.fileName.toLowerCase(), teleport);
 				}
 			}
 			return map;
@@ -68,7 +55,7 @@ export function createVueFiles() {
 				const sourceFile = vueFiles[key]!;
 				const embeddedFile = sourceFile.refs.sfcScriptForScriptLs.file.value;
 				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleport.value;
-				map.set(embeddedFile.fileName, sourceMap);
+				map.set(embeddedFile.fileName.toLowerCase(), sourceMap);
 			}
 			return map;
 		}),
@@ -85,7 +72,7 @@ export function createVueFiles() {
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
 
-		getTeleport: untrack((lsType: 'script' | 'template', fileName: string) => teleports[lsType].value.get(fileName)),
+		getTeleport: untrack((lsType: 'script' | 'template', fileName: string) => teleports[lsType].value.get(fileName.toLowerCase())),
 		getEmbeddeds: untrack(function* (
 			lsType: 'script' | 'template' | 'nonTs',
 		) {
@@ -109,18 +96,18 @@ export function createVueFiles() {
 			if (end === undefined)
 				end = start;
 
-			const embedded = sourceMapsByFileNameAndLsType.value[lsType].get(fileName);
+			const maped = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
 
-			if (embedded) {
+			if (maped) {
 
-				if (sourceMapFilter && !sourceMapFilter(embedded.sourceMap))
+				if (sourceMapFilter && !sourceMapFilter(maped.embedded.sourceMap))
 					return;
 
-				for (const vueRange of embedded.sourceMap.getSourceRanges(start, end, filter)) {
+				for (const vueRange of maped.embedded.sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
-						fileName: embedded.file.fileName,
+						fileName: maped.vueFile.fileName,
 						range: vueRange[0],
-						embedded,
+						maped: maped,
 						data: vueRange[1],
 					};
 				}
@@ -144,7 +131,7 @@ export function createVueFiles() {
 			lsType: 'script' | 'template' | 'nonTs',
 			fileName: string,
 		) {
-			return sourceMapsByFileNameAndLsType.value[lsType].get(fileName);
+			return sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
 		}),
 	};
 }

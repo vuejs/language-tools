@@ -12,7 +12,7 @@ export function defineRename(action: {
 	newName: string,
 	length: number,
 	resultFileNums?: number,
-}, results: Record<string, string>) {
+}, expectedResult: Record<string, string>) {
 
 	const fileName = action.fileName;
 	const uri = shared.fsPathToUri(fileName);
@@ -30,9 +30,9 @@ export function defineRename(action: {
 				expect(!!result?.changes).toEqual(true);
 				if (!result?.changes) return;
 
-				expect(Object.keys(result.changes).length).toEqual(action.resultFileNums ?? Object.keys(results).length);
+				expect(Object.keys(result.changes).length).toEqual(action.resultFileNums ?? Object.keys(expectedResult).length);
 
-				for (const fileName in results) {
+				for (const fileName in expectedResult) {
 
 					const textEdits = result?.changes?.[shared.fsPathToUri(fileName)];
 					expect(!!textEdits).toEqual(true);
@@ -44,10 +44,15 @@ export function defineRename(action: {
 
 					const renameScriptText = renameScript.getText(0, renameScript.getLength());
 					const renameScriptResult = TextDocument.applyEdits(TextDocument.create('', '', 0, renameScriptText), textEdits);
-					expect(renameScriptResult).toEqual(results[fileName]);
+					expect(normalizedText(renameScriptResult)).toEqual(normalizedText(expectedResult[fileName]));
 
 				}
 			});
 		}
 	});
+}
+
+// avoid new line character different
+function normalizedText(text: string) {
+	return text.split('\n').map(line => line.trim()).join('\n');
 }

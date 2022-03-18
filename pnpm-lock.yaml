@@ -171,10 +171,8 @@ importers:
     specifiers:
       '@volar/vue-typescript': 0.33.2
       typescript: latest
-      upath: ^2.0.1
     dependencies:
       '@volar/vue-typescript': link:../vue-typescript
-      upath: 2.0.1
     devDependencies:
       typescript: 4.6.2
 
@@ -186,14 +184,12 @@ importers:
       '@vue/compiler-dom': ^3.2.27
       '@vue/shared': ^3.2.27
       typescript: latest
-      upath: ^2.0.1
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/source-map': link:../source-map
       '@vue/compiler-core': 3.2.31
       '@vue/compiler-dom': 3.2.31
       '@vue/shared': 3.2.31
-      upath: 2.0.1
     devDependencies:
       typescript: 4.6.2
 
@@ -312,7 +308,6 @@ importers:
       '@vue/compiler-sfc': ^3.2.27
       '@vue/reactivity': ^3.2.27
       typescript: latest
-      upath: ^2.0.1
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/pug-language-service': link:../pug-language-service
@@ -320,7 +315,6 @@ importers:
       '@volar/vue-code-gen': link:../vue-code-gen
       '@vue/compiler-sfc': 3.2.31
       '@vue/reactivity': 3.2.31
-      upath: 2.0.1
     devDependencies:
       typescript: 4.6.2
 

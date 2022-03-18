@@ -1,6 +1,7 @@
 name: testing
 
-on: [push, pull_request]
+# on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
@@ -9,7 +10,7 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x]
-        os: [ubuntu-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -22,16 +23,6 @@ jobs:
 
       # install pnpm
       - run: npm i -g pnpm
-
-      # https://github.com/actions/cache/blob/main/examples.md#node---lerna
-      - name: Cache node_modules
-        uses: actions/cache@v2
-        with:
-          path: |
-            node_modules
-            */*/node_modules
-          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-
       - run: pnpm i
       - run: npm run build
       - run: npm run test

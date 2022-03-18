@@ -10,7 +10,7 @@ import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
-import * as upath from 'upath';
+import * as path from 'path';
 
 export function useSfcTemplateScript(
 	fileName: string,
@@ -32,7 +32,7 @@ export function useSfcTemplateScript(
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 ) {
-	const baseFileName = upath.basename(fileName);
+	const baseFileName = path.basename(fileName);
 	const cssModuleClasses = computed(() =>
 		styleFiles.value.reduce((obj, style) => {
 			if (style.data.module) {

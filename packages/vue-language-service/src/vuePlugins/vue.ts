@@ -133,7 +133,7 @@ export default function (host: Omit<Parameters<typeof htmlPluginBase>[0], 'getHt
                     }
                 }
 
-                if (host.scriptTsLs && !host.scriptTsLs.__internal__.getValidTextDocument(vueDocument.file.getScriptTsFile().fileName)) {
+                if (host.scriptTsLs && !host.scriptTsLs.__internal__.isValidFile(vueDocument.file.getScriptTsFile().fileName)) {
                     for (const script of [sfc.script, sfc.scriptSetup]) {
 
                         if (!script || script.content === '')

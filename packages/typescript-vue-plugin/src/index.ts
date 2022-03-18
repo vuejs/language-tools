@@ -1,5 +1,5 @@
 import * as vue from '@volar/vue-typescript';
-import * as path from 'upath';
+import * as path from 'path';
 import * as apis from './apis';
 import { tsShared } from '@volar/vue-typescript';
 

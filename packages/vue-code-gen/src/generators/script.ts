@@ -1,7 +1,7 @@
 import { CodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
-import * as path from 'upath';
+import * as path from 'path';
 import type * as templateGen from '../generators/template_scriptSetup';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
@@ -111,9 +111,9 @@ export function generate(
 
 		let src = script.src;
 
-		if (src.endsWith('.d.ts')) src = path.removeExt(path.removeExt(src, '.ts'), '.d');
-		else if (src.endsWith('.ts')) src = path.removeExt(src, '.ts');
-		else if (src.endsWith('.tsx')) src = path.removeExt(src, '.tsx');
+		if (src.endsWith('.d.ts')) src = src.substring(0, src.length - '.d.ts'.length);
+		else if (src.endsWith('.ts')) src = src.substring(0, src.length - '.ts'.length);
+		else if (src.endsWith('.tsx')) src = src.substring(0, src.length - '.tsx'.length);
 
 		codeGen.addText(`export * from `);
 		codeGen.addCode(
@@ -491,7 +491,7 @@ export function generate(
 			codeGen.addText(`);\n`);
 		}
 		else if (scriptSetup) {
-			codeGen.addText(`export declare const __VLS_name: '${path.basename(path.removeExt(fileName, '.vue'))}';\n`);
+			codeGen.addText(`export declare const __VLS_name: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);
 		}
 		else {
 			codeGen.addText(`export const __VLS_name = undefined;\n`);

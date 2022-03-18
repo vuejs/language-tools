@@ -1,6 +1,6 @@
 import type { TextRange } from '@volar/vue-code-gen';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as upath from 'upath';
+import * as path from 'path';
 import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
 import { LanguageServiceHost, VueCompilerOptions } from './types';
@@ -83,7 +83,7 @@ export function createTypeScriptRuntime(options: {
     function getLocalTypesFiles(lsType: 'script' | 'template') {
         if (lsType === 'script')
             return [];
-        return vueFiles.getDirs().map(dir => upath.join(dir, localTypes.typesFileName));
+        return vueFiles.getDirs().map(dir => path.join(dir, localTypes.typesFileName));
     }
     function update(shouldUpdateTemplateScript: boolean) {
         const newVueProjectVersion = options.vueLsHost.getVueProjectVersion?.();
@@ -157,7 +157,7 @@ export function createTypeScriptRuntime(options: {
                     // .vue.js -> .vue
                     // .vue.ts -> .vue
                     // .vue.d.ts (never)
-                    const fileNameTrim = upath.trimExt(fileName);
+                    const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
                     if (fileNameTrim.endsWith('.vue')) {
                         const vueFile = vueFiles.get(fileNameTrim);
                         if (!vueFile) {
@@ -179,11 +179,11 @@ export function createTypeScriptRuntime(options: {
             getScriptFileNames,
             getScriptVersion,
             getScriptSnapshot,
-            readDirectory: (path, extensions, exclude, include, depth) => {
-                const result = options.vueLsHost.readDirectory?.(path, extensions, exclude, include, depth) ?? [];
+            readDirectory: (_path, extensions, exclude, include, depth) => {
+                const result = options.vueLsHost.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
                 for (const vuePath of vueFiles.getFileNames()) {
-                    const vuePath2 = upath.join(path, upath.basename(vuePath));
-                    if (upath.relative(path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
+                    const vuePath2 = path.join(_path, path.basename(vuePath));
+                    if (path.relative(_path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
                         continue;
                     }
                     if (!depth && vuePath.toLowerCase() === vuePath2.toLowerCase()) {
@@ -196,7 +196,7 @@ export function createTypeScriptRuntime(options: {
                 return result;
             },
             getScriptKind(fileName) {
-                switch (upath.extname(fileName)) {
+                switch (path.extname(fileName)) {
                     case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
                     case '.js': return ts.ScriptKind.JS;
                     case '.jsx': return ts.ScriptKind.JSX;
@@ -221,8 +221,8 @@ export function createTypeScriptRuntime(options: {
 
             const tsFileNames = getLocalTypesFiles(lsType);
 
-            for (const embedded of vueFiles.getEmbeddeds(lsType)) {
-                tsFileNames.push(embedded.file.fileName); // virtual .ts
+            for (const maped of vueFiles.getEmbeddeds(lsType)) {
+                tsFileNames.push(maped.embedded.file.fileName); // virtual .ts
             }
 
             for (const fileName of options.vueLsHost.getScriptFileNames()) {
@@ -237,18 +237,18 @@ export function createTypeScriptRuntime(options: {
             return tsFileNames;
         }
         function getScriptVersion(fileName: string) {
-            const basename = upath.basename(fileName);
+            const basename = path.basename(fileName);
             if (basename === localTypes.typesFileName) {
                 return '';
             }
-            let embedded = vueFiles.fromEmbeddedFileName(lsType, fileName);
-            if (embedded) {
-                if (fileVersions.has(embedded.file)) {
-                    return fileVersions.get(embedded.file)!;
+            let maped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (maped) {
+                if (fileVersions.has(maped.embedded.file)) {
+                    return fileVersions.get(maped.embedded.file)!;
                 }
                 else {
-                    const version = ts.sys.createHash?.(embedded.file.content) ?? embedded.file.content;
-                    fileVersions.set(embedded.file, version);
+                    const version = ts.sys.createHash?.(maped.embedded.file.content) ?? maped.embedded.file.content;
+                    fileVersions.set(maped.embedded.file, version);
                     return version;
                 }
             }
@@ -256,19 +256,19 @@ export function createTypeScriptRuntime(options: {
         }
         function getScriptSnapshot(fileName: string) {
             const version = getScriptVersion(fileName);
-            const cache = scriptSnapshots.get(fileName);
+            const cache = scriptSnapshots.get(fileName.toLowerCase());
             if (cache && cache[0] === version) {
                 return cache[1];
             }
-            const basename = upath.basename(fileName);
+            const basename = path.basename(fileName);
             if (basename === localTypes.typesFileName) {
                 return localTypesScript;
             }
-            const embedded = vueFiles.fromEmbeddedFileName(lsType, fileName);
-            if (embedded) {
-                const text = embedded.file.content;
+            const maped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (maped) {
+                const text = maped.embedded.file.content;
                 const snapshot = ts.ScriptSnapshot.fromString(text);
-                scriptSnapshots.set(fileName, [version, snapshot]);
+                scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
                 return snapshot;
             }
             let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
@@ -279,7 +279,7 @@ export function createTypeScriptRuntime(options: {
                     tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any')
                     tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
                 }
-                scriptSnapshots.set(fileName, [version, tsScript]);
+                scriptSnapshots.set(fileName.toLowerCase(), [version, tsScript]);
                 return tsScript;
             }
         }
