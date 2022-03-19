@@ -5,7 +5,10 @@ const fs = require('fs');
 const readFileSync = fs.readFileSync;
 
 const workspace = process.cwd();
-const viteBinPath = require.resolve('./node_modules/.bin/vite', { paths: [workspace] });
+let viteBinPath = require.resolve('./node_modules/.bin/vite', { paths: [workspace] });
+if (process.platform == 'win32') {
+    viteBinPath = require.resolve('./node_modules/vite/bin/vite.js', { paths: [workspace] });
+}
 const viteDir = path.dirname(require.resolve('vite/package.json', { paths: [workspace] }));
 const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
 const installCode = `
