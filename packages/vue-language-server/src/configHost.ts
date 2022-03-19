@@ -15,7 +15,7 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 	});
 
 	return {
-		getConfiguration(section, scopeUri) {
+		async getConfiguration(section, scopeUri) {
 			if (!settings[section]) {
 				settings[section] = {};
 			}

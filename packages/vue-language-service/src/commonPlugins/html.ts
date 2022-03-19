@@ -16,12 +16,8 @@ export default function (host: {
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
     const htmlLs = html.getLanguageService({ fileSystemProvider: host.fileSystemProvider });
 
+    let inited = false;
     let customData: html.IHTMLDataProvider[] = [];
-
-    getCustomData().then(data => {
-        customData = data;
-        htmlLs.setDataProviders(true, customData);
-    });
 
     host.configurationHost?.onDidChangeConfiguration(async () => {
         customData = await getCustomData();
@@ -34,7 +30,7 @@ export default function (host: {
         getHtmlDocument,
         getHtmlDataProviders: () => customData,
 
-        doComplete(document, position, context) {
+        async doComplete(document, position, context) {
             return worker(document, (htmlDocument) => {
 
                 if (!host.documentContext)
@@ -44,7 +40,7 @@ export default function (host: {
             });
         },
 
-        doHover(document, position) {
+        async doHover(document, position) {
             return worker(document, async (htmlDocument) => {
 
                 const hoverSettings = await host.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
@@ -93,7 +89,7 @@ export default function (host: {
             });
         },
 
-        format(document, range, options) {
+        async format(document, range, options) {
             return worker(document, async (htmlDocument) => {
 
                 const formatConfiguration = await host.configurationHost?.getConfiguration<html.HTMLFormatConfiguration>('html.format', document.uri);
@@ -117,7 +113,7 @@ export default function (host: {
             });
         },
 
-        doAutoInsert(document, position, context) {
+        async doAutoInsert(document, position, context) {
             return worker(document, async (htmlDocument) => {
 
                 const lastCharacter = context.lastChange.text[context.lastChange.text.length - 1];
@@ -152,6 +148,14 @@ export default function (host: {
             });
         },
     };
+
+    async function initCustomData() {
+        if (!inited) {
+            customData = await getCustomData();
+            htmlLs.setDataProviders(true, customData);
+            inited = true;
+        }
+    }
 
     async function getCustomData() {
 
@@ -188,11 +192,13 @@ export default function (host: {
         return [];
     }
 
-    function worker<T>(document: TextDocument, callback: (htmlDocument: html.HTMLDocument) => T) {
+    async function worker<T>(document: TextDocument, callback: (htmlDocument: html.HTMLDocument) => T) {
 
         const htmlDocument = getHtmlDocument(document);
         if (!htmlDocument)
             return;
+
+        await initCustomData();
 
         return callback(htmlDocument);
     }

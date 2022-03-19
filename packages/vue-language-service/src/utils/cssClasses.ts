@@ -1,9 +1,8 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as css from 'vscode-css-languageservice';
+import * as css from 'vscode-css-languageservice';
 import type { TextRange } from '@volar/vue-code-gen';
 
 export function findClassNames(
-	css: typeof import('vscode-css-languageservice'),
 	doc: TextDocument,
 	ss: css.Stylesheet,
 	cssLs: css.LanguageService,

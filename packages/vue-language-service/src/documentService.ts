@@ -9,7 +9,7 @@ import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
 import usePrettierPlugin from './commonPlugins/prettier';
-import useHtmlFormatPlugin from './commonPlugins/prettyhtml';
+import usePrettyhtmlPlugin from './commonPlugins/prettyhtml';
 import usePugPlugin from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
 import useSassFormatPlugin from './commonPlugins/sassFormatter';
@@ -51,10 +51,10 @@ export function getDocumentService(
 		getVueDocument,
 		scriptTsLs: undefined,
 	});
-	const htmlPlugin = patchHtmlFormat(useHtmlPlugin({
+	const htmlPlugin = useHtmlPlugin({
 		configurationHost,
 		fileSystemProvider,
-	}));
+	});
 	const pugPlugin = usePugPlugin({
 		configurationHost,
 		htmlPlugin,
@@ -75,13 +75,14 @@ export function getDocumentService(
 
 	// formatter plugins
 	const cssFormatPlugin = usePrettierPlugin(['css', 'less', 'scss', 'postcss']);
-	const htmlFormatPlugin = useHtmlFormatPlugin({ getPrintWidth });
+	const prettyhtmlPlugin = usePrettyhtmlPlugin({ getPrintWidth });
 	const pugFormatPlugin = usePugFormatPlugin();
 	const sassFormatPlugin = useSassFormatPlugin();
 	const formatPlugns = [
 		...customPlugins,
 		cssFormatPlugin,
-		htmlFormatPlugin,
+		prettyhtmlPlugin, // ignore in browser
+		htmlPlugin,
 		pugFormatPlugin,
 		sassFormatPlugin,
 		jsonPlugin,

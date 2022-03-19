@@ -1,5 +1,5 @@
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
-import * as html from 'vscode-html-languageservice';
+import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from './html';

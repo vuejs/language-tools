@@ -35,11 +35,7 @@ export default function (host: {
     };
     const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 
-    getCustomData().then(customData => {
-        cssLs.setDataProviders(true, customData);
-        scssLs.setDataProviders(true, customData);
-        lessLs.setDataProviders(true, customData);
-    });
+    let inited = false;
 
     host.configurationHost?.onDidChangeConfiguration(async () => {
         const customData = await getCustomData();
@@ -53,7 +49,7 @@ export default function (host: {
         getStylesheet,
         getCssLs,
 
-        doValidation(document) {
+        async doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {
 
                 const settings = await host.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
@@ -62,7 +58,7 @@ export default function (host: {
             });
         },
 
-        doComplete(document, position, context) {
+        async doComplete(document, position, context) {
             return worker(document, async (stylesheet, cssLs) => {
 
                 if (!host.documentContext)
@@ -90,7 +86,7 @@ export default function (host: {
             });
         },
 
-        doHover(document, position) {
+        async doHover(document, position) {
             return worker(document, async (stylesheet, cssLs) => {
 
                 const settings = await host.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
@@ -185,6 +181,16 @@ export default function (host: {
         },
     };
 
+    async function initCustomData() {
+        if (!inited) {
+            const customData = await getCustomData();
+            cssLs.setDataProviders(true, customData);
+            scssLs.setDataProviders(true, customData);
+            lessLs.setDataProviders(true, customData);
+            inited = true;
+        }
+    }
+
     async function getCustomData() {
 
         if (host.configurationHost) {
@@ -249,7 +255,7 @@ export default function (host: {
         return stylesheet;
     }
 
-    function worker<T>(document: TextDocument, callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T) {
+    async function worker<T>(document: TextDocument, callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T) {
 
         const stylesheet = getStylesheet(document);
         if (!stylesheet)
@@ -258,6 +264,8 @@ export default function (host: {
         const cssLs = getCssLs(document.languageId);
         if (!cssLs)
             return;
+
+        await initCustomData();
 
         return callback(stylesheet, cssLs);
     }

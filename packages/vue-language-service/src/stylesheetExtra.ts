@@ -1,11 +1,11 @@
+import * as shared from '@volar/shared';
 import { getMatchBindTexts } from '@volar/vue-code-gen/out/parsers/cssBindRanges';
 import { TextRange } from '@volar/vue-code-gen/out/types';
-import * as css from 'vscode-css-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { findClassNames } from './utils/cssClasses';
 import { EmbeddedFile } from '@volar/vue-typescript';
-import * as shared from '@volar/shared';
-import useCssPlugin from './commonPlugins/css';
+import type * as css from 'vscode-css-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import type useCssPlugin from './commonPlugins/css';
+import { findClassNames } from './utils/cssClasses';
 
 interface StylesheetNode {
     children: StylesheetNode[] | undefined,
@@ -93,7 +93,7 @@ export function createStylesheetExtra(cssPlugin: ReturnType<typeof useCssPlugin>
             const cssLs = cssPlugin.getCssLs?.(document.languageId);
 
             if (stylesheet && cssLs) {
-                const classNames = findClassNames(css, document, stylesheet, cssLs);
+                const classNames = findClassNames(document, stylesheet, cssLs);
                 for (const className in classNames) {
                     const offsets = classNames[className];
                     for (const offset of offsets) {
