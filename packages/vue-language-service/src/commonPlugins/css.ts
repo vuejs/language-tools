@@ -49,6 +49,9 @@ export default function (host: {
         getStylesheet,
         getCssLs,
 
+        // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
+        triggerCharacters: ['/', '-', ':'],
+
         async doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {
 

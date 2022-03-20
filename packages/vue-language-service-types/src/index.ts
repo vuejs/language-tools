@@ -7,9 +7,9 @@ type NullableResult<T> = NotNullableResult<T | undefined | null>;
 export type SemanticToken = [number, number, number, number, number];
 
 export interface ConfigurationHost {
-	getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
-	onDidChangeConfiguration: (cb: () => void) => void,
-	rootUris: string[],
+    getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
+    onDidChangeConfiguration: (cb: () => void) => void,
+    rootUris: string[],
 }
 
 export interface ExecuteCommandContext {
@@ -26,6 +26,9 @@ export interface ExecuteCommandContext {
 }
 
 export type EmbeddedLanguageServicePlugin = {
+
+    triggerCharacters?: string[],
+
     doValidation?(document: TextDocument, options: {
         semantic?: boolean;
         syntactic?: boolean;

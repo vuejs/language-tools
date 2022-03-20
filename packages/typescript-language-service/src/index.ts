@@ -1,9 +1,8 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import * as completions from './services/completion';
-import * as completions2 from './services/completion2';
-import * as directiveCommentCompletions from './services/directiveCommentCompletions';
-import * as jsDocCompletions from './services/jsDocCompletions';
-import * as completionResolve from './services/completionResolve';
+import * as completions from './services/completions/basic';
+import * as directiveCommentCompletions from './services/completions/directiveComment';
+import * as jsDocCompletions from './services/completions/jsDoc';
+import * as completionResolve from './services/completions/resolve';
 import * as definitions from './services/definition';
 import * as typeDefinitions from './services/typeDefinition';
 import * as references from './services/references';
@@ -30,7 +29,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
-export { getTriggerCharacters } from './services/completion';
 import * as path from 'path';
 
 export interface Settings {
@@ -61,7 +59,7 @@ export function createLanguageService(
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),
 		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
-		doComplete: completions2.register(languageService, getValidTextDocument, settings, ts),
+		doComplete: completions.register(languageService, getValidTextDocument, settings, ts),
 		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, settings),
 		doDirectiveCommentComplete: directiveCommentCompletions.register(getValidTextDocument),
 		doJsDocComplete: jsDocCompletions.register(languageService, getValidTextDocument),
@@ -82,7 +80,6 @@ export function createLanguageService(
 			getTextDocument,
 			getValidTextDocument,
 			isValidFile,
-			doCompleteSync: completions.register(languageService, getValidTextDocument, ts),
 		},
 	};
 

@@ -91,7 +91,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 			(await import('./features/customFeatures')).register(connection, documents, () => projects);
 			(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, params);
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, ts.version);
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities);
 
 			connection.onInitialized(async () => {
 

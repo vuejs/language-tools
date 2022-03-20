@@ -1,12 +1,12 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { entriesToLocations } from '../utils/transforms';
-import { handleKindModifiers } from './completion';
-import type { Data } from './completion';
-import * as previewer from '../utils/previewer';
+import { entriesToLocations } from '../../utils/transforms';
+import { handleKindModifiers } from './basic';
+import type { Data } from './basic';
+import * as previewer from '../../utils/previewer';
 import * as shared from '@volar/shared';
-import type { Settings } from '../';
+import type { Settings } from '../..';
 
 export function register(
 	languageService: ts.LanguageService,
@@ -16,7 +16,11 @@ export function register(
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
-		const data: Data = item.data as any;
+		const data: Data | undefined = item.data as any;
+
+		if (!data)
+			return item;
+
 		const fileName = data.fileName;
 		let offset = data.offset;
 		const document = getTextDocument(data.uri);

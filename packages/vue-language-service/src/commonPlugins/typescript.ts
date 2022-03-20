@@ -2,13 +2,45 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
+import * as semver from 'semver';
+import * as vscode from 'vscode-languageserver-protocol';
+
+function getBasicTriggerCharacters(tsVersion: string) {
+
+    const triggerCharacters = ['.', '"', '\'', '`', '/', '<'];
+
+    // https://github.com/microsoft/vscode/blob/8e65ae28d5fb8b3c931135da1a41edb9c80ae46f/extensions/typescript-language-features/src/languageFeatures/completions.ts#L811-L833
+    if (semver.lt(tsVersion, '3.1.0') || semver.gte(tsVersion, '3.2.0')) {
+        triggerCharacters.push('@');
+    }
+    if (semver.gte(tsVersion, '3.8.1')) {
+        triggerCharacters.push('#');
+    }
+    if (semver.gte(tsVersion, '4.3.0')) {
+        triggerCharacters.push(' ');
+    }
+
+    return triggerCharacters;
+}
+
+const jsDocTriggerCharacters = ['*'];
+const directiveCommentTriggerCharacters = ['@'];
 
 export default function (host: {
+    tsVersion: string,
     getTsLs: () => ts2.LanguageService,
     baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
 }): EmbeddedLanguageServicePlugin {
 
+    const basicTriggerCharacters = getBasicTriggerCharacters(host.tsVersion);
+
     return {
+
+        triggerCharacters: [
+            ...basicTriggerCharacters,
+            ...jsDocTriggerCharacters,
+            ...directiveCommentTriggerCharacters,
+        ],
 
         doValidation(document, options) {
             if (isTsDocument(document)) {
@@ -16,15 +48,45 @@ export default function (host: {
             }
         },
 
-        doComplete(document, position, context) {
+        async doComplete(document, position, context) {
             if (isTsDocument(document)) {
-                const options: ts.GetCompletionsAtPositionOptions = {
-                    ...host.baseCompletionOptions,
-                    triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
-                    triggerKind: context?.triggerKind,
+
+                let result: vscode.CompletionList = {
+                    isIncomplete: false,
+                    items: [],
                 };
 
-                return host.getTsLs().doComplete(document.uri, position, options);
+                if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
+
+                    const options: ts.GetCompletionsAtPositionOptions = {
+                        ...host.baseCompletionOptions,
+                        triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
+                        triggerKind: context?.triggerKind,
+                    };
+                    const basicResult = await host.getTsLs().doComplete(document.uri, position, options);
+
+                    if (basicResult) {
+                        result = basicResult;
+                    }
+                }
+                if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && jsDocTriggerCharacters.includes(context.triggerCharacter))) {
+
+                    const jsdocResult = await host.getTsLs().doJsDocComplete(document.uri, position);
+
+                    if (jsdocResult) {
+                        result.items.push(jsdocResult);
+                    }
+                }
+                if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && directiveCommentTriggerCharacters.includes(context.triggerCharacter))) {
+
+                    const directiveCommentResult = await host.getTsLs().doDirectiveCommentComplete(document.uri, position);
+
+                    if (directiveCommentResult) {
+                        result.items = result.items.concat(directiveCommentResult);
+                    }
+                }
+
+                return result;
             }
         },
 

@@ -65,6 +65,7 @@ export function getDocumentService(
 	});
 	const jsonPlugin = useJsonPlugin({});
 	const tsPlugin = useTsPlugin({
+		tsVersion: ts.version,
 		getTsLs: () => tsLs,
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({

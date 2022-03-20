@@ -1,10 +1,11 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as PConst from '../protocol.const';
+import * as PConst from '../../protocol.const';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as semver from 'semver';
-import { parseKindModifier } from '../utils/modifiers';
+import { parseKindModifier } from '../../utils/modifiers';
+import { Settings } from '../..';
 
 export interface Data {
 	uri: string,
@@ -13,40 +14,33 @@ export interface Data {
 	originalItem: ts.CompletionEntry
 }
 
-export function getTriggerCharacters(tsVersion: string) {
-
-	const triggerCharacters = ['.', '"', '\'', '`', '/', '<'];
-
-	// https://github.com/microsoft/vscode/blob/8e65ae28d5fb8b3c931135da1a41edb9c80ae46f/extensions/typescript-language-features/src/languageFeatures/completions.ts#L811-L833
-	if (semver.lt(tsVersion, '3.1.0') || semver.gte(tsVersion, '3.2.0')) {
-		triggerCharacters.push('@');
-	}
-	if (semver.gte(tsVersion, '3.8.1')) {
-		triggerCharacters.push('#');
-	}
-	if (semver.gte(tsVersion, '4.3.0')) {
-		triggerCharacters.push(' ');
-	}
-
-	return triggerCharacters;
-}
-
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
+	settings: Settings,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	return (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): vscode.CompletionList | undefined => {
+
+	return async (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): Promise<vscode.CompletionList | undefined> => {
 
 		const document = getTextDocument(uri);
-		if (!document) return;
+		if (!document)
+			return;
 
+		const preferences = await settings.getPreferences?.(document) ?? {};
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		let completionContext: ReturnType<typeof languageService.getCompletionsAtPosition> | undefined;
-		try { completionContext = languageService.getCompletionsAtPosition(fileName, offset, options); } catch { }
-		if (completionContext === undefined) return;
+		try {
+			completionContext = languageService.getCompletionsAtPosition(fileName, offset, {
+				...preferences,
+				...options,
+			});
+		} catch { }
+
+		if (completionContext === undefined)
+			return;
 
 		const wordRange = completionContext.optionalReplacementSpan ? vscode.Range.create(
 			document.positionAt(completionContext.optionalReplacementSpan.start),

@@ -6,7 +6,6 @@ export function register(
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	legend: vscode.SemanticTokensLegend,
 	server: vscode.ServerCapabilities,
-	tsVersion: string,
 ) {
 	if (features.references) {
 		server.referencesProvider = true;
@@ -54,9 +53,8 @@ export function register(
 		};
 	}
 	if (features.completion) {
-		const triggerCharacters = vue.getTriggerCharacters(tsVersion);
 		server.completionProvider = {
-			triggerCharacters: Object.values(triggerCharacters).flat(),
+			triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./'.split(''), // all symbols on keyboard
 			resolveProvider: true,
 		};
 		server.executeCommandProvider = {

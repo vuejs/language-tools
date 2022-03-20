@@ -30,6 +30,9 @@ export default function (host: {
         getHtmlDocument,
         getHtmlDataProviders: () => customData,
 
+        // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
+        triggerCharacters: ['.', ':', '<', '"', '=', '/'],
+
         async doComplete(document, position, context) {
             return worker(document, (htmlDocument) => {
 

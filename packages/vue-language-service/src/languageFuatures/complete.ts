@@ -143,7 +143,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (!plugin.doComplete)
 								continue;
 
-							if (completionContext?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(completionContext.triggerCharacter))
+							if (completionContext?.triggerCharacter && !plugin.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
 							if (cache!.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
@@ -204,7 +204,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!plugin.doComplete)
 						continue;
 
-					if (completionContext?.triggerCharacter && !plugin.context?.triggerCharacters?.includes(completionContext.triggerCharacter))
+					if (completionContext?.triggerCharacter && !plugin.triggerCharacters?.includes(completionContext.triggerCharacter))
 						continue;
 
 					if (cache.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache.mainCompletion.documentUri !== document.uri))

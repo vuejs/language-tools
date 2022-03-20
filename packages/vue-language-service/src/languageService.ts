@@ -11,10 +11,8 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './commonPlugins/css';
-import useDirectiveCommentPlugin from './commonPlugins/directiveComment';
 import useEmmetPlugin from './commonPlugins/emmet';
 import useHtmlPlugin from './commonPlugins/html';
-import useJsDocPlugin from './commonPlugins/jsDoc';
 import useJsonPlugin from './commonPlugins/json';
 import usePugPlugin from './commonPlugins/pug';
 import useTsPlugin from './commonPlugins/typescript';
@@ -50,25 +48,17 @@ import useRefSugarConversionsPlugin from './vuePlugins/refSugarConversions';
 import useScriptSetupConversionsPlugin from './vuePlugins/scriptSetupConversions';
 import useTagNameCasingConversionsPlugin from './vuePlugins/tagNameCasingConversions';
 import useVuePlugin from './vuePlugins/vue';
-import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes, triggerCharacters as vueTemplateLanguageTriggerCharacters } from './vuePlugins/vueTemplateLanguage';
+import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './vuePlugins/vueTemplateLanguage';
 // import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
 export type LanguageServicePlugin = ReturnType<typeof defineLanguageServicePlugin>;
 
-const directiveCommentTriggerCharacters = ['@'];
-const jsDocTriggerCharacters = ['*'];
-const cssTriggerCharacters = ['/', '-', ':']; // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
-const htmlTriggerCharacters = ['.', ':', '<', '"', '=', '/']; // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
-const jsonTriggerCharacters = ['"', ':']; // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
-const vueTriggerCharacters = htmlTriggerCharacters;
-
 let pluginId = 0;
 
 function defineLanguageServicePlugin<T extends EmbeddedLanguageServicePlugin>(plugin: T, context?: {
 	isAdditionalCompletion?: boolean,
-	triggerCharacters?: string[],
 }) {
 	return {
 		id: pluginId++,
@@ -90,19 +80,6 @@ export function getSemanticTokenLegend() {
 	};
 
 	return semanticTokenLegend;
-}
-
-export function getTriggerCharacters(tsVersion: string) {
-	return [...new Set([
-		...vueTriggerCharacters,
-		...ts2.getTriggerCharacters(tsVersion),
-		...jsonTriggerCharacters,
-		...jsDocTriggerCharacters,
-		...cssTriggerCharacters,
-		...htmlTriggerCharacters,
-		...directiveCommentTriggerCharacters,
-		...vueTemplateLanguageTriggerCharacters,
-	])];
 }
 
 export function createLanguageService(
@@ -136,7 +113,6 @@ export function createLanguageService(
 	const templateTsLsHost = tsRuntime.getTsLsHost('template');
 	const templateTsLs = templateTsLsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsLsHost, templateTsLsRaw, tsSettings) : undefined;
 	const blockingRequests = new Set<Promise<any>>();
-	const tsTriggerCharacters = ts2.getTriggerCharacters(ts.version);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
 	// plugins
@@ -148,9 +124,6 @@ export function createLanguageService(
 			scriptTsLs,
 			documentContext,
 		}),
-		{
-			triggerCharacters: vueTriggerCharacters,
-		},
 	);
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
@@ -159,7 +132,6 @@ export function createLanguageService(
 			documentContext,
 			fileSystemProvider,
 		}),
-		htmlTriggerCharacters,
 	);
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',
@@ -168,7 +140,6 @@ export function createLanguageService(
 			htmlPlugin: vueTemplateHtmlPlugin,
 			documentContext,
 		}),
-		[],
 	);
 	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
@@ -176,29 +147,22 @@ export function createLanguageService(
 			documentContext,
 			fileSystemProvider,
 		}),
-		{
-			triggerCharacters: cssTriggerCharacters,
-		},
 	);
 	const jsonPlugin = defineLanguageServicePlugin(
 		useJsonPlugin({
 			schema: undefined, // TODO
 			schemaRequestService,
 		}),
-		{
-			triggerCharacters: cssTriggerCharacters,
-		},
 	);
 	const emmetPlugin = defineLanguageServicePlugin(
 		useEmmetPlugin({
 			configurationHost,
 		}),
 		{
-			triggerCharacters: [],
 			isAdditionalCompletion: true,
 		},
 	);
-	const scriptTsPlugins = useTsPlugins(
+	const scriptTsPlugin = useTsPlugins(
 		scriptTsLs,
 		false,
 		{
@@ -206,7 +170,7 @@ export function createLanguageService(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		},
 	);
-	const templateTsPlugins = templateTsLs ? useTsPlugins(
+	const templateTsPlugin = templateTsLs ? useTsPlugins(
 		templateTsLs,
 		true,
 		{
@@ -216,7 +180,7 @@ export function createLanguageService(
 			includeCompletionsForModuleExports: false,
 			includeCompletionsForImportStatements: false,
 		},
-	) : [];
+	) : undefined;
 	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
 			configurationHost,
@@ -283,8 +247,8 @@ export function createLanguageService(
 		scriptSetupConversionsPlugin,
 		refSugarConversionsPlugin,
 		tagNameCasingConversionsPlugin,
-		...scriptTsPlugins,
-		...templateTsPlugins,
+		scriptTsPlugin,
+		...(templateTsPlugin ? [templateTsPlugin] : []),
 	]) {
 		allPlugins.set(plugin.id, plugin);
 	}
@@ -309,11 +273,11 @@ export function createLanguageService(
 				refSugarConversionsPlugin,
 				tagNameCasingConversionsPlugin,
 			];
-			if (lsType === 'template') {
-				plugins = plugins.concat(templateTsPlugins);
+			if (lsType === 'template' && templateTsPlugin) {
+				plugins.push(templateTsPlugin);
 			}
 			else if (lsType === 'script') {
-				plugins = plugins.concat(scriptTsPlugins);
+				plugins.push(scriptTsPlugin);
 				plugins.push(autoDotValuePlugin);
 			}
 			return plugins;
@@ -438,7 +402,7 @@ export function createLanguageService(
 			return document;
 		}
 	}
-	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T, triggerCharacters: string[]) {
+	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
 				configurationHost,
@@ -467,20 +431,15 @@ export function createLanguageService(
 				tsSettings,
 				tsRuntime,
 			}),
-			{
-				triggerCharacters: [...triggerCharacters, ...vueTemplateLanguageTriggerCharacters],
-			},
 		);
 	}
 	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, baseCompletionOptions: ts.GetCompletionsAtPositionOptions) {
 		const _languageSupportPlugin = defineLanguageServicePlugin(
 			useTsPlugin({
+				tsVersion: ts.version,
 				getTsLs: () => tsLs,
 				baseCompletionOptions,
 			}),
-			{
-				triggerCharacters: tsTriggerCharacters,
-			},
 		);
 		const languageSupportPlugin: LanguageServicePlugin = isTemplatePlugin ? {
 			..._languageSupportPlugin,
@@ -506,29 +465,7 @@ export function createLanguageService(
 				return tsComplete;
 			},
 		} : _languageSupportPlugin;
-		const jsDocPlugin = defineLanguageServicePlugin(
-			useJsDocPlugin({
-				getTsLs: () => tsLs,
-			}),
-			{
-				triggerCharacters: jsDocTriggerCharacters,
-				isAdditionalCompletion: true,
-			},
-		);
-		const directiveCommentPlugin = defineLanguageServicePlugin(
-			useDirectiveCommentPlugin({
-				getTsLs: () => tsLs,
-			}),
-			{
-				triggerCharacters: directiveCommentTriggerCharacters,
-				isAdditionalCompletion: true,
-			},
-		);
-		return [
-			languageSupportPlugin,
-			jsDocPlugin,
-			directiveCommentPlugin,
-		];
+		return languageSupportPlugin;
 	}
 	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
 

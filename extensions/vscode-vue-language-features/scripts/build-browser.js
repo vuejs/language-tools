@@ -12,11 +12,6 @@ require('esbuild').build({
     plugins: [{
         name: 'node-deps',
         setup(build) {
-            // build.onResolve({ filter: /^(vscode-.*|estree-walker|jsonc-parser)/ }, args => {
-            //     const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
-            //     const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
-            //     return { path: pathEsm }
-            // })
             build.onResolve({ filter: /^\@vue\/.*$/ }, args => {
                 const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
                 const pathEsm = pathUmdMay.replace('.cjs.', '.esm-browser.')
@@ -47,17 +42,9 @@ require('esbuild').build({
     plugins: [{
         name: 'node-deps',
         setup(build) {
-            // build.onResolve({ filter: /^(vscode-.*|estree-walker|jsonc-parser)/ }, args => {
-            //     const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
-            //     const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
-            //     if (pathUmdMay !== pathEsm)
-            //         console.log(pathUmdMay)
-            //     return { path: pathEsm }
-            // })
             build.onResolve({ filter: /^vscode-.*-languageservice$/ }, args => {
                 const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
                 const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
-                console.log(pathUmdMay, pathEsm)
                 return { path: pathEsm }
             })
             build.onResolve({ filter: /^\@vue\/.*$/ }, args => {

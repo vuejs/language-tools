@@ -20,10 +20,6 @@ export const semanticTokenTypes = [
     'operator', // namespaced component accessor: '.'
 ];
 
-export const triggerCharacters = [
-    '@', // vue event shorthand
-];
-
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
     stop: 'call event.stopPropagation().',
@@ -88,6 +84,11 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
     return {
 
         ...host.templateLanguagePlugin,
+
+        triggerCharacters: [
+            ...host.templateLanguagePlugin.triggerCharacters ?? [],
+            '@', // vue event shorthand
+        ],
 
         async doValidation(document, options) {
 
