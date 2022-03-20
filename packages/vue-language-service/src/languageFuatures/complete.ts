@@ -151,7 +151,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							const embeddedCompletionList = await plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
-							if (!embeddedCompletionList)
+							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
 
 							if (!plugin.context?.isAdditionalCompletion) {
@@ -212,7 +212,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const completionList = await plugin.doComplete(document, position, completionContext);
 
-					if (!completionList)
+					if (!completionList || !completionList.items.length)
 						continue;
 
 					if (!plugin.context?.isAdditionalCompletion) {

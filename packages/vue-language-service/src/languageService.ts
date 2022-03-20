@@ -156,9 +156,6 @@ export function createLanguageService(
 		useEmmetPlugin({
 			configurationHost,
 		}),
-		{
-			isAdditionalCompletion: true,
-		},
 	);
 	const scriptTsPlugin = useTsPlugins(
 		scriptTsLs,
