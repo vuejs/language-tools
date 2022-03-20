@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver';
 import { ConfigurationHost } from '@volar/vue-language-service';
 
-export function createLsConfigs(rootFolders: string[], connection: vscode.Connection): ConfigurationHost {
+export function createLsConfigs(rootFolderUris: string[], connection: vscode.Connection): ConfigurationHost {
 
 	let settings: Record<string, Record<string, Promise<any>>> = {};
 
@@ -28,6 +28,6 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 		onDidChangeConfiguration(cb) {
 			callbacks.push(cb);
 		},
-		rootUris: rootFolders,
+		rootUris: rootFolderUris,
 	};
 }

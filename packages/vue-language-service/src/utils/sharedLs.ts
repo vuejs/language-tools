@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts2 from '@volar/typescript-language-service';
 
@@ -18,9 +17,9 @@ export function getDummyTsLs(
 			getProjectVersion: () => dummyProjectVersion.toString(),
 			getScriptVersion: () => dummyProjectVersion.toString(),
 			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),
-			getScriptFileNames: () => [shared.uriToFsPath(doc.uri)],
-			getScriptSnapshot: fileName => {
-				if (shared.fsPathToUri(fileName) === shared.normalizeUri(doc.uri)) {
+			getScriptFileNames: () => [doc.uri],
+			getScriptSnapshot: uri => {
+				if (uri === doc.uri) {
 					return ts.ScriptSnapshot.fromString(doc.getText());
 				}
 			},

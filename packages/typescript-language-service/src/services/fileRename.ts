@@ -1,7 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import type { Settings } from '../';
 
@@ -18,11 +17,8 @@ export function register(
 			settings.getPreferences?.(document) ?? {},
 		]) : [{}, {}];
 
-		const fileToRename = shared.uriToFsPath(oldUri);
-		const newFilePath = shared.uriToFsPath(newUri);
-
 		let response: ReturnType<typeof languageService.getEditsForFileRename> | undefined;
-		try { response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences); } catch { }
+		try { response = languageService.getEditsForFileRename(oldUri, newUri, formatOptions, preferences); } catch { }
 		if (!response?.length) return;
 
 		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);

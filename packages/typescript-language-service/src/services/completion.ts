@@ -2,13 +2,11 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as PConst from '../protocol.const';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import * as semver from 'semver';
 import { parseKindModifier } from '../utils/modifiers';
 
 export interface Data {
 	uri: string,
-	fileName: string,
 	offset: number,
 	originalItem: ts.CompletionEntry
 }
@@ -41,11 +39,10 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		let completionContext: ReturnType<typeof languageService.getCompletionsAtPosition> | undefined;
-		try { completionContext = languageService.getCompletionsAtPosition(fileName, offset, options); } catch { }
+		try { completionContext = languageService.getCompletionsAtPosition(document.uri, offset, options); } catch { }
 		if (completionContext === undefined) return;
 
 		const wordRange = completionContext.optionalReplacementSpan ? vscode.Range.create(
@@ -129,7 +126,6 @@ export function register(
 
 				const data: Data = {
 					uri,
-					fileName,
 					offset,
 					originalItem: tsEntry,
 				};

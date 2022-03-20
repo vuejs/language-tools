@@ -14,7 +14,7 @@ const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
 export function createProjects(
 	runtimeEnv: RuntimeEnvironment,
-	rootPaths: string[],
+	rootPathUris: string[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
@@ -34,7 +34,7 @@ export function createProjects(
 	const updatedUris = new Set<string>();
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
-	for (const rootPath of rootPaths) {
+	for (const rootPath of rootPathUris) {
 		workspaces.set(rootPath, createWorkspace(
 			runtimeEnv,
 			rootPath,
@@ -78,8 +78,7 @@ export function createProjects(
 		for (const workspace of workspaces.values()) {
 
 			for (const change of handler.changes) {
-				const fileName = shared.uriToFsPath(change.uri);
-				if (rootTsConfigNames.includes(path.basename(fileName)) || workspace.projects.fsPathHas(fileName)) {
+				if (rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)) || workspace.projects.uriHas(change.uri)) {
 					tsConfigChanges.push(change);
 				}
 				else {
@@ -92,13 +91,12 @@ export function createProjects(
 				clearDiagnostics();
 
 				for (const tsConfigChange of tsConfigChanges) {
-					const tsConfig = shared.uriToFsPath(tsConfigChange.uri);
-					if (workspace.projects.fsPathHas(tsConfig)) {
-						workspace.projects.fsPathDelete(tsConfig);
-						(async () => (await workspace.projects.fsPathGet(tsConfig))?.dispose())();
+					if (workspace.projects.uriHas(tsConfigChange.uri)) {
+						workspace.projects.uriDelete(tsConfigChange.uri);
+						(async () => (await workspace.projects.uriGet(tsConfigChange.uri))?.dispose())();
 					}
 					if (tsConfigChange.type !== vscode.FileChangeType.Deleted) {
-						workspace.getProjectByCreate(tsConfig); // create new project
+						workspace.getProjectByCreate(tsConfigChange.uri); // create new project
 					}
 				}
 			}
@@ -110,7 +108,7 @@ export function createProjects(
 				}
 			}
 
-			onDriveFileUpdated(undefined);
+			onDriveFileUpdated();
 		}
 	});
 
@@ -121,11 +119,11 @@ export function createProjects(
 		getProject,
 	};
 
-	async function onDriveFileUpdated(driveFileName: string | undefined) {
+	async function onDriveFileUpdated() {
 
 		const req = ++semanticTokensReq;
 
-		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
+		await updateDiagnostics(undefined);
 
 		await shared.sleep(100);
 
@@ -229,9 +227,8 @@ export function createProjects(
 
 		await waitForOnDidChangeWatchedFiles(uri);
 
-		const fileName = shared.uriToFsPath(uri);
 		const rootPaths = [...workspaces.keys()]
-			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
+			.filter(rootPath => shared.isFileInDir(uri, rootPath))
 			.sort(sortPaths);
 
 		for (const rootPath of rootPaths) {
@@ -266,7 +263,7 @@ export function createProjects(
 
 function createWorkspace(
 	runtimeEnv: RuntimeEnvironment,
-	rootPath: string,
+	rootPathUri: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
@@ -276,7 +273,7 @@ function createWorkspace(
 	inferredCompilerOptions: ts.CompilerOptions,
 ) {
 
-	const rootTsConfigs = ts.sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+	const rootTsConfigs = ts.sys.readDirectory(rootPathUri.replace('file://', ''), rootTsConfigNames, undefined, ['**/*']).map(fileName => 'file://' + fileName);
 	const projects = shared.createPathMap<Project>();
 	let inferredProject: Project | undefined;
 
@@ -308,7 +305,7 @@ function createWorkspace(
 				runtimeEnv,
 				ts,
 				options,
-				rootPath,
+				rootPathUri,
 				inferredCompilerOptions,
 				tsLocalized,
 				documents,
@@ -320,8 +317,6 @@ function createWorkspace(
 	}
 	async function findMatchConfigs(uri: string) {
 
-		const fileName = shared.uriToFsPath(uri);
-
 		prepareClosestootParsedCommandLine();
 		return await findDirectIncludeTsconfig() ?? await findIndirectReferenceTsconfig();
 
@@ -330,7 +325,7 @@ function createWorkspace(
 			let matches: string[] = [];
 
 			for (const rootTsConfig of rootTsConfigs) {
-				if (shared.isFileInDir(shared.uriToFsPath(uri), path.dirname(rootTsConfig))) {
+				if (shared.isFileInDir(uri, path.dirname(rootTsConfig))) {
 					matches.push(rootTsConfig);
 				}
 			}
@@ -345,12 +340,12 @@ function createWorkspace(
 			return findTsconfig(async tsconfig => {
 				const parsedCommandLine = await getParsedCommandLine(tsconfig);
 				const fileNames = new Set(parsedCommandLine.fileNames);
-				return fileNames.has(fileName);
+				return fileNames.has(uri);
 			});
 		}
 		function findIndirectReferenceTsconfig() {
 			return findTsconfig(async tsconfig => {
-				const project = await projects.fsPathGet(tsconfig);
+				const project = await projects.uriGet(tsconfig);
 				const ls = await project?.getLanguageServiceDontCreate();
 				const validDoc = ls?.__internal__.context.getTsLs('script').__internal__.getValidTextDocument(uri);
 				return !!validDoc;
@@ -361,7 +356,7 @@ function createWorkspace(
 			const checked = new Set<string>();
 
 			for (const rootTsConfig of rootTsConfigs.sort(sortPaths)) {
-				const project = await projects.fsPathGet(rootTsConfig);
+				const project = await projects.uriGet(rootTsConfig);
 				if (project) {
 
 					const chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
@@ -427,21 +422,21 @@ function createWorkspace(
 			return project.getParsedCommandLine();
 		}
 	}
-	function getProjectByCreate(tsConfig: string) {
-		let project = projects.fsPathGet(tsConfig);
+	function getProjectByCreate(tsConfigUri: string) {
+		let project = projects.uriGet(tsConfigUri);
 		if (!project) {
 			project = createProject(
 				runtimeEnv,
 				ts,
 				options,
-				path.dirname(tsConfig),
-				tsConfig,
+				path.dirname(tsConfigUri),
+				tsConfigUri,
 				tsLocalized,
 				documents,
 				connection,
 				lsConfigs,
 			);
-			projects.fsPathSet(tsConfig, project);
+			projects.uriSet(tsConfigUri, project);
 		}
 		return project;
 	}

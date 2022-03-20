@@ -6,7 +6,7 @@ import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as fs from 'fs';
-import * as shared from '@volar/shared';
+import { URI } from 'vscode-uri';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 
@@ -31,8 +31,9 @@ createLanguageServer(connection, {
     },
     fileSystemProvide: {
         stat: (uri) => {
+            const parsedUri = URI.parse(uri);
             return new Promise<html.FileStat>((resolve, reject) => {
-                fs.stat(shared.uriToFsPath(uri), (err, stats) => {
+                fs.stat(parsedUri.fsPath, (err, stats) => {
                     if (stats) {
                         resolve({
                             type: stats.isFile() ? html.FileType.File
@@ -51,8 +52,9 @@ createLanguageServer(connection, {
             });
         },
         readDirectory: (uri) => {
+            const parsedUri = URI.parse(uri);
             return new Promise<[string, html.FileType][]>((resolve, reject) => {
-                fs.readdir(shared.uriToFsPath(uri), (err, files) => {
+                fs.readdir(parsedUri.fsPath, (err, files) => {
                     if (files) {
                         resolve(files.map(file => [file, html.FileType.File]));
                     }

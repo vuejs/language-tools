@@ -34,9 +34,9 @@ export function register(
 					connection.workspace.applyEdit({
 						edit: {
 							documentChanges: [
-								vscode.CreateFile.create(shared.fsPathToUri(fileName)),
+								vscode.CreateFile.create(fileName),
 								vscode.TextDocumentEdit.create(
-									vscode.OptionalVersionedTextDocumentIdentifier.create(shared.fsPathToUri(fileName), null),
+									vscode.OptionalVersionedTextDocumentIdentifier.create(fileName, null),
 									[{ range: vscode.Range.create(0, 0, 0, 0), newText: localTypes.code }],
 								),
 							]
@@ -83,7 +83,7 @@ export function register(
 				const allVueDocuments = context.vueDocuments.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(vueFile.uri)));
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.vueLsHost.getCurrentDirectory(), vueFile.uri));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}

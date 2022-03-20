@@ -5,7 +5,6 @@ import { entriesToLocations } from '../utils/transforms';
 import { handleKindModifiers } from './completion';
 import type { Data } from './completion';
 import * as previewer from '../utils/previewer';
-import * as shared from '@volar/shared';
 import type { Settings } from '../';
 
 export function register(
@@ -17,7 +16,6 @@ export function register(
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
 		const data: Data = item.data as any;
-		const fileName = data.fileName;
 		let offset = data.offset;
 		const document = getTextDocument(data.uri);
 
@@ -32,7 +30,7 @@ export function register(
 
 		let details: ts.CompletionEntryDetails | undefined;
 		try {
-			details = languageService.getCompletionEntryDetails(fileName, offset, data.originalItem.name, formatOptions, data.originalItem.source, preferences, data.originalItem.data);
+			details = languageService.getCompletionEntryDetails(data.uri, offset, data.originalItem.name, formatOptions, data.originalItem.source, preferences, data.originalItem.data);
 		}
 		catch (err) {
 			item.detail = `[TS Error] ${err}`;
@@ -48,7 +46,7 @@ export function register(
 				detailTexts.push(action.description);
 				for (const changes of action.changes) {
 					const entries = changes.textChanges.map(textChange => {
-						return { fileName, textSpan: textChange.span }
+						return { fileName: data.uri, textSpan: textChange.span }
 					});
 					const locs = entriesToLocations(entries, getTextDocument2);
 					locs.forEach((loc, index) => {
@@ -58,7 +56,7 @@ export function register(
 			}
 		}
 		if (details.displayParts) {
-			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: shared.fsPathToUri }, getTextDocument2));
+			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: uri => uri }, getTextDocument2));
 		}
 		if (detailTexts.length) {
 			item.detail = detailTexts.join('\n');
@@ -66,7 +64,7 @@ export function register(
 
 		item.documentation = {
 			kind: 'markdown',
-			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: shared.fsPathToUri }, getTextDocument2),
+			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: uri => uri }, getTextDocument2),
 		};
 
 		if (details) {

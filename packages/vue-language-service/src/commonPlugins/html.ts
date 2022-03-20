@@ -161,32 +161,32 @@ export default function (host: {
 
         if (host.configurationHost) {
 
-            const paths = new Set<string>();
-            const customData: string[] = await host.configurationHost.getConfiguration('html.customData') ?? [];
-            const rootPaths = host.configurationHost.rootUris.map(shared.uriToFsPath);
+            // const paths = new Set<string>();
+            // const customData: string[] = await host.configurationHost.getConfiguration('html.customData') ?? [];
+            // const rootPaths = host.configurationHost.rootUris.map(shared.uriToFsPath);
 
-            for (const customDataPath of customData) {
-                try {
-                    const jsonPath = require.resolve(customDataPath, { paths: rootPaths });
-                    paths.add(jsonPath);
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            }
+            // for (const customDataPath of customData) {
+            //     try {
+            //         const jsonPath = require.resolve(customDataPath, { paths: rootPaths });
+            //         paths.add(jsonPath);
+            //     }
+            //     catch (error) {
+            //         console.error(error);
+            //     }
+            // }
 
-            const newData: html.IHTMLDataProvider[] = [];
+            // const newData: html.IHTMLDataProvider[] = [];
 
-            for (const path of paths) {
-                try {
-                    newData.push(html.newHTMLDataProvider(path, require(path)));
-                }
-                catch (error) {
-                    console.error(error);
-                }
-            }
+            // for (const path of paths) {
+            //     try {
+            //         newData.push(html.newHTMLDataProvider(path, require(path)));
+            //     }
+            //     catch (error) {
+            //         console.error(error);
+            //     }
+            // }
 
-            return newData;
+            // return newData;
         }
 
         return [];

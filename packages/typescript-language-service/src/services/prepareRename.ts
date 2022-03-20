@@ -1,6 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 /* typescript-language-features is hardcode true */
@@ -14,11 +13,10 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		let renameInfo: ReturnType<typeof languageService.getRenameInfo> | undefined;
-		try { renameInfo = languageService.getRenameInfo(fileName, offset, renameInfoOptions); } catch { }
+		try { renameInfo = languageService.getRenameInfo(document.uri, offset, renameInfoOptions); } catch { }
 		if (!renameInfo) return;
 
 		if (!renameInfo.canRename) {

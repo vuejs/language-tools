@@ -1,6 +1,5 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
@@ -43,7 +42,7 @@ export default function (host: {
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
 		if (!ast) {
-			ast = host.ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), host.ts.ScriptTarget.Latest);
+			ast = host.ts.createSourceFile(tsDoc.uri, tsDoc.getText(), host.ts.ScriptTarget.Latest);
 			asts.set(tsDoc, ast);
 		}
 		return ast;

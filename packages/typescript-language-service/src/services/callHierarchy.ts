@@ -1,5 +1,4 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
@@ -14,11 +13,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		let calls: ReturnType<typeof languageService.prepareCallHierarchy> | undefined;
-		try { calls = languageService.prepareCallHierarchy(fileName, offset); } catch { }
+		try { calls = languageService.prepareCallHierarchy(uri, offset); } catch { }
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];
@@ -29,11 +27,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
 
 		let calls: ReturnType<typeof languageService.provideCallHierarchyIncomingCalls> | undefined;
-		try { calls = languageService.provideCallHierarchyIncomingCalls(fileName, offset); } catch { }
+		try { calls = languageService.provideCallHierarchyIncomingCalls(item.uri, offset); } catch { }
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];
@@ -44,11 +41,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
 
 		let calls: ReturnType<typeof languageService.provideCallHierarchyOutgoingCalls> | undefined;
-		try { calls = languageService.provideCallHierarchyOutgoingCalls(fileName, offset); } catch { }
+		try { calls = languageService.provideCallHierarchyOutgoingCalls(item.uri, offset); } catch { }
 		if (!calls) return [];
 
 		const items = Array.isArray(calls) ? calls : [calls];
@@ -67,7 +63,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 	function fromProtocolCallHierarchyItem(item: ts.CallHierarchyItem): vscode.CallHierarchyItem {
 		const rootPath = languageService.getProgram()?.getCompilerOptions().rootDir ?? '';
-		const document = getTextDocument(shared.fsPathToUri(item.file))!; // TODO
+		const document = getTextDocument(item.file)!; // TODO
 		const useFileName = isSourceFileItem(item);
 		const name = useFileName ? path.basename(item.file) : item.name;
 		const detail = useFileName ? upath.relative(rootPath, path.dirname(item.file)) : item.containerName ?? '';
@@ -75,7 +71,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			kind: typeConverters.SymbolKind.fromProtocolScriptElementKind(item.kind),
 			name,
 			detail,
-			uri: shared.fsPathToUri(item.file),
+			uri: item.file,
 			range: {
 				start: document.positionAt(item.span.start),
 				end: document.positionAt(item.span.start + item.span.length),
@@ -94,7 +90,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 	}
 
 	function fromProtocolCallHierchyIncomingCall(item: ts.CallHierarchyIncomingCall): vscode.CallHierarchyIncomingCall {
-		const document = getTextDocument(shared.fsPathToUri(item.from.file))!;
+		const document = getTextDocument(item.from.file)!;
 		return {
 			from: fromProtocolCallHierarchyItem(item.from),
 			fromRanges: item.fromSpans.map(fromSpan => ({

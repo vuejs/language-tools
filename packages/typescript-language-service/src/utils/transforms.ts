@@ -1,20 +1,17 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function entriesToLocations(entries: { fileName: string, textSpan: ts.TextSpan }[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const locations: vscode.Location[] = [];
 	for (const entry of entries) {
-		const entryUri = shared.fsPathToUri(entry.fileName);
-		const doc = getTextDocument(entryUri);
+		const doc = getTextDocument(entry.fileName);
 		if (!doc) continue;
 		const range = vscode.Range.create(
 			doc.positionAt(entry.textSpan.start),
 			doc.positionAt(entry.textSpan.start + entry.textSpan.length),
 		);
-		const uri = shared.fsPathToUri(entry.fileName);
-		const location = vscode.Location.create(uri, range);
+		const location = vscode.Location.create(entry.fileName, range);
 		locations.push(location);
 	}
 	return locations;
@@ -22,8 +19,7 @@ export function entriesToLocations(entries: { fileName: string, textSpan: ts.Tex
 export function entriesToLocationLinks<T extends ts.DocumentSpan>(entries: T[], getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
 	const locations: vscode.LocationLink[] = [];
 	for (const entry of entries) {
-		const entryUri = shared.fsPathToUri(entry.fileName);
-		const doc = getTextDocument(entryUri);
+		const doc = getTextDocument(entry.fileName);
 		if (!doc) continue;
 		const targetSelectionRange = vscode.Range.create(
 			doc.positionAt(entry.textSpan.start),
@@ -37,8 +33,7 @@ export function entriesToLocationLinks<T extends ts.DocumentSpan>(entries: T[], 
 			doc.positionAt(entry.originalTextSpan.start),
 			doc.positionAt(entry.originalTextSpan.start + entry.originalTextSpan.length),
 		) : undefined;
-		const uri = shared.fsPathToUri(entry.fileName);
-		const location = vscode.LocationLink.create(uri, targetRange, targetSelectionRange, originSelectionRange);
+		const location = vscode.LocationLink.create(entry.fileName, targetRange, targetSelectionRange, originSelectionRange);
 		locations.push(location);
 	}
 	return locations;
@@ -51,8 +46,7 @@ export function boundSpanToLocationLinks(info: ts.DefinitionInfoAndBoundSpan, or
 		originalDoc.positionAt(info.textSpan.start + info.textSpan.length),
 	);
 	for (const entry of info.definitions) {
-		const entryUri = shared.fsPathToUri(entry.fileName);
-		const doc = getTextDocument(entryUri);
+		const doc = getTextDocument(entry.fileName);
 		if (!doc) continue;
 		const targetSelectionRange = vscode.Range.create(
 			doc.positionAt(entry.textSpan.start),
@@ -62,8 +56,7 @@ export function boundSpanToLocationLinks(info: ts.DefinitionInfoAndBoundSpan, or
 			doc.positionAt(entry.contextSpan.start),
 			doc.positionAt(entry.contextSpan.start + entry.contextSpan.length),
 		) : targetSelectionRange;
-		const uri = shared.fsPathToUri(entry.fileName);
-		const location = vscode.LocationLink.create(uri, targetRange, targetSelectionRange, originSelectionRange);
+		const location = vscode.LocationLink.create(entry.fileName, targetRange, targetSelectionRange, originSelectionRange);
 		locations.push(location);
 	}
 	return locations;

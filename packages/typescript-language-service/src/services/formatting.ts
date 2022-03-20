@@ -1,6 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { Settings } from '../';
 
@@ -13,14 +12,13 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const tsOptions = await settings.getFormatOptions?.(document, options) ?? options;
 
 		let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
 		try {
 			scriptEdits = range
-				? languageService.getFormattingEditsForRange(fileName, document.offsetAt(range.start), document.offsetAt(range.end), tsOptions)
-				: languageService.getFormattingEditsForDocument(fileName, tsOptions);
+				? languageService.getFormattingEditsForRange(document.uri, document.offsetAt(range.start), document.offsetAt(range.end), tsOptions)
+				: languageService.getFormattingEditsForDocument(document.uri, tsOptions);
 		} catch { }
 		if (!scriptEdits) return [];
 

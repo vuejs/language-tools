@@ -81,30 +81,28 @@ export function createLanguageService(
 			raw: languageService,
 			getTextDocument,
 			getValidTextDocument,
-			isValidFile,
+			isValidScript,
 			doCompleteSync: completions.register(languageService, getValidTextDocument, ts),
 		},
 	};
 
 	function getValidTextDocument(uri: string) {
-		const fileName = shared.uriToFsPath(uri);
-		if (!isValidFile(fileName)) {
+		if (!isValidScript(uri)) {
 			return;
 		}
 		return getTextDocument(uri);
 	}
-	function isValidFile(fileName: string) {
-		if (!languageService.getProgram()?.getSourceFile(fileName)) {
+	function isValidScript(uri: string) {
+		if (!languageService.getProgram()?.getSourceFile(uri)) {
 			return false;
 		}
 		return true;
 	}
 	function getTextDocument(uri: string) {
-		const fileName = shared.uriToFsPath(uri);
-		const version = host.getScriptVersion(fileName);
+		const version = host.getScriptVersion(uri);
 		const oldDoc = documents.uriGet(uri);
 		if (!oldDoc || oldDoc[0] !== version) {
-			const scriptSnapshot = host.getScriptSnapshot(fileName);
+			const scriptSnapshot = host.getScriptSnapshot(uri);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 				const document = TextDocument.create(uri, shared.syntaxToLanguageId(path.extname(uri).slice(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);

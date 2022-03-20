@@ -2,7 +2,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as PConst from '../protocol.const';
 import * as vscode from 'vscode-languageserver-protocol';
 import { parseKindModifier } from '../utils/modifiers';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 const getSymbolKind = (kind: string): vscode.SymbolKind => {
@@ -32,10 +31,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
-
 		let barItems: ReturnType<typeof languageService.getNavigationTree> | undefined;
-		try { barItems = languageService.getNavigationTree(fileName); } catch { }
+		try { barItems = languageService.getNavigationTree(document.uri); } catch { }
 		if (!barItems) return [];
 
 		// The root represents the file. Ignore this when showing in the UI

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import type * as Proto from '../protocol';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export interface IFilePathToResourceConverter {
@@ -145,7 +144,7 @@ function convertLinkTags(
 							fileName: string,
 							textSpan: { start: number, length: number },
 						};
-						const fileDoc = getTextDocument(shared.uriToFsPath(_target.fileName));
+						const fileDoc = getTextDocument(_target.fileName);
 						if (fileDoc) {
 							const start = fileDoc.positionAt(_target.textSpan.start);
 							const end = fileDoc.positionAt(_target.textSpan.start + _target.textSpan.length);

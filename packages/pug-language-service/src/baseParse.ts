@@ -9,7 +9,7 @@ const pugParser = require('pug-parser');
 export function baseParse(pugCode: string) {
 
 	const fileName = 'foo.pug';
-	const pugTextDocument = TextDocument.create(shared.fsPathToUri('foo.pug'), 'jade', 0, pugCode);
+	const pugTextDocument = TextDocument.create('file:///foo.pug', 'jade', 0, pugCode);
 	const codeGen = new CodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
 	let error: {
 		code: string,

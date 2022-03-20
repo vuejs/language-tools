@@ -35,20 +35,16 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 	async function onInitialize(params: vscode.InitializeParams) {
 
 		const options: shared.ServerInitializationOptions = params.initializationOptions as any;
-		let folders: string[] = [];
-		let rootUri: URI;
+		let folderUris: string[] = [];
 
 		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
-			folders = params.workspaceFolders
-				.map(folder => URI.parse(folder.uri))
-				.filter(uri => uri.scheme === 'file')
-				.map(uri => uri.fsPath);
+			folderUris = params.workspaceFolders.map(folder => folder.uri);
 		}
-		else if (params.rootUri && (rootUri = URI.parse(params.rootUri)).scheme === 'file') {
-			folders = [rootUri.fsPath];
+		else if (params.rootUri) {
+			folderUris = [params.rootUri];
 		}
 		else if (params.rootPath) {
-			folders = [params.rootPath];
+			folderUris = [URI.file(params.rootPath).toString()];
 		}
 
 		const result: vscode.InitializeResult = {
@@ -60,7 +56,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 		if (options.documentFeatures) {
 
-			const configHost = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
+			const configHost = params.capabilities.workspace?.configuration ? createLsConfigs(folderUris, connection) : undefined;
 			const ts = runtimeEnv.loadTypescript(options);
 			const documentService = vue.getDocumentService(
 				{ typescript: ts },
@@ -75,7 +71,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 				},
 				configHost,
 				runtimeEnv.fileSystemProvide,
-				loadCustomPlugins(folders[0]),
+				loadCustomPlugins(folderUris[0]),
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, documentService);
@@ -85,7 +81,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 		if (options.languageFeatures) {
 
 			let projects: ReturnType<typeof createProjects> | undefined;
-			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
+			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folderUris, connection) : undefined;
 
 			const ts = runtimeEnv.loadTypescript(options);
 
@@ -104,7 +100,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 				projects = createProjects(
 					runtimeEnv,
-					folders,
+					folderUris,
 					ts,
 					tsLocalized,
 					options,
@@ -125,7 +121,8 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 	}
 }
 
-export function loadCustomPlugins(dir: string) {
+export function loadCustomPlugins(dirUri: string) {
+	const dir = URI.parse(dirUri).fsPath; // TODO: check scheme
 	try {
 		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
 		const config: { plugins?: vue.EmbeddedLanguageServicePlugin[] } = require(configPath);

@@ -1,7 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as previewer from '../utils/previewer';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function register(
@@ -14,16 +13,15 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		let info: ReturnType<typeof languageService.getQuickInfoAtPosition> | undefined;
-		try { info = languageService.getQuickInfoAtPosition(fileName, offset); } catch { }
+		try { info = languageService.getQuickInfoAtPosition(document.uri, offset); } catch { }
 		if (!info) return;
 
 		const parts: string[] = [];
 		const displayString = ts.displayPartsToString(info.displayParts);
-		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags, { toResource: shared.fsPathToUri }, getTextDocument2);
+		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags, { toResource: uri => uri }, getTextDocument2);
 
 		if (displayString && !documentOnly) {
 			parts.push(['```typescript', displayString, '```'].join('\n'));

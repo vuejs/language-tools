@@ -122,7 +122,7 @@ async function useSetupSugar(
 
     if (edits?.length) {
 
-        await context.applyEdit({ changes: { [vueDocument.uri]: edits } });
+        await context.applyEdit({ changes: { [vueDocument.file.fileName]: edits } });
         await shared.sleep(200);
 
         const importEdits = await getAddMissingImportsEdits(vueDocument, doCodeActions, doCodeActionResolve);

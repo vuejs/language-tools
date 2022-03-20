@@ -36,15 +36,14 @@ export function register(languageService: ts.LanguageService, getTextDocument2: 
 
 		function toSymbolInformation(item: ts.NavigateToItem) {
 			const label = getLabel(item);
-			const uri = shared.fsPathToUri(item.fileName);
-			const document = getTextDocument2(uri);
+			const document = getTextDocument2(item.fileName);
 			if (document) {
 				const range = vscode.Range.create(document.positionAt(item.textSpan.start), document.positionAt(item.textSpan.start + item.textSpan.length));
 				const info = vscode.SymbolInformation.create(
 					label,
 					getSymbolKind(item),
 					range,
-					uri,
+					item.fileName,
 					item.containerName || '',
 				);
 				const kindModifiers = item.kindModifiers ? parseKindModifier(item.kindModifiers) : undefined;

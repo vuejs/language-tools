@@ -223,7 +223,7 @@ export function register(
 		if (config === 'always') {
 			const renaming = new Promise<void>(async resolve => {
 				for (const file of handler.files) {
-					const renameFileContent = getScriptText(documents, shared.uriToFsPath(file.oldUri), ts.sys);
+					const renameFileContent = getScriptText(documents, file.oldUri, ts.sys);
 					if (renameFileContent) {
 						renameFileContentCache.set(file.oldUri, renameFileContent);
 					}

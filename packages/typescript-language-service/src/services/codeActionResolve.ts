@@ -24,21 +24,21 @@ export function register(
 		if (data?.type === 'fixAll') {
 			const fixs = data.fixIds.map(fixId => {
 				try {
-					return languageService.getCombinedCodeFix({ type: 'file', fileName: data.fileName }, fixId, formatOptions, preferences);
+					return languageService.getCombinedCodeFix({ type: 'file', fileName: data.uri }, fixId, formatOptions, preferences);
 				} catch { }
 			});
 			const changes = fixs.map(fix => fix?.changes ?? []).flat();
 			codeAction.edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
 		}
 		else if (data?.type === 'refactor') {
-			const editInfo = languageService.getEditsForRefactor(data.fileName, formatOptions, data.range, data.refactorName, data.actionName, preferences);
+			const editInfo = languageService.getEditsForRefactor(data.uri, formatOptions, data.range, data.refactorName, data.actionName, preferences);
 			if (editInfo) {
 				const edit = fileTextChangesToWorkspaceEdit(editInfo.edits, getTextDocument);
 				codeAction.edit = edit;
 			}
 		}
 		else if (data?.type === 'organizeImports') {
-			const changes = languageService.organizeImports({ type: 'file', fileName: data.fileName }, formatOptions, preferences);
+			const changes = languageService.organizeImports({ type: 'file', fileName: data.uri }, formatOptions, preferences);
 			const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
 			codeAction.edit = edit;
 		}

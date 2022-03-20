@@ -1,5 +1,4 @@
 import { URI } from 'vscode-uri';
-import { fsPathToUri } from './path';
 
 interface Options<T> {
 	delete(key: string): boolean;
@@ -22,21 +21,12 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 		uriGet,
 		uriHas,
 		uriSet,
-		fsPathDelete,
-		fsPathGet,
-		fsPathHas,
-		fsPathSet,
 	};
 
 	function getUriByUri(uri: string) {
 		if (uriToUriKeys[uri] === undefined)
 			uriToUriKeys[uri] = normalizeUri(uri).toLowerCase();
 		return uriToUriKeys[uri];
-	}
-	function getUriByFsPath(fsPath: string) {
-		if (fsPathToUriKeys[fsPath] === undefined)
-			fsPathToUriKeys[fsPath] = fsPathToUri(fsPath).toLowerCase();
-		return fsPathToUriKeys[fsPath];
 	}
 
 	function clear() {
@@ -57,19 +47,6 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 	}
 	function uriSet(_uri: string, item: T) {
 		return map.set(getUriByUri(_uri), item);
-	}
-
-	function fsPathDelete(_fsPath: string) {
-		return map.delete(getUriByFsPath(_fsPath));
-	}
-	function fsPathGet(_fsPath: string) {
-		return map.get(getUriByFsPath(_fsPath));
-	}
-	function fsPathHas(_fsPath: string) {
-		return map.has(getUriByFsPath(_fsPath));
-	}
-	function fsPathSet(_fsPath: string, item: T) {
-		return map.set(getUriByFsPath(_fsPath), item);
 	}
 }
 

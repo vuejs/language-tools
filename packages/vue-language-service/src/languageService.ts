@@ -361,8 +361,8 @@ export function createLanguageService(
 		},
 
 		__internal__: {
+			vueLsHost,
 			tsRuntime,
-			rootPath: vueLsHost.getCurrentDirectory(),
 			context,
 			getContext: defineApi(() => context, true),
 			// getD3: defineApi(d3.register(context), true), // unused for now
@@ -371,54 +371,54 @@ export function createLanguageService(
 	};
 
 	function getDocumentContext() {
-		const compilerHost = ts.createCompilerHost(vueLsHost.getCompilationSettings());
+		// const compilerHost = ts.createCompilerHost(vueLsHost.getCompilationSettings());
 		const documentContext: html.DocumentContext = {
-			resolveReference(ref: string, base: string) {
+			resolveReference: () => undefined,
+			// resolveReference(ref: string, base: string) {
 
-				const isUri = base.indexOf('://') >= 0;
-				const resolveResult = ts.resolveModuleName(
-					ref,
-					isUri ? shared.uriToFsPath(base) : base,
-					vueLsHost.getCompilationSettings(),
-					compilerHost,
-				);
-				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
-				const dirs = new Set<string>();
+			// 	const isUri = base.indexOf('://') >= 0;
+			// 	const resolveResult = ts.resolveModuleName(
+			// 		ref,
+			// 		isUri ? shared.uriToFsPath(base) : base,
+			// 		vueLsHost.getCompilationSettings(),
+			// 		compilerHost,
+			// 	);
+			// 	const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+			// 	const dirs = new Set<string>();
 
-				const fileExists = vueLsHost.fileExists ?? ts.sys.fileExists;
-				const directoryExists = vueLsHost.directoryExists ?? ts.sys.directoryExists;
+			// 	const fileExists = vueLsHost.fileExists ?? ts.sys.fileExists;
+			// 	const directoryExists = vueLsHost.directoryExists ?? ts.sys.directoryExists;
 
-				for (const failed of failedLookupLocations) {
-					let path = failed;
-					const fileName = upath.basename(path);
-					if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
-						dirs.add(upath.dirname(path));
-					}
-					if (path.endsWith('.d.ts')) {
-						path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
-					}
-					else {
-						continue;
-					}
-					if (fileExists(path)) {
-						return isUri ? shared.fsPathToUri(path) : path;
-					}
-				}
-				for (const dir of dirs) {
-					if (directoryExists(dir)) {
-						return isUri ? shared.fsPathToUri(dir) : dir;
-					}
-				}
+			// 	for (const failed of failedLookupLocations) {
+			// 		let path = failed;
+			// 		const fileName = upath.basename(path);
+			// 		if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
+			// 			dirs.add(upath.dirname(path));
+			// 		}
+			// 		if (path.endsWith('.d.ts')) {
+			// 			path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
+			// 		}
+			// 		else {
+			// 			continue;
+			// 		}
+			// 		if (fileExists(path)) {
+			// 			return isUri ? shared.fsPathToUri(path) : path;
+			// 		}
+			// 	}
+			// 	for (const dir of dirs) {
+			// 		if (directoryExists(dir)) {
+			// 			return isUri ? shared.fsPathToUri(dir) : dir;
+			// 		}
+			// 	}
 
-				return undefined;
-			},
+			// 	return undefined;
+			// },
 		};
 		return documentContext;
 	}
 	function getTextDocument(uri: string) {
 
-		const fileName = shared.uriToFsPath(uri);
-		const scriptSnapshot = vueLsHost.getScriptSnapshot(fileName);
+		const scriptSnapshot = vueLsHost.getScriptSnapshot(uri);
 
 		if (scriptSnapshot) {
 

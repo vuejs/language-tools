@@ -1,6 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import * as fixNames from '../utils/fixNames';
@@ -9,13 +8,11 @@ import type { Settings } from '../';
 export interface FixAllData {
 	type: 'fixAll',
 	uri: string,
-	fileName: string,
 	fixIds: {}[],
 }
 export interface RefactorData {
 	type: 'refactor',
 	uri: string,
-	fileName: string,
 	refactorName: string,
 	actionName: string,
 	range: { pos: number, end: number },
@@ -24,7 +21,6 @@ export interface RefactorData {
 export interface OrganizeImportsData {
 	type: 'organizeImports',
 	uri: string,
-	fileName: string,
 }
 
 export type Data = FixAllData | RefactorData | OrganizeImportsData;
@@ -44,7 +40,6 @@ export function register(
 			settings.getPreferences?.(document) ?? {},
 		]);
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);
 		let result: vscode.CodeAction[] = [];
@@ -53,7 +48,7 @@ export function register(
 			for (const error of context.diagnostics) {
 				try {
 					const codeFixes = languageService.getCodeFixesAtPosition(
-						fileName,
+						document.uri,
 						document.offsetAt(error.range.start),
 						document.offsetAt(error.range.end),
 						[Number(error.code)],
@@ -71,7 +66,7 @@ export function register(
 			for (const only of context.only) {
 				if (only.split('.')[0] === vscode.CodeActionKind.Refactor) {
 					try {
-						const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, only);
+						const refactors = languageService.getApplicableRefactors(uri, { pos: start, end: end }, preferences, undefined, only);
 						for (const refactor of refactors) {
 							result = result.concat(transformRefactor(refactor));
 						}
@@ -81,7 +76,7 @@ export function register(
 		}
 		else {
 			try {
-				const refactors = languageService.getApplicableRefactors(fileName, { pos: start, end: end }, preferences, undefined, undefined);
+				const refactors = languageService.getApplicableRefactors(uri, { pos: start, end: end }, preferences, undefined, undefined);
 				for (const refactor of refactors) {
 					result = result.concat(transformRefactor(refactor));
 				}
@@ -93,7 +88,6 @@ export function register(
 			const data: OrganizeImportsData = {
 				type: 'organizeImports',
 				uri,
-				fileName,
 			};
 			// @ts-expect-error
 			action.data = data;
@@ -105,7 +99,6 @@ export function register(
 			const data: FixAllData = {
 				uri,
 				type: 'fixAll',
-				fileName,
 				fixIds: [
 					fixNames.classIncorrectlyImplementsInterface,
 					fixNames.awaitInSyncFunction,
@@ -122,7 +115,6 @@ export function register(
 			const data: FixAllData = {
 				uri,
 				type: 'fixAll',
-				fileName,
 				fixIds: [
 					// not working and throw
 					fixNames.unusedIdentifier,
@@ -143,7 +135,6 @@ export function register(
 			const data: FixAllData = {
 				uri,
 				type: 'fixAll',
-				fileName,
 				fixIds: [
 					// not working and throw
 					fixNames.fixImport,
@@ -205,7 +196,6 @@ export function register(
 				const data: FixAllData = {
 					uri,
 					type: 'fixAll',
-					fileName,
 					fixIds: [codeFix.fixId],
 				};
 				// @ts-expect-error
@@ -225,7 +215,6 @@ export function register(
 				const data: RefactorData = {
 					uri,
 					type: 'refactor',
-					fileName,
 					range: { pos: start, end: end },
 					refactorName: refactor.name,
 					actionName: action.name,

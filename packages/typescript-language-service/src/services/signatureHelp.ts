@@ -27,11 +27,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			};
 		}
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
 		let helpItems: ReturnType<typeof languageService.getSignatureHelpItems> | undefined;
-		try { helpItems = languageService.getSignatureHelpItems(fileName, offset, options); } catch { }
+		try { helpItems = languageService.getSignatureHelpItems(document.uri, offset, options); } catch { }
 		if (!helpItems) return;
 
 		return {

@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -12,11 +11,10 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const result: vscode.SelectionRange[] = [];
 
 		for (const position of positions) {
-			const fileName = shared.uriToFsPath(document.uri);
 			const offset = document.offsetAt(position);
 
 			let range: ReturnType<typeof languageService.getSmartSelectionRange> | undefined;
-			try { range = languageService.getSmartSelectionRange(fileName, offset); } catch { }
+			try { range = languageService.getSmartSelectionRange(document.uri, offset); } catch { }
 			if (!range) continue;
 
 			result.push(transformSelectionRange(range, document));

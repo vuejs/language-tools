@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { SearchTexts, TypeScriptRuntime } from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
@@ -299,8 +298,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
             return item;
 
         const vueDocument = _vueDocument;
-        const importFile = shared.uriToFsPath(data.importUri);
-        const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), importFile);
+        const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), data.importUri);
         const descriptor = vueDocument.file.getDescriptor();
         const scriptAst = vueDocument.file.getScriptAst();
         const scriptSetupAst = vueDocument.file.getScriptSetupAst();
@@ -406,12 +404,12 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
         async function planAInsertText() {
             const embeddedScriptFile = vueDocument.file.getScriptTsFile();
             const embeddedScriptDocument = vueDocument.embeddedDocumentsMap.get(embeddedScriptFile);
-            const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
+            const tsImportName = camelize(path.basename(data.importUri).replace(/\./g, '-'));
             const [formatOptions, preferences] = await Promise.all([
                 host.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
                 host.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
             ]);
-            const tsDetail = host.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+            const tsDetail = host.scriptTsLs.__internal__.raw.getCompletionEntryDetails(embeddedScriptDocument.uri, 0, tsImportName, formatOptions, data.importUri, preferences, undefined);
             if (tsDetail?.codeActions) {
                 for (const action of tsDetail.codeActions) {
                     for (const change of action.changes) {
@@ -441,7 +439,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
     async function provideHtmlData(vueDocument: VueDocument) {
 
-        const nameCases = await host.getNameCases?.(vueDocument.uri) ?? {
+        const nameCases = await host.getNameCases?.(vueDocument.file.fileName) ?? {
             tag: 'both',
             attr: 'kebabCase',
         };
@@ -637,8 +635,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
             if (itemId?.type === 'importFile') {
 
                 const [fileUri] = itemId.args;
-                const filePath = shared.uriToFsPath(fileUri);
-                const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), filePath);
+                const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), fileUri);
                 const data: AutoImportCompletionData = {
                     mode: 'autoImport',
                     vueDocumentUri: vueDocument.uri,

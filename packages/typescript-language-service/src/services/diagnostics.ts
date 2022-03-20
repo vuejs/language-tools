@@ -17,9 +17,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const program = languageService.getProgram();
-		const sourceFile = program?.getSourceFile(fileName);
+		const sourceFile = program?.getSourceFile(document.uri);
 		if (!program || !sourceFile) return [];
 
 		let errors: ts.Diagnostic[] = [];
@@ -28,7 +27,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			errors = [
 				...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
 				...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
-				...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
+				...options.suggestion ? languageService.getSuggestionDiagnostics(document.uri) : [],
 			];
 
 			if (options.declaration && getEmitDeclarations(program.getCompilerOptions())) {
@@ -81,7 +80,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 			let document: TextDocument | undefined;
 			if (diag.file) {
-				document = getTextDocument(shared.fsPathToUri(diag.file.fileName));
+				document = getTextDocument(diag.file.fileName);
 			}
 			if (!document) return;
 

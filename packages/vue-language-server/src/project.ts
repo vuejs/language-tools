@@ -17,8 +17,8 @@ export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	options: shared.ServerInitializationOptions,
-	rootPath: string,
-	tsConfig: string | ts.CompilerOptions,
+	rootPathUri: string,
+	tsConfigUri: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: vscode.TextDocuments<TextDocument>,
 	connection: vscode.Connection,
@@ -50,7 +50,7 @@ export async function createProject(
 			return realPath;
 		} : undefined,
 		fileExists: path => ts.sys.fileExists(resolveAbsolutePath(path)),
-		getCurrentDirectory: () => rootPath,
+		getCurrentDirectory: () => rootPathUri,
 	};
 
 	let typeRootVersion = 0;
@@ -76,7 +76,7 @@ export async function createProject(
 	};
 
 	function resolveAbsolutePath(_path: string) {
-		const relativePath = path.relative(ts.sys.getCurrentDirectory(), rootPath);
+		const relativePath = path.relative(ts.sys.getCurrentDirectory(), rootPathUri);
 		if (relativePath === '') return _path;
 		if (_path === '') return relativePath;
 		return !path.isAbsolute(_path) ? relativePath + '/' + _path : _path;
@@ -242,16 +242,16 @@ export async function createProject(
 
 		return host;
 
-		function getScriptVersion(fileName: string) {
-			return scripts.fsPathGet(fileName)?.version.toString()
+		function getScriptVersion(uri: string) {
+			return scripts.uriGet(uri)?.version.toString()
 				?? '';
 		}
-		function getScriptSnapshot(fileName: string) {
-			const script = scripts.fsPathGet(fileName);
+		function getScriptSnapshot(uri: string) {
+			const script = scripts.uriGet(uri);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
-			const text = getScriptText(documents, fileName, projectSys);
+			const text = getScriptText(documents, uri, projectSys);
 			if (text !== undefined) {
 				const snapshot = ts.ScriptSnapshot.fromString(text);
 				if (script) {
@@ -259,7 +259,7 @@ export async function createProject(
 					script.snapshotVersion = script.version;
 				}
 				else {
-					scripts.fsPathSet(fileName, {
+					scripts.uriSet(uri, {
 						version: -1,
 						snapshot: snapshot,
 						snapshotVersion: -1,
@@ -288,11 +288,11 @@ export async function createProject(
 			fileExists: projectSys.fileExists,
 			readFile: projectSys.readFile,
 		};
-		if (typeof tsConfig === 'string') {
-			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+		if (typeof tsConfigUri === 'string') {
+			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfigUri);
 		}
 		else {
-			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');
+			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPathUri, tsConfigUri, 'tsconfig.json');
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 			content.fileNames = content.fileNames.map(shared.normalizeFileName);
 			return { ...content, vueOptions: {} };
@@ -302,16 +302,15 @@ export async function createProject(
 
 export function getScriptText(
 	documents: vscode.TextDocuments<TextDocument>,
-	fileName: string,
+	uri: string,
 	sys: typeof import('typescript/lib/tsserverlibrary')['sys'],
 ) {
-	const uri = shared.fsPathToUri(fileName);
 	const doc = getDocumentSafely(documents, uri);
 	if (doc) {
 		return doc.getText();
 	}
-	if (sys.fileExists(fileName)) {
-		return sys.readFile(fileName, 'utf8');
+	if (uri.startsWith('file://') && sys.fileExists(uri.replace('file://', ''))) {
+		return sys.readFile(uri.replace('file://', ''), 'utf8');
 	}
-	return renameFileContentCache.get(shared.fsPathToUri(fileName));
+	return renameFileContentCache.get(uri);
 }

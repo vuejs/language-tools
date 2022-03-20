@@ -21,10 +21,9 @@ export function register(
 		if (!isPotentiallyValidDocCompletionPosition(document, position))
 			return;
 
-		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
-		const docCommentTemplate = languageService.getDocCommentTemplateAtPosition(fileName, offset);
+		const docCommentTemplate = languageService.getDocCommentTemplateAtPosition(document.uri, offset);
 		if (!docCommentTemplate)
 			return;
 

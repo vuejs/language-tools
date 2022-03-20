@@ -1,5 +1,4 @@
 import * as shared from '@volar/shared';
-import * as upath from 'upath';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
@@ -208,7 +207,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0]).filter(shared.notEmpty);
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
-			name: tsItem.name === upath.basename(shared.uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(shared.uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
+			name: tsItem.name ===
+				sourceMap.mappedDocument.uri.substring(sourceMap.mappedDocument.uri.lastIndexOf('/') + 1)
+				? sourceMap.mappedDocument.uri.substring(sourceMap.sourceDocument.uri.lastIndexOf('/') + 1)
+				: tsItem.name,
 			uri: sourceMap.sourceDocument.uri,
 			range: vueRange,
 			selectionRange: vueSelectionRange,

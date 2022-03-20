@@ -147,7 +147,7 @@ export function getDocumentService(
 		}
 
 		const vueFile = vueTs.createVueFile(
-			shared.uriToFsPath(document.uri),
+			document.uri,
 			document.getText(),
 			document.version.toString(),
 			vueTsPlugins,

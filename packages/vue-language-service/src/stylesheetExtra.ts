@@ -49,7 +49,7 @@ export function createStylesheetExtra(cssPlugin: ReturnType<typeof useCssPlugin>
 
         if (!document) {
             document = TextDocument.create(
-                shared.fsPathToUri(embeddedFile.fileName),
+                embeddedFile.fileName,
                 shared.syntaxToLanguageId(embeddedFile.lang),
                 0,
                 embeddedFile.content,

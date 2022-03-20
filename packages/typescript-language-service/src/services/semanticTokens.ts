@@ -1,7 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as shared from '@volar/shared';
 
 export function getSemanticTokenLegend(): vscode.SemanticTokensLegend {
 	if (tokenTypes.length !== TokenType._) {
@@ -23,18 +22,17 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const file = shared.uriToFsPath(uri);
 		const start = range ? document.offsetAt(range.start) : 0;
 		const length = range ? (document.offsetAt(range.end) - start) : document.getText().length;
 
 		if (cancle?.isCancellationRequested) return;
 		let response2: ReturnType<typeof languageService.getEncodedSyntacticClassifications> | undefined;
-		try { response2 = languageService.getEncodedSyntacticClassifications(file, { start, length }); } catch { }
+		try { response2 = languageService.getEncodedSyntacticClassifications(document.uri, { start, length }); } catch { }
 		if (!response2) return;
 
 		if (cancle?.isCancellationRequested) return;
 		let response1: ReturnType<typeof languageService.getEncodedSemanticClassifications> | undefined;
-		try { response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty); } catch { }
+		try { response1 = languageService.getEncodedSemanticClassifications(document.uri, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty); } catch { }
 		if (!response1) return;
 
 		const tokenSpan = [...response1.spans, ...response2.spans];
