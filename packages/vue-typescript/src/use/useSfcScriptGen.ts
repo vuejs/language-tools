@@ -59,11 +59,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	});
 	const file = computed(() => {
 
-		let _fileName: string | undefined;
-
 		if (lsType === 'script') {
-
-			_fileName = fileName + '.' + lang.value
 
 			const file: EmbeddedFile = {
 				lsType,

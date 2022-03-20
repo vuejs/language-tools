@@ -100,6 +100,23 @@ export function generate(
 		);
 	}
 
+	// fix https://github.com/johnsoncodehk/volar/issues/1048, https://github.com/johnsoncodehk/volar/issues/435
+	codeGen.addMapping2({
+		data: {
+			vueTag: 'sfc',
+			capabilities: {},
+		},
+		mode: SourceMaps.Mode.Expand,
+		mappedRange: {
+			start: 0,
+			end: codeGen.getText().length,
+		},
+		sourceRange: {
+			start: 0,
+			end: 0,
+		},
+	});
+
 	return {
 		codeGen,
 		teleports,
