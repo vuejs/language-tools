@@ -43,7 +43,7 @@ export function createProgramProxy(
 		getCssVBindRanges: () => [],
 		vueCompilerOptions,
 		vueLsHost: vueLsHost,
-		isTsPlugin: false,
+		isVueTsc: true,
 	});
 	const tsProgram = tsRuntime.getTsLs('script').getProgram();
 	if (!tsProgram) throw '!tsProgram';

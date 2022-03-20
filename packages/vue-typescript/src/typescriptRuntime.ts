@@ -26,6 +26,7 @@ export function createTypeScriptRuntime(options: {
     getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
     vueLsHost: LanguageServiceHost,
     isTsPlugin?: boolean,
+    isVueTsc?: boolean,
 }) {
 
     const { typescript: ts } = options;
@@ -247,7 +248,11 @@ export function createTypeScriptRuntime(options: {
                     return fileVersions.get(maped.embedded.file)!;
                 }
                 else {
-                    const version = ts.sys.createHash?.(maped.embedded.file.content) ?? maped.embedded.file.content;
+                    let version = ts.sys.createHash?.(maped.embedded.file.content) ?? maped.embedded.file.content;
+                    if (options.isVueTsc) {
+                        // fix https://github.com/johnsoncodehk/volar/issues/1082
+                        version = maped.vueFile.getVersion() + ':' + version;
+                    }
                     fileVersions.set(maped.embedded.file, version);
                     return version;
                 }
