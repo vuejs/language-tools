@@ -119,10 +119,8 @@ export function createLanguageService(
 	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
-			configurationHost,
 			getVueDocument: (document) => vueDocuments.get(document.uri),
 			scriptTsLs,
-			documentContext,
 		}),
 	);
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(

@@ -5,6 +5,7 @@ import useHtmlPlugin from '../commonPlugins/html';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 import { VueDocument } from '../vueDocuments';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
     version: 1.1,
@@ -91,12 +92,12 @@ const dataProvider = html.newHTMLDataProvider('vue', {
     ]
 });
 
-export default function (host: Omit<Parameters<typeof useHtmlPlugin>[0], 'getHtmlLs'> & {
+export default function (host: {
     getVueDocument(document: TextDocument): VueDocument | undefined,
     scriptTsLs: ts2.LanguageService | undefined,
-}): ReturnType<typeof useHtmlPlugin> {
+}): EmbeddedLanguageServicePlugin {
 
-    const htmlPlugin = useHtmlPlugin(host);
+    const htmlPlugin = useHtmlPlugin({ validLang: 'vue' });
     htmlPlugin.htmlLs.setDataProviders(false, [dataProvider]);
 
     return {
@@ -147,19 +148,6 @@ export default function (host: Omit<Parameters<typeof useHtmlPlugin>[0], 'getHtm
                 }
 
                 return result;
-            });
-        },
-
-        findDocumentLinks(document) {
-            return worker(document, (vueDocument) => {
-
-                if (!host.documentContext)
-                    return;
-
-                const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
-                const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
-
-                return htmlPlugin.htmlLs.findDocumentLinks(sfcWithEmptyBlocksDocument, host.documentContext);
             });
         },
 

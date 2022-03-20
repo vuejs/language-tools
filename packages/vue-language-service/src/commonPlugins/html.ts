@@ -4,9 +4,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 
 export default function (host: {
-    configurationHost: ConfigurationHost | undefined
+    configurationHost?: ConfigurationHost,
     documentContext?: html.DocumentContext,
     fileSystemProvider?: html.FileSystemProvider,
+    validLang?: string,
 }): EmbeddedLanguageServicePlugin & {
     htmlLs: html.LanguageService,
     getHtmlDocument(document: TextDocument): html.HTMLDocument | undefined,
@@ -35,11 +36,12 @@ export default function (host: {
 
         async doComplete(document, position, context) {
             return worker(document, (htmlDocument) => {
-
-                if (!host.documentContext)
-                    return;
-
-                return htmlLs.doComplete2(document, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
+                if (host.documentContext) {
+                    return htmlLs.doComplete2(document, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
+                }
+                else {
+                    return htmlLs.doComplete(document, position, htmlDocument, /** TODO: CompletionConfiguration */);
+                }
             });
         },
 
@@ -153,7 +155,7 @@ export default function (host: {
     };
 
     async function initCustomData() {
-        if (!inited) {
+        if (!inited && host.configurationHost) {
             customData = await getCustomData();
             htmlLs.setDataProviders(true, customData);
             inited = true;
@@ -208,7 +210,7 @@ export default function (host: {
 
     function getHtmlDocument(document: TextDocument) {
 
-        if (document.languageId !== 'html')
+        if (document.languageId !== (host.validLang ?? 'html'))
             return;
 
         const cache = htmlDocuments.get(document);
