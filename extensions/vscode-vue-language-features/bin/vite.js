@@ -5,10 +5,7 @@ const fs = require('fs');
 const readFileSync = fs.readFileSync;
 
 const workspace = process.cwd();
-let viteBinPath = require.resolve('./node_modules/.bin/vite', { paths: [workspace] });
-if (process.platform == 'win32') {
-    viteBinPath = require.resolve('./node_modules/vite/bin/vite.js', { paths: [workspace] });
-}
+const viteBinPath = require.resolve('vite/bin/vite.js', { paths: [workspace] });
 const viteDir = path.dirname(require.resolve('vite/package.json', { paths: [workspace] }));
 const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
 const installCode = `
@@ -158,7 +155,7 @@ function __installPreview(app) {
     }
 }
 `;
-const replaceCode =`async function doTransform(...args) {
+const replaceCode = `async function doTransform(...args) {
     const result = await __doTransformOriginal(...args);
     const createAppText = 'createApp,';
     if (args[0].indexOf('vue.js?') >= 0 && result.code && result.code.indexOf(createAppText) >= 0 && result.code.indexOf('__createAppProxy') === -1) {
