@@ -27,6 +27,10 @@
 				"experimentalDisableTemplateSupport": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+				},
+				"experimentalRsolveNonScopedCssClasses": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1038"
 				}
 			}
 		}

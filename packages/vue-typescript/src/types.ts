@@ -20,4 +20,5 @@ export interface VueCompilerOptions {
 	experimentalTemplateCompilerOptions?: any;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
 	experimentalDisableTemplateSupport?: boolean;
+	experimentalRsolveNonScopedCssClasses?: boolean;
 }
