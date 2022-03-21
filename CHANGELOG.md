@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.33.5
+
+- fix: diagnostics not update ([#1076](https://github.com/johnsoncodehk/volar/issues/1076))
+
 ## 0.33.4
 
 - fix: expand selection broken since 0.33.0 ([#1085](https://github.com/johnsoncodehk/volar/issues/1085))
