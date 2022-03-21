@@ -262,7 +262,6 @@ export function createLanguageService(
 				vueTemplateHtmlPlugin,
 				vueTemplatePugPlugin,
 				jsonPlugin,
-				emmetPlugin,
 				referencesCodeLensPlugin,
 				htmlPugConversionsPlugin,
 				scriptSetupConversionsPlugin,
@@ -276,6 +275,8 @@ export function createLanguageService(
 				plugins.push(scriptTsPlugin);
 				plugins.push(autoDotValuePlugin);
 			}
+			// put emmet plugin at latest to fix https://github.com/johnsoncodehk/volar/issues/1088
+			plugins.push(emmetPlugin);
 			return plugins;
 		},
 		getPluginById: id => allPlugins.get(id),
