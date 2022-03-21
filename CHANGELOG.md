@@ -4,8 +4,8 @@
 
 - feat: support attribute binding syntax `:<name>.attr` ([#1047](https://github.com/johnsoncodehk/volar/pull/1047))
 - feat: supoprt document features for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
-- feat: reduce vue-tsc depends ([#1038](https://github.com/johnsoncodehk/volar/issues/1038))
-- feat: add option to support intellisense for non-scoped css
+- feat: add option to support intellisense for non-scoped css ([#1038](https://github.com/johnsoncodehk/volar/issues/1038))
+- feat: reduce vue-tsc depends
 - fix: json schema request service not available since 0.33.0 ([#243](https://github.com/johnsoncodehk/volar/issues/243))
 - fix: remove `console.log` avoid vim-lsp crash ([#1046](https://github.com/johnsoncodehk/volar/pull/1046))
 - fix: emmet suggestions messed up embedded language suggestions ([#1039](https://github.com/johnsoncodehk/volar/issues/1039))
