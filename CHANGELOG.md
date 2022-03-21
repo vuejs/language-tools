@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.33.6
+
+- fix: TS completion not working in interpolations ([#1088](https://github.com/johnsoncodehk/volar/issues/1088))
+- fix: not respected `html.autoCreateQuotes`, `html.autoClosingTags` settings ([#840](https://github.com/johnsoncodehk/volar/issues/840))
+- fix: organize imports code action edge range incorrect ([#1091](https://github.com/johnsoncodehk/volar/issues/1091))
+- fix: don't report css module `$style` types error on vue-tsc ([#1089](https://github.com/johnsoncodehk/volar/issues/1089))
+- fix: css vars no effect on vue-tsc ([#1093](https://github.com/johnsoncodehk/volar/issues/1093))
+
 ## 0.33.5
 
 - fix: diagnostics not update ([#1076](https://github.com/johnsoncodehk/volar/issues/1076))
