@@ -13,11 +13,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			positions,
-			sourceMap => true,
+			sourceMap => sourceMap.embeddedFile.capabilities.foldingRanges,
 			(positions, sourceMap) => [positions
-				.map(position => sourceMap.getMappedRange(position, position, data => !!data.capabilities.basic)?.[0].start)
+				.map(position => sourceMap.getMappedRange(position, position)?.[0].start)
 				.filter(shared.notEmpty)],
-			(plugin, document, positions) => plugin.getSelectionRanges?.(document, positions),
+			(plugin, document, positions) => positions.length ? plugin.getSelectionRanges?.(document, positions) : undefined,
 			(data, sourceMap) => transformSelectionRanges(
 				data,
 				range => {
@@ -28,7 +28,6 @@ export function register(context: DocumentServiceRuntimeContext) {
 					return sourceMap.getSourceRange(range.start, range.end)?.[0]
 				},
 			),
-			arr => arr.flat(),
 		);
 	}
 }
