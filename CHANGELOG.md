@@ -9,6 +9,7 @@
 - fix: json schema request service not available since 0.33.0 ([#243](https://github.com/johnsoncodehk/volar/issues/243))
 - fix: remove `console.log` avoid vim-lsp crash ([#1046](https://github.com/johnsoncodehk/volar/pull/1046))
 - fix: emmet suggestions messed up embedded language suggestions ([#1039](https://github.com/johnsoncodehk/volar/issues/1039))
+- fix: missing proposals for HTML attribute value ([#1072](https://github.com/johnsoncodehk/volar/issues/1072))
 - fix: vue-tsc watch not always catch vue file changes ([#1082](https://github.com/johnsoncodehk/volar/issues/1082))
 - fix: previewer not working with pnpm ([#1074](https://github.com/johnsoncodehk/volar/issues/1074))
 - fix: global components type not working with `vue-class-component` ([#1061](https://github.com/johnsoncodehk/volar/issues/1061))
