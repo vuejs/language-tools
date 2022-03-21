@@ -8,6 +8,7 @@ export default function (host: {
     documentContext?: html.DocumentContext,
     fileSystemProvider?: html.FileSystemProvider,
     validLang?: string,
+    disableCustomData?: boolean,
 }): EmbeddedLanguageServicePlugin & {
     htmlLs: html.LanguageService,
     getHtmlDocument(document: TextDocument): html.HTMLDocument | undefined,
@@ -20,10 +21,15 @@ export default function (host: {
     let inited = false;
     let customData: html.IHTMLDataProvider[] = [];
 
-    host.configurationHost?.onDidChangeConfiguration(async () => {
-        customData = await getCustomData();
-        htmlLs.setDataProviders(true, customData);
-    });
+    if (host.disableCustomData) {
+        inited = true;
+    }
+    else {
+        host.configurationHost?.onDidChangeConfiguration(async () => {
+            customData = await getCustomData();
+            htmlLs.setDataProviders(true, customData);
+        });
+    }
 
     return {
 

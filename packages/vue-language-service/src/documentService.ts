@@ -47,6 +47,7 @@ export function getDocumentService(
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
+		configurationHost,
 		getVueDocument,
 		scriptTsLs: undefined,
 	});
