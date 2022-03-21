@@ -114,6 +114,7 @@ export function createLanguageService(
 	const templateTsLs = templateTsLsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsLsHost, templateTsLsRaw, tsSettings) : undefined;
 	const blockingRequests = new Set<Promise<any>>();
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
+	const documentVersions = new Map<string, number>();
 
 	// plugins
 	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
@@ -385,10 +386,14 @@ export function createLanguageService(
 
 			if (!document) {
 
+				const newVersion = (documentVersions.get(uri.toLowerCase()) ?? 0) + 1;
+
+				documentVersions.set(uri.toLowerCase(), newVersion);
+
 				document = TextDocument.create(
 					uri,
 					uri.endsWith('.vue') ? 'vue' : 'typescript', // TODO
-					0, // TODO
+					newVersion,
 					scriptSnapshot.getText(0, scriptSnapshot.getLength()),
 				);
 				documents.set(scriptSnapshot, document);

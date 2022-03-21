@@ -21,6 +21,7 @@ export function createStylesheetExtra(cssPlugin: ReturnType<typeof useCssPlugin>
     const embeddedDocuments = new WeakMap<EmbeddedFile, TextDocument>();
     const stylesheetVBinds = new WeakMap<css.Stylesheet, TextRange[]>();
     const stylesheetClasses = new WeakMap<css.Stylesheet, Record<string, TextRange[]>>();
+    const embeddedDocumentVersions = new Map<string, number>();
 
     return {
         getCssVBindRanges,
@@ -48,10 +49,16 @@ export function createStylesheetExtra(cssPlugin: ReturnType<typeof useCssPlugin>
         let document = embeddedDocuments.get(embeddedFile);
 
         if (!document) {
+
+            const uri = shared.fsPathToUri(embeddedFile.fileName);
+            const newVersion = (embeddedDocumentVersions.get(embeddedFile.lsType + ':' + uri.toLowerCase()) ?? 0) + 1;
+
+            embeddedDocumentVersions.set(embeddedFile.lsType + ':' + uri.toLowerCase(), newVersion);
+
             document = TextDocument.create(
-                shared.fsPathToUri(embeddedFile.fileName),
+                uri,
                 shared.syntaxToLanguageId(embeddedFile.lang),
-                0,
+                newVersion,
                 embeddedFile.content,
             );
             embeddedDocuments.set(embeddedFile, document);

@@ -210,11 +210,19 @@ export function parseVueDocuments(vueFiles: VueFiles) {
 export function parseVueDocument(vueFile: VueFile) {
 
     // cache map
+    let documentVersion = 0;
+    const embeddedDocumentVersions = new Map<string, number>();
     const embeddedDocumentsMap = useCacheMap<EmbeddedFile, TextDocument>(embeddedFile => {
+
+        const uri = shared.fsPathToUri(embeddedFile.fileName);
+        const newVersion = (embeddedDocumentVersions.get(embeddedFile.lsType + ':' + uri.toLowerCase()) ?? 0) + 1;
+
+        embeddedDocumentVersions.set(embeddedFile.lsType + ':' + uri.toLowerCase(), newVersion);
+
         return TextDocument.create(
-            shared.fsPathToUri(embeddedFile.fileName),
+            uri,
             shared.syntaxToLanguageId(embeddedFile.lang),
-            0,
+            newVersion,
             embeddedFile.content,
         );
     });
@@ -228,7 +236,7 @@ export function parseVueDocument(vueFile: VueFile) {
     });
 
     // reactivity
-    const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), 'vue', 0, vueFile.refs.content.value));
+    const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), 'vue', documentVersion++, vueFile.refs.content.value));
     const sourceMaps = computed(() => {
         return vueFile.refs.allEmbeddeds.value.map(embedded => sourceMapsMap.get(embedded));
     });
