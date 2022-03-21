@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.4
+
+- fix: expand selection broken since 0.33.0 ([#1085](https://github.com/johnsoncodehk/volar/issues/1085))
+- fix: vueCompilerOptions typo `experimentalRsolveNonScopedCssClasses` -> `experimentalResolveNonScopedCssClasses`
+- fix: 0.33.3 release packages missing `/out` directory ([#1086](https://github.com/johnsoncodehk/volar/issues/1086))
+
 ## 0.33.3
 
 - feat: support attribute binding syntax `:<name>.attr` ([#1047](https://github.com/johnsoncodehk/volar/pull/1047))
