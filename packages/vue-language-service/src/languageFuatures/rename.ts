@@ -138,7 +138,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 					sourceMap?.embeddedFile.lsType === 'template' && renameFromScriptContent,
 					data,
 					context.vueDocuments,
-					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename,
 				);
 			},
 			(workspaceEdits) => {
@@ -207,7 +206,6 @@ export function embeddedEditToSourceEdit(
 	ignoreScriptLsResult: boolean,
 	tsResult: vscode.WorkspaceEdit,
 	vueDocuments: VueDocuments,
-	isValidMapping: (data: EmbeddedFileMappingData) => boolean,
 ) {
 
 	const vueResult: vscode.WorkspaceEdit = {};
@@ -230,7 +228,7 @@ export function embeddedEditToSourceEdit(
 				tsUri,
 				tsEdit.range.start,
 				tsEdit.range.end,
-				isValidMapping,
+				data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
 			)) {
 
 				if (ignoreScriptLsResult) {
@@ -277,7 +275,11 @@ export function embeddedEditToSourceEdit(
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const [vueRange, data] of sourceMap.getSourceRanges(tsEdit.range.start, tsEdit.range.end, isValidMapping)) {
+						for (const [vueRange, data] of sourceMap.getSourceRanges(
+							tsEdit.range.start,
+							tsEdit.range.end,
+							data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
+						)) {
 
 							if (ignoreScriptLsResult && !(data.vueTag === 'template' || data.vueTag === 'style')) {
 								continue;

@@ -30,7 +30,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					if (resolvedItem.edit) {
 
-						const edit = embeddedEditToSourceEdit(sourceMap.embeddedFile.lsType, false, resolvedItem.edit, context.vueDocuments, () => true);
+						const edit = embeddedEditToSourceEdit(
+							sourceMap.embeddedFile.lsType,
+							false,
+							resolvedItem.edit,
+							context.vueDocuments,
+						);
 
 						if (edit) {
 							resolvedItem.edit = edit;

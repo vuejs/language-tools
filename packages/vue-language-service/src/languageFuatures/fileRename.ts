@@ -28,7 +28,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 					false,
 					workspaceEdit,
 					context.vueDocuments,
-					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename,
 				)
 			}
 		}
