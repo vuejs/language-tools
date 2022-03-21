@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.33.3
+
+- feat: support attribute binding syntax `:<name>.attr` ([#1047](https://github.com/johnsoncodehk/volar/pull/1047))
+- feat: supoprt document features for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
+- feat: reduce vue-tsc depends ([#1038](https://github.com/johnsoncodehk/volar/issues/1038))
+- feat: add option to support intellisense for non-scoped css
+- fix: json schema request service not available since 0.33.0 ([#243](https://github.com/johnsoncodehk/volar/issues/243))
+- fix: remove `console.log` avoid vim-lsp crash ([#1046](https://github.com/johnsoncodehk/volar/pull/1046))
+- fix: emmet suggestions messed up embedded language suggestions ([#1039](https://github.com/johnsoncodehk/volar/issues/1039))
+- fix: vue-tsc watch not always catch vue file changes ([#1082](https://github.com/johnsoncodehk/volar/issues/1082))
+- fix: previewer not working with pnpm ([#1074](https://github.com/johnsoncodehk/volar/issues/1074))
+- fix: global components type not working with `vue-class-component` ([#1061](https://github.com/johnsoncodehk/volar/issues/1061))
+- fix: goto component definition not working with some syntax ([#435](https://github.com/johnsoncodehk/volar/issues/435)) ([#1048](https://github.com/johnsoncodehk/volar/issues/1048))
+- fix: directives argument should be optional if argument could be undefined ([#1040](https://github.com/johnsoncodehk/volar/issues/1040))
+
 ## 0.33.2
 
 - feat: add option `vueCompilerOptions.experimentalDisableTemplateSupport` to disable template type-check and intellisense ([#577](https://github.com/johnsoncodehk/volar/issues/577))
