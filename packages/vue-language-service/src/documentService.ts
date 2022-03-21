@@ -155,7 +155,6 @@ export function getDocumentService(
 			{},
 			context.typescript,
 			'Record<string, string>',
-			stylesheetExtra.getCssVBindRanges,
 			stylesheetExtra.getCssClasses,
 		);
 		vueDoc = parseVueDocument(vueFile);

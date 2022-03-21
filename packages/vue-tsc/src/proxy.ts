@@ -41,7 +41,6 @@ export function createProgramProxy(
 		typescript: ts,
 		baseCssModuleType: 'any',
 		getCssClasses: () => ({}),
-		getCssVBindRanges: () => [],
 		vueCompilerOptions,
 		vueLsHost: vueLsHost,
 		isVueTsc: true,

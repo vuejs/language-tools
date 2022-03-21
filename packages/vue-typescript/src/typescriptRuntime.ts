@@ -23,7 +23,6 @@ export function createTypeScriptRuntime(options: {
     typescript: typeof import('typescript/lib/tsserverlibrary'),
     vueCompilerOptions: VueCompilerOptions,
     baseCssModuleType: string,
-    getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
     getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
     vueLsHost: LanguageServiceHost,
     isTsPlugin?: boolean,
@@ -322,7 +321,6 @@ export function createTypeScriptRuntime(options: {
                     options.vueCompilerOptions,
                     options.typescript,
                     options.baseCssModuleType,
-                    options.getCssVBindRanges,
                     options.getCssClasses,
                 ));
                 vueScriptContentsUpdate = true;

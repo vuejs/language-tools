@@ -29,7 +29,6 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				vueCompilerOptions,
 				baseCssModuleType: 'any',
 				getCssClasses: () => ({}),
-				getCssVBindRanges: () => [],
 				vueLsHost: proxyHost.host,
 				isTsPlugin: true
 			});

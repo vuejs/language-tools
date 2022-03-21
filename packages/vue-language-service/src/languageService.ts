@@ -101,7 +101,6 @@ export function createLanguageService(
 		vueCompilerOptions,
 		baseCssModuleType: 'Record<string, string>',
 		getCssClasses: ef => stylesheetExtra.getCssClasses(ef),
-		getCssVBindRanges: ef => stylesheetExtra.getCssVBindRanges(ef),
 		vueLsHost: vueLsHost,
 		isTsPlugin: false,
 	});

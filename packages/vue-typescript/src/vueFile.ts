@@ -17,6 +17,7 @@ import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
+import { parseCssVars } from './utils/parseCssVars';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 
@@ -80,7 +81,6 @@ export function createVueFile(
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	baseCssModuleType: string,
-	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 ) {
 
@@ -108,6 +108,7 @@ export function createVueFile(
 		props: [],
 		setupReturns: [],
 	}) as ITemplateScriptData;
+	const cssVars = new WeakMap<EmbeddedFile, TextRange[]>();
 
 	// computeds
 	const parsedSfc = computed(() => parse(content.value, { sourceMap: false, ignoreEmpty: false }));
@@ -248,21 +249,27 @@ export function createVueFile(
 
 		const embeddeds: EmbeddedStructure[] = [];
 
-		// styles
-		for (const style of sfcStyles.embeddeds.value) {
-			embeddeds.push({
-				self: style,
-				embeddeds: [],
-			});
-		}
-
-		// customBlocks
-		for (const customBlock of sfcCustomBlocks.embeddeds.value) {
-			embeddeds.push({
-				self: customBlock,
-				embeddeds: [],
-			});
-		}
+		// template
+		embeddeds.push({
+			self: sfcTemplate.embedded.value,
+			embeddeds: [
+				{
+					self: sfcTemplateScript.embedded.value,
+					inheritParentIndent: true,
+					embeddeds: [],
+				},
+				{
+					self: sfcTemplateScript.formatEmbedded.value,
+					inheritParentIndent: true,
+					embeddeds: [],
+				},
+				{
+					self: sfcTemplateScript.inlineCssEmbedded.value,
+					inheritParentIndent: true,
+					embeddeds: [],
+				},
+			],
+		});
 
 		// scripts - format
 		embeddeds.push({
@@ -294,27 +301,21 @@ export function createVueFile(
 			embeddeds: [],
 		});
 
-		// template
-		embeddeds.push({
-			self: sfcTemplate.embedded.value,
-			embeddeds: [
-				{
-					self: sfcTemplateScript.embedded.value,
-					inheritParentIndent: true,
-					embeddeds: [],
-				},
-				{
-					self: sfcTemplateScript.formatEmbedded.value,
-					inheritParentIndent: true,
-					embeddeds: [],
-				},
-				{
-					self: sfcTemplateScript.inlineCssEmbedded.value,
-					inheritParentIndent: true,
-					embeddeds: [],
-				},
-			],
-		});
+		// styles
+		for (const style of sfcStyles.embeddeds.value) {
+			embeddeds.push({
+				self: style,
+				embeddeds: [],
+			});
+		}
+
+		// customBlocks
+		for (const customBlock of sfcCustomBlocks.embeddeds.value) {
+			embeddeds.push({
+				self: customBlock,
+				embeddeds: [],
+			});
+		}
 
 		return embeddeds;
 	});
@@ -578,6 +579,17 @@ export function createVueFile(
 		}
 
 		return dirty;
+	}
+	function getCssVBindRanges(embeddedFile: EmbeddedFile) {
+
+		let binds = cssVars.get(embeddedFile);
+
+		if (!binds) {
+			binds = [...parseCssVars(embeddedFile.content)];
+			cssVars.set(embeddedFile, binds)
+		}
+
+		return binds;
 	}
 }
 
