@@ -79,6 +79,7 @@ export function createVueFile(
 	plugins: VueLanguagePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	baseCssModuleType: string,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 ) {
@@ -210,6 +211,7 @@ export function createVueFile(
 		sfcStyles.files,
 		sfcScriptForScriptLs.lang,
 		compilerOptions,
+		baseCssModuleType,
 		getCssVBindRanges,
 		getCssClasses,
 	);

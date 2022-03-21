@@ -4,7 +4,6 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocuments } from '../vueDocuments';
-import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 
 export function register(context: LanguageServiceRuntimeContext) {
 

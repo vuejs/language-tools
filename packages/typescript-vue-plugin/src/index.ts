@@ -27,6 +27,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			const tsRuntime = vue.createTypeScriptRuntime({
 				typescript: ts,
 				vueCompilerOptions,
+				baseCssModuleType: 'any',
 				getCssClasses: () => ({}),
 				getCssVBindRanges: () => [],
 				vueLsHost: proxyHost.host,

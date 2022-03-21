@@ -99,6 +99,7 @@ export function createLanguageService(
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
 		vueCompilerOptions,
+		baseCssModuleType: 'Record<string, string>',
 		getCssClasses: ef => stylesheetExtra.getCssClasses(ef),
 		getCssVBindRanges: ef => stylesheetExtra.getCssVBindRanges(ef),
 		vueLsHost: vueLsHost,

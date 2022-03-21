@@ -39,6 +39,7 @@ export function createProgramProxy(
 	};
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
+		baseCssModuleType: 'any',
 		getCssClasses: () => ({}),
 		getCssVBindRanges: () => [],
 		vueCompilerOptions,

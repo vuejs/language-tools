@@ -22,6 +22,7 @@ export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 export function createTypeScriptRuntime(options: {
     typescript: typeof import('typescript/lib/tsserverlibrary'),
     vueCompilerOptions: VueCompilerOptions,
+    baseCssModuleType: string,
     getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
     getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
     vueLsHost: LanguageServiceHost,
@@ -320,6 +321,7 @@ export function createTypeScriptRuntime(options: {
                     plugins,
                     options.vueCompilerOptions,
                     options.typescript,
+                    options.baseCssModuleType,
                     options.getCssVBindRanges,
                     options.getCssClasses,
                 ));

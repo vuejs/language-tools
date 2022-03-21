@@ -154,6 +154,7 @@ export function getDocumentService(
 			vueTsPlugins,
 			{},
 			context.typescript,
+			'Record<string, string>',
 			stylesheetExtra.getCssVBindRanges,
 			stylesheetExtra.getCssClasses,
 		);

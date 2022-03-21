@@ -29,6 +29,7 @@ export function useSfcTemplateScript(
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
+	baseCssModuleType: string,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 ) {
@@ -97,7 +98,7 @@ export function useSfcTemplateScript(
 		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
 		for (const moduleName in cssModuleClasses.value) {
 			const moduleClasses = cssModuleClasses.value[moduleName];
-			codeGen.addText(`declare var ${moduleName}: Record<string, string> & {\n`);
+			codeGen.addText(`declare var ${moduleName}: ${baseCssModuleType} & {\n`);
 			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
 			codeGen.addText('};\n');
 		}
