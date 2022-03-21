@@ -101,6 +101,7 @@ export default function (host: {
     const htmlPlugin = useHtmlPlugin({
         configurationHost: host.configurationHost,
         validLang: 'vue',
+        disableCustomData: true,
     });
     htmlPlugin.htmlLs.setDataProviders(false, [dataProvider]);
 
