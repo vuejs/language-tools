@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.7
+
+- feat: support nuxt 3 app preview and goto code
+- fix: avoid click event on element when use goto code
+- fix: style codeLens references always show 0 references ([#1095](https://github.com/johnsoncodehk/volar/issues/1095))
+
 ## 0.33.6
 
 - fix: TS completion not working in interpolations ([#1088](https://github.com/johnsoncodehk/volar/issues/1088))

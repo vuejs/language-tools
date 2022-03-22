@@ -506,7 +506,7 @@
 			},
 			{
 				"command": "volar.action.selectElement",
-				"title": "Select Element",
+				"title": "Go to Code",
 				"category": "Volar",
 				"icon": "$(search)"
 			},
