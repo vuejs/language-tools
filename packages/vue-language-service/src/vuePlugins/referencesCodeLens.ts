@@ -71,7 +71,7 @@ export default function (host: {
             const references = await host.findReference(data.uri, data.position) ?? [];
             const referencesInDifferentDocument = references.filter(reference =>
                 reference.uri !== data.uri // different file
-                || !sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
+                || sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
             );
             const referencesCount = referencesInDifferentDocument.length ?? 0;
 
