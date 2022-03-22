@@ -310,11 +310,6 @@
 					"default": true,
 					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.icon.vite": {
-					"type": "boolean",
-					"default": true,
-					"description": "(Experimental) Show extra Vite features."
-				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": false,
@@ -476,7 +471,13 @@
 				"command": "volar.action.vite",
 				"title": "Experimental Features for Vite",
 				"category": "Volar",
-				"icon": "images/vite-icon.svg"
+				"icon": "images/vite-logo.svg"
+			},
+			{
+				"command": "volar.action.nuxt",
+				"title": "Experimental Features for Nuxt",
+				"category": "Volar",
+				"icon": "images/nuxt-logo.svg"
 			},
 			{
 				"command": "volar.action.tagNameCase",
@@ -558,6 +559,10 @@
 					"when": "editorLangId == vue"
 				},
 				{
+					"command": "volar.action.nuxt",
+					"when": "editorLangId == vue"
+				},
+				{
 					"command": "volar.action.tagNameCase",
 					"when": "editorLangId == vue"
 				},
@@ -598,7 +603,12 @@
 				},
 				{
 					"command": "volar.action.vite",
-					"when": "editorLangId == vue && config.volar.icon.vite && volar.foundViteDir",
+					"when": "editorLangId == vue && volar.foundViteDir",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.nuxt",
+					"when": "editorLangId == vue && volar.foundNuxtDir",
 					"group": "navigation"
 				},
 				{

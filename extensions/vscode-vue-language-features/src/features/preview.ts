@@ -6,7 +6,11 @@ import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { parse } from '@vue/compiler-sfc';
 
-interface PreviewState { port: number, fileName: string }
+interface PreviewState {
+	mode: 'vite' | 'nuxt',
+	port: number,
+	fileName: string,
+}
 
 const enum PreviewType {
 	Webview = 'volar-webview',
@@ -21,7 +25,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
 
 			const terminal = vscode.window.terminals.find(terminal => terminal.name === 'volar-preview');
-			const port = await openPreview(PreviewType.Webview, state.fileName, '', terminal, state.port, panel);
+			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, terminal, state.port, panel);
 
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state)
 		}
@@ -34,11 +38,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			if (!editor) return;
 
 			const terminal = vscode.window.terminals.find(terminal => terminal.name === 'volar-preview');
-			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), terminal, state.port, panel);
+			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, terminal, state.port, panel);
 
 			if (port !== undefined) {
 				const previewQuery = createQuery(editor.document.fileName, editor.document.getText());
-				updatePreviewPanel(panel, state.fileName, previewQuery, port);
+				updatePreviewPanel(panel, state.fileName, previewQuery, port, state.mode);
 			}
 		}
 	}
@@ -49,16 +53,30 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (!editor)
 			return;
 
-		const viteConfigFile = await getViteConfigFile(editor.document.fileName);
+		const viteConfigFile = await getConfigFile(editor.document.fileName, 'vite');
 		const select = await userPick({
-			[PreviewType.Webview]: { label: 'Preview Vite App', description: '(Experimental)', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
+			[PreviewType.Webview]: { label: 'Preview Vite App', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
 			[PreviewType.ComponentPreview]: { label: `Preview Component with Vite`, description: '(WIP)', detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName },
-			// refsGraph: { label: `Refs Reactive Graph (WIP)` },
 		});
 		if (select === undefined)
 			return; // cancle
 
-		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText());
+		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'vite');
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.nuxt', async () => {
+
+		const editor = vscode.window.activeTextEditor;
+		if (!editor)
+			return;
+
+		const viteConfigFile = await getConfigFile(editor.document.fileName, 'nuxt');
+		const select = await userPick({
+			[PreviewType.Webview]: { label: 'Preview Nuxt App', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
+		});
+		if (select === undefined)
+			return; // cancle
+
+		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'nuxt');
 	}));
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
@@ -69,23 +87,27 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function updateFoundViteDir() {
 		if (vscode.window.activeTextEditor?.document.languageId === 'vue') {
-			const viteConfigFile = await getViteConfigFile(vscode.window.activeTextEditor.document.fileName);
+
+			const viteConfigFile = await getConfigFile(vscode.window.activeTextEditor.document.fileName, 'vite');
+			const nuxtConfigFile = await getConfigFile(vscode.window.activeTextEditor.document.fileName, 'nuxt');
+
 			vscode.commands.executeCommand('setContext', 'volar.foundViteDir', viteConfigFile !== undefined);
+			vscode.commands.executeCommand('setContext', 'volar.foundNuxtDir', nuxtConfigFile !== undefined);
 		}
 	}
-	async function openPreview(mode: PreviewType, fileName: string, fileText: string, _terminal?: vscode.Terminal, _port?: number, _panel?: vscode.WebviewPanel) {
+	async function openPreview(previewType: PreviewType, fileName: string, fileText: string, mode: 'vite' | 'nuxt', _terminal?: vscode.Terminal, _port?: number, _panel?: vscode.WebviewPanel) {
 
-		const viteConfigFile = await getViteConfigFile(fileName);
-		if (!viteConfigFile)
+		const configFile = await getConfigFile(fileName, mode);
+		if (!configFile)
 			return;
 
-		const viteDir = path.dirname(viteConfigFile);
+		const configDir = path.dirname(configFile);
 		const { terminal, port } = _terminal && _port
 			? { terminal: _terminal, port: _port }
-			: await startViteServer(viteDir);
+			: await startServerServer(configDir, mode);
 
 		const panel = _panel ?? vscode.window.createWebviewPanel(
-			mode,
+			previewType,
 			'Volar Webview',
 			vscode.ViewColumn.Beside,
 			{
@@ -114,20 +136,20 @@ export async function activate(context: vscode.ExtensionContext) {
 			vscode.env.openExternal(vscode.Uri.parse(statusBar.text));
 		}));
 
-		if (mode === PreviewType.Webview) {
+		if (previewType === PreviewType.Webview) {
 
 			panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { port, fileName });
+				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { port, fileName, mode });
 			}));
 			panelContext.push(vscode.commands.registerCommand('volar.inputWebviewUrl', async () => {
 				const input = await vscode.window.showInputBox({ value: statusBar.text });
 				if (input !== undefined && input !== statusBar.text) {
-					panel.webview.html = getWebviewContent(input, { port, fileName });
+					panel.webview.html = getWebviewContent(input, { port, fileName, mode });
 				}
 			}));
 
-			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { port, fileName });
+			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { port, fileName, mode });
 
 			panel.onDidChangeViewState(() => {
 				if (panel.active)
@@ -136,7 +158,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					statusBar.hide();
 			});
 		}
-		else if (mode === PreviewType.ComponentPreview) {
+		else if (previewType === PreviewType.ComponentPreview) {
 
 			// const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
 			// 	if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
@@ -167,10 +189,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			}));
 			panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				updatePreviewPanel(panel, fileName, previewQuery, port);
+				updatePreviewPanel(panel, fileName, previewQuery, port, mode);
 			}));
 
-			updatePreviewPanel(panel, fileName, previewQuery, port);
+			updatePreviewPanel(panel, fileName, previewQuery, port, mode);
 		}
 
 		return port;
@@ -233,14 +255,20 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	async function startViteServer(viteDir: string) {
+	async function startServerServer(viteDir: string, type: 'vite' | 'nuxt') {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-preview');
-		const viteProxyPath = require.resolve('./bin/vite', { paths: [context.extensionPath] });
+		const viteProxyPath = type === 'vite'
+			? require.resolve('./bin/vite', { paths: [context.extensionPath] })
+			: require.resolve('./bin/nuxi', { paths: [context.extensionPath] });
 
 		terminal.sendText(`cd ${viteDir}`);
-		terminal.sendText(`node ${JSON.stringify(viteProxyPath)} --port=${port}`);
+
+		if (type === 'vite')
+			terminal.sendText(`node ${JSON.stringify(viteProxyPath)} --port=${port}`);
+		else
+			terminal.sendText(`node ${JSON.stringify(viteProxyPath)} dev --port ${port}`);
 
 		return {
 			port,
@@ -248,18 +276,18 @@ export async function activate(context: vscode.ExtensionContext) {
 		};
 	}
 
-	async function getViteConfigFile(fileName: string) {
+	async function getConfigFile(fileName: string, mode: 'vite' | 'nuxt') {
 		let dir = path.dirname(fileName);
-		let viteConfigFile: string | undefined;
+		let configFile: string | undefined;
 		while (true) {
-			const configTs = path.join(dir, 'vite.config.ts');
-			const configJs = path.join(dir, 'vite.config.js');
+			const configTs = path.join(dir, mode + '.config.ts');
+			const configJs = path.join(dir, mode + '.config.js');
 			if (await fs.exists(vscode.Uri.file(configTs))) {
-				viteConfigFile = configTs;
+				configFile = configTs;
 				break;
 			}
 			if (await fs.exists(vscode.Uri.file(configJs))) {
-				viteConfigFile = configJs;
+				configFile = configJs;
 				break;
 			}
 			const upperDir = path.dirname(dir);
@@ -268,7 +296,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 			dir = upperDir;
 		}
-		return viteConfigFile;
+		return configFile;
 	}
 
 	function createQuery(vueCode: string, fileName: string) {
@@ -319,12 +347,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		return query;
 	}
 
-	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, query: string, port: number) {
+	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, query: string, port: number, mode: 'vite' | 'nuxt') {
 		const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
 		const bgSrc = previewPanel.webview.asWebviewUri(bgPath);
 		const url = `http://localhost:${port}/__preview${query}#${fileName}`;
 		previewPanel.title = 'Preview ' + path.basename(fileName);
-		previewPanel.webview.html = getWebviewContent(url, { port, fileName }, bgSrc.toString());
+		previewPanel.webview.html = getWebviewContent(url, { port, fileName, mode }, bgSrc.toString());
 	}
 
 	function getWebviewContent(url: string, state: PreviewState, bg?: string) {
