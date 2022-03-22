@@ -3,9 +3,9 @@ import { VueLanguagePlugin } from '../typescriptRuntime';
 
 export default function (): VueLanguagePlugin {
 
-    return {
+	return {
 
-        compileTemplate(template, lang) {
+		compileTemplate(template, lang) {
 
 			if (lang === 'pug') {
 
@@ -32,6 +32,6 @@ export default function (): VueLanguagePlugin {
 					};
 				}
 			}
-        }
-    }
+		}
+	}
 }

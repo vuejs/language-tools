@@ -28,24 +28,28 @@ function __installFinder(app) {
         var _a;
         if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'selectElement') {
             enabled = true;
+            clickMask.style.pointerEvents = 'none';
+            document.body.appendChild(clickMask);
+            updateOverlay();
         }
     });
-    window.addEventListener('click', function (ev) {
+    window.addEventListener('mousedown', function (ev) {
         if (enabled) {
-            ev.preventDefault(); // TODO: not working
             enabled = false;
+            clickMask.style.pointerEvents = '';
             highlightNodes = [];
             updateOverlay();
-            if (lastGotoData) {
-                parent.postMessage(lastGotoData, '*');
-                lastGotoData = undefined;
+            if (lastCodeLoc) {
+                parent.postMessage(lastCodeLoc, '*');
+                lastCodeLoc = undefined;
             }
         }
     });
     var overlay = createOverlay();
+    var clickMask = createClickMask();
     var highlightNodes = [];
     var enabled = false;
-    var lastGotoData;
+    var lastCodeLoc;
     app.config.globalProperties.$volar = {
         highlight: highlight,
         unHighlight: unHighlight,
@@ -53,14 +57,14 @@ function __installFinder(app) {
     function goToTemplate(fileName, range) {
         if (!enabled)
             return;
-        lastGotoData = {
+        lastCodeLoc = {
             command: 'goToTemplate',
             data: {
                 fileName: fileName,
                 range: JSON.parse(range),
             },
         };
-        parent.postMessage(lastGotoData, '*');
+        parent.postMessage(lastCodeLoc, '*');
     }
     function highlight(node, fileName, range) {
         if (!enabled)
@@ -69,12 +73,14 @@ function __installFinder(app) {
         updateOverlay();
     }
     function unHighlight(node) {
+        if (!enabled)
+            return;
         highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
         updateOverlay();
     }
     function createOverlay() {
         var overlay = document.createElement('div');
-        overlay.style.backgroundColor = 'rgba(145, 184, 226, 0.35)';
+        overlay.style.backgroundColor = 'rgba(65, 184, 131, 0.35)';
         overlay.style.position = 'fixed';
         overlay.style.zIndex = '99999999999999';
         overlay.style.pointerEvents = 'none';
@@ -82,6 +88,24 @@ function __installFinder(app) {
         overlay.style.alignItems = 'center';
         overlay.style.justifyContent = 'center';
         overlay.style.borderRadius = '3px';
+        return overlay;
+    }
+    function createClickMask() {
+        var overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.zIndex = '99999999999999';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.display = 'flex';
+        overlay.style.left = '0';
+        overlay.style.right = '0';
+        overlay.style.top = '0';
+        overlay.style.bottom = '0';
+        overlay.addEventListener('mouseup', function () {
+            var _a;
+            if (overlay.parentNode) {
+                (_a = overlay.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(overlay);
+            }
+        });
         return overlay;
     }
     function updateOverlay() {
@@ -174,22 +198,23 @@ function __proxyExport(rawOptions = {}) {
 
   if (!rawOptions)
     rawOptions = {};
+
   if (!rawOptions.template)
     rawOptions.template = {};
+
   if (!rawOptions.template.compilerOptions)
     rawOptions.template.compilerOptions = {};
+
   if (!rawOptions.template.compilerOptions.nodeTransforms)
     rawOptions.template.compilerOptions.nodeTransforms = [];
 
   rawOptions.template.compilerOptions.nodeTransforms.push((node, ctx) => {
     if (node.type === 1) {
-      const { offset: start } = node.loc.start;
-      const { offset: end } = node.loc.end;
       node.props.push({
         type: 6,
         name: 'data-loc',
         value: {
-          content: '[' + start + ',' + end + ']',
+          content: '[' + node.loc.start.offset + ',' + node.loc.end.offset + ']',
         },
         loc: node.loc,
       }, {

@@ -5,12 +5,12 @@ export const vuePlugin: Plugin = app => {
 	installFinder(app);
 	installPreview(app);
 	let href = '';
-    setInterval(function () {
-        if (href !== location.href) {
-            href = location.href;
-            parent.postMessage({ command: 'urlChanged', data: href }, '*');
-        }
-    }, 200);
+	setInterval(function () {
+		if (href !== location.href) {
+			href = location.href;
+			parent.postMessage({ command: 'urlChanged', data: href }, '*');
+		}
+	}, 200);
 };
 
 function installFinder(app: App) {
@@ -19,25 +19,30 @@ function installFinder(app: App) {
 	window.addEventListener('message', event => {
 		if (event.data?.command === 'selectElement') {
 			enabled = true;
+			clickMask.style.pointerEvents = 'none';
+			document.body.appendChild(clickMask);
+			updateOverlay();
 		}
 	});
-	window.addEventListener('click', (ev) => {
+	window.addEventListener('mousedown', (ev) => {
 		if (enabled) {
-			ev.preventDefault(); // TODO: not working
 			enabled = false;
+			clickMask.style.pointerEvents = '';
 			highlightNodes = [];
 			updateOverlay();
-			if (lastGotoData) {
-				parent.postMessage(lastGotoData, '*');
-				lastGotoData = undefined;
+			if (lastCodeLoc) {
+				parent.postMessage(lastCodeLoc, '*');
+				lastCodeLoc = undefined;
 			}
 		}
 	});
 
 	const overlay = createOverlay();
+	const clickMask = createClickMask();
+
 	let highlightNodes: [HTMLElement, string, string][] = [];
 	let enabled = false;
-	let lastGotoData: any | undefined;
+	let lastCodeLoc: any | undefined;
 
 	app.config.globalProperties.$volar = {
 		highlight,
@@ -46,14 +51,14 @@ function installFinder(app: App) {
 
 	function goToTemplate(fileName: string, range: string) {
 		if (!enabled) return;
-		lastGotoData = {
+		lastCodeLoc = {
 			command: 'goToTemplate',
 			data: {
 				fileName,
 				range: JSON.parse(range),
 			},
 		};
-		parent.postMessage(lastGotoData, '*');
+		parent.postMessage(lastCodeLoc, '*');
 	}
 	function highlight(node: HTMLElement, fileName: string, range: string) {
 		if (!enabled) return;
@@ -61,12 +66,13 @@ function installFinder(app: App) {
 		updateOverlay();
 	}
 	function unHighlight(node: HTMLElement) {
+		if (!enabled) return;
 		highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
 		updateOverlay();
 	}
 	function createOverlay() {
 		const overlay = document.createElement('div');
-		overlay.style.backgroundColor = 'rgba(145, 184, 226, 0.35)';
+		overlay.style.backgroundColor = 'rgba(65, 184, 131, 0.35)';
 		overlay.style.position = 'fixed';
 		overlay.style.zIndex = '99999999999999';
 		overlay.style.pointerEvents = 'none';
@@ -74,6 +80,23 @@ function installFinder(app: App) {
 		overlay.style.alignItems = 'center';
 		overlay.style.justifyContent = 'center';
 		overlay.style.borderRadius = '3px';
+		return overlay;
+	}
+	function createClickMask() {
+		const overlay = document.createElement('div');
+		overlay.style.position = 'fixed';
+		overlay.style.zIndex = '99999999999999';
+		overlay.style.pointerEvents = 'none';
+		overlay.style.display = 'flex';
+		overlay.style.left = '0';
+		overlay.style.right = '0';
+		overlay.style.top = '0';
+		overlay.style.bottom = '0';
+		overlay.addEventListener('mouseup', () => {
+			if (overlay.parentNode) {
+				overlay.parentNode?.removeChild(overlay)
+			}
+		});
 		return overlay;
 	}
 	function updateOverlay() {
