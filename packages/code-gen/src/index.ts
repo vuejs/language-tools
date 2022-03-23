@@ -59,7 +59,7 @@ export class CodeGen<T = undefined> {
 	}
 }
 
-export function margeCodeGen<T extends CodeGen<any>>(a: T, b: T) {
+export function mergeCodeGen<T extends CodeGen<any>>(a: T, b: T) {
 	const aLength = a.getText().length;
 	for (const mapping of b.getMappings()) {
 		a.addMapping2({

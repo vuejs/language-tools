@@ -1,4 +1,4 @@
-import { CodeGen, margeCodeGen } from '@volar/code-gen';
+import { CodeGen, mergeCodeGen } from '@volar/code-gen';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
@@ -118,7 +118,7 @@ export function useSfcTemplateScript(
 		writeCssVars();
 
 		if (templateCodeGens.value) {
-			margeCodeGen(codeGen, templateCodeGens.value.codeGen);
+			mergeCodeGen(codeGen, templateCodeGens.value.codeGen);
 		}
 
 		codeGen.addText(`export default __VLS_slots;\n`);
