@@ -54,7 +54,7 @@ function __installSelectionHighlight() {
     function vnodeMounted(node, fileName, range) {
         nodes.set(node, {
             fileName,
-            range: JSON.parse(range),
+            range,
         });
     }
     function vnodeUnmounted(node) {
@@ -200,7 +200,7 @@ function __installFinder() {
             command: 'goToTemplate',
             data: {
                 fileName: fileName,
-                range: JSON.parse(range),
+                range,
             },
         };
         parent.postMessage(lastCodeLoc, '*');
@@ -349,20 +349,12 @@ function __proxyExport(rawOptions = {}) {
 
   rawOptions.template.compilerOptions.nodeTransforms.push((node, ctx) => {
     if (node.type === 1) {
-        node.props.push(
-            {
-                type: 6,
-                name: 'data-loc',
-                value: {
-                content: '[' + node.loc.start.offset + ',' + node.loc.end.offset + ']',
-            },
-            loc: node.loc,
-            },
-        );
-        addEvent(node, 'mouseenter', '$volar.highlight($event.target, $.type.__file, $event.target.dataset.loc)');
+        const start = node.loc.start.offset;
+        const end = node.loc.end.offset;
+        addEvent(node, 'mouseenter', \`$volar.highlight($event.target, $.type.__file, [\${start},\${end}])\`);
         addEvent(node, 'mouseleave', '$volar.unHighlight($event.target)');
-        addEvent(node, 'vnode-mounted', '$event.el.dataset ? $volar.vnodeMounted($event.el, $.type.__file, $event.el.dataset.loc) : undefined');
-        addEvent(node, 'vnode-unmounted', '$event.el.dataset ? $volar.vnodeUnmounted($event.el) : undefined');
+        addEvent(node, 'vnode-mounted', \`$volar.vnodeMounted($event.el, $.type.__file, [\${start},\${end}])\`);
+        addEvent(node, 'vnode-unmounted', '$volar.vnodeUnmounted($event.el)');
     }
   });
 

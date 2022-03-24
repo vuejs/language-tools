@@ -55,10 +55,10 @@ export default defineNuxtPlugin(app => {
             vnodeUnmounted,
         };
 
-        function vnodeMounted(node: HTMLElement, fileName: string, range: string) {
+        function vnodeMounted(node: HTMLElement, fileName: string, range: [number, number]) {
             nodes.set(node, {
                 fileName,
-                range: JSON.parse(range),
+                range,
             });
         }
         function vnodeUnmounted(node: HTMLElement) {
@@ -200,13 +200,13 @@ export default defineNuxtPlugin(app => {
             unHighlight,
         };
 
-        function goToTemplate(fileName: string, range: string) {
+        function goToTemplate(fileName: string, range: [number, number]) {
             if (!enabled) return;
             lastCodeLoc = {
                 command: 'goToTemplate',
                 data: {
                     fileName,
-                    range: JSON.parse(range),
+                    range,
                 },
             };
             parent.postMessage(lastCodeLoc, '*');
