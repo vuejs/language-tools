@@ -13,7 +13,7 @@ export default function (): VueLanguagePlugin {
 
 				if (pugDoc) {
 					return {
-						result: pugDoc.htmlCode,
+						html: pugDoc.htmlCode,
 						mapping: (htmlStart, htmlEnd) => {
 							const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
 							if (pugRange) {

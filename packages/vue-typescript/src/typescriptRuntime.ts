@@ -12,7 +12,7 @@ import { createVueFiles } from './vueFiles';
 export interface VueLanguagePlugin {
 
     compileTemplate?(tmplate: string, lang: string): {
-        result: string,
+        html: string,
         mapping(htmlStart: number, htmlEnd: number): { start: number, end: number } | undefined,
     } | undefined
 }

@@ -128,7 +128,7 @@ export function createVueFile(
 				if (compiledHtml) {
 					return {
 						lang: sfc.template.lang ?? 'html',
-						htmlText: compiledHtml.result,
+						htmlText: compiledHtml.html,
 						htmlToTemplate: compiledHtml.mapping,
 					};
 				};

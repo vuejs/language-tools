@@ -9,7 +9,7 @@ export default function (): VueLanguagePlugin {
             if (lang === 'html') {
 
                 return {
-                    result: template,
+                    html: template,
                     mapping: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
                 };
             }
