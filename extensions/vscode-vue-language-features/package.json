@@ -310,6 +310,11 @@
 					"default": true,
 					"description": "Show split editor icon in title area of editor."
 				},
+				"volar.icon.preview": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show Vite / Nuxt App preview icon."
+				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": false,
@@ -603,12 +608,12 @@
 				},
 				{
 					"command": "volar.action.vite",
-					"when": "editorLangId == vue && volar.foundViteDir",
+					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundViteDir",
 					"group": "navigation"
 				},
 				{
 					"command": "volar.action.nuxt",
-					"when": "editorLangId == vue && volar.foundNuxtDir",
+					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundNuxtDir",
 					"group": "navigation"
 				},
 				{
