@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
-import { parse } from '@vue/compiler-sfc';
+import { parse, SFCParseResult } from '@vue/compiler-sfc';
 
 interface PreviewState {
 	mode: 'vite' | 'nuxt',
@@ -21,6 +21,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	let goToTemplateReq = 0;
 
+	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult }>();
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
 
@@ -41,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, terminal, state.port, panel);
 
 			if (port !== undefined) {
-				const previewQuery = createQuery(editor.document.fileName, editor.document.getText());
+				const previewQuery = createQuery(editor.document);
 				updatePreviewPanel(panel, state.fileName, previewQuery, port, state.mode);
 			}
 		}
@@ -85,6 +86,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	updateFoundViteDir();
 
+	function getSfc(document: vscode.TextDocument) {
+		let cache = sfcs.get(document);
+		if (!cache || cache.version !== document.version) {
+			cache = {
+				version: document.version,
+				sfc: parse(document.getText(), { sourceMap: false, ignoreEmpty: false }),
+			};
+			sfcs.set(document, cache);
+		}
+		return cache.sfc;
+	}
 	async function updateFoundViteDir() {
 		if (vscode.window.activeTextEditor?.document.languageId === 'vue') {
 
@@ -113,6 +125,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			{
 				retainContextWhenHidden: true,
 				enableScripts: true,
+				enableFindWidget: true,
 			},
 		);
 		const panelContext: vscode.Disposable[] = [];
@@ -134,6 +147,17 @@ export async function activate(context: vscode.ExtensionContext) {
 		}));
 		panelContext.push(vscode.commands.registerCommand('volar.action.openInBrowser', () => {
 			vscode.env.openExternal(vscode.Uri.parse(statusBar.text));
+		}));
+		panelContext.push(vscode.window.onDidChangeTextEditorSelection(e => {
+			updateSelectionHighlights(e.textEditor);
+		}));
+		panelContext.push(vscode.window.onDidChangeTextEditorSelection(e => {
+			updateSelectionHighlights(e.textEditor);
+		}));
+		panelContext.push(vscode.workspace.onDidSaveTextDocument(e => {
+			if (vscode.window.activeTextEditor) {
+				updateSelectionHighlights(vscode.window.activeTextEditor);
+			}
 		}));
 
 		if (previewType === PreviewType.Webview) {
@@ -174,11 +198,15 @@ export async function activate(context: vscode.ExtensionContext) {
 			// 		// lastPreviewQuery = newQuery;
 			// 	}
 			// });
-			let previewQuery = createQuery(fileText, fileName);
+			let previewQuery = createQuery({
+				getText: () => fileText,
+				fileName,
+				version: -1,
+			} as vscode.TextDocument);
 
 			panelContext.push(vscode.workspace.onDidChangeTextDocument(e => {
 				if (e.document.fileName === fileName) {
-					const newPreviewQuery = createQuery(e.document.getText(), e.document.fileName);
+					const newPreviewQuery = createQuery(e.document);
 					if (newPreviewQuery !== previewQuery) {
 						const url = `http://localhost:${port}/__preview${newPreviewQuery}#${e.document.fileName}`;
 						panel.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
@@ -196,6 +224,32 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 		return port;
+
+		function updateSelectionHighlights(textEditor: vscode.TextEditor) {
+			if (textEditor.document.languageId === 'vue') {
+				const sfc = getSfc(textEditor.document);
+				const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
+				panel.webview.postMessage({
+					sender: 'volar',
+					command: 'highlightSelections',
+					data: {
+						fileName: textEditor.document.fileName,
+						ranges: textEditor.selections.map(selection => ({
+							start: textEditor.document.offsetAt(selection.start) - offset,
+							end: textEditor.document.offsetAt(selection.end) - offset,
+						})),
+						isDirty: textEditor.document.isDirty,
+					},
+				});
+			}
+			else {
+				panel.webview.postMessage({
+					sender: 'volar',
+					command: 'highlightSelections',
+					data: undefined,
+				});
+			}
+		}
 
 		async function webviewEventHandler(message: any) {
 			switch (message.command) {
@@ -235,7 +289,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					if (req !== goToTemplateReq)
 						return;
 
-					const sfc = parse(doc.getText(), { sourceMap: false, ignoreEmpty: false });
+					const sfc = getSfc(doc);
 					const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 					const start = doc.positionAt(data.range[0] + offset);
 					const end = doc.positionAt(data.range[1] + offset);
@@ -299,15 +353,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		return configFile;
 	}
 
-	function createQuery(vueCode: string, fileName: string) {
+	function createQuery(document: vscode.TextDocument) {
 
-		const sfc = parse(vueCode, { sourceMap: false, ignoreEmpty: false });
+		const sfc = getSfc(document);
 		let query = '';
+		let fileName = document.fileName;
 
 		for (const customBlock of sfc.descriptor.customBlocks) {
 			if (customBlock.type === 'preview') {
-				const previewTagStart = vueCode.substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
-				const previewTag = vueCode.substring(previewTagStart, customBlock.loc.start.offset);
+				const previewTagStart = document.getText().substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
+				const previewTag = document.getText().substring(previewTagStart, customBlock.loc.start.offset);
 				const previewGen = compile(previewTag + '</preview>').ast;
 				const props: Record<string, string> = {};
 				for (const previewNode of previewGen.children) {
@@ -391,8 +446,6 @@ export async function activate(context: vscode.ExtensionContext) {
 					await sleep(250);
 				}
 
-				console.log('server started');
-
 				preview = document.createElement('iframe');
 				preview.src = '${url}';
 				preview.onload = previewFrameLoaded;
@@ -410,7 +463,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				vscode.postMessage({ command: 'openUrl', data: 'https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg' });
 			}
 			function previewFrameLoaded() {
-				console.log('myframe is loaded', Date.now() - start);
 				preview.style.height = '100vh';
 				document.getElementById('loading').remove();
 			};

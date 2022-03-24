@@ -10,9 +10,18 @@ const viteDir = path.dirname(require.resolve('vite/package.json', { paths: [work
 const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
 const installCode = `
 function __createAppProxy(...args) {
+
     const app = createApp(...args);
-    app.use(__installFinder);
     app.use(__installPreview);
+
+    const finderApis = __installFinder();
+    const highlightApis = __installSelectionHighlight();
+
+    app.config.globalProperties.$volar = {
+        ...finderApis,
+        ...highlightApis,
+    };
+
     var href = '';
     setInterval(function () {
         if (href !== location.href) {
@@ -22,7 +31,135 @@ function __createAppProxy(...args) {
     }, 200);
     return app;
 }
-function __installFinder(app) {
+function __installSelectionHighlight() {
+
+    let selection;
+    const nodes = new Map();
+    const cursorInOverlays = new Map();
+    const rangeCoverOverlays = new Map();
+
+    window.addEventListener('message', event => {
+        if (event.data?.command === 'highlightSelections') {
+            selection = event.data.data;
+            updateHighlights();
+        }
+    });
+    window.addEventListener('scroll', updateHighlights);
+
+    return {
+        vnodeMounted,
+        vnodeUnmounted,
+    };
+
+    function vnodeMounted(node, fileName, range) {
+        nodes.set(node, {
+            fileName,
+            range: JSON.parse(range),
+        });
+    }
+    function vnodeUnmounted(node) {
+        nodes.delete(node);
+    }
+    function updateHighlights() {
+
+        if (selection.isDirty) {
+            for (const [_, overlay] of cursorInOverlays) {
+                overlay.style.opacity = 0.5;
+            }
+            for (const [_, overlay] of rangeCoverOverlays) {
+                overlay.style.opacity = 0.5;
+            }
+            return;
+        }
+        else {
+            for (const [_, overlay] of cursorInOverlays) {
+                overlay.style.opacity = 1;
+            }
+            for (const [_, overlay] of rangeCoverOverlays) {
+                overlay.style.opacity = 1;
+            }
+        }
+
+        const cursorIn = new Set();
+        const rangeConver = new Set();
+
+        if (selection) {
+            for (const range of selection.ranges) {
+                for (const [el, loc] of nodes) {
+                    if (loc.fileName === selection.fileName) {
+                        if (range.start <= loc.range[0] && range.end >= loc.range[1]) {
+                            rangeConver.add(el);
+                        }
+                        else if (
+                            range.start >= loc.range[0] && range.start <= loc.range[1]
+                            || range.end >= loc.range[0] && range.end <= loc.range[1]
+                        ) {
+                            console.log(loc.fileName, range, loc.range);
+                            cursorIn.add(el);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (const [el, overlay] of [...cursorInOverlays]) {
+            if (!cursorIn.has(el)) {
+                overlay.remove();
+                cursorInOverlays.delete(el);
+            }
+        }
+        for (const [el, overlay] of [...rangeCoverOverlays]) {
+            if (!rangeConver.has(el)) {
+                overlay.remove();
+                rangeCoverOverlays.delete(el);
+            }
+        }
+
+        for (const el of cursorIn) {
+            let overlay = cursorInOverlays.get(el);
+            if (!overlay) {
+                overlay = createCursorInOverlay();
+                cursorInOverlays.set(el, overlay);
+            }
+            const rect = el.getBoundingClientRect();
+            overlay.style.width = ~~rect.width + 'px';
+            overlay.style.height = ~~rect.height + 'px';
+            overlay.style.top = ~~rect.top + 'px';
+            overlay.style.left = ~~rect.left + 'px';
+        }
+        for (const el of rangeConver) {
+            let overlay = rangeCoverOverlays.get(el);
+            if (!overlay) {
+                overlay = createRangeCoverOverlay();
+                rangeCoverOverlays.set(el, overlay);
+            }
+            const rect = el.getBoundingClientRect();
+            overlay.style.width = ~~rect.width + 'px';
+            overlay.style.height = ~~rect.height + 'px';
+            overlay.style.top = ~~rect.top + 'px';
+            overlay.style.left = ~~rect.left + 'px';
+        }
+    }
+    function createCursorInOverlay() {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.zIndex = '99999999999999';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.borderRadius = '3px';
+        overlay.style.borderStyle = 'dashed';
+        overlay.style.borderColor = 'rgb(196, 105, 183)';
+        overlay.style.borderWidth = '2px';
+        overlay.style.boxSizing = 'border-box';
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+    function createRangeCoverOverlay() {
+        const overlay = createCursorInOverlay();
+        overlay.style.backgroundColor = 'rgba(196, 105, 183, 0.1)';
+        return overlay;
+    }
+}
+function __installFinder() {
     window.addEventListener('scroll', updateOverlay);
     window.addEventListener('message', function (event) {
         var _a;
@@ -50,10 +187,12 @@ function __installFinder(app) {
     var highlightNodes = [];
     var enabled = false;
     var lastCodeLoc;
-    app.config.globalProperties.$volar = {
-        highlight: highlight,
-        unHighlight: unHighlight,
+
+    return {
+        highlight,
+        unHighlight,
     };
+
     function goToTemplate(fileName, range) {
         if (!enabled)
             return;
@@ -210,56 +349,48 @@ function __proxyExport(rawOptions = {}) {
 
   rawOptions.template.compilerOptions.nodeTransforms.push((node, ctx) => {
     if (node.type === 1) {
-      node.props.push({
-        type: 6,
-        name: 'data-loc',
-        value: {
-          content: '[' + node.loc.start.offset + ',' + node.loc.end.offset + ']',
-        },
-        loc: node.loc,
-      }, {
-        type: 7,
-        name: 'on',
-        exp: {
-          type: 4,
-          content: '$volar.highlight($event.target, $.type.__file, $event.target.dataset.loc);',
-          isStatic: false,
-          constType: 0,
-          loc: node.loc,
-        },
-        arg: {
-          type: 4,
-          content: 'mouseenter',
-          isStatic: true,
-          constType: 3,
-          loc: node.loc,
-        },
-        modifiers: [],
-        loc: node.loc,
-      }, {
-        type: 7,
-        name: 'on',
-        exp: {
-          type: 4,
-          content: '$volar.unHighlight($event.target)',
-          isStatic: false,
-          constType: 0,
-          loc: node.loc,
-        },
-        arg: {
-          type: 4,
-          content: 'mouseleave',
-          isStatic: true,
-          constType: 3,
-          loc: node.loc,
-        },
-        modifiers: [],
-        loc: node.loc,
-      });
+        node.props.push(
+            {
+                type: 6,
+                name: 'data-loc',
+                value: {
+                content: '[' + node.loc.start.offset + ',' + node.loc.end.offset + ']',
+            },
+            loc: node.loc,
+            },
+        );
+        addEvent(node, 'mouseenter', '$volar.highlight($event.target, $.type.__file, $event.target.dataset.loc)');
+        addEvent(node, 'mouseleave', '$volar.unHighlight($event.target)');
+        addEvent(node, 'vnode-mounted', '$event.el.dataset ? $volar.vnodeMounted($event.el, $.type.__file, $event.el.dataset.loc) : undefined');
+        addEvent(node, 'vnode-unmounted', '$event.el.dataset ? $volar.vnodeUnmounted($event.el) : undefined');
     }
   });
 
   return __originalExport(rawOptions);
+
+
+    function addEvent(node, name, exp) {
+        node.props.push({
+            type: 7,
+            name: 'on',
+            exp: {
+                type: 4,
+                content: exp,
+                isStatic: false,
+                constType: 0,
+                loc: node.loc,
+            },
+            arg: {
+                type: 4,
+                content: name,
+                isStatic: true,
+                constType: 3,
+                loc: node.loc,
+            },
+            modifiers: [],
+            loc: node.loc,
+        });
+    }
 }
 
 const __originalExport = module.exports;
