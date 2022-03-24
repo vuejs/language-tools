@@ -52,31 +52,35 @@ function __installSelectionHighlight() {
     };
 
     function vnodeMounted(node, fileName, range) {
-        nodes.set(node, {
-            fileName,
-            range,
-        });
+        if (node instanceof Element) {
+            nodes.set(node, {
+                fileName,
+                range,
+            });
+        }
     }
     function vnodeUnmounted(node) {
-        nodes.delete(node);
+        if (node instanceof Element) {
+            nodes.delete(node);
+        }
     }
     function updateHighlights() {
 
         if (selection.isDirty) {
             for (const [_, overlay] of cursorInOverlays) {
-                overlay.style.opacity = 0.5;
+                overlay.style.opacity = '0.5';
             }
             for (const [_, overlay] of rangeCoverOverlays) {
-                overlay.style.opacity = 0.5;
+                overlay.style.opacity = '0.5';
             }
             return;
         }
         else {
             for (const [_, overlay] of cursorInOverlays) {
-                overlay.style.opacity = 1;
+                overlay.style.opacity = '1';
             }
             for (const [_, overlay] of rangeCoverOverlays) {
-                overlay.style.opacity = 1;
+                overlay.style.opacity = '1';
             }
         }
 
@@ -94,7 +98,6 @@ function __installSelectionHighlight() {
                             range.start >= loc.range[0] && range.start <= loc.range[1]
                             || range.end >= loc.range[0] && range.end <= loc.range[1]
                         ) {
-                            console.log(loc.fileName, range, loc.range);
                             cursorIn.add(el);
                         }
                     }
@@ -206,16 +209,16 @@ function __installFinder() {
         parent.postMessage(lastCodeLoc, '*');
     }
     function highlight(node, fileName, range) {
-        if (!enabled)
-            return;
-        highlightNodes.push([node, fileName, range]);
-        updateOverlay();
+        if (enabled && node instanceof Element) {
+            highlightNodes.push([node, fileName, range]);
+            updateOverlay();
+        }
     }
     function unHighlight(node) {
-        if (!enabled)
-            return;
-        highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
-        updateOverlay();
+        if (enabled) {
+            highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
+            updateOverlay();
+        }
     }
     function createOverlay() {
         var overlay = document.createElement('div');

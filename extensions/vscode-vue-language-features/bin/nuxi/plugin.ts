@@ -35,12 +35,12 @@ export default defineNuxtPlugin(app => {
             }[],
             isDirty: boolean,
         } | undefined;
-        const nodes = new Map<HTMLElement, {
+        const nodes = new Map<Element, {
             fileName: string,
             range: [number, number],
         }>();
-        const cursorInOverlays = new Map<HTMLElement, HTMLElement>();
-        const rangeCoverOverlays = new Map<HTMLElement, HTMLElement>();
+        const cursorInOverlays = new Map<Element, HTMLElement>();
+        const rangeCoverOverlays = new Map<Element, HTMLElement>();
 
         window.addEventListener('message', event => {
             if (event.data?.command === 'highlightSelections') {
@@ -55,37 +55,41 @@ export default defineNuxtPlugin(app => {
             vnodeUnmounted,
         };
 
-        function vnodeMounted(node: HTMLElement, fileName: string, range: [number, number]) {
-            nodes.set(node, {
-                fileName,
-                range,
-            });
+        function vnodeMounted(node: unknown, fileName: string, range: [number, number]) {
+            if (node instanceof Element) {
+                nodes.set(node, {
+                    fileName,
+                    range,
+                });
+            }
         }
-        function vnodeUnmounted(node: HTMLElement) {
-            nodes.delete(node);
+        function vnodeUnmounted(node: unknown) {
+            if (node instanceof Element) {
+                nodes.delete(node);
+            }
         }
         function updateHighlights() {
 
             if (selection.isDirty) {
                 for (const [_, overlay] of cursorInOverlays) {
-                    overlay.style.opacity = 0.5;
+                    overlay.style.opacity = '0.5';
                 }
                 for (const [_, overlay] of rangeCoverOverlays) {
-                    overlay.style.opacity = 0.5;
+                    overlay.style.opacity = '0.5';
                 }
                 return;
             }
             else {
                 for (const [_, overlay] of cursorInOverlays) {
-                    overlay.style.opacity = 1;
+                    overlay.style.opacity = '1';
                 }
                 for (const [_, overlay] of rangeCoverOverlays) {
-                    overlay.style.opacity = 1;
+                    overlay.style.opacity = '1';
                 }
             }
 
-            const cursorIn = new Set<HTMLElement>();
-            const rangeConver = new Set<HTMLElement>();
+            const cursorIn = new Set<Element>();
+            const rangeConver = new Set<Element>();
 
             if (selection) {
                 for (const range of selection.ranges) {
@@ -98,7 +102,6 @@ export default defineNuxtPlugin(app => {
                                 range.start >= loc.range[0] && range.start <= loc.range[1]
                                 || range.end >= loc.range[0] && range.end <= loc.range[1]
                             ) {
-                                console.log(loc.fileName, range, loc.range);
                                 cursorIn.add(el);
                             }
                         }
@@ -191,7 +194,7 @@ export default defineNuxtPlugin(app => {
         const overlay = createOverlay();
         const clickMask = createClickMask();
 
-        let highlightNodes: [HTMLElement, string, string][] = [];
+        let highlightNodes: [Element, string, [number, number]][] = [];
         let enabled = false;
         let lastCodeLoc: any | undefined;
 
@@ -211,15 +214,17 @@ export default defineNuxtPlugin(app => {
             };
             parent.postMessage(lastCodeLoc, '*');
         }
-        function highlight(node: HTMLElement, fileName: string, range: string) {
-            if (!enabled) return;
-            highlightNodes.push([node, fileName, range]);
-            updateOverlay();
+        function highlight(node: unknown, fileName: string, range: [number, number]) {
+            if (enabled && node instanceof Element) {
+                highlightNodes.push([node, fileName, range]);
+                updateOverlay();
+            }
         }
-        function unHighlight(node: HTMLElement) {
-            if (!enabled) return;
-            highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
-            updateOverlay();
+        function unHighlight(node: Element) {
+            if (enabled) {
+                highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
+                updateOverlay();
+            }
         }
         function createOverlay() {
             const overlay = document.createElement('div');
