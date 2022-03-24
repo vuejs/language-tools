@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.33.8
+
+- feat: highlight selections code on preview
+- feat: add setting to disable preview icons ([#1101](https://github.com/johnsoncodehk/volar/issues/1101))
+
 ## 0.33.7
 
 - feat: support nuxt 3 app preview and goto code
