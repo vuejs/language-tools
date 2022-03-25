@@ -15,6 +15,10 @@ export default function (host: {
             if (!syntax)
                 return;
 
+            // monkey fix https://github.com/johnsoncodehk/volar/issues/1105
+            if (syntax === 'jsx')
+                return;
+
             const emmetConfig = await getEmmetConfig(syntax);
 
             return emmet.doComplete(textDocument, position, syntax, emmetConfig);
