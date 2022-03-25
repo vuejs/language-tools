@@ -4,6 +4,8 @@ import * as apis from './apis';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { tsShared } from '@volar/vue-typescript';
 
+let projectVersion = 0;
+
 export function createProgramProxy(
 	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
 	_options?: ts.CompilerOptions,
@@ -18,9 +20,13 @@ export function createProgramProxy(
 	if (!options.host)
 		return doThrow('!options.host');
 
+	projectVersion++;
+
 	const host = options.host;
 	const vueCompilerOptions = getVueCompilerOptions();
 	const scripts = new Map<string, {
+		projectVersion: number,
+		modifiedTime: number,
 		scriptSnapshot: ts.IScriptSnapshot,
 		version: string,
 	}>();
@@ -30,14 +36,21 @@ export function createProgramProxy(
 		writeFile: undefined,
 		getCompilationSettings: () => options.options,
 		getVueCompilationSettings: () => vueCompilerOptions,
-		getScriptFileNames: () => options.rootNames as string[],
-		getScriptVersion: (fileName) => scripts.get(fileName)?.version ?? '',
+		getScriptFileNames: () => {
+			return options.rootNames as string[];
+		},
+		getScriptVersion,
 		getScriptSnapshot,
-		getProjectVersion: () => '',
-		getVueProjectVersion: () => '',
+		getProjectVersion: () => {
+			return projectVersion.toString();
+		},
+		getVueProjectVersion: () => {
+			return projectVersion.toString();
+		},
 		getProjectReferences: () => options.projectReferences,
 	};
-	const tsRuntime = createTypeScriptRuntime({
+
+	const tsRuntime = (options.oldProgram as any)?.__VLS_tsRuntime ?? createTypeScriptRuntime({
 		typescript: ts,
 		baseCssModuleType: 'any',
 		getCssClasses: () => ({}),
@@ -45,23 +58,28 @@ export function createProgramProxy(
 		vueLsHost: vueLsHost,
 		isVueTsc: true,
 	});
-	const tsProgram = tsRuntime.getTsLs('script').getProgram();
-	if (!tsProgram) throw '!tsProgram';
+	tsRuntime.update(true); // must update before getProgram() to update virtual scripts
 
-	const tsProgramApis_2 = apis.register(ts, tsRuntime);
-	const tsProgramProxy = new Proxy<ts.Program>(tsProgram, {
-		get: (target: any, property: keyof typeof tsProgramApis_2) => {
+	const tsProgram = tsRuntime.getTsLs('script').getProgram();
+	if (!tsProgram)
+		throw '!tsProgram';
+
+	const proxyApis = apis.register(ts, tsRuntime);
+	const program = new Proxy<ts.Program>(tsProgram, {
+		get: (target: any, property: keyof typeof proxyApis) => {
 			tsRuntime.update(true);
-			return tsProgramApis_2[property] || target[property];
+			return proxyApis[property] || target[property];
 		},
 	});
+
+	(program as any).__VLS_tsRuntime = tsRuntime;
 
 	for (const rootName of options.rootNames) {
 		// register file watchers
 		host.getSourceFile(rootName, ts.ScriptTarget.ESNext);
 	}
 
-	return tsProgramProxy;
+	return program;
 
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
 		const tsConfig = options.options.configFilePath;
@@ -70,20 +88,35 @@ export function createProgramProxy(
 		}
 		return {};
 	}
+	function getScriptVersion(fileName: string) {
+		return getScript(fileName)?.version ?? '';
+	}
 	function getScriptSnapshot(fileName: string) {
+		return getScript(fileName)?.scriptSnapshot;
+	}
+	function getScript(fileName: string) {
+
 		const script = scripts.get(fileName);
-		if (script) {
-			return script.scriptSnapshot;
+		if (script?.projectVersion === projectVersion) {
+			return script;
 		}
+
+		const modifiedTime = ts.sys.getModifiedTime?.(fileName)?.valueOf() ?? 0;
+		if (script?.modifiedTime === modifiedTime) {
+			return script;
+		}
+
 		if (host.fileExists(fileName)) {
 			const fileContent = host.readFile(fileName);
 			if (fileContent !== undefined) {
-				const scriptSnapshot = ts.ScriptSnapshot.fromString(fileContent);
-				scripts.set(fileName, {
-					scriptSnapshot: scriptSnapshot,
-					version: ts.sys.createHash?.(fileContent) ?? fileContent,
-				});
-				return scriptSnapshot;
+				const script = {
+					projectVersion,
+					modifiedTime,
+					scriptSnapshot: ts.ScriptSnapshot.fromString(fileContent),
+					version: host.createHash?.(fileContent) ?? fileContent,
+				};
+				scripts.set(fileName, script);
+				return script;
 			}
 		}
 	}

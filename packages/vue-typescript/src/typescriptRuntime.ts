@@ -151,8 +151,7 @@ export function createTypeScriptRuntime(options: {
 
         const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
         const fileVersions = new WeakMap<EmbeddedFile, string>();
-        const tsHost: ts.LanguageServiceHost = {
-            ...options.vueLsHost,
+        const _tsHost: Partial<ts.LanguageServiceHost> = {
             fileExists: options.vueLsHost.fileExists
                 ? fileName => {
                     // .vue.js -> .vue
@@ -210,11 +209,17 @@ export function createTypeScriptRuntime(options: {
         };
 
         if (lsType === 'template') {
-            tsHost.getCompilationSettings = () => ({
+            _tsHost.getCompilationSettings = () => ({
                 ...options.vueLsHost.getCompilationSettings(),
                 jsx: ts.JsxEmit.Preserve,
             });
         }
+
+        const tsHost = new Proxy<ts.LanguageServiceHost>(_tsHost as ts.LanguageServiceHost, {
+            get: (target, property: keyof ts.LanguageServiceHost) => {
+                return target[property] || options.vueLsHost[property];
+            },
+        });
 
         return tsHost;
 

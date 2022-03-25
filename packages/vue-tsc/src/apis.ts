@@ -135,7 +135,7 @@ export function register(
 							}
 						}
 						else {
-							file = ts.createSourceFile(tsOrVueLoc.fileName, docText, tsOrVueLoc.fileName.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest)
+							file = ts.createSourceFile(tsOrVueLoc.fileName, docText, tsOrVueLoc.fileName.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest);
 						}
 					}
 					const newDiagnostic: T = {
