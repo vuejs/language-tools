@@ -53,11 +53,11 @@ export async function documentArgFeatureWorker<T, K>(
 
 			context.updateTsLs(sourceMap.mappedDocument);
 
-			for (const mapedArg of transformArg(arg, sourceMap)) {
+			for (const mappedArg of transformArg(arg, sourceMap)) {
 
 				for (const plugin of plugins) {
 
-					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mapedArg);
+					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mappedArg);
 
 					if (!embeddedResult)
 						continue;
@@ -135,11 +135,11 @@ export async function languageFeatureWorker<T, K>(
 
 			const plugins = context.getPlugins(sourceMap.embeddedFile.lsType);
 
-			for (const mapedArg of transformArg(arg, sourceMap)) {
+			for (const mappedArg of transformArg(arg, sourceMap)) {
 
 				for (const plugin of plugins) {
 
-					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mapedArg, sourceMap, vueDocument);
+					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mappedArg, sourceMap, vueDocument);
 
 					if (!embeddedResult)
 						continue;

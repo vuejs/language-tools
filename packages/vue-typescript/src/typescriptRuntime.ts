@@ -222,8 +222,8 @@ export function createTypeScriptRuntime(options: {
 
             const tsFileNames = getLocalTypesFiles(lsType);
 
-            for (const maped of vueFiles.getEmbeddeds(lsType)) {
-                tsFileNames.push(maped.embedded.file.fileName); // virtual .ts
+            for (const mapped of vueFiles.getEmbeddeds(lsType)) {
+                tsFileNames.push(mapped.embedded.file.fileName); // virtual .ts
             }
 
             for (const fileName of options.vueLsHost.getScriptFileNames()) {
@@ -242,18 +242,18 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return '';
             }
-            let maped = vueFiles.fromEmbeddedFileName(lsType, fileName);
-            if (maped) {
-                if (fileVersions.has(maped.embedded.file)) {
-                    return fileVersions.get(maped.embedded.file)!;
+            let mapped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (mapped) {
+                if (fileVersions.has(mapped.embedded.file)) {
+                    return fileVersions.get(mapped.embedded.file)!;
                 }
                 else {
-                    let version = ts.sys.createHash?.(maped.embedded.file.content) ?? maped.embedded.file.content;
+                    let version = ts.sys.createHash?.(mapped.embedded.file.content) ?? mapped.embedded.file.content;
                     if (options.isVueTsc) {
                         // fix https://github.com/johnsoncodehk/volar/issues/1082
-                        version = maped.vueFile.getVersion() + ':' + version;
+                        version = mapped.vueFile.getVersion() + ':' + version;
                     }
-                    fileVersions.set(maped.embedded.file, version);
+                    fileVersions.set(mapped.embedded.file, version);
                     return version;
                 }
             }
@@ -269,9 +269,9 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return localTypesScript;
             }
-            const maped = vueFiles.fromEmbeddedFileName(lsType, fileName);
-            if (maped) {
-                const text = maped.embedded.file.content;
+            const mapped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            if (mapped) {
+                const text = mapped.embedded.file.content;
                 const snapshot = ts.ScriptSnapshot.fromString(text);
                 scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
                 return snapshot;

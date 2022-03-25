@@ -96,18 +96,18 @@ export function createVueFiles() {
 			if (end === undefined)
 				end = start;
 
-			const maped = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
+			const mapped = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
 
-			if (maped) {
+			if (mapped) {
 
-				if (sourceMapFilter && !sourceMapFilter(maped.embedded.sourceMap))
+				if (sourceMapFilter && !sourceMapFilter(mapped.embedded.sourceMap))
 					return;
 
-				for (const vueRange of maped.embedded.sourceMap.getSourceRanges(start, end, filter)) {
+				for (const vueRange of mapped.embedded.sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
-						fileName: maped.vueFile.fileName,
+						fileName: mapped.vueFile.fileName,
 						range: vueRange[0],
-						maped: maped,
+						mapped: mapped,
 						data: vueRange[1],
 					};
 				}

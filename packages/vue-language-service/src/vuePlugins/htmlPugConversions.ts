@@ -34,11 +34,11 @@ export default function (host: {
 
                     const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
 
-                    for (const maped of sourceMap.mappings) {
+                    for (const mapped of sourceMap.mappings) {
                         return [{
                             range: {
-                                start: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
-                                end: sourceMap.sourceDocument.positionAt(maped.sourceRange.start),
+                                start: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
+                                end: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
                             },
                             command: {
                                 title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),

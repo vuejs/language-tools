@@ -311,9 +311,9 @@ export function useSfcTemplateScript(
 			]) {
 				const cssSourceMap = styleEmbeddeds.value.find(embedded => embedded.file.fileName === fileName)?.sourceMap;
 				if (!cssSourceMap) continue;
-				for (const maped of mappings) {
-					const tsRange = maped.tsRange;
-					for (const cssRange of maped.cssRanges) {
+				for (const mapped of mappings) {
+					const tsRange = mapped.tsRange;
+					for (const cssRange of mapped.cssRanges) {
 						const vueRange = cssSourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0];
 						if (!vueRange) continue;
 						sourceMap.mappings.push({
@@ -322,12 +322,12 @@ export function useSfcTemplateScript(
 								capabilities: {
 									references: true,
 									rename: true,
-									referencesCodeLens: maped.mode === SourceMaps.Mode.Totally, // has 2 modes
+									referencesCodeLens: mapped.mode === SourceMaps.Mode.Totally, // has 2 modes
 								},
-								normalizeNewName: maped.patchRename ? beforeCssRename : undefined,
-								applyNewName: maped.patchRename ? doCssRename : undefined,
+								normalizeNewName: mapped.patchRename ? beforeCssRename : undefined,
+								applyNewName: mapped.patchRename ? doCssRename : undefined,
 							},
-							mode: maped.mode,
+							mode: mapped.mode,
 							sourceRange: vueRange,
 							mappedRange: tsRange,
 						});
@@ -460,8 +460,8 @@ export function useSfcTemplateScript(
 				} : undefined;
 
 				const sourceMap = new Teleport();
-				for (const maped of data.value.ctxMappings) {
-					sourceMap.mappings.push(maped);
+				for (const mapped of data.value.ctxMappings) {
+					sourceMap.mappings.push(mapped);
 				}
 				teleport.value = sourceMap;
 			}
