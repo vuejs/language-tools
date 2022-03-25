@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.9
+
+- perf: faster vue-tsc watch response
+- fix: memory leak on vue-tsc watch ([#1106](https://github.com/johnsoncodehk/volar/issues/1106))
+- fix: emmet block html src path completion ([#1105](https://github.com/johnsoncodehk/volar/issues/1106))
+
 ## 0.33.8
 
 - feat: highlight selections code on preview
