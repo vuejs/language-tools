@@ -42,13 +42,13 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 	}
 
 	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
-			return maped;
+		for (const mapped of this.getRanges(start, end ?? start, false, filter)) {
+			return mapped;
 		}
 	}
 	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
-			return maped;
+		for (const mapped of this.getRanges(start, end ?? start, true, filter)) {
+			return mapped;
 		}
 	}
 	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
@@ -68,18 +68,18 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
 		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
 
-		for (const maped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
-			yield getMaped(maped);
+		for (const mapped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
+			yield getMapped(mapped);
 		}
 
-		function getMaped(maped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
+		function getMapped(mapped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
 			if (startIsNumber) {
-				return maped as [{ start: T, end: T }, Data];
+				return mapped as [{ start: T, end: T }, Data];
 			}
 			return [{
-				start: toDoc.positionAt(maped[0].start) as T,
-				end: toDoc.positionAt(maped[0].end) as T,
-			}, maped[1]];
+				start: toDoc.positionAt(mapped[0].start) as T,
+				end: toDoc.positionAt(mapped[0].end) as T,
+			}, mapped[1]];
 		}
 	}
 }

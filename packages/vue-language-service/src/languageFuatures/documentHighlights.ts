@@ -12,12 +12,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			position,
 			function* (position, sourceMap) {
-				for (const [mapedRange] of sourceMap.getMappedRanges(
+				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
 					data => !!data.capabilities.basic,
 				)) {
-					yield mapedRange.start;
+					yield mappedRange.start;
 				}
 			},
 			(plugin, document, position) => plugin.findDocumentHighlights?.(document, position),

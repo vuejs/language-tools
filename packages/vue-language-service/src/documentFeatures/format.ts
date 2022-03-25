@@ -169,11 +169,11 @@ function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedD
 	const indentTextEdits: vscode.TextEdit[] = [];
 	const document = vueDocument.getDocument();
 
-	for (const maped of sourceMap.mappings) {
+	for (const mapped of sourceMap.mappings) {
 
 		const textRange = {
-			start: document.positionAt(maped.sourceRange.start),
-			end: document.positionAt(maped.sourceRange.end),
+			start: document.positionAt(mapped.sourceRange.start),
+			end: document.positionAt(mapped.sourceRange.end),
 		};
 		const text = document.getText(textRange);
 
@@ -182,7 +182,7 @@ function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedD
 
 		const lines = text.split('\n');
 		const removeIndent = getRemoveIndent(lines);
-		const baseIndent = getBaseIndent(maped.sourceRange.start);
+		const baseIndent = getBaseIndent(mapped.sourceRange.start);
 
 		for (let i = 1; i < lines.length; i++) {
 			const line = lines[i];

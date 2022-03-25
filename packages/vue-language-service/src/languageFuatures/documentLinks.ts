@@ -44,15 +44,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			for (const sourceMap of vueDocument.getSourceMaps()) {
 
-				for (const maped of sourceMap.mappings) {
+				for (const mapped of sourceMap.mappings) {
 
-					if (!maped.data.capabilities.displayWithLink)
+					if (!mapped.data.capabilities.displayWithLink)
 						continue;
 
 					result.push({
 						range: {
-							start: document.positionAt(maped.sourceRange.start),
-							end: document.positionAt(maped.sourceRange.end),
+							start: document.positionAt(mapped.sourceRange.start),
+							end: document.positionAt(mapped.sourceRange.end),
 						},
 						target: uri, // TODO
 					});

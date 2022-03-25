@@ -14,7 +14,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			{ position, newName },
 			function* (arg, sourceMap) {
-				for (const [mapedRange, mapedData] of sourceMap.getMappedRanges(
+				for (const [mappedRange, mappedData] of sourceMap.getMappedRanges(
 					arg.position,
 					arg.position,
 					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.in : !!data.capabilities.rename,
@@ -22,10 +22,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					let newName = arg.newName;
 
-					if (mapedData.normalizeNewName)
-						newName = mapedData.normalizeNewName(arg.newName);
+					if (mappedData.normalizeNewName)
+						newName = mappedData.normalizeNewName(arg.newName);
 
-					yield { position: mapedRange.start, newName };
+					yield { position: mappedRange.start, newName };
 				}
 			},
 			async (plugin, document, arg, sourceMap) => {
@@ -189,10 +189,10 @@ export function margeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
 
 /**
  * TODO: rewrite this
- * 
+ *
  * Start from Script LS
  * -> Access all results
- * 
+ *
  * Start from template LS
  * -> Start from template content?
  *    -> Access all results

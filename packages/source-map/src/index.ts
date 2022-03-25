@@ -65,13 +65,13 @@ export class SourceMapBase<Data = undefined> {
 	}
 
 	public getSourceRange(start: number, end?: number, filter?: (data: Data) => boolean) {
-		for (const maped of this.getRanges(start, end ?? start, false, filter)) {
-			return maped;
+		for (const mapped of this.getRanges(start, end ?? start, false, filter)) {
+			return mapped;
 		}
 	}
 	public getMappedRange(start: number, end?: number, filter?: (data: Data) => boolean) {
-		for (const maped of this.getRanges(start, end ?? start, true, filter)) {
-			return maped;
+		for (const mapped of this.getRanges(start, end ?? start, true, filter)) {
+			return mapped;
 		}
 	}
 	public getSourceRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
@@ -88,33 +88,33 @@ export class SourceMapBase<Data = undefined> {
 			if (filter && !filter(mapping.data))
 				continue;
 
-			const maped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
-			if (maped) {
-				yield getMaped(maped);
+			const mapped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
+			if (mapped) {
+				yield getMapped(mapped);
 			}
 			else if (mapping.additional) {
 				for (const other of mapping.additional) {
-					const maped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
-					if (maped) {
-						yield getMaped(maped);
+					const mapped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
+					if (mapped) {
+						yield getMapped(mapped);
 						break; // only return first match additional range
 					}
 				}
 			}
 		}
 
-		function getMaped(maped: [{ start: number, end: number }, Data]) {
-			return maped;
+		function getMapped(mapped: [{ start: number, end: number }, Data]) {
+			return mapped;
 		}
 	}
 
 	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number }, Data] | undefined {
-		const mapedToRange = sourceToTarget ? targetRange : sourceRange;
-		const mapedFromRange = sourceToTarget ? sourceRange : targetRange;
+		const mappedToRange = sourceToTarget ? targetRange : sourceRange;
+		const mappedFromRange = sourceToTarget ? sourceRange : targetRange;
 		if (mode === Mode.Totally) {
-			if (start === mapedFromRange.start && end === mapedFromRange.end) {
-				const _start = mapedToRange.start;
-				const _end = mapedToRange.end;
+			if (start === mappedFromRange.start && end === mappedFromRange.end) {
+				const _start = mappedToRange.start;
+				const _end = mappedToRange.end;
 				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
@@ -122,9 +122,9 @@ export class SourceMapBase<Data = undefined> {
 			}
 		}
 		else if (mode === Mode.Offset) {
-			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
-				const _start = mapedToRange.start + start - mapedFromRange.start;
-				const _end = mapedToRange.end + end - mapedFromRange.end;
+			if (start >= mappedFromRange.start && end <= mappedFromRange.end) {
+				const _start = mappedToRange.start + start - mappedFromRange.start;
+				const _end = mappedToRange.end + end - mappedFromRange.end;
 				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),
@@ -132,9 +132,9 @@ export class SourceMapBase<Data = undefined> {
 			}
 		}
 		else if (mode === Mode.Expand) {
-			if (start >= mapedFromRange.start && end <= mapedFromRange.end) {
-				const _start = mapedToRange.start;
-				const _end = mapedToRange.end;
+			if (start >= mappedFromRange.start && end <= mappedFromRange.end) {
+				const _start = mappedToRange.start;
+				const _end = mappedToRange.end;
 				return [{
 					start: Math.min(_start, _end),
 					end: Math.max(_start, _end),

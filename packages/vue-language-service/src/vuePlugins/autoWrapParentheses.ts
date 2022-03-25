@@ -31,9 +31,9 @@ export default function (host: {
 
 			const offset = document.offsetAt(position);
 
-			for (const mapedRange of templateFormatScript.sourceMap.mappings) {
-				if (mapedRange.sourceRange.end === offset) {
-					const text = document.getText().substring(mapedRange.sourceRange.start, mapedRange.sourceRange.end);
+			for (const mappedRange of templateFormatScript.sourceMap.mappings) {
+				if (mappedRange.sourceRange.end === offset) {
+					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
 					const ast = host.ts.createSourceFile(templateFormatScript.file.fileName, text, host.ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
@@ -46,8 +46,8 @@ export default function (host: {
 						) {
 							return vscode.TextEdit.replace(
 								{
-									start: document.positionAt(mapedRange.sourceRange.start),
-									end: document.positionAt(mapedRange.sourceRange.end),
+									start: document.positionAt(mappedRange.sourceRange.start),
+									end: document.positionAt(mappedRange.sourceRange.end),
 								},
 								'(' + text + '$0' + ')',
 							);

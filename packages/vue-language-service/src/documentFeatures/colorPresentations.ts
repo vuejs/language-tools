@@ -14,8 +14,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 			range,
 			sourceMap => sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			function* (range, sourceMap) {
-				for (const [mapedRange] of sourceMap.getMappedRanges(range.start, range.end)) {
-					yield mapedRange;
+				for (const [mappedRange] of sourceMap.getMappedRanges(range.start, range.end)) {
+					yield mappedRange;
 				}
 			},
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
@@ -33,7 +33,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 					cp.textEdit.range = editRange;
 				}
-				
+
 				if (cp.additionalTextEdits) {
 					for (const textEdit of cp.additionalTextEdits) {
 

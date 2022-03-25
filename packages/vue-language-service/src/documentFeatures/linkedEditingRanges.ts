@@ -14,12 +14,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 			position,
 			sourceMap => true,
 			function* (position, sourceMap) {
-				for (const [mapedRange] of sourceMap.getMappedRanges(
+				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
 					data => !!data.capabilities.completion,
 				)) {
-					yield mapedRange.start;
+					yield mappedRange.start;
 				}
 			},
 			(plugin, document, position) => plugin.findLinkedEditingRanges?.(document, position),

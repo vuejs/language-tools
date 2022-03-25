@@ -20,12 +20,12 @@ export function register(
 			uri,
 			position,
 			function* (position, sourceMap) {
-				for (const [mapedRange] of sourceMap.getMappedRanges(
+				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
 					isValidMappingData,
 				)) {
-					yield mapedRange.start;
+					yield mappedRange.start;
 				}
 			},
 			async (plugin, document, position, sourceMap) => {
