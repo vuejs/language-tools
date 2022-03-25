@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.33.8",
+	"version": "0.33.9",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -646,8 +646,8 @@
 	},
 	"devDependencies": {
 		"@types/vscode": "1.61.0",
-		"@volar/shared": "0.33.7",
-		"@volar/vue-language-server": "0.33.7",
+		"@volar/shared": "0.33.9",
+		"@volar/vue-language-server": "0.33.9",
 		"@vue/compiler-dom": "^3.2.27",
 		"@vue/compiler-sfc": "^3.2.27",
 		"@vue/reactivity": "^3.2.27",
