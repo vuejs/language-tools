@@ -12,10 +12,11 @@ const installCode = `
 function __createAppProxy(...args) {
 
     const app = createApp(...args);
-    app.use(__installPreview);
+    app.use(installPreview);
 
-    const finderApis = __installFinder();
-    const highlightApis = __installSelectionHighlight();
+    const ws = new WebSocket('ws://localhost:56789');
+    const finderApis = installGoToCode();
+    const highlightApis = installSelectionHighlight();
 
     app.config.globalProperties.$volar = {
         ...finderApis,
@@ -29,295 +30,322 @@ function __createAppProxy(...args) {
             parent.postMessage({ command: 'urlChanged', data: href }, '*');
         }
     }, 200);
+
     return app;
-}
-function __installSelectionHighlight() {
 
-    let selection;
-    const nodes = new Map();
-    const cursorInOverlays = new Map();
-    const rangeCoverOverlays = new Map();
+    function installSelectionHighlight() {
 
-    window.addEventListener('message', event => {
-        if (event.data?.command === 'highlightSelections') {
-            selection = event.data.data;
-            updateHighlights();
-        }
-    });
-    window.addEventListener('scroll', updateHighlights);
+        let selection;
+        const nodes = new Map();
+        const cursorInOverlays = new Map();
+        const rangeCoverOverlays = new Map();
 
-    return {
-        vnodeMounted,
-        vnodeUnmounted,
-    };
-
-    function vnodeMounted(node, fileName, range) {
-        if (node instanceof Element) {
-            nodes.set(node, {
-                fileName,
-                range,
-            });
-        }
-    }
-    function vnodeUnmounted(node) {
-        if (node instanceof Element) {
-            nodes.delete(node);
-        }
-    }
-    function updateHighlights() {
-
-        if (selection.isDirty) {
-            for (const [_, overlay] of cursorInOverlays) {
-                overlay.style.opacity = '0.5';
+        window.addEventListener('message', event => {
+            if (event.data?.command === 'highlightSelections') {
+                selection = event.data.data;
+                updateHighlights();
             }
-            for (const [_, overlay] of rangeCoverOverlays) {
-                overlay.style.opacity = '0.5';
+        });
+        window.addEventListener('scroll', updateHighlights);
+
+        ws.addEventListener('message', event => {
+            const data = JSON.parse(event.data);
+            if (data?.command === 'highlightSelections') {
+                selection = data.data;
+                updateHighlights();
             }
-            return;
-        }
-        else {
-            for (const [_, overlay] of cursorInOverlays) {
-                overlay.style.opacity = '1';
-            }
-            for (const [_, overlay] of rangeCoverOverlays) {
-                overlay.style.opacity = '1';
+        });
+
+        return {
+            vnodeMounted,
+            vnodeUnmounted,
+        };
+
+        function vnodeMounted(node, fileName, range) {
+            if (node instanceof Element) {
+                nodes.set(node, {
+                    fileName,
+                    range,
+                });
             }
         }
+        function vnodeUnmounted(node) {
+            if (node instanceof Element) {
+                nodes.delete(node);
+            }
+        }
+        function updateHighlights() {
 
-        const cursorIn = new Set();
-        const rangeConver = new Set();
+            if (selection.isDirty) {
+                for (const [_, overlay] of cursorInOverlays) {
+                    overlay.style.opacity = '0.5';
+                }
+                for (const [_, overlay] of rangeCoverOverlays) {
+                    overlay.style.opacity = '0.5';
+                }
+                return;
+            }
+            else {
+                for (const [_, overlay] of cursorInOverlays) {
+                    overlay.style.opacity = '1';
+                }
+                for (const [_, overlay] of rangeCoverOverlays) {
+                    overlay.style.opacity = '1';
+                }
+            }
 
-        if (selection) {
-            for (const range of selection.ranges) {
-                for (const [el, loc] of nodes) {
-                    if (loc.fileName === selection.fileName) {
-                        if (range.start <= loc.range[0] && range.end >= loc.range[1]) {
-                            rangeConver.add(el);
-                        }
-                        else if (
-                            range.start >= loc.range[0] && range.start <= loc.range[1]
-                            || range.end >= loc.range[0] && range.end <= loc.range[1]
-                        ) {
-                            cursorIn.add(el);
+            const cursorIn = new Set();
+            const rangeConver = new Set();
+
+            if (selection) {
+                for (const range of selection.ranges) {
+                    for (const [el, loc] of nodes) {
+                        if (loc.fileName === selection.fileName) {
+                            if (range.start <= loc.range[0] && range.end >= loc.range[1]) {
+                                rangeConver.add(el);
+                            }
+                            else if (
+                                range.start >= loc.range[0] && range.start <= loc.range[1]
+                                || range.end >= loc.range[0] && range.end <= loc.range[1]
+                            ) {
+                                cursorIn.add(el);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        for (const [el, overlay] of [...cursorInOverlays]) {
-            if (!cursorIn.has(el)) {
-                overlay.remove();
-                cursorInOverlays.delete(el);
+            for (const [el, overlay] of [...cursorInOverlays]) {
+                if (!cursorIn.has(el)) {
+                    overlay.remove();
+                    cursorInOverlays.delete(el);
+                }
             }
-        }
-        for (const [el, overlay] of [...rangeCoverOverlays]) {
-            if (!rangeConver.has(el)) {
-                overlay.remove();
-                rangeCoverOverlays.delete(el);
+            for (const [el, overlay] of [...rangeCoverOverlays]) {
+                if (!rangeConver.has(el)) {
+                    overlay.remove();
+                    rangeCoverOverlays.delete(el);
+                }
             }
-        }
 
-        for (const el of cursorIn) {
-            let overlay = cursorInOverlays.get(el);
-            if (!overlay) {
-                overlay = createCursorInOverlay();
-                cursorInOverlays.set(el, overlay);
+            for (const el of cursorIn) {
+                let overlay = cursorInOverlays.get(el);
+                if (!overlay) {
+                    overlay = createCursorInOverlay();
+                    cursorInOverlays.set(el, overlay);
+                }
+                const rect = el.getBoundingClientRect();
+                overlay.style.width = ~~rect.width + 'px';
+                overlay.style.height = ~~rect.height + 'px';
+                overlay.style.top = ~~rect.top + 'px';
+                overlay.style.left = ~~rect.left + 'px';
             }
-            const rect = el.getBoundingClientRect();
-            overlay.style.width = ~~rect.width + 'px';
-            overlay.style.height = ~~rect.height + 'px';
-            overlay.style.top = ~~rect.top + 'px';
-            overlay.style.left = ~~rect.left + 'px';
-        }
-        for (const el of rangeConver) {
-            let overlay = rangeCoverOverlays.get(el);
-            if (!overlay) {
-                overlay = createRangeCoverOverlay();
-                rangeCoverOverlays.set(el, overlay);
+            for (const el of rangeConver) {
+                let overlay = rangeCoverOverlays.get(el);
+                if (!overlay) {
+                    overlay = createRangeCoverOverlay();
+                    rangeCoverOverlays.set(el, overlay);
+                }
+                const rect = el.getBoundingClientRect();
+                overlay.style.width = ~~rect.width + 'px';
+                overlay.style.height = ~~rect.height + 'px';
+                overlay.style.top = ~~rect.top + 'px';
+                overlay.style.left = ~~rect.left + 'px';
             }
-            const rect = el.getBoundingClientRect();
-            overlay.style.width = ~~rect.width + 'px';
-            overlay.style.height = ~~rect.height + 'px';
-            overlay.style.top = ~~rect.top + 'px';
-            overlay.style.left = ~~rect.left + 'px';
+        }
+        function createCursorInOverlay() {
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.zIndex = '99999999999999';
+            overlay.style.pointerEvents = 'none';
+            overlay.style.borderRadius = '3px';
+            overlay.style.borderStyle = 'dashed';
+            overlay.style.borderColor = 'rgb(196, 105, 183)';
+            overlay.style.borderWidth = '2px';
+            overlay.style.boxSizing = 'border-box';
+            document.body.appendChild(overlay);
+            return overlay;
+        }
+        function createRangeCoverOverlay() {
+            const overlay = createCursorInOverlay();
+            overlay.style.backgroundColor = 'rgba(196, 105, 183, 0.1)';
+            return overlay;
         }
     }
-    function createCursorInOverlay() {
-        const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.zIndex = '99999999999999';
-        overlay.style.pointerEvents = 'none';
-        overlay.style.borderRadius = '3px';
-        overlay.style.borderStyle = 'dashed';
-        overlay.style.borderColor = 'rgb(196, 105, 183)';
-        overlay.style.borderWidth = '2px';
-        overlay.style.boxSizing = 'border-box';
-        document.body.appendChild(overlay);
-        return overlay;
-    }
-    function createRangeCoverOverlay() {
-        const overlay = createCursorInOverlay();
-        overlay.style.backgroundColor = 'rgba(196, 105, 183, 0.1)';
-        return overlay;
-    }
-}
-function __installFinder() {
-    window.addEventListener('scroll', updateOverlay);
-    window.addEventListener('message', function (event) {
-        var _a;
-        if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'selectElement') {
+    function installGoToCode() {
+        window.addEventListener('scroll', updateOverlay);
+        window.addEventListener('message', function (event) {
+            var _a;
+            if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'selectElement') {
+                enable();
+            }
+        });
+        window.addEventListener('mousedown', function (ev) {
+            disable();
+        });
+        window.addEventListener('keydown', event => {
+            if (event.key === 'Alt') {
+                enable();
+            }
+        });
+        window.addEventListener('keyup', event => {
+            if (event.key === 'Alt') {
+                disable();
+            }
+        });
+
+        var overlay = createOverlay();
+        var clickMask = createClickMask();
+        var highlightNodes = [];
+        var enabled = false;
+        var lastCodeLoc;
+
+        return {
+            highlight,
+            unHighlight,
+        };
+
+        function enable() {
             enabled = true;
             clickMask.style.pointerEvents = 'none';
             document.body.appendChild(clickMask);
             updateOverlay();
         }
-    });
-    window.addEventListener('mousedown', function (ev) {
-        if (enabled) {
-            enabled = false;
-            clickMask.style.pointerEvents = '';
-            highlightNodes = [];
-            updateOverlay();
-            if (lastCodeLoc) {
-                parent.postMessage(lastCodeLoc, '*');
-                lastCodeLoc = undefined;
+        function disable() {
+            if (enabled) {
+                enabled = false;
+                clickMask.style.pointerEvents = '';
+                highlightNodes = [];
+                updateOverlay();
+                if (lastCodeLoc) {
+                    ws.send(JSON.stringify(lastCodeLoc));
+                    lastCodeLoc = undefined;
+                }
             }
         }
-    });
-    var overlay = createOverlay();
-    var clickMask = createClickMask();
-    var highlightNodes = [];
-    var enabled = false;
-    var lastCodeLoc;
-
-    return {
-        highlight,
-        unHighlight,
-    };
-
-    function goToTemplate(fileName, range) {
-        if (!enabled)
-            return;
-        lastCodeLoc = {
-            command: 'goToTemplate',
-            data: {
-                fileName: fileName,
-                range,
-            },
-        };
-        parent.postMessage(lastCodeLoc, '*');
-    }
-    function highlight(node, fileName, range) {
-        if (enabled && node instanceof Element) {
-            highlightNodes.push([node, fileName, range]);
-            updateOverlay();
+        function goToTemplate(fileName, range) {
+            if (!enabled)
+                return;
+            lastCodeLoc = {
+                command: 'goToTemplate',
+                data: {
+                    fileName: fileName,
+                    range,
+                },
+            };
+            ws.send(JSON.stringify(lastCodeLoc));
         }
-    }
-    function unHighlight(node) {
-        if (enabled) {
-            highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
-            updateOverlay();
-        }
-    }
-    function createOverlay() {
-        var overlay = document.createElement('div');
-        overlay.style.backgroundColor = 'rgba(65, 184, 131, 0.35)';
-        overlay.style.position = 'fixed';
-        overlay.style.zIndex = '99999999999999';
-        overlay.style.pointerEvents = 'none';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        overlay.style.borderRadius = '3px';
-        return overlay;
-    }
-    function createClickMask() {
-        var overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.zIndex = '99999999999999';
-        overlay.style.pointerEvents = 'none';
-        overlay.style.display = 'flex';
-        overlay.style.left = '0';
-        overlay.style.right = '0';
-        overlay.style.top = '0';
-        overlay.style.bottom = '0';
-        overlay.addEventListener('mouseup', function () {
-            var _a;
-            if (overlay.parentNode) {
-                (_a = overlay.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(overlay);
+        function highlight(node, fileName, range) {
+            if (enabled && node instanceof Element) {
+                highlightNodes.push([node, fileName, range]);
+                updateOverlay();
             }
-        });
-        return overlay;
-    }
-    function updateOverlay() {
-        if (highlightNodes.length) {
-            document.body.appendChild(overlay);
-            var highlight_1 = highlightNodes[highlightNodes.length - 1];
-            var highlightNode = highlight_1[0];
-            var rect = highlightNode.getBoundingClientRect();
-            overlay.style.width = ~~rect.width + 'px';
-            overlay.style.height = ~~rect.height + 'px';
-            overlay.style.top = ~~rect.top + 'px';
-            overlay.style.left = ~~rect.left + 'px';
-            goToTemplate(highlight_1[1], highlight_1[2]);
         }
-        else if (overlay.parentNode) {
-            overlay.parentNode.removeChild(overlay);
+        function unHighlight(node) {
+            if (enabled) {
+                highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
+                updateOverlay();
+            }
+        }
+        function createOverlay() {
+            var overlay = document.createElement('div');
+            overlay.style.backgroundColor = 'rgba(65, 184, 131, 0.35)';
+            overlay.style.position = 'fixed';
+            overlay.style.zIndex = '99999999999999';
+            overlay.style.pointerEvents = 'none';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.borderRadius = '3px';
+            return overlay;
+        }
+        function createClickMask() {
+            var overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.zIndex = '99999999999999';
+            overlay.style.pointerEvents = 'none';
+            overlay.style.display = 'flex';
+            overlay.style.left = '0';
+            overlay.style.right = '0';
+            overlay.style.top = '0';
+            overlay.style.bottom = '0';
+            overlay.addEventListener('mouseup', function () {
+                var _a;
+                if (overlay.parentNode) {
+                    (_a = overlay.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(overlay);
+                }
+            });
+            return overlay;
+        }
+        function updateOverlay() {
+            if (highlightNodes.length) {
+                document.body.appendChild(overlay);
+                var highlight_1 = highlightNodes[highlightNodes.length - 1];
+                var highlightNode = highlight_1[0];
+                var rect = highlightNode.getBoundingClientRect();
+                overlay.style.width = ~~rect.width + 'px';
+                overlay.style.height = ~~rect.height + 'px';
+                overlay.style.top = ~~rect.top + 'px';
+                overlay.style.left = ~~rect.left + 'px';
+                goToTemplate(highlight_1[1], highlight_1[2]);
+            }
+            else if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
         }
     }
-}
-function __installPreview(app) {
-    if (location.pathname === '/__preview') {
-        var preview = defineComponent({
-            setup: function () {
-                window.addEventListener('message', function (event) {
-                    var _a;
-                    if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'updateUrl') {
-                        url.value = new URL(event.data.data);
-                        _file.value = url.value.hash.slice(1);
-                    }
-                });
-                var url = ref(new URL(location.href));
-                var _file = ref(url.value.hash.slice(1));
-                var file = computed(function () {
-                    // fix windows path for vite
-                    var path = _file.value.replace(/\\\\\\\\/g, '/');
-                    if (path.indexOf(':') >= 0) {
-                        path = path.split(':')[1];
-                    }
-                    return path;
-                });
-                var target = computed(function () { return defineAsyncComponent(function () { return import(file.value); }); }); // TODO: responsive not working
-                var props = computed(function () {
-                    var _props = {};
-                    url.value.searchParams.forEach(function (value, key) {
-                        eval('_props[key] = ' + value);
+    function installPreview(app) {
+        if (location.pathname === '/__preview') {
+            var preview = defineComponent({
+                setup: function () {
+                    window.addEventListener('message', function (event) {
+                        var _a;
+                        if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'updateUrl') {
+                            url.value = new URL(event.data.data);
+                            _file.value = url.value.hash.slice(1);
+                        }
                     });
-                    return _props;
-                });
-                return function () { return h(Suspense, undefined, [
-                    h(target.value, props.value)
-                ]); };
-            },
-        });
-        // TODO: fix preview not working is preview component is root component
-        app._component.setup = preview.setup;
-        app.config.warnHandler = function (msg) {
-            window.parent.postMessage({
-                command: 'warn',
-                data: msg,
-            }, '*');
-            console.warn(msg);
-        };
-        app.config.errorHandler = function (msg) {
-            window.parent.postMessage({
-                command: 'error',
-                data: msg,
-            }, '*');
-            console.error(msg);
-        };
-        // TODO: post emit
+                    var url = ref(new URL(location.href));
+                    var _file = ref(url.value.hash.slice(1));
+                    var file = computed(function () {
+                        // fix windows path for vite
+                        var path = _file.value.replace(/\\\\\\\\/g, '/');
+                        if (path.indexOf(':') >= 0) {
+                            path = path.split(':')[1];
+                        }
+                        return path;
+                    });
+                    var target = computed(function () { return defineAsyncComponent(function () { return import(file.value); }); }); // TODO: responsive not working
+                    var props = computed(function () {
+                        var _props = {};
+                        url.value.searchParams.forEach(function (value, key) {
+                            eval('_props[key] = ' + value);
+                        });
+                        return _props;
+                    });
+                    return function () { return h(Suspense, undefined, [
+                        h(target.value, props.value)
+                    ]); };
+                },
+            });
+            // TODO: fix preview not working is preview component is root component
+            app._component.setup = preview.setup;
+            app.config.warnHandler = function (msg) {
+                window.parent.postMessage({
+                    command: 'warn',
+                    data: msg,
+                }, '*');
+                console.warn(msg);
+            };
+            app.config.errorHandler = function (msg) {
+                window.parent.postMessage({
+                    command: 'error',
+                    data: msg,
+                }, '*');
+                console.error(msg);
+            };
+            // TODO: post emit
+        }
     }
 }
 `;

@@ -386,7 +386,7 @@
 				},
 				"volar.preview.port": {
 					"type": "number",
-					"default": 3333,
+					"default": 3334,
 					"description": "Default port for component preview server."
 				},
 				"volar.preview.backgroundColor": {
@@ -646,6 +646,7 @@
 	},
 	"devDependencies": {
 		"@types/vscode": "1.61.0",
+		"@types/ws": "^8.5.3",
 		"@volar/shared": "0.33.9",
 		"@volar/vue-language-server": "0.33.9",
 		"@vue/compiler-dom": "^3.2.27",
@@ -655,6 +656,7 @@
 		"path-browserify": "^1.0.1",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.0-next.8",
-		"vscode-nls": "5.0.0"
+		"vscode-nls": "5.0.0",
+		"ws": "^8.5.0"
 	}
 }

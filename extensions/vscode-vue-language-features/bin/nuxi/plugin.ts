@@ -4,7 +4,8 @@ export default defineNuxtPlugin(app => {
     if (process.server)
         return;
 
-    const finderApis = installFinder();
+    const ws = new WebSocket('ws://localhost:56789');
+    const finderApis = installGoToCode();
     const highlightApis = installSelectionHighlight();
 
     let href = '';
@@ -49,6 +50,14 @@ export default defineNuxtPlugin(app => {
             }
         });
         window.addEventListener('scroll', updateHighlights);
+
+        ws.addEventListener('message', event => {
+            const data = JSON.parse(event.data);
+            if (data?.command === 'highlightSelections') {
+                selection = data.data;
+                updateHighlights();
+            }
+        });
 
         return {
             vnodeMounted,
@@ -167,27 +176,25 @@ export default defineNuxtPlugin(app => {
         }
     }
 
-    function installFinder() {
+    function installGoToCode() {
 
         window.addEventListener('scroll', updateOverlay);
         window.addEventListener('message', event => {
             if (event.data?.command === 'selectElement') {
-                enabled = true;
-                clickMask.style.pointerEvents = 'none';
-                document.body.appendChild(clickMask);
-                updateOverlay();
+                enable();
             }
         });
-        window.addEventListener('mousedown', (ev) => {
-            if (enabled) {
-                enabled = false;
-                clickMask.style.pointerEvents = '';
-                highlightNodes = [];
-                updateOverlay();
-                if (lastCodeLoc) {
-                    parent.postMessage(lastCodeLoc, '*');
-                    lastCodeLoc = undefined;
-                }
+        window.addEventListener('mousedown', event => {
+            disable();
+        });
+        window.addEventListener('keydown', event => {
+            if (event.key === 'Alt') {
+                enable();
+            }
+        });
+        window.addEventListener('keyup', event => {
+            if (event.key === 'Alt') {
+                disable();
             }
         });
 
@@ -203,6 +210,24 @@ export default defineNuxtPlugin(app => {
             unHighlight,
         };
 
+        function enable() {
+            enabled = true;
+            clickMask.style.pointerEvents = 'none';
+            document.body.appendChild(clickMask);
+            updateOverlay();
+        }
+        function disable() {
+            if (enabled) {
+                enabled = false;
+                clickMask.style.pointerEvents = '';
+                highlightNodes = [];
+                updateOverlay();
+                if (lastCodeLoc) {
+                    ws.send(JSON.stringify(lastCodeLoc));
+                    lastCodeLoc = undefined;
+                }
+            }
+        }
         function goToTemplate(fileName: string, range: [number, number]) {
             if (!enabled) return;
             lastCodeLoc = {
@@ -212,7 +237,7 @@ export default defineNuxtPlugin(app => {
                     range,
                 },
             };
-            parent.postMessage(lastCodeLoc, '*');
+            ws.send(JSON.stringify(lastCodeLoc));
         }
         function highlight(node: unknown, fileName: string, range: [number, number]) {
             if (enabled && node instanceof Element) {

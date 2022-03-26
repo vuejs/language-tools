@@ -5,6 +5,7 @@ import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { parse, SFCParseResult } from '@vue/compiler-sfc';
+import * as WebSocket from 'ws';
 
 interface PreviewState {
 	mode: 'vite' | 'nuxt',
@@ -27,9 +28,40 @@ export async function activate(context: vscode.ExtensionContext) {
 	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 	context.subscriptions.push(statusBar);
 
-	let goToTemplateReq = 0;
+	const wsList: WebSocket.WebSocket[] = [];
+	let wss: WebSocket.Server | undefined;
+
+	function startWsServer() {
+		wss = new WebSocket.Server({
+			port: 56789
+		});
+
+		wss.on('connection', ws => {
+			wsList.push(ws);
+			ws.on('message', msg => {
+				webviewEventHandler(JSON.parse(msg.toString()));
+			});
+		});
+	}
+	if (vscode.window.terminals.some(terminal => terminal.name.startsWith('volar-preview:'))) {
+		startWsServer();
+	}
+	vscode.window.onDidOpenTerminal(e => {
+		if (e.name.startsWith('volar-preview:')) {
+			startWsServer();
+		}
+	});
+	vscode.window.onDidCloseTerminal(e => {
+		if (e.name.startsWith('volar-preview:')) {
+			wss?.close();
+			wsList.length = 0;
+		}
+	});
 
 	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult }>();
+
+	let goToTemplateReq = 0;
+
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
 
@@ -72,9 +104,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const viteConfigFile = await getConfigFile(editor.document.fileName, 'vite');
 		const select = await userPick({
-			[PreviewType.Webview]: { label: 'Preview Vite App', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
-			[PreviewType.ExternalBrowser]: { label: 'Preview Vite App in External Browser' },
-			[PreviewType.ComponentPreview]: { label: `Preview Component with Vite`, description: '(WIP)', detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName },
+			[PreviewType.Webview]: {
+				label: 'Preview Vite App',
+				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
+			},
+			[PreviewType.ExternalBrowser]: {
+				label: 'Preview Vite App in External Browser',
+				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
+			},
+			[PreviewType.ComponentPreview]: {
+				label: `Preview Component with Vite`,
+				description: '(WIP)',
+				detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName,
+			},
 		});
 		if (select === undefined)
 			return; // cancle
@@ -89,8 +131,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const viteConfigFile = await getConfigFile(editor.document.fileName, 'nuxt');
 		const select = await userPick({
-			[PreviewType.Webview]: { label: 'Preview Nuxt App', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
-			[PreviewType.ExternalBrowser]: { label: 'Preview Nuxt App in External Browser' },
+			[PreviewType.Webview]: {
+				label: 'Preview Nuxt App',
+				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
+			},
+			[PreviewType.ExternalBrowser]: {
+				label: 'Preview Nuxt App in External Browser',
+				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
+			},
 		});
 		if (select === undefined)
 			return; // cancle
@@ -115,12 +163,30 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		}
 	}));
+	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
+		for (const panel of panels) {
+			updateSelectionHighlights(e.textEditor, panel, undefined);
+		}
+		for (const ws of wsList) {
+			updateSelectionHighlights(e.textEditor, undefined, ws);
+		}
+	}));
+	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(e => {
+		if (vscode.window.activeTextEditor) {
+			for (const panel of panels) {
+				updateSelectionHighlights(vscode.window.activeTextEditor, panel, undefined);
+			}
+			for (const ws of wsList) {
+				updateSelectionHighlights(vscode.window.activeTextEditor, undefined, ws);
+			}
+		}
+	}));
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.ComponentPreview, new PreviewPanelSerializer()));
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateFoundViteDir));
+	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updatePreviewIconStatus));
 
-	updateFoundViteDir();
+	updatePreviewIconStatus();
 
 	function getSfc(document: vscode.TextDocument) {
 		let cache = sfcs.get(document);
@@ -133,7 +199,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 		return cache.sfc;
 	}
-	async function updateFoundViteDir() {
+
+	async function updatePreviewIconStatus() {
 		if (vscode.window.activeTextEditor?.document.languageId === 'vue') {
 
 			const viteConfigFile = await getConfigFile(vscode.window.activeTextEditor.document.fileName, 'vite');
@@ -143,6 +210,37 @@ export async function activate(context: vscode.ExtensionContext) {
 			vscode.commands.executeCommand('setContext', 'volar.foundNuxtDir', nuxtConfigFile !== undefined);
 		}
 	}
+
+	function updateSelectionHighlights(textEditor: vscode.TextEditor, panel: vscode.WebviewPanel | undefined, ws: WebSocket.WebSocket | undefined) {
+		if (textEditor.document.languageId === 'vue') {
+			const sfc = getSfc(textEditor.document);
+			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
+			const msg = {
+				sender: 'volar',
+				command: 'highlightSelections',
+				data: {
+					fileName: textEditor.document.fileName,
+					ranges: textEditor.selections.map(selection => ({
+						start: textEditor.document.offsetAt(selection.start) - offset,
+						end: textEditor.document.offsetAt(selection.end) - offset,
+					})),
+					isDirty: textEditor.document.isDirty,
+				},
+			};
+			panel?.webview.postMessage(msg);
+			ws?.send(JSON.stringify(msg));
+		}
+		else {
+			const msg = {
+				sender: 'volar',
+				command: 'highlightSelections',
+				data: undefined,
+			};
+			panel?.webview.postMessage(JSON.stringify(msg));
+			ws?.send(JSON.stringify(msg));
+		}
+	}
+
 	async function openPreview(previewType: PreviewType, fileName: string, fileText: string, mode: 'vite' | 'nuxt', _panel?: vscode.WebviewPanel) {
 
 		const configFile = await getConfigFile(fileName, mode);
@@ -195,18 +293,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 		panels.add(panel);
-
-		panelContext.push(vscode.window.onDidChangeTextEditorSelection(e => {
-			updateSelectionHighlights(e.textEditor);
-		}));
-		panelContext.push(vscode.window.onDidChangeTextEditorSelection(e => {
-			updateSelectionHighlights(e.textEditor);
-		}));
-		panelContext.push(vscode.workspace.onDidSaveTextDocument(e => {
-			if (vscode.window.activeTextEditor) {
-				updateSelectionHighlights(vscode.window.activeTextEditor);
-			}
-		}));
 
 		if (previewType === PreviewType.Webview) {
 
@@ -263,98 +349,72 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 		return port;
+	}
 
-		function updateSelectionHighlights(textEditor: vscode.TextEditor) {
-			if (textEditor.document.languageId === 'vue') {
-				const sfc = getSfc(textEditor.document);
+	async function webviewEventHandler(message: any) {
+		switch (message.command) {
+			case 'openUrl': {
+				const url = message.data;
+				vscode.env.openExternal(vscode.Uri.parse(url));
+				break;
+			}
+			case 'closeExternalBrowserPanel': {
+				externalBrowserPanel?.dispose();
+				break;
+			}
+			case 'urlChanged': {
+				const url = message.data;
+				statusBar.text = url;
+				break;
+			}
+			case 'log': {
+				const text = message.data;
+				vscode.window.showInformationMessage(text);
+				break;
+			}
+			case 'warn': {
+				const text = message.data;
+				vscode.window.showWarningMessage(text);
+				break;
+			}
+			case 'error': {
+				const text = message.data;
+				vscode.window.showErrorMessage(text);
+				break;
+			}
+			case 'goToTemplate': {
+				const req = ++goToTemplateReq;
+				const data = message.data as {
+					fileName: string,
+					range: [number, number],
+				};
+				const doc = await vscode.workspace.openTextDocument(data.fileName);
+
+				if (req !== goToTemplateReq)
+					return;
+
+				const sfc = getSfc(doc);
 				const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-				panel.webview.postMessage({
-					sender: 'volar',
-					command: 'highlightSelections',
-					data: {
-						fileName: textEditor.document.fileName,
-						ranges: textEditor.selections.map(selection => ({
-							start: textEditor.document.offsetAt(selection.start) - offset,
-							end: textEditor.document.offsetAt(selection.end) - offset,
-						})),
-						isDirty: textEditor.document.isDirty,
-					},
-				});
-			}
-			else {
-				panel.webview.postMessage({
-					sender: 'volar',
-					command: 'highlightSelections',
-					data: undefined,
-				});
-			}
-		}
+				const start = doc.positionAt(data.range[0] + offset);
+				const end = doc.positionAt(data.range[1] + offset);
+				await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
 
-		async function webviewEventHandler(message: any) {
-			switch (message.command) {
-				case 'openUrl': {
-					const url = message.data;
-					vscode.env.openExternal(vscode.Uri.parse(url));
-					break;
-				}
-				case 'closeExternalBrowserPanel': {
-					externalBrowserPanel?.dispose();
-					break;
-				}
-				case 'urlChanged': {
-					const url = message.data;
-					statusBar.text = url;
-					break;
-				}
-				case 'log': {
-					const text = message.data;
-					vscode.window.showInformationMessage(text);
-					break;
-				}
-				case 'warn': {
-					const text = message.data;
-					vscode.window.showWarningMessage(text);
-					break;
-				}
-				case 'error': {
-					const text = message.data;
-					vscode.window.showErrorMessage(text);
-					break;
-				}
-				case 'goToTemplate': {
-					const req = ++goToTemplateReq;
-					const data = message.data as {
-						fileName: string,
-						range: [number, number],
-					};
-					const doc = await vscode.workspace.openTextDocument(data.fileName);
+				if (req !== goToTemplateReq)
+					return;
 
-					if (req !== goToTemplateReq)
-						return;
-
-					const sfc = getSfc(doc);
-					const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-					const start = doc.positionAt(data.range[0] + offset);
-					const end = doc.positionAt(data.range[1] + offset);
-					await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
-
-					if (req !== goToTemplateReq)
-						return;
-
-					const editor = vscode.window.activeTextEditor;
-					if (editor) {
-						editor.selection = new vscode.Selection(start, end);
-						editor.revealRange(new vscode.Range(start, end));
-					}
-					break;
+				const editor = vscode.window.activeTextEditor;
+				if (editor) {
+					editor.selection = new vscode.Selection(start, end);
+					editor.revealRange(new vscode.Range(start, end));
 				}
+				break;
 			}
 		}
 	}
 
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
-		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
+		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3334);
 		const terminal = vscode.window.createTerminal('volar-preview:' + port);
 		const viteProxyPath = type === 'vite'
 			? require.resolve('./bin/vite', { paths: [context.extensionPath] })
