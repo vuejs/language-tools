@@ -236,14 +236,16 @@ function __createAppProxy(...args) {
             ws.send(JSON.stringify(lastCodeLoc));
         }
         function highlight(node, fileName, range) {
-            if (enabled && node instanceof Element) {
+            if (node instanceof Element) {
                 highlightNodes.push([node, fileName, range]);
+            }
+            if (enabled) {
                 updateOverlay();
             }
         }
         function unHighlight(node) {
+            highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
             if (enabled) {
-                highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
                 updateOverlay();
             }
         }

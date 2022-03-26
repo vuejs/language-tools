@@ -240,14 +240,16 @@ export default defineNuxtPlugin(app => {
             ws.send(JSON.stringify(lastCodeLoc));
         }
         function highlight(node: unknown, fileName: string, range: [number, number]) {
-            if (enabled && node instanceof Element) {
+            if (node instanceof Element) {
                 highlightNodes.push([node, fileName, range]);
+            }
+            if (enabled) {
                 updateOverlay();
             }
         }
         function unHighlight(node: Element) {
+            highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
             if (enabled) {
-                highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
                 updateOverlay();
             }
         }
