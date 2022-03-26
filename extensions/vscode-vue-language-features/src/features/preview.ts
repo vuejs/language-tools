@@ -13,13 +13,14 @@ interface PreviewState {
 
 const enum PreviewType {
 	Webview = 'volar-webview',
-	StartServer = 'volar-start-server',
+	ExternalBrowser = 'volar-start-server',
 	ComponentPreview = 'volar-component-preview',
 }
 
 export async function activate(context: vscode.ExtensionContext) {
 
 	const panels = new Set<vscode.WebviewPanel>();
+	let externalBrowserPanel: vscode.WebviewPanel | undefined;
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.inputWebviewUrl';
@@ -72,8 +73,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		const viteConfigFile = await getConfigFile(editor.document.fileName, 'vite');
 		const select = await userPick({
 			[PreviewType.Webview]: { label: 'Preview Vite App', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
+			[PreviewType.ExternalBrowser]: { label: 'Preview Vite App in External Browser' },
 			[PreviewType.ComponentPreview]: { label: `Preview Component with Vite`, description: '(WIP)', detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName },
-			[PreviewType.StartServer]: { label: 'Start Server without Webview' },
 		});
 		if (select === undefined)
 			return; // cancle
@@ -89,7 +90,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		const viteConfigFile = await getConfigFile(editor.document.fileName, 'nuxt');
 		const select = await userPick({
 			[PreviewType.Webview]: { label: 'Preview Nuxt App', detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile },
-			[PreviewType.StartServer]: { label: 'Start Server without Webview' },
+			[PreviewType.ExternalBrowser]: { label: 'Preview Nuxt App in External Browser' },
 		});
 		if (select === undefined)
 			return; // cancle
@@ -161,11 +162,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			port = server.port;
 		}
 
-		if (previewType === PreviewType.StartServer) {
-			terminal.show();
-			return;
-		}
-
 		const panel = _panel ?? vscode.window.createWebviewPanel(
 			previewType,
 			'Volar Webview',
@@ -176,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				enableFindWidget: true,
 			},
 		);
-		panels.add(panel);
+
 		const panelContext: vscode.Disposable[] = [];
 
 		panel.onDidDispose(() => {
@@ -184,10 +180,21 @@ export async function activate(context: vscode.ExtensionContext) {
 				disposable.dispose();
 			}
 			panels.delete(panel);
-			if (panels.size === 0) {
+			if (panel !== externalBrowserPanel && panels.size === 0) {
 				terminal?.dispose();
 			}
 		});
+
+		panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
+
+		if (previewType === PreviewType.ExternalBrowser) {
+			terminal.show();
+			panel.webview.html = getWebviewContent(`http://localhost:${port}`, undefined, undefined, true);
+			externalBrowserPanel = panel;
+			return;
+		}
+
+		panels.add(panel);
 
 		panelContext.push(vscode.window.onDidChangeTextEditorSelection(e => {
 			updateSelectionHighlights(e.textEditor);
@@ -203,11 +210,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		if (previewType === PreviewType.Webview) {
 
-			panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
 				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
 			}));
-
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
 
 			panel.onDidChangeViewState(() => {
@@ -250,7 +255,6 @@ export async function activate(context: vscode.ExtensionContext) {
 					}
 				}
 			}));
-			panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
 				updatePreviewPanel(panel, fileName, previewQuery, port, mode);
 			}));
@@ -291,6 +295,10 @@ export async function activate(context: vscode.ExtensionContext) {
 				case 'openUrl': {
 					const url = message.data;
 					vscode.env.openExternal(vscode.Uri.parse(url));
+					break;
+				}
+				case 'closeExternalBrowserPanel': {
+					externalBrowserPanel?.dispose();
 					break;
 				}
 				case 'urlChanged': {
@@ -445,7 +453,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		previewPanel.webview.html = getWebviewContent(url, { fileName, mode }, bgSrc.toString());
 	}
 
-	function getWebviewContent(url: string, state?: PreviewState, bg?: string) {
+	function getWebviewContent(url: string, state?: PreviewState, bg?: string, openExternalOnLoaded?: boolean) {
+
 		const configs = vscode.workspace.getConfiguration('volar');
 
 		let html = `
@@ -495,8 +504,14 @@ export async function activate(context: vscode.ExtensionContext) {
 			})();
 
 			function previewFrameLoaded() {
-				preview.style.height = '100vh';
-				document.getElementById('loading').remove();
+				${openExternalOnLoaded ? `
+					vscode.postMessage({ command: 'openUrl', data: '${url}' });
+					vscode.postMessage({ command: 'closeExternalBrowserPanel' });
+				` : `
+					preview.style.height = '100vh';
+					document.getElementById('loading').remove();
+				`
+			}
 			};
 			function sleep(ms) {
 				return new Promise(resolve => setTimeout(resolve, ms));
