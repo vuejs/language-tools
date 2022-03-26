@@ -8,7 +8,6 @@ import { parse, SFCParseResult } from '@vue/compiler-sfc';
 
 interface PreviewState {
 	mode: 'vite' | 'nuxt',
-	port: number,
 	fileName: string,
 }
 
@@ -19,14 +18,25 @@ const enum PreviewType {
 
 export async function activate(context: vscode.ExtensionContext) {
 
+	const panels = new Set<vscode.WebviewPanel>();
+
+	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+	statusBar.command = 'volar.inputWebviewUrl';
+	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+	context.subscriptions.push(statusBar);
+
 	let goToTemplateReq = 0;
 
 	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult }>();
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
 
-			const terminal = vscode.window.terminals.find(terminal => terminal.name === 'volar-preview');
-			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, terminal, state.port, panel);
+			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+			if (!terminal) {
+				return; // don't create server because maybe user close it intentionally
+			}
+
+			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, panel);
 
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state)
 		}
@@ -38,8 +48,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			const editor = vscode.window.visibleTextEditors.find(document => document.document.fileName === state.fileName);
 			if (!editor) return;
 
-			const terminal = vscode.window.terminals.find(terminal => terminal.name === 'volar-preview');
-			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, terminal, state.port, panel);
+			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+			if (!terminal) {
+				return; // don't create server because maybe user close it intentionally
+			}
+
+			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, panel);
 
 			if (port !== undefined) {
 				const previewQuery = createQuery(editor.document);
@@ -79,6 +93,24 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'nuxt');
 	}));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
+		const panel = [...panels].find(panel => panel.active);
+		if (panel) {
+			panel.webview.postMessage({ sender: 'volar', command: 'selectElement' });
+		}
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.openInBrowser', () => {
+		vscode.env.openExternal(vscode.Uri.parse(statusBar.text));
+	}));
+	context.subscriptions.push(vscode.commands.registerCommand('volar.inputWebviewUrl', async () => {
+		const panel = [...panels].find(panel => panel.active);
+		if (panel) {
+			const input = await vscode.window.showInputBox({ value: statusBar.text });
+			if (input !== undefined && input !== statusBar.text) {
+				panel.webview.html = getWebviewContent(input);
+			}
+		}
+	}));
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.ComponentPreview, new PreviewPanelSerializer()));
@@ -107,16 +139,24 @@ export async function activate(context: vscode.ExtensionContext) {
 			vscode.commands.executeCommand('setContext', 'volar.foundNuxtDir', nuxtConfigFile !== undefined);
 		}
 	}
-	async function openPreview(previewType: PreviewType, fileName: string, fileText: string, mode: 'vite' | 'nuxt', _terminal?: vscode.Terminal, _port?: number, _panel?: vscode.WebviewPanel) {
+	async function openPreview(previewType: PreviewType, fileName: string, fileText: string, mode: 'vite' | 'nuxt', _panel?: vscode.WebviewPanel) {
 
 		const configFile = await getConfigFile(fileName, mode);
 		if (!configFile)
 			return;
 
-		const configDir = path.dirname(configFile);
-		const { terminal, port } = _terminal && _port
-			? { terminal: _terminal, port: _port }
-			: await startServerServer(configDir, mode);
+		let terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+		let port: number;
+
+		if (terminal) {
+			port = Number(terminal.name.split(':')[1]);
+		}
+		else {
+			const configDir = path.dirname(configFile);
+			const server = await startPreviewServer(configDir, mode);
+			terminal = server.terminal;
+			port = server.port;
+		}
 
 		const panel = _panel ?? vscode.window.createWebviewPanel(
 			previewType,
@@ -128,26 +168,19 @@ export async function activate(context: vscode.ExtensionContext) {
 				enableFindWidget: true,
 			},
 		);
+		panels.add(panel);
 		const panelContext: vscode.Disposable[] = [];
 
 		panel.onDidDispose(() => {
 			for (const disposable of panelContext) {
 				disposable.dispose();
 			}
+			panels.delete(panel);
+			if (panels.size === 0) {
+				terminal?.dispose();
+			}
 		});
 
-		const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-		statusBar.command = 'volar.inputWebviewUrl';
-		statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-		panelContext.push(statusBar);
-
-		panelContext.push(terminal);
-		panelContext.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
-			panel.webview.postMessage({ sender: 'volar', command: 'selectElement' });
-		}));
-		panelContext.push(vscode.commands.registerCommand('volar.action.openInBrowser', () => {
-			vscode.env.openExternal(vscode.Uri.parse(statusBar.text));
-		}));
 		panelContext.push(vscode.window.onDidChangeTextEditorSelection(e => {
 			updateSelectionHighlights(e.textEditor);
 		}));
@@ -164,16 +197,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { port, fileName, mode });
-			}));
-			panelContext.push(vscode.commands.registerCommand('volar.inputWebviewUrl', async () => {
-				const input = await vscode.window.showInputBox({ value: statusBar.text });
-				if (input !== undefined && input !== statusBar.text) {
-					panel.webview.html = getWebviewContent(input, { port, fileName, mode });
-				}
+				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
 			}));
 
-			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { port, fileName, mode });
+			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
 
 			panel.onDidChangeViewState(() => {
 				if (panel.active)
@@ -309,10 +336,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	async function startServerServer(viteDir: string, type: 'vite' | 'nuxt') {
+	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
-		const terminal = vscode.window.createTerminal('volar-preview');
+		const terminal = vscode.window.createTerminal('volar-preview:' + port);
 		const viteProxyPath = type === 'vite'
 			? require.resolve('./bin/vite', { paths: [context.extensionPath] })
 			: require.resolve('./bin/nuxi', { paths: [context.extensionPath] });
@@ -407,10 +434,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		const bgSrc = previewPanel.webview.asWebviewUri(bgPath);
 		const url = `http://localhost:${port}/__preview${query}#${fileName}`;
 		previewPanel.title = 'Preview ' + path.basename(fileName);
-		previewPanel.webview.html = getWebviewContent(url, { port, fileName, mode }, bgSrc.toString());
+		previewPanel.webview.html = getWebviewContent(url, { fileName, mode }, bgSrc.toString());
 	}
 
-	function getWebviewContent(url: string, state: PreviewState, bg?: string) {
+	function getWebviewContent(url: string, state?: PreviewState, bg?: string) {
 		const configs = vscode.workspace.getConfiguration('volar');
 
 		let html = `
