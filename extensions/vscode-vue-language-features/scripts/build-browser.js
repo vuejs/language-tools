@@ -25,6 +25,10 @@ require('esbuild').build({
                 const path = require.resolve(args.path.replace('/tsVersion', '/tsVersionEmpty'), { paths: [args.resolveDir] })
                 return { path: path }
             })
+            build.onResolve({ filter: /\/preview$/ }, args => {
+                const path = require.resolve(args.path.replace('/preview', '/tsVersionEmpty'), { paths: [args.resolveDir] })
+                return { path: path }
+            })
         },
     }],
 }).catch(() => process.exit(1))
