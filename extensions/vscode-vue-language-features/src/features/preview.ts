@@ -272,7 +272,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const panel = _panel ?? vscode.window.createWebviewPanel(
 			previewType,
-			'Volar Webview',
+			'Preview ' + path.relative(vscode.workspace.rootPath ?? '', configFile),
 			vscode.ViewColumn.Beside,
 			{
 				retainContextWhenHidden: true,
