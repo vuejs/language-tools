@@ -164,7 +164,7 @@ export default defineNuxtPlugin(app => {
             overlay.style.borderRadius = '3px';
             overlay.style.borderStyle = 'dashed';
             overlay.style.borderColor = 'rgb(196, 105, 183)';
-            overlay.style.borderWidth = '2px';
+            overlay.style.borderWidth = '1px';
             overlay.style.boxSizing = 'border-box';
             document.body.appendChild(overlay);
             return overlay;
@@ -185,7 +185,7 @@ export default defineNuxtPlugin(app => {
             }
         });
         window.addEventListener('mousedown', event => {
-            disable();
+            disable(true);
         });
         window.addEventListener('keydown', event => {
             if (event.key === 'Alt') {
@@ -194,7 +194,7 @@ export default defineNuxtPlugin(app => {
         });
         window.addEventListener('keyup', event => {
             if (event.key === 'Alt') {
-                disable();
+                disable(false);
             }
         });
 
@@ -216,7 +216,7 @@ export default defineNuxtPlugin(app => {
             document.body.appendChild(clickMask);
             updateOverlay();
         }
-        function disable() {
+        function disable(openVscode: boolean) {
             if (enabled) {
                 enabled = false;
                 clickMask.style.pointerEvents = '';
@@ -224,6 +224,9 @@ export default defineNuxtPlugin(app => {
                 updateOverlay();
                 if (lastCodeLoc) {
                     ws.send(JSON.stringify(lastCodeLoc));
+                    if (openVscode) {
+                        window.open('vscode://files:/' + lastCodeLoc.fileName);
+                    }
                     lastCodeLoc = undefined;
                 }
             }

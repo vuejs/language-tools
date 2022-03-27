@@ -161,7 +161,7 @@ function __createAppProxy(...args) {
             overlay.style.borderRadius = '3px';
             overlay.style.borderStyle = 'dashed';
             overlay.style.borderColor = 'rgb(196, 105, 183)';
-            overlay.style.borderWidth = '2px';
+            overlay.style.borderWidth = '1px';
             overlay.style.boxSizing = 'border-box';
             document.body.appendChild(overlay);
             return overlay;
@@ -181,7 +181,7 @@ function __createAppProxy(...args) {
             }
         });
         window.addEventListener('mousedown', function (ev) {
-            disable();
+            disable(true);
         });
         window.addEventListener('keydown', event => {
             if (event.key === 'Alt') {
@@ -190,7 +190,7 @@ function __createAppProxy(...args) {
         });
         window.addEventListener('keyup', event => {
             if (event.key === 'Alt') {
-                disable();
+                disable(false);
             }
         });
 
@@ -211,7 +211,7 @@ function __createAppProxy(...args) {
             document.body.appendChild(clickMask);
             updateOverlay();
         }
-        function disable() {
+        function disable(openVscode) {
             if (enabled) {
                 enabled = false;
                 clickMask.style.pointerEvents = '';
@@ -219,6 +219,9 @@ function __createAppProxy(...args) {
                 updateOverlay();
                 if (lastCodeLoc) {
                     ws.send(JSON.stringify(lastCodeLoc));
+                    if (openVscode) {
+                        window.open('vscode://files:/' + lastCodeLoc.fileName);
+                    }
                     lastCodeLoc = undefined;
                 }
             }
