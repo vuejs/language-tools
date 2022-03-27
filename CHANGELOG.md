@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.33.10
+
+- feat: support preview features on external browser
+  - press `Alt` key to activating go to code feature
+- fix: can't open multiple preview windows
+
 ## 0.33.9
 
 - perf: faster vue-tsc watch response
