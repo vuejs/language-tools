@@ -171,6 +171,16 @@ export async function activate(context: vscode.ExtensionContext) {
 			updateSelectionHighlights(e.textEditor, undefined, ws);
 		}
 	}));
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
+		if (vscode.window.activeTextEditor) {
+			for (const panel of panels) {
+				updateSelectionHighlights(vscode.window.activeTextEditor, panel, undefined);
+			}
+			for (const ws of wsList) {
+				updateSelectionHighlights(vscode.window.activeTextEditor, undefined, ws);
+			}
+		}
+	}));
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(e => {
 		if (vscode.window.activeTextEditor) {
 			for (const panel of panels) {
