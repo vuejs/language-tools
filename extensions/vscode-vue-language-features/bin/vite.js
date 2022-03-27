@@ -242,15 +242,11 @@ function __createAppProxy(...args) {
             if (node instanceof Element) {
                 highlightNodes.push([node, fileName, range]);
             }
-            if (enabled) {
-                updateOverlay();
-            }
+            updateOverlay();
         }
         function unHighlight(node) {
             highlightNodes = highlightNodes.filter(function (hNode) { return hNode[0] !== node; });
-            if (enabled) {
-                updateOverlay();
-            }
+            updateOverlay();
         }
         function createOverlay() {
             var overlay = document.createElement('div');
@@ -283,7 +279,7 @@ function __createAppProxy(...args) {
             return overlay;
         }
         function updateOverlay() {
-            if (highlightNodes.length) {
+            if (enabled && highlightNodes.length) {
                 document.body.appendChild(overlay);
                 var highlight_1 = highlightNodes[highlightNodes.length - 1];
                 var highlightNode = highlight_1[0];

@@ -246,15 +246,11 @@ export default defineNuxtPlugin(app => {
             if (node instanceof Element) {
                 highlightNodes.push([node, fileName, range]);
             }
-            if (enabled) {
-                updateOverlay();
-            }
+            updateOverlay();
         }
         function unHighlight(node: Element) {
             highlightNodes = highlightNodes.filter(hNode => hNode[0] !== node);
-            if (enabled) {
-                updateOverlay();
-            }
+            updateOverlay();
         }
         function createOverlay() {
             const overlay = document.createElement('div');
@@ -286,7 +282,7 @@ export default defineNuxtPlugin(app => {
             return overlay;
         }
         function updateOverlay() {
-            if (highlightNodes.length) {
+            if (enabled && highlightNodes.length) {
                 document.body.appendChild(overlay);
                 const highlight = highlightNodes[highlightNodes.length - 1];
                 const highlightNode = highlight[0];
