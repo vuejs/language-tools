@@ -29,7 +29,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 [kabiaa/atom-ide-volar](https://github.com/kabiaa/atom-ide-volar) \
 *Vue language client for Atom*
 
-[jadestrong/lsp-volar](https://github.com/jadestrong/lsp-volar) ⚡ 🤝 \
+[emacs-lsp/lsp-mode](https://github.com/emacs-lsp/lsp-mode) ([jadestrong/lsp-volar](https://github.com/jadestrong/lsp-volar)) ⚡ 🤝 \
 *Vue language client for Emacs*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
