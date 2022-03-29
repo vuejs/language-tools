@@ -268,7 +268,7 @@ export function register(
 				}))).filter(shared.notEmpty);
 			if (edits.length) {
 				const result = edits[0];
-				vue.margeWorkspaceEdits(result, ...edits.slice(1));
+				vue.mergeWorkspaceEdits(result, ...edits.slice(1));
 				return result;
 			}
 			return null;
