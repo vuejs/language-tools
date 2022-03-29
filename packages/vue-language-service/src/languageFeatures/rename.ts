@@ -144,7 +144,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const mainEdit = workspaceEdits[0];
 				const otherEdits = workspaceEdits.slice(1);
 
-				margeWorkspaceEdits(mainEdit, ...otherEdits);
+				mergeWorkspaceEdits(mainEdit, ...otherEdits);
 
 				if (mainEdit.changes) {
 					for (const uri in mainEdit.changes) {
@@ -158,7 +158,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 	}
 }
 
-export function margeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: vscode.WorkspaceEdit[]) {
+export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: vscode.WorkspaceEdit[]) {
 	for (const other of others) {
 		for (const uri in other.changeAnnotations) {
 			if (!original.changeAnnotations) {

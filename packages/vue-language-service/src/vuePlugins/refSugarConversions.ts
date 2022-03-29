@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
-import { margeWorkspaceEdits } from '../languageFeatures/rename';
+import { mergeWorkspaceEdits } from '../languageFeatures/rename';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
 import { isBlacklistNode, isRefType } from './autoCompleteRefs';
 import { getAddMissingImportsEdits } from './scriptSetupConversions';
@@ -263,7 +263,7 @@ async function unuseRefSugar(
         const removeInvalidValueEdits = getRemoveInvalidDotValueEdits(vueDocument, errors);
 
         if (importEdits && removeInvalidValueEdits) {
-            margeWorkspaceEdits(importEdits, removeInvalidValueEdits);
+            mergeWorkspaceEdits(importEdits, removeInvalidValueEdits);
             await context.applyEdit(importEdits);
         }
         else if (importEdits || removeInvalidValueEdits) {
