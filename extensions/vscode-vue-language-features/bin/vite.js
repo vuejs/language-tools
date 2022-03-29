@@ -180,7 +180,7 @@ function __createAppProxy(...args) {
                 enable();
             }
         });
-        window.addEventListener('mousedown', function (ev) {
+        window.addEventListener('pointerdown', function (ev) {
             disable(true);
         });
         window.addEventListener('keydown', event => {
@@ -270,7 +270,7 @@ function __createAppProxy(...args) {
             overlay.style.right = '0';
             overlay.style.top = '0';
             overlay.style.bottom = '0';
-            overlay.addEventListener('mouseup', function () {
+            overlay.addEventListener('pointerup', function () {
                 var _a;
                 if (overlay.parentNode) {
                     (_a = overlay.parentNode) === null || _a === void 0 ? void 0 : _a.removeChild(overlay);
@@ -383,8 +383,8 @@ function __proxyExport(rawOptions = {}) {
     if (node.type === 1) {
         const start = node.loc.start.offset;
         const end = node.loc.end.offset;
-        addEvent(node, 'mouseenter', \`$volar.highlight($event.target, $.type.__file, [\${start},\${end}])\`);
-        addEvent(node, 'mouseleave', '$volar.unHighlight($event.target)');
+        addEvent(node, 'pointerenter', \`$volar.highlight($event.target, $.type.__file, [\${start},\${end}])\`);
+        addEvent(node, 'pointerleave', '$volar.unHighlight($event.target)');
         addEvent(node, 'vnode-mounted', \`$volar.vnodeMounted($event.el, $.type.__file, [\${start},\${end}])\`);
         addEvent(node, 'vnode-unmounted', '$volar.vnodeUnmounted($event.el)');
     }

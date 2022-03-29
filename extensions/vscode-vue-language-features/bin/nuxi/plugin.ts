@@ -184,7 +184,7 @@ export default defineNuxtPlugin(app => {
                 enable();
             }
         });
-        window.addEventListener('mousedown', event => {
+        window.addEventListener('pointerdown', event => {
             disable(true);
         });
         window.addEventListener('keydown', event => {
@@ -274,7 +274,7 @@ export default defineNuxtPlugin(app => {
             overlay.style.right = '0';
             overlay.style.top = '0';
             overlay.style.bottom = '0';
-            overlay.addEventListener('mouseup', () => {
+            overlay.addEventListener('pointerup', () => {
                 if (overlay.parentNode) {
                     overlay.parentNode?.removeChild(overlay)
                 }
