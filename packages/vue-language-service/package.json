@@ -14,6 +14,7 @@
 	},
 	"devDependencies": {
 		"@types/prettier": "^1.16.4",
+		"@types/semver": "^7.3.8",
 		"typescript": "latest"
 	},
 	"dependencies": {
@@ -33,6 +34,7 @@
 		"@vue/shared": "^3.2.27",
 		"prettier": "^1.16.4",
 		"sass-formatter": "^0.7.2",
+		"semver": "^7.3.5",
 		"upath": "^2.0.1",
 		"vscode-css-languageservice": "^5.1.9",
 		"vscode-html-languageservice": "^4.2.1",
