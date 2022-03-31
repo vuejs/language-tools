@@ -4,14 +4,14 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 type NotNullableResult<T> = T | Thenable<T>;
 type NullableResult<T> = NotNullableResult<T | undefined | null>;
 
-let currentConfigurationHost: ConfigurationHost | undefined;
+var __VLS_currentConfigurationHost: ConfigurationHost | undefined;
 
 export function useConfigurationHost() {
-    return currentConfigurationHost;
+    return __VLS_currentConfigurationHost;
 }
 
 export function setCurrentConfigurationHost(configHost: ConfigurationHost | undefined) {
-    currentConfigurationHost = configHost;
+    __VLS_currentConfigurationHost = configHost;
 }
 
 export type SemanticToken = [number, number, number, number, number];
