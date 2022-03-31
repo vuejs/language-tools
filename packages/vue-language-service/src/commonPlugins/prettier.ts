@@ -2,18 +2,20 @@ import * as prettier from 'prettier';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
-export default function (allowLanguageIds: prettier.BuiltInParserName[]): EmbeddedLanguageServicePlugin {
+export default function (options: {
+    allowLanguageIds: prettier.BuiltInParserName[],
+}): EmbeddedLanguageServicePlugin {
 
     return {
 
-        format(document, range, options) {
+        format(document, range, options_2) {
 
-            if (!allowLanguageIds.includes(document.languageId as prettier.BuiltInParserName))
+            if (!options.allowLanguageIds.includes(document.languageId as prettier.BuiltInParserName))
                 return;
 
             const newStyleText = prettier.format(document.getText(), {
-                tabWidth: options.tabSize,
-                useTabs: !options.insertSpaces,
+                tabWidth: options_2.tabSize,
+                useTabs: !options_2.insertSpaces,
                 parser: document.languageId as prettier.BuiltInParserName,
             });
 

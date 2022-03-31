@@ -5,10 +5,9 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '../commonPlugins/typescript';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 
-export default function (host: {
-    configurationHost: ConfigurationHost | undefined,
+export default function (options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getTsLs: () => ts2.LanguageService,
 }): EmbeddedLanguageServicePlugin {
@@ -25,16 +24,16 @@ export default function (host: {
 			if (!isCharacterTyping(document, context))
 				return;
 
-			const enabled = await host.configurationHost?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
+			const enabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
 			if (!enabled)
 				return;
 
 			const sourceFile = getAst(document);
-			if (isBlacklistNode(host.ts, sourceFile, document.offsetAt(position)))
+			if (isBlacklistNode(options.ts, sourceFile, document.offsetAt(position)))
 				return;
 
-			const typeDefs = host.getTsLs().findTypeDefinition(document.uri, position);
-			if (isRefType(typeDefs, host.getTsLs())) {
+			const typeDefs = options.getTsLs().findTypeDefinition(document.uri, position);
+			if (isRefType(typeDefs, options.getTsLs())) {
 				return '${1:.value}';
 			}
 		},
@@ -43,7 +42,7 @@ export default function (host: {
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
 		if (!ast) {
-			ast = host.ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), host.ts.ScriptTarget.Latest);
+			ast = options.ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), options.ts.ScriptTarget.Latest);
 			asts.set(tsDoc, ast);
 		}
 		return ast;

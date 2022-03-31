@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -95,6 +95,8 @@ export function createLanguageService(
 	}>,
 ) {
 
+	setCurrentConfigurationHost(configurationHost); // TODO
+
 	const vueCompilerOptions = vueLsHost.getVueCompilationSettings?.() ?? {};
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
@@ -120,7 +122,6 @@ export function createLanguageService(
 	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
-			configurationHost,
 			getVueDocument: (document) => vueDocuments.get(document.uri),
 			scriptTsLs,
 		}),
@@ -128,7 +129,6 @@ export function createLanguageService(
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
 		useHtmlPlugin({
-			configurationHost,
 			documentContext,
 			fileSystemProvider,
 		}),
@@ -143,7 +143,6 @@ export function createLanguageService(
 	);
 	const cssPlugin = defineLanguageServicePlugin(
 		useCssPlugin({
-			configurationHost,
 			documentContext,
 			fileSystemProvider,
 		}),
@@ -155,9 +154,7 @@ export function createLanguageService(
 		}),
 	);
 	const emmetPlugin = defineLanguageServicePlugin(
-		useEmmetPlugin({
-			configurationHost,
-		}),
+		useEmmetPlugin(),
 	);
 	const scriptTsPlugin = useTsPlugins(
 		scriptTsLs,
@@ -180,27 +177,23 @@ export function createLanguageService(
 	) : undefined;
 	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
-			configurationHost,
 			ts,
 			getTsLs: () => scriptTsLs,
 		}),
 	);
 	const referencesCodeLensPlugin = defineLanguageServicePlugin(
 		useReferencesCodeLensPlugin({
-			configurationHost,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 			findReference: async (...args) => findReferences_internal(...args),
 		}),
 	);
 	const htmlPugConversionsPlugin = defineLanguageServicePlugin(
 		useHtmlPugConversionsPlugin({
-			configurationHost,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 		}),
 	);
 	const scriptSetupConversionsPlugin = defineLanguageServicePlugin(
 		useScriptSetupConversionsPlugin({
-			configurationHost,
 			ts,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 			doCodeActions: async (...args) => doCodeActions_internal(...args),
@@ -209,7 +202,6 @@ export function createLanguageService(
 	);
 	const refSugarConversionsPlugin = defineLanguageServicePlugin(
 		useRefSugarConversionsPlugin({
-			configurationHost,
 			ts,
 			getVueDocument: (uri) => vueDocuments.get(uri),
 			doCodeActions: async (...args) => doCodeActions_internal(...args),
@@ -407,7 +399,6 @@ export function createLanguageService(
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
 		return defineLanguageServicePlugin(
 			useVueTemplateLanguagePlugin({
-				configurationHost,
 				ts,
 				templateLanguagePlugin,
 				getSemanticTokenLegend,

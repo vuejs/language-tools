@@ -4,6 +4,16 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 type NotNullableResult<T> = T | Thenable<T>;
 type NullableResult<T> = NotNullableResult<T | undefined | null>;
 
+let currentConfigurationHost: ConfigurationHost | undefined;
+
+export function useConfigurationHost() {
+    return currentConfigurationHost;
+}
+
+export function setCurrentConfigurationHost(configHost: ConfigurationHost | undefined) {
+    currentConfigurationHost = configHost;
+}
+
 export type SemanticToken = [number, number, number, number, number];
 
 export interface ConfigurationHost {

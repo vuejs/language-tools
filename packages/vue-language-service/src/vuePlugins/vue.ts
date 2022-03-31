@@ -5,7 +5,7 @@ import useHtmlPlugin from '../commonPlugins/html';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 import { VueDocument } from '../vueDocuments';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
     version: 1.1,
@@ -92,14 +92,12 @@ const dataProvider = html.newHTMLDataProvider('vue', {
     ]
 });
 
-export default function (host: {
-    configurationHost?: ConfigurationHost,
+export default function (options: {
     getVueDocument(document: TextDocument): VueDocument | undefined,
     scriptTsLs: ts2.LanguageService | undefined,
 }): EmbeddedLanguageServicePlugin {
 
     const htmlPlugin = useHtmlPlugin({
-        configurationHost: host.configurationHost,
         validLang: 'vue',
         disableCustomData: true,
     });
@@ -109,7 +107,7 @@ export default function (host: {
 
         ...htmlPlugin,
 
-        doValidation(document, options) {
+        doValidation(document) {
             return worker(document, (vueDocument) => {
 
                 const result: vscode.Diagnostic[] = [];
@@ -131,7 +129,7 @@ export default function (host: {
                     }
                 }
 
-                if (host.scriptTsLs && !host.scriptTsLs.__internal__.isValidFile(vueDocument.file.getScriptTsFile().fileName)) {
+                if (options.scriptTsLs && !options.scriptTsLs.__internal__.isValidFile(vueDocument.file.getScriptTsFile().fileName)) {
                     for (const script of [sfc.script, sfc.scriptSetup]) {
 
                         if (!script || script.content === '')
@@ -242,7 +240,7 @@ export default function (host: {
 
     function worker<T>(document: TextDocument, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = host.getVueDocument(document);
+        const vueDocument = options.getVueDocument(document);
         if (!vueDocument)
             return;
 

@@ -1,27 +1,26 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import { isCharacterTyping } from './autoCompleteRefs';
 import { VueDocument } from '../vueDocuments';
 
-export default function (host: {
-	configurationHost: ConfigurationHost | undefined,
+export default function (options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument: (document: TextDocument) => VueDocument | undefined,
 }): EmbeddedLanguageServicePlugin {
 
 	return {
 
-		async doAutoInsert(document, position, options) {
+		async doAutoInsert(document, position, options_2) {
 
-			const enabled = await host.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? true;
+			const enabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? true;
 			if (!enabled)
 				return;
 
-			if (!isCharacterTyping(document, options))
+			if (!isCharacterTyping(document, options_2))
 				return;
 
-			const vueDocument = host.getVueDocument(document);
+			const vueDocument = options.getVueDocument(document);
 			if (!vueDocument)
 				return;
 
@@ -34,14 +33,14 @@ export default function (host: {
 			for (const mappedRange of templateFormatScript.sourceMap.mappings) {
 				if (mappedRange.sourceRange.end === offset) {
 					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
-					const ast = host.ts.createSourceFile(templateFormatScript.file.fileName, text, host.ts.ScriptTarget.Latest);
+					const ast = options.ts.createSourceFile(templateFormatScript.file.fileName, text, options.ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (
-							host.ts.isExpressionStatement(statement)
-							&& host.ts.isAsExpression(statement.expression)
-							&& host.ts.isTypeReferenceNode(statement.expression.type)
-							&& host.ts.isIdentifier(statement.expression.type.typeName)
+							options.ts.isExpressionStatement(statement)
+							&& options.ts.isAsExpression(statement.expression)
+							&& options.ts.isTypeReferenceNode(statement.expression.type)
+							&& options.ts.isIdentifier(statement.expression.type.typeName)
 							&& statement.expression.type.typeName.text
 						) {
 							return vscode.TextEdit.replace(

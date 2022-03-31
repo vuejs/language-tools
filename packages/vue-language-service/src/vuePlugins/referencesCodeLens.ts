@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import * as shared from '@volar/shared';
 import { VueDocument } from '../vueDocuments';
 
@@ -15,8 +15,7 @@ export interface ReferencesCodeLensData {
     position: vscode.Position,
 }
 
-export default function (host: {
-    configurationHost: ConfigurationHost | undefined,
+export default function (options: {
     getVueDocument(uri: string): VueDocument | undefined,
     findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
@@ -26,7 +25,7 @@ export default function (host: {
         doCodeLens(document) {
             return worker(document.uri, async (vueDocument) => {
 
-                const isEnabled = await host.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
+                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
                 if (!isEnabled)
                     return;
@@ -62,13 +61,13 @@ export default function (host: {
         async doCodeLensResolve(codeLens) {
 
             const data: ReferencesCodeLensData = codeLens.data as any;
-            const vueDocument = host.getVueDocument(data.uri)
+            const vueDocument = options.getVueDocument(data.uri)
 
             if (!vueDocument)
                 return codeLens;
 
             const sourceMaps = vueDocument.getSourceMaps();
-            const references = await host.findReference(data.uri, data.position) ?? [];
+            const references = await options.findReference(data.uri, data.position) ?? [];
             const referencesInDifferentDocument = references.filter(reference =>
                 reference.uri !== data.uri // different file
                 || sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
@@ -101,7 +100,7 @@ export default function (host: {
 
     function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = host.getVueDocument(uri);
+        const vueDocument = options.getVueDocument(uri);
         if (!vueDocument)
             return;
 

@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
 import { mergeWorkspaceEdits } from '../languageFeatures/rename';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
 import { isBlacklistNode, isRefType } from './autoCompleteRefs';
 import { getAddMissingImportsEdits } from './scriptSetupConversions';
 import { VueDocument } from '../vueDocuments';
@@ -20,8 +20,7 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (host: {
-    configurationHost: ConfigurationHost | undefined,
+export default function (options: {
     getVueDocument(uri: string): VueDocument | undefined,
     // for use ref sugar
     ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -40,7 +39,7 @@ export default function (host: {
         doCodeLens(document) {
             return worker(document.uri, async (vueDocument) => {
 
-                const isEnabled = await host.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
                 if (!isEnabled)
                     return;
@@ -74,7 +73,7 @@ export default function (host: {
                 const [uri] = args as CommandArgs;
 
                 return worker(uri, vueDocument => {
-                    return useRefSugar(host.ts, vueDocument, context, host.findReferences, host.findTypeDefinition, host.scriptTsLs);
+                    return useRefSugar(options.ts, vueDocument, context, options.findReferences, options.findTypeDefinition, options.scriptTsLs);
                 });
             }
 
@@ -83,7 +82,7 @@ export default function (host: {
                 const [uri] = args as CommandArgs;
 
                 return worker(uri, vueDocument => {
-                    return unuseRefSugar(vueDocument, context, host.doCodeActions, host.doCodeActionResolve, host.doRename, host.doValidation);
+                    return unuseRefSugar(vueDocument, context, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
                 });
             }
         },
@@ -91,7 +90,7 @@ export default function (host: {
 
     function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = host.getVueDocument(uri);
+        const vueDocument = options.getVueDocument(uri);
         if (!vueDocument)
             return;
 

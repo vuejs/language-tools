@@ -4,7 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from './html';
 
-export default function (host: {
+export default function (options: {
     configurationHost: {
         getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
         onDidChangeConfiguration: (cb: () => void) => void,
@@ -18,12 +18,12 @@ export default function (host: {
     getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
 } {
 
-    const pugLs = pug.getLanguageService(host.htmlPlugin.htmlLs);
+    const pugLs = pug.getLanguageService(options.htmlPlugin.htmlLs);
     const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
     return {
 
-        ...host.htmlPlugin,
+        ...options.htmlPlugin,
         pugLs,
         getPugDocument,
 
@@ -47,17 +47,17 @@ export default function (host: {
         doComplete(document, position, context) {
             return worker(document, (pugDocument) => {
 
-                if (!host.documentContext)
+                if (!options.documentContext)
                     return;
 
-                return pugLs.doComplete(pugDocument, position, host.documentContext, /** TODO: CompletionConfiguration */);
+                return pugLs.doComplete(pugDocument, position, options.documentContext, /** TODO: CompletionConfiguration */);
             });
         },
 
         doHover(document, position) {
             return worker(document, async (pugDocument) => {
 
-                const hoverSettings = await host.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+                const hoverSettings = await options.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
                 return pugLs.doHover(pugDocument, position, hoverSettings);
             });
@@ -72,10 +72,10 @@ export default function (host: {
         findDocumentLinks(document) {
             return worker(document, (pugDocument) => {
 
-                if (!host.documentContext)
+                if (!options.documentContext)
                     return;
 
-                return pugLs.findDocumentLinks(pugDocument, host.documentContext);
+                return pugLs.findDocumentLinks(pugDocument, options.documentContext);
             });
         },
 

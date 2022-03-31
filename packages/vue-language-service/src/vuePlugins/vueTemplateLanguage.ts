@@ -12,7 +12,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
 import type { LanguageServiceHost } from '../types';
 import { untrack } from '../utils/untrack';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import useHtmlPlugin from '../commonPlugins/html';
 
 export const semanticTokenTypes = [
@@ -56,8 +56,7 @@ interface AutoImportCompletionData {
     importUri: string,
 }
 
-export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
-    configurationHost: ConfigurationHost | undefined,
+export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
     ts: typeof import('typescript/lib/tsserverlibrary'),
     getSemanticTokenLegend(): vscode.SemanticTokensLegend,
     getScanner(document: TextDocument): html.Scanner | undefined,
@@ -79,24 +78,24 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
     const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
     const autoImportPositions = new WeakSet<vscode.Position>();
-    const tokenTypes = new Map(host.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
+    const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
 
     return {
 
-        ...host.templateLanguagePlugin,
+        ...options.templateLanguagePlugin,
 
         triggerCharacters: [
-            ...host.templateLanguagePlugin.triggerCharacters ?? [],
+            ...options.templateLanguagePlugin.triggerCharacters ?? [],
             '@', // vue event shorthand
         ],
 
-        async doValidation(document, options) {
+        async doValidation(document, options_2) {
 
-            if (!host.isSupportedDocument(document))
+            if (!options.isSupportedDocument(document))
                 return;
 
-            const originalResult = await host.templateLanguagePlugin.doValidation?.(document, options);
-            const vueDocument = host.vueDocuments.fromEmbeddedDocument(document);
+            const originalResult = await options.templateLanguagePlugin.doValidation?.(document, options_2);
+            const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
 
             if (vueDocument) {
 
@@ -152,16 +151,16 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
         async findDocumentSemanticTokens(document, range) {
 
-            if (!host.isSupportedDocument(document))
+            if (!options.isSupportedDocument(document))
                 return;
 
-            const result = await host.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range) ?? [];
-            const vueDocument = host.vueDocuments.fromEmbeddedDocument(document);
-            const scanner = host.getScanner(document);
+            const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range) ?? [];
+            const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+            const scanner = options.getScanner(document);
 
             if (vueDocument && scanner) {
 
-                host.updateTemplateScripts();
+                options.updateTemplateScripts();
 
                 const templateScriptData = vueDocument.file.getTemplateScriptData();
                 const components = new Set([
@@ -216,17 +215,17 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
         async doComplete(document, position, context) {
 
-            if (!host.isSupportedDocument(document))
+            if (!options.isSupportedDocument(document))
                 return;
 
-            const vueDocument = host.vueDocuments.fromEmbeddedDocument(document);
+            const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
             let tsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
 
             if (vueDocument) {
                 tsItems = await provideHtmlData(vueDocument);
             }
 
-            const htmlComplete = await host.templateLanguagePlugin.doComplete?.(document, position, context);
+            const htmlComplete = await options.templateLanguagePlugin.doComplete?.(document, position, context);
 
             if (!htmlComplete)
                 return;
@@ -295,13 +294,13 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
     async function resolveAutoImportItem(item: vscode.CompletionItem, data: AutoImportCompletionData) {
 
-        const _vueDocument = host.vueDocuments.get(data.vueDocumentUri);
+        const _vueDocument = options.vueDocuments.get(data.vueDocumentUri);
         if (!_vueDocument)
             return item;
 
         const vueDocument = _vueDocument;
         const importFile = shared.uriToFsPath(data.importUri);
-        const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), importFile);
+        const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), importFile);
         const descriptor = vueDocument.file.getDescriptor();
         const scriptAst = vueDocument.file.getScriptAst();
         const scriptSetupAst = vueDocument.file.getScriptSetupAst();
@@ -355,20 +354,20 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
                     '\n' + insertText,
                 ),
             ];
-            const scriptRanges = parseScriptRanges(host.ts, scriptAst, !!descriptor.scriptSetup, true, true);
+            const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
             const exportDefault = scriptRanges.exportDefault;
             if (exportDefault) {
                 // https://github.com/microsoft/TypeScript/issues/36174
-                const printer = host.ts.createPrinter();
+                const printer = options.ts.createPrinter();
                 if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
                     const newNode: typeof exportDefault.componentsOptionNode = {
                         ...exportDefault.componentsOptionNode,
                         properties: [
                             ...exportDefault.componentsOptionNode.properties,
-                            host.ts.factory.createShorthandPropertyAssignment(componentName),
+                            options.ts.factory.createShorthandPropertyAssignment(componentName),
                         ] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
                     };
-                    const printText = printer.printNode(host.ts.EmitHint.Expression, newNode, scriptAst);
+                    const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
                     const editRange = vscode.Range.create(
                         textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
                         textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.end),
@@ -385,10 +384,10 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
                         ...exportDefault.argsNode,
                         properties: [
                             ...exportDefault.argsNode.properties,
-                            host.ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+                            options.ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
                         ] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
                     };
-                    const printText = printer.printNode(host.ts.EmitHint.Expression, newNode, scriptAst);
+                    const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
                     const editRange = vscode.Range.create(
                         textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),
                         textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.end),
@@ -409,10 +408,10 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
             const embeddedScriptDocument = vueDocument.embeddedDocumentsMap.get(embeddedScriptFile);
             const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
             const [formatOptions, preferences] = await Promise.all([
-                host.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
-                host.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
+                options.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
+                options.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
             ]);
-            const tsDetail = host.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+            const tsDetail = options.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
             if (tsDetail?.codeActions) {
                 for (const action of tsDetail.codeActions) {
                     for (const change of action.changes) {
@@ -442,7 +441,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
     async function provideHtmlData(vueDocument: VueDocument) {
 
-        const nameCases = await host.getNameCases?.(vueDocument.uri) ?? {
+        const nameCases = await options.getNameCases?.(vueDocument.uri) ?? {
             tag: 'both',
             attr: 'kebabCase',
         };
@@ -550,10 +549,10 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
         }
 
         const descriptor = vueDocument.file.getDescriptor();
-        const enabledComponentAutoImport = await host.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
+        const enabledComponentAutoImport = await useConfigurationHost()?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
         if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
-            for (const vueDocument of host.vueDocuments.getAll()) {
+            for (const vueDocument of options.vueDocuments.getAll()) {
                 let baseName = path.basename(vueDocument.uri, '.vue');
                 if (baseName.toLowerCase() === 'index') {
                     baseName = path.basename(path.dirname(vueDocument.uri));
@@ -581,8 +580,8 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
             globalAttributes,
         });
 
-        host.templateLanguagePlugin.htmlLs.setDataProviders(true, [
-            ...host.templateLanguagePlugin.getHtmlDataProviders(),
+        options.templateLanguagePlugin.htmlLs.setDataProviders(true, [
+            ...options.templateLanguagePlugin.getHtmlDataProviders(),
             vueGlobalDirectiveProvider,
             dataProvider,
         ]);
@@ -639,7 +638,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
                 const [fileUri] = itemId.args;
                 const filePath = shared.uriToFsPath(fileUri);
-                const rPath = path.relative(host.vueLsHost.getCurrentDirectory(), filePath);
+                const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), filePath);
                 const data: AutoImportCompletionData = {
                     mode: 'autoImport',
                     vueDocumentUri: vueDocument.uri,
@@ -718,7 +717,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
             completionList.items = [...temp.values()];
         }
 
-        host.templateLanguagePlugin.htmlLs.setDataProviders(true, host.templateLanguagePlugin.getHtmlDataProviders());
+        options.templateLanguagePlugin.htmlLs.setDataProviders(true, options.templateLanguagePlugin.getHtmlDataProviders());
     }
 
     function getComponentCompletionData(sourceFile: VueDocument) {
@@ -733,7 +732,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
     function getLastImportNode(ast: ts.SourceFile) {
         let importNode: ts.ImportDeclaration | undefined;
         ast.forEachChild(node => {
-            if (host.ts.isImportDeclaration(node)) {
+            if (options.ts.isImportDeclaration(node)) {
                 importNode = node;
             }
         });
@@ -757,7 +756,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
 
             const result = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>();
 
-            if (!host.templateTsLs)
+            if (!options.templateTsLs)
                 return result;
 
             { // watching
@@ -792,7 +791,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            bind = host.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            bind = options.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     {
@@ -800,18 +799,18 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(host: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            on = host.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            on = options.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     result.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = host.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
+                const globalBind = options.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
                 result.set('*', { item: undefined, bind: globalBind, on: [] });
             }
             return result;
         });
         return () => {
-            projectVersion.value = host.getScriptContentVersion();
+            projectVersion.value = options.getScriptContentVersion();
             const nowUsedTags = new Set(Object.keys(sfcTemplateScript.templateCodeGens.value?.tagNames ?? {}));
             if (!eqSet(usedTags.value, nowUsedTags)) {
                 usedTags.value = nowUsedTags;

@@ -1,10 +1,9 @@
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 
-export default function (host: {
-    configurationHost?: ConfigurationHost,
+export default function (options: {
     documentContext?: html.DocumentContext,
     fileSystemProvider?: html.FileSystemProvider,
     validLang?: string,
@@ -16,20 +15,10 @@ export default function (host: {
 } {
 
     const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
-    const htmlLs = html.getLanguageService({ fileSystemProvider: host.fileSystemProvider });
+    const htmlLs = html.getLanguageService({ fileSystemProvider: options.fileSystemProvider });
 
     let inited = false;
     let customData: html.IHTMLDataProvider[] = [];
-
-    if (host.disableCustomData) {
-        inited = true;
-    }
-    else {
-        host.configurationHost?.onDidChangeConfiguration(async () => {
-            customData = await getCustomData();
-            htmlLs.setDataProviders(true, customData);
-        });
-    }
 
     return {
 
@@ -42,8 +31,8 @@ export default function (host: {
 
         async doComplete(document, position, context) {
             return worker(document, (htmlDocument) => {
-                if (host.documentContext) {
-                    return htmlLs.doComplete2(document, position, htmlDocument, host.documentContext, /** TODO: CompletionConfiguration */);
+                if (options.documentContext) {
+                    return htmlLs.doComplete2(document, position, htmlDocument, options.documentContext, /** TODO: CompletionConfiguration */);
                 }
                 else {
                     return htmlLs.doComplete(document, position, htmlDocument, /** TODO: CompletionConfiguration */);
@@ -54,7 +43,7 @@ export default function (host: {
         async doHover(document, position) {
             return worker(document, async (htmlDocument) => {
 
-                const hoverSettings = await host.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+                const hoverSettings = await useConfigurationHost()?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
                 return htmlLs.doHover(document, position, htmlDocument, hoverSettings);
             });
@@ -69,10 +58,10 @@ export default function (host: {
         findDocumentLinks(document) {
             return worker(document, (htmlDocument) => {
 
-                if (!host.documentContext)
+                if (!options.documentContext)
                     return;
 
-                return htmlLs.findDocumentLinks(document, host.documentContext);
+                return htmlLs.findDocumentLinks(document, options.documentContext);
             });
         },
 
@@ -103,7 +92,7 @@ export default function (host: {
         async format(document, range, options) {
             return worker(document, async (htmlDocument) => {
 
-                const formatConfiguration = await host.configurationHost?.getConfiguration<html.HTMLFormatConfiguration>('html.format', document.uri);
+                const formatConfiguration = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration>('html.format', document.uri);
 
                 return htmlLs.format(document, range, {
                     ...formatConfiguration,
@@ -131,11 +120,11 @@ export default function (host: {
 
                 if (context.lastChange.rangeLength === 0 && lastCharacter === '=') {
 
-                    const enabled = (await host.configurationHost?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
+                    const enabled = (await useConfigurationHost()?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
 
                     if (enabled) {
 
-                        const text = htmlLs.doQuoteComplete(document, position, htmlDocument, await host.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+                        const text = htmlLs.doQuoteComplete(document, position, htmlDocument, await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
 
                         if (text) {
                             return text;
@@ -145,7 +134,7 @@ export default function (host: {
 
                 if (context.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
 
-                    const enabled = (await host.configurationHost?.getConfiguration<boolean>('html.autoClosingTags')) ?? true;
+                    const enabled = (await useConfigurationHost()?.getConfiguration<boolean>('html.autoClosingTags')) ?? true;
 
                     if (enabled) {
 
@@ -161,20 +150,28 @@ export default function (host: {
     };
 
     async function initCustomData() {
-        if (!inited && host.configurationHost) {
+        if (!inited && !options.disableCustomData) {
+
+            useConfigurationHost()?.onDidChangeConfiguration(async () => {
+                customData = await getCustomData();
+                htmlLs.setDataProviders(true, customData);
+            });
             customData = await getCustomData();
             htmlLs.setDataProviders(true, customData);
+
             inited = true;
         }
     }
 
     async function getCustomData() {
 
-        if (host.configurationHost) {
+        const configHost = useConfigurationHost();
+
+        if (configHost) {
 
             const paths = new Set<string>();
-            const customData: string[] = await host.configurationHost.getConfiguration('html.customData') ?? [];
-            const rootPaths = host.configurationHost.rootUris.map(shared.uriToFsPath);
+            const customData: string[] = await configHost.getConfiguration('html.customData') ?? [];
+            const rootPaths = configHost.rootUris.map(shared.uriToFsPath);
 
             for (const customDataPath of customData) {
                 try {
@@ -216,7 +213,7 @@ export default function (host: {
 
     function getHtmlDocument(document: TextDocument) {
 
-        if (document.languageId !== (host.validLang ?? 'html'))
+        if (document.languageId !== (options.validLang ?? 'html'))
             return;
 
         const cache = htmlDocuments.get(document);

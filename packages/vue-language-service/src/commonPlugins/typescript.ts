@@ -26,13 +26,13 @@ function getBasicTriggerCharacters(tsVersion: string) {
 const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
 
-export default function (host: {
+export default function (options: {
     tsVersion: string,
     getTsLs: () => ts2.LanguageService,
     baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
 }): EmbeddedLanguageServicePlugin {
 
-    const basicTriggerCharacters = getBasicTriggerCharacters(host.tsVersion);
+    const basicTriggerCharacters = getBasicTriggerCharacters(options.tsVersion);
 
     return {
 
@@ -42,9 +42,9 @@ export default function (host: {
             ...directiveCommentTriggerCharacters,
         ],
 
-        doValidation(document, options) {
+        doValidation(document, options_2) {
             if (isTsDocument(document)) {
-                return host.getTsLs().doValidation(document.uri, options);
+                return options.getTsLs().doValidation(document.uri, options_2);
             }
         },
 
@@ -58,12 +58,12 @@ export default function (host: {
 
                 if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
 
-                    const options: ts.GetCompletionsAtPositionOptions = {
-                        ...host.baseCompletionOptions,
+                    const completeOptions: ts.GetCompletionsAtPositionOptions = {
+                        ...options.baseCompletionOptions,
                         triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
                         triggerKind: context?.triggerKind,
                     };
-                    const basicResult = await host.getTsLs().doComplete(document.uri, position, options);
+                    const basicResult = await options.getTsLs().doComplete(document.uri, position, completeOptions);
 
                     if (basicResult) {
                         result = basicResult;
@@ -71,7 +71,7 @@ export default function (host: {
                 }
                 if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && jsDocTriggerCharacters.includes(context.triggerCharacter))) {
 
-                    const jsdocResult = await host.getTsLs().doJsDocComplete(document.uri, position);
+                    const jsdocResult = await options.getTsLs().doJsDocComplete(document.uri, position);
 
                     if (jsdocResult) {
                         result.items.push(jsdocResult);
@@ -79,7 +79,7 @@ export default function (host: {
                 }
                 if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && directiveCommentTriggerCharacters.includes(context.triggerCharacter))) {
 
-                    const directiveCommentResult = await host.getTsLs().doDirectiveCommentComplete(document.uri, position);
+                    const directiveCommentResult = await options.getTsLs().doDirectiveCommentComplete(document.uri, position);
 
                     if (directiveCommentResult) {
                         result.items = result.items.concat(directiveCommentResult);
@@ -91,108 +91,108 @@ export default function (host: {
         },
 
         doCompleteResolve(item) {
-            return host.getTsLs().doCompletionResolve(item);
+            return options.getTsLs().doCompletionResolve(item);
         },
 
         doHover(document, position) {
             if (isTsDocument(document)) {
-                return host.getTsLs().doHover(document.uri, position);
+                return options.getTsLs().doHover(document.uri, position);
             }
         },
 
         findDefinition(document, position) {
             if (isTsDocument(document)) {
-                return host.getTsLs().findDefinition(document.uri, position);
+                return options.getTsLs().findDefinition(document.uri, position);
             }
         },
 
         findTypeDefinition(document, position) {
             if (isTsDocument(document)) {
-                return host.getTsLs().findTypeDefinition(document.uri, position);
+                return options.getTsLs().findTypeDefinition(document.uri, position);
             }
         },
 
         findImplementations(document, position) {
             if (isTsDocument(document)) {
-                return host.getTsLs().findImplementations(document.uri, position);
+                return options.getTsLs().findImplementations(document.uri, position);
             }
         },
 
         findReferences(document, position) {
             if (isTsDocument(document) || isJsonDocument(document)) {
-                return host.getTsLs().findReferences(document.uri, position);
+                return options.getTsLs().findReferences(document.uri, position);
             }
         },
 
         findDocumentHighlights(document, position) {
             if (isTsDocument(document)) {
-                return host.getTsLs().findDocumentHighlights(document.uri, position);
+                return options.getTsLs().findDocumentHighlights(document.uri, position);
             }
         },
 
         findDocumentSymbols(document) {
             if (isTsDocument(document)) {
-                return host.getTsLs().findDocumentSymbols(document.uri);
+                return options.getTsLs().findDocumentSymbols(document.uri);
             }
         },
 
         findDocumentSemanticTokens(document, range, cancleToken) {
             if (isTsDocument(document)) {
-                return host.getTsLs().getDocumentSemanticTokens(document.uri, range, cancleToken);
+                return options.getTsLs().getDocumentSemanticTokens(document.uri, range, cancleToken);
             }
         },
 
         findWorkspaceSymbols(query) {
-            return host.getTsLs().findWorkspaceSymbols(query);
+            return options.getTsLs().findWorkspaceSymbols(query);
         },
 
         doCodeActions(document, range, context) {
             if (isTsDocument(document)) {
-                return host.getTsLs().getCodeActions(document.uri, range, context);
+                return options.getTsLs().getCodeActions(document.uri, range, context);
             }
         },
 
         doCodeActionResolve(codeAction) {
-            return host.getTsLs().doCodeActionResolve(codeAction);
+            return options.getTsLs().doCodeActionResolve(codeAction);
         },
 
         doRenamePrepare(document, position) {
             if (isTsDocument(document)) {
-                return host.getTsLs().prepareRename(document.uri, position);
+                return options.getTsLs().prepareRename(document.uri, position);
             }
         },
 
         doRename(document, position, newName) {
             if (isTsDocument(document) || isJsonDocument(document)) {
-                return host.getTsLs().doRename(document.uri, position, newName);
+                return options.getTsLs().doRename(document.uri, position, newName);
             }
         },
 
         doFileRename(oldUri, newUri) {
-            return host.getTsLs().getEditsForFileRename(oldUri, newUri);
+            return options.getTsLs().getEditsForFileRename(oldUri, newUri);
         },
 
         getFoldingRanges(document) {
             if (isTsDocument(document)) {
-                return host.getTsLs().getFoldingRanges(document.uri);
+                return options.getTsLs().getFoldingRanges(document.uri);
             }
         },
 
         getSelectionRanges(document, positions) {
             if (isTsDocument(document)) {
-                return host.getTsLs().getSelectionRanges(document.uri, positions);
+                return options.getTsLs().getSelectionRanges(document.uri, positions);
             }
         },
 
         getSignatureHelp(document, position, context) {
             if (isTsDocument(document)) {
-                return host.getTsLs().getSignatureHelp(document.uri, position, context);
+                return options.getTsLs().getSignatureHelp(document.uri, position, context);
             }
         },
 
-        format(document, range, options) {
+        format(document, range, options_2) {
             if (isTsDocument(document)) {
-                return host.getTsLs().doFormatting(document.uri, options, range);
+                return options.getTsLs().doFormatting(document.uri, options_2, range);
             }
         },
 
@@ -200,16 +200,16 @@ export default function (host: {
 
             doPrepare(document, position) {
                 if (isTsDocument(document)) {
-                    return host.getTsLs().callHierarchy.doPrepare(document.uri, position);
+                    return options.getTsLs().callHierarchy.doPrepare(document.uri, position);
                 }
             },
 
             getIncomingCalls(item) {
-                return host.getTsLs().callHierarchy.getIncomingCalls(item);
+                return options.getTsLs().callHierarchy.getIncomingCalls(item);
             },
 
             getOutgoingCalls(item) {
-                return host.getTsLs().callHierarchy.getOutgoingCalls(item);
+                return options.getTsLs().callHierarchy.getOutgoingCalls(item);
             },
         },
     };

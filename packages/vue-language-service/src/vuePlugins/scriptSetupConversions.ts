@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
 import type { TextRange } from '@volar/vue-code-gen/out/types';
 import * as vscode from 'vscode-languageserver-protocol';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, ExecuteCommandContext } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
 import { VueDocument } from '../vueDocuments';
 
 enum Commands {
@@ -17,8 +17,7 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (host: {
-    configurationHost: ConfigurationHost | undefined,
+export default function (options: {
     ts: typeof import('typescript/lib/tsserverlibrary'),
     getVueDocument(uri: string): VueDocument | undefined,
     doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
@@ -30,7 +29,7 @@ export default function (host: {
         doCodeLens(document) {
             return worker(document.uri, async (vueDocument) => {
 
-                const isEnabled = await host.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
                 if (!isEnabled)
                     return;
@@ -75,7 +74,7 @@ export default function (host: {
                 const [uri] = args as CommandArgs;
 
                 return worker(uri, vueDocument => {
-                    return useSetupSugar(host.ts, vueDocument, context, host.doCodeActions, host.doCodeActionResolve);
+                    return useSetupSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve);
                 });
             }
 
@@ -84,7 +83,7 @@ export default function (host: {
                 const [uri] = args as CommandArgs;
 
                 return worker(uri, vueDocument => {
-                    return unuseSetupSugar(host.ts, vueDocument, context, host.doCodeActions, host.doCodeActionResolve);
+                    return unuseSetupSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve);
                 });
             }
         },
@@ -92,7 +91,7 @@ export default function (host: {
 
     function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = host.getVueDocument(uri);
+        const vueDocument = options.getVueDocument(uri);
         if (!vueDocument)
             return;
 

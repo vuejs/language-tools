@@ -10,7 +10,7 @@ export type ConvertTagNameCasingCommandArgs = [
     'kebab' | 'pascal'
 ];
 
-export default function (host: {
+export default function (options: {
     getVueDocument(uri: string): VueDocument | undefined,
     findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
@@ -48,7 +48,7 @@ export default function (host: {
                             context.workDoneProgress.report(i++ / Object.keys(resolvedTags).length * 100, tagName);
 
                             const offset = template.startTagEnd + resolvedTag.offsets[0];
-                            const refs = await host.findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
+                            const refs = await options.findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
 
                             for (const vueLoc of refs) {
                                 if (
@@ -81,7 +81,7 @@ export default function (host: {
 
     function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = host.getVueDocument(uri);
+        const vueDocument = options.getVueDocument(uri);
         if (!vueDocument)
             return;
 

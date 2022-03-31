@@ -1,4 +1,4 @@
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
@@ -11,8 +11,7 @@ const wordPatterns: { [lang: string]: RegExp } = {
     postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
 
-export default function (host: {
-    configurationHost: ConfigurationHost | undefined,
+export default function (options: {
     documentContext?: css.DocumentContext,
     fileSystemProvider?: css.FileSystemProvider,
 }): EmbeddedLanguageServicePlugin & {
@@ -20,9 +19,9 @@ export default function (host: {
     getCssLs?(lang: string): css.LanguageService | undefined
 } {
 
-    const cssLs = css.getCSSLanguageService({ fileSystemProvider: host.fileSystemProvider });
-    const scssLs = css.getSCSSLanguageService({ fileSystemProvider: host.fileSystemProvider });
-    const lessLs = css.getLESSLanguageService({ fileSystemProvider: host.fileSystemProvider });
+    const cssLs = css.getCSSLanguageService({ fileSystemProvider: options.fileSystemProvider });
+    const scssLs = css.getSCSSLanguageService({ fileSystemProvider: options.fileSystemProvider });
+    const lessLs = css.getLESSLanguageService({ fileSystemProvider: options.fileSystemProvider });
     const postcssLs: css.LanguageService = {
         ...scssLs,
         doValidation: (document, stylesheet, documentSettings) => {
@@ -37,13 +36,6 @@ export default function (host: {
 
     let inited = false;
 
-    host.configurationHost?.onDidChangeConfiguration(async () => {
-        const customData = await getCustomData();
-        cssLs.setDataProviders(true, customData);
-        scssLs.setDataProviders(true, customData);
-        lessLs.setDataProviders(true, customData);
-    });
-
     return {
 
         getStylesheet,
@@ -55,7 +47,7 @@ export default function (host: {
         async doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                const settings = await host.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+                const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 
                 return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
             });
@@ -64,14 +56,14 @@ export default function (host: {
         async doComplete(document, position, context) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                if (!host.documentContext)
+                if (!options.documentContext)
                     return;
 
                 const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
                 const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
                 const wordRange = vscode.Range.create(wordStart ?? position, position);
-                const settings = await host.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
-                const cssResult = await cssLs.doComplete2(document, position, stylesheet, host.documentContext, settings?.completion);
+                const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+                const cssResult = await cssLs.doComplete2(document, position, stylesheet, options.documentContext, settings?.completion);
 
                 if (cssResult) {
                     for (const item of cssResult.items) {
@@ -92,7 +84,7 @@ export default function (host: {
         async doHover(document, position) {
             return worker(document, async (stylesheet, cssLs) => {
 
-                const settings = await host.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+                const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 
                 return cssLs.doHover(document, position, stylesheet, settings?.hover);
             });
@@ -124,10 +116,10 @@ export default function (host: {
         findDocumentLinks(document) {
             return worker(document, (stylesheet, cssLs) => {
 
-                if (!host.documentContext)
+                if (!options.documentContext)
                     return;
 
-                return cssLs.findDocumentLinks(document, stylesheet, host.documentContext);
+                return cssLs.findDocumentLinks(document, stylesheet, options.documentContext);
             });
         },
 
@@ -186,6 +178,14 @@ export default function (host: {
 
     async function initCustomData() {
         if (!inited) {
+
+            useConfigurationHost()?.onDidChangeConfiguration(async () => {
+                const customData = await getCustomData();
+                cssLs.setDataProviders(true, customData);
+                scssLs.setDataProviders(true, customData);
+                lessLs.setDataProviders(true, customData);
+            });
+
             const customData = await getCustomData();
             cssLs.setDataProviders(true, customData);
             scssLs.setDataProviders(true, customData);
@@ -196,11 +196,13 @@ export default function (host: {
 
     async function getCustomData() {
 
-        if (host.configurationHost) {
+        const configHost = useConfigurationHost();
+
+        if (configHost) {
 
             const paths = new Set<string>();
-            const customData: string[] = await host.configurationHost.getConfiguration('css.customData') ?? [];
-            const rootPaths = host.configurationHost.rootUris.map(shared.uriToFsPath);
+            const customData: string[] = await configHost.getConfiguration('css.customData') ?? [];
+            const rootPaths = configHost.rootUris.map(shared.uriToFsPath);
 
             for (const customDataPath of customData) {
                 try {

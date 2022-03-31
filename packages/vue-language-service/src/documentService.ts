@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
 import * as vueTs from '@volar/vue-typescript';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -40,6 +40,8 @@ export function getDocumentService(
 	customPlugins: EmbeddedLanguageServicePlugin[],
 ) {
 
+	setCurrentConfigurationHost(configurationHost); // TODO
+
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
 	const tsSettings = getTsSettings(configurationHost);
 
@@ -47,12 +49,10 @@ export function getDocumentService(
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
-		configurationHost,
 		getVueDocument,
 		scriptTsLs: undefined,
 	});
 	const htmlPlugin = useHtmlPlugin({
-		configurationHost,
 		fileSystemProvider,
 	});
 	const pugPlugin = usePugPlugin({
@@ -60,7 +60,6 @@ export function getDocumentService(
 		htmlPlugin,
 	});
 	const cssPlugin = useCssPlugin({
-		configurationHost,
 		fileSystemProvider,
 	});
 	const jsonPlugin = useJsonPlugin({});
@@ -69,13 +68,12 @@ export function getDocumentService(
 		getTsLs: () => tsLs,
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		configurationHost,
 		ts,
 		getVueDocument,
 	});
 
 	// formatter plugins
-	const cssFormatPlugin = usePrettierPlugin(['css', 'less', 'scss', 'postcss']);
+	const cssFormatPlugin = usePrettierPlugin({ allowLanguageIds: ['css', 'less', 'scss', 'postcss'] });
 	const prettyhtmlPlugin = usePrettyhtmlPlugin({ getPrintWidth });
 	const pugFormatPlugin = usePugFormatPlugin();
 	const sassFormatPlugin = useSassFormatPlugin();

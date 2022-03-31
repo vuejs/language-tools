@@ -3,13 +3,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
-export default function (host: {
+export default function (options: {
     schema?: json.JSONSchema,
     schemaRequestService?: json.SchemaRequestService,
 }): EmbeddedLanguageServicePlugin {
 
     const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
-    const jsonLs = json.getLanguageService({ schemaRequestService: host.schemaRequestService });
+    const jsonLs = json.getLanguageService({ schemaRequestService: options.schemaRequestService });
 
     return {
 
@@ -21,7 +21,7 @@ export default function (host: {
 
                 const documentLanguageSettings = undefined; // await getSettings(); // TODO
 
-                return jsonLs.doValidation(document, jsonDocument, documentLanguageSettings, host.schema) as Promise<vscode.Diagnostic[]>;
+                return jsonLs.doValidation(document, jsonDocument, documentLanguageSettings, options.schema) as Promise<vscode.Diagnostic[]>;
             });
         },
 
