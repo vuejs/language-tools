@@ -21,7 +21,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       # install pnpm
-      - run: npm i -g pnpm
-      - run: pnpm i
-      - run: npm run build
-      - run: npm run test
+      - run: npm i -g pnpm@6.32.4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm run test
