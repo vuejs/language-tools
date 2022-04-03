@@ -16,9 +16,6 @@
 			"path": "../shared/tsconfig.build.json"
 		},
 		{
-			"path": "../html2pug/tsconfig.build.json"
-		},
-		{
 			"path": "../source-map/tsconfig.build.json"
 		},
 		{

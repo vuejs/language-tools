@@ -17,8 +17,8 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
+		"@johnsoncodehk/html2pug": "^1.0.0",
 		"@johnsoncodehk/pug-beautify": "^0.2.2",
-		"@volar/html2pug": "0.33.9",
 		"@volar/pug-language-service": "0.33.9",
 		"@volar/shared": "0.33.9",
 		"@volar/source-map": "0.33.9",

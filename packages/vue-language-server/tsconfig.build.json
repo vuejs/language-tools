@@ -13,9 +13,6 @@
 	],
 	"references": [
 		{
-			"path": "../html2pug/tsconfig.build.json"
-		},
-		{
 			"path": "../shared/tsconfig.build.json"
 		},
 		{

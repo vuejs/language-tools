@@ -63,21 +63,6 @@ importers:
     dependencies:
       '@volar/source-map': link:../source-map
 
-  packages/html2pug:
-    specifiers:
-      '@types/pug': latest
-      domelementtype: ^2.2.0
-      domhandler: ^4.3.1
-      htmlparser2: ^7.2.0
-      pug: ^3.0.2
-    dependencies:
-      domelementtype: 2.2.0
-      domhandler: 4.3.1
-      htmlparser2: 7.2.0
-      pug: 3.0.2
-    devDependencies:
-      '@types/pug': 2.0.6
-
   packages/pug-language-service:
     specifiers:
       '@volar/code-gen': 0.33.9
@@ -202,9 +187,9 @@ importers:
 
   packages/vue-language-service:
     specifiers:
+      '@johnsoncodehk/html2pug': ^1.0.0
       '@johnsoncodehk/pug-beautify': ^0.2.2
       '@types/semver': ^7.3.9
-      '@volar/html2pug': 0.33.9
       '@volar/pug-language-service': 0.33.9
       '@volar/shared': 0.33.9
       '@volar/source-map': 0.33.9
@@ -226,8 +211,8 @@ importers:
       vscode-languageserver-protocol: ^3.17.0-next.16
       vscode-languageserver-textdocument: ^1.0.4
     dependencies:
+      '@johnsoncodehk/html2pug': 1.0.0
       '@johnsoncodehk/pug-beautify': 0.2.2
-      '@volar/html2pug': link:../html2pug
       '@volar/pug-language-service': link:../pug-language-service
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
@@ -347,6 +332,15 @@ packages:
     resolution: {integrity: sha512-H9XAx3hc0BQHY6l+IFSWHDySypcXsvsuLhgYLUGywmJ5pswRVQJUHpOsobnLYp2ZUaUlKiKDrgWWhosOwAEM8Q==}
     engines: {node: '>=6.9.0'}
     dev: true
+
+  /@johnsoncodehk/html2pug/1.0.0:
+    resolution: {integrity: sha512-TAs9NvSxC2ceT11h9Hck/p4No3lyaAtYUfV0ttPgImLxfbrAtvID5pdQVC5j1hYa/0oMg+Q4Xq91yihSgeAmgQ==}
+    dependencies:
+      domelementtype: 2.2.0
+      domhandler: 4.3.1
+      htmlparser2: 7.2.0
+      pug: 3.0.2
+    dev: false
 
   /@johnsoncodehk/pug-beautify/0.2.2:
     resolution: {integrity: sha512-qqNS/YD0Nck5wtQLCPHAfGVgWbbGafxSPjNh0ekYPFSNNqnDH2kamnduzYly8IiADmeVx/MfAE1njMEjVeHTMA==}
@@ -1290,10 +1284,6 @@ packages:
 
   /@types/parse-json/4.0.0:
     resolution: {integrity: sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==}
-    dev: true
-
-  /@types/pug/2.0.6:
-    resolution: {integrity: sha512-SnHmG9wN1UVmagJOnyo/qkk0Z7gejYxOYYmaAwr5u2yFYfsupN3sg10kyzN8Hep/2zbHxCnsumxOoRIRMBwKCg==}
     dev: true
 
   /@types/semver/7.3.9:
