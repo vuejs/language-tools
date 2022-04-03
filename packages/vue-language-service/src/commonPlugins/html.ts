@@ -30,12 +30,15 @@ export default function (options: {
         triggerCharacters: ['.', ':', '<', '"', '=', '/'],
 
         async doComplete(document, position, context) {
-            return worker(document, (htmlDocument) => {
+            return worker(document, async (htmlDocument) => {
+
+                const configs = await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
+
                 if (options.documentContext) {
-                    return htmlLs.doComplete2(document, position, htmlDocument, options.documentContext, /** TODO: CompletionConfiguration */);
+                    return htmlLs.doComplete2(document, position, htmlDocument, options.documentContext, configs);
                 }
                 else {
-                    return htmlLs.doComplete(document, position, htmlDocument, /** TODO: CompletionConfiguration */);
+                    return htmlLs.doComplete(document, position, htmlDocument, configs);
                 }
             });
         },
