@@ -1,4 +1,5 @@
 import type * as vscode from 'vscode-languageserver-protocol';
+import { describe, expect, it } from 'vitest';
 import * as path from 'upath';
 import { tester } from './createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
