@@ -175,9 +175,15 @@ export default function (options: {
             });
         },
 
-        format(document, range, options) {
-            return worker(document, (stylesheet, cssLs) => {
-                return cssLs.format(document, range, options);
+        async format(document, range, options) {
+            return worker(document, async (stylesheet, cssLs) => {
+
+                const options_2 = await useConfigurationHost()?.getConfiguration<css.CSSFormatConfiguration>('css.format', document.uri);
+
+                return cssLs.format(document, range, {
+                    ...options_2,
+                    ...options,
+                });
             });
         },
     };
