@@ -174,6 +174,12 @@ export default function (options: {
                 return cssLs.getSelectionRanges(document, positions, stylesheet);
             });
         },
+
+        format(document, range, options) {
+            return worker(document, (stylesheet, cssLs) => {
+                return cssLs.format(document, range, options);
+            });
+        },
     };
 
     async function initCustomData() {

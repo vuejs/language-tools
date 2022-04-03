@@ -8,7 +8,6 @@ import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
-import usePrettierPlugin from './commonPlugins/prettier';
 import usePugPlugin from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
 import useSassFormatPlugin from './commonPlugins/sassFormatter';
@@ -71,12 +70,11 @@ export function getDocumentService(
 	});
 
 	// formatter plugins
-	const cssFormatPlugin = usePrettierPlugin({ allowLanguageIds: ['css', 'less', 'scss', 'postcss'] });
 	const pugFormatPlugin = usePugFormatPlugin();
 	const sassFormatPlugin = useSassFormatPlugin();
 	const formatPlugns = [
 		...customPlugins,
-		cssFormatPlugin,
+		cssPlugin,
 		htmlPlugin,
 		pugFormatPlugin,
 		sassFormatPlugin,
@@ -173,13 +171,22 @@ function patchHtmlFormat<T extends EmbeddedLanguageServicePlugin>(htmlPlugin: T)
 				const suffixes = '</template>';
 
 				const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
-				const result = await originalFormat?.(patchDocument, range, options);
+				const result = await originalFormat?.(patchDocument, {
+					start: patchDocument.positionAt(0),
+					end: patchDocument.positionAt(document.getText().length),
+				}, options);
 
 				if (result) {
 					for (const edit of result) {
-						if (document.offsetAt(edit.range.start) === 0 && document.offsetAt(edit.range.end) === document.getText().length) {
-							edit.newText = edit.newText.trim();
-							edit.newText = edit.newText.substring(prefixes.length, edit.newText.length - suffixes.length);
+						if (patchDocument.offsetAt(edit.range.start) === 0) {
+							edit.newText = edit.newText.trimStart();
+							edit.newText = edit.newText.substring(prefixes.length);
+							edit.range.start = document.positionAt(0);
+						}
+						if (patchDocument.offsetAt(edit.range.end) === patchDocument.getText().length) {
+							edit.newText = edit.newText.trimEnd();
+							edit.newText = edit.newText.substring(0, edit.newText.length - suffixes.length);
+							edit.range.end = document.positionAt(document.getText().length);
 						}
 					}
 				}

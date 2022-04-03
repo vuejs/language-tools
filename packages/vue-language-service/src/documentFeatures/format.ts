@@ -129,6 +129,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 		async function tryFormat(document: TextDocument) {
 
 			const plugins = context.getFormatPlugins();
+			const range: vscode.Range = {
+				start: document.positionAt(0),
+				end: document.positionAt(document.getText().length),
+			};
 
 			context.updateTsLs(document);
 
@@ -140,7 +144,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				let edits: vscode.TextEdit[] | null | undefined;
 
 				try {
-					edits = await plugin.format(document, undefined, options);
+					edits = await plugin.format(document, range, options);
 				}
 				catch (err) {
 					console.error(err);

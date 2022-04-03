@@ -70,7 +70,7 @@ export type EmbeddedLanguageServicePlugin = {
     getFoldingRanges?(document: TextDocument): NullableResult<vscode.FoldingRange[]>;
     getSelectionRanges?(document: TextDocument, positions: vscode.Position[]): NullableResult<vscode.SelectionRange[]>;
     getSignatureHelp?(document: TextDocument, position: vscode.Position, context?: vscode.SignatureHelpContext): NullableResult<vscode.SignatureHelp>;
-    format?(document: TextDocument, range: vscode.Range | undefined, options: vscode.FormattingOptions): NullableResult<vscode.TextEdit[]>;
+    format?(document: TextDocument, range: vscode.Range, options: vscode.FormattingOptions): NullableResult<vscode.TextEdit[]>;
 
     callHierarchy?: {
         doPrepare(document: TextDocument, position: vscode.Position): NullableResult<vscode.CallHierarchyItem[]>;

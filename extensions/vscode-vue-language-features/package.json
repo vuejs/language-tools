@@ -649,13 +649,13 @@
 		"@types/ws": "^8.5.3",
 		"@volar/shared": "0.33.9",
 		"@volar/vue-language-server": "0.33.9",
-		"@vue/compiler-dom": "^3.2.27",
-		"@vue/compiler-sfc": "^3.2.27",
-		"@vue/reactivity": "^3.2.27",
+		"@vue/compiler-dom": "^3.2.31",
+		"@vue/compiler-sfc": "^3.2.31",
+		"@vue/reactivity": "^3.2.31",
 		"esbuild": "latest",
 		"path-browserify": "^1.0.1",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.0.0-next.8",
+		"vscode-languageclient": "^8.0.0-next.14",
 		"vscode-nls": "5.0.0",
 		"ws": "^8.5.0"
 	}

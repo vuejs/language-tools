@@ -85,14 +85,6 @@ export default function (options: {
 
         format(document, range, options) {
             return worker(document, (jsonDocument) => {
-
-                if (!range) {
-                    range = vscode.Range.create(
-                        vscode.Position.create(0, 0),
-                        document.positionAt(document.getText().length),
-                    );
-                }
-
                 return jsonLs.format(document, range, options);
             });
         },
