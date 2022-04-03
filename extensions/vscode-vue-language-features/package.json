@@ -327,7 +327,7 @@
 				},
 				"volar.autoCompleteRefs": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
 				},
 				"volar.takeOverMode.enabled": {
