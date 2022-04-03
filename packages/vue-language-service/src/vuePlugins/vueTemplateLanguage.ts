@@ -648,7 +648,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                 item.filterText = item.label + ' ' + rPath;
                 item.detail = rPath;
                 item.kind = vscode.CompletionItemKind.File;
-                item.sortText = '\u0003' + item.sortText;
+                item.sortText = '\u0003' + (item.sortText ?? item.label);
                 item.data = data as any;
             }
             else if (itemIdKey && itemId) {
@@ -660,7 +660,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                     const [componentName] = itemId.args;
 
                     if (componentName !== '*') {
-                        item.sortText = '\u0000' + item.sortText;
+                        item.sortText = '\u0000' + (item.sortText ?? item.label);
                     }
 
                     if (tsItem) {
@@ -679,14 +679,14 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                     || item.label === 'v-for'
                 ) {
                     item.kind = vscode.CompletionItemKind.Method;
-                    item.sortText = '\u0003' + item.sortText;
+                    item.sortText = '\u0003' + (item.sortText ?? item.label);
                 }
                 else if (item.label.startsWith('v-')) {
                     item.kind = vscode.CompletionItemKind.Function;
-                    item.sortText = '\u0002' + item.sortText;
+                    item.sortText = '\u0002' + (item.sortText ?? item.label);
                 }
                 else {
-                    item.sortText = '\u0001' + item.sortText;
+                    item.sortText = '\u0001' + (item.sortText ?? item.label);
                 }
 
                 const data: HtmlCompletionData = {
