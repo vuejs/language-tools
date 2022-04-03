@@ -64,15 +64,6 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 			const ts = runtimeEnv.loadTypescript(options);
 			const documentService = vue.getDocumentService(
 				{ typescript: ts },
-				async (uri) => {
-					if (options.documentFeatures?.documentFormatting?.getDocumentPrintWidthRequest) {
-						const response = await connection.sendRequest(shared.GetDocumentPrintWidthRequest.type, { uri });
-						if (response !== undefined) {
-							return response;
-						}
-					}
-					return options.documentFeatures?.documentFormatting?.defaultPrintWidth ?? 100;
-				},
 				configHost,
 				runtimeEnv.fileSystemProvide,
 				loadCustomPlugins(folders[0]),

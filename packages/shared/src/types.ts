@@ -79,13 +79,7 @@ export interface ServerInitializationOptions {
 		linkedEditingRange?: boolean
 		documentSymbol?: boolean
 		documentColor?: boolean
-		documentFormatting?: {
-			defaultPrintWidth: number,
-			/**
-			 * {@link __requests.GetDocumentPrintWidthRequest}
-			 * */
-			getDocumentPrintWidthRequest?: boolean,
-		},
+		documentFormatting?: boolean,
 	}
 	initializationMessage?: string
 }

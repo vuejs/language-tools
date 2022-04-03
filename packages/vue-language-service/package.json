@@ -19,7 +19,6 @@
 	},
 	"dependencies": {
 		"@johnsoncodehk/pug-beautify": "^0.2.2",
-		"@starptech/prettyhtml": "^0.10.0",
 		"@volar/html2pug": "0.33.9",
 		"@volar/pug-language-service": "0.33.9",
 		"@volar/shared": "0.33.9",
@@ -44,7 +43,6 @@
 	},
 	"browser": {
 		"./out/commonPlugins/prettier.js": "./out/commonPlugins/empty.js",
-		"./out/commonPlugins/prettyhtml.js": "./out/commonPlugins/empty.js",
 		"./out/commonPlugins/emmet.js": "./out/commonPlugins/empty.js",
 		"./out/commonPlugins/pug.js": "./out/commonPlugins/empty.js",
 		"./out/vuePlugins/htmlPugConversions.js": "./out/commonPlugins/empty.js"

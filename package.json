@@ -18,8 +18,5 @@
 		"lerna": "latest",
 		"typescript": "latest",
 		"vitest": "^0.8.4"
-	},
-	"resolutions": {
-		"to-vfile": "7.1.0"
 	}
 }

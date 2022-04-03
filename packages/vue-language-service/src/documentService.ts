@@ -9,7 +9,6 @@ import useCssPlugin from './commonPlugins/css';
 import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
 import usePrettierPlugin from './commonPlugins/prettier';
-import usePrettyhtmlPlugin from './commonPlugins/prettyhtml';
 import usePugPlugin from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
 import useSassFormatPlugin from './commonPlugins/sassFormatter';
@@ -34,7 +33,6 @@ export interface DocumentService extends ReturnType<typeof getDocumentService> {
 
 export function getDocumentService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
-	getPrintWidth: (uri: string) => Promise<number>,
 	configurationHost: ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
@@ -74,13 +72,11 @@ export function getDocumentService(
 
 	// formatter plugins
 	const cssFormatPlugin = usePrettierPlugin({ allowLanguageIds: ['css', 'less', 'scss', 'postcss'] });
-	const prettyhtmlPlugin = usePrettyhtmlPlugin({ getPrintWidth });
 	const pugFormatPlugin = usePugFormatPlugin();
 	const sassFormatPlugin = useSassFormatPlugin();
 	const formatPlugns = [
 		...customPlugins,
 		cssFormatPlugin,
-		prettyhtmlPlugin, // ignore in browser
 		htmlPlugin,
 		pugFormatPlugin,
 		sassFormatPlugin,

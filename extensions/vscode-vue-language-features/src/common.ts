@@ -7,7 +7,6 @@ import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
-import * as documentPrintWidth from './features/documentPrintWidth';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
@@ -170,7 +169,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			showReferences.activate(context, client);
 			documentVersion.activate(context, client);
 			documentContent.activate(context, client);
-			documentPrintWidth.activate(context, client);
 			activeSelection.activate(context, client);
 		}
 
@@ -250,10 +248,7 @@ function getInitializationOptions(
 			linkedEditingRange: true,
 			documentSymbol: true,
 			documentColor: true,
-			documentFormatting: {
-				defaultPrintWidth: 100,
-				getDocumentPrintWidthRequest: true,
-			},
+			documentFormatting: true,
 		} : undefined,
 		initializationMessage: initMessage,
 	};
