@@ -1,5 +1,8 @@
 require('esbuild').build({
-    entryPoints: {
+    entryPoints: process.argv.includes('--empty') ? {
+        client: './scripts/empty.js',
+        server: './scripts/empty.js',
+    } : {
         client: './out/nodeClientMain.js',
         server: './node_modules/@volar/vue-language-server/out/node.js',
     },

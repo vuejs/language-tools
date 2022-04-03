@@ -13,7 +13,7 @@
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"engines": {
-		"vscode": "^1.61.0"
+		"vscode": "^1.63.0"
 	},
 	"keywords": [
 		"volar",
@@ -635,17 +635,21 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run build",
 		"prebuild": "cd ../.. && npm run build",
 		"build": "npm run build:node && npm run build:browser",
 		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
 		"build:node": "node scripts/build-node",
 		"build:browser": "node scripts/build-browser",
-		"pack": "vsce package",
-		"release": "vsce publish"
+		"prepack:node": "npm run prebuild && npm run build:node -- --minify && npm run build:browser -- --empty",
+		"prepack:browser": "npm run prebuild && npm run build:browser -- --minify && npm run build:node -- --empty",
+		"pack:node": "npm run prepack:node && vsce package",
+		"pack:browser": "npm run prepack:browser && vsce package",
+		"release:node": "npm run prepack:node && vsce publish --target win32-x64 win32-ia32 win32-arm64 linux-x64 linux-arm64 linux-armhf darwin-x64 darwin-arm64 alpine-x64 alpine-arm64",
+		"release:browser": "npm run prepack:browser && vsce publish --target web",
+		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/vscode": "1.61.0",
+		"@types/vscode": "1.63.0",
 		"@types/ws": "^8.5.3",
 		"@volar/shared": "0.33.9",
 		"@volar/vue-language-server": "0.33.9",

@@ -1,5 +1,7 @@
 require('esbuild').build({
-    entryPoints: {
+    entryPoints: process.argv.includes('--empty') ? {
+        client: './scripts/empty.js',
+    } : {
         client: './out/browserClientMain.js',
     },
     bundle: true,
@@ -34,7 +36,9 @@ require('esbuild').build({
 }).catch(() => process.exit(1))
 
 require('esbuild').build({
-    entryPoints: {
+    entryPoints: process.argv.includes('--empty') ? {
+        server: './scripts/empty.js',
+    } : {
         server: './node_modules/@volar/vue-language-server/out/browser.js',
     },
     bundle: true,
