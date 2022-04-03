@@ -61,17 +61,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	const lowPowerMode = lowPowerModeEnabled();
-	if (lowPowerMode) {
-		vscode.window
-			.showInformationMessage('Low Power Mode Enabled.', 'Disable')
-			.then(option => {
-				if (option !== undefined) {
-					vscode.commands.executeCommand('workbench.action.openSettings', 'volar.lowPowerMode');
-				}
-			});
-	}
-
 	const takeOverMode = takeOverModeEnabled();
 	if (takeOverMode) {
 		vscode.window
@@ -104,32 +93,33 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		] : [
 			{ language: 'vue' },
 		];
+	const _useSecondServer = useSecondServer();
 
 	apiClient = createLc(
-		'volar-api',
-		'Volar - API',
+		'volar-language-features',
+		'Volar - Language Features Server',
 		languageFeaturesDocumentSelector,
-		getInitializationOptions(context, 'api', undefined, lowPowerMode),
+		getInitializationOptions(context, 'main-language-features', undefined, _useSecondServer),
 		6009,
 	);
-	docClient = !lowPowerMode ? createLc(
-		'volar-document',
-		'Volar - Document',
+	docClient = _useSecondServer ? createLc(
+		'volar-language-features-2',
+		'Volar - Second Language Features Server',
 		languageFeaturesDocumentSelector,
-		getInitializationOptions(context, 'doc', undefined, lowPowerMode),
+		getInitializationOptions(context, 'second-language-features', undefined, _useSecondServer),
 		6010,
 	) : undefined;
 	htmlClient = createLc(
-		'volar-html',
-		'Volar - HTML',
+		'volar-document-features',
+		'Volar - Document Features Server',
 		documentFeaturesDocumentSelector,
-		getInitializationOptions(context, 'html', undefined, lowPowerMode),
+		getInitializationOptions(context, 'document-features', undefined, _useSecondServer),
 		6011,
 	);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
 
-	registarLowPowerModeChange();
+	registarUseSecondServerChange();
 	registarRestartRequest();
 	registarClientRequests();
 
@@ -143,10 +133,10 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.activate(context, docClient ?? apiClient);
 
-	async function registarLowPowerModeChange() {
+	async function registarUseSecondServerChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
-			const nowIsLowPowerMode = lowPowerModeEnabled();
-			if (lowPowerMode !== nowIsLowPowerMode) {
+			const nowUseSecondServer = useSecondServer();
+			if (_useSecondServer !== nowUseSecondServer) {
 				const reload = await vscode.window.showInformationMessage('Please reload VSCode to switch low power mode.', 'Reload Window');
 				if (reload === undefined) return; // cancel
 				vscode.commands.executeCommand('workbench.action.reloadWindow');
@@ -200,20 +190,20 @@ export function takeOverModeEnabled() {
 	return status;
 }
 
-function lowPowerModeEnabled() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('lowPowerMode');
+function useSecondServer() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.useSecondServer');
 }
 
 function getInitializationOptions(
 	context: vscode.ExtensionContext,
-	mode: 'api' | 'doc' | 'html',
+	mode: 'main-language-features' | 'second-language-features' | 'document-features',
 	initMessage: string | undefined,
-	lowPowerMode: boolean,
+	useSecondServer: boolean,
 ) {
 	const initializationOptions: shared.ServerInitializationOptions = {
 		typescript: tsVersion.getCurrentTsPaths(context),
-		languageFeatures: (mode === 'api' || mode === 'doc') ? {
-			...(mode === 'api' ? {
+		languageFeatures: (mode === 'main-language-features' || mode === 'second-language-features') ? {
+			...(mode === 'main-language-features' ? {
 				references: true,
 				implementation: true,
 				definition: true,
@@ -233,7 +223,7 @@ function getInitializationOptions(
 				},
 				schemaRequestService: { getDocumentContentRequest: true },
 			} : {}),
-			...((mode === 'doc' || (mode === 'api' && lowPowerMode)) ? {
+			...((mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer)) ? {
 				documentHighlight: true,
 				documentLink: true,
 				codeLens: { showReferencesNotification: true },
@@ -242,7 +232,7 @@ function getInitializationOptions(
 				schemaRequestService: { getDocumentContentRequest: true },
 			} : {}),
 		} : undefined,
-		documentFeatures: mode === 'html' ? {
+		documentFeatures: mode === 'document-features' ? {
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,

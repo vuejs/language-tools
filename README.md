@@ -104,9 +104,9 @@ flowchart LR
 
     subgraph VUE_CLIENTS[Language Clients]
       direction LR
-      VUE_CLIENT_API[api]
-      VUE_CLIENT_DOC[doc]
-      VUE_CLIENT_HTML[html]
+      VUE_CLIENT_API[Language Features]
+      VUE_CLIENT_DOC[Second Language Features]
+      VUE_CLIENT_HTML[Document Features]
     end
 
     click VUE_CLIENT_API "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"

@@ -252,7 +252,7 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"volar-api.trace.server": {
+				"volar-language-features.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -263,7 +263,7 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar-document.trace.server": {
+				"volar-language-features-2.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -274,7 +274,7 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar-html.trace.server": {
+				"volar-document-features.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -285,10 +285,10 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar.lowPowerMode": {
+				"volar.vueserver.useSecondServer": {
 					"type": "boolean",
 					"default": false,
-					"description": "Using one language server to do the work of two language serves can reduce system resource usage, but features such as auto-complete will be much slower."
+					"description": "Use second server to progress heavy diagnostic works, the main server workhorse computing intellisense, operations such as auto-complete can respond faster. Note that this will lead to more memory usage."
 				},
 				"volar.codeLens.references": {
 					"type": "boolean",

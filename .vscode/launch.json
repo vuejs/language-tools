@@ -41,7 +41,7 @@
 			}
 		},
 		{
-			"name": "Attach to Server - API",
+			"name": "Attach to Langauge Features Server",
 			"type": "node",
 			"request": "attach",
 			"port": 6009,
@@ -51,7 +51,7 @@
 			]
 		},
 		{
-			"name": "Attach to Server - Document",
+			"name": "Attach to Second Language Features Server",
 			"type": "node",
 			"request": "attach",
 			"port": 6010,
@@ -61,7 +61,7 @@
 			]
 		},
 		{
-			"name": "Attach to Server - HTML",
+			"name": "Attach to Document Features Server",
 			"type": "node",
 			"request": "attach",
 			"port": 6011,
@@ -76,9 +76,9 @@
 			"name": "Client + Server",
 			"configurations": [
 				"Launch Client",
-				"Attach to Server - API",
-				"Attach to Server - Document",
-				"Attach to Server - HTML"
+				"Attach to Langauge Features Server",
+				"Attach to Second Language Features Server",
+				"Attach to Document Features Server"
 			]
 		}
 	]
