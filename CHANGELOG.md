@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.34.1
+
+- fix: fixed vue-tsc broken regression
+
 ## 0.34.0
 
 - feat: expose `useConfigurationHost` for external language feature plugins
