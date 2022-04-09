@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.34.0
+
+- feat: expose `useConfigurationHost` for external language feature plugins
+- perf: faster language server initialization
+- perf: simplify template script generation ([#455](https://github.com/johnsoncodehk/volar/issues/455))
+- perf: reduce TS language service instances ([#1108](https://github.com/johnsoncodehk/volar/issues/1108))
+- fix: web bundle lead to package size greatly increased ([#1084](https://github.com/johnsoncodehk/volar/issues/1084))
+- fix: undefined sortText break vim ([#1118](https://github.com/johnsoncodehk/volar/issues/1118))
+- fix: template context do not update by external .ts scripts ([#565](https://github.com/johnsoncodehk/volar/issues/565))
+- fix: not respect HTML completion settings ([#1139](https://github.com/johnsoncodehk/volar/issues/1139))
+- chore: default disabled `volar.autoCompleteRefs` for reduce CPU usage
+
+**Breaking changes**
+
+- Not support typed template slots for now ([#1108](https://github.com/johnsoncodehk/volar/issues/1108))
+- Not support emits renaming
+- Not support props renaming for `Vue.extends` or `lang="js"`
+- Changed built-in HTML formatter from `prettyhtml` to `vscode-html-languageservice` ([#1078](https://github.com/johnsoncodehk/volar/issues/1078))
+  - If you would like to use `prettyhtml`, see `prettyhtml` section in https://github.com/johnsoncodehk/volar/discussions/1027
+- Changed built-in CSS formatter from `prettier` to `vscode-css-languageservice` ([#1131](https://github.com/johnsoncodehk/volar/issues/1131))
+  - If you would like to use `Prettier`, see `Prettier` section in https://github.com/johnsoncodehk/volar/discussions/1027
+- Changed setting `volar.lowPowerMode` to `volar.vueserver.useSecondServer` and disabled by default
+  - When disabled, language service instance reduce a half of memory usage, but auto-complete should be slower in expected
+
 ## 0.33.10
 
 - feat: support preview features on external browser
