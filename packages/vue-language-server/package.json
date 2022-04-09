@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-server",
-	"version": "0.34.0",
+	"version": "0.34.1",
 	"license": "MIT",
 	"files": [
 		"*.js",
@@ -17,9 +17,9 @@
 		"directory": "packages/vue-language-server"
 	},
 	"dependencies": {
-		"@volar/shared": "0.34.0",
-		"@volar/vue-language-service": "0.34.0",
-		"@volar/vue-typescript": "0.34.0",
+		"@volar/shared": "0.34.1",
+		"@volar/vue-language-service": "0.34.1",
+		"@volar/vue-typescript": "0.34.1",
 		"@vue/shared": "^3.2.31",
 		"request-light": "^0.5.7",
 		"upath": "^2.0.1",
