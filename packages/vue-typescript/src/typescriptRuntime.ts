@@ -35,8 +35,7 @@ export function createTypeScriptRuntime(options: {
 
     let vueProjectVersion: string | undefined;
     let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
-    let scriptProjectVersion = 0; // update by script LS virtual files / *.ts
-    let templateProjectVersion = 0;
+    let tsProjectVersion = 0; // update by script LS virtual files / *.ts
     let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
     const vueFiles = createVueFiles();
     const templateScriptUpdateFileNames = new Set<string>();
@@ -45,34 +44,28 @@ export function createTypeScriptRuntime(options: {
         useHtmlPlugin(),
         usePugPlugin(),
     ];
-    const templateTsHost = options.vueCompilerOptions.experimentalDisableTemplateSupport ? undefined : createTsLsHost('template');
-    const scriptTsHost = createTsLsHost('script');
-    const templateTsLsRaw = templateTsHost ? ts.createLanguageService(templateTsHost) : undefined;
-    const scriptTsLsRaw = ts.createLanguageService(scriptTsHost);
+    const tsLsHost = createTsLsHost();
+    const tsLsRaw = ts.createLanguageService(tsLsHost);
 
-    if (templateTsHost && templateTsLsRaw) {
-        injectCacheLogicToLanguageServiceHost(ts, templateTsHost, templateTsLsRaw);
-    }
-    injectCacheLogicToLanguageServiceHost(ts, scriptTsHost, scriptTsLsRaw);
+    injectCacheLogicToLanguageServiceHost(ts, tsLsHost, tsLsRaw);
 
     const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
 
     return {
         vueLsHost: options.vueLsHost,
         vueFiles,
-        getTsLs: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsLsRaw! : scriptTsLsRaw,
-        getTsLsHost: (lsType: 'template' | 'script') => lsType === 'template' ? templateTsHost! : scriptTsHost,
+        getTsLs: () => tsLsRaw,
+        getTsLsHost: () => tsLsHost,
         update,
         getScriptContentVersion: () => scriptContentVersion,
         dispose: () => {
-            scriptTsLsRaw.dispose();
-            templateTsLsRaw?.dispose();
+            tsLsRaw.dispose();
         },
         onInitProgress(cb: (p: number) => void) {
             initProgressCallback.push(cb);
         },
-        getLocalTypesFiles: (lsType: 'script' | 'template') => {
-            const fileNames = getLocalTypesFiles(lsType);
+        getLocalTypesFiles: () => {
+            const fileNames = getLocalTypesFiles();
             const code = localTypes.getTypesCode(isVue2);
             return {
                 fileNames,
@@ -81,9 +74,7 @@ export function createTypeScriptRuntime(options: {
         },
     };
 
-    function getLocalTypesFiles(lsType: 'script' | 'template') {
-        if (lsType === 'script')
-            return [];
+    function getLocalTypesFiles() {
         return vueFiles.getDirs().map(dir => path.join(dir, localTypes.typesFileName));
     }
     function update(shouldUpdateTemplateScript: boolean) {
@@ -147,7 +138,7 @@ export function createTypeScriptRuntime(options: {
             updateSourceFiles([], shouldUpdateTemplateScript)
         }
     }
-    function createTsLsHost(lsType: 'template' | 'script') {
+    function createTsLsHost() {
 
         const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
         const fileVersions = new WeakMap<EmbeddedFile, string>();
@@ -166,7 +157,7 @@ export function createTypeScriptRuntime(options: {
                                 updateSourceFiles([fileNameTrim], false); // create virtual files
                             }
                         }
-                        return !!vueFiles.fromEmbeddedFileName(lsType, fileName);
+                        return !!vueFiles.fromEmbeddedFileName(fileName);
                     }
                     else {
                         return !!options.vueLsHost.fileExists?.(fileName);
@@ -174,7 +165,7 @@ export function createTypeScriptRuntime(options: {
                 }
                 : undefined,
             getProjectVersion: () => {
-                return options.vueLsHost.getProjectVersion?.() + '-' + (lsType === 'template' ? templateProjectVersion : scriptProjectVersion).toString();
+                return options.vueLsHost.getProjectVersion?.() + '-' + tsProjectVersion.toString();
             },
             getScriptFileNames,
             getScriptVersion,
@@ -208,13 +199,6 @@ export function createTypeScriptRuntime(options: {
             },
         };
 
-        if (lsType === 'template') {
-            _tsHost.getCompilationSettings = () => ({
-                ...options.vueLsHost.getCompilationSettings(),
-                jsx: ts.JsxEmit.Preserve,
-            });
-        }
-
         const tsHost = new Proxy<ts.LanguageServiceHost>(_tsHost as ts.LanguageServiceHost, {
             get: (target, property: keyof ts.LanguageServiceHost) => {
                 return target[property] || options.vueLsHost[property];
@@ -225,9 +209,9 @@ export function createTypeScriptRuntime(options: {
 
         function getScriptFileNames() {
 
-            const tsFileNames = getLocalTypesFiles(lsType);
+            const tsFileNames = getLocalTypesFiles();
 
-            for (const mapped of vueFiles.getEmbeddeds(lsType)) {
+            for (const mapped of vueFiles.getEmbeddeds()) {
                 tsFileNames.push(mapped.embedded.file.fileName); // virtual .ts
             }
 
@@ -247,7 +231,7 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return '';
             }
-            let mapped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            let mapped = vueFiles.fromEmbeddedFileName(fileName);
             if (mapped) {
                 if (fileVersions.has(mapped.embedded.file)) {
                     return fileVersions.get(mapped.embedded.file)!;
@@ -274,7 +258,7 @@ export function createTypeScriptRuntime(options: {
             if (basename === localTypes.typesFileName) {
                 return localTypesScript;
             }
-            const mapped = vueFiles.fromEmbeddedFileName(lsType, fileName);
+            const mapped = vueFiles.fromEmbeddedFileName(fileName);
             if (mapped) {
                 const text = mapped.embedded.file.content;
                 const snapshot = ts.ScriptSnapshot.fromString(text);
@@ -283,7 +267,7 @@ export function createTypeScriptRuntime(options: {
             }
             let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
             if (tsScript) {
-                if (lsType === 'template' && basename === 'runtime-dom.d.ts') {
+                if (basename === 'runtime-dom.d.ts') {
                     // allow arbitrary attributes
                     let tsScriptText = tsScript.getText(0, tsScript.getLength());
                     tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any')
@@ -349,14 +333,13 @@ export function createTypeScriptRuntime(options: {
             scriptContentVersion++;
         }
         if (vueScriptsUpdated) {
-            scriptProjectVersion++;
-            templateProjectVersion++;
+            tsProjectVersion++;
         }
         if (shouldUpdateTemplateScript && lastScriptProjectVersionWhenTemplateProjectVersionUpdate !== scriptContentVersion) {
             lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
             let currentNums = 0;
             for (const fileName of templateScriptUpdateFileNames) {
-                if (templateTsLsRaw && templateTsHost && vueFiles.get(fileName)?.updateTemplateScript(templateTsLsRaw, templateTsHost)) {
+                if (vueFiles.get(fileName)?.updateTemplateScript(tsLsRaw, tsLsHost)) {
                     templateScriptUpdated = true;
                 }
                 currentNums++;
@@ -371,7 +354,7 @@ export function createTypeScriptRuntime(options: {
             initProgressCallback.length = 0;
         }
         if (templateScriptUpdated) {
-            templateProjectVersion++;
+            tsProjectVersion++;
         }
     }
     function unsetSourceFiles(uris: string[]) {
@@ -383,8 +366,7 @@ export function createTypeScriptRuntime(options: {
         }
         if (updated) {
             scriptContentVersion++;
-            scriptProjectVersion++;
-            templateProjectVersion++;
+            tsProjectVersion++;
         }
     }
 }

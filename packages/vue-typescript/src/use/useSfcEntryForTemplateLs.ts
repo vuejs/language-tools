@@ -10,7 +10,6 @@ export function useSfcEntryForTemplateLs(
 	fileName: string,
 	script: Ref<Sfc['script']>,
 	scriptSetup: Ref<Sfc['scriptSetup']>,
-	template: Ref<Sfc['template']>,
 	hasTsDoc: Ref<boolean>,
 	isVue2: boolean,
 ) {
@@ -46,19 +45,12 @@ export function useSfcEntryForTemplateLs(
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
 		content += `({} as __VLS_types.OptionsSetupReturns<typeof __VLS_options_ts>).${SearchTexts.SetupReturns};\n`;
 		content += `({} as __VLS_types.OptionsProps<typeof __VLS_options_ts>).${SearchTexts.Props};\n`;
-		content += `({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};`;
-		content += `\n`;
-		content += `export default {} as typeof __VLS_component & {\n`;
-		content += `__VLS_raw: typeof __VLS_component\n`;
-		content += `__VLS_options: typeof __VLS_options,\n`;
-		content += template.value ? `__VLS_slots: typeof import ('./${baseFileName}.__VLS_template').default,\n` : `// no template\n`;
-		content += `};\n`;
+		content += `({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
 
 		const file: EmbeddedFile = {
-			fileName: fileName + '.ts',
+			fileName: fileName + '.__VLS_middle.ts',
 			lang: 'ts',
 			content,
-			lsType: 'template',
 			capabilities: {
 				diagnostics: false,
 				foldingRanges: false,

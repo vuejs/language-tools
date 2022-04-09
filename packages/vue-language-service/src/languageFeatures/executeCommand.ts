@@ -26,7 +26,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 			else {
 
-				for (const plugin of context.getPlugins('script')) {
+				for (const plugin of context.getPlugins()) {
 
 					await plugin.doExecuteCommand?.(originalCommand.command, originalCommand.arguments as any, executeCommandContext);
 				}

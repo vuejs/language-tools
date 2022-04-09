@@ -94,7 +94,7 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 
 export default function (options: {
     getVueDocument(document: TextDocument): VueDocument | undefined,
-    scriptTsLs: ts2.LanguageService | undefined,
+    tsLs: ts2.LanguageService | undefined,
 }): EmbeddedLanguageServicePlugin {
 
     const htmlPlugin = useHtmlPlugin({
@@ -129,7 +129,7 @@ export default function (options: {
                     }
                 }
 
-                if (options.scriptTsLs && !options.scriptTsLs.__internal__.isValidFile(vueDocument.file.getScriptTsFile().fileName)) {
+                if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueDocument.file.getScriptTsFile().fileName)) {
                     for (const script of [sfc.script, sfc.scriptSetup]) {
 
                         if (!script || script.content === '')

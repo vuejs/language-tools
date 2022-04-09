@@ -10,7 +10,6 @@ export interface PluginCallHierarchyData {
 	originalItem: vscode.CallHierarchyItem,
 	pluginId: number,
 	sourceMap: {
-		lsType: 'script' | 'template' | 'nonTs',
 		embeddedDocumentUri: string
 	} | undefined,
 }
@@ -45,7 +44,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 							originalItem: item,
 							pluginId: plugin.id,
 							sourceMap: sourceMap ? {
-								lsType: sourceMap.embeddedFile.lsType,
 								embeddedDocumentUri: sourceMap.mappedDocument.uri,
 							} : undefined,
 						};
@@ -57,7 +55,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					});
 				},
 				(data, sourceMap) => !sourceMap ? data : data
-					.map(item => transformCallHierarchyItem(sourceMap.embeddedFile.lsType, item, [])?.[0])
+					.map(item => transformCallHierarchyItem(item, [])?.[0])
 					.filter(shared.notEmpty),
 				arr => dedupe.withLocations(arr.flat()),
 			);
@@ -82,7 +80,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (data.sourceMap) {
 
-					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.lsType, data.sourceMap.embeddedDocumentUri);
+					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
 
 					if (sourceMap) {
 
@@ -90,7 +88,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						for (const _call of _calls) {
 
-							const calls = transformCallHierarchyItem(sourceMap.embeddedFile.lsType, _call.from, _call.fromRanges);
+							const calls = transformCallHierarchyItem(_call.from, _call.fromRanges);
 
 							if (!calls)
 								continue;
@@ -108,7 +106,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					for (const _call of _calls) {
 
-						const calls = transformCallHierarchyItem('script', _call.from, _call.fromRanges);
+						const calls = transformCallHierarchyItem(_call.from, _call.fromRanges);
 
 						if (!calls)
 							continue;
@@ -143,7 +141,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (data.sourceMap) {
 
-					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.lsType, data.sourceMap.embeddedDocumentUri);
+					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
 
 					if (sourceMap) {
 
@@ -151,7 +149,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						for (const call of _calls) {
 
-							const calls = transformCallHierarchyItem(sourceMap.embeddedFile.lsType, call.to, call.fromRanges);
+							const calls = transformCallHierarchyItem(call.to, call.fromRanges);
 
 							if (!calls)
 								continue;
@@ -169,7 +167,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					for (const call of _calls) {
 
-						const calls = transformCallHierarchyItem('script', call.to, call.fromRanges);
+						const calls = transformCallHierarchyItem(call.to, call.fromRanges);
 
 						if (!calls)
 							continue;
@@ -186,9 +184,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 		},
 	};
 
-	function transformCallHierarchyItem(lsType: 'script' | 'template' | 'nonTs', tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
+	function transformCallHierarchyItem(tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
 
-		const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsItem.uri);
+		const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(tsItem.uri);
 		if (!sourceMap)
 			return [tsItem, tsRanges]; // not virtual file
 

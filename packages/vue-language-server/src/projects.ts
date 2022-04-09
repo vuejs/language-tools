@@ -352,7 +352,7 @@ function createWorkspace(
 			return findTsconfig(async tsconfig => {
 				const project = await projects.fsPathGet(tsconfig);
 				const ls = await project?.getLanguageServiceDontCreate();
-				const validDoc = ls?.__internal__.context.getTsLs('script').__internal__.getValidTextDocument(uri);
+				const validDoc = ls?.__internal__.context.getTsLs().__internal__.getValidTextDocument(uri);
 				return !!validDoc;
 			});
 		}

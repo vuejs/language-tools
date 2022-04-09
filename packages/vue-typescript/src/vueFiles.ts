@@ -25,41 +25,25 @@ export function createVueFiles() {
 
 		return map;
 	});
-	const sourceMapsByFileNameAndLsType = computed(() => {
-		const maps = {
-			nonTs:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
-			script:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
-			template:  new Map<string, { vueFile: VueFile, embedded: Embedded }>(),
-		};
+	const sourceMapsByFileName = computed(() => {
+		const map = new Map<string, { vueFile: VueFile, embedded: Embedded }>();
 		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
-				maps[embedded.file.lsType].set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
+				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
 		}
-		return maps
+		return map
 	});
-	const teleports = {
-		template: computed(() => {
-			const map = new Map<string, Teleport>();
-			for (const key in vueFiles) {
-				const sourceFile = vueFiles[key]!;
-				for (const { file, teleport } of sourceFile.refs.teleports.value) {
-					map.set(file.fileName.toLowerCase(), teleport);
-				}
+	const teleports = computed(() => {
+		const map = new Map<string, Teleport>();
+		for (const key in vueFiles) {
+			const sourceFile = vueFiles[key]!;
+			for (const { file, teleport } of sourceFile.refs.teleports.value) {
+				map.set(file.fileName.toLowerCase(), teleport);
 			}
-			return map;
-		}),
-		script: computed(() => {
-			const map = new Map<string, Teleport>();
-			for (const key in vueFiles) {
-				const sourceFile = vueFiles[key]!;
-				const embeddedFile = sourceFile.refs.sfcScriptForScriptLs.file.value;
-				const sourceMap = sourceFile.refs.sfcScriptForScriptLs.teleport.value;
-				map.set(embeddedFile.fileName.toLowerCase(), sourceMap);
-			}
-			return map;
-		}),
-	};
+		}
+		return map;
+	});
 	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
@@ -72,17 +56,14 @@ export function createVueFiles() {
 		getDirs: untrack(() => dirs.value),
 		getAll: untrack(() => all.value),
 
-		getTeleport: untrack((lsType: 'script' | 'template', fileName: string) => teleports[lsType].value.get(fileName.toLowerCase())),
-		getEmbeddeds: untrack(function* (
-			lsType: 'script' | 'template' | 'nonTs',
-		) {
-			for (const sourceMap of sourceMapsByFileNameAndLsType.value[lsType]) {
+		getTeleport: untrack((fileName: string) => teleports.value.get(fileName.toLowerCase())),
+		getEmbeddeds: untrack(function* () {
+			for (const sourceMap of sourceMapsByFileName.value) {
 				yield sourceMap[1];
 			}
 		}),
 
 		fromEmbeddedLocation: untrack(function* (
-			lsType: 'script' | 'template' | 'nonTs',
 			fileName: string,
 			start: number,
 			end?: number,
@@ -96,7 +77,7 @@ export function createVueFiles() {
 			if (end === undefined)
 				end = start;
 
-			const mapped = sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
+			const mapped = sourceMapsByFileName.value.get(fileName.toLowerCase());
 
 			if (mapped) {
 
@@ -128,10 +109,9 @@ export function createVueFiles() {
 			return embeddedDocumentsMap.value.get(file);
 		}),
 		fromEmbeddedFileName: untrack(function (
-			lsType: 'script' | 'template' | 'nonTs',
 			fileName: string,
 		) {
-			return sourceMapsByFileNameAndLsType.value[lsType].get(fileName.toLowerCase());
+			return sourceMapsByFileName.value.get(fileName.toLowerCase());
 		}),
 	};
 }

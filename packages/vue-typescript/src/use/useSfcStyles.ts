@@ -23,7 +23,6 @@ export function useSfcStyles(
 				fileName: fileName + '.' + i + '.' + style.lang,
 				lang: style.lang,
 				content: style.content,
-				lsType: 'nonTs',
 				capabilities: {
 					diagnostics: true,
 					foldingRanges: true,

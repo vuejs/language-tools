@@ -34,14 +34,14 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			});
 			const _tsPluginApis = apis.register(tsRuntime);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs('script').getSemanticDiagnostics, false),
-				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs('script').getEncodedSemanticClassifications, false),
+				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs().getSemanticDiagnostics, false),
+				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs().getEncodedSemanticClassifications, false),
 				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs('script').getCompletionEntryDetails, false), // not sure
-				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs('script').getCompletionEntrySymbol, false), // not sure
-				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs('script').getQuickInfoAtPosition, false),
-				getSignatureHelpItems: apiHook(tsRuntime.getTsLs('script').getSignatureHelpItems, false),
-				getRenameInfo: apiHook(tsRuntime.getTsLs('script').getRenameInfo, false),
+				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs().getCompletionEntryDetails, false), // not sure
+				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs().getCompletionEntrySymbol, false), // not sure
+				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs().getQuickInfoAtPosition, false),
+				getSignatureHelpItems: apiHook(tsRuntime.getTsLs().getSignatureHelpItems, false),
+				getRenameInfo: apiHook(tsRuntime.getTsLs().getRenameInfo, false),
 
 				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
 				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),

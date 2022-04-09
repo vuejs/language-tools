@@ -18,7 +18,7 @@ const capabilitiesSet = {
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	refAttr: { references: true, definitions: true, rename: true, },
-}
+};
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
 	round: ['(', ')'] as [string, string],
@@ -100,7 +100,6 @@ export function generate(
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
 		const var_correctTagName = `__VLS_${elementIndex++}`;
-		const var_wrapComponent = `__VLS_${elementIndex++}`;
 		const var_rawComponent = `__VLS_${elementIndex++}`;
 		const var_slotsComponent = `__VLS_${elementIndex++}`;
 		const var_baseProps = `__VLS_${elementIndex++}`;
@@ -131,23 +130,12 @@ export function generate(
 		}
 		else {
 			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_rawComponents, '${tagName}'>;\n`);
-			tsCodeGen.addText(`declare const ${var_wrapComponent}: __VLS_types.GetProperty<typeof __VLS_wrapComponents, typeof ${var_correctTagName}, any>;\n`);
 			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
 		}
 		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_types.ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
-
-		if (isNamespacedTag) {
-			tsCodeGen.addText(`declare const ${var_slots}:
-				__VLS_types.TemplateSlots<typeof ${var_rawComponent}>
-				& __VLS_types.DefaultSlots<typeof ${var_rawComponent}, typeof ${var_rawComponent}>;\n`);
-		}
-		else {
-			tsCodeGen.addText(`declare const ${var_slots}:
-				__VLS_types.TemplateSlots<typeof ${var_wrapComponent}>
-				& __VLS_types.DefaultSlots<typeof ${var_wrapComponent}, typeof ${var_rawComponent}>;\n`);
-		}
+		tsCodeGen.addText(`declare const ${var_slots}: __VLS_types.DefaultSlots<typeof ${var_rawComponent}>;\n`);
 
 		for (const eventName in tag.events) {
 
@@ -223,8 +211,6 @@ export function generate(
 			}
 		}
 
-		writeOptionReferences();
-
 		/* Completion */
 		tsCodeGen.addText('/* Completion: Emits */\n');
 		for (const name of componentNames) {
@@ -245,88 +231,6 @@ export function generate(
 			events: var_events,
 			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
 		};
-
-		function writeOptionReferences() {
-			// fix find references not work if prop has default value
-			// fix emits references not work
-			for (const propName in tag.props) {
-
-				const prop = tag.props[propName];
-				const propNames = new Set<string>();
-				propNames.add(propName);
-				propNames.add(camelize(propName));
-
-				for (const name of propNames.values()) {
-					// __VLS_options.props
-					tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`${var_wrapComponent}.__VLS_options.props`);
-					writePropertyAccess2(
-						name,
-						prop.offsets.map(offset => ({ start: offset, end: offset + prop.argName.length })),
-						{
-							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.attrReference,
-								rename: propName === prop.argName,
-							},
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(`;\n`);
-				}
-			}
-			for (const eventName in tag.events) {
-
-				const event = tag.events[eventName];
-				const eventNames = new Set<string>();
-				const propNames = new Set<string>();
-				eventNames.add(eventName);
-				eventNames.add(camelize(eventName));
-				propNames.add(camelize('on-' + eventName));
-
-				for (const name of eventNames.values()) {
-					// __VLS_options.emits
-					tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`${var_wrapComponent}.__VLS_options.emits`);
-					writePropertyAccess2(
-						name,
-						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attrReference,
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(`;\n`);
-				}
-				for (const name of propNames.values()) {
-					// __VLS_options.props
-					tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`${var_wrapComponent}.__VLS_options.props`);
-					writePropertyAccess2(
-						name,
-						event.offsets.map(offset => ({ start: offset, end: offset + eventName.length })),
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.attrReference,
-							normalizeNewName(newName) {
-								return camelize('on-' + newName);
-							},
-							applyNewName(oldName, newName) {
-								const hName = hyphenate(newName);
-								if (hyphenate(newName).startsWith('on-')) {
-									return camelize(hName.slice('on-'.length));
-								}
-								return newName;
-							},
-						},
-					);
-					tsCodeGen.addText(`;\n`);
-				}
-			}
-		}
 	}
 
 	for (const childNode of templateAst.children) {

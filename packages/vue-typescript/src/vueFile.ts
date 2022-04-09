@@ -62,7 +62,6 @@ export interface EmbeddedFile<T = unknown> {
 	fileName: string,
 	lang: string,
 	content: string,
-	lsType: 'template' | 'script' | 'nonTs',
 	capabilities: {
 		diagnostics: boolean,
 		foldingRanges: boolean,
@@ -190,11 +189,10 @@ export function createVueFile(
 		compilerOptions.experimentalCompatMode === 2,
 		getCssVBindRanges,
 	);
-	const sfcEntryForTemplateLs = useSfcEntryForTemplateLs(
+	const sfcTemplateMiddleScript = useSfcEntryForTemplateLs(
 		fileName,
 		computed(() => sfc.script),
 		computed(() => sfc.scriptSetup),
-		computed(() => sfc.template),
 		computed(() => !!sfcScriptForTemplateLs.fileTs.value),
 		compilerOptions.experimentalCompatMode === 2,
 	);
@@ -289,7 +287,7 @@ export function createVueFile(
 
 		// scripts - template ls
 		embeddeds.push({
-			self: sfcEntryForTemplateLs.embedded.value,
+			self: sfcTemplateMiddleScript.embedded.value,
 			embeddeds: [],
 		});
 		embeddeds.push({
@@ -370,7 +368,7 @@ export function createVueFile(
 			allEmbeddeds,
 			teleports,
 			sfcTemplateScript,
-			sfcEntryForTemplateLs,
+			sfcEntryForTemplateLs: sfcTemplateMiddleScript,
 			sfcScriptForScriptLs,
 			templateScriptData,
 		},
@@ -524,8 +522,8 @@ export function createVueFile(
 			}
 		}
 	}
-	function updateTemplateScript(templateTsLs: ts.LanguageService, tempalteTsHost: ts.LanguageServiceHost) {
-		const newVersion = tempalteTsHost.getProjectVersion?.();
+	function updateTemplateScript(tsLs: ts.LanguageService, tsHost: ts.LanguageServiceHost) {
+		const newVersion = tsHost.getProjectVersion?.();
 		if (templateScriptData.projectVersion === newVersion) {
 			return false;
 		}
@@ -535,11 +533,11 @@ export function createVueFile(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		};
 
-		const file = sfcEntryForTemplateLs.file.value;
-		const context = file.content.indexOf(SearchTexts.Context) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
-		let components = file.content.indexOf(SearchTexts.Components) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
-		const props = file.content.indexOf(SearchTexts.Props) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Props), options)?.entries ?? [] : [];
-		const setupReturns = file.content.indexOf(SearchTexts.SetupReturns) >= 0 ? templateTsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.SetupReturns), options)?.entries ?? [] : [];
+		const file = sfcTemplateMiddleScript.file.value;
+		const context = file.content.indexOf(SearchTexts.Context) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
+		let components = file.content.indexOf(SearchTexts.Components) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
+		const props = file.content.indexOf(SearchTexts.Props) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Props), options)?.entries ?? [] : [];
+		const setupReturns = file.content.indexOf(SearchTexts.SetupReturns) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.SetupReturns), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');

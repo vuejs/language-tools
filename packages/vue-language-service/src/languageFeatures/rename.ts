@@ -65,31 +65,28 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								let foundTeleport = false;
 
-								if (sourceMap?.embeddedFile.lsType !== 'nonTs') {
+								recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-									recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
+								const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(editUri);
 
-									const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', editUri);
+								if (teleport) {
 
-									if (teleport) {
+									for (const [teleRange, sideData] of teleport.findTeleports(
+										textEdit.range.start,
+										textEdit.range.end,
+										sideData => !!sideData.capabilities.references,
+									)) {
 
-										for (const [teleRange, sideData] of teleport.findTeleports(
-											textEdit.range.start,
-											textEdit.range.end,
-											sideData => !!sideData.capabilities.references,
-										)) {
+										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+											continue;
 
-											if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
-												continue;
+										foundTeleport = true;
 
-											foundTeleport = true;
+										const newName_2 = sideData.transformNewName
+											? sideData.transformNewName(newName)
+											: newName;
 
-											const newName_2 = sideData.transformNewName
-												? sideData.transformNewName(newName)
-												: newName;
-
-											await withTeleports(teleport.document, teleRange.start, newName_2);
-										}
+										await withTeleports(teleport.document, teleRange.start, newName_2);
 									}
 								}
 
@@ -128,13 +125,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			},
 			(data, sourceMap) => {
-
-				const vueDocument = context.vueDocuments.get(uri);
-				const renameFromScriptContent = !vueDocument || !vueDocument.getSourceMaps().some(sourceMap => sourceMap.embeddedFile.lsType === 'template' && sourceMap.getMappedRange(position));
-
 				return embeddedEditToSourceEdit(
-					sourceMap?.embeddedFile.lsType ?? 'script',
-					sourceMap?.embeddedFile.lsType === 'template' && renameFromScriptContent,
 					data,
 					context.vueDocuments,
 				);
@@ -201,8 +192,6 @@ export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
  *    -> No: Access all results
  */
 export function embeddedEditToSourceEdit(
-	lsType: 'script' | 'template' | 'nonTs',
-	ignoreScriptLsResult: boolean,
 	tsResult: vscode.WorkspaceEdit,
 	vueDocuments: VueDocuments,
 ) {
@@ -216,26 +205,18 @@ export function embeddedEditToSourceEdit(
 			vueResult.changeAnnotations = {};
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
-		const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsUri)?.sourceDocument.uri ?? tsUri;
+		const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri)?.sourceDocument.uri ?? tsUri;
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
 			for (const vueLoc of vueDocuments.fromEmbeddedLocation(
-				lsType,
 				tsUri,
 				tsEdit.range.start,
 				tsEdit.range.end,
 				data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
 			)) {
-
-				if (ignoreScriptLsResult) {
-					const isTemplateResult = vueLoc.sourceMap && (vueLoc.data.vueTag === 'template' || vueLoc.data.vueTag === 'style');
-					if (!isTemplateResult) {
-						continue;
-					}
-				}
 
 				let newText_2 = tsEdit.newText;
 
@@ -267,7 +248,7 @@ export function embeddedEditToSourceEdit(
 			}
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
-				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsDocEdit.textDocument.uri);
+				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.textDocument.uri);
 				if (sourceMap) {
 					vueDocEdit = vscode.TextDocumentEdit.create(
 						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
@@ -280,10 +261,6 @@ export function embeddedEditToSourceEdit(
 							data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
 						)) {
 
-							if (ignoreScriptLsResult && !(data.vueTag === 'template' || data.vueTag === 'style')) {
-								continue;
-							}
-
 							vueDocEdit.edits.push({
 								annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
 								newText: tsEdit.newText,
@@ -295,19 +272,19 @@ export function embeddedEditToSourceEdit(
 						vueDocEdit = undefined;
 					}
 				}
-				else if (!ignoreScriptLsResult) {
+				else {
 					vueDocEdit = tsDocEdit;
 				}
 			}
-			else if (vscode.CreateFile.is(tsDocEdit) && !ignoreScriptLsResult) {
+			else if (vscode.CreateFile.is(tsDocEdit)) {
 				vueDocEdit = tsDocEdit; // TODO: remove .ts?
 			}
-			else if (vscode.RenameFile.is(tsDocEdit) && !ignoreScriptLsResult) {
-				const oldUri = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
+			else if (vscode.RenameFile.is(tsDocEdit)) {
+				const oldUri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
 				vueDocEdit = vscode.RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 			}
-			else if (vscode.DeleteFile.is(tsDocEdit) && !ignoreScriptLsResult) {
-				const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(lsType, tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
+			else if (vscode.DeleteFile.is(tsDocEdit)) {
+				const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
 				vueDocEdit = vscode.DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			if (vueDocEdit) {

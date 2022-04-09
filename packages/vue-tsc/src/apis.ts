@@ -1,8 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TypeScriptRuntime } from '@volar/vue-typescript';
 
-const lsTypes = ['script', 'template'] as const;
-
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: TypeScriptRuntime,
@@ -18,11 +16,7 @@ export function register(
 	};
 
 	function getRootFileNames() {
-		const set = new Set([
-			...getProgram('script')?.getRootFileNames().filter(fileName => context.getTsLsHost('script').fileExists?.(fileName)) ?? [],
-			...getProgram('template')?.getRootFileNames().filter(fileName => context.getTsLsHost('template')?.fileExists?.(fileName)) ?? [],
-		]);
-		return [...set.values()];
+		return getProgram()?.getRootFileNames().filter(fileName => context.getTsLsHost().fileExists?.(fileName));
 	}
 
 	// for vue-tsc --noEmit --watch
@@ -46,7 +40,7 @@ export function register(
 
 		if (sourceFile) {
 
-			const mapped = context.vueFiles.fromEmbeddedFileName('script', sourceFile.fileName);
+			const mapped = context.vueFiles.fromEmbeddedFileName(sourceFile.fileName);
 
 			if (mapped) {
 
@@ -56,15 +50,20 @@ export function register(
 
 				for (const embedded of embeddeds) {
 
-					if (embedded.file.lsType === 'nonTs' || !embedded.file.capabilities.diagnostics)
+					const isTsFile = embedded.file.fileName.endsWith('.js') ||
+						embedded.file.fileName.endsWith('.ts') ||
+						embedded.file.fileName.endsWith('.jsx') ||
+						embedded.file.fileName.endsWith('.tsx')
+
+					if (!isTsFile || !embedded.file.capabilities.diagnostics)
 						continue;
 
-					const program = getProgram(embedded.file.lsType);
+					const program = getProgram();
 					const embeddedSourceFile = program?.getSourceFile(embedded.file.fileName);
 
 					if (embeddedSourceFile) {
 
-						const errors = transformDiagnostics(embedded.file.lsType, program?.[api](embeddedSourceFile, cancellationToken) ?? []);
+						const errors = transformDiagnostics(program?.[api](embeddedSourceFile, cancellationToken) ?? []);
 						results = results.concat(errors);
 					}
 				}
@@ -72,34 +71,30 @@ export function register(
 				return results;
 			}
 			else {
-				return getProgram('script')?.[api](sourceFile, cancellationToken) ?? [];
+				return getProgram()?.[api](sourceFile, cancellationToken) ?? [];
 			}
 		}
 
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType)?.[api](sourceFile, cancellationToken) ?? [])).flat();
+		return transformDiagnostics(getProgram()?.[api](sourceFile, cancellationToken) ?? []);
 	}
 
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-		return lsTypes.map(lsType => transformDiagnostics(lsType, getProgram(lsType)?.getGlobalDiagnostics(cancellationToken) ?? [])).flat();
+		return transformDiagnostics(getProgram()?.getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram('script')!.emit(targetSourceFile, (context.vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
-		const templateResult = getProgram('template')?.emit(targetSourceFile, undefined, cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram()!.emit(targetSourceFile, (context.vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
-			diagnostics: [
-				...transformDiagnostics('script', scriptResult.diagnostics),
-				...transformDiagnostics('template', templateResult?.diagnostics ?? []),
-			],
+			diagnostics: transformDiagnostics(scriptResult.diagnostics),
 		};
 	}
-	function getProgram(lsType: 'script' | 'template') {
-		return context.getTsLs(lsType)?.getProgram();
+	function getProgram() {
+		return context.getTsLs()?.getProgram();
 	}
 
 	// transform
-	function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(lsType: 'script' | 'template', diagnostics: readonly T[]): T[] {
+	function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(diagnostics: readonly T[]): T[] {
 		const result: T[] = [];
 		for (const diagnostic of diagnostics) {
 			if (
@@ -108,7 +103,6 @@ export function register(
 				&& diagnostic.length !== undefined
 			) {
 				for (const tsOrVueLoc of context.vueFiles.fromEmbeddedLocation(
-					lsType,
 					diagnostic.file.fileName,
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
@@ -116,9 +110,6 @@ export function register(
 				)) {
 
 					if (!context.vueLsHost.fileExists?.(tsOrVueLoc.fileName))
-						continue;
-
-					if (!tsOrVueLoc.mapped && lsType !== 'script')
 						continue;
 
 					let file = tsOrVueLoc.fileName === diagnostic.file.fileName
@@ -146,7 +137,7 @@ export function register(
 					};
 					const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
 					if (relatedInformation) {
-						(newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(lsType, relatedInformation);
+						(newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(relatedInformation);
 					}
 					result.push(newDiagnostic);
 				}

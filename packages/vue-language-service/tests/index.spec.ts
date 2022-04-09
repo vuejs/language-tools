@@ -1,4 +1,3 @@
-import './renames/emit';
 import './renames/prop';
 import './renames/typeProp';
 import './renames/cssModules';

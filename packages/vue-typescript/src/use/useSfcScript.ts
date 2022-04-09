@@ -24,7 +24,6 @@ export function useSfcScript(
 				fileName: fileName + '.' + script.value.lang,
 				lang: script.value.lang,
 				content: script.value.content,
-				lsType: 'nonTs',
 				capabilities: {
 					diagnostics: false,
 					foldingRanges: true,

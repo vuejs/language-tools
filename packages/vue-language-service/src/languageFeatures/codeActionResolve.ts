@@ -22,7 +22,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (data.sourceMap) {
 
-				const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.lsType, data.sourceMap.embeddedDocumentUri);
+				const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
 
 				if (sourceMap) {
 
@@ -31,8 +31,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (resolvedItem.edit) {
 
 						const edit = embeddedEditToSourceEdit(
-							sourceMap.embeddedFile.lsType,
-							false,
 							resolvedItem.edit,
 							context.vueDocuments,
 						);

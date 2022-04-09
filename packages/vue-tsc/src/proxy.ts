@@ -60,7 +60,7 @@ export function createProgramProxy(
 	});
 	tsRuntime.update(true); // must update before getProgram() to update virtual scripts
 
-	const tsProgram = tsRuntime.getTsLs('script').getProgram();
+	const tsProgram = tsRuntime.getTsLs().getProgram();
 	if (!tsProgram)
 		throw '!tsProgram';
 

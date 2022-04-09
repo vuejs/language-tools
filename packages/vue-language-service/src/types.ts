@@ -17,7 +17,7 @@ export type DocumentServiceRuntimeContext = {
 export type LanguageServiceRuntimeContext = {
 	vueDocuments: VueDocuments,
 	getTextDocument(uri: string): TextDocument | undefined,
-	getPlugins(lsType: 'template' | 'script' | 'nonTs'): LanguageServicePlugin[],
+	getPlugins(): LanguageServicePlugin[],
 	getPluginById(id: number): LanguageServicePlugin | undefined,
-	getTsLs: <T extends 'template' | 'script'>(lsType: T) => T extends 'script' ? ts2.LanguageService : (ts2.LanguageService | undefined);
+	getTsLs(): ts2.LanguageService;
 }

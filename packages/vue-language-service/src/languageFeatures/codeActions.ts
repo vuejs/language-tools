@@ -11,7 +11,6 @@ export interface PluginCodeActionData {
 	originalItem: vscode.CodeAction,
 	pluginId: number,
 	sourceMap: {
-		lsType: 'script' | 'template' | 'nonTs',
 		embeddedDocumentUri: string
 	} | undefined,
 }
@@ -84,7 +83,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 						originalItem: _codeAction,
 						pluginId: plugin.id,
 						sourceMap: sourceMap ? {
-							lsType: sourceMap.embeddedFile.lsType,
 							embeddedDocumentUri: sourceMap.mappedDocument.uri,
 						} : undefined,
 					};
@@ -102,8 +100,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (_codeAction.edit) {
 					const edit = embeddedEditToSourceEdit(
-						sourceMap.embeddedFile.lsType,
-						false,
 						_codeAction.edit,
 						context.vueDocuments,
 					);

@@ -62,7 +62,6 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		if (lsType === 'script') {
 
 			const file: EmbeddedFile = {
-				lsType,
 				fileName: fileName + '.' + lang.value,
 				lang: lang.value,
 				content: codeGen.value.codeGen.getText(),
@@ -81,7 +80,6 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 		else if (script.value || scriptSetup.value) {
 
 			const file: EmbeddedFile = {
-				lsType,
 				fileName: fileName + '.__VLS_script.' + lang.value,
 				lang: lang.value,
 				content: codeGen.value.codeGen.getText(),
@@ -104,7 +102,6 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 
 			const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
 			const _file: EmbeddedFile = {
-				lsType,
 				fileName: fileName + '.__VLS_script_ts.' + tsLang,
 				lang: tsLang,
 				content: file.value.content,

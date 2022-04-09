@@ -110,10 +110,7 @@ export function createLanguageService(
 	const tsSettings = getTsSettings(configurationHost);
 	const documentContext = getDocumentContext();
 
-	const scriptTsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost('script'), tsRuntime.getTsLs('script'), tsSettings);
-	const templateTsLsRaw = tsRuntime.getTsLs('template');
-	const templateTsLsHost = tsRuntime.getTsLsHost('template');
-	const templateTsLs = templateTsLsHost && templateTsLsRaw ? ts2.createLanguageService(ts, templateTsLsHost, templateTsLsRaw, tsSettings) : undefined;
+	const tsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs(), tsSettings);
 	const blockingRequests = new Set<Promise<any>>();
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
@@ -123,7 +120,7 @@ export function createLanguageService(
 	const vuePlugin = defineLanguageServicePlugin(
 		useVuePlugin({
 			getVueDocument: (document) => vueDocuments.get(document.uri),
-			scriptTsLs,
+			tsLs,
 		}),
 	);
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
@@ -157,28 +154,23 @@ export function createLanguageService(
 		useEmmetPlugin(),
 	);
 	const scriptTsPlugin = useTsPlugins(
-		scriptTsLs,
+		tsLs,
 		false,
-		{
+		uri => (uri.indexOf('.__VLS_template') === -1 ? {
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-		},
-	);
-	const templateTsPlugin = templateTsLs ? useTsPlugins(
-		templateTsLs,
-		true,
-		{
+		} : {
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 			quotePreference: 'single',
 			includeCompletionsForModuleExports: false,
 			includeCompletionsForImportStatements: false,
-		},
-	) : undefined;
+		}),
+	);
 	const autoDotValuePlugin = defineLanguageServicePlugin(
 		useAutoDotValuePlugin({
 			ts,
-			getTsLs: () => scriptTsLs,
+			getTsLs: () => tsLs,
 		}),
 	);
 	const referencesCodeLensPlugin = defineLanguageServicePlugin(
@@ -210,7 +202,7 @@ export function createLanguageService(
 			doValidation: async (...args) => doValidation_internal(...args),
 			doRename: async (...args) => doRename_internal(...args),
 			findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
-			scriptTsLs: scriptTsLs,
+			scriptTsLs: tsLs,
 		}),
 	);
 	const tagNameCasingConversionsPlugin = defineLanguageServicePlugin(
@@ -237,7 +229,6 @@ export function createLanguageService(
 		refSugarConversionsPlugin,
 		tagNameCasingConversionsPlugin,
 		scriptTsPlugin,
-		...(templateTsPlugin ? [templateTsPlugin] : []),
 	]) {
 		allPlugins.set(plugin.id, plugin);
 	}
@@ -245,33 +236,25 @@ export function createLanguageService(
 	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: LanguageServiceRuntimeContext = {
 		vueDocuments,
-		getTsLs: lsType => lsType === 'template' ? templateTsLs! : scriptTsLs,
+		getTsLs: () => tsLs,
 		getTextDocument,
-		getPlugins: lsType => {
-			let plugins = [
-				...customPlugins,
-				vuePlugin,
-				cssPlugin,
-				vueTemplateHtmlPlugin,
-				vueTemplatePugPlugin,
-				jsonPlugin,
-				referencesCodeLensPlugin,
-				htmlPugConversionsPlugin,
-				scriptSetupConversionsPlugin,
-				refSugarConversionsPlugin,
-				tagNameCasingConversionsPlugin,
-			];
-			if (lsType === 'template' && templateTsPlugin) {
-				plugins.push(templateTsPlugin);
-			}
-			else if (lsType === 'script') {
-				plugins.push(scriptTsPlugin);
-				plugins.push(autoDotValuePlugin);
-			}
+		getPlugins: () => [
+			...customPlugins,
+			vuePlugin,
+			cssPlugin,
+			vueTemplateHtmlPlugin,
+			vueTemplatePugPlugin,
+			jsonPlugin,
+			referencesCodeLensPlugin,
+			htmlPugConversionsPlugin,
+			scriptSetupConversionsPlugin,
+			refSugarConversionsPlugin,
+			tagNameCasingConversionsPlugin,
+			scriptTsPlugin,
+			autoDotValuePlugin,
 			// put emmet plugin at latest to fix https://github.com/johnsoncodehk/volar/issues/1088
-			plugins.push(emmetPlugin);
-			return plugins;
-		},
+			emmetPlugin,
+		],
 		getPluginById: id => allPlugins.get(id),
 	};
 	const _callHierarchy = callHierarchy.register(context);
@@ -413,8 +396,7 @@ export function createLanguageService(
 						}
 					}
 				},
-				scriptTsLs: scriptTsLs,
-				templateTsLs: templateTsLs,
+				tsLs,
 				isSupportedDocument: (document) => document.languageId === languageId,
 				getNameCases,
 				getScriptContentVersion: tsRuntime.getScriptContentVersion,
@@ -426,12 +408,12 @@ export function createLanguageService(
 			}),
 		);
 	}
-	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, baseCompletionOptions: ts.GetCompletionsAtPositionOptions) {
+	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {
 		const _languageSupportPlugin = defineLanguageServicePlugin(
 			useTsPlugin({
 				tsVersion: ts.version,
 				getTsLs: () => tsLs,
-				baseCompletionOptions,
+				getBaseCompletionOptions,
 			}),
 		);
 		const languageSupportPlugin: LanguageServicePlugin = isTemplatePlugin ? {
@@ -468,7 +450,7 @@ export function createLanguageService(
 		}
 
 		for (const sourceMap of vueDocument.getSourceMaps()) {
-			if (sourceMap.embeddedFile.lsType === 'template') {
+			if (sourceMap.embeddedFile.fileName.indexOf('.__VLS_template.') >= 0) {
 				for (const _ of sourceMap.getMappedRanges(pos, pos, data =>
 					data.vueTag === 'template'
 					|| data.vueTag === 'style' // handle CSS variable injection to fix https://github.com/johnsoncodehk/volar/issues/777

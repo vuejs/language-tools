@@ -29,7 +29,7 @@ const directiveCommentTriggerCharacters = ['@'];
 export default function (options: {
     tsVersion: string,
     getTsLs: () => ts2.LanguageService,
-    baseCompletionOptions?: ts.GetCompletionsAtPositionOptions,
+    getBaseCompletionOptions?: (uri: string) => ts.GetCompletionsAtPositionOptions,
 }): EmbeddedLanguageServicePlugin {
 
     const basicTriggerCharacters = getBasicTriggerCharacters(options.tsVersion);
@@ -58,8 +58,9 @@ export default function (options: {
 
                 if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
 
+                    const baseCompletionOptions = options.getBaseCompletionOptions?.(document.uri) ?? [];
                     const completeOptions: ts.GetCompletionsAtPositionOptions = {
-                        ...options.baseCompletionOptions,
+                        ...baseCompletionOptions,
                         triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
                         triggerKind: context?.triggerKind,
                     };

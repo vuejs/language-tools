@@ -20,7 +20,6 @@ export function useSfcCustomBlocks(
 				fileName: fileName + '.' + i + '.' + customBlock.lang,
 				lang: customBlock.lang,
 				content: customBlock.content,
-				lsType: 'nonTs',
 				capabilities: {
 					diagnostics: true,
 					foldingRanges: true,
