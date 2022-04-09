@@ -81,7 +81,6 @@ export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = 
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 export type GetProperty<T, K, N = any> = K extends keyof T ? T[K] : N;
 export type ComponentContext<T> = T extends new (...args: any) => any ? InstanceType<T> : T extends (...args: any) => any ? ReturnType<T> : T;
-export type OptionsSetupReturns<T> = T extends { setup(): infer R } ? R : {};
 export type OptionsProps<T> = T extends { props: infer R } ? R : {};
 export type SelectComponent<T1, T2> = T1 extends (new (...args: any) => any) ? T1 : T1 extends ((...args: any) => any) ? T1 : T2;
 

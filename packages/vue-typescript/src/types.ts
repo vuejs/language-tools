@@ -12,7 +12,6 @@ export interface ITemplateScriptData {
 	components: string[];
 	componentItems: ts.CompletionEntry[];
 	props: string[];
-	setupReturns: string[];
 }
 
 export interface VueCompilerOptions {

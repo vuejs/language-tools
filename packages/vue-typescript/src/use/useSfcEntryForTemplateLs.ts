@@ -43,7 +43,6 @@ export function useSfcEntryForTemplateLs(
 		content += `declare var __VLS_Components: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & typeof __VLS_ComponentsWrap.components & __VLS_types.GlobalComponents & __VLS_types.PickComponents<typeof __VLS_ctx> & __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
-		content += `({} as __VLS_types.OptionsSetupReturns<typeof __VLS_options_ts>).${SearchTexts.SetupReturns};\n`;
 		content += `({} as __VLS_types.OptionsProps<typeof __VLS_options_ts>).${SearchTexts.Props};\n`;
 		content += `({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
 
