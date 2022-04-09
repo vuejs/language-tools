@@ -47,10 +47,10 @@ export function register(
 				for (const vueDocument of context.vueDocuments.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 
-						const isTsFile = sourceMap.embeddedFile.fileName.endsWith('.js') ||
-							sourceMap.embeddedFile.fileName.endsWith('.ts') ||
-							sourceMap.embeddedFile.fileName.endsWith('.jsx') ||
-							sourceMap.embeddedFile.fileName.endsWith('.tsx')
+						const isTsFile = sourceMap.embeddedFile.lang === 'js' ||
+							sourceMap.embeddedFile.lang === 'ts' ||
+							sourceMap.embeddedFile.lang === 'jsx' ||
+							sourceMap.embeddedFile.lang === 'tsx'
 
 						if (!isTsFile)
 							continue;

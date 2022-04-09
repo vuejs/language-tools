@@ -98,10 +98,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 				true,
 				function* (arg, sourceMap) {
 
-					const isTsFile = sourceMap.embeddedFile.fileName.endsWith('.js') ||
-						sourceMap.embeddedFile.fileName.endsWith('.ts') ||
-						sourceMap.embeddedFile.fileName.endsWith('.jsx') ||
-						sourceMap.embeddedFile.fileName.endsWith('.tsx')
+					const isTsFile = sourceMap.embeddedFile.lang === 'js' ||
+						sourceMap.embeddedFile.lang === 'ts' ||
+						sourceMap.embeddedFile.lang === 'jsx' ||
+						sourceMap.embeddedFile.lang === 'tsx'
 
 					if (sourceMap.embeddedFile.capabilities.diagnostics && isTsFile === isTs) {
 						yield arg;

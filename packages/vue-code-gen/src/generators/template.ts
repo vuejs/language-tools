@@ -91,6 +91,8 @@ export function generate(
 	}> = {};
 	const localVars: Record<string, number> = {};
 
+	tsFormatCodeGen.addText('export { };\n');
+
 	let elementIndex = 0;
 
 	for (const childNode of templateAst.children) {

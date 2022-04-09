@@ -84,11 +84,11 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				lang: lang.value,
 				content: codeGen.value.codeGen.getText(),
 				capabilities: {
-					diagnostics: !script.value?.src && lsType === 'script',
+					diagnostics: false,
 					foldingRanges: false,
 					formatting: false,
 					documentSymbol: false,
-					codeActions: !script.value?.src && lsType === 'script',
+					codeActions: false,
 				},
 				data: undefined,
 			};

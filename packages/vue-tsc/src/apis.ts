@@ -16,7 +16,7 @@ export function register(
 	};
 
 	function getRootFileNames() {
-		return getProgram()?.getRootFileNames().filter(fileName => context.getTsLsHost().fileExists?.(fileName));
+		return getProgram().getRootFileNames().filter(fileName => context.getTsLsHost().fileExists?.(fileName));
 	}
 
 	// for vue-tsc --noEmit --watch
@@ -44,45 +44,24 @@ export function register(
 
 			if (mapped) {
 
-				let results: ts.Diagnostic[] = [];
+				if (!mapped.embedded.file.capabilities.diagnostics)
+					return [];
 
-				const embeddeds = mapped.vueFile.getAllEmbeddeds();
+				const program = getProgram();
+				const errors = transformDiagnostics(program?.[api](sourceFile, cancellationToken) ?? []);
 
-				for (const embedded of embeddeds) {
-
-					const isTsFile = embedded.file.fileName.endsWith('.js') ||
-						embedded.file.fileName.endsWith('.ts') ||
-						embedded.file.fileName.endsWith('.jsx') ||
-						embedded.file.fileName.endsWith('.tsx')
-
-					if (!isTsFile || !embedded.file.capabilities.diagnostics)
-						continue;
-
-					const program = getProgram();
-					const embeddedSourceFile = program?.getSourceFile(embedded.file.fileName);
-
-					if (embeddedSourceFile) {
-
-						const errors = transformDiagnostics(program?.[api](embeddedSourceFile, cancellationToken) ?? []);
-						results = results.concat(errors);
-					}
-				}
-
-				return results;
-			}
-			else {
-				return getProgram()?.[api](sourceFile, cancellationToken) ?? [];
+				return errors;
 			}
 		}
 
-		return transformDiagnostics(getProgram()?.[api](sourceFile, cancellationToken) ?? []);
+		return transformDiagnostics(getProgram()[api](sourceFile, cancellationToken) ?? []);
 	}
 
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-		return transformDiagnostics(getProgram()?.getGlobalDiagnostics(cancellationToken) ?? []);
+		return transformDiagnostics(getProgram().getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram()!.emit(targetSourceFile, (context.vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram().emit(targetSourceFile, (context.vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
@@ -90,7 +69,7 @@ export function register(
 		};
 	}
 	function getProgram() {
-		return context.getTsLs().getProgram();
+		return context.getTsLs().getProgram()!;
 	}
 
 	// transform
