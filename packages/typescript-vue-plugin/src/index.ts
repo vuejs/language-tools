@@ -34,22 +34,22 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			});
 			const _tsPluginApis = apis.register(tsRuntime);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs().getSemanticDiagnostics, false),
-				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs().getEncodedSemanticClassifications, false),
-				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition, false),
-				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs().getCompletionEntryDetails, false), // not sure
-				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs().getCompletionEntrySymbol, false), // not sure
-				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs().getQuickInfoAtPosition, false),
-				getSignatureHelpItems: apiHook(tsRuntime.getTsLs().getSignatureHelpItems, false),
-				getRenameInfo: apiHook(tsRuntime.getTsLs().getRenameInfo, false),
+				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs().getSemanticDiagnostics),
+				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs().getEncodedSemanticClassifications),
+				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition),
+				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs().getCompletionEntryDetails),
+				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs().getCompletionEntrySymbol),
+				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs().getQuickInfoAtPosition),
+				getSignatureHelpItems: apiHook(tsRuntime.getTsLs().getSignatureHelpItems),
+				getRenameInfo: apiHook(tsRuntime.getTsLs().getRenameInfo),
 
-				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations, true),
-				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition, false),
-				getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan, false),
-				getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition, false),
-				getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition, false),
-				getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition, true),
-				findReferences: apiHook(_tsPluginApis.findReferences, true),
+				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations),
+				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition),
+				getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan),
+				getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition),
+				getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition),
+				getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition),
+				findReferences: apiHook(_tsPluginApis.findReferences),
 
 				// TODO: now is handle by vue server
 				// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
@@ -75,12 +75,10 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			function apiHook<T extends (...args: any) => any>(
 				api: T,
-				shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean) = true,
 			) {
 				const handler = {
 					apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-						const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
-						tsRuntime.update(_shouldUpdateTemplateScript);
+						tsRuntime.update();
 						return target.apply(thisArg, argumentsList);
 					}
 				};

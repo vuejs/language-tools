@@ -137,7 +137,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		vscode.workspace.onDidChangeConfiguration(async () => {
 			const nowUseSecondServer = useSecondServer();
 			if (_useSecondServer !== nowUseSecondServer) {
-				const reload = await vscode.window.showInformationMessage('Please reload VSCode to switch low power mode.', 'Reload Window');
+				const reload = await vscode.window.showInformationMessage('Please reload VSCode to restart language servers.', 'Reload Window');
 				if (reload === undefined) return; // cancel
 				vscode.commands.executeCommand('workbench.action.reloadWindow');
 			}
@@ -240,7 +240,6 @@ function getInitializationOptions(
 			documentColor: true,
 			documentFormatting: true,
 		} : undefined,
-		initializationMessage: initMessage,
 	};
 	return initializationOptions;
 }

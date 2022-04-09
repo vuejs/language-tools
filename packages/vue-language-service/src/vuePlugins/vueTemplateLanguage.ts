@@ -1,8 +1,8 @@
 import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { SearchTexts, TypeScriptRuntime } from '@volar/vue-typescript';
+import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
-import { computed, pauseTracking, ref, resetTracking } from '@vue/reactivity';
+import { pauseTracking, resetTracking } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate, isHTMLTag } from '@vue/shared';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
@@ -11,7 +11,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
 import type { LanguageServiceHost } from '../types';
-import { untrack } from '../utils/untrack';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import useHtmlPlugin from '../commonPlugins/html';
 
@@ -70,12 +69,14 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
     getScriptContentVersion: () => number,
     vueLsHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
-    updateTemplateScripts: () => void,
     tsSettings: ts2.Settings,
     tsRuntime: TypeScriptRuntime,
 }): EmbeddedLanguageServicePlugin & T {
 
-    const componentCompletionDataGetters = new WeakMap<VueDocument, ReturnType<typeof useComponentCompletionData>>();
+    const componentCompletionDataCache = new WeakMap<
+        ReturnType<VueFile['getTemplateData']>,
+        Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>
+    >();
     const autoImportPositions = new WeakSet<vscode.Position>();
     const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
 
@@ -159,9 +160,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
             if (vueDocument && scanner) {
 
-                options.updateTemplateScripts();
-
-                const templateScriptData = vueDocument.file.getTemplateScriptData();
+                const templateScriptData = vueDocument.file.getTemplateData();
                 const components = new Set([
                     ...templateScriptData.components,
                     ...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
@@ -448,16 +447,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
         const tags: html.ITagData[] = [];
         const tsItems = new Map<string, ts.CompletionEntry>();
         const globalAttributes: html.IAttributeData[] = [];
-        const { contextItems } = vueDocument.file.getTemplateScriptData();
-
-        for (const item of contextItems) {
-            const dir = hyphenate(item.name);
-            if (dir.startsWith('v-')) {
-                const key = createInternalItemId('vueDirective', [dir]);
-                globalAttributes.push({ name: dir, description: key });
-                tsItems.set(key, item);
-            }
-        }
 
         for (const [_componentName, { item, bind, on }] of componentCompletion) {
 
@@ -719,15 +708,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
         options.templateLanguagePlugin.htmlLs.setDataProviders(true, options.templateLanguagePlugin.getHtmlDataProviders());
     }
 
-    function getComponentCompletionData(sourceFile: VueDocument) {
-        let getter = componentCompletionDataGetters.get(sourceFile);
-        if (!getter) {
-            getter = untrack(useComponentCompletionData(sourceFile));
-            componentCompletionDataGetters.set(sourceFile, getter);
-        }
-        return getter();
-    }
-
     function getLastImportNode(ast: ts.SourceFile) {
         let importNode: ts.ImportDeclaration | undefined;
         ast.forEachChild(node => {
@@ -741,24 +721,19 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
         } : undefined;
     }
 
-    function useComponentCompletionData(sourceFile: VueDocument) {
+    function getComponentCompletionData(sourceFile: VueDocument) {
 
-        const {
-            sfcTemplateScript,
-            templateScriptData,
-            sfcEntryForTemplateLs,
-        } = sourceFile.file.refs;
+        const templateData = sourceFile.file.getTemplateData();
 
-        const projectVersion = ref<number>();
-        const usedTags = ref(new Set<string>());
-        const result = computed(() => {
+        let cache = componentCompletionDataCache.get(templateData);
+        if (!cache) {
 
-            const result = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>();
+            const {
+                sfcTemplateScript,
+                sfcEntryForTemplateLs,
+            } = sourceFile.file.refs;
 
-            { // watching
-                projectVersion.value;
-                usedTags.value;
-            }
+            cache = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>();
 
             pauseTracking();
             const file = sfcTemplateScript.file.value;
@@ -768,7 +743,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
             if (file) {
 
-                const tags_1 = templateScriptData.componentItems.map(item => {
+                const tags_1 = templateData.componentItems.map(item => {
                     return { item, name: item.name };
                 });
                 const tags_2 = templateTagNames
@@ -777,7 +752,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
                 for (const tag of [...tags_1, ...tags_2]) {
 
-                    if (result.has(tag.name))
+                    if (cache.has(tag.name))
                         continue;
 
                     let bind: ts.CompletionEntry[] = [];
@@ -787,7 +762,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            bind = options.tsRuntime.getTsLs()?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            bind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     {
@@ -795,24 +770,19 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            on = options.tsRuntime.getTsLs()?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            on = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
-                    result.set(tag.name, { item: tag.item, bind, on });
+                    cache.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = options.tsRuntime.getTsLs()?.getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
-                result.set('*', { item: undefined, bind: globalBind, on: [] });
+                const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
+                cache.set('*', { item: undefined, bind: globalBind, on: [] });
             }
-            return result;
-        });
-        return () => {
-            projectVersion.value = options.getScriptContentVersion();
-            const nowUsedTags = new Set(Object.keys(sfcTemplateScript.templateCodeGens.value?.tagNames ?? {}));
-            if (!eqSet(usedTags.value, nowUsedTags)) {
-                usedTags.value = nowUsedTags;
-            }
-            return result.value;
-        };
+
+            componentCompletionDataCache.set(templateData, cache);
+        }
+
+        return cache;
     }
 }
 

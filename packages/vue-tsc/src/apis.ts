@@ -90,7 +90,7 @@ export function register(
 		};
 	}
 	function getProgram() {
-		return context.getTsLs()?.getProgram();
+		return context.getTsLs().getProgram();
 	}
 
 	// transform

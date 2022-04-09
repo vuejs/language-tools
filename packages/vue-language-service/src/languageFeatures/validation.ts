@@ -5,7 +5,7 @@ import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import { EmbeddedDocumentSourceMap } from '../vueDocuments';
 
-export function register(context: LanguageServiceRuntimeContext, updateTemplateScripts: () => void) {
+export function register(context: LanguageServiceRuntimeContext) {
 
 	const responseCache = new Map<
 		string,
@@ -30,9 +30,6 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 			}
 		>
 	>();
-	const templateTsCache_semantic: typeof nonTsCache = new Map();
-	const templateTsCache_syntactic: typeof nonTsCache = new Map();
-	const templateTsCache_suggestion: typeof nonTsCache = new Map();
 	const scriptTsCache_semantic: typeof nonTsCache = new Map();
 	const scriptTsCache_syntactic: typeof nonTsCache = new Map();
 	const scriptTsCache_suggestion: typeof nonTsCache = new Map();
@@ -58,36 +55,10 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 			syntactic: true,
 		}, nonTsCache, errors => cache.nonTs = errors ?? []);
 		doResponse();
-
-		const vueDocument = context.vueDocuments.get(uri);
-
-		if (vueDocument) {
-
-			const lastUpdated = vueDocument.file.getLastUpdated();
-
-			const isScriptChanged = lastUpdated.script || lastUpdated.scriptSetup;
-			if (isScriptChanged) {
-				await worker(true, { syntactic: true }, templateTsCache_syntactic, errors => cache.templateTs_syntactic = errors ?? []);
-				await worker(true, { suggestion: true }, templateTsCache_suggestion, errors => cache.templateTs_suggestion = errors ?? []);
-				doResponse();
-				if (!await isCancel?.())
-					updateTemplateScripts();
-				await worker(true, { semantic: true }, templateTsCache_semantic, errors => cache.templateTs_semantic = errors ?? []);
-			}
-			else {
-				await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
-				await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
-				doResponse();
-				await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
-			}
-
-		}
-		else {
-			await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
-			await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
-			doResponse();
-			await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
-		}
+		await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
+		await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
+		doResponse();
+		await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
 
 		return getErrors();
 
@@ -147,7 +118,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 					const pluginCache = cacheMap.get(plugin.id) ?? cacheMap.set(plugin.id, new Map()).get(plugin.id)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = isTs ? undefined : context.getTsLs()?.__internal__.host.getProjectVersion?.();
+					const tsProjectVersion = isTs ? undefined : context.getTsLs().__internal__.host.getProjectVersion?.();
 
 					if (!isTs) {
 						if (cache && cache.documentVersion === document.version) {

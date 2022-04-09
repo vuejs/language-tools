@@ -148,6 +148,8 @@ export function getDocumentService(
 			context.typescript,
 			'Record<string, string>',
 			stylesheetExtra.getCssClasses,
+			undefined,
+			undefined,
 		);
 		vueDoc = parseVueDocument(vueFile);
 

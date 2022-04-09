@@ -81,6 +81,8 @@ export function createVueFile(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	baseCssModuleType: string,
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
+	tsLs: ts.LanguageService | undefined,
+	tsHost: ts.LanguageServiceHost | undefined,
 ) {
 
 	// refs
@@ -98,13 +100,11 @@ export function createVueFile(
 		script: false,
 		scriptSetup: false,
 	};
-	const templateScriptData = shallowReactive<ITemplateScriptData>({
+	let templateScriptData: ITemplateScriptData = {
 		projectVersion: undefined,
-		context: [],
-		contextItems: [],
 		components: [],
 		componentItems: [],
-	}) as ITemplateScriptData;
+	};
 	const cssVars = new WeakMap<EmbeddedFile, TextRange[]>();
 
 	// computeds
@@ -339,10 +339,9 @@ export function createVueFile(
 		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
 		update: untrack(update),
-		updateTemplateScript: untrack(updateTemplateScript),
+		getTemplateData: untrack(getTemplateData),
 		getScriptTsFile: untrack(() => sfcScriptForScriptLs.file.value),
 		getEmbeddedTemplate: untrack(() => sfcTemplate.embedded.value),
-		getTemplateScriptData: untrack(() => templateScriptData),
 		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => sfcScript.ast.value),
 		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
@@ -361,7 +360,6 @@ export function createVueFile(
 			sfcTemplateScript,
 			sfcEntryForTemplateLs: sfcTemplateMiddleScript,
 			sfcScriptForScriptLs,
-			templateScriptData,
 		},
 	};
 
@@ -380,16 +378,13 @@ export function createVueFile(
 		updateStyles(parsedSfc.value.descriptor.styles);
 		updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
 
-		sfcTemplateScript.update(); // TODO
-
 		const scriptLang_2 = sfcScriptForScriptLs.file.value.lang;
 		const scriptText_2 = sfcScriptForScriptLs.file.value.content;
 		const templateScriptContent_2 = sfcTemplateScript.file.value?.content;
 
 		return {
 			scriptContentUpdated: lastUpdated.script || lastUpdated.scriptSetup,
-			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2, // TODO
-			templateScriptUpdated: templateScriptContent !== templateScriptContent_2,
+			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2 || templateScriptContent !== templateScriptContent_2, // TODO
 		};
 
 		function updateTemplate(block: SFCTemplateBlock | null) {
@@ -513,10 +508,17 @@ export function createVueFile(
 			}
 		}
 	}
-	function updateTemplateScript(tsLs: ts.LanguageService, tsHost: ts.LanguageServiceHost) {
+	function getTemplateData() {
+
+		if (!tsHost)
+			return templateScriptData;
+
+		if (!tsLs)
+			return templateScriptData;
+
 		const newVersion = tsHost.getProjectVersion?.();
 		if (templateScriptData.projectVersion === newVersion) {
-			return false;
+			return templateScriptData;
 		}
 		templateScriptData.projectVersion = newVersion;
 
@@ -525,35 +527,29 @@ export function createVueFile(
 		};
 
 		const file = sfcTemplateMiddleScript.file.value;
-		const context = file.content.indexOf(SearchTexts.Context) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
 		let components = file.content.indexOf(SearchTexts.Components) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');
 		});
 
-		const contextNames = context.map(entry => entry.name);
 		const componentNames = components.map(entry => entry.name);
 
 		let dirty = false;
 
-		if (!eqSet(new Set(contextNames), new Set(templateScriptData.context))) {
-			templateScriptData.context = contextNames;
-			templateScriptData.contextItems = context;
-			dirty = true;
-		}
-
 		if (!eqSet(new Set(componentNames), new Set(templateScriptData.components))) {
-			templateScriptData.components = componentNames;
-			templateScriptData.componentItems = components;
 			dirty = true;
 		}
 
 		if (dirty) {
-			sfcTemplateScript.update(); // TODO
+			templateScriptData = {
+				projectVersion: newVersion,
+				components: componentNames,
+				componentItems: components,
+			};
 		}
 
-		return dirty;
+		return templateScriptData;
 	}
 	function getCssVBindRanges(embeddedFile: EmbeddedFile) {
 

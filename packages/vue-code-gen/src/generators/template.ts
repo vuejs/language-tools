@@ -1,10 +1,10 @@
 import * as SourceMaps from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
-import { camelize, hyphenate, isHTMLTag, isSVGTag, isGloballyWhitelisted } from '@vue/shared';
+import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '../types';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import { colletVars, walkInterpolationFragment } from '../transform';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -269,110 +269,6 @@ export function generate(
 		attrNames,
 	};
 
-	function walkInterpolationFragment(code: string, cb: (fragment: string, offset: number | undefined) => void) {
-
-		let ctxVarOffsets: number[] = [];
-		let localVarOffsets: number[] = [];
-
-		const ast = ts.createSourceFile('/foo.ts', code, ts.ScriptTarget.ESNext);
-		const varCb = (localVar: ts.Identifier) => {
-			if (!!localVars[localVar.text] || isGloballyWhitelisted(localVar.text)) {
-				localVarOffsets.push(localVar.getStart(ast));
-			}
-			else {
-				ctxVarOffsets.push(localVar.getStart(ast));
-			}
-		};
-		ast.forEachChild(node => walkIdentifiers(node, varCb));
-
-		ctxVarOffsets = ctxVarOffsets.sort((a, b) => a - b);
-		localVarOffsets = localVarOffsets.sort((a, b) => a - b);
-
-		if (ctxVarOffsets.length) {
-
-			cb(code.substring(0, ctxVarOffsets[0]), 0);
-
-			for (let i = 0; i < ctxVarOffsets.length - 1; i++) {
-				cb('__VLS_ctx.', undefined);
-				cb(code.substring(ctxVarOffsets[i], ctxVarOffsets[i + 1]), ctxVarOffsets[i]);
-			}
-
-			cb('__VLS_ctx.', undefined);
-			cb(code.substring(ctxVarOffsets[ctxVarOffsets.length - 1]), ctxVarOffsets[ctxVarOffsets.length - 1]);
-		}
-		else {
-			cb(code, 0);
-		}
-	}
-	function walkIdentifiers(node: ts.Node, cb: (varNode: ts.Identifier) => void) {
-
-		const blockVars: string[] = [];
-
-		if (ts.isIdentifier(node)) {
-			cb(node);
-		}
-		else if (ts.isPropertyAccessExpression(node)) {
-			walkIdentifiers(node.expression, cb);
-		}
-		else if (ts.isVariableDeclaration(node)) {
-
-			colletVars(node.name, blockVars);
-
-			for (const varName of blockVars)
-				localVars[varName] = (localVars[varName] ?? 0) + 1;
-
-			if (node.initializer)
-				walkIdentifiers(node.initializer, cb);
-		}
-		else if (ts.isArrowFunction(node)) {
-
-			const functionArgs: string[] = [];
-
-			for (const param of node.parameters)
-				colletVars(param.name, functionArgs);
-
-			for (const varName of functionArgs)
-				localVars[varName] = (localVars[varName] ?? 0) + 1;
-
-			walkIdentifiers(node.body, cb);
-
-			for (const varName of functionArgs)
-				localVars[varName]--;
-		}
-		else if (ts.isObjectLiteralExpression(node)) {
-			for (const prop of node.properties) {
-				if (ts.isPropertyAssignment(prop)) {
-					walkIdentifiers(prop.initializer, cb);
-				}
-			}
-		}
-		else {
-			node.forEachChild(node => walkIdentifiers(node, cb));
-		}
-
-		for (const varName of blockVars)
-			localVars[varName]--;
-	}
-	function colletVars(node: ts.Node, result: string[]) {
-		if (ts.isIdentifier(node)) {
-			result.push(node.text);
-		}
-		else if (ts.isObjectBindingPattern(node)) {
-			for (const el of node.elements) {
-				colletVars(el.name, result);
-			}
-		}
-		else if (ts.isArrayBindingPattern(node)) {
-			for (const el of node.elements) {
-				if (ts.isBindingElement(el)) {
-					colletVars(el.name, result);
-				}
-			}
-		}
-		else {
-			node.forEachChild(node => colletVars(node, result));
-		}
-	}
 	function collectTags(node: CompilerDOM.TemplateChildNode) {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const patchForNode = getPatchForSlotNode(node);
@@ -551,7 +447,7 @@ export function generate(
 			if (leftExpressionRange && leftExpressionText) {
 
 				const collentAst = ts.createSourceFile('/foo.ts', `const [${leftExpressionText}]`, ts.ScriptTarget.ESNext);
-				colletVars(collentAst, forBlockVars);
+				colletVars(ts, collentAst, forBlockVars);
 
 				for (const varName of forBlockVars)
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
@@ -1322,7 +1218,7 @@ export function generate(
 					tsCodeGen.addText(`const `);
 
 					const collentAst = ts.createSourceFile('/foo.ts', `const ${prop.exp.content}`, ts.ScriptTarget.ESNext);
-					colletVars(collentAst, slotBlockVars);
+					colletVars(ts, collentAst, slotBlockVars);
 
 					writeCode(
 						prop.exp.content,
@@ -1760,8 +1656,16 @@ export function generate(
 		}
 	}
 	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: EmbeddedFileMappingData) {
-		if (validTsVar.test(mapCode) || (mapCode.startsWith('[') && mapCode.endsWith(']'))) {
+		if (validTsVar.test(mapCode)) {
 			writeCode(mapCode, sourceRange, mapMode, data);
+			return 1;
+		}
+		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
+			writeInterpolation(
+				mapCode,
+				sourceRange.start,
+				data,
+			);
 			return 1;
 		}
 		else {
@@ -1863,7 +1767,7 @@ export function generate(
 		prefix = '',
 		suffix = '',
 	) {
-		walkInterpolationFragment(prefix + mapCode + suffix, (frag, fragOffset) => {
+		walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset) => {
 			if (fragOffset === undefined) {
 				tsCodeGen.addText(frag);
 			}
@@ -1891,7 +1795,7 @@ export function generate(
 				);
 				tsCodeGen.addText(addSubfix);
 			}
-		});
+		}, localVars);
 	}
 	function writeFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
 		tsFormatCodeGen.addText(formatWrapper[0]);

@@ -36,10 +36,7 @@ export function createTypeScriptRuntime(options: {
     let vueProjectVersion: string | undefined;
     let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
     let tsProjectVersion = 0; // update by script LS virtual files / *.ts
-    let lastScriptProjectVersionWhenTemplateProjectVersionUpdate = -1;
     const vueFiles = createVueFiles();
-    const templateScriptUpdateFileNames = new Set<string>();
-    const initProgressCallback: ((p: number) => void)[] = [];
     const plugins = [
         useHtmlPlugin(),
         usePugPlugin(),
@@ -61,9 +58,6 @@ export function createTypeScriptRuntime(options: {
         dispose: () => {
             tsLsRaw.dispose();
         },
-        onInitProgress(cb: (p: number) => void) {
-            initProgressCallback.push(cb);
-        },
         getLocalTypesFiles: () => {
             const fileNames = getLocalTypesFiles();
             const code = localTypes.getTypesCode(isVue2);
@@ -77,7 +71,7 @@ export function createTypeScriptRuntime(options: {
     function getLocalTypesFiles() {
         return vueFiles.getDirs().map(dir => path.join(dir, localTypes.typesFileName));
     }
-    function update(shouldUpdateTemplateScript: boolean) {
+    function update() {
         const newVueProjectVersion = options.vueLsHost.getVueProjectVersion?.();
         if (newVueProjectVersion === undefined || newVueProjectVersion !== vueProjectVersion) {
 
@@ -131,11 +125,8 @@ export function createTypeScriptRuntime(options: {
                 unsetSourceFiles(fileNamesToRemove);
             }
             if (finalUpdateFileNames.length) {
-                updateSourceFiles(finalUpdateFileNames, shouldUpdateTemplateScript)
+                updateSourceFiles(finalUpdateFileNames)
             }
-        }
-        else if (shouldUpdateTemplateScript && templateScriptUpdateFileNames.size) {
-            updateSourceFiles([], shouldUpdateTemplateScript)
         }
     }
     function createTsLsHost() {
@@ -154,7 +145,7 @@ export function createTypeScriptRuntime(options: {
                         if (!vueFile) {
                             const fileExists = !!options.vueLsHost.fileExists?.(fileNameTrim);
                             if (fileExists) {
-                                updateSourceFiles([fileNameTrim], false); // create virtual files
+                                updateSourceFiles([fileNameTrim]); // create virtual files
                             }
                         }
                         return !!vueFiles.fromEmbeddedFileName(fileName);
@@ -278,17 +269,11 @@ export function createTypeScriptRuntime(options: {
             }
         }
     }
-    function updateSourceFiles(fileNames: string[], shouldUpdateTemplateScript: boolean) {
+    function updateSourceFiles(fileNames: string[]) {
 
         let vueScriptContentsUpdate = false;
         let vueScriptsUpdated = false;
-        let templateScriptUpdated = false;
 
-        if (shouldUpdateTemplateScript) {
-            for (const cb of initProgressCallback) {
-                cb(0);
-            }
-        }
         for (const fileName of fileNames) {
 
             const sourceFile = vueFiles.get(fileName);
@@ -311,6 +296,8 @@ export function createTypeScriptRuntime(options: {
                     options.typescript,
                     options.baseCssModuleType,
                     options.getCssClasses,
+                    tsLsRaw,
+                    tsLsHost,
                 ));
                 vueScriptContentsUpdate = true;
                 vueScriptsUpdated = true;
@@ -323,37 +310,12 @@ export function createTypeScriptRuntime(options: {
                 if (updates.scriptUpdated) {
                     vueScriptsUpdated = true;
                 }
-                if (updates.templateScriptUpdated) {
-                    templateScriptUpdated = true;
-                }
             }
-            templateScriptUpdateFileNames.add(fileName);
         }
         if (vueScriptContentsUpdate) {
             scriptContentVersion++;
         }
         if (vueScriptsUpdated) {
-            tsProjectVersion++;
-        }
-        if (shouldUpdateTemplateScript && lastScriptProjectVersionWhenTemplateProjectVersionUpdate !== scriptContentVersion) {
-            lastScriptProjectVersionWhenTemplateProjectVersionUpdate = scriptContentVersion;
-            let currentNums = 0;
-            for (const fileName of templateScriptUpdateFileNames) {
-                if (vueFiles.get(fileName)?.updateTemplateScript(tsLsRaw, tsLsHost)) {
-                    templateScriptUpdated = true;
-                }
-                currentNums++;
-                for (const cb of initProgressCallback) {
-                    cb(currentNums / templateScriptUpdateFileNames.size);
-                }
-            }
-            templateScriptUpdateFileNames.clear();
-            for (const cb of initProgressCallback) {
-                cb(1);
-            }
-            initProgressCallback.length = 0;
-        }
-        if (templateScriptUpdated) {
             tsProjectVersion++;
         }
     }

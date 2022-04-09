@@ -7,8 +7,6 @@ export type LanguageServiceHost = ts.LanguageServiceHost & {
 
 export interface ITemplateScriptData {
 	projectVersion: string | undefined;
-	context: string[];
-	contextItems: ts.CompletionEntry[];
 	components: string[];
 	componentItems: ts.CompletionEntry[];
 }

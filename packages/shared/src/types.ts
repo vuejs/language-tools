@@ -81,5 +81,4 @@ export interface ServerInitializationOptions {
 		documentColor?: boolean
 		documentFormatting?: boolean,
 	}
-	initializationMessage?: string
 }

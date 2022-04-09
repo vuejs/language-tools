@@ -54,7 +54,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 		function getTagNameCase(vueDocument: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
-			const components = vueDocument.file.getTemplateScriptData().components;
+			const components = vueDocument.file.getTemplateData().components;
 			const tagNames = new Set(Object.keys(vueDocument.file.getTemplateTagNames() ?? {}));
 
 			let anyComponentUsed = false;

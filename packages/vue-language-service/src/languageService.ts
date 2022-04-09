@@ -258,40 +258,40 @@ export function createLanguageService(
 		getPluginById: id => allPlugins.get(id),
 	};
 	const _callHierarchy = callHierarchy.register(context);
-	const findReferences_internal = defineInternalApi(references.register(context), true);
-	const doCodeActions_internal = defineInternalApi(codeActions.register(context), false);
-	const doCodeActionResolve_internal = defineInternalApi(codeActionResolve.register(context), false);
-	const doValidation_internal = defineInternalApi(diagnostics.register(context, () => tsRuntime.update(true)), false);
-	const doRename_internal = defineInternalApi(rename.register(context), true);
-	const findTypeDefinition_internal = defineInternalApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition);
+	const findReferences_internal = defineInternalApi(references.register(context));
+	const doCodeActions_internal = defineInternalApi(codeActions.register(context));
+	const doCodeActionResolve_internal = defineInternalApi(codeActionResolve.register(context));
+	const doValidation_internal = defineInternalApi(diagnostics.register(context));
+	const doRename_internal = defineInternalApi(rename.register(context));
+	const findTypeDefinition_internal = defineInternalApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions));
 
 	return {
-		doValidation: defineApi(diagnostics.register(context, () => tsRuntime.update(true)), false, false),
-		findReferences: defineApi(references.register(context), true),
-		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
-		findTypeDefinition: defineApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions), isTemplateScriptPosition),
-		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false), false),
-		prepareRename: defineApi(renamePrepare.register(context), isTemplateScriptPosition),
-		doRename: defineApi(rename.register(context), true),
-		getEditsForFileRename: defineApi(fileRename.register(context), false),
-		getSemanticTokens: defineApi(semanticTokens.register(context), false),
-		doHover: defineApi(hover.register(context), isTemplateScriptPosition),
-		doComplete: defineApi(completions.register(context), isTemplateScriptPosition),
-		doCodeActions: defineApi(codeActions.register(context), false),
-		doCodeActionResolve: defineApi(codeActionResolve.register(context), false),
-		doCompletionResolve: defineApi(completionResolve.register(context), false),
-		getSignatureHelp: defineApi(signatureHelp.register(context), false),
-		doCodeLens: defineApi(codeLens.register(context), false),
-		doCodeLensResolve: defineApi(codeLensResolve.register(context), false),
-		findDocumentHighlights: defineApi(documentHighlight.register(context), false),
-		findDocumentLinks: defineApi(documentLink.register(context), false),
-		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context), false),
-		doAutoInsert: defineApi(autoInsert.register(context), false),
-		doExecuteCommand: defineApi(executeCommand.register(context), false),
+		doValidation: defineApi(diagnostics.register(context), false),
+		findReferences: defineApi(references.register(context)),
+		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions)),
+		findTypeDefinition: defineApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions)),
+		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false)),
+		prepareRename: defineApi(renamePrepare.register(context)),
+		doRename: defineApi(rename.register(context)),
+		getEditsForFileRename: defineApi(fileRename.register(context)),
+		getSemanticTokens: defineApi(semanticTokens.register(context)),
+		doHover: defineApi(hover.register(context)),
+		doComplete: defineApi(completions.register(context)),
+		doCodeActions: defineApi(codeActions.register(context)),
+		doCodeActionResolve: defineApi(codeActionResolve.register(context)),
+		doCompletionResolve: defineApi(completionResolve.register(context)),
+		getSignatureHelp: defineApi(signatureHelp.register(context)),
+		doCodeLens: defineApi(codeLens.register(context)),
+		doCodeLensResolve: defineApi(codeLensResolve.register(context)),
+		findDocumentHighlights: defineApi(documentHighlight.register(context)),
+		findDocumentLinks: defineApi(documentLink.register(context)),
+		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context)),
+		doAutoInsert: defineApi(autoInsert.register(context)),
+		doExecuteCommand: defineApi(executeCommand.register(context)),
 		callHierarchy: {
-			doPrepare: defineApi(_callHierarchy.doPrepare, isTemplateScriptPosition),
-			getIncomingCalls: defineApi(_callHierarchy.getIncomingCalls, true),
-			getOutgoingCalls: defineApi(_callHierarchy.getOutgoingCalls, true),
+			doPrepare: defineApi(_callHierarchy.doPrepare),
+			getIncomingCalls: defineApi(_callHierarchy.getIncomingCalls),
+			getOutgoingCalls: defineApi(_callHierarchy.getOutgoingCalls),
 		},
 		dispose: () => {
 			tsRuntime.dispose();
@@ -301,9 +301,9 @@ export function createLanguageService(
 			tsRuntime,
 			rootPath: vueLsHost.getCurrentDirectory(),
 			context,
-			getContext: defineApi(() => context, true),
+			getContext: defineApi(() => context),
 			// getD3: defineApi(d3.register(context), true), // unused for now
-			detectTagNameCase: defineApi(tagNameCase.register(context), true),
+			detectTagNameCase: defineApi(tagNameCase.register(context)),
 		},
 	};
 
@@ -402,7 +402,6 @@ export function createLanguageService(
 				getScriptContentVersion: tsRuntime.getScriptContentVersion,
 				vueLsHost,
 				vueDocuments,
-				updateTemplateScripts: () => tsRuntime.update(true),
 				tsSettings,
 				tsRuntime,
 			}),
@@ -442,37 +441,8 @@ export function createLanguageService(
 		} : _languageSupportPlugin;
 		return languageSupportPlugin;
 	}
-	function isTemplateScriptPosition(uri: string, pos: vscode.Position) {
-
-		const vueDocument = vueDocuments.get(uri);
-		if (!vueDocument) {
-			return false;
-		}
-
-		for (const sourceMap of vueDocument.getSourceMaps()) {
-			if (sourceMap.embeddedFile.fileName.indexOf('.__VLS_template.') >= 0) {
-				for (const _ of sourceMap.getMappedRanges(pos, pos, data =>
-					data.vueTag === 'template'
-					|| data.vueTag === 'style' // handle CSS variable injection to fix https://github.com/johnsoncodehk/volar/issues/777
-				)) {
-					return true;
-				}
-			}
-		}
-
-		const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
-		if (embeddedTemplate) {
-			const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
-			for (const _ of sourceMap.getMappedRanges(pos)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
 	function defineApi<T extends (...args: any) => any>(
 		api: T,
-		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean),
 		blockNewRequest = true,
 	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
 		const handler = {
@@ -480,8 +450,7 @@ export function createLanguageService(
 				for (const runningRequest of blockingRequests) {
 					await runningRequest;
 				}
-				const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
-				tsRuntime.update(_shouldUpdateTemplateScript);
+				tsRuntime.update();
 				const runner = target.apply(thisArg, argumentsList);
 				if (blockNewRequest && runner instanceof Promise) {
 					blockingRequests.add(runner);
@@ -494,12 +463,10 @@ export function createLanguageService(
 	}
 	function defineInternalApi<T extends (...args: any) => any>(
 		api: T,
-		shouldUpdateTemplateScript: boolean | ((...args: Parameters<T>) => boolean),
 	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
 		const handler = {
 			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-				const _shouldUpdateTemplateScript = typeof shouldUpdateTemplateScript === 'boolean' ? shouldUpdateTemplateScript : shouldUpdateTemplateScript.apply(null, argumentsList);
-				tsRuntime.update(_shouldUpdateTemplateScript);
+				tsRuntime.update();
 				return target.apply(thisArg, argumentsList);
 			}
 		};

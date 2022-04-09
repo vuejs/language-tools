@@ -1,8 +1,8 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
-import { computed, ref, Ref } from '@vue/reactivity';
-import { ITemplateScriptData, VueCompilerOptions } from '../types';
+import { computed, Ref } from '@vue/reactivity';
+import { VueCompilerOptions } from '../types';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 import type { TextRange } from '@volar/vue-code-gen';
@@ -11,6 +11,7 @@ import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
 import * as path from 'path';
+import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
 
 export function useSfcTemplateScript(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -198,6 +199,9 @@ export function useSfcTemplateScript(
 			return mappings;
 		}
 		function writeCssVars() {
+
+			const emptyLocalVars: Record<string, number> = {};
+
 			for (let i = 0; i < sfcStyles.value.length; i++) {
 
 				const style = sfcStyles.value[i];
@@ -205,24 +209,39 @@ export function useSfcTemplateScript(
 
 				for (const cssBind of binds) {
 					const bindText = style.content.substring(cssBind.start, cssBind.end);
-					codeGen.addCode(
+					walkInterpolationFragment(
+						ts,
 						bindText,
-						cssBind,
-						SourceMaps.Mode.Offset,
-						{
-							vueTag: 'style',
-							vueTagIndex: i,
-							capabilities: {
-								basic: true,
-								references: true,
-								definitions: true,
-								diagnostic: true,
-								rename: true,
-								completion: true,
-								semanticTokens: true,
-							},
+						(frag, fragOffset) => {
+							if (fragOffset === undefined) {
+								codeGen.addText(frag);
+							}
+							else {
+								codeGen.addCode(
+									frag,
+									{
+										start: cssBind.start + fragOffset,
+										end: cssBind.start + fragOffset + frag.length,
+									},
+									SourceMaps.Mode.Offset,
+									{
+										vueTag: 'style',
+										vueTagIndex: i,
+										capabilities: {
+											basic: true,
+											references: true,
+											definitions: true,
+											diagnostic: true,
+											rename: true,
+											completion: true,
+											semanticTokens: true,
+										},
+									},
+								);
+							}
 						},
-					);
+						emptyLocalVars,
+					)
 					codeGen.addText(';\n');
 				}
 			}
@@ -324,8 +343,44 @@ export function useSfcTemplateScript(
 			};
 		}
 	});
-	const file = ref<EmbeddedFile>();
-	const formatFile = ref<EmbeddedFile>();
+	const file = computed(() => {
+		if (data.value) {
+			const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
+			const embeddedFile: EmbeddedFile = {
+				fileName: fileName + '.__VLS_template.' + lang,
+				lang: lang,
+				content: data.value.codeGen.getText(),
+				capabilities: {
+					diagnostics: true,
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: false,
+					codeActions: false,
+				},
+				data: undefined,
+			};
+			return embeddedFile;
+		}
+	});
+	const formatFile = computed(() => {
+		if (templateCodeGens.value) {
+			const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
+			const embeddedFile: EmbeddedFile = {
+				fileName: fileName + '.__VLS_template.format.' + lang,
+				lang: lang,
+				content: templateCodeGens.value.formatCodeGen.getText(),
+				capabilities: {
+					diagnostics: false,
+					foldingRanges: false,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: false,
+				},
+				data: undefined,
+			};
+			return embeddedFile;
+		}
+	});
 
 	return {
 		templateCodeGens,
@@ -335,7 +390,6 @@ export function useSfcTemplateScript(
 		formatEmbedded,
 		inlineCssFile,
 		inlineCssEmbedded,
-		update, // TODO: cheapComputed
 	};
 
 	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: SourceMaps.Range) {
@@ -350,46 +404,6 @@ export function useSfcTemplateScript(
 			start: templateOffset + range.start,
 			end: templateOffset + range.end,
 		};
-	}
-	function update() {
-
-		const newLang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
-
-		if (data.value?.codeGen.getText() !== file.value?.content || (file.value && file.value.lang !== newLang)) {
-			if (data.value) {
-				file.value = {
-					fileName: fileName + '.__VLS_template.' + newLang,
-					lang: newLang,
-					content: data.value.codeGen.getText(),
-					capabilities: {
-						diagnostics: true,
-						foldingRanges: false,
-						formatting: false,
-						documentSymbol: false,
-						codeActions: false,
-					},
-					data: undefined,
-				};
-				formatFile.value = templateCodeGens.value ? {
-					fileName: fileName + '.__VLS_template.format.' + newLang,
-					lang: newLang,
-					content: templateCodeGens.value.formatCodeGen.getText(),
-					capabilities: {
-						diagnostics: false,
-						foldingRanges: false,
-						formatting: true,
-						documentSymbol: true,
-						codeActions: false,
-					},
-					data: undefined,
-				} : undefined;
-
-			}
-			else {
-				file.value = undefined;
-				formatFile.value = undefined;
-			}
-		}
 	}
 }
 
