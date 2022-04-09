@@ -82,16 +82,15 @@ export function useSfcTemplateScript(
 
 		writeImportTypes();
 
-		codeGen.addText(`declare var __VLS_ctxRaw: InstanceType<typeof __VLS_component>;\n`);
-		codeGen.addText(`declare var __VLS_ctx: __VLS_types.ExtractRawComponents<typeof __VLS_ctxRaw>;\n`);
+		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
 		codeGen.addText(`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
 
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('declare var __VLS_wrapComponentsRaw: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctxRaw>;\n'); // has __VLS_options
+		codeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
 		codeGen.addText('declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & { __VLS_raw: typeof __VLS_component, __VLS_options: typeof __VLS_options, __VLS_slots: typeof __VLS_slots }>;\n');
-		codeGen.addText('declare var __VLS_wrapComponents: typeof __VLS_wrapComponentsRaw & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_wrapComponentsRaw>;\n');
-		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<__VLS_types.ExtractRawComponents<typeof __VLS_wrapComponents>> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare var __VLS_allComponents: typeof __VLS_otherComponents & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_otherComponents>;\n');
+		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<typeof __VLS_allComponents> & JSX.IntrinsicElements;\n'); // sort by priority
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');

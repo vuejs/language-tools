@@ -94,8 +94,6 @@ export type ExtractComponentProps<T> =
 	: T extends FunctionalComponent<infer P2> ? P2
 	: T
 
-export type ExtractRawComponents<T> = { [K in keyof T]: ExtractRawComponent<T[K]> };
-export type ExtractRawComponent<T> = T extends { __VLS_raw: infer C } ? C : T;
 export type ExtractEmit2<T> =
 	T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
 	: T extends new (...args: any) => { $emit: infer Emit } ? Emit
