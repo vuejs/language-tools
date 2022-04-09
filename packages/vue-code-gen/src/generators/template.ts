@@ -18,7 +18,7 @@ const capabilitiesSet = {
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
 	refAttr: { references: true, definitions: true, rename: true, },
-}
+};
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
 	round: ['(', ')'] as [string, string],

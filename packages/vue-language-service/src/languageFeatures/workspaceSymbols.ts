@@ -6,7 +6,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (query: string) => {
 
-		const plugins = context.getPlugins('script');
+		const plugins = context.getPlugins();
 		const symbolsList: vscode.SymbolInformation[][] = [];
 
 		for (const plugin of plugins) {
@@ -20,7 +20,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				continue;
 
 			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
-				for (const vueLoc of context.vueDocuments.fromEmbeddedLocation('script', loc.uri, loc.range.start, loc.range.end)) {
+				for (const vueLoc of context.vueDocuments.fromEmbeddedLocation(loc.uri, loc.range.start, loc.range.end)) {
 					return vscode.Location.create(vueLoc.uri, vueLoc.range);
 				}
 			});

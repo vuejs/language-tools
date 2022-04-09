@@ -60,8 +60,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
     ts: typeof import('typescript/lib/tsserverlibrary'),
     getSemanticTokenLegend(): vscode.SemanticTokensLegend,
     getScanner(document: TextDocument): html.Scanner | undefined,
-    scriptTsLs: ts2.LanguageService,
-    templateTsLs: ts2.LanguageService | undefined,
+    tsLs: ts2.LanguageService,
     templateLanguagePlugin: T,
     isSupportedDocument: (document: TextDocument) => boolean,
     getNameCases?: (uri: string) => Promise<{
@@ -411,7 +410,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                 options.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
                 options.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
             ]);
-            const tsDetail = options.scriptTsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+            const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
             if (tsDetail?.codeActions) {
                 for (const action of tsDetail.codeActions) {
                     for (const change of action.changes) {
@@ -756,9 +755,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
             const result = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>();
 
-            if (!options.templateTsLs)
-                return result;
-
             { // watching
                 projectVersion.value;
                 usedTags.value;
@@ -791,7 +787,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            bind = options.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            bind = options.tsRuntime.getTsLs()?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     {
@@ -799,12 +795,12 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            on = options.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            on = options.tsRuntime.getTsLs()?.getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
                         }
                     }
                     result.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = options.tsRuntime.getTsLs('template')?.getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
+                const globalBind = options.tsRuntime.getTsLs()?.getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
                 result.set('*', { item: undefined, bind: globalBind, on: [] });
             }
             return result;

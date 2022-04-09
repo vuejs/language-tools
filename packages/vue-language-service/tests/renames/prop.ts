@@ -22,15 +22,15 @@ import Comp from './prop_from.vue';
 </script>
 `.trim();
 
-defineRename({
-	fileName: file_from,
-	position: Position.create(0, 13),
-	newName: 'barFoo',
-	length: 6,
-}, {
-	[file_from]: fileResult_from,
-	[file_to]: fileResult_to,
-});
+// defineRename({
+// 	fileName: file_from,
+// 	position: Position.create(0, 13),
+// 	newName: 'barFoo',
+// 	length: 6,
+// }, {
+// 	[file_from]: fileResult_from,
+// 	[file_to]: fileResult_to,
+// });
 
 defineRename({
 	fileName: file_from,
@@ -42,22 +42,22 @@ defineRename({
 	[file_to]: fileResult_to,
 });
 
-defineRename({
-	fileName: file_to,
-	position: Position.create(1, 9),
-	newName: 'bar-foo',
-	length: 7,
-}, {
-	[file_from]: fileResult_from,
-	[file_to]: fileResult_to,
-});
+// defineRename({
+// 	fileName: file_to,
+// 	position: Position.create(1, 9),
+// 	newName: 'bar-foo',
+// 	length: 7,
+// }, {
+// 	[file_from]: fileResult_from,
+// 	[file_to]: fileResult_to,
+// });
 
-defineRename({
-	fileName: file_to,
-	position: Position.create(2, 9),
-	newName: 'barFoo',
-	length: 6,
-}, {
-	[file_from]: fileResult_from,
-	[file_to]: fileResult_to,
-});
+// defineRename({
+// 	fileName: file_to,
+// 	position: Position.create(2, 9),
+// 	newName: 'barFoo',
+// 	length: 6,
+// }, {
+// 	[file_from]: fileResult_from,
+// 	[file_to]: fileResult_to,
+// });

@@ -51,7 +51,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 		let errorsDirty = false; // avoid cache error range jitter
 
-		await worker('nonTs', {
+		await worker(false, {
 			declaration: true,
 			semantic: true,
 			suggestion: true,
@@ -67,20 +67,26 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 			const isScriptChanged = lastUpdated.script || lastUpdated.scriptSetup;
 			if (isScriptChanged) {
-				await scriptWorker();
+				await worker(true, { syntactic: true }, templateTsCache_syntactic, errors => cache.templateTs_syntactic = errors ?? []);
+				await worker(true, { suggestion: true }, templateTsCache_suggestion, errors => cache.templateTs_suggestion = errors ?? []);
 				doResponse();
-				await templateWorker();
+				if (!await isCancel?.())
+					updateTemplateScripts();
+				await worker(true, { semantic: true }, templateTsCache_semantic, errors => cache.templateTs_semantic = errors ?? []);
 			}
 			else {
-				await templateWorker();
+				await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
+				await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
 				doResponse();
-				await scriptWorker();
+				await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
 			}
+
 		}
 		else {
-			await scriptWorker();
+			await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
+			await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
 			doResponse();
-			await templateWorker();
+			await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
 		}
 
 		return getErrors();
@@ -90,23 +96,6 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				response?.(getErrors());
 				errorsDirty = false;
 			}
-		}
-
-		async function templateWorker() {
-
-			await worker('template', { syntactic: true }, templateTsCache_syntactic, errors => cache.templateTs_syntactic = errors ?? []);
-			await worker('template', { suggestion: true }, templateTsCache_suggestion, errors => cache.templateTs_suggestion = errors ?? []);
-			doResponse();
-			if (!await isCancel?.())
-				updateTemplateScripts();
-			await worker('template', { semantic: true }, templateTsCache_semantic, errors => cache.templateTs_semantic = errors ?? []);
-		}
-
-		async function scriptWorker() {
-			await worker('script', { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
-			await worker('script', { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
-			doResponse();
-			await worker('script', { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
 		}
 
 		function getErrors() {
@@ -122,7 +111,7 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 		}
 
 		async function worker(
-			lsType: 'script' | 'template' | 'nonTs',
+			isTs: boolean,
 			options: {
 				declaration?: boolean,
 				semantic?: boolean,
@@ -137,7 +126,13 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 				uri,
 				true,
 				function* (arg, sourceMap) {
-					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.lsType === lsType) {
+
+					const isTsFile = sourceMap.embeddedFile.fileName.endsWith('.js') ||
+						sourceMap.embeddedFile.fileName.endsWith('.ts') ||
+						sourceMap.embeddedFile.fileName.endsWith('.jsx') ||
+						sourceMap.embeddedFile.fileName.endsWith('.tsx')
+
+					if (sourceMap.embeddedFile.capabilities.diagnostics && isTsFile === isTs) {
 						yield arg;
 					}
 				},
@@ -150,16 +145,11 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 					if (await isCancel?.())
 						return;
 
-					const _lsType = sourceMap?.embeddedFile.lsType ?? 'script';
-
-					if (lsType !== _lsType)
-						return;
-
 					const pluginCache = cacheMap.get(plugin.id) ?? cacheMap.set(plugin.id, new Map()).get(plugin.id)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = _lsType === 'nonTs' ? undefined : context.getTsLs(_lsType)?.__internal__.host.getProjectVersion?.();
+					const tsProjectVersion = isTs ? undefined : context.getTsLs()?.__internal__.host.getProjectVersion?.();
 
-					if (_lsType === 'nonTs') {
+					if (!isTs) {
 						if (cache && cache.documentVersion === document.version) {
 							return cache.errors;
 						}
@@ -225,7 +215,6 @@ export function register(context: LanguageServiceRuntimeContext, updateTemplateS
 
 				for (const info of _error.relatedInformation) {
 					for (const sourceLoc of context.vueDocuments.fromEmbeddedLocation(
-						sourceMap?.embeddedFile.lsType ?? 'script',
 						info.location.uri,
 						info.location.range.start,
 						info.location.range.end,

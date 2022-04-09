@@ -20,7 +20,7 @@ export function register(
 		const projects = getProjects();
 		return (await projects?.getProject(handler.uri))?.tsconfig;
 	});
-	connection.onNotification(shared.WriteVirtualFilesNotification.type, async ({ lsType }) => {
+	connection.onNotification(shared.WriteVirtualFilesNotification.type, async () => {
 
 		const projects = getProjects();
 		if (!projects) return;
@@ -29,7 +29,7 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const localTypes = ls.__internal__.tsRuntime.getLocalTypesFiles(lsType);
+				const localTypes = ls.__internal__.tsRuntime.getLocalTypesFiles();
 				for (const fileName of localTypes.fileNames) {
 					connection.workspace.applyEdit({
 						edit: {
@@ -46,19 +46,26 @@ export function register(
 				const context = await ls.__internal__.getContext();
 				for (const vueDocument of context.vueDocuments.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
-						if (sourceMap.embeddedFile.lsType === lsType) {
-							connection.workspace.applyEdit({
-								edit: {
-									documentChanges: [
-										vscode.CreateFile.create(sourceMap.mappedDocument.uri),
-										vscode.TextDocumentEdit.create(
-											vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
-											[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
-										),
-									]
-								}
-							});
-						}
+
+						const isTsFile = sourceMap.embeddedFile.fileName.endsWith('.js') ||
+							sourceMap.embeddedFile.fileName.endsWith('.ts') ||
+							sourceMap.embeddedFile.fileName.endsWith('.jsx') ||
+							sourceMap.embeddedFile.fileName.endsWith('.tsx')
+
+						if (!isTsFile)
+							continue;
+
+						connection.workspace.applyEdit({
+							edit: {
+								documentChanges: [
+									vscode.CreateFile.create(sourceMap.mappedDocument.uri),
+									vscode.TextDocumentEdit.create(
+										vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
+										[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
+									),
+								]
+							}
+						});
 					}
 				}
 			}

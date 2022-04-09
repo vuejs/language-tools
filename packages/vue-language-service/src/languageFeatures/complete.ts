@@ -9,7 +9,6 @@ export interface PluginCompletionData {
 	originalItem: vscode.CompletionItem,
 	pluginId: number,
 	sourceMap: {
-		lsType: 'script' | 'template' | 'nonTs',
 		embeddedDocumentUri: string
 	} | undefined,
 }
@@ -20,7 +19,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 		uri: string,
 		data: {
 			sourceMap: {
-				lsType: 'script' | 'template' | 'nonTs',
 				embeddedDocumentUri: string
 			} | undefined,
 			plugin: LanguageServicePlugin,
@@ -47,7 +45,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (cacheData.sourceMap) {
 
-					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(cacheData.sourceMap.lsType, cacheData.sourceMap.embeddedDocumentUri);
+					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(cacheData.sourceMap.embeddedDocumentUri);
 
 					if (!sourceMap)
 						continue;
@@ -72,7 +70,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 									originalItem: item,
 									pluginId: cacheData.plugin.id,
 									sourceMap: {
-										lsType: sourceMap.embeddedFile.lsType,
 										embeddedDocumentUri: sourceMap.mappedDocument.uri,
 									},
 								};
@@ -134,7 +131,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
-					const plugins = context.getPlugins(sourceMap.embeddedFile.lsType).sort(sortPlugins);
+					const plugins = context.getPlugins().sort(sortPlugins);
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
@@ -166,7 +163,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 										originalItem: item,
 										pluginId: plugin.id,
 										sourceMap: {
-											lsType: sourceMap.embeddedFile.lsType,
 											embeddedDocumentUri: sourceMap.mappedDocument.uri,
 										}
 									};
@@ -182,7 +178,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							cache!.data.push({
 								sourceMap: {
-									lsType: sourceMap.embeddedFile.lsType,
 									embeddedDocumentUri: sourceMap.mappedDocument.uri,
 								},
 								plugin,
@@ -197,7 +192,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (document) {
 
-				const plugins = context.getPlugins('script').sort(sortPlugins);
+				const plugins = context.getPlugins().sort(sortPlugins);
 
 				for (const plugin of plugins) {
 

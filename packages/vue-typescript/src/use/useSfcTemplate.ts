@@ -16,7 +16,6 @@ export function useSfcTemplate(
 				fileName: fileName + '.' + template.value.lang,
 				lang: template.value.lang,
 				content: template.value.content,
-				lsType: 'nonTs',
 				capabilities: {
 					diagnostics: true,
 					foldingRanges: true,

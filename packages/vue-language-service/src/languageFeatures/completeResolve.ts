@@ -23,7 +23,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (data.sourceMap) {
 
-				const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.lsType, data.sourceMap.embeddedDocumentUri);
+				const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
 
 				if (sourceMap) {
 

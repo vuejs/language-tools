@@ -53,27 +53,24 @@ export function register(
 
 						let foundTeleport = false;
 
-						if (sourceMap?.embeddedFile.lsType !== 'nonTs') {
+						recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-							recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
+						const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(definition.targetUri);
 
-							const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', definition.targetUri);
+						if (teleport) {
 
-							if (teleport) {
+							for (const [teleRange] of teleport.findTeleports(
+								definition.targetSelectionRange.start,
+								definition.targetSelectionRange.end,
+								isValidTeleportSideData,
+							)) {
 
-								for (const [teleRange] of teleport.findTeleports(
-									definition.targetSelectionRange.start,
-									definition.targetSelectionRange.end,
-									isValidTeleportSideData,
-								)) {
+								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+									continue;
 
-									if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
-										continue;
+								foundTeleport = true;
 
-									foundTeleport = true;
-
-									await withTeleports(teleport.document, teleRange.start, originDefinition ?? definition);
-								}
+								await withTeleports(teleport.document, teleRange.start, originDefinition ?? definition);
 							}
 						}
 
@@ -103,7 +100,7 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', link.targetUri);
+				const targetSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(link.targetUri);
 
 				if (targetSourceMap) {
 

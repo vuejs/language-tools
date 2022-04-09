@@ -113,30 +113,22 @@ export function parseVueDocuments(vueFiles: VueFiles) {
         return map;
     });
     const embeddedDocumentsMapLsType = computed(() => {
-        const maps = {
-            nonTs: new Map<string, EmbeddedDocumentSourceMap>(),
-            script: new Map<string, EmbeddedDocumentSourceMap>(),
-            template: new Map<string, EmbeddedDocumentSourceMap>(),
-        };
+        const map = new Map<string, EmbeddedDocumentSourceMap>();
         for (const vueDocument of getAll()) {
             for (const sourceMap of vueDocument.refs.sourceMaps.value) {
-                maps[sourceMap.embeddedFile.lsType].set(sourceMap.mappedDocument.uri, sourceMap);
+                map.set(sourceMap.mappedDocument.uri, sourceMap);
             }
         }
-        return maps;
+        return map;
     });
     const teleportsMapLsType = computed(() => {
-        const maps = {
-            nonTs: new Map<string, TeleportSourceMap>(),
-            script: new Map<string, TeleportSourceMap>(),
-            template: new Map<string, TeleportSourceMap>(),
-        };
+        const map = new Map<string, TeleportSourceMap>();
         for (const vueDocument of getAll()) {
             for (const teleport of vueDocument.refs.teleports.value) {
-                maps[teleport.embeddedFile.lsType].set(teleport.mappedDocument.uri, teleport);
+                map.set(teleport.mappedDocument.uri, teleport);
             }
         }
-        return maps;
+        return map;
     });
 
     return {
@@ -153,14 +145,13 @@ export function parseVueDocuments(vueFiles: VueFiles) {
         fromEmbeddedDocument: untrack((document: TextDocument) => {
             return embeddedDocumentsMap.value.get(document);
         }),
-        sourceMapFromEmbeddedDocumentUri: untrack((lsType: 'script' | 'template' | 'nonTs', uri: string) => {
-            return embeddedDocumentsMapLsType.value[lsType].get(uri);
+        sourceMapFromEmbeddedDocumentUri: untrack((uri: string) => {
+            return embeddedDocumentsMapLsType.value.get(uri);
         }),
-        teleportfromEmbeddedDocumentUri: untrack((lsType: 'script' | 'template' | 'nonTs', uri: string) => {
-            return teleportsMapLsType.value[lsType].get(uri);
+        teleportfromEmbeddedDocumentUri: untrack((uri: string) => {
+            return teleportsMapLsType.value.get(uri);
         }),
         fromEmbeddedLocation: untrack(function* (
-            lsType: 'script' | 'template' | 'nonTs',
             uri: string,
             start: vscode.Position,
             end?: vscode.Position,
@@ -174,7 +165,7 @@ export function parseVueDocuments(vueFiles: VueFiles) {
             if (end === undefined)
                 end = start;
 
-            const sourceMap = embeddedDocumentsMapLsType.value[lsType].get(uri);
+            const sourceMap = embeddedDocumentsMapLsType.value.get(uri);
 
             if (sourceMap) {
 
@@ -215,9 +206,9 @@ export function parseVueDocument(vueFile: VueFile) {
     const embeddedDocumentsMap = useCacheMap<EmbeddedFile, TextDocument>(embeddedFile => {
 
         const uri = shared.fsPathToUri(embeddedFile.fileName);
-        const newVersion = (embeddedDocumentVersions.get(embeddedFile.lsType + ':' + uri.toLowerCase()) ?? 0) + 1;
+        const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
 
-        embeddedDocumentVersions.set(embeddedFile.lsType + ':' + uri.toLowerCase(), newVersion);
+        embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);
 
         return TextDocument.create(
             uri,

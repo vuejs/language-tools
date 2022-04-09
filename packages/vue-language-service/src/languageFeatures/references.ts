@@ -47,27 +47,24 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						let foundTeleport = false;
 
-						if (sourceMap?.embeddedFile.lsType !== 'nonTs') {
+						recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-							recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
+						const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(reference.uri);
 
-							const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', reference.uri);
+						if (teleport) {
 
-							if (teleport) {
+							for (const [teleRange] of teleport.findTeleports(
+								reference.range.start,
+								reference.range.end,
+								sideData => !!sideData.capabilities.references,
+							)) {
 
-								for (const [teleRange] of teleport.findTeleports(
-									reference.range.start,
-									reference.range.end,
-									sideData => !!sideData.capabilities.references,
-								)) {
+								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+									continue;
 
-									if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
-										continue;
+								foundTeleport = true;
 
-									foundTeleport = true;
-
-									await withTeleports(teleport.document, teleRange.start);
-								}
+								await withTeleports(teleport.document, teleRange.start);
 							}
 						}
 
@@ -79,7 +76,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(sourceMap?.embeddedFile.lsType ?? 'script', reference.uri);
+				const referenceSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(reference.uri);
 
 				if (referenceSourceMap) {
 

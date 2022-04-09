@@ -91,8 +91,7 @@ export namespace VerifyAllScriptsNotification {
 }
 
 export namespace WriteVirtualFilesNotification {
-	export type ParamsType = { lsType: 'template' | 'script' };
-	export const type = new vscode.NotificationType<ParamsType>('volar.action.writeVirtualFiles');
+	export const type = new vscode.NotificationType0('volar.action.writeVirtualFiles');
 }
 
 export namespace DetectDocumentNameCasesRequest {

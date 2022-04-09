@@ -78,7 +78,7 @@ export function useSfcTemplateScript(
 		const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
-		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${baseFileName}';\n`);
+		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${baseFileName}.__VLS_middle';\n`);
 
 		writeImportTypes();
 
@@ -360,7 +360,6 @@ export function useSfcTemplateScript(
 		if (templateCodeGens.value) {
 
 			const file: EmbeddedFile = {
-				lsType: 'nonTs',
 				fileName: fileName + '.template.css',
 				lang: 'css',
 				content: templateCodeGens.value.cssCodeGen.getText(),
@@ -431,7 +430,6 @@ export function useSfcTemplateScript(
 		if (data.value?.codeGen.getText() !== file.value?.content || (file.value && file.value.lang !== newLang)) {
 			if (data.value) {
 				file.value = {
-					lsType: 'template',
 					fileName: fileName + '.__VLS_template.' + newLang,
 					lang: newLang,
 					content: data.value.codeGen.getText(),
@@ -445,7 +443,6 @@ export function useSfcTemplateScript(
 					data: undefined,
 				};
 				formatFile.value = templateCodeGens.value ? {
-					lsType: 'nonTs',
 					fileName: fileName + '.__VLS_template.format.' + newLang,
 					lang: newLang,
 					content: templateCodeGens.value.formatCodeGen.getText(),

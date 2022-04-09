@@ -13,7 +13,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			newUri += '.ts';
 		}
 
-		const plugins = context.getPlugins('script');
+		const plugins = context.getPlugins();
 
 		for (const plugin of plugins) {
 
@@ -24,8 +24,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (workspaceEdit) {
 				return embeddedEditToSourceEdit(
-					'script',
-					false,
 					workspaceEdit,
 					context.vueDocuments,
 				)

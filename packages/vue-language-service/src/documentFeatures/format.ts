@@ -32,7 +32,6 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			let edits: vscode.TextEdit[] = [];
 			let toPatchIndent: {
-				lsType: string,
 				sourceMapEmbeddedDocumentUri: string,
 			} | undefined;
 
@@ -45,7 +44,6 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				if (embedded.inheritParentIndent)
 					toPatchIndent = {
-						lsType: sourceMap.embeddedFile.lsType,
 						sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
 					};
 
@@ -75,7 +73,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				tryUpdateVueDocument();
 
-				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.embeddedFile.lsType === toPatchIndent?.lsType && sourceMap.mappedDocument.uri === toPatchIndent.sourceMapEmbeddedDocumentUri);
+				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
 
 				if (sourceMap) {
 

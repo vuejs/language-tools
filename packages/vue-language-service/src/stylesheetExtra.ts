@@ -23,9 +23,9 @@ export function createStylesheetExtra(cssPlugin: ReturnType<typeof useCssPlugin>
         if (!document) {
 
             const uri = shared.fsPathToUri(embeddedFile.fileName);
-            const newVersion = (embeddedDocumentVersions.get(embeddedFile.lsType + ':' + uri.toLowerCase()) ?? 0) + 1;
+            const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
 
-            embeddedDocumentVersions.set(embeddedFile.lsType + ':' + uri.toLowerCase(), newVersion);
+            embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);
 
             document = TextDocument.create(
                 uri,

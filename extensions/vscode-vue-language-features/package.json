@@ -447,13 +447,8 @@
 				"category": "Volar"
 			},
 			{
-				"command": "volar.action.writeTemplateLsVirtualFiles",
-				"title": "Write Template LS Virtual Files",
-				"category": "Volar (Debug)"
-			},
-			{
-				"command": "volar.action.writeScriptLsVirtualFiles",
-				"title": "Write Script LS Virtual Files",
+				"command": "volar.action.writeVirtualFiles",
+				"title": "Write Virtual Files",
 				"category": "Volar (Debug)"
 			},
 			{
@@ -539,11 +534,7 @@
 					"when": "volar.activated"
 				},
 				{
-					"command": "volar.action.writeTemplateLsVirtualFiles",
-					"when": "volar.activated"
-				},
-				{
-					"command": "volar.action.writeScriptLsVirtualFiles",
+					"command": "volar.action.writeVirtualFiles",
 					"when": "volar.activated"
 				},
 				{
