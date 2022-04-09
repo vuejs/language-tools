@@ -111,6 +111,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			[PreviewType.ExternalBrowser]: {
 				label: 'Preview Vite App in External Browser',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
+				description: 'Press `Alt` to use go to code in Browser',
 			},
 			[PreviewType.ComponentPreview]: {
 				label: `Preview Component with Vite`,
@@ -138,6 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			[PreviewType.ExternalBrowser]: {
 				label: 'Preview Nuxt App in External Browser',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
+				description: 'Press `Alt` to use go to code in Browser',
 			},
 		});
 		if (select === undefined)
