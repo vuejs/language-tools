@@ -8,7 +8,6 @@ import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { VueLanguagePlugin } from './typescriptRuntime';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
-import { useSfcEntryForTemplateLs } from './use/useSfcEntryForTemplateLs';
 import { useSfcScript } from './use/useSfcScript';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
@@ -187,17 +186,11 @@ export function createVueFile(
 		compilerOptions.experimentalCompatMode === 2,
 		getCssVBindRanges,
 	);
-	const sfcTemplateMiddleScript = useSfcEntryForTemplateLs(
-		fileName,
-		computed(() => sfc.script),
-		computed(() => sfc.scriptSetup),
-		computed(() => !!sfcScriptForTemplateLs.fileTs.value),
-		compilerOptions.experimentalCompatMode === 2,
-	);
 	const sfcTemplateScript = useSfcTemplateScript(
 		ts,
 		fileName,
 		computed(() => sfc.template),
+		computed(() => sfc.script),
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptSetupRanges.value),
 		computed(() => sfc.styles),
@@ -211,6 +204,7 @@ export function createVueFile(
 		baseCssModuleType,
 		getCssVBindRanges,
 		getCssClasses,
+		compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
@@ -278,15 +272,7 @@ export function createVueFile(
 
 		// scripts - template ls
 		embeddeds.push({
-			self: sfcTemplateMiddleScript.embedded.value,
-			embeddeds: [],
-		});
-		embeddeds.push({
 			self: sfcScriptForTemplateLs.embedded.value,
-			embeddeds: [],
-		});
-		embeddeds.push({
-			self: sfcScriptForTemplateLs.embeddedTs.value,
 			embeddeds: [],
 		});
 
@@ -358,7 +344,6 @@ export function createVueFile(
 			allEmbeddeds,
 			teleports,
 			sfcTemplateScript,
-			sfcEntryForTemplateLs: sfcTemplateMiddleScript,
 			sfcScriptForScriptLs,
 		},
 	};
@@ -526,8 +511,8 @@ export function createVueFile(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		};
 
-		const file = sfcTemplateMiddleScript.file.value;
-		let components = file.content.indexOf(SearchTexts.Components) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
+		const file = sfcTemplateScript.file.value;
+		let components = file && file.content.indexOf(SearchTexts.Components) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');

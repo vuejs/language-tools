@@ -96,51 +96,11 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			return file;
 		}
 	});
-	const fileTs = computed(() => {
-
-		if (lsType === 'template' && file.value && ['js', 'jsx'].includes(lang.value)) {
-
-			const tsLang = lang.value === 'jsx' ? 'tsx' : 'ts';
-			const _file: EmbeddedFile = {
-				fileName: fileName + '.__VLS_script_ts.' + tsLang,
-				lang: tsLang,
-				content: file.value.content,
-				capabilities: {
-					diagnostics: false,
-					foldingRanges: false,
-					formatting: false,
-					documentSymbol: false,
-					codeActions: false,
-				},
-				data: undefined,
-			};
-
-			return _file;
-		}
-	});
 	const embedded = computed<Embedded | undefined>(() => {
 		if (file.value) {
 			return {
 				sourceMap: new EmbeddedFileSourceMap(codeGen.value.codeGen.getMappings(parseMappingSourceRange)),
 				file: file.value,
-			};
-		}
-	});
-	const embeddedTs = computed<Embedded | undefined>(() => {
-
-		if (embedded.value && fileTs.value) {
-
-			return {
-				file: fileTs.value,
-				sourceMap: new EmbeddedFileSourceMap(
-					embedded.value.sourceMap.mappings.map(mapping => ({
-						...mapping,
-						data: {
-							...mapping.data,
-							capabilities: {}
-						},
-					})),
-				),
 			};
 		}
 	});
@@ -158,9 +118,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	return {
 		lang,
 		file: file as T extends 'script' ? ComputedRef<EmbeddedFile<undefined>> : ComputedRef<EmbeddedFile<undefined> | undefined>,
-		fileTs,
 		embedded,
-		embeddedTs,
 		teleport,
 	};
 

@@ -12,11 +12,13 @@ import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
 import * as path from 'path';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
+import { getVueLibraryName } from '../utils/localTypes';
 
 export function useSfcTemplateScript(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
 	template: Ref<Sfc['template']>,
+	script: Ref<Sfc['script']>,
 	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	styles: Ref<Sfc['styles']>,
@@ -33,6 +35,7 @@ export function useSfcTemplateScript(
 	baseCssModuleType: string,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
+	isVue2: boolean,
 ) {
 	const baseFileName = path.basename(fileName);
 	const cssModuleClasses = computed(() =>
@@ -80,7 +83,16 @@ export function useSfcTemplateScript(
 		const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
-		codeGen.addText(`import { __VLS_options, __VLS_name, __VLS_component } from './${baseFileName}.__VLS_middle';\n`);
+
+		if (script.value || scriptSetup.value) {
+			codeGen.addText(`import { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`);
+			codeGen.addText(`import __VLS_component from './${baseFileName}.__VLS_script';\n`);
+		}
+		else {
+			codeGen.addText(`var __VLS_name = undefined;\n`);
+			codeGen.addText(`var __VLS_options = {};\n`);
+			codeGen.addText(`var __VLS_component = (await import('${getVueLibraryName(isVue2)}')).defineComponent({});\n`);
+		}
 
 		writeImportTypes();
 
@@ -93,6 +105,9 @@ export function useSfcTemplateScript(
 		codeGen.addText('declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n');
 		codeGen.addText('declare var __VLS_allComponents: typeof __VLS_otherComponents & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_otherComponents>;\n');
 		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<typeof __VLS_allComponents> & JSX.IntrinsicElements;\n'); // sort by priority
+
+		codeGen.addText(`__VLS_allComponents.${SearchTexts.Components};\n`);
+		codeGen.addText(`({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
 
 		/* CSS Module */
 		codeGen.addText('/* CSS Module */\n');

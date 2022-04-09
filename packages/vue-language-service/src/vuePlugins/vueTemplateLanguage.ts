@@ -728,17 +728,13 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
         let cache = componentCompletionDataCache.get(templateData);
         if (!cache) {
 
-            const {
-                sfcTemplateScript,
-                sfcEntryForTemplateLs,
-            } = sourceFile.file.refs;
+            const { sfcTemplateScript } = sourceFile.file.refs;
 
             cache = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[] }>();
 
             pauseTracking();
             const file = sfcTemplateScript.file.value;
             const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
-            const entryFile = sfcEntryForTemplateLs.file.value;
             resetTracking();
 
             if (file) {
@@ -775,7 +771,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                     }
                     cache.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(entryFile.fileName, entryFile.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
+                const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
                 cache.set('*', { item: undefined, bind: globalBind, on: [] });
             }
 
