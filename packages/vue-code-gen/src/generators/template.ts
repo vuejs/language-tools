@@ -135,17 +135,7 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_types.ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
-
-		if (isNamespacedTag) {
-			tsCodeGen.addText(`declare const ${var_slots}:
-				__VLS_types.TemplateSlots<typeof ${var_rawComponent}>
-				& __VLS_types.DefaultSlots<typeof ${var_rawComponent}, typeof ${var_rawComponent}>;\n`);
-		}
-		else {
-			tsCodeGen.addText(`declare const ${var_slots}:
-				__VLS_types.TemplateSlots<typeof ${var_rawComponent}>
-				& __VLS_types.DefaultSlots<typeof ${var_rawComponent}, typeof ${var_rawComponent}>;\n`);
-		}
+		tsCodeGen.addText(`declare const ${var_slots}: __VLS_types.DefaultSlots<typeof ${var_rawComponent}>;\n`);
 
 		for (const eventName in tag.events) {
 

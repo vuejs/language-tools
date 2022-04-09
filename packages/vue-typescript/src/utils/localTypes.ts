@@ -66,12 +66,8 @@ export declare function directiveFunction<T>(dir: T):
 	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
 	: T;
 
-export type TemplateSlots<T> = T extends { __VLS_slots: infer S } ? S : {};
-export type HasTemplateSlotsType<T> = T extends { __VLS_slots: infer _ } ? true : false;
 export type HasScriptSlotsType<T> = T extends new (...args: any) => { ${slots}?: infer _ } ? true : false;
-export type DefaultSlots<W, R> = HasTemplateSlotsType<W> extends true ? {}
-	: HasScriptSlotsType<R> extends true ? {}
-	: Record<string, any>;
+export type DefaultSlots<C> = HasScriptSlotsType<C> extends true ? {} : Record<string, any>;
 export type SlotsComponent<T> = T extends new (...args: any) => { ${slots}?: infer S } ? T : new (...args: any) => { ${slots}: {} };
 export type ScriptSlots<T> = T extends { ${slots}?: infer S }
 	? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
