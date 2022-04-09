@@ -104,7 +104,6 @@ export function createVueFile(
 		contextItems: [],
 		components: [],
 		componentItems: [],
-		props: [],
 	}) as ITemplateScriptData;
 	const cssVars = new WeakMap<EmbeddedFile, TextRange[]>();
 
@@ -535,7 +534,6 @@ export function createVueFile(
 		const file = sfcTemplateMiddleScript.file.value;
 		const context = file.content.indexOf(SearchTexts.Context) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Context), options)?.entries ?? [] : [];
 		let components = file.content.indexOf(SearchTexts.Components) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
-		const props = file.content.indexOf(SearchTexts.Props) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Props), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');
@@ -543,7 +541,6 @@ export function createVueFile(
 
 		const contextNames = context.map(entry => entry.name);
 		const componentNames = components.map(entry => entry.name);
-		const propNames = props.map(entry => entry.name);
 
 		let dirty = false;
 
@@ -556,11 +553,6 @@ export function createVueFile(
 		if (!eqSet(new Set(componentNames), new Set(templateScriptData.components))) {
 			templateScriptData.components = componentNames;
 			templateScriptData.componentItems = components;
-			dirty = true;
-		}
-
-		if (!eqSet(new Set(propNames), new Set(templateScriptData.props))) {
-			templateScriptData.props = propNames;
 			dirty = true;
 		}
 

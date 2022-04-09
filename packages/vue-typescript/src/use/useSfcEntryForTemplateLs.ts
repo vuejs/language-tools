@@ -23,7 +23,6 @@ export function useSfcEntryForTemplateLs(
 		content += '// @ts-nocheck\n';
 		content += `import * as __VLS_types from './__VLS_types';\n`;
 		if (script.value || scriptSetup.value) {
-			content += `import { __VLS_options as __VLS_options_ts } from './${baseFileName}.${tsScriptFileName}';\n`;
 			content += `import { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`;
 			content += `export { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`;
 			content += `export * from './${baseFileName}.__VLS_script';\n`;
@@ -35,7 +34,6 @@ export function useSfcEntryForTemplateLs(
 			content += `export var __VLS_name = undefined;\n`;
 			content += `export var __VLS_options = {};\n`;
 			content += `export var __VLS_component = (await import('${getVueLibraryName(isVue2)}')).defineComponent({});\n`;
-			content += `var __VLS_options_ts = {};\n`;
 			content += `var __VLS_component_ts = (await import('${getVueLibraryName(isVue2)}')).defineComponent({});\n`;
 		}
 		content += `declare var __VLS_ctx: __VLS_types.ComponentContext<typeof __VLS_component_ts>;\n`;
@@ -43,7 +41,6 @@ export function useSfcEntryForTemplateLs(
 		content += `declare var __VLS_Components: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & typeof __VLS_ComponentsWrap.components & __VLS_types.GlobalComponents & __VLS_types.PickComponents<typeof __VLS_ctx> & __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n`;
 		content += `__VLS_ctx.${SearchTexts.Context};\n`;
 		content += `__VLS_Components.${SearchTexts.Components};\n`;
-		content += `({} as __VLS_types.OptionsProps<typeof __VLS_options_ts>).${SearchTexts.Props};\n`;
 		content += `({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`;
 
 		const file: EmbeddedFile = {

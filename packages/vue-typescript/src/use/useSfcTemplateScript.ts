@@ -202,7 +202,6 @@ export function useSfcTemplateScript(
 			return mappings;
 		}
 		function writeProps() {
-			const propsSet = new Set(templateScriptData.props);
 			const mappings: SourceMaps.Mapping<TeleportMappingData>[] = [];
 			for (const propName of templateScriptData.context) {
 				codeGen.addText(`declare let `);
@@ -234,34 +233,6 @@ export function useSfcTemplateScript(
 					mappedRange: templateSideRange,
 				});
 
-				if (propsSet.has(propName)) {
-					codeGen.addText(` __VLS_options.props.`);
-					const scriptSideRange2 = codeGen.addText(propName);
-					codeGen.addText(`;`);
-
-					mappings.push({
-						data: {
-							isAdditionalReference: true,
-							toSource: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
-							},
-							toTarget: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
-							},
-						},
-						mode: SourceMaps.Mode.Offset,
-						sourceRange: scriptSideRange2,
-						mappedRange: templateSideRange,
-					});
-				}
 				codeGen.addText(`\n`);
 			}
 			return mappings;
