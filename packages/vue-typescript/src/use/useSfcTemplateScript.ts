@@ -3,9 +3,9 @@ import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, ref, Ref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from '../types';
-import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
+import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
-import type { TeleportMappingData, TextRange } from '@volar/vue-code-gen';
+import type { TextRange } from '@volar/vue-code-gen';
 import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
@@ -13,12 +13,12 @@ import * as SourceMaps from '@volar/source-map';
 import * as path from 'path';
 
 export function useSfcTemplateScript(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
 	template: Ref<Sfc['template']>,
 	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	styles: Ref<Sfc['styles']>,
-	templateScriptData: ITemplateScriptData,
 	styleFiles: ReturnType<typeof useSfcStyles>['files'],
 	styleEmbeddeds: ReturnType<typeof useSfcStyles>['embeddeds'],
 	templateData: Ref<{
@@ -61,6 +61,7 @@ export function useSfcTemplateScript(
 			return;
 
 		return templateGen.generate(
+			ts,
 			templateData.value.lang,
 			sfcTemplateCompileResult.value.ast,
 			compilerOptions.experimentalCompatMode === 2,
@@ -109,10 +110,6 @@ export function useSfcTemplateScript(
 		codeGen.addText('};\n');
 		codeGen.addText('declare var __VLS_styleScopedClasses: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
 
-		/* Props */
-		codeGen.addText(`/* Props */\n`);
-		const ctxMappings = writeProps();
-
 		codeGen.addText(`/* CSS variable injection */\n`);
 		writeCssVars();
 
@@ -126,7 +123,6 @@ export function useSfcTemplateScript(
 			codeGen,
 			cssModuleMappingsArr,
 			cssScopedMappings,
-			ctxMappings,
 		};
 
 		function writeImportTypes() {
@@ -198,42 +194,6 @@ export function useSfcTemplateScript(
 					});
 					codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType},\n`);
 				}
-			}
-			return mappings;
-		}
-		function writeProps() {
-			const mappings: SourceMaps.Mapping<TeleportMappingData>[] = [];
-			for (const propName of templateScriptData.context) {
-				codeGen.addText(`declare let `);
-				const templateSideRange = codeGen.addText(propName);
-				codeGen.addText(`: typeof __VLS_ctx.`);
-				const scriptSideRange = codeGen.addText(propName);
-				codeGen.addText(`;`);
-
-				mappings.push({
-					data: {
-						isAdditionalReference: false,
-						toSource: {
-							capabilities: {
-								definitions: true,
-								references: true,
-								rename: true,
-							},
-						},
-						toTarget: {
-							capabilities: {
-								definitions: true,
-								references: true,
-								rename: true,
-							},
-						},
-					},
-					mode: SourceMaps.Mode.Offset,
-					sourceRange: scriptSideRange,
-					mappedRange: templateSideRange,
-				});
-
-				codeGen.addText(`\n`);
 			}
 			return mappings;
 		}
@@ -366,7 +326,6 @@ export function useSfcTemplateScript(
 	});
 	const file = ref<EmbeddedFile>();
 	const formatFile = ref<EmbeddedFile>();
-	const teleport = ref<Teleport>();
 
 	return {
 		templateCodeGens,
@@ -374,7 +333,6 @@ export function useSfcTemplateScript(
 		file,
 		formatFile,
 		formatEmbedded,
-		teleport,
 		inlineCssFile,
 		inlineCssEmbedded,
 		update, // TODO: cheapComputed
@@ -426,15 +384,9 @@ export function useSfcTemplateScript(
 					data: undefined,
 				} : undefined;
 
-				const sourceMap = new Teleport();
-				for (const mapped of data.value.ctxMappings) {
-					sourceMap.mappings.push(mapped);
-				}
-				teleport.value = sourceMap;
 			}
 			else {
 				file.value = undefined;
-				teleport.value = undefined;
 				formatFile.value = undefined;
 			}
 		}

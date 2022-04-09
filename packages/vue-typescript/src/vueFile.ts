@@ -195,12 +195,12 @@ export function createVueFile(
 		compilerOptions.experimentalCompatMode === 2,
 	);
 	const sfcTemplateScript = useSfcTemplateScript(
+		ts,
 		fileName,
 		computed(() => sfc.template),
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptSetupRanges.value),
 		computed(() => sfc.styles),
-		templateScriptData,
 		sfcStyles.files,
 		sfcStyles.embeddeds,
 		sfcTemplateCompiled,
@@ -224,13 +224,6 @@ export function createVueFile(
 			file: EmbeddedFile,
 			teleport: Teleport,
 		}[] = [];
-
-		if (sfcTemplateScript.file.value && sfcTemplateScript.teleport.value) {
-			_all.push({
-				file: sfcTemplateScript.file.value,
-				teleport: sfcTemplateScript.teleport.value,
-			});
-		}
 
 		if (sfcScriptForTemplateLs.file.value && sfcScriptForTemplateLs.teleport.value) {
 			_all.push({
