@@ -32,6 +32,7 @@
   - If you would like to use `Prettier`, see `Prettier` section in https://github.com/johnsoncodehk/volar/discussions/1027
 - Changed setting `volar.lowPowerMode` to `volar.vueserver.useSecondServer` and disabled by default
   - When disabled, language service instance reduce a half of memory usage, but auto-complete should be slower in expected
+- `"jsx": "preserve"` now is required for template type-checking ([#1153](https://github.com/johnsoncodehk/volar/issues/1153))
 
 ## 0.33.10
 
