@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.34.3
+
+- feat: release `@volar/preview` for support vite, nuxt 3 app preview features other then vscode IDEs ([#1115](https://github.com/johnsoncodehk/volar/issues/1115))
+- fix: `require()` should not report error in template ([#1161](https://github.com/johnsoncodehk/volar/issues/1161))
+- fix: template interpolations syntax broken with inline block comments ([#1143](https://github.com/johnsoncodehk/volar/issues/1143))
+- fix: vue-tsc emit declaration diagnostics incomplete ([#1127](https://github.com/johnsoncodehk/volar/issues/1127))
+- fix: ts plugin should not affect to non-vue project ([#1144](https://github.com/johnsoncodehk/volar/issues/1144))
+- fix: object literal santax not working in directive and v-for expressions ([#1160](https://github.com/johnsoncodehk/volar/issues/1160))
+- fix: shorthand property assignment santax not working in template ([#1156](https://github.com/johnsoncodehk/volar/issues/1156))
+- fix: should not emit `__VLS_` files file with `vue-tsc --declaration --emitDeclarationOnly`
+- fix: `experimentalDisableTemplateSupport` not working
+- fix: formatting crashes with inline v-bind on scoped v-slot ([#1151](https://github.com/johnsoncodehk/volar/issues/1151))
+- fix: language server broken in js project without allowJs
+
+**Breaking changes**
+
+- For pug template project, you need to install optional dependencie `@volar/pug-language-service` to support pug template type-checking on vue-tsc ([#1092](https://github.com/johnsoncodehk/volar/issues/1092))
+- Changed `experimentalResolveNonScopedCssClasses` to `experimentalResolveStyleCssClasses` ([#1121](https://github.com/johnsoncodehk/volar/issues/1121))
+
 ## 0.34.2
 
 - fix: add missing depend for vue-tsc ([#1154](https://github.com/johnsoncodehk/volar/issues/1154))
