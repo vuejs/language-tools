@@ -1,6 +1,6 @@
 {
   "name": "@volar/preview",
-  "version": "0.34.2",
+  "version": "0.34.3",
   "license": "MIT",
   "files": [
     "bin",
@@ -18,6 +18,6 @@
     "volar-preview-nuxi": "./bin/nuxi.js"
   },
   "dependencies": {
-		"ws": "^8.5.0"
+    "ws": "^8.5.0"
   }
 }
