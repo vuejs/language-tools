@@ -12,7 +12,7 @@ export function getDocumentSafely(documents: vscode.TextDocuments<TextDocument>,
 	}
 
 	for (const document of documents.all()) {
-		if (shared.normalizeUri(document.uri) === normalizeUri) {
+		if (shared.normalizeUri(document.uri).toLowerCase() === normalizeUri.toLowerCase()) {
 			return document;
 		}
 	}
