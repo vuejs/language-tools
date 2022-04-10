@@ -8,38 +8,54 @@ export function walkInterpolationFragment(
     localVars: Record<string, number>,
 ) {
 
-    let ctxVarOffsets: number[] = [];
-    let localVarOffsets: number[] = [];
+    let ctxVars: {
+        text: string,
+        isShorthand: boolean,
+        offset: number,
+    }[] = [];
+    // let localVarOffsets: number[] = [];
 
     const ast = ts.createSourceFile('/foo.ts', code, ts.ScriptTarget.ESNext);
-    const varCb = (localVar: ts.Identifier) => {
+    const varCb = (id: ts.Identifier, isShorthand: boolean) => {
         if (
-            !!localVars[localVar.text] ||
-            isGloballyWhitelisted(localVar.text) ||
-            localVar.text === '$style'
+            !!localVars[id.text] ||
+            isGloballyWhitelisted(id.text) ||
+            id.text === '$style'
         ) {
-            localVarOffsets.push(localVar.getStart(ast));
+            // localVarOffsets.push(localVar.getStart(ast));
         }
         else {
-            ctxVarOffsets.push(localVar.getStart(ast));
+            ctxVars.push({
+                text: id.text,
+                isShorthand: isShorthand,
+                offset: id.getStart(ast),
+            });
         }
     };
     ast.forEachChild(node => walkIdentifiers(ts, node, varCb, localVars));
 
-    ctxVarOffsets = ctxVarOffsets.sort((a, b) => a - b);
-    localVarOffsets = localVarOffsets.sort((a, b) => a - b);
+    ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
+    // localVarOffsets = localVarOffsets.sort((a, b) => a - b);
 
-    if (ctxVarOffsets.length) {
+    if (ctxVars.length) {
 
-        cb(code.substring(0, ctxVarOffsets[0]), 0);
+        cb(code.substring(0, ctxVars[0].offset), 0);
 
-        for (let i = 0; i < ctxVarOffsets.length - 1; i++) {
+        for (let i = 0; i < ctxVars.length - 1; i++) {
+            if (ctxVars[i].isShorthand) {
+                cb(ctxVars[i].text, ctxVars[i].offset);
+                cb(': ', undefined);
+            }
             cb('__VLS_ctx.', undefined);
-            cb(code.substring(ctxVarOffsets[i], ctxVarOffsets[i + 1]), ctxVarOffsets[i]);
+            cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
         }
 
+        if (ctxVars[ctxVars.length - 1].isShorthand) {
+            cb(ctxVars[ctxVars.length - 1].text, ctxVars[ctxVars.length - 1].offset);
+            cb(': ', undefined);
+        }
         cb('__VLS_ctx.', undefined);
-        cb(code.substring(ctxVarOffsets[ctxVarOffsets.length - 1]), ctxVarOffsets[ctxVarOffsets.length - 1]);
+        cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
     }
     else {
         cb(code, 0);
@@ -49,14 +65,17 @@ export function walkInterpolationFragment(
 function walkIdentifiers(
     ts: typeof import('typescript/lib/tsserverlibrary'),
     node: ts.Node,
-    cb: (varNode: ts.Identifier) => void,
+    cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
     localVars: Record<string, number>,
 ) {
 
     const blockVars: string[] = [];
 
     if (ts.isIdentifier(node)) {
-        cb(node);
+        cb(node, false);
+    }
+    else if (ts.isShorthandPropertyAssignment(node)) {
+        cb(node.name, true);
     }
     else if (ts.isPropertyAccessExpression(node)) {
         walkIdentifiers(ts, node.expression, cb, localVars);
@@ -90,6 +109,10 @@ function walkIdentifiers(
         for (const prop of node.properties) {
             if (ts.isPropertyAssignment(prop)) {
                 walkIdentifiers(ts, prop.initializer, cb, localVars);
+            }
+            // fix https://github.com/johnsoncodehk/volar/issues/1156
+            else if (ts.isShorthandPropertyAssignment(prop)) {
+                walkIdentifiers(ts, prop, cb, localVars);
             }
         }
     }
