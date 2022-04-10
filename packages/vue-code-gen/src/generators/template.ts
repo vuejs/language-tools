@@ -1064,7 +1064,8 @@ export function generate(
 				if (forRemainStyleOrClass) {
 					continue;
 				}
-				tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
+				// comment this line to avoid affect comments in prop expressions
+				// tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 			}
 		}
 
