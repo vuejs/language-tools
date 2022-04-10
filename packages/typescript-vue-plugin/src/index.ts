@@ -9,6 +9,13 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
+			const files = info.project.getScriptFileNames();
+			const hasVueFile = files.some(file => file.endsWith('.vue'));
+
+			if (!hasVueFile) {
+				return info.languageService;
+			}
+
 			// fix: https://github.com/johnsoncodehk/volar/issues/205
 			info.project.getScriptKind = fileName => {
 				switch (path.extname(fileName)) {
