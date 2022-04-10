@@ -1,6 +1,6 @@
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import * as css from 'vscode-css-languageservice';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 
@@ -179,11 +179,26 @@ export default function (options: {
             return worker(document, async (stylesheet, cssLs) => {
 
                 const options_2 = await useConfigurationHost()?.getConfiguration<css.CSSFormatConfiguration>('css.format', document.uri);
-
-                return cssLs.format(document, range, {
+                const edits = cssLs.format(document, range, {
                     ...options_2,
                     ...options,
                 });
+                let newText = TextDocument.applyEdits(document, edits);
+
+                // fix https://github.com/johnsoncodehk/volar/issues/1155
+                if (!newText.startsWith('\n'))
+                    newText = '\n' + newText;
+
+                if (!newText.endsWith('\n'))
+                    newText = newText + '\n';
+
+                if (newText === document.getText())
+                    return [];
+
+                return [vscode.TextEdit.replace({
+                    start: document.positionAt(0),
+                    end: document.positionAt(document.getText().length),
+                }, newText)];
             });
         },
     };
