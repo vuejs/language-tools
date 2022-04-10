@@ -36,6 +36,7 @@ export function useSfcTemplateScript(
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 	isVue2: boolean,
+	disableTemplateScript: boolean,
 ) {
 	const baseFileName = path.basename(fileName);
 	const cssModuleClasses = computed(() =>
@@ -264,7 +265,7 @@ export function useSfcTemplateScript(
 	});
 	const embedded = computed<Embedded | undefined>(() => {
 
-		if (file.value) {
+		if (!disableTemplateScript && file.value) {
 			const sourceMap = new SourceMaps.SourceMapBase<EmbeddedFileMappingData>(
 				data.value.codeGen.getMappings(parseMappingSourceRange)
 			);

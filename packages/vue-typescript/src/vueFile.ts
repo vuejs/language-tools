@@ -205,6 +205,7 @@ export function createVueFile(
 		getCssVBindRanges,
 		getCssClasses,
 		compilerOptions.experimentalCompatMode === 2,
+		!!compilerOptions.experimentalDisableTemplateSupport,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
