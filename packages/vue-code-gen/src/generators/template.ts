@@ -1462,7 +1462,10 @@ export function generate(
 		}
 	}
 	function writeSlots(node: CompilerDOM.ElementNode) {
-		if (node.tag !== 'slot') return;
+
+		if (node.tag !== 'slot')
+			return;
+
 		const varDefaultBind = `__VLS_${elementIndex++}`;
 		const varBinds = `__VLS_${elementIndex++}`;
 		const varSlot = `__VLS_${elementIndex++}`;
@@ -1483,15 +1486,10 @@ export function generate(
 					prop.exp.loc.start.offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
+						capabilities: capabilitiesSet.attrReference,
 					},
 					'(',
 					')',
-				);
-				writeFormatCode(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					formatBrackets.round,
 				);
 				tsCodeGen.addText(`;\n`);
 				break;
@@ -1526,15 +1524,10 @@ export function generate(
 					prop.exp.loc.start.offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
+						capabilities: capabilitiesSet.attrReference,
 					},
 					'(',
 					')',
-				);
-				writeFormatCode(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					formatBrackets.round,
 				);
 				tsCodeGen.addText(`,\n`);
 			}
