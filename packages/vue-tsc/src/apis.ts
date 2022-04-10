@@ -118,7 +118,9 @@ export function register(
 					if (relatedInformation) {
 						(newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(relatedInformation);
 					}
+
 					result.push(newDiagnostic);
+					break;
 				}
 			}
 			else if (
