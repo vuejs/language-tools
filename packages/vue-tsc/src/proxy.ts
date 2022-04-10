@@ -1,7 +1,7 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-typescript';
 import * as apis from './apis';
-import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import { createTypeScriptRuntime, TypeScriptRuntime } from '@volar/vue-typescript';
 import { tsShared } from '@volar/vue-typescript';
 
 let projectVersion = 0;
@@ -33,7 +33,11 @@ export function createProgramProxy(
 	const vueLsHost: vue.LanguageServiceHost = {
 		...host,
 		resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
-		writeFile: undefined,
+		writeFile: (fileName, content) => {
+			if (fileName.indexOf('__VLS_') === -1) {
+				host.writeFile(fileName, content, false);
+			}
+		},
 		getCompilationSettings: () => options.options,
 		getVueCompilationSettings: () => vueCompilerOptions,
 		getScriptFileNames: () => {
@@ -50,7 +54,7 @@ export function createProgramProxy(
 		getProjectReferences: () => options.projectReferences,
 	};
 
-	const tsRuntime = (options.oldProgram as any)?.__VLS_tsRuntime ?? createTypeScriptRuntime({
+	const tsRuntime: TypeScriptRuntime = (options.oldProgram as any)?.__VLS_tsRuntime ?? createTypeScriptRuntime({
 		typescript: ts,
 		baseCssModuleType: 'any',
 		getCssClasses: () => ({}),
@@ -58,7 +62,7 @@ export function createProgramProxy(
 		vueLsHost: vueLsHost,
 		isVueTsc: true,
 	});
-	tsRuntime.update(true); // must update before getProgram() to update virtual scripts
+	tsRuntime.update(); // must update before getProgram() to update virtual scripts
 
 	const tsProgram = tsRuntime.getTsLs().getProgram();
 	if (!tsProgram)
@@ -67,7 +71,7 @@ export function createProgramProxy(
 	const proxyApis = apis.register(ts, tsRuntime);
 	const program = new Proxy<ts.Program>(tsProgram, {
 		get: (target: any, property: keyof typeof proxyApis) => {
-			tsRuntime.update(true);
+			tsRuntime.update();
 			return proxyApis[property] || target[property];
 		},
 	});
