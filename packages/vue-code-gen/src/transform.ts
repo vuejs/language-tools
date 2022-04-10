@@ -39,21 +39,27 @@ export function walkInterpolationFragment(
 
     if (ctxVars.length) {
 
-        cb(code.substring(0, ctxVars[0].offset), 0);
-
-        for (let i = 0; i < ctxVars.length - 1; i++) {
-            if (ctxVars[i].isShorthand) {
-                cb(ctxVars[i].text, ctxVars[i].offset);
-                cb(': ', undefined);
-            }
-            cb('__VLS_ctx.', undefined);
-            cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
-        }
-
-        if (ctxVars[ctxVars.length - 1].isShorthand) {
-            cb(ctxVars[ctxVars.length - 1].text, ctxVars[ctxVars.length - 1].offset);
+        if (ctxVars[0].isShorthand) {
+            cb(code.substring(0, ctxVars[0].offset + ctxVars[0].text.length), 0);
             cb(': ', undefined);
         }
+        else {
+            cb(code.substring(0, ctxVars[0].offset), 0);
+        }
+
+        for (let i = 0; i < ctxVars.length - 1; i++) {
+
+            cb('__VLS_ctx.', undefined);
+
+            if (ctxVars[i + 1].isShorthand) {
+                cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
+                cb(': ', undefined);
+            }
+            else {
+                cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
+            }
+        }
+
         cb('__VLS_ctx.', undefined);
         cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
     }
