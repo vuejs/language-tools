@@ -50,8 +50,9 @@ export function useSfcTemplateScript(
 	);
 	const cssScopedClasses = computed(() => {
 		const obj: Record<string, Record<string, TextRange[]>> = {};
+		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
 		for (const style of styleFiles.value) {
-			if (style.data.scoped || compilerOptions.experimentalResolveNonScopedCssClasses) {
+			if ((setting === 'scoped' && style.data.scoped) || setting === 'always') {
 				const classes = getCssClasses(style);
 				obj[style.fileName] = classes;
 			}

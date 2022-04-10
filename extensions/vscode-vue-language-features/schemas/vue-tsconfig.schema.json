@@ -28,9 +28,13 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				},
-				"experimentalResolveNonScopedCssClasses": {
-					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1038"
+				"experimentalResolveStyleCssClasses": {
+					"enum": [
+						"scoped",
+						"always",
+						"never"
+					],
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1038, https://github.com/johnsoncodehk/volar/issues/1121"
 				}
 			}
 		}
