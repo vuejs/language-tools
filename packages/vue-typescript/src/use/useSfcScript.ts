@@ -21,7 +21,7 @@ export function useSfcScript(
 		if (script.value) {
 
 			const file: EmbeddedFile = {
-				fileName: fileName + '.' + script.value.lang,
+				fileName: fileName + '.__VLS_script.format.' + script.value.lang,
 				lang: script.value.lang,
 				content: script.value.content,
 				capabilities: {
