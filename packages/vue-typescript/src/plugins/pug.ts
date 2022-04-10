@@ -1,4 +1,3 @@
-import * as pug from '@volar/pug-language-service';
 import { VueLanguagePlugin } from '../typescriptRuntime';
 
 export default function (): VueLanguagePlugin {
@@ -9,7 +8,13 @@ export default function (): VueLanguagePlugin {
 
 			if (lang === 'pug') {
 
-				const pugDoc = pug.baseParse(template);
+				let pug: typeof import('@volar/pug-language-service') | undefined;
+
+				try {
+					pug = require('@volar/pug-language-service');
+				} catch { }
+
+				const pugDoc = pug?.baseParse(template);
 
 				if (pugDoc) {
 					return {

@@ -17,11 +17,13 @@
 	},
 	"dependencies": {
 		"@volar/code-gen": "0.34.2",
-		"@volar/pug-language-service": "0.34.2",
 		"@volar/source-map": "0.34.2",
 		"@volar/vue-code-gen": "0.34.2",
 		"@vue/compiler-sfc": "^3.2.31",
 		"@vue/reactivity": "^3.2.31"
+	},
+	"optionalDependencies": {
+		"@volar/pug-language-service": "0.34.2"
 	},
 	"browser": {
 		"./out/plugins/pug.js": "./out/plugins/empty.js"
