@@ -28,6 +28,7 @@ export function useSfcCustomBlocks(
 					codeActions: true,
 				},
 				data: undefined,
+				isTsHostFile: false,
 			});
 		}
 

@@ -47,12 +47,7 @@ export function register(
 				for (const vueDocument of context.vueDocuments.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 
-						const isTsFile = sourceMap.embeddedFile.lang === 'js' ||
-							sourceMap.embeddedFile.lang === 'ts' ||
-							sourceMap.embeddedFile.lang === 'jsx' ||
-							sourceMap.embeddedFile.lang === 'tsx'
-
-						if (!isTsFile)
+						if (!sourceMap.embeddedFile.isTsHostFile)
 							continue;
 
 						connection.workspace.applyEdit({

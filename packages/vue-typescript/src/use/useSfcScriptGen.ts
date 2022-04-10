@@ -73,6 +73,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 					codeActions: !script.value?.src,
 				},
 				data: undefined,
+				isTsHostFile: true,
 			};
 
 			return file;
@@ -91,6 +92,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 					codeActions: false,
 				},
 				data: undefined,
+				isTsHostFile: true,
 			};
 
 			return file;

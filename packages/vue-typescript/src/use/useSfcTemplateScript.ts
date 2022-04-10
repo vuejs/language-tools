@@ -340,6 +340,7 @@ export function useSfcTemplateScript(
 				// 	module: false,
 				// 	scoped: false,
 				// },
+				isTsHostFile: false,
 			};
 
 			return file;
@@ -374,6 +375,7 @@ export function useSfcTemplateScript(
 					codeActions: false,
 				},
 				data: undefined,
+				isTsHostFile: true,
 			};
 			return embeddedFile;
 		}
@@ -393,6 +395,7 @@ export function useSfcTemplateScript(
 					codeActions: false,
 				},
 				data: undefined,
+				isTsHostFile: false,
 			};
 			return embeddedFile;
 		}

@@ -206,13 +206,7 @@ export function createTypeScriptRuntime(options: {
             const tsFileNames = getLocalTypesFiles();
 
             for (const mapped of vueFiles.getEmbeddeds()) {
-
-                const isTsFile = mapped.embedded.file.lang === 'js' ||
-                    mapped.embedded.file.lang === 'ts' ||
-                    mapped.embedded.file.lang === 'jsx' ||
-                    mapped.embedded.file.lang === 'tsx';
-
-                if (isTsFile) {
+                if (mapped.embedded.file.isTsHostFile) {
                     tsFileNames.push(mapped.embedded.file.fileName); // virtual .ts
                 }
             }

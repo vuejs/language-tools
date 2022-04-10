@@ -97,13 +97,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				uri,
 				true,
 				function* (arg, sourceMap) {
-
-					const isTsFile = sourceMap.embeddedFile.lang === 'js' ||
-						sourceMap.embeddedFile.lang === 'ts' ||
-						sourceMap.embeddedFile.lang === 'jsx' ||
-						sourceMap.embeddedFile.lang === 'tsx'
-
-					if (sourceMap.embeddedFile.capabilities.diagnostics && isTsFile === isTs) {
+					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.isTsHostFile === isTs) {
 						yield arg;
 					}
 				},

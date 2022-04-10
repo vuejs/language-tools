@@ -34,6 +34,7 @@ export function useSfcStyles(
 					module: style.module,
 					scoped: style.scoped,
 				},
+				isTsHostFile: false,
 			});
 		}
 

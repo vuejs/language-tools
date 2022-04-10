@@ -61,6 +61,7 @@ export interface EmbeddedFile<T = unknown> {
 	fileName: string,
 	lang: string,
 	content: string,
+	isTsHostFile: boolean,
 	capabilities: {
 		diagnostics: boolean,
 		foldingRanges: boolean,

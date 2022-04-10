@@ -32,6 +32,7 @@ export function useSfcScript(
 					codeActions: false,
 				},
 				data: undefined,
+				isTsHostFile: false,
 			};
 
 			return file;

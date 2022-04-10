@@ -24,6 +24,7 @@ export function useSfcTemplate(
 					codeActions: true,
 				},
 				data: undefined,
+				isTsHostFile: false,
 			};
 
 			return file;
