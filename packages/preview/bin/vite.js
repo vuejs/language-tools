@@ -40,12 +40,6 @@ function __createAppProxy(...args) {
         const cursorInOverlays = new Map();
         const rangeCoverOverlays = new Map();
 
-        window.addEventListener('message', event => {
-            if (event.data?.command === 'highlightSelections') {
-                selection = event.data.data;
-                updateHighlights();
-            }
-        });
         window.addEventListener('scroll', updateHighlights);
 
         ws.addEventListener('message', event => {
@@ -194,6 +188,13 @@ function __createAppProxy(...args) {
             }
         });
 
+        ws.addEventListener('message', event => {
+            const data = JSON.parse(event.data);
+            if (data?.command === 'openFile') {
+                window.open(data.data);
+            }
+        });
+
         var overlay = createOverlay();
         var clickMask = createClickMask();
         var highlightNodes = [];
@@ -211,7 +212,7 @@ function __createAppProxy(...args) {
             document.body.appendChild(clickMask);
             updateOverlay();
         }
-        function disable(openVscode) {
+        function disable(openEditor) {
             if (enabled) {
                 enabled = false;
                 clickMask.style.pointerEvents = '';
@@ -219,8 +220,11 @@ function __createAppProxy(...args) {
                 updateOverlay();
                 if (lastCodeLoc) {
                     ws.send(JSON.stringify(lastCodeLoc));
-                    if (openVscode) {
-                        window.open('vscode://files:/' + lastCodeLoc.fileName);
+                    if (openEditor) {
+                        ws.send(JSON.stringify({
+                            command: 'requestOpenFile',
+                            data: lastCodeLoc.data,
+                        }));
                     }
                     lastCodeLoc = undefined;
                 }

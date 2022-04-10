@@ -17,6 +17,9 @@
 			"path": "../../packages/vue-language-server/tsconfig.build.json"
 		},
 		{
+			"path": "../../packages/preview/tsconfig.build.json"
+		},
+		{
 			"path": "../../packages/shared/tsconfig.build.json"
 		}
 	]

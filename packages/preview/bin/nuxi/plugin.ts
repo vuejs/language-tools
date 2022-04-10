@@ -43,12 +43,6 @@ export default defineNuxtPlugin(app => {
         const cursorInOverlays = new Map<Element, HTMLElement>();
         const rangeCoverOverlays = new Map<Element, HTMLElement>();
 
-        window.addEventListener('message', event => {
-            if (event.data?.command === 'highlightSelections') {
-                selection = event.data.data;
-                updateHighlights();
-            }
-        });
         window.addEventListener('scroll', updateHighlights);
 
         ws.addEventListener('message', event => {
@@ -198,6 +192,13 @@ export default defineNuxtPlugin(app => {
             }
         });
 
+        ws.addEventListener('message', event => {
+            const data = JSON.parse(event.data);
+            if (data?.command === 'openFile') {
+                window.open(data.data);
+            }
+        });
+
         const overlay = createOverlay();
         const clickMask = createClickMask();
 
@@ -216,7 +217,7 @@ export default defineNuxtPlugin(app => {
             document.body.appendChild(clickMask);
             updateOverlay();
         }
-        function disable(openVscode: boolean) {
+        function disable(openEditor: boolean) {
             if (enabled) {
                 enabled = false;
                 clickMask.style.pointerEvents = '';
@@ -224,8 +225,11 @@ export default defineNuxtPlugin(app => {
                 updateOverlay();
                 if (lastCodeLoc) {
                     ws.send(JSON.stringify(lastCodeLoc));
-                    if (openVscode) {
-                        window.open('vscode://files:/' + lastCodeLoc.fileName);
+                    if (openEditor) {
+                        ws.send(JSON.stringify({
+                            command: 'requestOpenFile',
+                            data: lastCodeLoc.data,
+                        }));
                     }
                     lastCodeLoc = undefined;
                 }

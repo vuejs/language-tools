@@ -5,7 +5,7 @@ import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { parse, SFCParseResult } from '@vue/compiler-sfc';
-import * as WebSocket from 'ws';
+import * as preview from '@volar/preview';
 
 interface PreviewState {
 	mode: 'vite' | 'nuxt',
@@ -28,39 +28,29 @@ export async function activate(context: vscode.ExtensionContext) {
 	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 	context.subscriptions.push(statusBar);
 
-	const wsList: WebSocket.WebSocket[] = [];
-	let wss: WebSocket.Server | undefined;
+	let ws: ReturnType<typeof preview.createPreviewWebSocket> | undefined;
 
-	function startWsServer() {
-		wss = new WebSocket.Server({
-			port: 56789
-		});
-
-		wss.on('connection', ws => {
-			wsList.push(ws);
-			ws.on('message', msg => {
-				webviewEventHandler(JSON.parse(msg.toString()));
-			});
-		});
-	}
 	if (vscode.window.terminals.some(terminal => terminal.name.startsWith('volar-preview:'))) {
-		startWsServer();
+		ws = preview.createPreviewWebSocket({
+			goToCode: handleGoToCode,
+			getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
+		});
 	}
 	vscode.window.onDidOpenTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
-			startWsServer();
+			ws = preview.createPreviewWebSocket({
+				goToCode: handleGoToCode,
+				getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
+			});
 		}
 	});
 	vscode.window.onDidCloseTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
-			wss?.close();
-			wsList.length = 0;
+			ws?.stop();
 		}
 	});
 
 	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult }>();
-
-	let goToTemplateReq = 0;
 
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
@@ -166,31 +156,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
-		for (const panel of panels) {
-			updateSelectionHighlights(e.textEditor, panel, undefined);
-		}
-		for (const ws of wsList) {
-			updateSelectionHighlights(e.textEditor, undefined, ws);
-		}
+		updateSelectionHighlights(e.textEditor);
 	}));
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
 		if (vscode.window.activeTextEditor) {
-			for (const panel of panels) {
-				updateSelectionHighlights(vscode.window.activeTextEditor, panel, undefined);
-			}
-			for (const ws of wsList) {
-				updateSelectionHighlights(vscode.window.activeTextEditor, undefined, ws);
-			}
+			updateSelectionHighlights(vscode.window.activeTextEditor);
 		}
 	}));
 	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(e => {
 		if (vscode.window.activeTextEditor) {
-			for (const panel of panels) {
-				updateSelectionHighlights(vscode.window.activeTextEditor, panel, undefined);
-			}
-			for (const ws of wsList) {
-				updateSelectionHighlights(vscode.window.activeTextEditor, undefined, ws);
-			}
+			updateSelectionHighlights(vscode.window.activeTextEditor);
 		}
 	}));
 
@@ -223,33 +198,21 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	function updateSelectionHighlights(textEditor: vscode.TextEditor, panel: vscode.WebviewPanel | undefined, ws: WebSocket.WebSocket | undefined) {
+	function updateSelectionHighlights(textEditor: vscode.TextEditor) {
 		if (textEditor.document.languageId === 'vue') {
 			const sfc = getSfc(textEditor.document);
 			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-			const msg = {
-				sender: 'volar',
-				command: 'highlightSelections',
-				data: {
-					fileName: textEditor.document.fileName,
-					ranges: textEditor.selections.map(selection => ({
-						start: textEditor.document.offsetAt(selection.start) - offset,
-						end: textEditor.document.offsetAt(selection.end) - offset,
-					})),
-					isDirty: textEditor.document.isDirty,
-				},
-			};
-			panel?.webview.postMessage(msg);
-			ws?.send(JSON.stringify(msg));
+			ws?.highlight(
+				textEditor.document.fileName,
+				textEditor.selections.map(selection => ({
+					start: textEditor.document.offsetAt(selection.start) - offset,
+					end: textEditor.document.offsetAt(selection.end) - offset,
+				})),
+				textEditor.document.isDirty,
+			);
 		}
 		else {
-			const msg = {
-				sender: 'volar',
-				command: 'highlightSelections',
-				data: undefined,
-			};
-			panel?.webview.postMessage(JSON.stringify(msg));
-			ws?.send(JSON.stringify(msg));
+			ws?.unhighlight();
 		}
 	}
 
@@ -394,33 +357,29 @@ export async function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage(text);
 				break;
 			}
-			case 'goToTemplate': {
-				const req = ++goToTemplateReq;
-				const data = message.data as {
-					fileName: string,
-					range: [number, number],
-				};
-				const doc = await vscode.workspace.openTextDocument(data.fileName);
+		}
+	}
 
-				if (req !== goToTemplateReq)
-					return;
+	async function handleGoToCode(fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean }) {
 
-				const sfc = getSfc(doc);
-				const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-				const start = doc.positionAt(data.range[0] + offset);
-				const end = doc.positionAt(data.range[1] + offset);
-				await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+		const doc = await vscode.workspace.openTextDocument(fileName);
 
-				if (req !== goToTemplateReq)
-					return;
+		if (cancleToken.isCancelled)
+			return;
 
-				const editor = vscode.window.activeTextEditor;
-				if (editor) {
-					editor.selection = new vscode.Selection(start, end);
-					editor.revealRange(new vscode.Range(start, end));
-				}
-				break;
-			}
+		const sfc = getSfc(doc);
+		const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
+		const start = doc.positionAt(range[0] + offset);
+		const end = doc.positionAt(range[1] + offset);
+		await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
+
+		if (cancleToken.isCancelled)
+			return;
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			editor.selection = new vscode.Selection(start, end);
+			editor.revealRange(new vscode.Range(start, end));
 		}
 	}
 
@@ -429,8 +388,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3334);
 		const terminal = vscode.window.createTerminal('volar-preview:' + port);
 		const viteProxyPath = type === 'vite'
-			? require.resolve('./bin/vite', { paths: [context.extensionPath] })
-			: require.resolve('./bin/nuxi', { paths: [context.extensionPath] });
+			? require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })
+			: require.resolve('./dist/preview-bin/nuxi', { paths: [context.extensionPath] });
 
 		terminal.sendText(`cd ${viteDir}`);
 
