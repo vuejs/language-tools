@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.34.2
+
+- fix: add missing depend for vue-tsc ([#1154](https://github.com/johnsoncodehk/volar/issues/1154))
+- fix: css format should not trimmed new lines ([#1155](https://github.com/johnsoncodehk/volar/issues/1155))
+
 ## 0.34.1
 
 - fix: fixed vue-tsc broken regression
