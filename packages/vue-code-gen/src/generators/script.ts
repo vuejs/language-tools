@@ -100,11 +100,15 @@ export function generate(
 		);
 	}
 
-	// fix https://github.com/johnsoncodehk/volar/issues/1048, https://github.com/johnsoncodehk/volar/issues/435
+	// fix https://github.com/johnsoncodehk/volar/issues/1048
+	// fix https://github.com/johnsoncodehk/volar/issues/435
+	// fix https://github.com/johnsoncodehk/volar/issues/1127
 	codeGen.addMapping2({
 		data: {
 			vueTag: 'sfc',
-			capabilities: {},
+			capabilities: {
+				diagnostic: lsType === 'script',
+			},
 		},
 		mode: SourceMaps.Mode.Expand,
 		mappedRange: {
