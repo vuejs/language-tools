@@ -4,7 +4,7 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { EmbeddedFileSourceMap } from '@volar/vue-typescript';
 import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, reactive, ref, shallowReactive, unref } from '@vue/reactivity';
+import { computed, reactive, ref, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { VueLanguagePlugin } from './typescriptRuntime';
 import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
@@ -13,10 +13,10 @@ import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
 import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
+import { parseCssVars } from './utils/parseCssVars';
 import { Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import { parseCssVars } from './utils/parseCssVars';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 
@@ -512,7 +512,12 @@ export function createVueFile(
 		};
 
 		const file = sfcTemplateScript.file.value;
-		let components = file && file.content.indexOf(SearchTexts.Components) >= 0 ? tsLs.getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
+		const hasFile = file &&
+			file.content.indexOf(SearchTexts.Components) >= 0 &&
+			// getSourceFile return undefined for lang=js with allowJs=false;
+			!!tsLs.getProgram()?.getSourceFile(file.fileName);
+
+		let components = hasFile ? tsLs.getCompletionsAtPosition(file!.fileName, file!.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');

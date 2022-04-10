@@ -140,6 +140,7 @@ export function createTypeScriptRuntime(options: {
                     // .vue.ts -> .vue
                     // .vue.d.ts (never)
                     const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
+
                     if (fileNameTrim.endsWith('.vue')) {
                         const vueFile = vueFiles.get(fileNameTrim);
                         if (!vueFile) {
@@ -148,11 +149,13 @@ export function createTypeScriptRuntime(options: {
                                 updateSourceFiles([fileNameTrim]); // create virtual files
                             }
                         }
-                        return !!vueFiles.fromEmbeddedFileName(fileName);
                     }
-                    else {
-                        return !!options.vueLsHost.fileExists?.(fileName);
+
+                    if (!!vueFiles.fromEmbeddedFileName(fileName)) {
+                        return true;
                     }
+
+                    return !!options.vueLsHost.fileExists?.(fileName);
                 }
                 : undefined,
             getProjectVersion: () => {
