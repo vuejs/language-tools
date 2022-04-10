@@ -1333,6 +1333,8 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
+						'(',
+						')',
 					);
 					writeFormatCode(
 						prop.exp.content,
