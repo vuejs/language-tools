@@ -392,6 +392,8 @@ export function generate(
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
 				},
+				'',
+				'',
 			);
 			writeFormatCode(
 				context,
@@ -469,7 +471,7 @@ export function generate(
 					formatBrackets.square,
 				);
 			}
-			tsCodeGen.addText(`] of __VLS_types.getVforSourceType(`);
+			tsCodeGen.addText(`] of __VLS_types.getVforSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
@@ -478,6 +480,8 @@ export function generate(
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
+					'(',
+					')',
 				);
 				writeFormatCode(
 					source.content,
@@ -485,7 +489,7 @@ export function generate(
 					formatBrackets.round,
 				);
 			}
-			tsCodeGen.addText(`)) {\n`);
+			tsCodeGen.addText(`) {\n`);
 
 			for (const childNode of node.children) {
 				visitNode(childNode, parentEl);
@@ -726,6 +730,8 @@ export function generate(
 									vueTag: 'template',
 									capabilities: capabilitiesSet.all,
 								},
+								'(',
+								')',
 							);
 							writeFormatCode(
 								prop.exp.content,
@@ -1278,6 +1284,8 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
+						'',
+						'',
 					);
 					tsCodeGen.addText(`]`);
 				}
@@ -1662,6 +1670,8 @@ export function generate(
 				mapCode,
 				sourceRange.start,
 				data,
+				'',
+				'',
 			);
 			return 1;
 		}
@@ -1761,8 +1771,8 @@ export function generate(
 		mapCode: string,
 		sourceOffset: number,
 		data: EmbeddedFileMappingData,
-		prefix = '',
-		suffix = '',
+		prefix: string,
+		suffix: string,
 	) {
 		walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset) => {
 			if (fragOffset === undefined) {
