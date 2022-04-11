@@ -125,6 +125,11 @@ function walkIdentifiers(
             else if (ts.isShorthandPropertyAssignment(prop)) {
                 walkIdentifiers(ts, prop, cb, localVars);
             }
+            // fix https://github.com/johnsoncodehk/volar/issues/1148#issuecomment-1094378126
+            else if (ts.isSpreadAssignment(prop)) {
+                // TODO: cannot report "Spread types may only be created from object types.ts(2698)"
+                walkIdentifiers(ts, prop.expression, cb, localVars);
+            }
         }
     }
     else if (ts.isTypeReferenceNode(node)) {
