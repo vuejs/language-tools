@@ -175,25 +175,23 @@ function patchHtmlFormat<T extends EmbeddedLanguageServicePlugin>(htmlPlugin: T)
 				const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
 				const result = await originalFormat?.(patchDocument, {
 					start: patchDocument.positionAt(0),
-					end: patchDocument.positionAt(document.getText().length),
+					end: patchDocument.positionAt(patchDocument.getText().length),
 				}, options);
 
-				if (result) {
-					for (const edit of result) {
-						if (patchDocument.offsetAt(edit.range.start) === 0) {
-							edit.newText = edit.newText.trimStart();
-							edit.newText = edit.newText.substring(prefixes.length);
-							edit.range.start = document.positionAt(0);
-						}
-						if (patchDocument.offsetAt(edit.range.end) === patchDocument.getText().length) {
-							edit.newText = edit.newText.trimEnd();
-							edit.newText = edit.newText.substring(0, edit.newText.length - suffixes.length);
-							edit.range.end = document.positionAt(document.getText().length);
-						}
-					}
-				}
+				if (!result?.length)
+					return result;
 
-				return result;
+				let newText = TextDocument.applyEdits(patchDocument, result);
+				newText = newText.trim();
+				newText = newText.substring(prefixes.length, newText.length - suffixes.length);
+
+				return [{
+					newText,
+					range: {
+						start: document.positionAt(0),
+						end: document.positionAt(document.getText().length),
+					}
+				}];
 			}
 
 			return originalFormat?.(document, range, options);
