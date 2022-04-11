@@ -17,7 +17,7 @@ const capabilitiesSet = {
 	attrReference: { references: true, definitions: true, rename: true, },
 	scopedClassName: { references: true, definitions: true, rename: true, completion: true, },
 	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
-	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, referencesCodeLens: true },
+	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
 	refAttr: { references: true, definitions: true, rename: true, },
 };
 const formatBrackets = {
