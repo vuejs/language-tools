@@ -14,6 +14,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
 	let exposeRuntimeArg: TextRange | undefined;
+	let exposeTypeArg: TextRange | undefined;
 	let emitsTypeNums = -1;
 
 	const bindings = parseBindingRanges(ts, ast, false);
@@ -48,6 +49,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 		emitsTypeArg,
 		emitsTypeNums,
 		exposeRuntimeArg,
+		exposeTypeArg,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -72,7 +74,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 						exposeRuntimeArg = _getStartEnd(runtimeArg);
 					}
 				}
-				else if (node.typeArguments?.length) {
+				if (node.typeArguments?.length) {
 					const typeArg = node.typeArguments[0];
 					if (callText === 'defineProps') {
 						propsTypeArg = _getStartEnd(typeArg);
@@ -82,6 +84,9 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 						if (ts.isTypeLiteralNode(typeArg)) {
 							emitsTypeNums = typeArg.members.length;
 						}
+					}
+					else if (callText === 'defineExpose') {
+						exposeTypeArg = _getStartEnd(typeArg);
 					}
 				}
 			}

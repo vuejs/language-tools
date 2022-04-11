@@ -271,10 +271,7 @@ export function generate(
 		if (scriptSetup && scriptSetupRanges) {
 			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
 				codeGen.addText(`props: (`);
-				if (scriptSetupRanges.propsRuntimeArg) {
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-				}
-				else if (scriptSetupRanges.propsTypeArg) {
+				if (scriptSetupRanges.propsTypeArg) {
 
 					usedTypes.DefinePropsToOptions = true;
 					codeGen.addText(`{} as `);
@@ -293,18 +290,21 @@ export function generate(
 						codeGen.addText(`>`);
 					}
 				}
+				else if (scriptSetupRanges.propsRuntimeArg) {
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				}
 				codeGen.addText(`),\n`);
 			}
-			if (scriptSetupRanges.emitsRuntimeArg) {
-				codeGen.addText(`emits: (`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codeGen.addText(`),\n`);
-			}
-			else if (scriptSetupRanges.emitsTypeArg) {
+			if (scriptSetupRanges.emitsTypeArg) {
 				usedTypes.ConstructorOverloads = true;
 				codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codeGen.addText(`>>),\n`);
+			}
+			else if (scriptSetupRanges.emitsRuntimeArg) {
+				codeGen.addText(`emits: (`);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+				codeGen.addText(`),\n`);
 			}
 			const bindingsArr: {
 				bindings: { start: number, end: number }[],
@@ -337,7 +337,12 @@ export function generate(
 				writeTemplate();
 				codeGen.addText(`};\n`);
 
-				if (scriptSetupRanges.exposeRuntimeArg) {
+				if (scriptSetupRanges.exposeTypeArg) {
+					codeGen.addText(`return { } as `);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
+					codeGen.addText(`;\n`);
+				}
+				else if (scriptSetupRanges.exposeRuntimeArg) {
 					codeGen.addText(`return `);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
 					codeGen.addText(`;\n`);
@@ -425,7 +430,7 @@ export function generate(
 			);
 			codeGen.addText(`),\n`);
 		}
-		if (scriptSetupRanges?.propsTypeArg && scriptSetup) {
+		else if (scriptSetupRanges?.propsTypeArg && scriptSetup) {
 			codeGen.addText(`props: ({} as `);
 			codeGen.addCode(
 				scriptSetup.content.substring(scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end),
@@ -459,7 +464,7 @@ export function generate(
 			);
 			codeGen.addText(`),\n`);
 		}
-		if (scriptSetupRanges?.emitsTypeArg && scriptSetup) {
+		else if (scriptSetupRanges?.emitsTypeArg && scriptSetup) {
 			codeGen.addText(`emits: ({} as `);
 			codeGen.addCode(
 				scriptSetup.content.substring(scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end),

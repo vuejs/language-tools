@@ -40,7 +40,6 @@ export function createPreviewWebSocket(options: {
                     fileName: string,
                     range: [number, number],
                 };
-                console.log(data);
                 const url = options.getOpenFileUrl(data.fileName, data.range);
 
                 ws.send(JSON.stringify({
