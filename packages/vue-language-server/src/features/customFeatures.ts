@@ -71,11 +71,8 @@ export function register(
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}
-					let _result: vscode.Diagnostic[] = [];
-					await ls.doValidation(vueFile.uri, result => {
-						connection.sendDiagnostics({ uri: vueFile.uri, diagnostics: result });
-						_result = result;
-					});
+					let _result = await ls.doValidation(vueFile.uri);
+					connection.sendDiagnostics({ uri: vueFile.uri, diagnostics: _result });
 					errors += _result.filter(error => error.severity === vscode.DiagnosticSeverity.Error).length;
 					warnings += _result.filter(error => error.severity === vscode.DiagnosticSeverity.Warning).length;
 				}
