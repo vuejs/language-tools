@@ -279,9 +279,8 @@ importers:
       '@volar/vue-code-gen': link:../vue-code-gen
       '@vue/compiler-sfc': 3.2.31
       '@vue/reactivity': 3.2.31
-    optionalDependencies:
-      '@volar/pug-language-service': link:../pug-language-service
     devDependencies:
+      '@volar/pug-language-service': link:../pug-language-service
       typescript: 4.6.3
 
 packages:

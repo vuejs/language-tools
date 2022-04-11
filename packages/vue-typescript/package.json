@@ -13,6 +13,7 @@
 		"directory": "packages/vue-typescript"
 	},
 	"devDependencies": {
+		"@volar/pug-language-service": "0.34.4",
 		"typescript": "latest"
 	},
 	"dependencies": {
@@ -21,9 +22,6 @@
 		"@volar/vue-code-gen": "0.34.4",
 		"@vue/compiler-sfc": "^3.2.31",
 		"@vue/reactivity": "^3.2.31"
-	},
-	"optionalDependencies": {
-		"@volar/pug-language-service": "0.34.4"
 	},
 	"browser": {
 		"./out/plugins/pug.js": "./out/plugins/empty.js"
