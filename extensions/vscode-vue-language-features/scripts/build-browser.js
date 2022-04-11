@@ -43,6 +43,7 @@ require('esbuild').build({
     },
     bundle: true,
     outdir: './dist/browser',
+    external: ['fs'],
     format: 'iife',
     tsconfig: '../../tsconfig.build.json',
     minify: process.argv.includes('--minify'),
