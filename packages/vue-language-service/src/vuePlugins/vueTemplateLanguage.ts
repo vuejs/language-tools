@@ -758,7 +758,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            bind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            bind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
                         }
                     }
                     {
@@ -766,12 +766,12 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
                         let offset = file.content.indexOf(searchText);
                         if (offset >= 0) {
                             offset += searchText.length;
-                            on = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries ?? [];
+                            on = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
                         }
                     }
                     cache.set(tag.name, { item: tag.item, bind, on });
                 }
-                const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries ?? [];
+                const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
                 cache.set('*', { item: undefined, bind: globalBind, on: [] });
             }
 

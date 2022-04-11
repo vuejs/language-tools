@@ -527,7 +527,7 @@ export function createVueFile(
 			// getSourceFile return undefined for lang=js with allowJs=false;
 			!!tsLs.getProgram()?.getSourceFile(file.fileName);
 
-		let components = hasFile ? tsLs.getCompletionsAtPosition(file!.fileName, file!.content.indexOf(SearchTexts.Components), options)?.entries ?? [] : [];
+		let components = hasFile ? tsLs.getCompletionsAtPosition(file!.fileName, file!.content.indexOf(SearchTexts.Components), options)?.entries.filter(entry => entry.kind !== ts.ScriptElementKind.warning) ?? [] : [];
 
 		components = components.filter(entry => {
 			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');
