@@ -25,6 +25,7 @@ export async function getInferredCompilerOptions(
 		allowSyntheticDefaultImports: true,
 		allowNonTsExtensions: true,
 		resolveJsonModule: true,
+		jsx: ts.JsxEmit.Preserve,
 	};
 
 	return options;
