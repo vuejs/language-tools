@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.34.5
+
+- feat: preset `"jsx": "preserve"` for non-tsconfig project
+- fix: avoid template report errors if `"jsx": "preserve"` missing ([#1161](https://github.com/johnsoncodehk/volar/issues/1161))
+- fix: attrs auto-complete and tag highlight incorrect on js project ([#1158](https://github.com/johnsoncodehk/volar/issues/1158))
+- fix: script setup report false positive error with defineExpose type arg ([#1165](https://github.com/johnsoncodehk/volar/issues/1165))
+
+**Breaking changes**
+
+- `@volar/pug-language-service` now is a optional depend on vue-tsc, you need to install it additionally to support pug template type-checking on vue-tsc ([#1092](https://github.com/johnsoncodehk/volar/issues/1092))
+
 ## 0.34.4
 
 - fix: script setup report false positive error with multi-line interpolation
@@ -22,7 +33,6 @@
 
 **Breaking changes**
 
-- For pug template project, you need to install optional dependencie `@volar/pug-language-service` to support pug template type-checking on vue-tsc ([#1092](https://github.com/johnsoncodehk/volar/issues/1092))
 - Changed `experimentalResolveNonScopedCssClasses` to `experimentalResolveStyleCssClasses` ([#1121](https://github.com/johnsoncodehk/volar/issues/1121))
 
 ## 0.34.2
