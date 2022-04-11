@@ -25,23 +25,15 @@ export function register(
 		const projects = getProjects();
 		if (!projects) return;
 
+		const fs = await import('fs');
+
 		for (const workspace of projects.workspaces.values()) {
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
 				const localTypes = ls.__internal__.tsRuntime.getLocalTypesFiles();
 				for (const fileName of localTypes.fileNames) {
-					connection.workspace.applyEdit({
-						edit: {
-							documentChanges: [
-								vscode.CreateFile.create(shared.fsPathToUri(fileName)),
-								vscode.TextDocumentEdit.create(
-									vscode.OptionalVersionedTextDocumentIdentifier.create(shared.fsPathToUri(fileName), null),
-									[{ range: vscode.Range.create(0, 0, 0, 0), newText: localTypes.code }],
-								),
-							]
-						}
-					});
+					fs.writeFile(fileName, localTypes.code, () => { });
 				}
 				const context = await ls.__internal__.getContext();
 				for (const vueDocument of context.vueDocuments.getAll()) {
@@ -50,17 +42,7 @@ export function register(
 						if (!sourceMap.embeddedFile.isTsHostFile)
 							continue;
 
-						connection.workspace.applyEdit({
-							edit: {
-								documentChanges: [
-									vscode.CreateFile.create(sourceMap.mappedDocument.uri),
-									vscode.TextDocumentEdit.create(
-										vscode.OptionalVersionedTextDocumentIdentifier.create(sourceMap.mappedDocument.uri, null),
-										[{ range: vscode.Range.create(0, 0, 0, 0), newText: sourceMap.mappedDocument.getText() }],
-									),
-								]
-							}
-						});
+						fs.writeFile(sourceMap.embeddedFile.fileName, sourceMap.mappedDocument.getText(), () => { });
 					}
 				}
 			}
