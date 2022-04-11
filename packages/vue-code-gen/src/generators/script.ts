@@ -2,7 +2,7 @@ import { CodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import * as path from 'path';
-import type * as templateGen from '../generators/template_scriptSetup';
+import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { TeleportMappingData, EmbeddedFileMappingData } from '../types';
@@ -534,20 +534,24 @@ export function generate(
 		}
 
 		// fix import components unused report
+		codeGen.addText('// @ts-ignore\n');
+		codeGen.addText('[');
 		for (const varName of bindingNames) {
-			if (htmlGen.tags.has(varName) || htmlGen.tags.has(hyphenate(varName))) {
-				codeGen.addText('// @ts-ignore\n');
-				codeGen.addText(varName + ';\n');
+			if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenate(varName)]) {
+				codeGen.addText(varName + ', ');
 			}
 		}
-		for (const tag of htmlGen.tags) {
+		for (const tag of Object.keys(htmlGen.tagNames)) {
 			if (tag.indexOf('.') >= 0) {
-				codeGen.addText('// @ts-ignore\n');
-				codeGen.addText(tag + ';\n');
+				codeGen.addText(tag + ', ');
 			}
 		}
+		codeGen.addText('];\n');
 
-		codeGen.addText(htmlGen.text);
+		codeGen.addText('// @ts-ignore\n');
+		codeGen.addText('[');
+		codeGen.addText([...htmlGen.identifiers].join(', '));
+		codeGen.addText('];\n');
 	}
 }
 

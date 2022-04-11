@@ -6,6 +6,7 @@ export function walkInterpolationFragment(
     code: string,
     cb: (fragment: string, offset: number | undefined) => void,
     localVars: Record<string, number>,
+    identifiers: Set<string>,
 ) {
 
     let ctxVars: {
@@ -33,6 +34,7 @@ export function walkInterpolationFragment(
                 isShorthand: isShorthand,
                 offset: id.getStart(ast),
             });
+            identifiers.add(id.text);
         }
     };
     ast.forEachChild(node => walkIdentifiers(ts, node, varCb, localVars));

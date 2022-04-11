@@ -218,6 +218,7 @@ export function useSfcTemplateScript(
 		function writeCssVars() {
 
 			const emptyLocalVars: Record<string, number> = {};
+			const identifiers = new Set<string>();
 
 			for (let i = 0; i < sfcStyles.value.length; i++) {
 
@@ -258,6 +259,7 @@ export function useSfcTemplateScript(
 							}
 						},
 						emptyLocalVars,
+						identifiers,
 					)
 					codeGen.addText(';\n');
 				}

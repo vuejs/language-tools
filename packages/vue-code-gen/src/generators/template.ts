@@ -90,6 +90,7 @@ export function generate(
 		offsets: number[],
 	}> = {};
 	const localVars: Record<string, number> = {};
+	const identifiers = new Set<string>();
 
 	tsFormatCodeGen.addText('export { };\n');
 
@@ -269,6 +270,7 @@ export function generate(
 		cssCodeGen: cssCodeGen,
 		tagNames: tagResolves,
 		attrNames,
+		identifiers,
 	};
 
 	function collectTags(node: CompilerDOM.TemplateChildNode) {
@@ -1803,7 +1805,7 @@ export function generate(
 				);
 				tsCodeGen.addText(addSubfix);
 			}
-		}, localVars);
+		}, localVars, identifiers);
 	}
 	function writeFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
 		tsFormatCodeGen.addText(formatWrapper[0]);

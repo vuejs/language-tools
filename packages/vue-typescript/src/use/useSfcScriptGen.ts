@@ -2,7 +2,7 @@ import { computed, Ref, ComputedRef } from '@vue/reactivity';
 import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
 import * as SourceMaps from '@volar/source-map';
 import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
-import * as templateGen from '@volar/vue-code-gen/out/generators/template_scriptSetup';
+import type * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { getVueLibraryName } from '../utils/localTypes';
@@ -13,21 +13,17 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
 	fileName: string,
 	vueFileContent: Ref<string>,
+	lang: Ref<string>,
 	script: Ref<Sfc['script']>,
 	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptRanges: Ref<ReturnType<typeof parseScriptRanges> | undefined>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
-	sfcTemplateCompileResult: Ref<ReturnType<(typeof import('@volar/vue-code-gen'))['compileSFCTemplate']> | undefined>,
+	htmlGen: Ref<ReturnType<typeof templateGen.generate> | undefined>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	isVue2: boolean,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 ) {
 
-	const htmlGen = computed(() => {
-		if (sfcTemplateCompileResult.value?.ast) {
-			return templateGen.generate(sfcTemplateCompileResult.value.ast);
-		}
-	});
 	const codeGen = computed(() =>
 		genScript(
 			lsType,
@@ -51,12 +47,6 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			getVueLibraryName(isVue2),
 		)
 	);
-	const lang = computed(() => {
-		return !script.value && !scriptSetup.value ? 'ts'
-			: scriptSetup.value && scriptSetup.value.lang !== 'js' ? scriptSetup.value.lang
-				: script.value && script.value.lang !== 'js' ? script.value.lang
-					: 'js'
-	});
 	const file = computed(() => {
 
 		if (lsType === 'script') {

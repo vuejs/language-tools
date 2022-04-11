@@ -1,5 +1,5 @@
 import { generate as generateScript } from './generators/script';
-import { generate as generateTemplateScript } from './generators/template_scriptSetup';
+import { generate as generateTemplateScript } from './generators/template';
 import { parseScriptRanges } from './parsers/scriptRanges';
 import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import * as CompilerDOM from '@vue/compiler-dom';
@@ -39,7 +39,8 @@ export function generateSFCScriptTypeCheckCode(
 			ts,
 			ts.createSourceFile('dummy.' + scriptLang, scriptSetupCode, ts.ScriptTarget.ESNext)
 		) : undefined,
-		() => templateAst ? generateTemplateScript(templateAst) : undefined,
+		() => undefined, // TODO
+		// () => templateAst ? generateTemplateScript(templateAst) : undefined,
 		() => cssVars ?? [],
 		vueLibName,
 	);

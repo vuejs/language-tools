@@ -161,32 +161,12 @@ export function createVueFile(
 			? parseScriptSetupRanges(ts, sfcScriptSetup.ast.value)
 			: undefined
 	);
-	const sfcScriptForTemplateLs = useSfcScriptGen(
-		'template',
-		fileName,
-		content,
-		computed(() => sfc.script),
-		computed(() => sfc.scriptSetup),
-		computed(() => scriptRanges.value),
-		computed(() => scriptSetupRanges.value),
-		sfcTemplateCompileResult,
-		computed(() => sfcStyles.files.value),
-		compilerOptions.experimentalCompatMode === 2,
-		getCssVBindRanges,
-	);
-	const sfcScriptForScriptLs = useSfcScriptGen(
-		'script',
-		fileName,
-		content,
-		computed(() => sfc.script),
-		computed(() => sfc.scriptSetup),
-		computed(() => scriptRanges.value),
-		computed(() => scriptSetupRanges.value),
-		sfcTemplateCompileResult,
-		computed(() => sfcStyles.files.value),
-		compilerOptions.experimentalCompatMode === 2,
-		getCssVBindRanges,
-	);
+	const scriptLang = computed(() => {
+		return !sfc.script && !sfc.scriptSetup ? 'ts'
+			: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
+				: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
+					: 'js'
+	});
 	const sfcTemplateScript = useSfcTemplateScript(
 		ts,
 		fileName,
@@ -200,13 +180,41 @@ export function createVueFile(
 		sfcTemplateCompiled,
 		sfcTemplateCompileResult,
 		sfcStyles.files,
-		sfcScriptForScriptLs.lang,
+		scriptLang,
 		compilerOptions,
 		baseCssModuleType,
 		getCssVBindRanges,
 		getCssClasses,
 		compilerOptions.experimentalCompatMode === 2,
 		!!compilerOptions.experimentalDisableTemplateSupport,
+	);
+	const sfcScriptForTemplateLs = useSfcScriptGen(
+		'template',
+		fileName,
+		content,
+		scriptLang,
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
+		computed(() => scriptRanges.value),
+		computed(() => scriptSetupRanges.value),
+		sfcTemplateScript.templateCodeGens,
+		computed(() => sfcStyles.files.value),
+		compilerOptions.experimentalCompatMode === 2,
+		getCssVBindRanges,
+	);
+	const sfcScriptForScriptLs = useSfcScriptGen(
+		'script',
+		fileName,
+		content,
+		scriptLang,
+		computed(() => sfc.script),
+		computed(() => sfc.scriptSetup),
+		computed(() => scriptRanges.value),
+		computed(() => scriptSetupRanges.value),
+		sfcTemplateScript.templateCodeGens,
+		computed(() => sfcStyles.files.value),
+		compilerOptions.experimentalCompatMode === 2,
+		getCssVBindRanges,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
