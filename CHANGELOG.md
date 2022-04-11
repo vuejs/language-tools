@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.34.4
+
+- fix: script setup report false positive error with multi-line interpolation
+- fix: object spread assignment not working in template
+- fix: html formatting result incorrect
+
 ## 0.34.3
 
 - feat: release `@volar/preview` for support vite, nuxt 3 app preview features other then vscode IDEs ([#1115](https://github.com/johnsoncodehk/volar/issues/1115))
