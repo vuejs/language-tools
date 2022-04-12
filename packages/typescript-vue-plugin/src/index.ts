@@ -9,10 +9,9 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
-			const files = info.project.getScriptFileNames();
-			const hasVueFile = files.some(file => file.endsWith('.vue'));
+			const proxyHost = createProxyHost(ts, info);
 
-			if (!hasVueFile) {
+			if (proxyHost.getVueFiles().length === 0) {
 				return info.languageService;
 			}
 
@@ -29,7 +28,6 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			};
 
-			const proxyHost = createProxyHost(ts, info);
 			const vueCompilerOptions = proxyHost.host.getVueCompilationSettings?.() ?? {};
 			const tsRuntime = vue.createTypeScriptRuntime({
 				typescript: ts,
