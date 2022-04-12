@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.6
+
+- feat: add prompt for `"jsx": "preserve"` missing
+- fix: auto-complete break language server if `"jsx": "preserve"` missing ([#1171](https://github.com/johnsoncodehk/volar/issues/1171))
+- fix: typescript plugin extension not working ([#1173](https://github.com/johnsoncodehk/volar/issues/1173))
+- fix: code action not working on *.ts with take over mode ([#1169](https://github.com/johnsoncodehk/volar/issues/1169))
+- fix: object computed property name report false positive error in template ([#1176](https://github.com/johnsoncodehk/volar/issues/1176))
+- fix: should count variable uses with ref attribute ([#1168](https://github.com/johnsoncodehk/volar/issues/1168))
+
 ## 0.34.5
 
 - feat: preset `"jsx": "preserve"` for non-tsconfig project
