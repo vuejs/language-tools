@@ -43,7 +43,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			}
 			else {
-				item = await plugin.doCodeActionResolve(item);
+				return await plugin.doCodeActionResolve(originalItem);
 			}
 		}
 
