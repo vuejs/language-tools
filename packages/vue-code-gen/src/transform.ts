@@ -119,6 +119,10 @@ function walkIdentifiers(
     else if (ts.isObjectLiteralExpression(node)) {
         for (const prop of node.properties) {
             if (ts.isPropertyAssignment(prop)) {
+                // fix https://github.com/johnsoncodehk/volar/issues/1176
+                if (ts.isComputedPropertyName(prop.name)) {
+                    walkIdentifiers(ts, prop.name.expression, cb, localVars);
+                }
                 walkIdentifiers(ts, prop.initializer, cb, localVars);
             }
             // fix https://github.com/johnsoncodehk/volar/issues/1156
