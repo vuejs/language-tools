@@ -137,17 +137,30 @@ export default function (options: {
 
                         const error = vscode.Diagnostic.create(
                             {
-                                start: document.positionAt(script.startTagEnd),
-                                end: document.positionAt(script.startTagEnd + script.content.length),
+                                start: document.positionAt(script.start),
+                                end: document.positionAt(script.startTagEnd),
                             },
                             'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
                             vscode.DiagnosticSeverity.Information,
                             undefined,
                             'volar',
                         );
-                        error.tags = [vscode.DiagnosticTag.Unnecessary];
                         result.push(error);
                     }
+                }
+
+                if (options.tsLs && sfc.template && vueDocument.file.isJsxMissing()) {
+                    const error = vscode.Diagnostic.create(
+                        {
+                            start: document.positionAt(sfc.template.start),
+                            end: document.positionAt(sfc.template.startTagEnd),
+                        },
+                        'TypeScript intellisense is disabled on template, you can config `"jsx": "preserve"` in tsconfig or jsconfig to enable it, or config `vueCompilerOptions.experimentalDisableTemplateSupport` to disable this prompt.',
+                        vscode.DiagnosticSeverity.Information,
+                        undefined,
+                        'volar',
+                    );
+                    result.push(error);
                 }
 
                 return result;
