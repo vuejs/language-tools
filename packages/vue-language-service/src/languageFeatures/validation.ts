@@ -11,12 +11,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 		string,
 		{
 			nonTs: vscode.Diagnostic[],
-			templateTs_semantic: vscode.Diagnostic[],
-			templateTs_syntactic: vscode.Diagnostic[],
-			templateTs_suggestion: vscode.Diagnostic[],
-			scriptTs_semantic: vscode.Diagnostic[],
-			scriptTs_syntactic: vscode.Diagnostic[],
-			scriptTs_suggestion: vscode.Diagnostic[],
+			tsSemantic: vscode.Diagnostic[],
+			tsSyntactic: vscode.Diagnostic[],
+			tsSuggestion: vscode.Diagnostic[],
 		}
 	>();
 	const nonTsCache = new Map<
@@ -38,12 +35,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
 			nonTs: [],
-			templateTs_semantic: [],
-			templateTs_suggestion: [],
-			templateTs_syntactic: [],
-			scriptTs_semantic: [],
-			scriptTs_suggestion: [],
-			scriptTs_syntactic: [],
+			tsSemantic: [],
+			tsSuggestion: [],
+			tsSyntactic: [],
 		}).get(uri)!;
 
 		let errorsDirty = false; // avoid cache error range jitter
@@ -55,10 +49,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			syntactic: true,
 		}, nonTsCache, errors => cache.nonTs = errors ?? []);
 		doResponse();
-		await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.scriptTs_syntactic = errors ?? []);
-		await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.scriptTs_suggestion = errors ?? []);
+		await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.tsSyntactic = errors ?? []);
+		await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.tsSuggestion = errors ?? []);
 		doResponse();
-		await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.scriptTs_semantic = errors ?? []);
+		await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.tsSemantic = errors ?? []);
 
 		return getErrors();
 
@@ -72,12 +66,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 		function getErrors() {
 			return [
 				...cache.nonTs,
-				...cache.templateTs_syntactic,
-				...cache.templateTs_suggestion,
-				...cache.templateTs_semantic,
-				...cache.scriptTs_syntactic,
-				...cache.scriptTs_suggestion,
-				...cache.scriptTs_semantic,
+				...cache.tsSyntactic,
+				...cache.tsSuggestion,
+				...cache.tsSemantic,
 			];
 		}
 
@@ -104,7 +95,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				async (plugin, document, arg, sourceMap) => {
 
 					// avoid duplicate errors from vue plugiin
-					if (!isTsDocument(document) && !options.semantic)
+					if (!isTsDocument(document) && isTs)
 						return;
 
 					if (await isCancel?.())
