@@ -83,7 +83,6 @@ export function generate(
 	const tagResolves: Record<string, {
 		rawComponent: string,
 		slotsComponent: string,
-		baseProps: string,
 		emit: string,
 		slots: string,
 		events: Record<string, string>,
@@ -108,7 +107,6 @@ export function generate(
 		const var_correctTagName = `__VLS_${elementIndex++}`;
 		const var_rawComponent = `__VLS_${elementIndex++}`;
 		const var_slotsComponent = `__VLS_${elementIndex++}`;
-		const var_baseProps = `__VLS_${elementIndex++}`;
 		const var_emit = `__VLS_${elementIndex++}`;
 		const var_slots = `__VLS_${elementIndex++}`;
 		const var_events: Record<string, string> = {};
@@ -139,7 +137,6 @@ export function generate(
 			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
 		}
 		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
-		tsCodeGen.addText(`declare const ${var_baseProps}: __VLS_types.ExtractComponentProps<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_slots}: __VLS_types.DefaultSlots<typeof ${var_rawComponent}>;\n`);
 
@@ -225,13 +222,13 @@ export function generate(
 		}
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
-			tsCodeGen.addText(`${var_baseProps}.${searchTexts.getPropsCompletion(name)};\n`);
+			tsCodeGen.addText('// @ts-ignore\n');
+			tsCodeGen.addText(`(<${var_rawComponent} ${searchTexts.getPropsCompletion(name)}/>);\n`);
 		}
 
 		tagResolves[tagName] = {
 			rawComponent: var_rawComponent,
 			slotsComponent: var_slotsComponent,
-			baseProps: var_baseProps,
 			emit: var_emit,
 			slots: var_slots,
 			events: var_events,

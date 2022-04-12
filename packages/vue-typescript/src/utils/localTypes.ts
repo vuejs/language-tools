@@ -84,11 +84,6 @@ export type ComponentContext<T> = T extends new (...args: any) => any ? Instance
 export type OptionsProps<T> = T extends { props: infer R } ? R : {};
 export type SelectComponent<T1, T2> = T1 extends (new (...args: any) => any) ? T1 : T1 extends ((...args: any) => any) ? T1 : T2;
 
-export type ExtractComponentProps<T> =
-	T extends new (...args: any) => { $props?: infer P1 } ? P1
-	: T extends FunctionalComponent<infer P2> ? P2
-	: T
-
 export type ExtractEmit2<T> =
 	T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
 	: T extends new (...args: any) => { $emit: infer Emit } ? Emit
