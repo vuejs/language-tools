@@ -1381,20 +1381,17 @@ export function generate(
 				&& prop.value
 			) {
 				tsCodeGen.addText(`// @ts-ignore\n`);
-				tsCodeGen.addText(`(`);
-				writeCode(
+				writeInterpolation(
 					prop.value.content,
-					{
-						start: prop.value.loc.start.offset + 1,
-						end: prop.value.loc.end.offset - 1,
-					},
-					SourceMaps.Mode.Offset,
+					prop.value.loc.start.offset + 1,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.refAttr,
 					},
-				);
-				tsCodeGen.addText(`);\n`);
+					'(',
+					')',
+				)
+				tsCodeGen.addText(`;\n`);
 			}
 		}
 	}
