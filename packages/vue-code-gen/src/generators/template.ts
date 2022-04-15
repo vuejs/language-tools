@@ -930,7 +930,18 @@ export function generate(
 						},
 					);
 					writePropValuePrefix(isStatic);
-					tsCodeGen.addText(prop.exp?.loc.source ?? 'undefined');
+					if (prop.exp) {
+						writeInterpolation(
+							prop.exp.loc.source,
+							undefined,
+							undefined,
+							'(',
+							')',
+						);
+					}
+					else {
+						tsCodeGen.addText('undefined');
+					}
 					writePropValueSuffix(isStatic);
 					writePropEnd(isStatic);
 				}
@@ -1766,8 +1777,8 @@ export function generate(
 	}
 	function writeInterpolation(
 		mapCode: string,
-		sourceOffset: number,
-		data: EmbeddedFileMappingData,
+		sourceOffset: number | undefined,
+		data: EmbeddedFileMappingData | undefined,
 		prefix: string,
 		suffix: string,
 	) {
@@ -1788,15 +1799,20 @@ export function generate(
 					frag = frag.substring(-fragOffset);
 					fragOffset = 0;
 				}
-				writeCode(
-					frag,
-					{
-						start: sourceOffset + fragOffset,
-						end: sourceOffset + fragOffset + frag.length,
-					},
-					SourceMaps.Mode.Offset,
-					data,
-				);
+				if (sourceOffset !== undefined && data !== undefined) {
+					writeCode(
+						frag,
+						{
+							start: sourceOffset + fragOffset,
+							end: sourceOffset + fragOffset + frag.length,
+						},
+						SourceMaps.Mode.Offset,
+						data,
+					);
+				}
+				else {
+					tsCodeGen.addText(frag);
+				}
 				tsCodeGen.addText(addSubfix);
 			}
 		}, localVars, identifiers);
