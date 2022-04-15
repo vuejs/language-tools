@@ -536,19 +536,11 @@ export function createVueFile(
 
 		const componentNames = components.map(entry => entry.name);
 
-		let dirty = false;
-
-		if (!eqSet(new Set(componentNames), new Set(templateScriptData.components))) {
-			dirty = true;
-		}
-
-		if (dirty) {
-			templateScriptData = {
-				projectVersion: newVersion,
-				components: componentNames,
-				componentItems: components,
-			};
-		}
+		templateScriptData = {
+			projectVersion: newVersion,
+			components: componentNames,
+			componentItems: components,
+		};
 
 		return templateScriptData;
 	}
@@ -563,12 +555,6 @@ export function createVueFile(
 
 		return binds;
 	}
-}
-
-function eqSet<T>(as: Set<T>, bs: Set<T>) {
-	if (as.size !== bs.size) return false;
-	for (const a of as) if (!bs.has(a)) return false;
-	return true;
 }
 
 const validScriptSyntaxs = ['js', 'jsx', 'ts', 'tsx'] as const;
