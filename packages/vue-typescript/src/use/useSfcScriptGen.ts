@@ -8,6 +8,7 @@ import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scr
 import { getVueLibraryName } from '../utils/localTypes';
 import type { EmbeddedFileMappingData, TextRange } from '@volar/vue-code-gen';
 import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
+import { VueCompilerOptions } from '../types';
 
 export function useSfcScriptGen<T extends 'template' | 'script'>(
 	lsType: T,
@@ -20,7 +21,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	htmlGen: Ref<ReturnType<typeof templateGen.generate> | undefined>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
-	isVue2: boolean,
+	compilerOptions: VueCompilerOptions,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 ) {
 
@@ -44,7 +45,8 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				}
 				return bindTexts;
 			},
-			getVueLibraryName(isVue2),
+			getVueLibraryName(compilerOptions.experimentalCompatMode === 2),
+			!!compilerOptions.experimentalShamefullySupportOptionsApi,
 		)
 	);
 	const file = computed(() => {

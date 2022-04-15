@@ -199,7 +199,7 @@ export function createVueFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateScript.templateCodeGens,
 		computed(() => sfcStyles.files.value),
-		compilerOptions.experimentalCompatMode === 2,
+		compilerOptions,
 		getCssVBindRanges,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
@@ -213,7 +213,7 @@ export function createVueFile(
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateScript.templateCodeGens,
 		computed(() => sfcStyles.files.value),
-		compilerOptions.experimentalCompatMode === 2,
+		compilerOptions,
 		getCssVBindRanges,
 	);
 	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
