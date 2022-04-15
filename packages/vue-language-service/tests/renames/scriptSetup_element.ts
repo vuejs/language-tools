@@ -21,7 +21,6 @@ defineRename({
 	position: Position.create(1, 5),
 	newName: 'h2',
 	length: 2,
-	resultFileNums: 2,
 }, { [file]: tagResult });
 
 defineRename({
@@ -29,7 +28,6 @@ defineRename({
 	position: Position.create(1, 18),
 	newName: 'h2',
 	length: 2,
-	resultFileNums: 2,
 }, { [file]: tagResult });
 
 // renaming ctx

@@ -9,16 +9,16 @@ import { colletVars, walkInterpolationFragment } from '../transform';
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	diagnosticOnly: { diagnostic: true, completion: true, },
+	diagnosticOnly: { diagnostic: true, completion: true },
 	tagHover: { basic: true },
 	event: { basic: true, diagnostic: true },
-	tagReference: { references: true, definitions: true, rename: true, },
-	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, },
-	attrReference: { references: true, definitions: true, rename: true, },
-	scopedClassName: { references: true, definitions: true, rename: true, completion: true, },
-	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true, },
+	tagReference: { references: true, definitions: true, rename: { in: false, out: true } },
+	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true },
+	attrReference: { references: true, definitions: true, rename: true },
+	scopedClassName: { references: true, definitions: true, rename: true, completion: true },
+	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true },
 	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
-	refAttr: { references: true, definitions: true, rename: true, },
+	refAttr: { references: true, definitions: true, rename: true },
 };
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
