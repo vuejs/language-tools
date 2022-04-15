@@ -1,9 +1,9 @@
 {
 	"compilerOptions": {
-		"target": "ES2020",
+		"target": "ES2016",
 		"lib": [
 			"WebWorker",
-			"ES2020"
+			"ES2016"
 		],
 		"module": "commonjs",
 		"moduleResolution": "node",
