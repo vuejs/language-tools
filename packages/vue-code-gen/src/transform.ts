@@ -22,9 +22,7 @@ export function walkInterpolationFragment(
             !!localVars[id.text] ||
             // https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
             isGloballyWhitelisted(id.text) ||
-            id.text === 'require' ||
-            // css module
-            id.text === '$style'
+            id.text === 'require'
         ) {
             // localVarOffsets.push(localVar.getStart(ast));
         }

@@ -98,7 +98,17 @@ export function useSfcTemplateScript(
 
 		writeImportTypes();
 
-		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component>;\n`);
+		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component> & {\n`);
+		/* CSS Module */
+		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
+		for (const moduleName in cssModuleClasses.value) {
+			const moduleClasses = cssModuleClasses.value[moduleName];
+			codeGen.addText(`${moduleName}: ${baseCssModuleType} & {\n`);
+			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
+			codeGen.addText('};\n');
+		}
+		codeGen.addText(`};\n`);
+
 		codeGen.addText(`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
 
 		/* Components */
@@ -110,16 +120,6 @@ export function useSfcTemplateScript(
 
 		codeGen.addText(`__VLS_allComponents.${SearchTexts.Components};\n`);
 		codeGen.addText(`({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
-
-		/* CSS Module */
-		codeGen.addText('/* CSS Module */\n');
-		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
-		for (const moduleName in cssModuleClasses.value) {
-			const moduleClasses = cssModuleClasses.value[moduleName];
-			codeGen.addText(`declare var ${moduleName}: ${baseCssModuleType} & {\n`);
-			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
-			codeGen.addText('};\n');
-		}
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
