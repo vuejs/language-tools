@@ -176,5 +176,4 @@ defineProps<Props>()
   - [vscode-html-languageservice](https://github.com/microsoft/vscode-html-languageservice): html
   - [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice): css, less, scss, postcss
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
-  - [sass-formatter](https://github.com/TheRealSyler/sass-formatter): sass
   - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx

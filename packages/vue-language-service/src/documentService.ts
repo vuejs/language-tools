@@ -10,7 +10,6 @@ import useHtmlPlugin from './commonPlugins/html';
 import useJsonPlugin from './commonPlugins/json';
 import usePugPlugin from './commonPlugins/pug';
 import usePugFormatPlugin from './commonPlugins/pugBeautify';
-import useSassFormatPlugin from './commonPlugins/sassFormatter';
 import useTsPlugin, { isTsDocument } from './commonPlugins/typescript';
 import * as autoInsert from './documentFeatures/autoInsert';
 import * as colorPresentations from './documentFeatures/colorPresentations';
@@ -71,13 +70,11 @@ export function getDocumentService(
 
 	// formatter plugins
 	const pugFormatPlugin = usePugFormatPlugin();
-	const sassFormatPlugin = useSassFormatPlugin();
 	const formatPlugns = [
 		...customPlugins,
 		cssPlugin,
 		htmlPlugin,
 		pugFormatPlugin,
-		sassFormatPlugin,
 		jsonPlugin,
 		tsPlugin,
 	].map(patchHtmlFormat);

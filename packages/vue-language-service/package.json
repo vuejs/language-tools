@@ -30,7 +30,6 @@
 		"@vscode/emmet-helper": "^2.8.4",
 		"@vue/reactivity": "^3.2.31",
 		"@vue/shared": "^3.2.31",
-		"sass-formatter": "^0.7.3",
 		"semver": "^7.3.5",
 		"upath": "^2.0.1",
 		"vscode-css-languageservice": "^5.4.1",
