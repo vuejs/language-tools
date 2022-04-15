@@ -18,6 +18,7 @@ export function generateSFCScriptTypeCheckCode(
 	scriptLang: 'js' | 'jsx' | 'ts' | 'tsx',
 	scriptCode: string | undefined,
 	scriptSetupCode: string | undefined,
+	shimComponentOptions: boolean,
 	templateAst?: CompilerDOM.RootNode,
 	cssVars?: string[],
 	vueLibName = 'vue',
@@ -43,6 +44,7 @@ export function generateSFCScriptTypeCheckCode(
 		// () => templateAst ? generateTemplateScript(templateAst) : undefined,
 		() => cssVars ?? [],
 		vueLibName,
+		shimComponentOptions,
 	);
 
 	return {

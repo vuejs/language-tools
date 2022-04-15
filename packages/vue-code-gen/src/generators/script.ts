@@ -22,6 +22,7 @@ export function generate(
 	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
 	getStyleBindTexts: () => string[],
 	vueLibName: string,
+	shimComponentOptions: boolean,
 ) {
 
 	const codeGen = new CodeGen<EmbeddedFileMappingData>();
@@ -166,7 +167,20 @@ export function generate(
 			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
 		}
 		else {
-			addVirtualCode('script', 0, script.content.length);
+			let isExportRawObject = false;
+			if (scriptRanges?.exportDefault) {
+				isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
+			}
+			if (isExportRawObject && shimComponentOptions && scriptRanges?.exportDefault) {
+				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
+				codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
+				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
+				codeGen.addText(`)`);
+				addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
+			}
+			else {
+				addVirtualCode('script', 0, script.content.length);
+			}
 		}
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
