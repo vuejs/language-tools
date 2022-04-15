@@ -18,16 +18,13 @@ export default function (): EmbeddedLanguageServicePlugin {
             if (options.insertSpaces)
                 _options.tabSize = options.tabSize; // move tabSize here to fix sass-formatter judge
 
-            const newStyleText = SassFormatter.Format(document.getText(), _options);
+            const newStyleText = SassFormatter.Format(document.getText(range), _options);
 
             if (newStyleText === document.getText())
                 return [];
 
             const cssEdit = vscode.TextEdit.replace(
-                vscode.Range.create(
-                    document.positionAt(0),
-                    document.positionAt(document.getText().length),
-                ),
+                range,
                 '\n' + newStyleText
             );
 

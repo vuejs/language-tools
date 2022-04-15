@@ -12,7 +12,7 @@ export default function (): EmbeddedLanguageServicePlugin {
             if (document.languageId !== 'jade')
                 return;
 
-            const pugCode = document.getText();
+            const pugCode = document.getText(range);
 
             // fix https://github.com/johnsoncodehk/volar/issues/304
             if (pugCode.trim() === '')
@@ -31,10 +31,7 @@ export default function (): EmbeddedLanguageServicePlugin {
                 return [];
 
             const pugEdit = vscode.TextEdit.replace(
-                vscode.Range.create(
-                    document.positionAt(0),
-                    document.positionAt(pugCode.length),
-                ),
+                range,
                 prefixes + newPugCode.trim() + suffixes,
             );
 
