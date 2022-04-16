@@ -557,9 +557,9 @@ export async function activate(context: vscode.ExtensionContext) {
 			</script>
 
 			<div id="loading">
-				<div style="display: flex; align-items: center; flex-direction: column;">
-					<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg" target="_top">
-						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
+				<div style="display: flex; align-items: center; flex-direction: column; min-height: 100vh; justify-content: space-evenly;">
+					<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg" target="_top">
+						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
 					</a>
 
 					<div style="height: 35px; width: 116px; display: flex;">
@@ -588,7 +588,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					</div>
 				</div>
 
-				<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block; shape-rendering: auto;" width="200px" height="100px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+				<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block; shape-rendering: auto; position: absolute; right: 0; bottom: 0;" width="200px" height="100px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
 					<g transform="translate(20 50)">
 						<circle cx="0" cy="0" r="6" fill="#41b883">
 							<animateTransform attributeName="transform" type="scale" begin="-0.375s" calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s" repeatCount="indefinite"></animateTransform>
