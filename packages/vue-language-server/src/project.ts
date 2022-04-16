@@ -54,8 +54,7 @@ export async function createProject(
 	};
 
 	let typeRootVersion = 0;
-	let tsProjectVersion = 0;
-	let vueProjectVersion = 0;
+	let projectVersion = 0;
 	let vueLs: Promise<vue.LanguageService> | undefined;
 	let parsedCommandLine = createParsedCommandLine();
 	const scripts = shared.createPathMap<{
@@ -152,7 +151,7 @@ export async function createProject(
 				scripts.uriDelete(change.uri);
 			}
 
-			updateProjectVersion(change.uri.endsWith('.vue'));
+			projectVersion++;
 		}
 
 		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
@@ -172,15 +171,7 @@ export async function createProject(
 			script.version = document.version;
 		}
 
-		updateProjectVersion(document.uri.endsWith('.vue'));
-	}
-	function updateProjectVersion(isVueFile: boolean) {
-		if (isVueFile) {
-			vueProjectVersion++;
-		}
-		else {
-			tsProjectVersion++;
-		}
+		projectVersion++;
 	}
 	function createLanguageServiceHost() {
 
@@ -199,8 +190,7 @@ export async function createProject(
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
-			getProjectVersion: () => tsProjectVersion.toString(),
-			getVueProjectVersion: () => vueProjectVersion.toString(),
+			getProjectVersion: () => projectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => parsedCommandLine.fileNames,
 			getCompilationSettings: () => parsedCommandLine.options,

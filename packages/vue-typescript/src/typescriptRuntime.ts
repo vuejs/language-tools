@@ -33,7 +33,7 @@ export function createTypeScriptRuntime(options: {
 
     const isVue2 = options.vueLsHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
-    let vueProjectVersion: string | undefined;
+    let lastProjectVersion: string | undefined;
     let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
     let tsProjectVersion = 0; // update by script LS virtual files / *.ts
     const vueFiles = createVueFiles();
@@ -72,10 +72,10 @@ export function createTypeScriptRuntime(options: {
         return vueFiles.getDirs().map(dir => path.join(dir, localTypes.typesFileName));
     }
     function update() {
-        const newVueProjectVersion = options.vueLsHost.getVueProjectVersion?.();
-        if (newVueProjectVersion === undefined || newVueProjectVersion !== vueProjectVersion) {
+        const newProjectVersion = options.vueLsHost.getProjectVersion?.();
+        if (newProjectVersion === undefined || newProjectVersion !== lastProjectVersion) {
 
-            vueProjectVersion = newVueProjectVersion;
+            lastProjectVersion = newProjectVersion;
 
             const nowFileNames = new Set([...options.vueLsHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
             const fileNamesToRemove: string[] = [];
@@ -159,7 +159,7 @@ export function createTypeScriptRuntime(options: {
                 }
                 : undefined,
             getProjectVersion: () => {
-                return options.vueLsHost.getProjectVersion?.() + '-' + tsProjectVersion.toString();
+                return tsProjectVersion.toString();
             },
             getScriptFileNames,
             getScriptVersion,

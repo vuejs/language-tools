@@ -131,8 +131,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getVueCompilationSettings: () => parsedCommandLine?.vueOptions ?? {},
 		getCurrentDirectory: () => info.project.getCurrentDirectory(),
 		getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
-		getProjectVersion: () => info.project.getProjectVersion(),
-		getVueProjectVersion: () => projectVersion.toString(),
+		getProjectVersion: () => info.project.getProjectVersion() + '-' + projectVersion,
 		getProjectReferences: () => info.project.getProjectReferences(),
 
 		getScriptFileNames,

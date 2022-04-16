@@ -48,9 +48,6 @@ export function createProgramProxy(
 		getProjectVersion: () => {
 			return projectVersion.toString();
 		},
-		getVueProjectVersion: () => {
-			return projectVersion.toString();
-		},
 		getProjectReferences: () => options.projectReferences,
 	};
 

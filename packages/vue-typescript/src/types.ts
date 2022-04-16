@@ -2,7 +2,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getVueCompilationSettings?(): VueCompilerOptions,
-	getVueProjectVersion?(): string;
 };
 
 export interface ITemplateScriptData {
