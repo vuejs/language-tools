@@ -269,7 +269,8 @@ export function generate(
 		);
 
 		if (scriptSetupRanges?.withDefaultsArg) {
-			codeGen.addText(`const __VLS_withDefaultsArg = (`);
+			// fix https://github.com/johnsoncodehk/volar/issues/1187
+			codeGen.addText(`const __VLS_withDefaultsArg = (<T>(t: T) => t)(`);
 			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
 			codeGen.addText(`);\n`);
 		}
