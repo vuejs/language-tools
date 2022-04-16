@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.34.7
+
+- feat: add option `experimentalShamefullySupportOptionsApi` to vueCompilerOptions ([#1202](https://github.com/johnsoncodehk/volar/issues/1202))
+- fix: use html renaming instead of ts renaming on tags ([#1201](https://github.com/johnsoncodehk/volar/issues/1201))
+- fix: not support lowser node version ([#1200](https://github.com/johnsoncodehk/volar/issues/1200))
+- fix: cannot update global components props completion list ([#1196](https://github.com/johnsoncodehk/volar/issues/1196))
+- fix: `svg` attributes report false positive void type ([#1184](https://github.com/johnsoncodehk/volar/issues/1184))
+- fix: css module types missing on template context ([#1178](https://github.com/johnsoncodehk/volar/issues/1178))
+- fix: false positive error with withDefaults + "strictNullChecks": false ([#1187](https://github.com/johnsoncodehk/volar/issues/1187))
+
+**Breaking changes**
+- sass formatter is moved to external plugin: https://github.com/johnsoncodehk/volar-plugins/tree/master/packages/sass-formatter
+
 ## 0.34.6
 
 - feat: add prompt for `"jsx": "preserve"` missing
