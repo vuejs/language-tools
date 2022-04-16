@@ -1,7 +1,7 @@
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import useHtmlPlugin from '../commonPlugins/html';
+import useHtmlPlugin from './html';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 import { VueDocument } from '../vueDocuments';

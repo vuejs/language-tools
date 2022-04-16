@@ -39,8 +39,8 @@
 		"vscode-languageserver-textdocument": "^1.0.4"
 	},
 	"browser": {
-		"./out/commonPlugins/emmet.js": "./out/commonPlugins/empty.js",
-		"./out/commonPlugins/pug.js": "./out/commonPlugins/empty.js",
-		"./out/vuePlugins/htmlPugConversions.js": "./out/commonPlugins/empty.js"
+		"./out/plugins/emmet.js": "./out/plugins/empty.js",
+		"./out/plugins/pug.js": "./out/plugins/empty.js",
+		"./out/plugins/vue-htmlpug-convert.js": "./out/plugins/empty.js"
 	}
 }

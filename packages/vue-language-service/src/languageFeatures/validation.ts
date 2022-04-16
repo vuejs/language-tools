@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { isTsDocument } from '../commonPlugins/typescript';
+import { isTsDocument } from '../plugins/typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';

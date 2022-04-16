@@ -12,7 +12,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as ts2 from '@volar/typescript-language-service';
 import type { LanguageServiceHost } from '../types';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
-import useHtmlPlugin from '../commonPlugins/html';
+import useHtmlPlugin from './html';
 
 export const semanticTokenTypes = [
     'componentTag',

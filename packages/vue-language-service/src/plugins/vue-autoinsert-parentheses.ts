@@ -1,7 +1,7 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
-import { isCharacterTyping } from './autoCompleteRefs';
+import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import { VueDocument } from '../vueDocuments';
 
 export default function (options: {

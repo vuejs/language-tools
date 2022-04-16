@@ -3,7 +3,7 @@ import { TextRange } from '@volar/vue-code-gen/out/types';
 import { EmbeddedFile } from '@volar/vue-typescript';
 import type * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type useCssPlugin from './commonPlugins/css';
+import type useCssPlugin from './plugins/css';
 import { findClassNames } from './utils/cssClasses';
 
 export function createStylesheetExtra(cssPlugin: ReturnType<typeof useCssPlugin>) {
