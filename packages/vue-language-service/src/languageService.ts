@@ -38,6 +38,7 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
+import * as inlayHints from './languageFeatures/inlayHints';
 import { getTsSettings } from './tsConfigs';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 import { parseVueDocuments } from './vueDocuments';
@@ -286,6 +287,7 @@ export function createLanguageService(
 		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context)),
 		doAutoInsert: defineApi(autoInsert.register(context)),
 		doExecuteCommand: defineApi(executeCommand.register(context)),
+		getInlayHints: defineApi(inlayHints.register(context)),
 		callHierarchy: {
 			doPrepare: defineApi(_callHierarchy.doPrepare),
 			getIncomingCalls: defineApi(_callHierarchy.getIncomingCalls),

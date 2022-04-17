@@ -133,6 +133,9 @@ export function createProjects(
 			if (options.languageFeatures?.semanticTokens) {
 				connection.languages.semanticTokens.refresh();
 			}
+			if (options.languageFeatures?.inlayHints) {
+				connection.languages.semanticTokens.refresh();
+			}
 		}
 	}
 	async function updateDiagnostics(docUri?: string) {

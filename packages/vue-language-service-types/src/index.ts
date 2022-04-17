@@ -75,6 +75,7 @@ export type EmbeddedLanguageServicePlugin = {
         getIncomingCalls(item: vscode.CallHierarchyItem): NotNullableResult<vscode.CallHierarchyIncomingCall[]>;
         getOutgoingCalls(item: vscode.CallHierarchyItem): NotNullableResult<vscode.CallHierarchyOutgoingCall[]>;
     },
+    getInlayHints?(document: TextDocument, range: vscode.Range): NullableResult<vscode.InlayHint[]>,
 
     // html
     findLinkedEditingRanges?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LinkedEditingRanges>;

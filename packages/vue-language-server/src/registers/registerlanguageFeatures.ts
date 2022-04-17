@@ -109,4 +109,7 @@ export function register(
 			resolveProvider: true,
 		};
 	}
+	if (features.inlayHints) {
+		server.inlayHintProvider = true;
+	}
 }

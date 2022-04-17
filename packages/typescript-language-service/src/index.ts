@@ -23,6 +23,7 @@ import * as semanticTokens from './services/semanticTokens';
 import * as foldingRanges from './services/foldingRanges';
 import * as callHierarchy from './services/callHierarchy';
 import * as implementation from './services/implementation';
+import * as inlayHints from './services/inlayHints';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -55,6 +56,7 @@ export function createLanguageService(
 		getEditsForFileRename: fileRename.register(languageService, getValidTextDocument, settings),
 		getCodeActions: codeActions.register(languageService, getValidTextDocument, settings),
 		doCodeActionResolve: codeActionResolve.register(languageService, getValidTextDocument, settings),
+		getInlayHints: inlayHints.register(languageService, getValidTextDocument, settings, ts),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),

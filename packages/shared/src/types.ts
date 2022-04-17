@@ -57,6 +57,7 @@ export interface ServerInitializationOptions {
 		}
 		semanticTokens?: boolean
 		codeAction?: boolean
+		inlayHints?: boolean;
 		diagnostics?: boolean | {
 			/**
 			 * {@link __requests.GetDocumentVersionRequest}

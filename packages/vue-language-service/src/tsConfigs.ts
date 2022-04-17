@@ -75,6 +75,15 @@ export async function getPreferences(
 		allowIncompleteCompletions: true,
 		displayPartsForJSDoc: true,
 
+		// inlay hints
+		includeInlayParameterNameHints: getInlayParameterNameHintsPreference(config),
+		includeInlayParameterNameHintsWhenArgumentMatchesName: !(config.inlayHints?.parameterNames?.suppressWhenArgumentMatchesName ?? true),
+		includeInlayFunctionParameterTypeHints: config.inlayHints?.parameterTypes?.enabled ?? false,
+		includeInlayVariableTypeHints: config.inlayHints?.variableTypes?.enabled ?? false,
+		includeInlayPropertyDeclarationTypeHints: config.inlayHints?.propertyDeclarationTypes?.enabled ?? false,
+		includeInlayFunctionLikeReturnTypeHints: config.inlayHints?.functionLikeReturnTypes?.enabled ?? false,
+		includeInlayEnumMemberValueHints: config.inlayHints?.enumMemberValues?.enabled ?? false,
+
 		// custom
 		includeCompletionsForModuleExports: config.suggest?.autoImports ?? true,
 	};
@@ -110,4 +119,13 @@ function getImportModuleSpecifierEndingPreference(config: any) {
 
 function isTypeScriptDocument(doc: TextDocument) {
 	return ['typescript', 'typescriptreact'].includes(doc.languageId);
+}
+
+function getInlayParameterNameHintsPreference(config: any) {
+	switch (config.inlayHints?.parameterNames?.enabled) {
+		case 'none': return 'none';
+		case 'literals': return 'literals';
+		case 'all': return 'all';
+		default: return undefined;
+	}
 }

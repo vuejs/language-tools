@@ -191,6 +191,12 @@ export default function (options: {
             }
         },
 
+        getInlayHints(document, range) {
+            if (isTsDocument(document)) {
+                return options.getTsLs().getInlayHints(document.uri, range);
+            }
+        },
+
         format(document, range, options_2) {
             if (isTsDocument(document)) {
                 return options.getTsLs().doFormatting(document.uri, options_2, range);

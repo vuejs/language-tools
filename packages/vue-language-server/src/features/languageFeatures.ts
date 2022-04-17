@@ -215,6 +215,10 @@ export function register(
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
 		return onSemanticTokens(handler, token, resultProgress);
 	});
+	connection.languages.inlayHint.on(async handler => {
+		const languageService = await getLanguageService(handler.textDocument.uri);
+		return languageService?.getInlayHints(handler.textDocument.uri, handler.range);
+	});
 	connection.workspace.onWillRenameFiles(async handler => {
 
 		const hasTsFile = handler.files.some(file => file.newUri.endsWith('.vue') || file.newUri.endsWith('.ts') || file.newUri.endsWith('.tsx'));
