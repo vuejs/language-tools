@@ -121,10 +121,10 @@ export function createVueFile(
 	}>(() => {
 		if (sfc.template) {
 			for (const plugin of plugins) {
-				const compiledHtml = plugin.compileTemplate?.(sfc.template.content, sfc.template.lang ?? 'html');
+				const compiledHtml = plugin.compileTemplate?.(sfc.template.content, sfc.template.lang);
 				if (compiledHtml) {
 					return {
-						lang: sfc.template.lang ?? 'html',
+						lang: sfc.template.lang,
 						htmlText: compiledHtml.html,
 						htmlToTemplate: compiledHtml.mapping,
 					};

@@ -97,10 +97,8 @@ export function createLanguageService(
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
-	const vueCompilerOptions = vueLsHost.getVueCompilationSettings?.() ?? {};
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
-		vueCompilerOptions,
 		baseCssModuleType: 'Record<string, string>',
 		getCssClasses: ef => stylesheetExtra.getCssClasses(ef),
 		vueLsHost: vueLsHost,

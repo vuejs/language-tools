@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
-import { LanguageServiceHost, VueCompilerOptions } from './types';
+import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
 import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
 import { createVueFile, EmbeddedFile } from './vueFile';
@@ -21,20 +21,15 @@ export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
 export function createTypeScriptRuntime(options: {
     typescript: typeof import('typescript/lib/tsserverlibrary'),
-    vueCompilerOptions: VueCompilerOptions,
+    vueLsHost: LanguageServiceHost,
     baseCssModuleType: string,
     getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
-    vueLsHost: LanguageServiceHost,
     isTsPlugin?: boolean,
     isVueTsc?: boolean,
 }) {
 
     const { typescript: ts } = options;
-
-    const isVue2 = options.vueLsHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
-
-    let lastProjectVersion: string | undefined;
-    let tsProjectVersion = 0;
+    const isVue2 = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode === 2;
     const vueFiles = createVueFiles();
     const plugins = [
         useHtmlPlugin(),
@@ -42,10 +37,12 @@ export function createTypeScriptRuntime(options: {
     ];
     const tsLsHost = createTsLsHost();
     const tsLsRaw = ts.createLanguageService(tsLsHost);
+    const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
+
+    let lastProjectVersion: string | undefined;
+    let tsProjectVersion = 0;
 
     injectCacheLogicToLanguageServiceHost(ts, tsLsHost, tsLsRaw);
-
-    const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
 
     return {
         vueLsHost: options.vueLsHost,
@@ -278,7 +275,7 @@ export function createTypeScriptRuntime(options: {
                     scriptText,
                     scriptVersion,
                     plugins,
-                    options.vueCompilerOptions,
+                    options.vueLsHost.getVueCompilationSettings(),
                     options.typescript,
                     options.baseCssModuleType,
                     options.getCssClasses,

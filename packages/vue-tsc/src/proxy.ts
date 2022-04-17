@@ -55,7 +55,6 @@ export function createProgramProxy(
 		typescript: ts,
 		baseCssModuleType: 'any',
 		getCssClasses: () => ({}),
-		vueCompilerOptions,
 		vueLsHost: vueLsHost,
 		isVueTsc: true,
 	});
