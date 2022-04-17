@@ -40,6 +40,7 @@ function createTester(root: string) {
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptVersion,
 		getScriptSnapshot,
+		getVueCompilationSettings: () => ({}),
 	}
 	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, undefined, []);
 
