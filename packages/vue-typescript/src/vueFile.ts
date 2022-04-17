@@ -379,7 +379,6 @@ export function createVueFile(
 		const templateScriptContent_2 = sfcTemplateScript.file.value?.content;
 
 		return {
-			scriptContentUpdated: lastUpdated.script || lastUpdated.scriptSetup,
 			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2 || templateScriptContent !== templateScriptContent_2, // TODO
 		};
 

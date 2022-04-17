@@ -92,11 +92,11 @@ export default function (options: {
 
     function worker<T>(document: TextDocument, callback: (jsonDocument: json.JSONDocument) => T) {
 
-        const htmlDocument = getJsonDocument(document);
-        if (!htmlDocument)
+        const jsonDocument = getJsonDocument(document);
+        if (!jsonDocument)
             return;
 
-        return callback(htmlDocument);
+        return callback(jsonDocument);
     }
 
     function getJsonDocument(textDocument: TextDocument) {

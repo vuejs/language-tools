@@ -66,7 +66,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
         tag: 'both' | 'kebabCase' | 'pascalCase',
         attr: 'kebabCase' | 'camelCase',
     }>,
-    getScriptContentVersion: () => number,
     vueLsHost: LanguageServiceHost,
     vueDocuments: VueDocuments,
     tsSettings: ts2.Settings,
@@ -786,12 +785,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
         return cache;
     }
-}
-
-function eqSet<T>(as: Set<T>, bs: Set<T>) {
-    if (as.size !== bs.size) return false;
-    for (const a of as) if (!bs.has(a)) return false;
-    return true;
 }
 
 function createInternalItemId(type: 'importFile' | 'vueDirective' | 'componentEvent' | 'componentProp' | 'component', args: string[]) {

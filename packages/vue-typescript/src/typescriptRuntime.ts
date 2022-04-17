@@ -34,8 +34,7 @@ export function createTypeScriptRuntime(options: {
     const isVue2 = options.vueLsHost.getVueCompilationSettings?.().experimentalCompatMode === 2;
 
     let lastProjectVersion: string | undefined;
-    let scriptContentVersion = 0; // only update by `<script>` / `<script setup>` / *.ts content
-    let tsProjectVersion = 0; // update by script LS virtual files / *.ts
+    let tsProjectVersion = 0;
     const vueFiles = createVueFiles();
     const plugins = [
         useHtmlPlugin(),
@@ -54,7 +53,6 @@ export function createTypeScriptRuntime(options: {
         getTsLs: () => tsLsRaw,
         getTsLsHost: () => tsLsHost,
         update,
-        getScriptContentVersion: () => scriptContentVersion,
         dispose: () => {
             tsLsRaw.dispose();
         },
@@ -102,22 +100,6 @@ export function createTypeScriptRuntime(options: {
                     fileNamesToCreate.push(nowFileName);
                 }
             }
-
-            // if (tsFileChanged) {
-            // 	scriptContentVersion++;
-            // 	scriptProjectVersion++;
-            // 	templateProjectVersion++;
-            // 	// TODO: template global properties can't update by .d.ts definition
-            // 	// wait for https://github.com/johnsoncodehk/volar/issues/455
-            // 	// updates.length = 0;
-            // 	// for (const fileName of oldFiles) {
-            // 	// 	if (newFiles.has(fileName)) {
-            // 	// 		if (fileName.endsWith('.vue')) {
-            // 	// 			updates.push(fileName);
-            // 	// 		}
-            // 	// 	}
-            // 	// }
-            // }
 
             const finalUpdateFileNames = fileNamesToCreate.concat(fileNamesToUpdate);
 
@@ -276,7 +258,6 @@ export function createTypeScriptRuntime(options: {
     }
     function updateSourceFiles(fileNames: string[]) {
 
-        let vueScriptContentsUpdate = false;
         let vueScriptsUpdated = false;
 
         for (const fileName of fileNames) {
@@ -304,21 +285,14 @@ export function createTypeScriptRuntime(options: {
                     tsLsRaw,
                     tsLsHost,
                 ));
-                vueScriptContentsUpdate = true;
                 vueScriptsUpdated = true;
             }
             else {
                 const updates = sourceFile.update(scriptText, scriptVersion);
-                if (updates.scriptContentUpdated) {
-                    vueScriptContentsUpdate = true;
-                }
                 if (updates.scriptUpdated) {
                     vueScriptsUpdated = true;
                 }
             }
-        }
-        if (vueScriptContentsUpdate) {
-            scriptContentVersion++;
         }
         if (vueScriptsUpdated) {
             tsProjectVersion++;
@@ -332,7 +306,6 @@ export function createTypeScriptRuntime(options: {
             }
         }
         if (updated) {
-            scriptContentVersion++;
             tsProjectVersion++;
         }
     }

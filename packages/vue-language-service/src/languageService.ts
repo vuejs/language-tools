@@ -399,7 +399,6 @@ export function createLanguageService(
 				tsLs,
 				isSupportedDocument: (document) => document.languageId === languageId,
 				getNameCases,
-				getScriptContentVersion: tsRuntime.getScriptContentVersion,
 				vueLsHost,
 				vueDocuments,
 				tsSettings,
