@@ -8,14 +8,8 @@ import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 export function useSfcScript(
 	fileName: string,
 	script: Ref<Sfc['script'] | Sfc['scriptSetup']>,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 
-	const ast = computed(() => {
-		if (script.value) {
-			return ts.createSourceFile(fileName + '.' + script.value.lang, script.value.content, ts.ScriptTarget.Latest);
-		}
-	});
 	const file = computed(() => {
 
 		if (script.value) {
@@ -67,7 +61,6 @@ export function useSfcScript(
 	});
 
 	return {
-		ast,
 		file,
 		embedded,
 	};

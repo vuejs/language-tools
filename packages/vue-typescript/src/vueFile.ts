@@ -141,24 +141,32 @@ export function createVueFile(
 			);
 		}
 	});
+	const scriptAst = computed(() => {
+		if (sfc.script) {
+			return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
+		}
+	});
+	const scriptSetupAst = computed(() => {
+		if (sfc.scriptSetup) {
+			return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
+		}
+	});
 	const sfcScript = useSfcScript(
 		fileName,
 		computed(() => sfc.script),
-		ts,
 	);
 	const sfcScriptSetup = useSfcScript(
 		fileName,
 		computed(() => sfc.scriptSetup),
-		ts,
 	);
 	const scriptRanges = computed(() =>
-		sfcScript.ast.value
-			? parseScriptRanges(ts, sfcScript.ast.value, !!sfc.scriptSetup, false, false)
+		scriptAst.value
+			? parseScriptRanges(ts, scriptAst.value, !!sfc.scriptSetup, false, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
-		sfcScriptSetup.ast.value
-			? parseScriptSetupRanges(ts, sfcScriptSetup.ast.value)
+		scriptSetupAst.value
+			? parseScriptSetupRanges(ts, scriptSetupAst.value)
 			: undefined
 	);
 	const scriptLang = computed(() => {
@@ -216,9 +224,9 @@ export function createVueFile(
 		compilerOptions,
 		getCssVBindRanges,
 	);
-	const sfcRefSugarRanges = computed(() => (sfcScriptSetup.ast.value ? {
-		refs: parseRefSugarDeclarationRanges(ts, sfcScriptSetup.ast.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
-		raws: parseRefSugarCallRanges(ts, sfcScriptSetup.ast.value, ['$raw', '$fromRefs']),
+	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
+		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
+		raws: parseRefSugarCallRanges(ts, scriptSetupAst.value, ['$raw', '$fromRefs']),
 	} : undefined));
 
 	// getters
@@ -339,8 +347,8 @@ export function createVueFile(
 		getScriptTsFile: untrack(() => sfcScriptForScriptLs.file.value),
 		getEmbeddedTemplate: untrack(() => sfcTemplate.embedded.value),
 		getDescriptor: untrack(() => unref(sfc)),
-		getScriptAst: untrack(() => sfcScript.ast.value),
-		getScriptSetupAst: untrack(() => sfcScriptSetup.ast.value),
+		getScriptAst: untrack(() => scriptAst.value),
+		getScriptSetupAst: untrack(() => scriptSetupAst.value),
 		getTemplateFormattingScript: untrack(() => sfcTemplateScript.formatEmbedded.value),
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
