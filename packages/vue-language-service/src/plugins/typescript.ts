@@ -122,7 +122,7 @@ export default function (options: {
 
         inlayHints: {
 
-            do(document, range) {
+            on(document, range) {
                 if (isTsDocument(document)) {
                     return options.getTsLs().getInlayHints(document.uri, range);
                 }

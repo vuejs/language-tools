@@ -55,7 +55,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return [];
 			},
 			(plugin, document, arg, sourceMap) => {
-				return plugin.inlayHints?.do?.(document, arg);
+				return plugin.inlayHints?.on?.(document, arg);
 			},
 			(inlayHints, sourceMap) => inlayHints.map(_inlayHint => {
 

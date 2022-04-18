@@ -91,7 +91,7 @@ export type EmbeddedLanguageServicePlugin = {
     },
 
     inlayHints?: {
-        do?(document: TextDocument, range: vscode.Range): NullableResult<vscode.InlayHint[]>,
+        on?(document: TextDocument, range: vscode.Range): NullableResult<vscode.InlayHint[]>,
         // TODO: resolve
     },
 
