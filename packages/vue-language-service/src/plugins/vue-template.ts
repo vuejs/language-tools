@@ -83,10 +83,51 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
         ...options.templateLanguagePlugin,
 
-        triggerCharacters: [
-            ...options.templateLanguagePlugin.triggerCharacters ?? [],
-            '@', // vue event shorthand
-        ],
+        complete: {
+
+            triggerCharacters: [
+                ...options.templateLanguagePlugin.complete?.triggerCharacters ?? [],
+                '@', // vue event shorthand
+            ],
+
+            async on(document, position, context) {
+    
+                if (!options.isSupportedDocument(document))
+                    return;
+    
+                const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+                let tsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
+    
+                if (vueDocument) {
+                    tsItems = await provideHtmlData(vueDocument);
+                }
+    
+                const htmlComplete = await options.templateLanguagePlugin.complete?.on?.(document, position, context);
+    
+                if (!htmlComplete)
+                    return;
+    
+                if (vueDocument && tsItems) {
+                    afterHtmlCompletion(htmlComplete, vueDocument, tsItems);
+                }
+    
+                return htmlComplete;
+            },
+
+            async resolve(item) {
+    
+                const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data as any;
+    
+                if (data?.mode === 'html') {
+                    return await resolveHtmlItem(item, data);
+                }
+                else if (data?.mode === 'autoImport') {
+                    return await resolveAutoImportItem(item, data);
+                }
+    
+                return item;
+            },
+        },
 
         async doValidation(document, options_2) {
 
@@ -208,44 +249,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
             }
 
             return result;
-        },
-
-        async doComplete(document, position, context) {
-
-            if (!options.isSupportedDocument(document))
-                return;
-
-            const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
-            let tsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
-
-            if (vueDocument) {
-                tsItems = await provideHtmlData(vueDocument);
-            }
-
-            const htmlComplete = await options.templateLanguagePlugin.doComplete?.(document, position, context);
-
-            if (!htmlComplete)
-                return;
-
-            if (vueDocument && tsItems) {
-                afterHtmlCompletion(htmlComplete, vueDocument, tsItems);
-            }
-
-            return htmlComplete;
-        },
-
-        async doCompleteResolve(item) {
-
-            const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data as any;
-
-            if (data?.mode === 'html') {
-                return await resolveHtmlItem(item, data);
-            }
-            else if (data?.mode === 'autoImport') {
-                return await resolveAutoImportItem(item, data);
-            }
-
-            return item;
         },
 
         resolveEmbeddedRange(range) {

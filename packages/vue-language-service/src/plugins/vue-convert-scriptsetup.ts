@@ -26,45 +26,48 @@ export default function (options: {
 
     return {
 
-        doCodeLens(document) {
-            return worker(document.uri, async (vueDocument) => {
+        codeLens: {
 
-                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
-
-                if (!isEnabled)
-                    return;
-
-                const result: vscode.CodeLens[] = [];
-                const descriptor = vueDocument.file.getDescriptor();
-
-                if (descriptor.scriptSetup) {
-                    result.push({
-                        range: {
-                            start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-                            end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-                        },
-                        command: {
-                            title: 'setup sugar ☑',
-                            command: Commands.UNUSE_SETUP_SUGAR,
-                            arguments: <CommandArgs>[document.uri],
-                        },
-                    });
-                }
-                else if (descriptor.script) {
-                    result.push({
-                        range: {
-                            start: document.positionAt(descriptor.script.startTagEnd),
-                            end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
-                        },
-                        command: {
-                            title: 'setup sugar ☐',
-                            command: Commands.USE_SETUP_SUGAR,
-                            arguments: <CommandArgs>[document.uri],
-                        },
-                    });
-                }
-                return result;
-            });
+            on(document) {
+                return worker(document.uri, async (vueDocument) => {
+    
+                    const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+    
+                    if (!isEnabled)
+                        return;
+    
+                    const result: vscode.CodeLens[] = [];
+                    const descriptor = vueDocument.file.getDescriptor();
+    
+                    if (descriptor.scriptSetup) {
+                        result.push({
+                            range: {
+                                start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+                                end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+                            },
+                            command: {
+                                title: 'setup sugar ☑',
+                                command: Commands.UNUSE_SETUP_SUGAR,
+                                arguments: <CommandArgs>[document.uri],
+                            },
+                        });
+                    }
+                    else if (descriptor.script) {
+                        result.push({
+                            range: {
+                                start: document.positionAt(descriptor.script.startTagEnd),
+                                end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+                            },
+                            command: {
+                                title: 'setup sugar ☐',
+                                command: Commands.USE_SETUP_SUGAR,
+                                arguments: <CommandArgs>[document.uri],
+                            },
+                        });
+                    }
+                    return result;
+                });
+            },
         },
 
         doExecuteCommand(command, args, context) {

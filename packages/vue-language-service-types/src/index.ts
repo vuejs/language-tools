@@ -35,19 +35,13 @@ export interface ExecuteCommandContext {
 
 export type EmbeddedLanguageServicePlugin = {
 
-    triggerCharacters?: string[],
-
     doValidation?(document: TextDocument, options: {
         semantic?: boolean;
         syntactic?: boolean;
         suggestion?: boolean;
         declaration?: boolean;
     }): NullableResult<vscode.Diagnostic[]>;
-    doComplete?(document: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): NullableResult<vscode.CompletionList>,
-    doCompleteResolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): NotNullableResult<vscode.CompletionItem>,
     doHover?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Hover>,
-    findDefinition?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
-    findTypeDefinition?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
     findImplementations?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
     findReferences?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Location[]>;
     findDocumentHighlights?(document: TextDocument, position: vscode.Position): NullableResult<vscode.DocumentHighlight[]>;
@@ -55,30 +49,55 @@ export type EmbeddedLanguageServicePlugin = {
     findDocumentSymbols?(document: TextDocument): NullableResult<vscode.SymbolInformation[]>;
     findDocumentSemanticTokens?(document: TextDocument, range?: vscode.Range, cancleToken?: vscode.CancellationToken): NullableResult<SemanticToken[]>;
     findWorkspaceSymbols?(query: string): NullableResult<vscode.SymbolInformation[]>;
-    doCodeActions?(document: TextDocument, range: vscode.Range, context: vscode.CodeActionContext): NullableResult<vscode.CodeAction[]>;
-    doCodeActionResolve?(codeAction: vscode.CodeAction): NotNullableResult<vscode.CodeAction>;
-    doCodeLens?(document: TextDocument): NullableResult<vscode.CodeLens[]>;
-    doCodeLensResolve?(codeLens: vscode.CodeLens): NotNullableResult<vscode.CodeLens>;
     doExecuteCommand?(command: string, args: any[], context: ExecuteCommandContext): NotNullableResult<void>;
     findDocumentColors?(document: TextDocument): NullableResult<vscode.ColorInformation[]>;
     getColorPresentations?(document: TextDocument, color: vscode.Color, range: vscode.Range): NullableResult<vscode.ColorPresentation[]>;
-    doRenamePrepare?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Range | vscode.ResponseError<void>>;
-    doRename?(document: TextDocument, position: vscode.Position, newName: string): NullableResult<vscode.WorkspaceEdit>;
     doFileRename?(oldUri: string, newUri: string): NullableResult<vscode.WorkspaceEdit>;
     getFoldingRanges?(document: TextDocument): NullableResult<vscode.FoldingRange[]>;
     getSelectionRanges?(document: TextDocument, positions: vscode.Position[]): NullableResult<vscode.SelectionRange[]>;
     getSignatureHelp?(document: TextDocument, position: vscode.Position, context?: vscode.SignatureHelpContext): NullableResult<vscode.SignatureHelp>;
     format?(document: TextDocument, range: vscode.Range, options: vscode.FormattingOptions): NullableResult<vscode.TextEdit[]>;
 
-    callHierarchy?: {
-        doPrepare(document: TextDocument, position: vscode.Position): NullableResult<vscode.CallHierarchyItem[]>;
-        getIncomingCalls(item: vscode.CallHierarchyItem): NotNullableResult<vscode.CallHierarchyIncomingCall[]>;
-        getOutgoingCalls(item: vscode.CallHierarchyItem): NotNullableResult<vscode.CallHierarchyOutgoingCall[]>;
+    definition?: {
+        on?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
+        onType?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
     },
-    getInlayHints?(document: TextDocument, range: vscode.Range): NullableResult<vscode.InlayHint[]>,
+
+    complete?: {
+        triggerCharacters?: string[],
+        on?(document: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): NullableResult<vscode.CompletionList>,
+        resolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): NotNullableResult<vscode.CompletionItem>,
+    },
+
+    rename?: {
+        prepare?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Range | vscode.ResponseError<void>>;
+        on?(document: TextDocument, position: vscode.Position, newName: string): NullableResult<vscode.WorkspaceEdit>;
+    },
+
+    codeAction?: {
+        on?(document: TextDocument, range: vscode.Range, context: vscode.CodeActionContext): NullableResult<vscode.CodeAction[]>;
+        resolve?(codeAction: vscode.CodeAction): NotNullableResult<vscode.CodeAction>;
+    },
+
+    codeLens?: {
+        on?(document: TextDocument): NullableResult<vscode.CodeLens[]>;
+        resolve?(codeLens: vscode.CodeLens): NotNullableResult<vscode.CodeLens>;
+    },
+
+    callHierarchy?: {
+        prepare(document: TextDocument, position: vscode.Position): NullableResult<vscode.CallHierarchyItem[]>;
+        onIncomingCalls(item: vscode.CallHierarchyItem): NotNullableResult<vscode.CallHierarchyIncomingCall[]>;
+        onOutgoingCalls(item: vscode.CallHierarchyItem): NotNullableResult<vscode.CallHierarchyOutgoingCall[]>;
+    },
+
+    inlayHints?: {
+        do?(document: TextDocument, range: vscode.Range): NullableResult<vscode.InlayHint[]>,
+        // TODO: resolve
+    },
 
     // html
     findLinkedEditingRanges?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LinkedEditingRanges>;
+
     doAutoInsert?(document: TextDocument, position: vscode.Position, context: {
         lastChange: {
             range: vscode.Range;
@@ -94,4 +113,4 @@ export type EmbeddedLanguageServicePlugin = {
     resolveEmbeddedRange?(range: vscode.Range): vscode.Range | undefined;
 
     // findMatchingTagPosition?(document: TextDocument, position: vscode.Position, htmlDocument: HTMLDocument): vscode.Position | null;
-}
+};

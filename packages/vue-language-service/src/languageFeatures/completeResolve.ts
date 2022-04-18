@@ -16,7 +16,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (!plugin)
 				return item;
 
-			if (!plugin.doCompleteResolve)
+			if (!plugin.complete?.resolve)
 				return item;
 
 			const originalItem = data.originalItem;
@@ -30,7 +30,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const newPosition_2 = newPosition
 						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.capabilities.completion)?.[0].start
 						: undefined;
-					const resolvedItem = await plugin.doCompleteResolve(originalItem, newPosition_2);
+					const resolvedItem = await plugin.complete.resolve(originalItem, newPosition_2);
 
 					item = transformCompletionItem(
 						resolvedItem,
@@ -40,7 +40,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			}
 			else {
-				item = await plugin.doCompleteResolve(originalItem);
+				item = await plugin.complete.resolve(originalItem);
 			}
 		}
 

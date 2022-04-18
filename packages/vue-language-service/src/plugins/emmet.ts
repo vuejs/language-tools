@@ -7,19 +7,22 @@ export default function (): EmbeddedLanguageServicePlugin {
 
     return {
 
-        async doComplete(textDocument, position) {
+        complete: {
 
-            const syntax = emmet.getEmmetMode(textDocument.languageId === 'vue' ? 'html' : textDocument.languageId);
-            if (!syntax)
-                return;
+            async on(textDocument, position) {
 
-            // monkey fix https://github.com/johnsoncodehk/volar/issues/1105
-            if (syntax === 'jsx')
-                return;
+                const syntax = emmet.getEmmetMode(textDocument.languageId === 'vue' ? 'html' : textDocument.languageId);
+                if (!syntax)
+                    return;
 
-            const emmetConfig = await getEmmetConfig(syntax);
+                // monkey fix https://github.com/johnsoncodehk/volar/issues/1105
+                if (syntax === 'jsx')
+                    return;
 
-            return emmet.doComplete(textDocument, position, syntax, emmetConfig);
+                const emmetConfig = await getEmmetConfig(syntax);
+
+                return emmet.doComplete(textDocument, position, syntax, emmetConfig);
+            },
         },
     };
 

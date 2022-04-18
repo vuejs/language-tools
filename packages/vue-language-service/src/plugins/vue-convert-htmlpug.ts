@@ -18,38 +18,41 @@ export default function (options: {
 
     return {
 
-        doCodeLens(document) {
-            return worker(document.uri, async (vueDocument) => {
+        codeLens: {
 
-                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
+            on(document) {
+                return worker(document.uri, async (vueDocument) => {
 
-                if (!isEnabled)
-                    return;
+                    const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
 
-                const result: vscode.CodeLens[] = [];
-                const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
+                    if (!isEnabled)
+                        return;
 
-                if (embeddedTemplate && (embeddedTemplate.file.lang === 'html' || embeddedTemplate.file.lang === 'pug')) {
+                    const result: vscode.CodeLens[] = [];
+                    const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
 
-                    const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
+                    if (embeddedTemplate && (embeddedTemplate.file.lang === 'html' || embeddedTemplate.file.lang === 'pug')) {
 
-                    for (const mapped of sourceMap.mappings) {
-                        return [{
-                            range: {
-                                start: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
-                                end: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
-                            },
-                            command: {
-                                title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),
-                                command: toggleConvertCommand,
-                                arguments: <CommandArgs>[document.uri],
-                            },
-                        }];
+                        const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
+
+                        for (const mapped of sourceMap.mappings) {
+                            return [{
+                                range: {
+                                    start: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
+                                    end: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
+                                },
+                                command: {
+                                    title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),
+                                    command: toggleConvertCommand,
+                                    arguments: <CommandArgs>[document.uri],
+                                },
+                            }];
+                        }
                     }
-                }
 
-                return result;
-            });
+                    return result;
+                });
+            },
         },
 
         doExecuteCommand(command, args, host) {

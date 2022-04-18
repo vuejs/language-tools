@@ -52,10 +52,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
-						if (!cacheData.plugin.doComplete)
+						if (!cacheData.plugin.complete?.on)
 							continue;
 
-						const embeddedCompletionList = await cacheData.plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
 						if (!embeddedCompletionList) {
 							cacheData.list.isIncomplete = false;
@@ -87,10 +87,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (document) {
 
-					if (!cacheData.plugin.doComplete)
+					if (!cacheData.plugin.complete?.on)
 						continue;
 
-					const completionList = await cacheData.plugin.doComplete(document, position, completionContext);
+					const completionList = await cacheData.plugin.complete?.on(document, position, completionContext);
 
 					if (!completionList) {
 						cacheData.list.isIncomplete = false;
@@ -137,16 +137,16 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						for (const plugin of plugins) {
 
-							if (!plugin.doComplete)
+							if (!plugin.complete?.on)
 								continue;
 
-							if (completionContext?.triggerCharacter && !plugin.triggerCharacters?.includes(completionContext.triggerCharacter))
+							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
 							if (cache!.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
-							const embeddedCompletionList = await plugin.doComplete(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+							const embeddedCompletionList = await plugin.complete?.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
@@ -196,16 +196,16 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				for (const plugin of plugins) {
 
-					if (!plugin.doComplete)
+					if (!plugin.complete?.on)
 						continue;
 
-					if (completionContext?.triggerCharacter && !plugin.triggerCharacters?.includes(completionContext.triggerCharacter))
+					if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 						continue;
 
 					if (cache.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache.mainCompletion.documentUri !== document.uri))
 						continue;
 
-					const completionList = await plugin.doComplete(document, position, completionContext);
+					const completionList = await plugin.complete?.on(document, position, completionContext);
 
 					if (!completionList || !completionList.items.length)
 						continue;

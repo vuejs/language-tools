@@ -39,7 +39,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				async function withTeleports(document: TextDocument, position: vscode.Position, newName: string) {
 
-					if (!plugin.doRename)
+					if (!plugin.rename?.on)
 						return;
 
 					if (recursiveChecker.has({ uri: document.uri, range: { start: position, end: position } }))
@@ -47,7 +47,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					recursiveChecker.add({ uri: document.uri, range: { start: position, end: position } });
 
-					const workspaceEdit = await plugin.doRename(document, position, newName);
+					const workspaceEdit = await plugin.rename.on(document, position, newName);
 
 					if (!workspaceEdit)
 						return;

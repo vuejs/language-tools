@@ -35,7 +35,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				},
 				async (plugin, document, position, sourceMap) => {
 
-					const items = await plugin.callHierarchy?.doPrepare(document, position);
+					const items = await plugin.callHierarchy?.prepare(document, position);
 
 					return items?.map(item => {
 
@@ -84,7 +84,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					if (sourceMap) {
 
-						const _calls = await plugin.callHierarchy.getIncomingCalls(originalItem);
+						const _calls = await plugin.callHierarchy.onIncomingCalls(originalItem);
 
 						for (const _call of _calls) {
 
@@ -102,7 +102,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 				else {
 
-					const _calls = await plugin.callHierarchy.getIncomingCalls(item);
+					const _calls = await plugin.callHierarchy.onIncomingCalls(item);
 
 					for (const _call of _calls) {
 
@@ -145,7 +145,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					if (sourceMap) {
 
-						const _calls = await plugin.callHierarchy.getOutgoingCalls(originalItem);
+						const _calls = await plugin.callHierarchy.onOutgoingCalls(originalItem);
 
 						for (const call of _calls) {
 
@@ -163,7 +163,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 				else {
 
-					const _calls = await plugin.callHierarchy.getOutgoingCalls(item);
+					const _calls = await plugin.callHierarchy.onOutgoingCalls(item);
 
 					for (const call of _calls) {
 

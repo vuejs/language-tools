@@ -22,65 +22,68 @@ export default function (options: {
 
     return {
 
-        doCodeLens(document) {
-            return worker(document.uri, async (vueDocument) => {
+        codeLens: {
 
-                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
+            on(document) {
+                return worker(document.uri, async (vueDocument) => {
 
-                if (!isEnabled)
-                    return;
+                    const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
-                const result: vscode.CodeLens[] = [];
+                    if (!isEnabled)
+                        return;
 
-                for (const sourceMap of vueDocument.getSourceMaps()) {
-                    for (const mapping of sourceMap.mappings) {
+                    const result: vscode.CodeLens[] = [];
 
-                        if (!mapping.data.capabilities.referencesCodeLens)
-                            continue;
+                    for (const sourceMap of vueDocument.getSourceMaps()) {
+                        for (const mapping of sourceMap.mappings) {
 
-                        const data: ReferencesCodeLensData = {
-                            uri: document.uri,
-                            vueTag: mapping.data.vueTag,
-                            position: document.positionAt(mapping.sourceRange.start),
-                        };
+                            if (!mapping.data.capabilities.referencesCodeLens)
+                                continue;
 
-                        result.push({
-                            range: {
-                                start: document.positionAt(mapping.sourceRange.start),
-                                end: document.positionAt(mapping.sourceRange.end),
-                            },
-                            data: data as any,
-                        });
+                            const data: ReferencesCodeLensData = {
+                                uri: document.uri,
+                                vueTag: mapping.data.vueTag,
+                                position: document.positionAt(mapping.sourceRange.start),
+                            };
+
+                            result.push({
+                                range: {
+                                    start: document.positionAt(mapping.sourceRange.start),
+                                    end: document.positionAt(mapping.sourceRange.end),
+                                },
+                                data: data as any,
+                            });
+                        }
                     }
-                }
 
-                return result;
-            });
-        },
+                    return result;
+                });
+            },
 
-        async doCodeLensResolve(codeLens) {
+            async resolve(codeLens) {
 
-            const data: ReferencesCodeLensData = codeLens.data as any;
-            const vueDocument = options.getVueDocument(data.uri)
+                const data: ReferencesCodeLensData = codeLens.data as any;
+                const vueDocument = options.getVueDocument(data.uri);
 
-            if (!vueDocument)
+                if (!vueDocument)
+                    return codeLens;
+
+                const sourceMaps = vueDocument.getSourceMaps();
+                const references = await options.findReference(data.uri, data.position) ?? [];
+                const referencesInDifferentDocument = references.filter(reference =>
+                    reference.uri !== data.uri // different file
+                    || sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
+                );
+                const referencesCount = referencesInDifferentDocument.length ?? 0;
+
+                codeLens.command = {
+                    title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
+                    command: showReferencesCommand,
+                    arguments: <CommandArgs>[data.uri, codeLens.range.start, references],
+                };
+
                 return codeLens;
-
-            const sourceMaps = vueDocument.getSourceMaps();
-            const references = await options.findReference(data.uri, data.position) ?? [];
-            const referencesInDifferentDocument = references.filter(reference =>
-                reference.uri !== data.uri // different file
-                || sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
-            );
-            const referencesCount = referencesInDifferentDocument.length ?? 0;
-
-            codeLens.command = {
-                title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
-                command: showReferencesCommand,
-                arguments: <CommandArgs>[data.uri, codeLens.range.start, references],
-            };
-
-            return codeLens;
+            },
         },
 
         doExecuteCommand(command, args, context) {

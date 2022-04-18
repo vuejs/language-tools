@@ -15,7 +15,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (!plugin)
 				return item;
 
-			if (!plugin.doCodeActionResolve)
+			if (!plugin.codeAction?.resolve)
 				return item;
 
 			const originalItem = data.originalItem;
@@ -26,7 +26,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (sourceMap) {
 
-					const resolvedItem = await plugin.doCodeActionResolve(originalItem);
+					const resolvedItem = await plugin.codeAction?.resolve(originalItem);
 
 					if (resolvedItem.edit) {
 
@@ -43,7 +43,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			}
 			else {
-				return await plugin.doCodeActionResolve(originalItem);
+				return await plugin.codeAction?.resolve(originalItem);
 			}
 		}
 

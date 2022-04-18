@@ -27,6 +27,19 @@ export default function (options: {
         pugLs,
         getPugDocument,
 
+        complete: {
+
+            on(document, position, context) {
+                return worker(document, (pugDocument) => {
+    
+                    if (!options.documentContext)
+                        return;
+    
+                    return pugLs.doComplete(pugDocument, position, options.documentContext, /** TODO: CompletionConfiguration */);
+                });
+            },
+        },
+
         doValidation(document) {
             return worker(document, (pugDocument) => {
 
@@ -41,16 +54,6 @@ export default function (options: {
                         },
                     }];
                 }
-            });
-        },
-
-        doComplete(document, position, context) {
-            return worker(document, (pugDocument) => {
-
-                if (!options.documentContext)
-                    return;
-
-                return pugLs.doComplete(pugDocument, position, options.documentContext, /** TODO: CompletionConfiguration */);
             });
         },
 

@@ -26,21 +26,33 @@ export default function (options: {
         getHtmlDocument,
         getHtmlDataProviders: () => customData,
 
-        // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
-        triggerCharacters: ['.', ':', '<', '"', '=', '/'],
+        complete: {
 
-        async doComplete(document, position, context) {
-            return worker(document, async (htmlDocument) => {
+            // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
+            triggerCharacters: ['.', ':', '<', '"', '=', '/'],
 
-                const configs = await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
+            async on(document, position, context) {
+                return worker(document, async (htmlDocument) => {
 
-                if (options.documentContext) {
-                    return htmlLs.doComplete2(document, position, htmlDocument, options.documentContext, configs);
-                }
-                else {
-                    return htmlLs.doComplete(document, position, htmlDocument, configs);
-                }
-            });
+                    const configs = await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
+
+                    if (options.documentContext) {
+                        return htmlLs.doComplete2(document, position, htmlDocument, options.documentContext, configs);
+                    }
+                    else {
+                        return htmlLs.doComplete(document, position, htmlDocument, configs);
+                    }
+                });
+            },
+        },
+
+        rename: {
+
+            on(document, position, newName) {
+                return worker(document, (htmlDocument) => {
+                    return htmlLs.doRename(document, position, newName, htmlDocument);
+                });
+            },
         },
 
         async doHover(document, position) {
@@ -71,12 +83,6 @@ export default function (options: {
         findDocumentSymbols(document) {
             return worker(document, (htmlDocument) => {
                 return htmlLs.findDocumentSymbols(document, htmlDocument);
-            });
-        },
-
-        doRename(document, position, newName) {
-            return worker(document, (htmlDocument) => {
-                return htmlLs.doRename(document, position, newName, htmlDocument);
             });
         },
 

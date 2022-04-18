@@ -19,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					yield mappedRange.start;
 				}
 			},
-			(plugin, document, position) => plugin.doRenamePrepare?.(document, position),
+			(plugin, document, position) => plugin.rename?.prepare?.(document, position),
 			(data, sourceMap) => {
 
 				if (sourceMap && vscode.Range.is(data))

@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(arg, sourceMap) => [arg],
 			async (plugin, document, arg, sourceMap) => {
 
-				const codeLens = await plugin.doCodeLens?.(document);
+				const codeLens = await plugin.codeLens?.on?.(document);
 
 				if (codeLens) {
 					return codeLens.map(item => {

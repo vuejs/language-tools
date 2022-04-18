@@ -39,7 +39,12 @@ export function register(
 
 				async function withTeleports(document: TextDocument, position: vscode.Position, originDefinition: vscode.LocationLink | undefined) {
 
-					if (!plugin[api])
+					const _api = api === 'findDefinition' ? plugin.definition?.on :
+						api === 'findTypeDefinition' ? plugin.definition?.onType :
+							api === 'findImplementations' ? plugin.findImplementations :
+								undefined;
+
+					if (!_api)
 						return;
 
 					if (recursiveChecker.has({ uri: document.uri, range: { start: position, end: position } }))
@@ -47,7 +52,7 @@ export function register(
 
 					recursiveChecker.add({ uri: document.uri, range: { start: position, end: position } });
 
-					const definitions = await plugin[api]?.(document, position) ?? [];
+					const definitions = await _api?.(document, position) ?? [];
 
 					for (const definition of definitions) {
 
@@ -119,5 +124,5 @@ export function register(
 			}).filter(shared.notEmpty),
 			arr => dedupe.withLocationLinks(arr.flat()),
 		);
-	}
+	};
 }

@@ -74,7 +74,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			async (plugin, document, arg, sourceMap) => {
 
-				const codeActions = await plugin.doCodeActions?.(document, arg.range, arg.codeActionContext);
+				const codeActions = await plugin.codeAction?.on?.(document, arg.range, arg.codeActionContext);
 
 				return codeActions?.map(_codeAction => {
 

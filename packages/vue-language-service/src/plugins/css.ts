@@ -4,7 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 
-const wordPatterns: { [lang: string]: RegExp } = {
+const wordPatterns: { [lang: string]: RegExp; } = {
     css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
     less: /(#?-?\d*\.\d\w*%?)|(::?[\w-]+(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
     scss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g,
@@ -15,8 +15,8 @@ export default function (options: {
     documentContext?: css.DocumentContext,
     fileSystemProvider?: css.FileSystemProvider,
 }): EmbeddedLanguageServicePlugin & {
-    getStylesheet?: (document: TextDocument) => css.Stylesheet | undefined
-    getCssLs?(lang: string): css.LanguageService | undefined
+    getStylesheet?: (document: TextDocument) => css.Stylesheet | undefined;
+    getCssLs?(lang: string): css.LanguageService | undefined;
 } {
 
     const cssLs = css.getCSSLanguageService({ fileSystemProvider: options.fileSystemProvider });
@@ -41,8 +41,81 @@ export default function (options: {
         getStylesheet,
         getCssLs,
 
-        // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
-        triggerCharacters: ['/', '-', ':'],
+        complete: {
+
+            // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
+            triggerCharacters: ['/', '-', ':'],
+
+            async on(document, position, context) {
+                return worker(document, async (stylesheet, cssLs) => {
+
+                    if (!options.documentContext)
+                        return;
+
+                    const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
+                    const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
+                    const wordRange = vscode.Range.create(wordStart ?? position, position);
+                    const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+                    const cssResult = await cssLs.doComplete2(document, position, stylesheet, options.documentContext, settings?.completion);
+
+                    if (cssResult) {
+                        for (const item of cssResult.items) {
+
+                            if (item.textEdit)
+                                continue;
+
+                            // track https://github.com/microsoft/vscode-css-languageservice/issues/265
+                            const newText = item.insertText || item.label;
+                            item.textEdit = vscode.TextEdit.replace(wordRange, newText);
+                        }
+                    }
+
+                    return cssResult;
+                });
+            },
+        },
+
+        rename: {
+
+            prepare(document, position) {
+                return worker(document, (stylesheet, cssLs) => {
+
+                    const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
+                    const wordRange = shared.getWordRange(wordPattern, position, document);
+
+                    return wordRange;
+                });
+            },
+
+            on(document, position, newName) {
+                return worker(document, (stylesheet, cssLs) => {
+                    return cssLs.doRename(document, position, newName, stylesheet);
+                });
+            },
+        },
+
+        codeAction: {
+
+            on(document, range, context) {
+                return worker(document, (stylesheet, cssLs) => {
+                    return cssLs.doCodeActions2(document, range, context, stylesheet) as vscode.CodeAction[];
+                });
+            },
+        },
+
+        definition: {
+
+            on(document, position) {
+                return worker(document, (stylesheet, cssLs) => {
+
+                    const location = cssLs.findDefinition(document, position, stylesheet);
+
+                    if (location) {
+                        return [vscode.LocationLink.create(location.uri, location.range, location.range)];
+                    }
+                });
+            },
+        },
 
         async doValidation(document) {
             return worker(document, async (stylesheet, cssLs) => {
@@ -53,51 +126,12 @@ export default function (options: {
             });
         },
 
-        async doComplete(document, position, context) {
-            return worker(document, async (stylesheet, cssLs) => {
-
-                if (!options.documentContext)
-                    return;
-
-                const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
-                const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
-                const wordRange = vscode.Range.create(wordStart ?? position, position);
-                const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
-                const cssResult = await cssLs.doComplete2(document, position, stylesheet, options.documentContext, settings?.completion);
-
-                if (cssResult) {
-                    for (const item of cssResult.items) {
-
-                        if (item.textEdit)
-                            continue
-
-                        // track https://github.com/microsoft/vscode-css-languageservice/issues/265
-                        const newText = item.insertText || item.label;
-                        item.textEdit = vscode.TextEdit.replace(wordRange, newText);
-                    }
-                }
-
-                return cssResult;
-            });
-        },
-
         async doHover(document, position) {
             return worker(document, async (stylesheet, cssLs) => {
 
                 const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 
                 return cssLs.doHover(document, position, stylesheet, settings?.hover);
-            });
-        },
-
-        findDefinition(document, position) {
-            return worker(document, (stylesheet, cssLs) => {
-
-                const location = cssLs.findDefinition(document, position, stylesheet);
-
-                if (location) {
-                    return [vscode.LocationLink.create(location.uri, location.range, location.range)];
-                }
             });
         },
 
@@ -129,12 +163,6 @@ export default function (options: {
             });
         },
 
-        doCodeActions(document, range, context) {
-            return worker(document, (stylesheet, cssLs) => {
-                return cssLs.doCodeActions2(document, range, context, stylesheet) as vscode.CodeAction[];
-            });
-        },
-
         findDocumentColors(document) {
             return worker(document, (stylesheet, cssLs) => {
                 return cssLs.findDocumentColors(document, stylesheet);
@@ -144,22 +172,6 @@ export default function (options: {
         getColorPresentations(document, color, range) {
             return worker(document, (stylesheet, cssLs) => {
                 return cssLs.getColorPresentations(document, stylesheet, color, range);
-            });
-        },
-
-        doRenamePrepare(document, position) {
-            return worker(document, (stylesheet, cssLs) => {
-
-                const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
-                const wordRange = shared.getWordRange(wordPattern, position, document);
-
-                return wordRange;
-            });
-        },
-
-        doRename(document, position, newName) {
-            return worker(document, (stylesheet, cssLs) => {
-                return cssLs.doRename(document, position, newName, stylesheet);
             });
         },
 

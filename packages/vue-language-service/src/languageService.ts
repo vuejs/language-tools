@@ -43,7 +43,7 @@ import { getTsSettings } from './tsConfigs';
 import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
 import { parseVueDocuments } from './vueDocuments';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
-import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug'
+import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useReferencesCodeLensPlugin from './plugins/vue-codelens-references';
 import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
@@ -84,7 +84,7 @@ export function getSemanticTokenLegend() {
 }
 
 export function createLanguageService(
-	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
+	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
 	vueLsHost: LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
@@ -416,26 +416,29 @@ export function createLanguageService(
 		);
 		const languageSupportPlugin: LanguageServicePlugin = isTemplatePlugin ? {
 			..._languageSupportPlugin,
-			async doComplete(textDocument, position, context) {
+			complete: {
+				..._languageSupportPlugin.complete,
+				async on(textDocument, position, context) {
 
-				const tsComplete = await _languageSupportPlugin.doComplete?.(textDocument, position, context);
+					const tsComplete = await _languageSupportPlugin.complete?.on?.(textDocument, position, context);
 
-				if (tsComplete) {
-					const sortTexts = shared.getTsCompletions(ts)?.SortText;
-					if (sortTexts) {
-						tsComplete.items = tsComplete.items.filter(tsItem => {
-							if (
-								(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
-								|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
-							) {
-								return isGloballyWhitelisted(tsItem.label);
-							}
-							return true;
-						});
+					if (tsComplete) {
+						const sortTexts = shared.getTsCompletions(ts)?.SortText;
+						if (sortTexts) {
+							tsComplete.items = tsComplete.items.filter(tsItem => {
+								if (
+									(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
+									|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
+								) {
+									return isGloballyWhitelisted(tsItem.label);
+								}
+								return true;
+							});
+						}
 					}
-				}
 
-				return tsComplete;
+					return tsComplete;
+				},
 			},
 		} : _languageSupportPlugin;
 		return languageSupportPlugin;

@@ -36,34 +36,37 @@ export default function (options: {
 
     return {
 
-        doCodeLens(document) {
-            return worker(document.uri, async (vueDocument) => {
+        codeLens: {
 
-                const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
-
-                if (!isEnabled)
-                    return;
-
-                const result: vscode.CodeLens[] = [];
-                const descriptor = vueDocument.file.getDescriptor();
-                const ranges = vueDocument.file.getSfcRefSugarRanges();
-
-                if (descriptor.scriptSetup && ranges) {
-                    result.push({
-                        range: {
-                            start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-                            end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-                        },
-                        command: {
-                            title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
-                            command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
-                            arguments: [document.uri],
-                        },
-                    });
-                }
-
-                return result;
-            });
+            on(document) {
+                return worker(document.uri, async (vueDocument) => {
+    
+                    const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+    
+                    if (!isEnabled)
+                        return;
+    
+                    const result: vscode.CodeLens[] = [];
+                    const descriptor = vueDocument.file.getDescriptor();
+                    const ranges = vueDocument.file.getSfcRefSugarRanges();
+    
+                    if (descriptor.scriptSetup && ranges) {
+                        result.push({
+                            range: {
+                                start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+                                end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+                            },
+                            command: {
+                                title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
+                                command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
+                                arguments: [document.uri],
+                            },
+                        });
+                    }
+    
+                    return result;
+                });
+            },
         },
 
         doExecuteCommand(command, args, context) {

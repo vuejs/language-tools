@@ -13,8 +13,30 @@ export default function (options: {
 
     return {
 
-        // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
-        triggerCharacters: ['"', ':'],
+        complete: {
+
+            // https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
+            triggerCharacters: ['"', ':'],
+
+            on(document, position, context) {
+                return worker(document, (jsonDocument) => {
+                    return jsonLs.doComplete(document, position, jsonDocument);
+                });
+            },
+
+            resolve(item) {
+                return jsonLs.doResolve(item);
+            },
+        },
+
+        definition: {
+
+            on(document, position) {
+                return worker(document, (jsonDocument) => {
+                    return jsonLs.findDefinition(document, position, jsonDocument);
+                });
+            },
+        },
 
         doValidation(document) {
             return worker(document, async (jsonDocument) => {
@@ -25,25 +47,9 @@ export default function (options: {
             });
         },
 
-        doComplete(document, position, context) {
-            return worker(document, (jsonDocument) => {
-                return jsonLs.doComplete(document, position, jsonDocument);
-            });
-        },
-
-        doCompleteResolve(item) {
-            return jsonLs.doResolve(item);
-        },
-
         doHover(document, position) {
             return worker(document, (jsonDocument) => {
                 return jsonLs.doHover(document, position, jsonDocument);
-            });
-        },
-
-        findDefinition(document, position) {
-            return worker(document, (jsonDocument) => {
-                return jsonLs.findDefinition(document, position, jsonDocument);
             });
         },
 

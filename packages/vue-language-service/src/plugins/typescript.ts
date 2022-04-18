@@ -36,11 +36,130 @@ export default function (options: {
 
     return {
 
-        triggerCharacters: [
-            ...basicTriggerCharacters,
-            ...jsDocTriggerCharacters,
-            ...directiveCommentTriggerCharacters,
-        ],
+        complete: {
+
+            triggerCharacters: [
+                ...basicTriggerCharacters,
+                ...jsDocTriggerCharacters,
+                ...directiveCommentTriggerCharacters,
+            ],
+
+            async on(document, position, context) {
+                if (isTsDocument(document)) {
+
+                    let result: vscode.CompletionList = {
+                        isIncomplete: false,
+                        items: [],
+                    };
+
+                    if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
+
+                        const baseCompletionOptions = options.getBaseCompletionOptions?.(document.uri) ?? [];
+                        const completeOptions: ts.GetCompletionsAtPositionOptions = {
+                            ...baseCompletionOptions,
+                            triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
+                            triggerKind: context?.triggerKind,
+                        };
+                        const basicResult = await options.getTsLs().doComplete(document.uri, position, completeOptions);
+
+                        if (basicResult) {
+                            result = basicResult;
+                        }
+                    }
+                    if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && jsDocTriggerCharacters.includes(context.triggerCharacter))) {
+
+                        const jsdocResult = await options.getTsLs().doJsDocComplete(document.uri, position);
+
+                        if (jsdocResult) {
+                            result.items.push(jsdocResult);
+                        }
+                    }
+                    if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && directiveCommentTriggerCharacters.includes(context.triggerCharacter))) {
+
+                        const directiveCommentResult = await options.getTsLs().doDirectiveCommentComplete(document.uri, position);
+
+                        if (directiveCommentResult) {
+                            result.items = result.items.concat(directiveCommentResult);
+                        }
+                    }
+
+                    return result;
+                }
+            },
+
+            resolve(item) {
+                return options.getTsLs().doCompletionResolve(item);
+            },
+        },
+
+        rename: {
+
+            prepare(document, position) {
+                if (isTsDocument(document)) {
+                    return options.getTsLs().prepareRename(document.uri, position);
+                }
+            },
+
+            on(document, position, newName) {
+                if (isTsDocument(document) || isJsonDocument(document)) {
+                    return options.getTsLs().doRename(document.uri, position, newName);
+                }
+            },
+        },
+
+        codeAction: {
+
+            on(document, range, context) {
+                if (isTsDocument(document)) {
+                    return options.getTsLs().getCodeActions(document.uri, range, context);
+                }
+            },
+
+            resolve(codeAction) {
+                return options.getTsLs().doCodeActionResolve(codeAction);
+            },
+        },
+
+        inlayHints: {
+
+            do(document, range) {
+                if (isTsDocument(document)) {
+                    return options.getTsLs().getInlayHints(document.uri, range);
+                }
+            },
+        },
+
+        callHierarchy: {
+
+            prepare(document, position) {
+                if (isTsDocument(document)) {
+                    return options.getTsLs().callHierarchy.doPrepare(document.uri, position);
+                }
+            },
+
+            onIncomingCalls(item) {
+                return options.getTsLs().callHierarchy.getIncomingCalls(item);
+            },
+
+            onOutgoingCalls(item) {
+                return options.getTsLs().callHierarchy.getOutgoingCalls(item);
+            },
+        },
+
+        definition: {
+
+            on(document, position) {
+                if (isTsDocument(document)) {
+                    return options.getTsLs().findDefinition(document.uri, position);
+                }
+            },
+
+            onType(document, position) {
+                if (isTsDocument(document)) {
+                    return options.getTsLs().findTypeDefinition(document.uri, position);
+                }
+            },
+        },
 
         doValidation(document, options_2) {
             if (isTsDocument(document)) {
@@ -48,68 +167,9 @@ export default function (options: {
             }
         },
 
-        async doComplete(document, position, context) {
-            if (isTsDocument(document)) {
-
-                let result: vscode.CompletionList = {
-                    isIncomplete: false,
-                    items: [],
-                };
-
-                if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
-
-                    const baseCompletionOptions = options.getBaseCompletionOptions?.(document.uri) ?? [];
-                    const completeOptions: ts.GetCompletionsAtPositionOptions = {
-                        ...baseCompletionOptions,
-                        triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
-                        triggerKind: context?.triggerKind,
-                    };
-                    const basicResult = await options.getTsLs().doComplete(document.uri, position, completeOptions);
-
-                    if (basicResult) {
-                        result = basicResult;
-                    }
-                }
-                if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && jsDocTriggerCharacters.includes(context.triggerCharacter))) {
-
-                    const jsdocResult = await options.getTsLs().doJsDocComplete(document.uri, position);
-
-                    if (jsdocResult) {
-                        result.items.push(jsdocResult);
-                    }
-                }
-                if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && directiveCommentTriggerCharacters.includes(context.triggerCharacter))) {
-
-                    const directiveCommentResult = await options.getTsLs().doDirectiveCommentComplete(document.uri, position);
-
-                    if (directiveCommentResult) {
-                        result.items = result.items.concat(directiveCommentResult);
-                    }
-                }
-
-                return result;
-            }
-        },
-
-        doCompleteResolve(item) {
-            return options.getTsLs().doCompletionResolve(item);
-        },
-
         doHover(document, position) {
             if (isTsDocument(document)) {
                 return options.getTsLs().doHover(document.uri, position);
-            }
-        },
-
-        findDefinition(document, position) {
-            if (isTsDocument(document)) {
-                return options.getTsLs().findDefinition(document.uri, position);
-            }
-        },
-
-        findTypeDefinition(document, position) {
-            if (isTsDocument(document)) {
-                return options.getTsLs().findTypeDefinition(document.uri, position);
             }
         },
 
@@ -147,28 +207,6 @@ export default function (options: {
             return options.getTsLs().findWorkspaceSymbols(query);
         },
 
-        doCodeActions(document, range, context) {
-            if (isTsDocument(document)) {
-                return options.getTsLs().getCodeActions(document.uri, range, context);
-            }
-        },
-
-        doCodeActionResolve(codeAction) {
-            return options.getTsLs().doCodeActionResolve(codeAction);
-        },
-
-        doRenamePrepare(document, position) {
-            if (isTsDocument(document)) {
-                return options.getTsLs().prepareRename(document.uri, position);
-            }
-        },
-
-        doRename(document, position, newName) {
-            if (isTsDocument(document) || isJsonDocument(document)) {
-                return options.getTsLs().doRename(document.uri, position, newName);
-            }
-        },
-
         doFileRename(oldUri, newUri) {
             return options.getTsLs().getEditsForFileRename(oldUri, newUri);
         },
@@ -191,33 +229,10 @@ export default function (options: {
             }
         },
 
-        getInlayHints(document, range) {
-            if (isTsDocument(document)) {
-                return options.getTsLs().getInlayHints(document.uri, range);
-            }
-        },
-
         format(document, range, options_2) {
             if (isTsDocument(document)) {
                 return options.getTsLs().doFormatting(document.uri, options_2, range);
             }
-        },
-
-        callHierarchy: {
-
-            doPrepare(document, position) {
-                if (isTsDocument(document)) {
-                    return options.getTsLs().callHierarchy.doPrepare(document.uri, position);
-                }
-            },
-
-            getIncomingCalls(item) {
-                return options.getTsLs().callHierarchy.getIncomingCalls(item);
-            },
-
-            getOutgoingCalls(item) {
-                return options.getTsLs().callHierarchy.getOutgoingCalls(item);
-            },
         },
     };
 }
