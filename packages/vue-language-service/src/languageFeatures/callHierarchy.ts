@@ -10,7 +10,7 @@ export interface PluginCallHierarchyData {
 	originalItem: vscode.CallHierarchyItem,
 	pluginId: number,
 	sourceMap: {
-		embeddedDocumentUri: string
+		embeddedDocumentUri: string;
 	} | undefined,
 }
 

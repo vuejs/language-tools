@@ -39,5 +39,5 @@ export function register(context: DocumentServiceRuntimeContext) {
 				}
 			},
 		);
-	}
+	};
 }

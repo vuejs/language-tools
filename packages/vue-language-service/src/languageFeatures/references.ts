@@ -93,5 +93,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => dedupe.withLocations(arr.flat()),
 		);
-	}
+	};
 }

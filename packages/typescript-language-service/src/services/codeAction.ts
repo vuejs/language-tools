@@ -18,7 +18,7 @@ export interface RefactorData {
 	fileName: string,
 	refactorName: string,
 	actionName: string,
-	range: { pos: number, end: number },
+	range: { pos: number, end: number; },
 }
 
 export interface OrganizeImportsData {
@@ -240,7 +240,7 @@ export function register(
 				}
 				codeActions.push(codeAction);
 			}
-			return codeActions
+			return codeActions;
 		}
 	};
 }

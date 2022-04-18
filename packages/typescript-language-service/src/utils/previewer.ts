@@ -132,7 +132,7 @@ function convertLinkTags(
 
 	const out: string[] = [];
 
-	let currentLink: { name?: string, target?: Proto.FileSpan, text?: string } | undefined;
+	let currentLink: { name?: string, target?: Proto.FileSpan, text?: string; } | undefined;
 	for (const part of parts) {
 		switch (part.kind) {
 			case 'link':
@@ -143,7 +143,7 @@ function convertLinkTags(
 					if (typeof currentLink.target === 'object' && 'fileName' in currentLink.target) {
 						const _target = currentLink.target as any as {
 							fileName: string,
-							textSpan: { start: number, length: number },
+							textSpan: { start: number, length: number; },
 						};
 						const fileDoc = getTextDocument(shared.uriToFsPath(_target.fileName));
 						if (fileDoc) {
@@ -167,7 +167,7 @@ function convertLinkTags(
 					}
 
 					if (target) {
-						const link = filePathConverter.toResource(target.file) + '#' + `L${target.start.line},${target.start.offset}`
+						const link = filePathConverter.toResource(target.file) + '#' + `L${target.start.line},${target.start.offset}`;
 
 						out.push(`[${text}](${link})`);
 					} else {

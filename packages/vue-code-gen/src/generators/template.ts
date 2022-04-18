@@ -50,7 +50,7 @@ export function generate(
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
 	cssScopedClasses: string[] = [],
-	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number } | undefined,
+	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number; } | undefined,
 	isScriptSetup: boolean,
 	searchTexts: {
 		getEmitCompletion(tag: string): string,
@@ -167,13 +167,13 @@ export function generate(
 		const componentNames = new Set([name1, name2, name3]);
 
 		if (!isScriptSetup) {
-			tsCodeGen.addText(`// @ts-ignore\n`)
+			tsCodeGen.addText(`// @ts-ignore\n`);
 			for (const name of componentNames) {
 				if (validTsVar.test(name)) {
 					tsCodeGen.addText(`${name}; `);
 				}
 			}
-			tsCodeGen.addText(`// ignore unused in setup returns\n`)
+			tsCodeGen.addText(`// ignore unused in setup returns\n`);
 		}
 
 		if (!isNamespacedTag) {
@@ -299,7 +299,7 @@ export function generate(
 
 					let propName = prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 						? prop.arg.content
-						: prop.arg.loc.source
+						: prop.arg.loc.source;
 
 					if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 						propName = propName.substring(1);
@@ -1399,7 +1399,7 @@ export function generate(
 					},
 					'(',
 					')',
-				)
+				);
 				tsCodeGen.addText(`;\n`);
 			}
 		}
@@ -1868,7 +1868,7 @@ export function generate(
 						start: other.sourceRange.start + otherOffset,
 						end: other.sourceRange.end + otherOffset,
 					},
-				})
+				});
 			}
 		}
 
@@ -1892,7 +1892,7 @@ function keepHyphenateName(oldName: string, newName: string) {
 	if (oldName === hyphenate(oldName)) {
 		return hyphenate(newName);
 	}
-	return newName
+	return newName;
 }
 // https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 // https://v3.vuejs.org/guide/forms.html#basic-usage

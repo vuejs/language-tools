@@ -37,7 +37,7 @@ export default function (options: {
 				return '${1:.value}';
 			}
 		},
-	}
+	};
 
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
@@ -63,7 +63,7 @@ export function isCharacterTyping(document: TextDocument, options: Parameters<No
 		return false;
 	}
 
-	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter)
+	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter);
 }
 
 export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number) {

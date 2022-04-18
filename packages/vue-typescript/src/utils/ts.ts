@@ -29,10 +29,10 @@ export function injectCacheLogicToLanguageServiceHost(
 	const moduleSpecifierCache = createModuleSpecifierCache();
 	const exportMapCache = _createCacheableExportInfoMap({
 		getCurrentProgram() {
-			return service.getProgram()
+			return service.getProgram();
 		},
 		getPackageJsonAutoImportProvider() {
-			return service.getProgram()
+			return service.getProgram();
 		},
 	});
 	const packageJsonCache = createPackageJsonCache(ts, {
@@ -88,7 +88,7 @@ export function createParsedCommandLine(
 		experimentalCompatMode?: 2 | 3;
 		experimentalTemplateCompilerOptions?: any;
 		experimentalTemplateCompilerOptionsRequirePath?: string;
-	}
+	};
 } {
 
 	const tsConfigPath = ts.sys.resolvePath(tsConfig);

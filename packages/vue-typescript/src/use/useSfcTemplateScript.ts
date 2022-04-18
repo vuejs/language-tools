@@ -26,7 +26,7 @@ export function useSfcTemplateScript(
 	styleEmbeddeds: ReturnType<typeof useSfcStyles>['embeddeds'],
 	templateData: Ref<{
 		lang: string,
-		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number; } | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: Ref<ReturnType<(typeof import('@volar/vue-code-gen'))['compileSFCTemplate']> | undefined>,
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
@@ -146,7 +146,7 @@ export function useSfcTemplateScript(
 		function writeImportTypes() {
 
 			const bindingsArr: {
-				typeBindings: { start: number, end: number }[],
+				typeBindings: { start: number, end: number; }[],
 				content: string,
 			}[] = [];
 
@@ -260,7 +260,7 @@ export function useSfcTemplateScript(
 						},
 						emptyLocalVars,
 						identifiers,
-					)
+					);
 					codeGen.addText(';\n');
 				}
 			}

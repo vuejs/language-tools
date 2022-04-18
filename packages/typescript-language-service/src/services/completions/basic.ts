@@ -11,7 +11,7 @@ export interface Data {
 	uri: string,
 	fileName: string,
 	offset: number,
-	originalItem: ts.CompletionEntry
+	originalItem: ts.CompletionEntry;
 }
 
 export function register(
@@ -109,7 +109,7 @@ export function register(
 					range = {
 						inserting: vscode.Range.create(wordRange.start, position),
 						replacing: wordRange,
-					}
+					};
 				}
 
 				if (range) {
@@ -329,7 +329,7 @@ export function register(
 
 			return true;
 		}
-	}
+	};
 }
 
 export function handleKindModifiers(item: vscode.CompletionItem, tsEntry: ts.CompletionEntry | ts.CompletionEntryDetails) {

@@ -1,87 +1,87 @@
 import * as WebSocket from 'ws';
 
 export function createPreviewWebSocket(options: {
-    goToCode: (fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean }) => void,
-    getOpenFileUrl: (fileName: string, range: [number, number]) => string,
+	goToCode: (fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) => void,
+	getOpenFileUrl: (fileName: string, range: [number, number]) => string,
 }) {
 
-    const wsList: WebSocket.WebSocket[] = [];
-    let wss: WebSocket.Server | undefined;
-    let goToTemplateReq = 0;
+	const wsList: WebSocket.WebSocket[] = [];
+	let wss: WebSocket.Server | undefined;
+	let goToTemplateReq = 0;
 
-    wss = new WebSocket.Server({ port: 56789 });
-    wss.on('connection', ws => {
+	wss = new WebSocket.Server({ port: 56789 });
+	wss.on('connection', ws => {
 
-        wsList.push(ws);
+		wsList.push(ws);
 
-        ws.on('message', msg => {
+		ws.on('message', msg => {
 
-            const message = JSON.parse(msg.toString());
+			const message = JSON.parse(msg.toString());
 
-            if (message.command === 'goToTemplate') {
+			if (message.command === 'goToTemplate') {
 
-                const req = ++goToTemplateReq;
-                const data = message.data as {
-                    fileName: string,
-                    range: [number, number],
-                };
-                const token = {
-                    get isCancelled() {
-                        return req !== goToTemplateReq;
-                    }
-                };
+				const req = ++goToTemplateReq;
+				const data = message.data as {
+					fileName: string,
+					range: [number, number],
+				};
+				const token = {
+					get isCancelled() {
+						return req !== goToTemplateReq;
+					}
+				};
 
-                options.goToCode(data.fileName, data.range, token);
-            }
+				options.goToCode(data.fileName, data.range, token);
+			}
 
-            if (message.command === 'requestOpenFile') {
+			if (message.command === 'requestOpenFile') {
 
-                const data = message.data as {
-                    fileName: string,
-                    range: [number, number],
-                };
-                const url = options.getOpenFileUrl(data.fileName, data.range);
+				const data = message.data as {
+					fileName: string,
+					range: [number, number],
+				};
+				const url = options.getOpenFileUrl(data.fileName, data.range);
 
-                ws.send(JSON.stringify({
-                    command: 'openFile',
-                    data: url,
-                }));
-            }
-        });
-    });
+				ws.send(JSON.stringify({
+					command: 'openFile',
+					data: url,
+				}));
+			}
+		});
+	});
 
-    return {
-        stop,
-        highlight,
-        unhighlight,
-    };
+	return {
+		stop,
+		highlight,
+		unhighlight,
+	};
 
-    function stop() {
-        wss?.close();
-        wsList.length = 0;
-    }
+	function stop() {
+		wss?.close();
+		wsList.length = 0;
+	}
 
-    function highlight(fileName: string, ranges: { start: number, end: number }[], isDirty: boolean) {
-        const msg = {
-            command: 'highlightSelections',
-            data: {
-                fileName,
-                ranges,
-                isDirty,
-            },
-        };
-        for (const ws of wsList) {
-            ws.send(JSON.stringify(msg));
-        }
-    }
+	function highlight(fileName: string, ranges: { start: number, end: number; }[], isDirty: boolean) {
+		const msg = {
+			command: 'highlightSelections',
+			data: {
+				fileName,
+				ranges,
+				isDirty,
+			},
+		};
+		for (const ws of wsList) {
+			ws.send(JSON.stringify(msg));
+		}
+	}
 
-    function unhighlight() {
-        const msg = {
-            command: 'highlightSelections',
-            data: undefined,
-        };
-        for (const ws of wsList) {
-            ws.send(JSON.stringify(msg));
-        }
-    }
+	function unhighlight() {
+		const msg = {
+			command: 'highlightSelections',
+			data: undefined,
+		};
+		for (const ws of wsList) {
+			ws.send(JSON.stringify(msg));
+		}
+	}
 }

@@ -51,7 +51,7 @@ export function defineTypeCheck(fileName: string, expectErrors: {
 						return expectError.start === start
 							&& expectError.end === end
 							&& expectError.source === error.source
-							&& expectError.code === error.code
+							&& expectError.code === error.code;
 
 					})).toEqual(true);
 				});

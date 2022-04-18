@@ -9,7 +9,7 @@ export interface PluginCompletionData {
 	originalItem: vscode.CompletionItem,
 	pluginId: number,
 	sourceMap: {
-		embeddedDocumentUri: string
+		embeddedDocumentUri: string;
 	} | undefined,
 }
 
@@ -19,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		uri: string,
 		data: {
 			sourceMap: {
-				embeddedDocumentUri: string
+				embeddedDocumentUri: string;
 			} | undefined,
 			plugin: LanguageServicePlugin,
 			list: vscode.CompletionList,
@@ -252,5 +252,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 				),
 			};
 		}
-	}
+	};
 }

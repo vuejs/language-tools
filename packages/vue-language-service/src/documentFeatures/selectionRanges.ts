@@ -25,9 +25,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (!sourceMap)
 						return range;
 
-					return sourceMap.getSourceRange(range.start, range.end)?.[0]
+					return sourceMap.getSourceRange(range.start, range.end)?.[0];
 				},
 			),
 		);
-	}
+	};
 }

@@ -6,105 +6,105 @@ import { VueDocument } from '../vueDocuments';
 const toggleConvertCommand = 'htmlPugConversions.toggle';
 
 export interface ReferencesCodeLensData {
-    uri: string,
-    position: vscode.Position,
+	uri: string,
+	position: vscode.Position,
 }
 
 type CommandArgs = [string];
 
 export default function (options: {
-    getVueDocument(uri: string): VueDocument | undefined,
+	getVueDocument(uri: string): VueDocument | undefined,
 }): EmbeddedLanguageServicePlugin {
 
-    return {
+	return {
 
-        codeLens: {
+		codeLens: {
 
-            on(document) {
-                return worker(document.uri, async (vueDocument) => {
+			on(document) {
+				return worker(document.uri, async (vueDocument) => {
 
-                    const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
+					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
 
-                    if (!isEnabled)
-                        return;
+					if (!isEnabled)
+						return;
 
-                    const result: vscode.CodeLens[] = [];
-                    const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
+					const result: vscode.CodeLens[] = [];
+					const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
 
-                    if (embeddedTemplate && (embeddedTemplate.file.lang === 'html' || embeddedTemplate.file.lang === 'pug')) {
+					if (embeddedTemplate && (embeddedTemplate.file.lang === 'html' || embeddedTemplate.file.lang === 'pug')) {
 
-                        const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
+						const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
 
-                        for (const mapped of sourceMap.mappings) {
-                            return [{
-                                range: {
-                                    start: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
-                                    end: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
-                                },
-                                command: {
-                                    title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),
-                                    command: toggleConvertCommand,
-                                    arguments: <CommandArgs>[document.uri],
-                                },
-                            }];
-                        }
-                    }
+						for (const mapped of sourceMap.mappings) {
+							return [{
+								range: {
+									start: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
+									end: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
+								},
+								command: {
+									title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),
+									command: toggleConvertCommand,
+									arguments: <CommandArgs>[document.uri],
+								},
+							}];
+						}
+					}
 
-                    return result;
-                });
-            },
-        },
+					return result;
+				});
+			},
+		},
 
-        doExecuteCommand(command, args, host) {
+		doExecuteCommand(command, args, host) {
 
-            if (command === toggleConvertCommand) {
+			if (command === toggleConvertCommand) {
 
-                const [uri] = args as CommandArgs;
+				const [uri] = args as CommandArgs;
 
-                return worker(uri, vueDocument => {
+				return worker(uri, vueDocument => {
 
-                    const document = vueDocument.getDocument();
-                    const desc = vueDocument.file.getDescriptor();
-                    if (!desc.template)
-                        return;
+					const document = vueDocument.getDocument();
+					const desc = vueDocument.file.getDescriptor();
+					if (!desc.template)
+						return;
 
-                    const lang = desc.template.lang;
+					const lang = desc.template.lang;
 
-                    if (lang === 'html') {
+					if (lang === 'html') {
 
-                        const pug = htmlToPug(desc.template.content) + '\n';
-                        const newTemplate = `<template lang="pug">` + pug;
-                        const range = vscode.Range.create(
-                            document.positionAt(desc.template.start),
-                            document.positionAt(desc.template.startTagEnd + desc.template.content.length),
-                        );
-                        const textEdit = vscode.TextEdit.replace(range, newTemplate);
+						const pug = htmlToPug(desc.template.content) + '\n';
+						const newTemplate = `<template lang="pug">` + pug;
+						const range = vscode.Range.create(
+							document.positionAt(desc.template.start),
+							document.positionAt(desc.template.startTagEnd + desc.template.content.length),
+						);
+						const textEdit = vscode.TextEdit.replace(range, newTemplate);
 
-                        host.applyEdit({ changes: { [document.uri]: [textEdit] } });
-                    }
-                    else if (lang === 'pug') {
+						host.applyEdit({ changes: { [document.uri]: [textEdit] } });
+					}
+					else if (lang === 'pug') {
 
-                        const html = pugToHtml(desc.template.content);
-                        const newTemplate = `<template>\n` + html + `\n`;
-                        const range = vscode.Range.create(
-                            document.positionAt(desc.template.start),
-                            document.positionAt(desc.template.startTagEnd + desc.template.content.length),
-                        );
-                        const textEdit = vscode.TextEdit.replace(range, newTemplate);
+						const html = pugToHtml(desc.template.content);
+						const newTemplate = `<template>\n` + html + `\n`;
+						const range = vscode.Range.create(
+							document.positionAt(desc.template.start),
+							document.positionAt(desc.template.startTagEnd + desc.template.content.length),
+						);
+						const textEdit = vscode.TextEdit.replace(range, newTemplate);
 
-                        host.applyEdit({ changes: { [document.uri]: [textEdit] } });
-                    }
-                });
-            }
-        },
-    };
+						host.applyEdit({ changes: { [document.uri]: [textEdit] } });
+					}
+				});
+			}
+		},
+	};
 
-    function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = options.getVueDocument(uri);
-        if (!vueDocument)
-            return;
+		const vueDocument = options.getVueDocument(uri);
+		if (!vueDocument)
+			return;
 
-        return callback(vueDocument);
-    }
+		return callback(vueDocument);
+	}
 }

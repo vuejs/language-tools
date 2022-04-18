@@ -50,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult }>();
+	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult; }>();
 
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
@@ -62,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, panel);
 
-			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state)
+			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state);
 		}
 	}
 
@@ -360,7 +360,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	async function handleGoToCode(fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean }) {
+	async function handleGoToCode(fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) {
 
 		const doc = await vscode.workspace.openTextDocument(fileName);
 

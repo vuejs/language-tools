@@ -29,5 +29,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 
 		return symbolsList.flat();
-	}
+	};
 }

@@ -41,7 +41,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				range: hovers.find(hover => hover.range && shared.isInsideRange(hover.range, { start: position, end: position }))?.range ?? hovers[0].range,
 			}),
 		);
-	}
+	};
 }
 
 function getHoverTexts(hover?: vscode.Hover) {

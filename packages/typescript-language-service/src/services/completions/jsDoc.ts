@@ -42,7 +42,7 @@ export function register(
 		const item = createCompletionItem(document, position, insertText);
 
 		return item;
-	}
+	};
 }
 
 function createCompletionItem(document: TextDocument, position: vscode.Position, insertText: string) {

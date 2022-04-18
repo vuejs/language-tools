@@ -90,9 +90,9 @@ export function getOverlapRange(
 }
 
 export function getOverlapRange2(
-	range1: { start: number, end: number },
-	range2: { start: number, end: number },
-): { start: number, end: number } | undefined {
+	range1: { start: number, end: number; },
+	range2: { start: number, end: number; },
+): { start: number, end: number; } | undefined {
 
 	const start = Math.max(range1.start, range2.start);
 	const end = Math.min(range1.end, range2.end);

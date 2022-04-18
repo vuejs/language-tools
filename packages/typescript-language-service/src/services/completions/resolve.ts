@@ -52,11 +52,11 @@ export function register(
 				detailTexts.push(action.description);
 				for (const changes of action.changes) {
 					const entries = changes.textChanges.map(textChange => {
-						return { fileName, textSpan: textChange.span }
+						return { fileName, textSpan: textChange.span };
 					});
 					const locs = entriesToLocations(entries, getTextDocument2);
 					locs.forEach((loc, index) => {
-						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText))
+						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText));
 					});
 				}
 			}

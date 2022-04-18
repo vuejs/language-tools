@@ -46,12 +46,12 @@ export type MappingBase = {
 	mode: Mode,
 	sourceRange: Range,
 	mappedRange: Range,
-}
+};
 
 export type Mapping<T> = MappingBase & {
 	data: T,
 	additional?: MappingBase[],
-}
+};
 
 export class SourceMapBase<Data = undefined> {
 
@@ -103,12 +103,12 @@ export class SourceMapBase<Data = undefined> {
 			}
 		}
 
-		function getMapped(mapped: [{ start: number, end: number }, Data]) {
+		function getMapped(mapped: [{ start: number, end: number; }, Data]) {
 			return mapped;
 		}
 	}
 
-	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number }, Data] | undefined {
+	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number; }, Data] | undefined {
 		const mappedToRange = sourceToTarget ? targetRange : sourceRange;
 		const mappedFromRange = sourceToTarget ? sourceRange : targetRange;
 		if (mode === Mode.Totally) {

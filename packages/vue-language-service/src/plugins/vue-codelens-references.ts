@@ -10,103 +10,103 @@ export const commands = [showReferencesCommand];
 type CommandArgs = [string, vscode.Position, vscode.Location[]];
 
 export interface ReferencesCodeLensData {
-    uri: string,
-    vueTag: string | undefined,
-    position: vscode.Position,
+	uri: string,
+	vueTag: string | undefined,
+	position: vscode.Position,
 }
 
 export default function (options: {
-    getVueDocument(uri: string): VueDocument | undefined,
-    findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
+	getVueDocument(uri: string): VueDocument | undefined,
+	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
 
-    return {
+	return {
 
-        codeLens: {
+		codeLens: {
 
-            on(document) {
-                return worker(document.uri, async (vueDocument) => {
+			on(document) {
+				return worker(document.uri, async (vueDocument) => {
 
-                    const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
+					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
-                    if (!isEnabled)
-                        return;
+					if (!isEnabled)
+						return;
 
-                    const result: vscode.CodeLens[] = [];
+					const result: vscode.CodeLens[] = [];
 
-                    for (const sourceMap of vueDocument.getSourceMaps()) {
-                        for (const mapping of sourceMap.mappings) {
+					for (const sourceMap of vueDocument.getSourceMaps()) {
+						for (const mapping of sourceMap.mappings) {
 
-                            if (!mapping.data.capabilities.referencesCodeLens)
-                                continue;
+							if (!mapping.data.capabilities.referencesCodeLens)
+								continue;
 
-                            const data: ReferencesCodeLensData = {
-                                uri: document.uri,
-                                vueTag: mapping.data.vueTag,
-                                position: document.positionAt(mapping.sourceRange.start),
-                            };
+							const data: ReferencesCodeLensData = {
+								uri: document.uri,
+								vueTag: mapping.data.vueTag,
+								position: document.positionAt(mapping.sourceRange.start),
+							};
 
-                            result.push({
-                                range: {
-                                    start: document.positionAt(mapping.sourceRange.start),
-                                    end: document.positionAt(mapping.sourceRange.end),
-                                },
-                                data: data as any,
-                            });
-                        }
-                    }
+							result.push({
+								range: {
+									start: document.positionAt(mapping.sourceRange.start),
+									end: document.positionAt(mapping.sourceRange.end),
+								},
+								data: data as any,
+							});
+						}
+					}
 
-                    return result;
-                });
-            },
+					return result;
+				});
+			},
 
-            async resolve(codeLens) {
+			async resolve(codeLens) {
 
-                const data: ReferencesCodeLensData = codeLens.data as any;
-                const vueDocument = options.getVueDocument(data.uri);
+				const data: ReferencesCodeLensData = codeLens.data as any;
+				const vueDocument = options.getVueDocument(data.uri);
 
-                if (!vueDocument)
-                    return codeLens;
+				if (!vueDocument)
+					return codeLens;
 
-                const sourceMaps = vueDocument.getSourceMaps();
-                const references = await options.findReference(data.uri, data.position) ?? [];
-                const referencesInDifferentDocument = references.filter(reference =>
-                    reference.uri !== data.uri // different file
-                    || sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
-                );
-                const referencesCount = referencesInDifferentDocument.length ?? 0;
+				const sourceMaps = vueDocument.getSourceMaps();
+				const references = await options.findReference(data.uri, data.position) ?? [];
+				const referencesInDifferentDocument = references.filter(reference =>
+					reference.uri !== data.uri // different file
+					|| sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
+				);
+				const referencesCount = referencesInDifferentDocument.length ?? 0;
 
-                codeLens.command = {
-                    title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
-                    command: showReferencesCommand,
-                    arguments: <CommandArgs>[data.uri, codeLens.range.start, references],
-                };
+				codeLens.command = {
+					title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
+					command: showReferencesCommand,
+					arguments: <CommandArgs>[data.uri, codeLens.range.start, references],
+				};
 
-                return codeLens;
-            },
-        },
+				return codeLens;
+			},
+		},
 
-        doExecuteCommand(command, args, context) {
+		doExecuteCommand(command, args, context) {
 
-            if (command === showReferencesCommand) {
+			if (command === showReferencesCommand) {
 
-                const [uri, position, references] = args as CommandArgs;
+				const [uri, position, references] = args as CommandArgs;
 
-                context.sendNotification(shared.ShowReferencesNotification.type, {
-                    textDocument: { uri },
-                    position,
-                    references,
-                });
-            }
-        },
-    };
+				context.sendNotification(shared.ShowReferencesNotification.type, {
+					textDocument: { uri },
+					position,
+					references,
+				});
+			}
+		},
+	};
 
-    function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
-        const vueDocument = options.getVueDocument(uri);
-        if (!vueDocument)
-            return;
+		const vueDocument = options.getVueDocument(uri);
+		if (!vueDocument)
+			return;
 
-        return callback(vueDocument);
-    }
+		return callback(vueDocument);
+	}
 }

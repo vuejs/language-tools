@@ -18,5 +18,5 @@ export function register(htmlLs: html.LanguageService) {
 				return pugRange ? vscode.Location.create(pugDoc.sourceMap.sourceDocument.uri, pugRange) : undefined;
 			},
 		);
-	}
+	};
 }

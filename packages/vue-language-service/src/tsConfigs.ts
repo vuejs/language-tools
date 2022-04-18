@@ -59,7 +59,7 @@ export async function getPreferences(
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};
 
-	const preferences: ts.UserPreferences & { displayPartsForJSDoc: true } = {
+	const preferences: ts.UserPreferences & { displayPartsForJSDoc: true; } = {
 		quotePreference: getQuoteStylePreference(preferencesConfig),
 		importModuleSpecifierPreference: getImportModuleSpecifierPreference(preferencesConfig),
 		importModuleSpecifierEnding: getImportModuleSpecifierEndingPreference(preferencesConfig),

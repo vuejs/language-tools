@@ -157,7 +157,7 @@ export async function languageFeatureWorker<T, K>(
 					const isEmptyArray = Array.isArray(result) && result.length === 0;
 
 					if (reportProgress && !isEmptyArray) {
-						reportProgress(combineResult(results))
+						reportProgress(combineResult(results));
 					}
 				}
 			}
@@ -190,7 +190,7 @@ export async function languageFeatureWorker<T, K>(
 			const isEmptyArray = Array.isArray(result) && result.length === 0;
 
 			if (reportProgress && !isEmptyArray) {
-				reportProgress(combineResult(results))
+				reportProgress(combineResult(results));
 			}
 		}
 	}

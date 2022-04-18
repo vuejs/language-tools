@@ -28,5 +28,5 @@ export function register(context: DocumentServiceRuntimeContext) {
 			),
 			arr => arr.flat(),
 		);
-	}
+	};
 }

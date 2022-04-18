@@ -19,5 +19,5 @@ export function register(htmlLs: html.LanguageService) {
 			htmlResult,
 			htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
 		);
-	}
+	};
 }

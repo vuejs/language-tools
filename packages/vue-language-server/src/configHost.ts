@@ -5,7 +5,7 @@ export function createLsConfigs(rootFolders: string[], connection: vscode.Connec
 
 	let settings: Record<string, Record<string, Promise<any>>> = {};
 
-	const callbacks: Function[] = []
+	const callbacks: Function[] = [];
 
 	connection.onDidChangeConfiguration(async () => {
 		settings = {};

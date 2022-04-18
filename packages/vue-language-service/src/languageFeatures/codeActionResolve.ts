@@ -48,5 +48,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 
 		return item;
-	}
+	};
 }

@@ -48,5 +48,5 @@ export function register(context: DocumentServiceRuntimeContext) {
 				return cp;
 			}).filter(shared.notEmpty),
 		);
-	}
+	};
 }

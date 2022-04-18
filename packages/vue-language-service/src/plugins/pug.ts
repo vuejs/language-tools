@@ -5,127 +5,127 @@ import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from './html';
 
 export default function (options: {
-    configurationHost: {
-        getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
-        onDidChangeConfiguration: (cb: () => void) => void,
-        rootUris: string[],
-    } | undefined,
-    documentContext?: html.DocumentContext,
-    htmlPlugin: ReturnType<typeof useHtmlPlugin>,
+	configurationHost: {
+		getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
+		onDidChangeConfiguration: (cb: () => void) => void,
+		rootUris: string[],
+	} | undefined,
+	documentContext?: html.DocumentContext,
+	htmlPlugin: ReturnType<typeof useHtmlPlugin>,
 }): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
-    htmlLs: html.LanguageService,
-    pugLs: pug.LanguageService,
-    getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
+	htmlLs: html.LanguageService,
+	pugLs: pug.LanguageService,
+	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
 } {
 
-    const pugLs = pug.getLanguageService(options.htmlPlugin.htmlLs);
-    const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
+	const pugLs = pug.getLanguageService(options.htmlPlugin.htmlLs);
+	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
-    return {
+	return {
 
-        ...options.htmlPlugin,
-        pugLs,
-        getPugDocument,
+		...options.htmlPlugin,
+		pugLs,
+		getPugDocument,
 
-        complete: {
+		complete: {
 
-            on(document, position, context) {
-                return worker(document, (pugDocument) => {
-    
-                    if (!options.documentContext)
-                        return;
-    
-                    return pugLs.doComplete(pugDocument, position, options.documentContext, /** TODO: CompletionConfiguration */);
-                });
-            },
-        },
+			on(document, position, context) {
+				return worker(document, (pugDocument) => {
 
-        doValidation(document) {
-            return worker(document, (pugDocument) => {
+					if (!options.documentContext)
+						return;
 
-                if (pugDocument.error) {
+					return pugLs.doComplete(pugDocument, position, options.documentContext, /** TODO: CompletionConfiguration */);
+				});
+			},
+		},
 
-                    return [{
-                        code: pugDocument.error.code,
-                        message: pugDocument.error.msg,
-                        range: {
-                            start: { line: pugDocument.error.line, character: pugDocument.error.column },
-                            end: { line: pugDocument.error.line, character: pugDocument.error.column },
-                        },
-                    }];
-                }
-            });
-        },
+		doValidation(document) {
+			return worker(document, (pugDocument) => {
 
-        doHover(document, position) {
-            return worker(document, async (pugDocument) => {
+				if (pugDocument.error) {
 
-                const hoverSettings = await options.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+					return [{
+						code: pugDocument.error.code,
+						message: pugDocument.error.msg,
+						range: {
+							start: { line: pugDocument.error.line, character: pugDocument.error.column },
+							end: { line: pugDocument.error.line, character: pugDocument.error.column },
+						},
+					}];
+				}
+			});
+		},
 
-                return pugLs.doHover(pugDocument, position, hoverSettings);
-            });
-        },
+		doHover(document, position) {
+			return worker(document, async (pugDocument) => {
 
-        findDocumentHighlights(document, position) {
-            return worker(document, (pugDocument) => {
-                return pugLs.findDocumentHighlights(pugDocument, position);
-            });
-        },
+				const hoverSettings = await options.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
-        findDocumentLinks(document) {
-            return worker(document, (pugDocument) => {
+				return pugLs.doHover(pugDocument, position, hoverSettings);
+			});
+		},
 
-                if (!options.documentContext)
-                    return;
+		findDocumentHighlights(document, position) {
+			return worker(document, (pugDocument) => {
+				return pugLs.findDocumentHighlights(pugDocument, position);
+			});
+		},
 
-                return pugLs.findDocumentLinks(pugDocument, options.documentContext);
-            });
-        },
+		findDocumentLinks(document) {
+			return worker(document, (pugDocument) => {
 
-        findDocumentSymbols(document) {
-            return worker(document, (pugDocument) => {
-                return pugLs.findDocumentSymbols(pugDocument);
-            });
-        },
+				if (!options.documentContext)
+					return;
 
-        getFoldingRanges(document) {
-            return worker(document, (pugDocument) => {
-                return pugLs.getFoldingRanges(pugDocument);
-            });
-        },
+				return pugLs.findDocumentLinks(pugDocument, options.documentContext);
+			});
+		},
 
-        getSelectionRanges(document, positions) {
-            return worker(document, (pugDocument) => {
-                return pugLs.getSelectionRanges(pugDocument, positions);
-            });
-        },
-    };
+		findDocumentSymbols(document) {
+			return worker(document, (pugDocument) => {
+				return pugLs.findDocumentSymbols(pugDocument);
+			});
+		},
 
-    function worker<T>(document: TextDocument, callback: (pugDocument: pug.PugDocument) => T) {
+		getFoldingRanges(document) {
+			return worker(document, (pugDocument) => {
+				return pugLs.getFoldingRanges(pugDocument);
+			});
+		},
 
-        const pugDocument = getPugDocument(document);
-        if (!pugDocument)
-            return;
+		getSelectionRanges(document, positions) {
+			return worker(document, (pugDocument) => {
+				return pugLs.getSelectionRanges(pugDocument, positions);
+			});
+		},
+	};
 
-        return callback(pugDocument);
-    }
+	function worker<T>(document: TextDocument, callback: (pugDocument: pug.PugDocument) => T) {
 
-    function getPugDocument(document: TextDocument) {
+		const pugDocument = getPugDocument(document);
+		if (!pugDocument)
+			return;
 
-        if (document.languageId !== 'jade')
-            return;
+		return callback(pugDocument);
+	}
 
-        const cache = pugDocuments.get(document);
-        if (cache) {
-            const [cacheVersion, cacheDoc] = cache;
-            if (cacheVersion === document.version) {
-                return cacheDoc;
-            }
-        }
+	function getPugDocument(document: TextDocument) {
 
-        const doc = pugLs.parsePugDocument(document.getText());
-        pugDocuments.set(document, [document.version, doc]);
+		if (document.languageId !== 'jade')
+			return;
 
-        return doc;
-    }
+		const cache = pugDocuments.get(document);
+		if (cache) {
+			const [cacheVersion, cacheDoc] = cache;
+			if (cacheVersion === document.version) {
+				return cacheDoc;
+			}
+		}
+
+		const doc = pugLs.parsePugDocument(document.getText());
+		pugDocuments.set(document, [document.version, doc]);
+
+		return doc;
+	}
 }

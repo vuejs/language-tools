@@ -19,7 +19,7 @@ export namespace GetDocumentVersionRequest {
 }
 
 export namespace ShowReferencesNotification {
-	export type ResponseType = vscode.TextDocumentPositionParams & { references: vscode.Location[] };
+	export type ResponseType = vscode.TextDocumentPositionParams & { references: vscode.Location[]; };
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');
 }
 

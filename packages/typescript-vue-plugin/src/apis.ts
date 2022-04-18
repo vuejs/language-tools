@@ -229,7 +229,7 @@ export function register(context: TypeScriptRuntime) {
 					start: vueLoc.range.start,
 					length: vueLoc.range.end - vueLoc.range.start,
 				},
-			}
+			};
 		}
 	}
 }

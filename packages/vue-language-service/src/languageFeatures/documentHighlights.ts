@@ -37,5 +37,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		);
-	}
+	};
 }

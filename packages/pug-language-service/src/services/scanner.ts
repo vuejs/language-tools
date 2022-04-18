@@ -54,5 +54,5 @@ export function register(htmlLs: html.LanguageService) {
 				}
 			}
 		}
-	}
+	};
 }

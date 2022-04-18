@@ -29,7 +29,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							uri,
 							originalItem: item,
 							pluginId: plugin.id,
-						}
+						};
 						const commandArgs: ExecutePluginCommandArgs | undefined = item.command ? [uri, plugin.id, item.command] : undefined;
 						const codeLens: vscode.CodeLens = {
 							...item,
@@ -59,5 +59,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		) ?? [];
-	}
+	};
 }

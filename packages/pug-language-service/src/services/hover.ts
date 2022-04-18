@@ -20,5 +20,5 @@ export function register(htmlLs: html.LanguageService) {
 			htmlResult,
 			htmlRange => docDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
 		);
-	}
+	};
 }

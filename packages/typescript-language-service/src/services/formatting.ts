@@ -33,7 +33,7 @@ export function register(
 					end: document.positionAt(textEdit.span.start + textEdit.span.length),
 				},
 				newText: textEdit.newText,
-			})
+			});
 		}
 
 		return result;

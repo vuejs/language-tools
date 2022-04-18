@@ -56,5 +56,5 @@ export function register() {
 			});
 			return text.substring(0, text.length - 1);
 		}
-	}
+	};
 }

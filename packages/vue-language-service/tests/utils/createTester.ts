@@ -41,13 +41,13 @@ function createTester(root: string) {
 		getScriptVersion,
 		getScriptSnapshot,
 		getVueCompilationSettings: () => ({}),
-	}
+	};
 	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, undefined, []);
 
 	return {
 		host,
 		languageService,
-	}
+	};
 
 	function getScriptVersion(fileName: string) {
 		return scriptVersions.get(fileName) ?? '';

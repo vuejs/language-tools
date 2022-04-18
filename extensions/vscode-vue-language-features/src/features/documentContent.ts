@@ -9,7 +9,7 @@ const localize = nls.loadMessageBundle();
 export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
 
 	await languageClient.onReady();
-	const schemaDocuments: { [uri: string]: boolean } = {};
+	const schemaDocuments: { [uri: string]: boolean; } = {};
 
 	context.subscriptions.push(languageClient.onRequest(shared.GetDocumentContentRequest.type, handle => {
 		const uri = vscode.Uri.parse(handle.uri);

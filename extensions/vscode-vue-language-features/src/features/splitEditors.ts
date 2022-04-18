@@ -79,7 +79,7 @@ export function userPick(options: Record<string, vscode.QuickPickItem>, placehol
 		quickPick.onDidHide(() => {
 			quickPick.dispose();
 			resolve(undefined);
-		})
+		});
 		quickPick.show();
 	});
 }

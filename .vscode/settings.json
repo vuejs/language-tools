@@ -1,0 +1,5 @@
+{
+	"typescript.format.semicolons": "insert",
+	"editor.insertSpaces": false,
+	"editor.detectIndentation": false
+}

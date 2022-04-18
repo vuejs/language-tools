@@ -95,7 +95,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			}
 			return getVueFiles().filter(fileName => project.fileExists(fileName));
 		},
-	}
+	};
 	return pluginModule;
 };
 

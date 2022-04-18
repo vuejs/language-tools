@@ -26,7 +26,7 @@ export function register(languageService: ts.LanguageService, getTextDocument2: 
 	return (query: string): vscode.SymbolInformation[] => {
 
 		let items: ReturnType<typeof languageService.getNavigateToItems> | undefined;
-		try { items = languageService.getNavigateToItems(query) } catch { }
+		try { items = languageService.getNavigateToItems(query); } catch { }
 		if (!items) return [];
 
 		return items

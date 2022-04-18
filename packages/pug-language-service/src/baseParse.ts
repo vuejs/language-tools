@@ -10,7 +10,7 @@ export function baseParse(pugCode: string) {
 
 	const fileName = 'foo.pug';
 	const pugTextDocument = TextDocument.create(shared.fsPathToUri('foo.pug'), 'jade', 0, pugCode);
-	const codeGen = new CodeGen<{ isEmptyTagCompletion: boolean } | undefined>();
+	const codeGen = new CodeGen<{ isEmptyTagCompletion: boolean; } | undefined>();
 	let error: {
 		code: string,
 		msg: string,
@@ -244,7 +244,7 @@ export function baseParse(pugCode: string) {
 	}
 	function collectAttrsBlocks(tokens: pugLex.Token[]) {
 
-		const blocks = new Map<number, { offset: number, text: string }>();
+		const blocks = new Map<number, { offset: number, text: string; }>();
 
 		for (let i = 0; i < tokens.length; i++) {
 			const token = tokens[i];

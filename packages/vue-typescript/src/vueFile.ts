@@ -117,7 +117,7 @@ export function createVueFile(
 	const sfcTemplateCompiled = computed<undefined | {
 		lang: string,
 		htmlText: string,
-		htmlToTemplate: (start: number, end: number) => { start: number, end: number } | undefined,
+		htmlToTemplate: (start: number, end: number) => { start: number, end: number; } | undefined,
 	}>(() => {
 		if (sfc.template) {
 			for (const plugin of plugins) {
@@ -173,7 +173,7 @@ export function createVueFile(
 		return !sfc.script && !sfc.scriptSetup ? 'ts'
 			: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
 				: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
-					: 'js'
+					: 'js';
 	});
 	const sfcTemplateScript = useSfcTemplateScript(
 		ts,
@@ -557,7 +557,7 @@ export function createVueFile(
 
 		if (!binds) {
 			binds = [...parseCssVars(embeddedFile.content)];
-			cssVars.set(embeddedFile, binds)
+			cssVars.set(embeddedFile, binds);
 		}
 
 		return binds;

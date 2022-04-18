@@ -1,7 +1,7 @@
 {
-  "packages": [
-    "extensions/*",
-    "packages/*"
-  ],
-  "version": "0.34.7"
+	"packages": [
+		"extensions/*",
+		"packages/*"
+	],
+	"version": "0.34.7"
 }

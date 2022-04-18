@@ -25,5 +25,5 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		);
-	}
+	};
 }

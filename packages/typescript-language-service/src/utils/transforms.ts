@@ -3,7 +3,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function entriesToLocations(entries: { fileName: string, textSpan: ts.TextSpan }[], getTextDocument: (uri: string) => TextDocument | undefined) {
+export function entriesToLocations(entries: { fileName: string, textSpan: ts.TextSpan; }[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const locations: vscode.Location[] = [];
 	for (const entry of entries) {
 		const entryUri = shared.fsPathToUri(entry.fileName);

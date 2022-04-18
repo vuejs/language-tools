@@ -61,5 +61,5 @@ export function register(
 			});
 		}
 		return [];
-	}
+	};
 }

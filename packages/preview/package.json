@@ -1,23 +1,23 @@
 {
-  "name": "@volar/preview",
-  "version": "0.34.7",
-  "license": "MIT",
-  "files": [
-    "bin",
-    "out/**/*.js",
-    "out/**/*.d.ts"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/johnsoncodehk/volar.git",
-    "directory": "packages/preview"
-  },
-  "main": "out/index.js",
-  "bin": {
-    "volar-preview-vite": "./bin/vite.js",
-    "volar-preview-nuxi": "./bin/nuxi.js"
-  },
-  "dependencies": {
-    "ws": "^8.5.0"
-  }
+	"name": "@volar/preview",
+	"version": "0.34.7",
+	"license": "MIT",
+	"files": [
+		"bin",
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/preview"
+	},
+	"main": "out/index.js",
+	"bin": {
+		"volar-preview-vite": "./bin/vite.js",
+		"volar-preview-nuxi": "./bin/nuxi.js"
+	},
+	"dependencies": {
+		"ws": "^8.5.0"
+	}
 }

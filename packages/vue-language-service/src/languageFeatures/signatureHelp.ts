@@ -22,5 +22,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(plugin, document, position) => plugin.getSignatureHelp?.(document, position, signatureHelpContext),
 			(data, sourceMap) => data,
 		);
-	}
+	};
 }

@@ -30,7 +30,7 @@ import type * as _ from 'vscode-languageserver-protocol';
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
 export function getDocumentService(
-	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary') },
+	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
 	configurationHost: ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],

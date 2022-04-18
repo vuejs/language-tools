@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 				if (!await fs.exists(newTemplateUri)) {
 					const template = await vscode.workspace.fs.readFile(templateUri);
-					vscode.workspace.fs.writeFile(newTemplateUri, template)
+					vscode.workspace.fs.writeFile(newTemplateUri, template);
 				}
 
 				const document = await vscode.workspace.openTextDocument(newTemplateUri);

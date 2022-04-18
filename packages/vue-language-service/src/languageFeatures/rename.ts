@@ -146,7 +146,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return workspaceEdits[0];
 			},
 		);
-	}
+	};
 }
 
 export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: vscode.WorkspaceEdit[]) {

@@ -61,5 +61,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			return result;
 		}
-	}
+	};
 }

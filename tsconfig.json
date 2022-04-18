@@ -1,11 +1,11 @@
 {
-    "extends": "./tsconfig.base.json",
-    "compilerOptions": {
-        "noEmit": true,
-    },
-    "include": [
-        "extensions/*/src",
-        "packages/*/src",
-        "packages/*/src/**/*.json",
-    ],
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true,
+	},
+	"include": [
+		"extensions/*/src",
+		"packages/*/src",
+		"packages/*/src/**/*.json",
+	],
 }

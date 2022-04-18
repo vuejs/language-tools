@@ -3,7 +3,7 @@ export const SearchTexts = {
 	GlobalAttrs: '/* __VLS_.SearchTexts.GlobalAttrs */',
 	PropsCompletion: (tag: string) => `/* __VLS_.SearchTexts.Completion.Props.${tag} */`,
 	EmitCompletion: (tag: string) => `/* __VLS_.SearchTexts.Completion.Emit.${tag} */`,
-}
+};
 
 export function replaceToComment(str: string, start: number, end: number) {
 	if (Math.abs(end - start) >= 4) {

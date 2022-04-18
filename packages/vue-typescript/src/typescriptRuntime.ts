@@ -11,299 +11,299 @@ import { createVueFiles } from './vueFiles';
 
 export interface VueLanguagePlugin {
 
-    compileTemplate?(tmplate: string, lang: string): {
-        html: string,
-        mapping(htmlStart: number, htmlEnd: number): { start: number, end: number } | undefined,
-    } | undefined
+	compileTemplate?(tmplate: string, lang: string): {
+		html: string,
+		mapping(htmlStart: number, htmlEnd: number): { start: number, end: number; } | undefined,
+	} | undefined;
 }
 
 export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
 export function createTypeScriptRuntime(options: {
-    typescript: typeof import('typescript/lib/tsserverlibrary'),
-    vueLsHost: LanguageServiceHost,
-    baseCssModuleType: string,
-    getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
-    isTsPlugin?: boolean,
-    isVueTsc?: boolean,
+	typescript: typeof import('typescript/lib/tsserverlibrary'),
+	vueLsHost: LanguageServiceHost,
+	baseCssModuleType: string,
+	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
+	isTsPlugin?: boolean,
+	isVueTsc?: boolean,
 }) {
 
-    const { typescript: ts } = options;
-    const isVue2 = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode === 2;
-    const vueFiles = createVueFiles();
-    const plugins = [
-        useHtmlPlugin(),
-        usePugPlugin(),
-    ];
-    const tsLsHost = createTsLsHost();
-    const tsLsRaw = ts.createLanguageService(tsLsHost);
-    const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
+	const { typescript: ts } = options;
+	const isVue2 = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode === 2;
+	const vueFiles = createVueFiles();
+	const plugins = [
+		useHtmlPlugin(),
+		usePugPlugin(),
+	];
+	const tsLsHost = createTsLsHost();
+	const tsLsRaw = ts.createLanguageService(tsLsHost);
+	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
 
-    let lastProjectVersion: string | undefined;
-    let tsProjectVersion = 0;
+	let lastProjectVersion: string | undefined;
+	let tsProjectVersion = 0;
 
-    injectCacheLogicToLanguageServiceHost(ts, tsLsHost, tsLsRaw);
+	injectCacheLogicToLanguageServiceHost(ts, tsLsHost, tsLsRaw);
 
-    return {
-        vueLsHost: options.vueLsHost,
-        vueFiles,
-        getTsLs: () => tsLsRaw,
-        getTsLsHost: () => tsLsHost,
-        update,
-        dispose: () => {
-            tsLsRaw.dispose();
-        },
-        getLocalTypesFiles: () => {
-            const fileNames = getLocalTypesFiles();
-            const code = localTypes.getTypesCode(isVue2);
-            return {
-                fileNames,
-                code,
-            };
-        },
-    };
+	return {
+		vueLsHost: options.vueLsHost,
+		vueFiles,
+		getTsLs: () => tsLsRaw,
+		getTsLsHost: () => tsLsHost,
+		update,
+		dispose: () => {
+			tsLsRaw.dispose();
+		},
+		getLocalTypesFiles: () => {
+			const fileNames = getLocalTypesFiles();
+			const code = localTypes.getTypesCode(isVue2);
+			return {
+				fileNames,
+				code,
+			};
+		},
+	};
 
-    function getLocalTypesFiles() {
-        return vueFiles.getDirs().map(dir => path.join(dir, localTypes.typesFileName));
-    }
-    function update() {
-        const newProjectVersion = options.vueLsHost.getProjectVersion?.();
-        if (newProjectVersion === undefined || newProjectVersion !== lastProjectVersion) {
+	function getLocalTypesFiles() {
+		return vueFiles.getDirs().map(dir => path.join(dir, localTypes.typesFileName));
+	}
+	function update() {
+		const newProjectVersion = options.vueLsHost.getProjectVersion?.();
+		if (newProjectVersion === undefined || newProjectVersion !== lastProjectVersion) {
 
-            lastProjectVersion = newProjectVersion;
+			lastProjectVersion = newProjectVersion;
 
-            const nowFileNames = new Set([...options.vueLsHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
-            const fileNamesToRemove: string[] = [];
-            const fileNamesToCreate: string[] = [];
-            const fileNamesToUpdate: string[] = [];
+			const nowFileNames = new Set([...options.vueLsHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
+			const fileNamesToRemove: string[] = [];
+			const fileNamesToCreate: string[] = [];
+			const fileNamesToUpdate: string[] = [];
 
-            for (const vueFile of vueFiles.getAll()) {
-                if (!nowFileNames.has(vueFile.fileName) && !options.vueLsHost.fileExists?.(vueFile.fileName)) {
-                    // delete
-                    fileNamesToRemove.push(vueFile.fileName);
-                }
-                else {
-                    // update
-                    const newVersion = options.vueLsHost.getScriptVersion(vueFile.fileName);
-                    if (vueFile.getVersion() !== newVersion) {
-                        fileNamesToUpdate.push(vueFile.fileName);
-                    }
-                }
-            }
+			for (const vueFile of vueFiles.getAll()) {
+				if (!nowFileNames.has(vueFile.fileName) && !options.vueLsHost.fileExists?.(vueFile.fileName)) {
+					// delete
+					fileNamesToRemove.push(vueFile.fileName);
+				}
+				else {
+					// update
+					const newVersion = options.vueLsHost.getScriptVersion(vueFile.fileName);
+					if (vueFile.getVersion() !== newVersion) {
+						fileNamesToUpdate.push(vueFile.fileName);
+					}
+				}
+			}
 
-            for (const nowFileName of nowFileNames) {
-                if (!vueFiles.get(nowFileName)) {
-                    // add
-                    fileNamesToCreate.push(nowFileName);
-                }
-            }
+			for (const nowFileName of nowFileNames) {
+				if (!vueFiles.get(nowFileName)) {
+					// add
+					fileNamesToCreate.push(nowFileName);
+				}
+			}
 
-            const finalUpdateFileNames = fileNamesToCreate.concat(fileNamesToUpdate);
+			const finalUpdateFileNames = fileNamesToCreate.concat(fileNamesToUpdate);
 
-            if (fileNamesToRemove.length) {
-                unsetSourceFiles(fileNamesToRemove);
-            }
-            if (finalUpdateFileNames.length) {
-                updateSourceFiles(finalUpdateFileNames)
-            }
-        }
-    }
-    function createTsLsHost() {
+			if (fileNamesToRemove.length) {
+				unsetSourceFiles(fileNamesToRemove);
+			}
+			if (finalUpdateFileNames.length) {
+				updateSourceFiles(finalUpdateFileNames);
+			}
+		}
+	}
+	function createTsLsHost() {
 
-        const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-        const fileVersions = new WeakMap<EmbeddedFile, string>();
-        const _tsHost: Partial<ts.LanguageServiceHost> = {
-            fileExists: options.vueLsHost.fileExists
-                ? fileName => {
-                    // .vue.js -> .vue
-                    // .vue.ts -> .vue
-                    // .vue.d.ts (never)
-                    const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
+		const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
+		const fileVersions = new WeakMap<EmbeddedFile, string>();
+		const _tsHost: Partial<ts.LanguageServiceHost> = {
+			fileExists: options.vueLsHost.fileExists
+				? fileName => {
+					// .vue.js -> .vue
+					// .vue.ts -> .vue
+					// .vue.d.ts (never)
+					const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
 
-                    if (fileNameTrim.endsWith('.vue')) {
-                        const vueFile = vueFiles.get(fileNameTrim);
-                        if (!vueFile) {
-                            const fileExists = !!options.vueLsHost.fileExists?.(fileNameTrim);
-                            if (fileExists) {
-                                updateSourceFiles([fileNameTrim]); // create virtual files
-                            }
-                        }
-                    }
+					if (fileNameTrim.endsWith('.vue')) {
+						const vueFile = vueFiles.get(fileNameTrim);
+						if (!vueFile) {
+							const fileExists = !!options.vueLsHost.fileExists?.(fileNameTrim);
+							if (fileExists) {
+								updateSourceFiles([fileNameTrim]); // create virtual files
+							}
+						}
+					}
 
-                    if (!!vueFiles.fromEmbeddedFileName(fileName)) {
-                        return true;
-                    }
+					if (!!vueFiles.fromEmbeddedFileName(fileName)) {
+						return true;
+					}
 
-                    return !!options.vueLsHost.fileExists?.(fileName);
-                }
-                : undefined,
-            getProjectVersion: () => {
-                return tsProjectVersion.toString();
-            },
-            getScriptFileNames,
-            getScriptVersion,
-            getScriptSnapshot,
-            readDirectory: (_path, extensions, exclude, include, depth) => {
-                const result = options.vueLsHost.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
-                for (const vuePath of vueFiles.getFileNames()) {
-                    const vuePath2 = path.join(_path, path.basename(vuePath));
-                    if (path.relative(_path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
-                        continue;
-                    }
-                    if (!depth && vuePath.toLowerCase() === vuePath2.toLowerCase()) {
-                        result.push(vuePath2);
-                    }
-                    else if (depth) {
-                        result.push(vuePath2); // TODO: depth num
-                    }
-                }
-                return result;
-            },
-            getScriptKind(fileName) {
-                switch (path.extname(fileName)) {
-                    case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
-                    case '.js': return ts.ScriptKind.JS;
-                    case '.jsx': return ts.ScriptKind.JSX;
-                    case '.ts': return ts.ScriptKind.TS;
-                    case '.tsx': return ts.ScriptKind.TSX;
-                    case '.json': return ts.ScriptKind.JSON;
-                    default: return ts.ScriptKind.Unknown;
-                }
-            },
-        };
+					return !!options.vueLsHost.fileExists?.(fileName);
+				}
+				: undefined,
+			getProjectVersion: () => {
+				return tsProjectVersion.toString();
+			},
+			getScriptFileNames,
+			getScriptVersion,
+			getScriptSnapshot,
+			readDirectory: (_path, extensions, exclude, include, depth) => {
+				const result = options.vueLsHost.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
+				for (const vuePath of vueFiles.getFileNames()) {
+					const vuePath2 = path.join(_path, path.basename(vuePath));
+					if (path.relative(_path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
+						continue;
+					}
+					if (!depth && vuePath.toLowerCase() === vuePath2.toLowerCase()) {
+						result.push(vuePath2);
+					}
+					else if (depth) {
+						result.push(vuePath2); // TODO: depth num
+					}
+				}
+				return result;
+			},
+			getScriptKind(fileName) {
+				switch (path.extname(fileName)) {
+					case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
+					case '.js': return ts.ScriptKind.JS;
+					case '.jsx': return ts.ScriptKind.JSX;
+					case '.ts': return ts.ScriptKind.TS;
+					case '.tsx': return ts.ScriptKind.TSX;
+					case '.json': return ts.ScriptKind.JSON;
+					default: return ts.ScriptKind.Unknown;
+				}
+			},
+		};
 
-        const tsHost = new Proxy<ts.LanguageServiceHost>(_tsHost as ts.LanguageServiceHost, {
-            get: (target, property: keyof ts.LanguageServiceHost) => {
-                return target[property] || options.vueLsHost[property];
-            },
-        });
+		const tsHost = new Proxy<ts.LanguageServiceHost>(_tsHost as ts.LanguageServiceHost, {
+			get: (target, property: keyof ts.LanguageServiceHost) => {
+				return target[property] || options.vueLsHost[property];
+			},
+		});
 
-        return tsHost;
+		return tsHost;
 
-        function getScriptFileNames() {
+		function getScriptFileNames() {
 
-            const tsFileNames = getLocalTypesFiles();
+			const tsFileNames = getLocalTypesFiles();
 
-            for (const mapped of vueFiles.getEmbeddeds()) {
-                if (mapped.embedded.file.isTsHostFile) {
-                    tsFileNames.push(mapped.embedded.file.fileName); // virtual .ts
-                }
-            }
+			for (const mapped of vueFiles.getEmbeddeds()) {
+				if (mapped.embedded.file.isTsHostFile) {
+					tsFileNames.push(mapped.embedded.file.fileName); // virtual .ts
+				}
+			}
 
-            for (const fileName of options.vueLsHost.getScriptFileNames()) {
-                if (options.isTsPlugin) {
-                    tsFileNames.push(fileName); // .vue + .ts
-                }
-                else if (!fileName.endsWith('.vue')) {
-                    tsFileNames.push(fileName); // .ts
-                }
-            }
+			for (const fileName of options.vueLsHost.getScriptFileNames()) {
+				if (options.isTsPlugin) {
+					tsFileNames.push(fileName); // .vue + .ts
+				}
+				else if (!fileName.endsWith('.vue')) {
+					tsFileNames.push(fileName); // .ts
+				}
+			}
 
-            return tsFileNames;
-        }
-        function getScriptVersion(fileName: string) {
-            const basename = path.basename(fileName);
-            if (basename === localTypes.typesFileName) {
-                return '';
-            }
-            let mapped = vueFiles.fromEmbeddedFileName(fileName);
-            if (mapped) {
-                if (fileVersions.has(mapped.embedded.file)) {
-                    return fileVersions.get(mapped.embedded.file)!;
-                }
-                else {
-                    let version = ts.sys.createHash?.(mapped.embedded.file.content) ?? mapped.embedded.file.content;
-                    if (options.isVueTsc) {
-                        // fix https://github.com/johnsoncodehk/volar/issues/1082
-                        version = mapped.vueFile.getVersion() + ':' + version;
-                    }
-                    fileVersions.set(mapped.embedded.file, version);
-                    return version;
-                }
-            }
-            return options.vueLsHost.getScriptVersion(fileName);
-        }
-        function getScriptSnapshot(fileName: string) {
-            const version = getScriptVersion(fileName);
-            const cache = scriptSnapshots.get(fileName.toLowerCase());
-            if (cache && cache[0] === version) {
-                return cache[1];
-            }
-            const basename = path.basename(fileName);
-            if (basename === localTypes.typesFileName) {
-                return localTypesScript;
-            }
-            const mapped = vueFiles.fromEmbeddedFileName(fileName);
-            if (mapped) {
-                const text = mapped.embedded.file.content;
-                const snapshot = ts.ScriptSnapshot.fromString(text);
-                scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
-                return snapshot;
-            }
-            let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
-            if (tsScript) {
-                if (basename === 'runtime-dom.d.ts') {
-                    // allow arbitrary attributes
-                    let tsScriptText = tsScript.getText(0, tsScript.getLength());
-                    tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any')
-                    tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
-                }
-                scriptSnapshots.set(fileName.toLowerCase(), [version, tsScript]);
-                return tsScript;
-            }
-        }
-    }
-    function updateSourceFiles(fileNames: string[]) {
+			return tsFileNames;
+		}
+		function getScriptVersion(fileName: string) {
+			const basename = path.basename(fileName);
+			if (basename === localTypes.typesFileName) {
+				return '';
+			}
+			let mapped = vueFiles.fromEmbeddedFileName(fileName);
+			if (mapped) {
+				if (fileVersions.has(mapped.embedded.file)) {
+					return fileVersions.get(mapped.embedded.file)!;
+				}
+				else {
+					let version = ts.sys.createHash?.(mapped.embedded.file.content) ?? mapped.embedded.file.content;
+					if (options.isVueTsc) {
+						// fix https://github.com/johnsoncodehk/volar/issues/1082
+						version = mapped.vueFile.getVersion() + ':' + version;
+					}
+					fileVersions.set(mapped.embedded.file, version);
+					return version;
+				}
+			}
+			return options.vueLsHost.getScriptVersion(fileName);
+		}
+		function getScriptSnapshot(fileName: string) {
+			const version = getScriptVersion(fileName);
+			const cache = scriptSnapshots.get(fileName.toLowerCase());
+			if (cache && cache[0] === version) {
+				return cache[1];
+			}
+			const basename = path.basename(fileName);
+			if (basename === localTypes.typesFileName) {
+				return localTypesScript;
+			}
+			const mapped = vueFiles.fromEmbeddedFileName(fileName);
+			if (mapped) {
+				const text = mapped.embedded.file.content;
+				const snapshot = ts.ScriptSnapshot.fromString(text);
+				scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
+				return snapshot;
+			}
+			let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
+			if (tsScript) {
+				if (basename === 'runtime-dom.d.ts') {
+					// allow arbitrary attributes
+					let tsScriptText = tsScript.getText(0, tsScript.getLength());
+					tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any');
+					tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
+				}
+				scriptSnapshots.set(fileName.toLowerCase(), [version, tsScript]);
+				return tsScript;
+			}
+		}
+	}
+	function updateSourceFiles(fileNames: string[]) {
 
-        let vueScriptsUpdated = false;
+		let vueScriptsUpdated = false;
 
-        for (const fileName of fileNames) {
+		for (const fileName of fileNames) {
 
-            const sourceFile = vueFiles.get(fileName);
-            const scriptSnapshot = options.vueLsHost.getScriptSnapshot(fileName);
+			const sourceFile = vueFiles.get(fileName);
+			const scriptSnapshot = options.vueLsHost.getScriptSnapshot(fileName);
 
-            if (!scriptSnapshot) {
-                continue;
-            }
+			if (!scriptSnapshot) {
+				continue;
+			}
 
-            const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-            const scriptVersion = options.vueLsHost.getScriptVersion(fileName);
+			const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
+			const scriptVersion = options.vueLsHost.getScriptVersion(fileName);
 
-            if (!sourceFile) {
-                vueFiles.set(fileName, createVueFile(
-                    fileName,
-                    scriptText,
-                    scriptVersion,
-                    plugins,
-                    options.vueLsHost.getVueCompilationSettings(),
-                    options.typescript,
-                    options.baseCssModuleType,
-                    options.getCssClasses,
-                    tsLsRaw,
-                    tsLsHost,
-                ));
-                vueScriptsUpdated = true;
-            }
-            else {
-                const updates = sourceFile.update(scriptText, scriptVersion);
-                if (updates.scriptUpdated) {
-                    vueScriptsUpdated = true;
-                }
-            }
-        }
-        if (vueScriptsUpdated) {
-            tsProjectVersion++;
-        }
-    }
-    function unsetSourceFiles(uris: string[]) {
-        let updated = false;
-        for (const uri of uris) {
-            if (vueFiles.delete(uri)) {
-                updated = true;
-            }
-        }
-        if (updated) {
-            tsProjectVersion++;
-        }
-    }
+			if (!sourceFile) {
+				vueFiles.set(fileName, createVueFile(
+					fileName,
+					scriptText,
+					scriptVersion,
+					plugins,
+					options.vueLsHost.getVueCompilationSettings(),
+					options.typescript,
+					options.baseCssModuleType,
+					options.getCssClasses,
+					tsLsRaw,
+					tsLsHost,
+				));
+				vueScriptsUpdated = true;
+			}
+			else {
+				const updates = sourceFile.update(scriptText, scriptVersion);
+				if (updates.scriptUpdated) {
+					vueScriptsUpdated = true;
+				}
+			}
+		}
+		if (vueScriptsUpdated) {
+			tsProjectVersion++;
+		}
+	}
+	function unsetSourceFiles(uris: string[]) {
+		let updated = false;
+		for (const uri of uris) {
+			if (vueFiles.delete(uri)) {
+				updated = true;
+			}
+		}
+		if (updated) {
+			tsProjectVersion++;
+		}
+	}
 }

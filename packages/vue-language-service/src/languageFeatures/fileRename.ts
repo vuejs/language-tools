@@ -26,8 +26,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return embeddedEditToSourceEdit(
 					workspaceEdit,
 					context.vueDocuments,
-				)
+				);
 			}
 		}
-	}
+	};
 }

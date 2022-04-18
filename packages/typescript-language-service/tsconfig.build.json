@@ -4,8 +4,13 @@
 		"outDir": "out",
 		"rootDir": "src",
 	},
-	"include": ["src"],
-	"exclude": ["node_modules", ".vscode-test"],
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
 	"references": [
 		{
 			"path": "../shared/tsconfig.build.json"

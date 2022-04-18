@@ -27,7 +27,7 @@ export function register(htmlLs: html.LanguageService) {
 			error: parsed.error,
 			ast: parsed.ast,
 		};
-	}
+	};
 }
 
 // TODO: reuse from vueDocuments.ts
@@ -72,9 +72,9 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 			yield getMapped(mapped);
 		}
 
-		function getMapped(mapped: [{ start: number, end: number }, Data]): [{ start: T, end: T }, Data] {
+		function getMapped(mapped: [{ start: number, end: number; }, Data]): [{ start: T, end: T; }, Data] {
 			if (startIsNumber) {
-				return mapped as [{ start: T, end: T }, Data];
+				return mapped as [{ start: T, end: T; }, Data];
 			}
 			return [{
 				start: toDoc.positionAt(mapped[0].start) as T,

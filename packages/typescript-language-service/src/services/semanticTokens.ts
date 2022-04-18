@@ -69,7 +69,7 @@ export function register(
 			}
 		}
 		return tokens;
-	}
+	};
 }
 
 function docLineLength(document: TextDocument, line: number) {

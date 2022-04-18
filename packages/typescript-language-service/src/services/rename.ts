@@ -101,7 +101,7 @@ export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChan
 					start: doc.positionAt(textChange.span.start),
 					end: doc.positionAt(textChange.span.start + textChange.span.length),
 				},
-			})
+			});
 		}
 		workspaceEdit.documentChanges.push(docEdit);
 	}

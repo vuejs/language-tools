@@ -44,7 +44,7 @@ export function register(
 					]
 				}
 			}
-		}
+		};
 	}
 	if (features.signatureHelp) {
 		server.signatureHelpProvider = {

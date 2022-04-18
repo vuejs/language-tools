@@ -11,7 +11,7 @@ export interface PluginCodeActionData {
 	originalItem: vscode.CodeAction,
 	pluginId: number,
 	sourceMap: {
-		embeddedDocumentUri: string
+		embeddedDocumentUri: string;
 	} | undefined,
 }
 
@@ -121,5 +121,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			return dedupe.withCodeAction(codeActions);
 		}
-	}
+	};
 }

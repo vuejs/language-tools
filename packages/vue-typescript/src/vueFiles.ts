@@ -26,13 +26,13 @@ export function createVueFiles() {
 		return map;
 	});
 	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { vueFile: VueFile, embedded: Embedded }>();
+		const map = new Map<string, { vueFile: VueFile, embedded: Embedded; }>();
 		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
 				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
 		}
-		return map
+		return map;
 	});
 	const teleports = computed(() => {
 		const map = new Map<string, Teleport>();

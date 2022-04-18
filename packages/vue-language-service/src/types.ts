@@ -12,7 +12,7 @@ export type DocumentServiceRuntimeContext = {
 	getPlugins(): EmbeddedLanguageServicePlugin[],
 	getFormatPlugins(): EmbeddedLanguageServicePlugin[],
 	updateTsLs(document: TextDocument): void,
-}
+};
 
 export type LanguageServiceRuntimeContext = {
 	vueDocuments: VueDocuments,
@@ -20,4 +20,4 @@ export type LanguageServiceRuntimeContext = {
 	getPlugins(): LanguageServicePlugin[],
 	getPluginById(id: number): LanguageServicePlugin | undefined,
 	getTsLs(): ts2.LanguageService;
-}
+};

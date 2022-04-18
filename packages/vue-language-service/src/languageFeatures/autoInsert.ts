@@ -27,7 +27,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								range,
 							},
 						},
-					}
+					};
 				}
 			},
 			(plugin, document, arg) => plugin.doAutoInsert?.(document, arg.position, arg.autoInsertContext),
@@ -47,5 +47,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			},
 		);
-	}
+	};
 }

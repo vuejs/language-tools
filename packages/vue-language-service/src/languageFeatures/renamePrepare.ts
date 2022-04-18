@@ -38,5 +38,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return prepares[0];
 			},
 		);
-	}
+	};
 }

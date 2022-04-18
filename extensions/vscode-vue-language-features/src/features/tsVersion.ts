@@ -128,7 +128,7 @@ function getVscodeTsPaths() {
 	return {
 		serverPath: shared.getVscodeTypescriptPath(vscode.env.appRoot),
 		localizedPath: shared.getVscodeTypescriptLocalizedPath(vscode.env.appRoot, vscode.env.language),
-	}
+	};
 }
 
 function getTsdk() {

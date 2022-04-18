@@ -322,7 +322,7 @@ export function generate(
 				codeGen.addText(`),\n`);
 			}
 			const bindingsArr: {
-				bindings: { start: number, end: number }[],
+				bindings: { start: number, end: number; }[],
 				content: string,
 				vueTag: 'script' | 'scriptSetup',
 			}[] = [];
@@ -497,7 +497,7 @@ export function generate(
 	function writeExportTypes() {
 
 		const bindingsArr: {
-			typeBindings: { start: number, end: number }[],
+			typeBindings: { start: number, end: number; }[],
 			content: string,
 		}[] = [];
 
@@ -587,17 +587,17 @@ export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: nu
 	else {
 		gen(nums);
 	}
-	code += `// 0\n`
-	code += `{};\n`
+	code += `// 0\n`;
+	code += `{};\n`;
 	return code;
 
 	function gen(i: number) {
 		code += `// ${i}\n`;
 		code += `T extends {\n`;
 		for (let j = 1; j <= i; j++) {
-			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`
+			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`;
 		}
-		code += `} ? (\n`
+		code += `} ? (\n`;
 		for (let j = 1; j <= i; j++) {
 			if (j > 1) code += '& ';
 			code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;

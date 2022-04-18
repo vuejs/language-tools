@@ -69,5 +69,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 			tokens => tokens.flat(),
 			reportProgress, // TODO: this is no effect in LSP
 		);
-	}
+	};
 }
