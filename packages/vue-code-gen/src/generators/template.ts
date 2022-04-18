@@ -23,7 +23,8 @@ const capabilitiesSet = {
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
 	round: ['(', ')'] as [string, string],
-	curly: ['{', '}'] as [string, string],
+	// fix https://github.com/johnsoncodehk/volar/issues/1210
+	curly: ['({ __VLS_foo:', '})'] as [string, string],
 	square: ['[', ']'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
@@ -383,7 +384,7 @@ export function generate(
 			const context = node.loc.source.substring(2, node.loc.source.length - 2);
 			let start = node.loc.start.offset + 2;
 
-			tsCodeGen.addText(`{`);
+			tsCodeGen.addText(`(`);
 			writeInterpolation(
 				context,
 				start,
@@ -399,7 +400,7 @@ export function generate(
 				start,
 				formatBrackets.curly,
 			);
-			tsCodeGen.addText(`};\n`);
+			tsCodeGen.addText(`);\n`);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
