@@ -10,7 +10,7 @@ export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	getProjects: () => Projects | undefined,
+	projects: Projects,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	params: vscode.InitializeParams,
 ) {
@@ -32,7 +32,7 @@ export function register(
 		return list;
 	});
 	connection.onCompletionResolve(async item => {
-		const uri = (item.data as { uri?: string } | undefined)?.uri;
+		const uri = (item.data as { uri?: string; } | undefined)?.uri;
 		if (!uri) return item;
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
@@ -164,27 +164,24 @@ export function register(
 		return languageService?.findDocumentLinks(handler.textDocument.uri);
 	});
 	connection.onWorkspaceSymbol(async (handler, token) => {
-		const projects = getProjects();
-		if (projects) {
 
-			let results: vscode.SymbolInformation[] = [];
+		let results: vscode.SymbolInformation[] = [];
 
-			for (const workspace of projects.workspaces.values()) {
-				let projects = [...workspace.projects.values()];
-				projects = projects.length ? projects : [workspace.getInferredProject()];
-				for (const project of projects) {
+		for (const workspace of projects.workspaces.values()) {
+			let projects = [...workspace.projects.values()];
+			projects = projects.length ? projects : [workspace.getInferredProject()];
+			for (const project of projects) {
 
-					if (token.isCancellationRequested)
-						return;
+				if (token.isCancellationRequested)
+					return;
 
-					const languageService = await (await project).getLanguageService();
+				const languageService = await (await project).getLanguageService();
 
-					results = results.concat(await languageService.findWorkspaceSymbols(handler.query));
-				}
+				results = results.concat(await languageService.findWorkspaceSymbols(handler.query));
 			}
-
-			return results;
 		}
+
+		return results;
 	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
 		const languageService = await getLanguageService(handler.textDocument.uri);
@@ -198,13 +195,13 @@ export function register(
 		return items?.length ? items : null;
 	});
 	connection.languages.callHierarchy.onIncomingCalls(async handler => {
-		const data = handler.item.data as { __uri?: string } | undefined;
+		const data = handler.item.data as { __uri?: string; } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
 		const languageService = await getLanguageService(uri);
 		return languageService?.callHierarchy.getIncomingCalls(handler.item) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(async handler => {
-		const data = handler.item.data as { __uri?: string } | undefined;
+		const data = handler.item.data as { __uri?: string; } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
 		const languageService = await getLanguageService(uri);
 		return languageService?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
@@ -309,8 +306,7 @@ export function register(
 		}
 	}
 	async function getLanguageService(uri: string) {
-		const projects = await getProjects();
-		const project = (await projects?.getProject(uri))?.project;
+		const project = (await projects.getProject(uri))?.project;
 		return project?.getLanguageService();
 	}
 }

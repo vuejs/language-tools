@@ -6,7 +6,6 @@ import * as shared from '@volar/shared';
 export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
 
 	await languageClient.onReady();
-	await languageClient.sendRequest(shared.InitDoneRequest.type);
 
 	const tagCases = shared.createPathMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);

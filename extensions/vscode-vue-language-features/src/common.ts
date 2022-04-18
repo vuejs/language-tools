@@ -99,21 +99,21 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		'volar-language-features',
 		'Volar - Language Features Server',
 		languageFeaturesDocumentSelector,
-		getInitializationOptions(context, 'main-language-features', undefined, _useSecondServer),
+		getInitializationOptions(context, 'main-language-features', _useSecondServer),
 		6009,
 	);
 	docClient = _useSecondServer ? createLc(
 		'volar-language-features-2',
 		'Volar - Second Language Features Server',
 		languageFeaturesDocumentSelector,
-		getInitializationOptions(context, 'second-language-features', undefined, _useSecondServer),
+		getInitializationOptions(context, 'second-language-features', _useSecondServer),
 		6010,
 	) : undefined;
 	htmlClient = createLc(
 		'volar-document-features',
 		'Volar - Document Features Server',
 		documentFeaturesDocumentSelector,
-		getInitializationOptions(context, 'document-features', undefined, _useSecondServer),
+		getInitializationOptions(context, 'document-features', _useSecondServer),
 		6011,
 	);
 
@@ -197,7 +197,6 @@ function useSecondServer() {
 function getInitializationOptions(
 	context: vscode.ExtensionContext,
 	mode: 'main-language-features' | 'second-language-features' | 'document-features',
-	initMessage: string | undefined,
 	useSecondServer: boolean,
 ) {
 	const initializationOptions: shared.ServerInitializationOptions = {

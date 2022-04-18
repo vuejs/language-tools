@@ -11,30 +11,19 @@ import type { FileSystemProvider } from 'vscode-html-languageservice';
 export interface RuntimeEnvironment {
 	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
 	loadTypescriptLocalized: (initOptions: shared.ServerInitializationOptions) => any,
-	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string> },
+	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string>; },
 	onDidChangeConfiguration?: (settings: any) => void,
 	fileSystemProvide: FileSystemProvider | undefined,
 }
 
 export function createLanguageServer(connection: vscode.Connection, runtimeEnv: RuntimeEnvironment) {
 
-	connection.onInitialize(onInitialize);
-	connection.listen();
+	let clientCapabilities: vscode.ClientCapabilities;
 
-	const documents = new vscode.TextDocuments(TextDocument);
-	documents.listen(connection);
-
-	let inited = false;
-	connection.onRequest(shared.InitDoneRequest.type, async () => {
-		while (!inited) {
-			await shared.sleep(100);
-		}
-		return undefined;
-	});
-
-	async function onInitialize(params: vscode.InitializeParams) {
+	connection.onInitialize(async params => {
 
 		const options: shared.ServerInitializationOptions = params.initializationOptions as any;
+		clientCapabilities = params.capabilities;
 		let folders: string[] = [];
 		let rootUri: URI;
 
@@ -57,11 +46,11 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 			},
 		};
 		const configuration = params.capabilities.workspace?.configuration ? connection.workspace : undefined;
+		const ts = runtimeEnv.loadTypescript(options);
+		const configHost = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
 
 		if (options.documentFeatures) {
 
-			const configHost = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
-			const ts = runtimeEnv.loadTypescript(options);
 			const documentService = vue.getDocumentService(
 				{ typescript: ts },
 				configHost,
@@ -75,53 +64,43 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 		if (options.languageFeatures) {
 
-			let projects: ReturnType<typeof createProjects> | undefined;
-			const lsConfigs = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
+			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
+			const projects = createProjects(
+				runtimeEnv,
+				folders,
+				ts,
+				tsLocalized,
+				options,
+				documents,
+				connection,
+				configHost,
+				() => getInferredCompilerOptions(ts, configuration),
+			);
 
-			const ts = runtimeEnv.loadTypescript(options);
-
-			(await import('./features/customFeatures')).register(connection, documents, () => projects);
-			(await import('./features/languageFeatures')).register(ts, connection, documents, () => projects, options.languageFeatures, params);
+			(await import('./features/customFeatures')).register(connection, documents, projects);
+			(await import('./features/languageFeatures')).register(ts, connection, documents, projects, options.languageFeatures, params);
 			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities);
-
-			connection.onInitialized(async () => {
-
-				const inferredCompilerOptions = await getInferredCompilerOptions(ts, configuration);
-				const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
-
-				if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
-					connection.client.register(vscode.DidChangeConfigurationNotification.type);
-				}
-
-				projects = createProjects(
-					runtimeEnv,
-					folders,
-					ts,
-					tsLocalized,
-					options,
-					documents,
-					connection,
-					lsConfigs,
-					inferredCompilerOptions,
-				);
-
-				inited = true;
-			});
-		}
-		else {
-			inited = true;
 		}
 
 		return result;
-	}
+	});
+	connection.onInitialized(() => {
+		if (clientCapabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
+			connection.client.register(vscode.DidChangeConfigurationNotification.type);
+		}
+	});
+	connection.listen();
+
+	const documents = new vscode.TextDocuments(TextDocument);
+	documents.listen(connection);
 }
 
 export function loadCustomPlugins(dir: string) {
 	try {
 		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
-		const config: { plugins?: vue.EmbeddedLanguageServicePlugin[] } = require(configPath);
+		const config: { plugins?: vue.EmbeddedLanguageServicePlugin[]; } = require(configPath);
 		// console.warn('Found', configPath, 'and loaded', config.plugins?.length, 'plugins.');
-		return config.plugins ?? []
+		return config.plugins ?? [];
 	}
 	catch (err) {
 		// console.warn('No volar.config.js found in', dir);

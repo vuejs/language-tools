@@ -24,6 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const clientOptions: lsp.LanguageClientOptions = {
 			documentSelector,
 			initializationOptions: initOptions,
+			progressOnInitialization: true,
 			synchronize: {
 				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
 			}

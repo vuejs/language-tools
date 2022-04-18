@@ -7,7 +7,7 @@ import type { Projects } from '../projects';
 export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
-	getProjects: () => Projects | undefined,
+	projects: Projects,
 ) {
 	connection.onRequest(shared.D3Request.type, async handler => {
 		// const document = documents.get(handler.uri);
@@ -17,13 +17,9 @@ export function register(
 		return undefined; // disable for now
 	});
 	connection.onRequest(shared.GetMatchTsConfigRequest.type, async handler => {
-		const projects = getProjects();
-		return (await projects?.getProject(handler.uri))?.tsconfig;
+		return (await projects.getProject(handler.uri))?.tsconfig;
 	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async () => {
-
-		const projects = getProjects();
-		if (!projects) return;
 
 		const fs = await import('fs');
 
@@ -49,9 +45,6 @@ export function register(
 		}
 	});
 	connection.onNotification(shared.VerifyAllScriptsNotification.type, async () => {
-
-		const projects = getProjects();
-		if (!projects) return;
 
 		let errors = 0;
 		let warnings = 0;
@@ -89,8 +82,7 @@ export function register(
 	});
 
 	async function getLanguageService(uri: string) {
-		const projects = await getProjects();
-		const project = (await projects?.getProject(uri))?.project;
+		const project = (await projects.getProject(uri))?.project;
 		return project?.getLanguageService();
 	}
 }

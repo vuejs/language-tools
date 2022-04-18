@@ -21,7 +21,7 @@ export function createProjects(
 	documents: vscode.TextDocuments<TextDocument>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
-	inferredCompilerOptions: ts.CompilerOptions,
+	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
 ) {
 
 	let semanticTokensReq = 0;
@@ -44,7 +44,7 @@ export function createProjects(
 			documents,
 			connection,
 			lsConfigs,
-			inferredCompilerOptions,
+			getInferredCompilerOptions,
 		));
 	}
 
@@ -276,7 +276,7 @@ function createWorkspace(
 	documents: vscode.TextDocuments<TextDocument>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
-	inferredCompilerOptions: ts.CompilerOptions,
+	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
 ) {
 
 	const rootTsConfigs = ts.sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
@@ -305,14 +305,14 @@ function createWorkspace(
 			};
 		}
 	}
-	function getInferredProject() {
+	async function getInferredProject() {
 		if (!inferredProject) {
 			inferredProject = createProject(
 				runtimeEnv,
 				ts,
 				options,
 				rootPath,
-				inferredCompilerOptions,
+				await getInferredCompilerOptions(),
 				tsLocalized,
 				documents,
 				connection,

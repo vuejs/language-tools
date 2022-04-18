@@ -6,7 +6,6 @@ import * as path from 'path';
 export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
 
 	await languageClient.onReady();
-	await languageClient.sendRequest(shared.InitDoneRequest.type);
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	let currentTsconfig = '';
