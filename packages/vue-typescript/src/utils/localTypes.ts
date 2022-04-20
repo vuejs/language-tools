@@ -119,9 +119,12 @@ export type EmitEvent_3<E2, E> =
 	: E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
 	: E extends keyof E2 ? ReturnVoid<E2[E]> // emits: { 'event-1': () => true, 'event-2': () => true }
 	: unknown
-export type FirstFunction<F0, F1> =
+export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void> =
 	NonNullable<F0> extends (Function | AnyArray<Function>) ? F0 :
-	NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 : unknown;
+	NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 :
+	NonNullable<F2> extends (Function | AnyArray<Function>) ? F2 :
+	NonNullable<F3> extends (Function | AnyArray<Function>) ? F3 :
+	unknown;
 export type GlobalAttrsBase = VNodeProps & AllowedComponentProps;
 export type GlobalAttrs = GlobalAttrsBase & HTMLAttributes;
 export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;

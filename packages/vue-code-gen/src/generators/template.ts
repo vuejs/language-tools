@@ -86,7 +86,6 @@ export function generate(
 		slotsComponent: string,
 		emit: string,
 		slots: string,
-		events: Record<string, string>,
 		offsets: number[],
 	}> = {};
 	const localVars: Record<string, number> = {};
@@ -110,7 +109,6 @@ export function generate(
 		const var_slotsComponent = `__VLS_${elementIndex++}`;
 		const var_emit = `__VLS_${elementIndex++}`;
 		const var_slots = `__VLS_${elementIndex++}`;
-		const var_events: Record<string, string> = {};
 
 		if (isNamespacedTag) {
 			for (let i = 0; i < tagRanges.length; i++) {
@@ -140,26 +138,6 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_slots}: __VLS_types.DefaultSlots<typeof ${var_rawComponent}>;\n`);
-
-		for (const eventName in tag.events) {
-
-			const var_on = `__VLS_${elementIndex++}`;
-			const key_1 = eventName; // click-outside
-			const key_3 = camelize(key_1); // clickOutside
-
-			tsCodeGen.addText(`type ${var_on} = \n`);
-			if (key_1 !== key_3) {
-				tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
-				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>,\n`);
-				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_3}'>\n`);
-				tsCodeGen.addText(`>;\n`);
-			}
-			else {
-				tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${var_rawComponent}, '${key_1}'>;\n`);
-			}
-
-			var_events[eventName] = var_on;
-		}
 
 		const name1 = tagName; // hello-world
 		const name2 = camelize(tagName); // helloWorld
@@ -232,7 +210,6 @@ export function generate(
 			slotsComponent: var_slotsComponent,
 			emit: var_emit,
 			slots: var_slots,
-			events: var_events,
 			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
 		};
 	}
@@ -625,16 +602,21 @@ export function generate(
 
 						tryWriteInstance();
 
+						const varInstanceProps = `__VLS_${elementIndex++}`;
+
+						tsCodeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Omit<__VLS_types.GlobalAttrs, keyof Props> & Record<string, unknown> : typeof ${tagResolves[node.tag].rawComponent} & Record<string, unknown>;\n`);
 						tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
 						tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
 						{
 							tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 							{
-								tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
-								tsCodeGen.addText(`${tagResolves[node.tag].events[prop.arg.loc.source]},\n`);
+								tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${prop.arg.loc.source}'>,\n`);
 								{
-									tsCodeGen.addText(`(typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Omit<__VLS_types.GlobalAttrs, keyof Props> & Record<string, unknown> : typeof ${tagResolves[node.tag].rawComponent} & Record<string, unknown>)[`);
+
 									const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
+									const key_3 = 'on' + prop.arg.loc.source[0].toUpperCase() + prop.arg.loc.source.substring(1); // onClick-outside
+
+									tsCodeGen.addText(`${varInstanceProps}[`);
 									writeCodeWithQuotes(
 										key_2,
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -653,23 +635,32 @@ export function generate(
 											},
 										},
 									);
-									tsCodeGen.addText(`]\n`);
-								}
-								tsCodeGen.addText(`>,\n`);
+									tsCodeGen.addText(`],\n`);
 
-								const camelizeName = camelize(prop.arg.loc.source);
-
-								if (camelizeName === prop.arg.loc.source) {
-									tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
-								}
-								else {
-									tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
-									{
-										tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
-										tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${camelizeName}'> : unknown,\n`);
+									if (key_3 !== key_2) {
+										tsCodeGen.addText(`${varInstanceProps}[`);
+										writeCodeWithQuotes(
+											key_3,
+											[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
+											{
+												vueTag: 'template',
+												capabilities: capabilitiesSet.attrReference,
+												normalizeNewName(newName) {
+													return 'on' + newName[0].toUpperCase() + newName.substring(1);
+												},
+												applyNewName(oldName, newName) {
+													const hName = hyphenate(newName);
+													if (hyphenate(newName).startsWith('on-')) {
+														return camelize(hName.slice('on-'.length));
+													}
+													return newName;
+												},
+											},
+										);
+										tsCodeGen.addText(`],\n`);
 									}
-									tsCodeGen.addText(`>\n`);
 								}
+								tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
 							}
 							tsCodeGen.addText(`>\n`);
 						}
