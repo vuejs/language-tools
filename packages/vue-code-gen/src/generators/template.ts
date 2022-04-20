@@ -144,16 +144,6 @@ export function generate(
 		const name3 = name2[0].toUpperCase() + name2.slice(1); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
-		if (!isScriptSetup) {
-			tsCodeGen.addText(`// @ts-ignore\n`);
-			for (const name of componentNames) {
-				if (validTsVar.test(name)) {
-					tsCodeGen.addText(`${name}; `);
-				}
-			}
-			tsCodeGen.addText(`// ignore unused in setup returns\n`);
-		}
-
 		if (!isNamespacedTag) {
 			// split tagRanges to fix end tag definition original select range mapping to start tag
 			for (const tagRange of tagRanges) {
