@@ -90,6 +90,7 @@ export function generate(
 	}> = {};
 	const localVars: Record<string, number> = {};
 	const identifiers = new Set<string>();
+	const scopedClasses: { className: string, offset: number; }[] = [];
 
 	tsFormatCodeGen.addText('export { };\n');
 
@@ -209,6 +210,27 @@ export function generate(
 		visitNode(childNode, undefined);
 		tsCodeGen.addText(`}\n`);
 	}
+
+	tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+	for (const { className, offset } of scopedClasses) {
+		tsCodeGen.addText(`__VLS_styleScopedClasses[`);
+		writeCodeWithQuotes(
+			className,
+			{
+				start: offset,
+				end: offset + className.length,
+			},
+			{
+				vueTag: 'template',
+				capabilities: {
+					...capabilitiesSet.scopedClassName,
+					displayWithLink: cssScopedClassesSet.has(className),
+				},
+			},
+		);
+		tsCodeGen.addText(`];\n`);
+	}
+	tsCodeGen.addText('}\n');
 
 	tsCodeGen.addText(`declare var __VLS_slots:\n`);
 	for (const [exp, slot] of slotExps) {
@@ -1395,12 +1417,11 @@ export function generate(
 
 				let startOffset = prop.value.loc.start.offset;
 				let tempClassName = '';
-				let openedBlock = false;
 
 				for (const char of (prop.value.loc.source + ' ')) {
 					if (char.trim() === '' || char === '"' || char === "'") {
 						if (tempClassName !== '') {
-							addClass(tempClassName, startOffset);
+							scopedClasses.push({ className: tempClassName, offset: startOffset });
 							startOffset += tempClassName.length;
 							tempClassName = '';
 						}
@@ -1409,33 +1430,6 @@ export function generate(
 					else {
 						tempClassName += char;
 					}
-				}
-
-				if (openedBlock) {
-					tsCodeGen.addText(`}\n`);
-				}
-
-				function addClass(className: string, offset: number) {
-					if (!openedBlock) {
-						tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
-						openedBlock = true;
-					}
-					tsCodeGen.addText(`__VLS_styleScopedClasses[`);
-					writeCodeWithQuotes(
-						className,
-						{
-							start: offset,
-							end: offset + className.length,
-						},
-						{
-							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.scopedClassName,
-								displayWithLink: cssScopedClassesSet.has(className),
-							},
-						},
-					);
-					tsCodeGen.addText(`];\n`);
 				}
 			}
 			else if (
