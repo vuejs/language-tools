@@ -40,8 +40,10 @@ function __createAppProxy(...args) {
         const nodes = new Map();
         const cursorInOverlays = new Map();
         const rangeCoverOverlays = new Map();
+		const cursorInResizeObserver = new ResizeObserver(scheduleUpdate);
+		const rangeCoverResizeObserver = new ResizeObserver(scheduleUpdate);
 
-        window.addEventListener('scroll', updateHighlights);
+        window.addEventListener('scroll', scheduleUpdate);
 
         ws.addEventListener('message', event => {
             const data = JSON.parse(event.data);
@@ -76,7 +78,7 @@ function __createAppProxy(...args) {
                 updateTimeout = setTimeout(() => {
                     updateHighlights();
                     updateTimeout = undefined;
-                }, 100);
+                }, 0);
             }
         }
         function updateHighlights() {
@@ -124,12 +126,14 @@ function __createAppProxy(...args) {
                 if (!cursorIn.has(el)) {
                     overlay.remove();
                     cursorInOverlays.delete(el);
+					cursorInResizeObserver.disconnect(el);
                 }
             }
             for (const [el, overlay] of [...rangeCoverOverlays]) {
                 if (!rangeConver.has(el)) {
                     overlay.remove();
                     rangeCoverOverlays.delete(el);
+					rangeCoverResizeObserver.disconnect(el);
                 }
             }
 
@@ -138,6 +142,7 @@ function __createAppProxy(...args) {
                 if (!overlay) {
                     overlay = createCursorInOverlay();
                     cursorInOverlays.set(el, overlay);
+					cursorInResizeObserver.observe(el);
                 }
                 const rect = el.getBoundingClientRect();
                 overlay.style.width = ~~rect.width + 'px';
@@ -150,6 +155,7 @@ function __createAppProxy(...args) {
                 if (!overlay) {
                     overlay = createRangeCoverOverlay();
                     rangeCoverOverlays.set(el, overlay);
+					rangeCoverResizeObserver.observe(el);
                 }
                 const rect = el.getBoundingClientRect();
                 overlay.style.width = ~~rect.width + 'px';

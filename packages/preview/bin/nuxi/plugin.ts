@@ -43,8 +43,10 @@ export default defineNuxtPlugin(app => {
 		}>();
 		const cursorInOverlays = new Map<Element, HTMLElement>();
 		const rangeCoverOverlays = new Map<Element, HTMLElement>();
+		const cursorInResizeObserver = new ResizeObserver(scheduleUpdate);
+		const rangeCoverResizeObserver = new ResizeObserver(scheduleUpdate);
 
-		window.addEventListener('scroll', updateHighlights);
+		window.addEventListener('scroll', scheduleUpdate);
 
 		ws.addEventListener('message', event => {
 			const data = JSON.parse(event.data);
@@ -79,7 +81,7 @@ export default defineNuxtPlugin(app => {
 				updateTimeout = setTimeout(() => {
 					updateHighlights();
 					updateTimeout = undefined;
-				}, 100);
+				}, 0);
 			}
 		}
 		function updateHighlights() {
@@ -127,12 +129,14 @@ export default defineNuxtPlugin(app => {
 				if (!cursorIn.has(el)) {
 					overlay.remove();
 					cursorInOverlays.delete(el);
+					cursorInResizeObserver.disconnect(el);
 				}
 			}
 			for (const [el, overlay] of [...rangeCoverOverlays]) {
 				if (!rangeConver.has(el)) {
 					overlay.remove();
 					rangeCoverOverlays.delete(el);
+					rangeCoverResizeObserver.disconnect(el);
 				}
 			}
 
@@ -141,6 +145,7 @@ export default defineNuxtPlugin(app => {
 				if (!overlay) {
 					overlay = createCursorInOverlay();
 					cursorInOverlays.set(el, overlay);
+					cursorInResizeObserver.observe(el);
 				}
 				const rect = el.getBoundingClientRect();
 				overlay.style.width = ~~rect.width + 'px';
@@ -153,6 +158,7 @@ export default defineNuxtPlugin(app => {
 				if (!overlay) {
 					overlay = createRangeCoverOverlay();
 					rangeCoverOverlays.set(el, overlay);
+					rangeCoverResizeObserver.observe(el);
 				}
 				const rect = el.getBoundingClientRect();
 				overlay.style.width = ~~rect.width + 'px';
