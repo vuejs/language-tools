@@ -12,6 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		{
 			nonTs: vscode.Diagnostic[],
 			tsSemantic: vscode.Diagnostic[],
+			tsDeclaration: vscode.Diagnostic[],
 			tsSyntactic: vscode.Diagnostic[],
 			tsSuggestion: vscode.Diagnostic[],
 		}
@@ -28,6 +29,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		>
 	>();
 	const scriptTsCache_semantic: typeof nonTsCache = new Map();
+	const scriptTsCache_declaration: typeof nonTsCache = new Map();
 	const scriptTsCache_syntactic: typeof nonTsCache = new Map();
 	const scriptTsCache_suggestion: typeof nonTsCache = new Map();
 
@@ -36,6 +38,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
 			nonTs: [],
 			tsSemantic: [],
+			tsDeclaration: [],
 			tsSuggestion: [],
 			tsSyntactic: [],
 		}).get(uri)!;
@@ -53,6 +56,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 		await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.tsSuggestion = errors ?? []);
 		doResponse();
 		await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.tsSemantic = errors ?? []);
+		doResponse();
+		await worker(true, { declaration: true }, scriptTsCache_declaration, errors => cache.tsDeclaration = errors ?? []);
 
 		return getErrors();
 
@@ -69,6 +74,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				...cache.tsSyntactic,
 				...cache.tsSuggestion,
 				...cache.tsSemantic,
+				...cache.tsDeclaration,
 			];
 		}
 
