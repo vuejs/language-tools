@@ -429,7 +429,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
-		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3334);
+		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
 		const terminal = vscode.window.createTerminal('volar-preview:' + port);
 		const viteProxyPath = type === 'vite'
 			? require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })
