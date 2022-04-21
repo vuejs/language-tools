@@ -218,7 +218,7 @@ export function createProjects(
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
 
-			const languageService = await project.getLanguageService();
+			const languageService = project.getLanguageService();
 			const errors = await languageService.doValidation(uri, async result => {
 				connection.sendDiagnostics({ uri: uri, diagnostics: result });
 			}, isCancel);

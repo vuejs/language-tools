@@ -55,15 +55,15 @@ export async function createProject(
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
-	let vueLs: Promise<vue.LanguageService> | undefined;
+	let vueLs: vue.LanguageService | undefined;
 	let parsedCommandLine = createParsedCommandLine();
+
 	const scripts = shared.createPathMap<{
 		version: number,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
-	const disposables: vscode.Disposable[] = [];
 
 	return {
 		onWorkspaceFilesChanged,
@@ -80,54 +80,50 @@ export async function createProject(
 		if (_path === '') return relativePath;
 		return !path.isAbsolute(_path) ? relativePath + '/' + _path : _path;
 	}
-	async function getLanguageService() {
+	function getLanguageService() {
 		if (!vueLs) {
-			vueLs = (async () => {
-				const customPlugins = loadCustomPlugins(languageServiceHost.getCurrentDirectory());
-				const vueLs = vue.createLanguageService(
-					{ typescript: ts },
-					languageServiceHost,
-					runtimeEnv.fileSystemProvide,
-					(uri) => {
+			vueLs = vue.createLanguageService(
+				{ typescript: ts },
+				languageServiceHost,
+				runtimeEnv.fileSystemProvide,
+				(uri) => {
 
-						const protocol = uri.substring(0, uri.indexOf(':'));
+					const protocol = uri.substring(0, uri.indexOf(':'));
 
-						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
-						if (builtInHandler) {
-							return builtInHandler(uri);
-						}
+					const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
+					if (builtInHandler) {
+						return builtInHandler(uri);
+					}
 
-						if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-							return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
-								return responseText;
-							}, error => {
-								return Promise.reject(error.message);
-							});
-						}
-						else {
-							return Promise.reject('clientHandledGetDocumentContentRequest is false');
-						}
-					},
-					lsConfigs,
-					customPlugins,
-					options.languageFeatures?.completion ? async (uri) => {
+					if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
+						return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
+							return responseText;
+						}, error => {
+							return Promise.reject(error.message);
+						});
+					}
+					else {
+						return Promise.reject('clientHandledGetDocumentContentRequest is false');
+					}
+				},
+				lsConfigs,
+				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
+				options.languageFeatures?.completion ? async (uri) => {
 
-						if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
-							const res = await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
-							return {
-								tag: res.tagNameCase,
-								attr: res.attrNameCase,
-							};
-						}
-
+					if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
+						const res = await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
 						return {
-							tag: options.languageFeatures!.completion!.defaultTagNameCase,
-							attr: options.languageFeatures!.completion!.defaultAttrNameCase,
+							tag: res.tagNameCase,
+							attr: res.attrNameCase,
 						};
-					} : undefined,
-				);
-				return vueLs;
-			})();
+					}
+
+					return {
+						tag: options.languageFeatures!.completion!.defaultTagNameCase,
+						attr: options.languageFeatures!.completion!.defaultAttrNameCase,
+					};
+				} : undefined,
+			);
 		}
 		return vueLs;
 	}
@@ -232,15 +228,9 @@ export async function createProject(
 			}
 		}
 	}
-	async function dispose() {
-		if (vueLs) {
-			(await vueLs).dispose();
-		}
-		for (const disposable of disposables) {
-			disposable.dispose();
-		}
+	function dispose() {
+		vueLs?.dispose();
 		scripts.clear();
-		disposables.length = 0;
 	}
 	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {

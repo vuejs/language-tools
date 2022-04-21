@@ -199,7 +199,7 @@ export function register(
 				if (token.isCancellationRequested)
 					return;
 
-				const vueLs = await (await project).getLanguageService();
+				const vueLs = (await project).getLanguageService();
 
 				results = results.concat(await vueLs.findWorkspaceSymbols(handler.query));
 			}
