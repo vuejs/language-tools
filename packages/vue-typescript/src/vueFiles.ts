@@ -47,10 +47,10 @@ export function createVueFiles() {
 	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
-		get: untrack((fileName: string) => vueFiles[fileName.toLocaleLowerCase()]),
-		delete: untrack((fileName: string) => delete vueFiles[fileName.toLocaleLowerCase()]),
-		has: untrack((fileName: string) => !!vueFiles[fileName.toLocaleLowerCase()]),
-		set: untrack((fileName: string, vueFile: VueFile) => vueFiles[fileName.toLocaleLowerCase()] = vueFile),
+		get: untrack((fileName: string) => vueFiles[fileName.toLowerCase()]),
+		delete: untrack((fileName: string) => delete vueFiles[fileName.toLowerCase()]),
+		has: untrack((fileName: string) => !!vueFiles[fileName.toLowerCase()]),
+		set: untrack((fileName: string, vueFile: VueFile) => vueFiles[fileName.toLowerCase()] = vueFile),
 
 		getFileNames: untrack(() => fileNames.value),
 		getDirs: untrack(() => dirs.value),
