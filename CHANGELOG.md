@@ -3,6 +3,7 @@
 ## 0.34.8
 
 - feat: support inlay hints ([#452](https://github.com/johnsoncodehk/volar/pull/452))
+  - if you're not using VSCode, you should config new option `languageFeatures.inlayHints = true` in initializationOptions to enable it
 - feat: allow disable highlight dom elements on preview ([#1209](https://github.com/johnsoncodehk/volar/issues/1209))
 - feat: improve dom elements highlight display refresh
 - fix: `typescript.format.semicolons` should not affect text interpolation ([#1210](https://github.com/johnsoncodehk/volar/issues/1210))
