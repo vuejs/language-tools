@@ -70,7 +70,7 @@ function __createAppProxy(...args) {
         }
         function updateHighlights() {
 
-            if (selection.isDirty) {
+            if (selection?.isDirty) {
                 for (const [_, overlay] of cursorInOverlays) {
                     overlay.style.opacity = '0.5';
                 }

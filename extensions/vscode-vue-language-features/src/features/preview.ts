@@ -29,12 +29,15 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(statusBar);
 
 	let ws: ReturnType<typeof preview.createPreviewWebSocket> | undefined;
+	let highlightDomElements = true;
+	const onDidChangeCodeLensesEmmiter = new vscode.EventEmitter<void>();
 
 	if (vscode.window.terminals.some(terminal => terminal.name.startsWith('volar-preview:'))) {
 		ws = preview.createPreviewWebSocket({
 			goToCode: handleGoToCode,
 			getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
 		});
+		onDidChangeCodeLensesEmmiter.fire();
 	}
 	vscode.window.onDidOpenTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
@@ -42,11 +45,14 @@ export async function activate(context: vscode.ExtensionContext) {
 				goToCode: handleGoToCode,
 				getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
 			});
+			onDidChangeCodeLensesEmmiter.fire();
 		}
 	});
 	vscode.window.onDidCloseTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
 			ws?.stop();
+			ws = undefined;
+			onDidChangeCodeLensesEmmiter.fire();
 		}
 	});
 
@@ -174,6 +180,44 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updatePreviewIconStatus));
 
 	updatePreviewIconStatus();
+	useHighlightDomElements();
+
+	function useHighlightDomElements() {
+
+		class HighlightDomElementsStatusCodeLens implements vscode.CodeLensProvider {
+			provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
+				if (ws) {
+					return [{
+						isResolved: true,
+						range: new vscode.Range(
+							document.positionAt(0),
+							document.positionAt(0),
+						),
+						command: {
+							title: 'highlight dom elements ' + (highlightDomElements ? '☑' : '☐'),
+							command: 'volar.toggleHighlightDomElementsStatus',
+						},
+					}];
+				}
+			};
+			onDidChangeCodeLenses = onDidChangeCodeLensesEmmiter.event;
+		}
+
+		const codeLens = new HighlightDomElementsStatusCodeLens();
+
+		vscode.languages.registerCodeLensProvider(
+			{ scheme: 'file', language: 'vue' },
+			codeLens,
+		);
+
+		vscode.commands.registerCommand('volar.toggleHighlightDomElementsStatus', () => {
+			highlightDomElements = !highlightDomElements;
+			if (vscode.window.activeTextEditor) {
+				updateSelectionHighlights(vscode.window.activeTextEditor);
+			}
+			onDidChangeCodeLensesEmmiter.fire();
+		});
+	}
 
 	function getSfc(document: vscode.TextDocument) {
 		let cache = sfcs.get(document);
@@ -199,7 +243,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	function updateSelectionHighlights(textEditor: vscode.TextEditor) {
-		if (textEditor.document.languageId === 'vue') {
+		if (textEditor.document.languageId === 'vue' && highlightDomElements) {
 			const sfc = getSfc(textEditor.document);
 			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 			ws?.highlight(
