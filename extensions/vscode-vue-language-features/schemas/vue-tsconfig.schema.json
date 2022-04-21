@@ -18,7 +18,7 @@
 				},
 				"experimentalShamefullySupportOptionsApi": {
 					"type": "boolean",
-					"markdownDescription": "Support intellisense compoonents that export options without `Vue.extend` and `defineComponent`. This is essentially a hack and not recommended to use it."
+					"markdownDescription": "Support intellisense components that export options without `Vue.extend` and `defineComponent`. This is essentially a hack and not recommended to use it."
 				},
 				"experimentalTemplateCompilerOptions": {
 					"type": "object",
