@@ -58,13 +58,10 @@ export type LanguageServicePlugin = ReturnType<typeof defineLanguageServicePlugi
 
 let pluginId = 0;
 
-function defineLanguageServicePlugin<T extends EmbeddedLanguageServicePlugin>(plugin: T, context?: {
-	isAdditionalCompletion?: boolean,
-}) {
+function defineLanguageServicePlugin<T extends EmbeddedLanguageServicePlugin>(plugin: T) {
 	return {
 		id: pluginId++,
 		...plugin,
-		context,
 	};
 }
 

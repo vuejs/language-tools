@@ -143,7 +143,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							if (cache!.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
+							if (cache!.mainCompletion && (!plugin.complete.isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
 							const embeddedCompletionList = await plugin.complete?.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
@@ -151,7 +151,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
 
-							if (!plugin.context?.isAdditionalCompletion) {
+							if (!plugin.complete.isAdditional) {
 								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
 							}
 
@@ -202,7 +202,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 						continue;
 
-					if (cache.mainCompletion && (!plugin.context?.isAdditionalCompletion || cache.mainCompletion.documentUri !== document.uri))
+					if (cache.mainCompletion && (!plugin.complete.isAdditional || cache.mainCompletion.documentUri !== document.uri))
 						continue;
 
 					const completionList = await plugin.complete?.on(document, position, completionContext);
@@ -210,7 +210,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!completionList || !completionList.items.length)
 						continue;
 
-					if (!plugin.context?.isAdditionalCompletion) {
+					if (!plugin.complete.isAdditional) {
 						cache.mainCompletion = { documentUri: document.uri };
 					}
 
@@ -240,7 +240,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
 
 		function sortPlugins(a: LanguageServicePlugin, b: LanguageServicePlugin) {
-			return (b.context?.isAdditionalCompletion ? -1 : 1) - (a.context?.isAdditionalCompletion ? -1 : 1);
+			return (b.complete?.isAdditional ? -1 : 1) - (a.complete?.isAdditional ? -1 : 1);
 		}
 
 		function combineCompletionList(lists: vscode.CompletionList[]) {

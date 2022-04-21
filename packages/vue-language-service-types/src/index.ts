@@ -65,6 +65,7 @@ export type EmbeddedLanguageServicePlugin = {
 
 	complete?: {
 		triggerCharacters?: string[],
+		isAdditional?: boolean,
 		on?(document: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): NullableResult<vscode.CompletionList>,
 		resolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): NotNullableResult<vscode.CompletionItem>,
 	},

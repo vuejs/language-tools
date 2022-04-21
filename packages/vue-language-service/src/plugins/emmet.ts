@@ -9,6 +9,8 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 		complete: {
 
+			isAdditional: true,
+
 			async on(textDocument, position) {
 
 				const syntax = emmet.getEmmetMode(textDocument.languageId === 'vue' ? 'html' : textDocument.languageId);
