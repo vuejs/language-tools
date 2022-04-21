@@ -15,153 +15,177 @@ export function register(
 	params: vscode.InitializeParams,
 ) {
 	connection.onCompletion(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const list = await languageService?.doComplete(
-			handler.textDocument.uri,
-			handler.position,
-			handler.context,
-		);
-		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
-		if (!insertReplaceSupport && list) {
-			for (const item of list.items) {
-				if (item.textEdit && vscode.InsertReplaceEdit.is(item.textEdit)) {
-					item.textEdit = vscode.TextEdit.replace(item.textEdit.insert, item.textEdit.newText);
+		return worker(handler.textDocument.uri, async vueLs => {
+			const list = await vueLs.doComplete(
+				handler.textDocument.uri,
+				handler.position,
+				handler.context,
+			);
+			const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
+			if (!insertReplaceSupport && list) {
+				for (const item of list.items) {
+					if (item.textEdit && vscode.InsertReplaceEdit.is(item.textEdit)) {
+						item.textEdit = vscode.TextEdit.replace(item.textEdit.insert, item.textEdit.newText);
+					}
 				}
 			}
-		}
-		return list;
+			return list;
+		});
 	});
 	connection.onCompletionResolve(async item => {
+
 		const uri = (item.data as { uri?: string; } | undefined)?.uri;
-		if (!uri) return item;
+		if (!uri) {
+			return item;
+		}
+
 		const activeSel = features.completion?.getDocumentSelectionRequest
 			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
-		const languageService = await getLanguageService(uri);
-		return languageService?.doCompletionResolve(item, newPosition) ?? item;
+
+		return await worker(uri, async vueLs => {
+			return vueLs.doCompletionResolve(item, newPosition) ?? item;
+		}) ?? item;
 	});
 	connection.onHover(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.doHover(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.doHover(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onSignatureHelp(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.getSignatureHelp(handler.textDocument.uri, handler.position, handler.context);
+		});
 	});
 	connection.onPrepareRename(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.prepareRename(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.prepareRename(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onRenameRequest(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.doRename(handler.textDocument.uri, handler.position, handler.newName);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.doRename(handler.textDocument.uri, handler.position, handler.newName);
+		});
 	});
 	connection.onCodeLens(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.doCodeLens(handler.textDocument.uri);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.doCodeLens(handler.textDocument.uri);
+		});
 	});
 	connection.onCodeLensResolve(async codeLens => {
+
 		const uri = (codeLens.data as any)?.uri as string | undefined; // TODO
-		if (!uri) return codeLens;
-		const languageService = await getLanguageService(uri);
-		return languageService?.doCodeLensResolve(codeLens) ?? codeLens;
+		if (!uri) {
+			return codeLens;
+		}
+
+		return await worker(uri, vueLs => {
+			return vueLs.doCodeLensResolve(codeLens) ?? codeLens;
+		}) ?? codeLens;
 	});
 	connection.onExecuteCommand(async (handler, token, workDoneProgress) => {
 
 		if (handler.command === vue.executePluginCommand) {
 
 			const args = handler.arguments as vue.ExecutePluginCommandArgs | undefined;
-			if (!args) return;
+			if (!args) {
+				return;
+			}
 
-			const vueLs = await getLanguageService(args[0]);
-			if (!vueLs) return;
-
-			return vueLs.doExecuteCommand(handler.command, args, {
-				token,
-				workDoneProgress,
-				applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
-				sendNotification: (type, params) => connection.sendNotification(type, params),
+			return worker(args[0], vueLs => {
+				return vueLs.doExecuteCommand(handler.command, args, {
+					token,
+					workDoneProgress,
+					applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
+					sendNotification: (type, params) => connection.sendNotification(type, params),
+				});
 			});
 		}
 
 		if (handler.command === 'volar.server.convertTagNameCasing') {
 
 			const args = handler.arguments as [string, 'kebab' | 'pascal'] | undefined;
-			if (!args) return;
+			if (!args) {
+				return;
+			}
 
-			const vueLs = await getLanguageService(args[0]);
-			if (!vueLs) return;
-
-			return vueLs.doExecuteCommand(
-				vue.executePluginCommand,
-				[
-					args[0],
-					undefined,
-					vscode.Command.create(
-						'',
-						vue.convertTagNameCasingCommand,
-						...<vue.ConvertTagNameCasingCommandArgs>[
-							args[0],
-							args[1],
-						]),
-				], {
-				token,
-				workDoneProgress,
-				applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
-				sendNotification: (type, params) => connection.sendNotification(type, params),
+			return worker(args[0], vueLs => {
+				return vueLs.doExecuteCommand(
+					vue.executePluginCommand,
+					[
+						args[0],
+						undefined,
+						vscode.Command.create(
+							'',
+							vue.convertTagNameCasingCommand,
+							...<vue.ConvertTagNameCasingCommandArgs>[
+								args[0],
+								args[1],
+							]),
+					], {
+					token,
+					workDoneProgress,
+					applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
+					sendNotification: (type, params) => connection.sendNotification(type, params),
+				});
 			});
 		}
 	});
 	connection.onCodeAction(async handler => {
-		const uri = handler.textDocument.uri;
-		const languageService = await getLanguageService(uri);
-		if (languageService) {
-			const codeActions = await languageService.doCodeActions(uri, handler.range, handler.context) ?? [];
+		return worker(handler.textDocument.uri, async vueLs => {
+			const codeActions = await vueLs.doCodeActions(handler.textDocument.uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
-					(codeAction.data as any).uri = uri;
+					(codeAction.data as any).uri = handler.textDocument.uri;
 				}
 				else {
-					codeAction.data = { uri };
+					codeAction.data = { uri: handler.textDocument.uri };
 				}
 			}
 			return codeActions;
-		}
+		});
 	});
 	connection.onCodeActionResolve(async codeAction => {
+
 		const uri: string | undefined = (codeAction.data as any)?.uri;
-		if (uri) {
-			const languageService = await getLanguageService(uri);
-			if (languageService) {
-				return languageService.doCodeActionResolve(codeAction);
-			}
+		if (!uri) {
+			return codeAction;
 		}
-		return codeAction;
+
+		return await worker(uri, vueLs => {
+			return vueLs.doCodeActionResolve(codeAction);
+		}) ?? codeAction;
 	});
 	connection.onReferences(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.findReferences(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findReferences(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onImplementation(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.findImplementations(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findImplementations(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onDefinition(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.findDefinition(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findDefinition(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onTypeDefinition(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.findTypeDefinition(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findTypeDefinition(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onDocumentHighlight(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.findDocumentHighlights(handler.textDocument.uri, handler.position);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findDocumentHighlights(handler.textDocument.uri, handler.position);
+		});
 	});
 	connection.onDocumentLinks(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.findDocumentLinks(handler.textDocument.uri);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findDocumentLinks(handler.textDocument.uri);
+		});
 	});
 	connection.onWorkspaceSymbol(async (handler, token) => {
 
@@ -175,46 +199,74 @@ export function register(
 				if (token.isCancellationRequested)
 					return;
 
-				const languageService = await (await project).getLanguageService();
+				const vueLs = await (await project).getLanguageService();
 
-				results = results.concat(await languageService.findWorkspaceSymbols(handler.query));
+				results = results.concat(await vueLs.findWorkspaceSymbols(handler.query));
 			}
 		}
 
 		return results;
 	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const items = await languageService?.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
-		if (items) {
-			for (const item of items) {
-				if (typeof item.data !== 'object') item.data = {};
-				(item.data as any).__uri = handler.textDocument.uri;
+		return await worker(handler.textDocument.uri, async vueLs => {
+			const items = await vueLs.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
+			if (items) {
+				for (const item of items) {
+					if (typeof item.data !== 'object') item.data = {};
+					(item.data as any).__uri = handler.textDocument.uri;
+				}
 			}
-		}
-		return items?.length ? items : null;
+			return items?.length ? items : null;
+		}) ?? [];
 	});
 	connection.languages.callHierarchy.onIncomingCalls(async handler => {
+
 		const data = handler.item.data as { __uri?: string; } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		const languageService = await getLanguageService(uri);
-		return languageService?.callHierarchy.getIncomingCalls(handler.item) ?? [];
+
+		return await worker(uri, vueLs => {
+			return vueLs.callHierarchy.getIncomingCalls(handler.item);
+		}) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(async handler => {
+
 		const data = handler.item.data as { __uri?: string; } | undefined;
 		const uri = data?.__uri ?? handler.item.uri;
-		const languageService = await getLanguageService(uri);
-		return languageService?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
+
+		return await worker(uri, vueLs => {
+			return vueLs.callHierarchy.getOutgoingCalls(handler.item);
+		}) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
-		return onSemanticTokens(handler, token, resultProgress);
+		return await worker(handler.textDocument.uri, async vueLs => {
+
+			const result = await vueLs?.getSemanticTokens(
+				handler.textDocument.uri,
+				undefined,
+				token,
+				tokens => resultProgress?.report(buildTokens(tokens)),
+			) ?? [];
+
+			return buildTokens(result);
+		}) ?? buildTokens([]);
 	});
 	connection.languages.semanticTokens.onRange(async (handler, token, _, resultProgress) => {
-		return onSemanticTokens(handler, token, resultProgress);
+		return await worker(handler.textDocument.uri, async vueLs => {
+
+			const result = await vueLs?.getSemanticTokens(
+				handler.textDocument.uri,
+				handler.range,
+				token,
+				tokens => resultProgress?.report(buildTokens(tokens)),
+			) ?? [];
+
+			return buildTokens(result);
+		}) ?? buildTokens([]);
 	});
 	connection.languages.inlayHint.on(async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.getInlayHints(handler.textDocument.uri, handler.range);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.getInlayHints(handler.textDocument.uri, handler.range);
+		});
 	});
 	connection.workspace.onWillRenameFiles(async handler => {
 
@@ -264,8 +316,8 @@ export function register(
 		async function worker() {
 			const edits = (await Promise.all(handler.files
 				.map(async file => {
-					const languageService = await getLanguageService(file.oldUri);
-					return languageService?.getEditsForFileRename(file.oldUri, file.newUri);
+					const vueLs = await getLanguageService(file.oldUri);
+					return vueLs?.getEditsForFileRename(file.oldUri, file.newUri);
 				}))).filter(shared.notEmpty);
 			if (edits.length) {
 				const result = edits[0];
@@ -276,34 +328,24 @@ export function register(
 		}
 	});
 	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		return languageService?.doAutoInsert(handler.textDocument.uri, handler.position, handler.options);
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.doAutoInsert(handler.textDocument.uri, handler.position, handler.options);
+		});
 	});
 
-	async function onSemanticTokens(
-		handler: vscode.SemanticTokensParams | vscode.SemanticTokensRangeParams,
-		token: vscode.CancellationToken,
-		resultProgress?: vscode.ResultProgressReporter<vscode.SemanticTokensPartialResult>,
-	) {
-
-		const languageService = await getLanguageService(handler.textDocument.uri);
-		const result = await languageService?.getSemanticTokens(
-			handler.textDocument.uri,
-			'range' in handler ? handler.range : undefined,
-			token,
-			tokens => resultProgress?.report(buildTokens(tokens)),
-		) ?? [];
-
-		return buildTokens(result);
-
-		function buildTokens(tokens: vue.SemanticToken[]) {
-			const builder = new vscode.SemanticTokensBuilder();
-			const sortedTokens = tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0]);
-			for (const token of sortedTokens) {
-				builder.push(...token);
-			}
-			return builder.build();
+	async function worker<T>(uri: string, cb: (vueLs: vue.LanguageService) => T) {
+		const vueLs = await getLanguageService(uri);
+		if (vueLs) {
+			return cb(vueLs);
 		}
+	}
+	function buildTokens(tokens: vue.SemanticToken[]) {
+		const builder = new vscode.SemanticTokensBuilder();
+		const sortedTokens = tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0]);
+		for (const token of sortedTokens) {
+			builder.push(...token);
+		}
+		return builder.build();
 	}
 	async function getLanguageService(uri: string) {
 		const project = (await projects.getProject(uri))?.project;
