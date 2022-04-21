@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.34.8
+
+- feat: support inlay hints ([#452](https://github.com/johnsoncodehk/volar/pull/452))
+- feat: allow disable highlight dom elements on preview ([#1209](https://github.com/johnsoncodehk/volar/issues/1209))
+- feat: improve dom elements highlight display refresh
+- fix: `typescript.format.semicolons` should not affect text interpolation ([#1210](https://github.com/johnsoncodehk/volar/issues/1210))
+- fix: vscode settings cannot update for document features ([#1210](https://github.com/johnsoncodehk/volar/issues/1210))
+- fix: `{{ { foo } }}` object literal expression not working on text interpolations
+- fix: cannot infer event type with prop name format `onFoo-bar` ([#1023](https://github.com/johnsoncodehk/volar/issues/1023))
+- fix: scoped class references not accurate on long document ([#1059](https://github.com/johnsoncodehk/volar/issues/1059))
+- fix: cannot update unediting vue document diagnostics ([#1163](https://github.com/johnsoncodehk/volar/issues/1163))
+- fix: emmet not working in style block ([#1145](https://github.com/johnsoncodehk/volar/issues/1145))
+- fix: nuxt preview not working on windows ([#1123](https://github.com/johnsoncodehk/volar/issues/1123))
+
 ## 0.34.7
 
 - feat: add option `experimentalShamefullySupportOptionsApi` to vueCompilerOptions ([#1202](https://github.com/johnsoncodehk/volar/issues/1202))
