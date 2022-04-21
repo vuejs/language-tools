@@ -36,6 +36,7 @@ export default defineNuxtPlugin(app => {
 			}[],
 			isDirty: boolean,
 		} | undefined;
+		let updateTimeout: number | undefined;
 		const nodes = new Map<Element, {
 			fileName: string,
 			range: [number, number],
@@ -64,11 +65,21 @@ export default defineNuxtPlugin(app => {
 					fileName,
 					range,
 				});
+				scheduleUpdate();
 			}
 		}
 		function vnodeUnmounted(node: unknown) {
 			if (node instanceof Element) {
 				nodes.delete(node);
+				scheduleUpdate();
+			}
+		}
+		function scheduleUpdate() {
+			if (updateTimeout === undefined) {
+				updateTimeout = setTimeout(() => {
+					updateHighlights();
+					updateTimeout = undefined;
+				}, 100);
 			}
 		}
 		function updateHighlights() {

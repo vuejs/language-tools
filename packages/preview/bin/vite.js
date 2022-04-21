@@ -36,6 +36,7 @@ function __createAppProxy(...args) {
     function installSelectionHighlight() {
 
         let selection;
+        let updateTimeout;
         const nodes = new Map();
         const cursorInOverlays = new Map();
         const rangeCoverOverlays = new Map();
@@ -61,11 +62,21 @@ function __createAppProxy(...args) {
                     fileName,
                     range,
                 });
+				scheduleUpdate();
             }
         }
         function vnodeUnmounted(node) {
             if (node instanceof Element) {
                 nodes.delete(node);
+				scheduleUpdate();
+            }
+        }
+        function scheduleUpdate() {
+            if (updateTimeout === undefined) {
+                updateTimeout = setTimeout(() => {
+                    updateHighlights();
+                    updateTimeout = undefined;
+                }, 100);
             }
         }
         function updateHighlights() {
@@ -426,20 +437,20 @@ module.exports = __proxyExport;
 `;
 
 fs.readFileSync = (...args) => {
-    if (args[0] === vuePluginPath) {
-        return readFileSync(...args) + viteExtraCode;
-    }
-    if (args[0].indexOf(viteDir) === 0) {
-        let content = readFileSync(...args);
-        if (content.indexOf('async function doTransform(') >= 0) {
-            content = content.replace(
-                `async function doTransform(`,
-                replaceCode,
-            );
-        }
-        return content;
-    }
-    return readFileSync(...args);
+	if (args[0] === vuePluginPath) {
+		return readFileSync(...args) + viteExtraCode;
+	}
+	if (args[0].indexOf(viteDir) === 0) {
+		let content = readFileSync(...args);
+		if (content.indexOf('async function doTransform(') >= 0) {
+			content = content.replace(
+				`async function doTransform(`,
+				replaceCode,
+			);
+		}
+		return content;
+	}
+	return readFileSync(...args);
 };
 
 require(viteBinPath);
