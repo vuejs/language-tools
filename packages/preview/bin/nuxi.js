@@ -5,7 +5,7 @@ const fs = require('fs');
 const readFileSync = fs.readFileSync;
 
 const workspace = process.cwd();
-const nuxiBinPath = require.resolve('./node_modules/.bin/nuxi', { paths: [workspace] });
+const nuxiBinPath = require.resolve('./node_modules/nuxt3/bin/nuxt.mjs', { paths: [workspace] });
 const jsConfigPath = path.resolve(workspace, 'nuxt.config.js');
 const tsConfigPath = path.resolve(workspace, 'nuxt.config.ts');
 
@@ -18,4 +18,4 @@ fs.readFileSync = (...args) => {
     return readFileSync(...args);
 };
 
-import(nuxiBinPath);
+import('file://' + nuxiBinPath);
