@@ -110,7 +110,7 @@ export default defineNuxtPlugin(app => {
 			if (selection) {
 				for (const range of selection.ranges) {
 					for (const [el, loc] of nodes) {
-						if (loc.fileName === selection.fileName) {
+						if (loc.fileName.replace(/\\/g, '/').toLowerCase() === selection.fileName.replace(/\\/g, '/').toLowerCase()) {
 							if (range.start <= loc.range[0] && range.end >= loc.range[1]) {
 								rangeConver.add(el);
 							}
