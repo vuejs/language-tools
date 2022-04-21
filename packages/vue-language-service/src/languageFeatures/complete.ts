@@ -146,6 +146,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (cache!.mainCompletion && (!plugin.complete.isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
+							// avoid duplicate items with .vue and .vue.htmlx
+							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
+								continue;
+
 							const embeddedCompletionList = await plugin.complete?.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
@@ -203,6 +207,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 						continue;
 
 					if (cache.mainCompletion && (!plugin.complete.isAdditional || cache.mainCompletion.documentUri !== document.uri))
+						continue;
+
+					// avoid duplicate items with .vue and .vue.htmlx
+					if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 						continue;
 
 					const completionList = await plugin.complete?.on(document, position, completionContext);
