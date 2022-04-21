@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.34.9
+
+- fix: vue documents diagnostics cannot update when other drive ts file changed
+- fix: ts declaration diagnostics missing ([#1222](https://github.com/johnsoncodehk/volar/issues/1222))
+
 ## 0.34.8
 
 - feat: support inlay hints ([#452](https://github.com/johnsoncodehk/volar/pull/452))
