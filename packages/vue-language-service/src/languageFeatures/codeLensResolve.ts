@@ -26,7 +26,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				command: resolvedOriginalItem.command ? {
 					...resolvedOriginalItem.command,
 					command: executePluginCommand,
-					arguments: <ExecutePluginCommandArgs>[data.uri, plugin.id, resolvedOriginalItem.command],
+					arguments: <ExecutePluginCommandArgs>[data.uri, context.getPluginId(plugin), resolvedOriginalItem.command],
 				} : undefined,
 				range: item.range, // range already transform in codeLens request
 			};

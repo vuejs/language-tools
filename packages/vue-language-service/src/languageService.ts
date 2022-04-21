@@ -54,17 +54,6 @@ import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemantic
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
-export type LanguageServicePlugin = ReturnType<typeof defineLanguageServicePlugin>;
-
-let pluginId = 0;
-
-function defineLanguageServicePlugin<T extends EmbeddedLanguageServicePlugin>(plugin: T) {
-	return {
-		id: pluginId++,
-		...plugin,
-	};
-}
-
 export function getSemanticTokenLegend() {
 
 	const tsLegend = ts2.getSemanticTokenLegend();
@@ -86,7 +75,7 @@ export function createLanguageService(
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: ConfigurationHost | undefined,
-	_customPlugins: EmbeddedLanguageServicePlugin[],
+	customPlugins: EmbeddedLanguageServicePlugin[],
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
@@ -112,13 +101,10 @@ export function createLanguageService(
 	const documentVersions = new Map<string, number>();
 
 	// plugins
-	const customPlugins = _customPlugins.map(plugin => defineLanguageServicePlugin(plugin));
-	const vuePlugin = defineLanguageServicePlugin(
-		useVuePlugin({
-			getVueDocument: (document) => vueDocuments.get(document.uri),
-			tsLs,
-		}),
-	);
+	const vuePlugin = useVuePlugin({
+		getVueDocument: (document) => vueDocuments.get(document.uri),
+		tsLs,
+	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
 		useHtmlPlugin({
@@ -134,21 +120,15 @@ export function createLanguageService(
 			documentContext,
 		}),
 	);
-	const cssPlugin = defineLanguageServicePlugin(
-		useCssPlugin({
-			documentContext,
-			fileSystemProvider,
-		}),
-	);
-	const jsonPlugin = defineLanguageServicePlugin(
-		useJsonPlugin({
-			schema: undefined, // TODO
-			schemaRequestService,
-		}),
-	);
-	const emmetPlugin = defineLanguageServicePlugin(
-		useEmmetPlugin(),
-	);
+	const cssPlugin = useCssPlugin({
+		documentContext,
+		fileSystemProvider,
+	});
+	const jsonPlugin = useJsonPlugin({
+		schema: undefined, // TODO
+		schemaRequestService,
+	});
+	const emmetPlugin = useEmmetPlugin();
 	const scriptTsPlugin = useTsPlugins(
 		tsLs,
 		false,
@@ -163,54 +143,40 @@ export function createLanguageService(
 			includeCompletionsForImportStatements: false,
 		}),
 	);
-	const autoDotValuePlugin = defineLanguageServicePlugin(
-		useAutoDotValuePlugin({
-			ts,
-			getTsLs: () => tsLs,
-		}),
-	);
-	const referencesCodeLensPlugin = defineLanguageServicePlugin(
-		useReferencesCodeLensPlugin({
-			getVueDocument: (uri) => vueDocuments.get(uri),
-			findReference: async (...args) => findReferences_internal(...args),
-		}),
-	);
-	const htmlPugConversionsPlugin = defineLanguageServicePlugin(
-		useHtmlPugConversionsPlugin({
-			getVueDocument: (uri) => vueDocuments.get(uri),
-		}),
-	);
-	const scriptSetupConversionsPlugin = defineLanguageServicePlugin(
-		useScriptSetupConversionsPlugin({
-			ts,
-			getVueDocument: (uri) => vueDocuments.get(uri),
-			doCodeActions: async (...args) => doCodeActions_internal(...args),
-			doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
-		}),
-	);
-	const refSugarConversionsPlugin = defineLanguageServicePlugin(
-		useRefSugarConversionsPlugin({
-			ts,
-			getVueDocument: (uri) => vueDocuments.get(uri),
-			doCodeActions: async (...args) => doCodeActions_internal(...args),
-			doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
-			findReferences: async (...args) => findReferences_internal(...args),
-			doValidation: async (...args) => doValidation_internal(...args),
-			doRename: async (...args) => doRename_internal(...args),
-			findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
-			scriptTsLs: tsLs,
-		}),
-	);
-	const tagNameCasingConversionsPlugin = defineLanguageServicePlugin(
-		useTagNameCasingConversionsPlugin({
-			getVueDocument: (uri) => vueDocuments.get(uri),
-			findReferences: async (...args) => findReferences_internal(...args),
-		}),
-	);
+	const autoDotValuePlugin = useAutoDotValuePlugin({
+		ts,
+		getTsLs: () => tsLs,
+	});
+	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
+		getVueDocument: (uri) => vueDocuments.get(uri),
+		findReference: async (...args) => findReferences_internal(...args),
+	});
+	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin({
+		getVueDocument: (uri) => vueDocuments.get(uri),
+	});
+	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin({
+		ts,
+		getVueDocument: (uri) => vueDocuments.get(uri),
+		doCodeActions: async (...args) => doCodeActions_internal(...args),
+		doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
+	});
+	const refSugarConversionsPlugin = useRefSugarConversionsPlugin({
+		ts,
+		getVueDocument: (uri) => vueDocuments.get(uri),
+		doCodeActions: async (...args) => doCodeActions_internal(...args),
+		doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
+		findReferences: async (...args) => findReferences_internal(...args),
+		doValidation: async (...args) => doValidation_internal(...args),
+		doRename: async (...args) => doRename_internal(...args),
+		findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
+		scriptTsLs: tsLs,
+	});
+	const tagNameCasingConversionsPlugin = useTagNameCasingConversionsPlugin({
+		getVueDocument: (uri) => vueDocuments.get(uri),
+		findReferences: async (...args) => findReferences_internal(...args),
+	});
 
-	const allPlugins = new Map<number, LanguageServicePlugin>();
-
-	for (const plugin of [
+	const allPlugins = [
 		...customPlugins,
 		vuePlugin,
 		cssPlugin,
@@ -225,9 +191,7 @@ export function createLanguageService(
 		refSugarConversionsPlugin,
 		tagNameCasingConversionsPlugin,
 		scriptTsPlugin,
-	]) {
-		allPlugins.set(plugin.id, plugin);
-	}
+	];
 
 	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: LanguageServiceRuntimeContext = {
@@ -251,7 +215,8 @@ export function createLanguageService(
 			// put emmet plugin at latest to fix https://github.com/johnsoncodehk/volar/issues/1088
 			emmetPlugin,
 		],
-		getPluginById: id => allPlugins.get(id),
+		getPluginId: plugin => allPlugins.indexOf(plugin),
+		getPluginById: id => allPlugins[id],
 	};
 	const _callHierarchy = callHierarchy.register(context);
 	const findReferences_internal = defineInternalApi(references.register(context));
@@ -377,41 +342,37 @@ export function createLanguageService(
 		}
 	}
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
-		return defineLanguageServicePlugin(
-			useVueTemplateLanguagePlugin({
-				ts,
-				templateLanguagePlugin,
-				getSemanticTokenLegend,
-				getScanner: (document): html.Scanner | undefined => {
-					if (document.languageId === 'html') {
-						return templateLanguagePlugin.htmlLs.createScanner(document.getText());
+		return useVueTemplateLanguagePlugin({
+			ts,
+			templateLanguagePlugin,
+			getSemanticTokenLegend,
+			getScanner: (document): html.Scanner | undefined => {
+				if (document.languageId === 'html') {
+					return templateLanguagePlugin.htmlLs.createScanner(document.getText());
+				}
+				else if (document.languageId === 'jade') {
+					const pugDocument = 'getPugDocument' in templateLanguagePlugin ? templateLanguagePlugin.getPugDocument(document) : undefined;
+					if (pugDocument) {
+						return 'pugLs' in templateLanguagePlugin ? templateLanguagePlugin.pugLs.createScanner(pugDocument) : undefined;
 					}
-					else if (document.languageId === 'jade') {
-						const pugDocument = 'getPugDocument' in templateLanguagePlugin ? templateLanguagePlugin.getPugDocument(document) : undefined;
-						if (pugDocument) {
-							return 'pugLs' in templateLanguagePlugin ? templateLanguagePlugin.pugLs.createScanner(pugDocument) : undefined;
-						}
-					}
-				},
-				tsLs,
-				isSupportedDocument: (document) => document.languageId === languageId,
-				getNameCases,
-				vueLsHost,
-				vueDocuments,
-				tsSettings,
-				tsRuntime,
-			}),
-		);
+				}
+			},
+			tsLs,
+			isSupportedDocument: (document) => document.languageId === languageId,
+			getNameCases,
+			vueLsHost,
+			vueDocuments,
+			tsSettings,
+			tsRuntime,
+		});
 	}
 	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {
-		const _languageSupportPlugin = defineLanguageServicePlugin(
-			useTsPlugin({
-				tsVersion: ts.version,
-				getTsLs: () => tsLs,
-				getBaseCompletionOptions,
-			}),
-		);
-		const languageSupportPlugin: LanguageServicePlugin = isTemplatePlugin ? {
+		const _languageSupportPlugin = useTsPlugin({
+			tsVersion: ts.version,
+			getTsLs: () => tsLs,
+			getBaseCompletionOptions,
+		});
+		const languageSupportPlugin: EmbeddedLanguageServicePlugin = isTemplatePlugin ? {
 			..._languageSupportPlugin,
 			complete: {
 				..._languageSupportPlugin.complete,

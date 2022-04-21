@@ -101,7 +101,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (await isCancel?.())
 						return;
 
-					const pluginCache = cacheMap.get(plugin.id) ?? cacheMap.set(plugin.id, new Map()).get(plugin.id)!;
+					const pluginId = context.getPluginId(plugin);
+					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
 					const tsProjectVersion = isTs ? context.getTsLs().__internal__.host.getProjectVersion?.() : undefined;
 

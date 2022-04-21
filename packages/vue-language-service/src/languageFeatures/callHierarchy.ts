@@ -42,7 +42,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						const data: PluginCallHierarchyData = {
 							uri,
 							originalItem: item,
-							pluginId: plugin.id,
+							pluginId: context.getPluginId(plugin),
 							sourceMap: sourceMap ? {
 								embeddedDocumentUri: sourceMap.mappedDocument.uri,
 							} : undefined,

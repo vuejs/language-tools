@@ -1,5 +1,4 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { LanguageServicePlugin } from '../languageService';
 import { visitEmbedded } from './definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
@@ -116,7 +115,7 @@ export async function languageFeatureWorker<T, K>(
 	uri: string,
 	arg: K,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
-	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: VueDocument | undefined) => T,
+	worker: (plugin: EmbeddedLanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: VueDocument | undefined) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,

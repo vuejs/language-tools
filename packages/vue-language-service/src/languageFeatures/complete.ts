@@ -1,8 +1,8 @@
 import { transformCompletionItem } from '@volar/transforms';
+import type { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { visitEmbedded } from '../utils/definePlugin';
-import { LanguageServicePlugin } from '../languageService';
 
 export interface PluginCompletionData {
 	uri: string,
@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			sourceMap: {
 				embeddedDocumentUri: string;
 			} | undefined,
-			plugin: LanguageServicePlugin,
+			plugin: EmbeddedLanguageServicePlugin,
 			list: vscode.CompletionList,
 		}[],
 		mainCompletion: {
@@ -68,7 +68,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								const data: PluginCompletionData = {
 									uri,
 									originalItem: item,
-									pluginId: cacheData.plugin.id,
+									pluginId: context.getPluginId(cacheData.plugin),
 									sourceMap: {
 										embeddedDocumentUri: sourceMap.mappedDocument.uri,
 									},
@@ -103,7 +103,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							const data: PluginCompletionData = {
 								uri,
 								originalItem: item,
-								pluginId: cacheData.plugin.id,
+								pluginId: context.getPluginId(cacheData.plugin),
 								sourceMap: undefined,
 							};
 							return {
@@ -161,7 +161,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									const data: PluginCompletionData = {
 										uri,
 										originalItem: item,
-										pluginId: plugin.id,
+										pluginId: context.getPluginId(plugin),
 										sourceMap: {
 											embeddedDocumentUri: sourceMap.mappedDocument.uri,
 										}
@@ -223,7 +223,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								const data: PluginCompletionData = {
 									uri,
 									originalItem: item,
-									pluginId: plugin.id,
+									pluginId: context.getPluginId(plugin),
 									sourceMap: undefined,
 								};
 								return {
@@ -239,7 +239,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
 
-		function sortPlugins(a: LanguageServicePlugin, b: LanguageServicePlugin) {
+		function sortPlugins(a: EmbeddedLanguageServicePlugin, b: EmbeddedLanguageServicePlugin) {
 			return (b.complete?.isAdditional ? -1 : 1) - (a.complete?.isAdditional ? -1 : 1);
 		}
 
