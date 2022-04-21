@@ -1,6 +1,6 @@
 {
 	"name": "@volar/transforms",
-	"version": "0.34.7",
+	"version": "0.34.8",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "packages/transforms"
 	},
 	"dependencies": {
-		"@volar/shared": "0.34.7",
+		"@volar/shared": "0.34.8",
 		"vscode-languageserver-types": "^3.17.0-next.9"
 	}
 }
