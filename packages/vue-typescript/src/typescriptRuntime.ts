@@ -30,6 +30,7 @@ export function createTypeScriptRuntime(options: {
 
 	const { typescript: ts } = options;
 	const isVue2 = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode === 2;
+	const tsFileVersions = new Map<string, string>();
 	const vueFiles = createVueFiles();
 	const plugins = [
 		useHtmlPlugin(),
@@ -72,13 +73,17 @@ export function createTypeScriptRuntime(options: {
 
 			lastProjectVersion = newProjectVersion;
 
-			const nowFileNames = new Set([...options.vueLsHost.getScriptFileNames()].filter(file => file.endsWith('.vue')));
+			const fileNames = options.vueLsHost.getScriptFileNames();
+			const vueFileNames = new Set(fileNames.filter(file => file.endsWith('.vue')));
+			const tsFileNames = new Set(fileNames.filter(file => !file.endsWith('.vue')));
 			const fileNamesToRemove: string[] = [];
 			const fileNamesToCreate: string[] = [];
 			const fileNamesToUpdate: string[] = [];
+			let tsFileUpdated = false;
 
+			// .vue
 			for (const vueFile of vueFiles.getAll()) {
-				if (!nowFileNames.has(vueFile.fileName) && !options.vueLsHost.fileExists?.(vueFile.fileName)) {
+				if (!vueFileNames.has(vueFile.fileName) && !options.vueLsHost.fileExists?.(vueFile.fileName)) {
 					// delete
 					fileNamesToRemove.push(vueFile.fileName);
 				}
@@ -91,11 +96,41 @@ export function createTypeScriptRuntime(options: {
 				}
 			}
 
-			for (const nowFileName of nowFileNames) {
+			for (const nowFileName of vueFileNames) {
 				if (!vueFiles.get(nowFileName)) {
 					// add
 					fileNamesToCreate.push(nowFileName);
 				}
+			}
+
+			// .ts / .js / .d.ts / .json ...
+			for (const tsFileVersion of tsFileVersions) {
+				if (!vueFileNames.has(tsFileVersion[0]) && !options.vueLsHost.fileExists?.(tsFileVersion[0])) {
+					// delete
+					tsFileVersions.delete(tsFileVersion[0]);
+					tsFileUpdated = true;
+				}
+				else {
+					// update
+					const newVersion = options.vueLsHost.getScriptVersion(tsFileVersion[0]);
+					if (tsFileVersion[1] !== newVersion) {
+						tsFileVersions.set(tsFileVersion[0], newVersion);
+						tsFileUpdated = true;
+					}
+				}
+			}
+
+			for (const nowFileName of tsFileNames) {
+				if (!tsFileVersions.has(nowFileName)) {
+					// add
+					const newVersion = options.vueLsHost.getScriptVersion(nowFileName);
+					tsFileVersions.set(nowFileName, newVersion);
+					tsFileUpdated = true;
+				}
+			}
+
+			if (tsFileUpdated) {
+				tsProjectVersion++;
 			}
 
 			const finalUpdateFileNames = fileNamesToCreate.concat(fileNamesToUpdate);
