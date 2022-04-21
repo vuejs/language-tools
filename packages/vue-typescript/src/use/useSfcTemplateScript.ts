@@ -230,11 +230,32 @@ export function useSfcTemplateScript(
 					walkInterpolationFragment(
 						ts,
 						bindText,
-						(frag, fragOffset) => {
+						(frag, fragOffset, lastCtxAccess) => {
 							if (fragOffset === undefined) {
 								codeGen.addText(frag);
 							}
 							else {
+								// fix https://github.com/johnsoncodehk/volar/issues/1205
+								if (lastCtxAccess) {
+									codeGen.addMapping2({
+										data: {
+											vueTag: 'style',
+											vueTagIndex: i,
+											capabilities: {
+												diagnostic: true,
+											},
+										},
+										mode: SourceMaps.Mode.Totally,
+										sourceRange: {
+											start: cssBind.start + fragOffset,
+											end: cssBind.start + fragOffset + lastCtxAccess.varLength,
+										},
+										mappedRange: {
+											start: codeGen.getText().length - lastCtxAccess.ctxText.length,
+											end: codeGen.getText().length + lastCtxAccess.varLength,
+										},
+									});
+								}
 								codeGen.addCode(
 									frag,
 									{

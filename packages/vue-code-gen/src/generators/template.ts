@@ -1758,7 +1758,7 @@ export function generate(
 		prefix: string,
 		suffix: string,
 	) {
-		walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset) => {
+		walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset, lastCtxAccess) => {
 			if (fragOffset === undefined) {
 				tsCodeGen.addText(frag);
 			}
@@ -1776,6 +1776,26 @@ export function generate(
 					fragOffset = 0;
 				}
 				if (sourceOffset !== undefined && data !== undefined) {
+					// fix https://github.com/johnsoncodehk/volar/issues/1205
+					if (lastCtxAccess && data.capabilities.diagnostic) {
+						tsCodeGen.addMapping2({
+							data: {
+								vueTag: data.vueTag,
+								capabilities: {
+									diagnostic: true,
+								},
+							},
+							mode: SourceMaps.Mode.Totally,
+							sourceRange: {
+								start: sourceOffset + fragOffset,
+								end: sourceOffset + fragOffset + lastCtxAccess.varLength,
+							},
+							mappedRange: {
+								start: tsCodeGen.getText().length - lastCtxAccess.ctxText.length,
+								end: tsCodeGen.getText().length + lastCtxAccess.varLength,
+							},
+						});
+					}
 					writeCode(
 						frag,
 						{

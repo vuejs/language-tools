@@ -4,7 +4,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 export function walkInterpolationFragment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	code: string,
-	cb: (fragment: string, offset: number | undefined) => void,
+	cb: (fragment: string, offset: number | undefined, beforeCtxAccess?: { ctxText: string, varLength: number; }) => void,
 	localVars: Record<string, number>,
 	identifiers: Set<string>,
 ) {
@@ -40,6 +40,8 @@ export function walkInterpolationFragment(
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 	// localVarOffsets = localVarOffsets.sort((a, b) => a - b);
 
+	let lastCtxAccess: { ctxText: string, varLength: number; } | undefined;
+
 	if (ctxVars.length) {
 
 		if (ctxVars[0].isShorthand) {
@@ -52,22 +54,31 @@ export function walkInterpolationFragment(
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
 
-			cb('__VLS_ctx.', undefined);
-
+			writeCtxAccess(ctxVars[i].text.length);
 			if (ctxVars[i + 1].isShorthand) {
-				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
+				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset, lastCtxAccess);
 				cb(': ', undefined);
 			}
 			else {
-				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
+				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset, lastCtxAccess);
 			}
+			lastCtxAccess = undefined;
 		}
 
-		cb('__VLS_ctx.', undefined);
-		cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
+		writeCtxAccess(ctxVars[ctxVars.length - 1].text.length);
+		cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset, lastCtxAccess);
+		lastCtxAccess = undefined;
 	}
 	else {
 		cb(code, 0);
+	}
+
+	function writeCtxAccess(varLength: number) {
+		cb('__VLS_ctx.', undefined);
+		lastCtxAccess = {
+			ctxText: '__VLS_ctx.',
+			varLength,
+		};
 	}
 }
 
