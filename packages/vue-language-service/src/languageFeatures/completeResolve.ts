@@ -32,6 +32,20 @@ export function register(context: LanguageServiceRuntimeContext) {
 						: undefined;
 					const resolvedItem = await plugin.complete.resolve(originalItem, newPosition_2);
 
+					// fix https://github.com/johnsoncodehk/volar/issues/916
+					if (resolvedItem.additionalTextEdits) {
+						for (const edit of resolvedItem.additionalTextEdits) {
+							if (
+								edit.range.start.line === 0
+								&& edit.range.start.character === 0
+								&& edit.range.end.line === 0
+								&& edit.range.end.character === 0
+							) {
+								edit.newText = '\n' + edit.newText;
+							}
+						}
+					}
+
 					item = transformCompletionItem(
 						resolvedItem,
 						embeddedRange => plugin.resolveEmbeddedRange?.(embeddedRange)
@@ -41,20 +55,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 			else {
 				item = await plugin.complete.resolve(originalItem);
-			}
-		}
-
-		// fix https://github.com/johnsoncodehk/volar/issues/916
-		if (item.additionalTextEdits) {
-			for (const edit of item.additionalTextEdits) {
-				if (
-					edit.range.start.line === 0
-					&& edit.range.start.character === 0
-					&& edit.range.end.line === 0
-					&& edit.range.end.character === 0
-				) {
-					edit.newText = '\n' + edit.newText;
-				}
 			}
 		}
 
