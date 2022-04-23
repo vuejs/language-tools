@@ -6,7 +6,7 @@
 - fix: avoid auto-import added on same line as `<script>` ([#916](https://github.com/johnsoncodehk/volar/issues/916))
 - fix: embedded html interpolations syntax highlight not working in markdown
 - fix: inlay hints not working in template
-- fix: preview not broken on nuxt3 rc ([#1225](https://github.com/johnsoncodehk/volar/issues/1225))
+- fix: preview broken on nuxt3 rc ([#1225](https://github.com/johnsoncodehk/volar/issues/1225))
 - fix: cannot use import equals in script setup ([#1223](https://github.com/johnsoncodehk/volar/issues/1223))
 - fix: directives syntax highlight display incorrect in html comment inside svg tag ([#1206](https://github.com/johnsoncodehk/volar/issues/1206))
 
