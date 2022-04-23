@@ -1,4 +1,4 @@
 packages:
   - 'extensions/*'
   - 'packages/*'
-  - 'packages/vue-language-service/testCases'
+  - 'packages/*/test-workspace'

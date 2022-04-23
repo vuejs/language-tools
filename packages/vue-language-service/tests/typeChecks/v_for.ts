@@ -1,4 +1,4 @@
 import * as path from 'upath';
 import { defineTypeCheck } from '../utils/defineTypeCheck';
 
-defineTypeCheck(path.resolve(__dirname, '../../testCases/typeChecks/v_for.vue'), []);
+defineTypeCheck(path.resolve(__dirname, '../../test-workspace/typeChecks/v_for.vue'), []);
