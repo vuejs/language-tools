@@ -1,6 +1,6 @@
 {
 	"fileTypes": [],
-	"injectionSelector": "L:meta.tag.metadata, L:meta.tag.structure, L:meta.tag.inline, L:meta.tag.object, L:meta.tag.other, L:meta.tag.custom, L:meta.element.structure.svg",
+	"injectionSelector": "L:meta.tag.metadata, L:meta.tag.structure, L:meta.tag.inline, L:meta.tag.object, L:meta.tag.other, L:meta.tag.custom, L:meta.element.structure.svg -comment.block",
 	"patterns": [
 		{
 			"include": "source.vue#vue-directives"
