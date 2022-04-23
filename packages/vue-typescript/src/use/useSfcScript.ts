@@ -24,6 +24,7 @@ export function useSfcScript(
 					formatting: true,
 					documentSymbol: true,
 					codeActions: false,
+					inlayHints: false,
 				},
 				data: undefined,
 				isTsHostFile: false,

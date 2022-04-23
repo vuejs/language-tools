@@ -358,6 +358,7 @@ export function useSfcTemplateScript(
 					formatting: false,
 					codeActions: false,
 					documentSymbol: false,
+					inlayHints: false,
 				},
 				data: undefined,
 				// data: {
@@ -397,6 +398,7 @@ export function useSfcTemplateScript(
 					formatting: false,
 					documentSymbol: false,
 					codeActions: false,
+					inlayHints: true,
 				},
 				data: undefined,
 				isTsHostFile: true,
@@ -417,6 +419,7 @@ export function useSfcTemplateScript(
 					formatting: true,
 					documentSymbol: true,
 					codeActions: false,
+					inlayHints: false,
 				},
 				data: undefined,
 				isTsHostFile: false,

@@ -29,6 +29,7 @@ export function useSfcStyles(
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
+					inlayHints: true,
 				},
 				data: {
 					module: style.module,

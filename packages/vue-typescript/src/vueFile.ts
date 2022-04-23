@@ -68,6 +68,7 @@ export interface EmbeddedFile<T = unknown> {
 		formatting: boolean,
 		documentSymbol: boolean,
 		codeActions: boolean,
+		inlayHints: boolean,
 	},
 	data: T,
 };

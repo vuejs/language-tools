@@ -26,6 +26,7 @@ export function useSfcCustomBlocks(
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
+					inlayHints: true,
 				},
 				data: undefined,
 				isTsHostFile: false,
