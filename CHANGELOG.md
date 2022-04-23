@@ -345,7 +345,7 @@
 - fix: pug template type-check broken with omit tag name
 - fix: language server broken with tsconfig extends a non-relative path ([#747](https://github.com/johnsoncodehk/volar/issues/747)) ([#749](https://github.com/johnsoncodehk/volar/issues/749))
 
-## 0.29.7  (2021/11/29)
+## 0.29.7 (2021/11/29)
 
 - feat: support html, css custom data ([#707](https://github.com/johnsoncodehk/volar/issues/707))
 - feat: support extends tsconfig `vueCompilerOptions` ([#731](https://github.com/johnsoncodehk/volar/issues/731))
