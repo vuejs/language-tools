@@ -54,7 +54,7 @@ export function register(
 	}
 	if (features.completion) {
 		server.completionProvider = {
-			triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./'.split(''), // all symbols on keyboard
+			triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./ '.split(''), // all symbols on keyboard
 			resolveProvider: true,
 		};
 		server.executeCommandProvider = {
