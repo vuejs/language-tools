@@ -32,6 +32,9 @@ Discord: https://discord.gg/5bnSSSSBbK
 [emacs-lsp/lsp-mode](https://github.com/emacs-lsp/lsp-mode) ([jadestrong/lsp-volar](https://github.com/jadestrong/lsp-volar)) ⚡ 🤝 \
 *Vue language client for Emacs*
 
+[tommasongr/nova-vue](https://github.com/tommasongr/nova-vue) \
+*Vue language client for Nova*
+
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
 
