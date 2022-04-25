@@ -119,9 +119,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
 
-	registarUseSecondServerChange();
-	registarRestartRequest();
-	registarClientRequests();
+	registerUseSecondServerChange();
+	registerRestartRequest();
+	registerClientRequests();
 
 	splitEditors.activate(context);
 	preview.activate(context);
@@ -133,7 +133,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.activate(context, docClient ?? apiClient);
 
-	async function registarUseSecondServerChange() {
+	async function registerUseSecondServerChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
 			const nowUseSecondServer = useSecondServer();
 			if (_useSecondServer !== nowUseSecondServer) {
@@ -143,17 +143,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			}
 		});
 	}
-	async function registarRestartRequest() {
+	async function registerRestartRequest() {
 
 		await Promise.all(clients.map(client => client.onReady()));
 
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
 			await Promise.all(clients.map(client => client.stop()));
 			await Promise.all(clients.map(client => client.start()));
-			registarClientRequests();
+			registerClientRequests();
 		}));
 	}
-	function registarClientRequests() {
+	function registerClientRequests() {
 
 		for (const client of clients) {
 			showReferences.activate(context, client);
