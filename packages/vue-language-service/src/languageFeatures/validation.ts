@@ -100,8 +100,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				},
 				async (plugin, document, arg, sourceMap) => {
 
-					// avoid duplicate errors from vue plugiin
-					if (!isTsDocument(document) && isTs)
+					// avoid duplicate errors from vue plugin & typescript plugin
+					if (isTsDocument(document) !== isTs)
 						return;
 
 					if (await isCancel?.())
