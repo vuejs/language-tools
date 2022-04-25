@@ -63,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
 			if (!terminal) {
-				return; // don't create server because maybe user close it intentionally
+				return; // don't create server because maybe user closed it intentionally
 			}
 
 			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, panel);
@@ -80,7 +80,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
 			if (!terminal) {
-				return; // don't create server because maybe user close it intentionally
+				return; // don't create server because maybe user closed it intentionally
 			}
 
 			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, panel);
@@ -116,7 +116,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			},
 		});
 		if (select === undefined)
-			return; // cancle
+			return; // cancel
 
 		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'vite');
 	}));
@@ -139,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			},
 		});
 		if (select === undefined)
-			return; // cancle
+			return; // cancel
 
 		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'nuxt');
 	}));

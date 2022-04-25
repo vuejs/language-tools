@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext, clients: Common
 
 		const select = await userPick(options);
 		if (select === undefined)
-			return; // cancle
+			return; // cancel
 
 		if (select === '2') {
 			vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);

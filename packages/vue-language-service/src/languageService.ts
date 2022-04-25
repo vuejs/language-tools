@@ -212,7 +212,7 @@ export function createLanguageService(
 			tagNameCasingConversionsPlugin,
 			scriptTsPlugin,
 			autoDotValuePlugin,
-			// put emmet plugin at latest to fix https://github.com/johnsoncodehk/volar/issues/1088
+			// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
 			emmetPlugin,
 		],
 		getPluginId: plugin => allPlugins.indexOf(plugin),

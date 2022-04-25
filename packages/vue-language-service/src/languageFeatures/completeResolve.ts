@@ -58,7 +58,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 		}
 
-		// TODO: monky fix import ts file icon
+		// TODO: monkey fix import ts file icon
 		if (item.detail !== item.detail + '.ts') {
 			item.detail = item.detail;
 		}

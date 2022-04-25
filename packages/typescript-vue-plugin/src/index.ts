@@ -54,7 +54,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition),
 				findReferences: apiHook(_tsPluginApis.findReferences),
 
-				// TODO: now is handle by vue server
+				// TODO: now is handled by vue server
 				// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
 				// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
 				// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),

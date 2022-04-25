@@ -68,7 +68,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			}
 			if (!anyComponentUsed) {
-				return 'unsure'; // not sure component style, because do not have any componnent using in <template> for check
+				return 'unsure'; // not sure component style, because do not have any component using in <template> for check
 			}
 			for (const tagName of tagNames) {
 				// TagName

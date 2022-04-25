@@ -62,7 +62,7 @@ export function register(
 				item.kind = convertKind(tsEntry.kind);
 
 				if (tsEntry.source && tsEntry.hasAction) {
-					// De-prioritze auto-imports
+					// De-prioritize auto-imports
 					// https://github.com/microsoft/vscode/issues/40311
 					item.sortText = '\uffff' + tsEntry.sortText;
 
@@ -317,7 +317,7 @@ export function register(
 		): boolean {
 			if (semver.lt(tsVersion, '3.2.0')) {
 				// Workaround for https://github.com/microsoft/TypeScript/issues/27742
-				// Only enable dot completions when previous character not a dot preceded by whitespace.
+				// Only enable dot completions when the previous character is not a dot preceded by whitespace.
 				// Prevents incorrectly completing while typing spread operators.
 				if (position.character > 1) {
 					const preText = document.getText(vscode.Range.create(
