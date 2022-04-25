@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
 		const select = await userPick(options);
 		if (select === undefined)
-			return; // cancle
+			return; // cancel
 
 		if (select === '0') {
 			tagCases.uriSet(crtDoc.uri.toString(), 'both');

@@ -67,7 +67,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return token;
 			}).filter(shared.notEmpty),
 			tokens => tokens.flat(),
-			reportProgress, // TODO: this is no effect in LSP
+			reportProgress, // TODO: this has no effect in LSP
 		);
 	};
 }

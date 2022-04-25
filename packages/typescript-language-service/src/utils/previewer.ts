@@ -60,7 +60,7 @@ function getTagBodyText(
 				return makeCodeblock(text);
 			}
 		case 'author':
-			// fix obsucated email address, #80898
+			// fix obfuscated email address, #80898
 			const emailMatch = text.match(/(.+)\s<([-.\w]+@[-.\w]+)>/);
 
 			if (emailMatch === null) {

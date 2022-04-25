@@ -37,7 +37,7 @@ type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 type IsFunctionalComponent<T> = T extends (...args: any) => JSX.Element ? true : false;
 type IsConstructorComponent<T> = T extends new (...args: any) => JSX.ElementClass ? true : false;
 type IsComponent_Loose<T> = IsConstructorComponent<T> extends false ? IsFunctionalComponent<T> extends false ? false : true : true; // allow any type
-type IsComponent_Strict<T> = IsConstructorComponent<T> extends true ? true : IsFunctionalComponent<T> extends true ? true : false; // not allow any type
+type IsComponent_Strict<T> = IsConstructorComponent<T> extends true ? true : IsFunctionalComponent<T> extends true ? true : false; // don't allow any type
 type ComponentKeys<T> = keyof { [K in keyof T as IsComponent_Loose<T[K]> extends true ? K : never]: any };
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
@@ -108,7 +108,7 @@ export type EmitEvent2<F, E> =
 		(...args: any): any
 		(...args: any): any
 	} ? (...payload: P) => void
-	: unknown | '[Type Warning] Volar cloud not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
+	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 export type EmitEvent<T, E> =
 	T extends DefineComponent<infer _, any, any, any, any, any, any, infer E2> ? EmitEvent_3<E2, E>
 	: T extends FunctionalComponent<infer _, infer E2> ? EmitEvent_3<E2, E>

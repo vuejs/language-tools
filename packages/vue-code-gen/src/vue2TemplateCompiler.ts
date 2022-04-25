@@ -9,7 +9,7 @@ export function compile(
 	const onError = options.onError;
 	options.onError = (error) => {
 		if (error.code === CompilerCore.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT)
-			return; // :key binding allow in v-for template child in vue 2
+			return; // :key binding allowed in v-for template child in vue 2
 		if (onError)
 			onError(error);
 		else
