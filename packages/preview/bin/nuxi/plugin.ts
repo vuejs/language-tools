@@ -1,5 +1,6 @@
 // @ts-nocheck
-export default defineNuxtPlugin(app => {
+// remove defineNuxtPlugin() to fixed https://github.com/yaegassy/coc-volar-tools/pull/3#issuecomment-1109155402
+export default app => {
 
 	if (process.server)
 		return;
@@ -373,4 +374,4 @@ export default defineNuxtPlugin(app => {
 	//         // TODO: post emit
 	//     }
 	// }
-});
+};
