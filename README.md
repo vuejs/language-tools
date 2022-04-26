@@ -2,12 +2,14 @@
 
 > ⚡ Explore high-performance tooling for Vue
 
-- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) (👈 The Main VSCode Extension)\
+- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
 *Vue language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
+- [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
+*Common plugins to changes language features behavior*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
