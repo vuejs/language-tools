@@ -9,13 +9,13 @@
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
-*Common plugins to changes language features behavior*
+*Common plugins to changes IDE behavior with Volar language server*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
 ## IDE Supports by Community
 
-[yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 \
+[yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 🅿️ \
 *Vue language client for coc.nvim*
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
@@ -38,7 +38,8 @@ Discord: https://discord.gg/5bnSSSSBbK
 *Vue language client for Nova*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
-\* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471)
+\* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471) \
+\* 🅿️ support [extra preview features](https://twitter.com/johnsoncodehk/status/1507024137901916161)
 
 ## High Level System Overview
 
