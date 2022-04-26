@@ -53,6 +53,7 @@ flowchart LR
     SUBLIME[Sublime]
     ATOM[Atom]
     EMACS[Emacs]
+    NOVA[Nova]
 
     %% Language Clients
     COC_VUE[yaegassy/coc-volar]
@@ -61,6 +62,7 @@ flowchart LR
     SUBLIME_VUE[sublimelsp/LSP-volar]
     ATOM_VUE[kabiaa/atom-ide-volar]
     EMACS_VUE[jadestrong/lsp-volar]
+    NOVA_VUE[tommasongr/nova-vue]
 
     click COC_VUE "https://github.com/yaegassy/coc-volar"
     click NEO_VUE "https://github.com/neovim/nvim-lspconfig"
@@ -68,6 +70,7 @@ flowchart LR
     click SUBLIME_VUE "https://github.com/sublimelsp/LSP-volar"
     click ATOM_VUE "https://github.com/kabiaa/atom-ide-volar"
     click EMACS_VUE "https://github.com/jadestrong/lsp-volar"
+    click NOVA_VUE "https://github.com/tommasongr/nova-vue"
 
     %% Volar - Extensions
     VSC_VUE[vscode-vue-language-features]
@@ -134,6 +137,7 @@ flowchart LR
     SUBLIME --> SUBLIME_VUE
     ATOM --> ATOM_VUE
     EMACS --> EMACS_VUE
+    NOVA --> NOVA_VUE
     VIM --> VIM_VUE
 
     VSC_VUE --> VUE_CLIENTS
@@ -142,6 +146,7 @@ flowchart LR
     SUBLIME_VUE --> VUE_CLIENTS
     ATOM_VUE --> VUE_CLIENTS
     EMACS_VUE --> VUE_CLIENTS
+    NOVA_VUE --> VUE_CLIENTS
     VIM_VUE --> VUE_CLIENTS
 
     VUE_CLIENTS -- Language Server Protocol --> VUE_SERVER
