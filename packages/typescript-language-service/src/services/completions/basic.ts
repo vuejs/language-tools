@@ -47,7 +47,10 @@ export function register(
 			document.positionAt(completionContext.optionalReplacementSpan.start + completionContext.optionalReplacementSpan.length),
 		) : undefined;
 
-		let line = document.getText({ start: position, end: { line: position.line + 1, character: 0 } });
+		let line = document.getText({
+			start: { line: position.line, character: 0 },
+			end: { line: position.line + 1, character: 0 },
+		});
 		if (line.endsWith('\n')) {
 			line = line.substring(0, line.length - 1);
 		}
