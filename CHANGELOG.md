@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.11 (2022/4/29)
+
+- fix: cannnot trigger auto-complete in import statement by input space
+- fix: duplicate diagnostics in *.ts on takeover mode ([#1234](https://github.com/johnsoncodehk/volar/issues/1234))
+- fix: style block has redundant html emmet result ([#1244](https://github.com/johnsoncodehk/volar/issues/1244))
+- fix: language server crash with low TS version ([#1242](https://github.com/johnsoncodehk/volar/issues/1242))
+- fix: directives type-check not working ([#1228](https://github.com/johnsoncodehk/volar/issues/1228))
+- fix: auto-complete replace range incorrect in import statement ([#1227](https://github.com/johnsoncodehk/volar/issues/1227))
+
 ## 0.34.10 (2022/4/24)
 
 - fix: template bindings error incomplete ([#1205](https://github.com/johnsoncodehk/volar/issues/1205))
