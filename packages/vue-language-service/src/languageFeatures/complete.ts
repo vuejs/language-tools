@@ -1,6 +1,7 @@
 import { transformCompletionItem } from '@volar/transforms';
 import type { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { visitEmbedded } from '../utils/definePlugin';
 
@@ -31,7 +32,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (uri: string, position: vscode.Position, completionContext?: vscode.CompletionContext) => {
 
-		const document = context.getTextDocument(uri);
+		let document: TextDocument | undefined;
 
 		if (
 			completionContext?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions
@@ -84,13 +85,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 						};
 					}
 				}
-
-				if (document) {
+				else if (document = context.getTextDocument(uri)) {
 
 					if (!cacheData.plugin.complete?.on)
 						continue;
 
-					const completionList = await cacheData.plugin.complete?.on(document, position, completionContext);
+					const completionList = await cacheData.plugin.complete.on(document, position, completionContext);
 
 					if (!completionList) {
 						cacheData.list.isIncomplete = false;
@@ -146,11 +146,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (cache!.mainCompletion && (!plugin.complete.isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
-							// avoid duplicate items with .vue and .vue.htmlx
+							// avoid duplicate items with .vue and .vue.html
 							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 								continue;
 
-							const embeddedCompletionList = await plugin.complete?.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
@@ -194,7 +194,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				});
 			}
 
-			if (document) {
+			if (document = context.getTextDocument(uri)) {
 
 				const plugins = context.getPlugins().sort(sortPlugins);
 
@@ -209,11 +209,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (cache.mainCompletion && (!plugin.complete.isAdditional || cache.mainCompletion.documentUri !== document.uri))
 						continue;
 
-					// avoid duplicate items with .vue and .vue.htmlx
+					// avoid duplicate items with .vue and .vue.html
 					if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 						continue;
 
-					const completionList = await plugin.complete?.on(document, position, completionContext);
+					const completionList = await plugin.complete.on(document, position, completionContext);
 
 					if (!completionList || !completionList.items.length)
 						continue;
