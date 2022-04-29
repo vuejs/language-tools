@@ -1332,7 +1332,7 @@ export function generate(
 			) {
 
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_types.directiveFunction(`);
+				tsCodeGen.addText(`__VLS_types.directiveFunction(__VLS_ctx.`);
 				writeCode(
 					camelize('v-' + prop.name),
 					{
@@ -1347,6 +1347,7 @@ export function generate(
 						applyNewName: keepHyphenateName,
 					},
 				);
+				identifiers.add(camelize('v-' + prop.name));
 				tsCodeGen.addText(`)(`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					writeInterpolation(
