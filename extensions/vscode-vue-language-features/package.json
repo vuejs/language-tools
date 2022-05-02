@@ -11,7 +11,7 @@
 	"displayName": "Vue Language Features (Volar)",
 	"description": "Language support for Vue 3",
 	"author": "johnsoncodehk",
-	"publisher": "johnsoncodehk",
+	"publisher": "Vue",
 	"engines": {
 		"vscode": "^1.63.0"
 	},

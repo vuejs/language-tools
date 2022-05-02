@@ -2,7 +2,7 @@
 
 > A [TS server plugin](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin) to make TS server know *.vue files.
 
-[Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-vue-plugin)
+[Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
 
 ⚠️ It's recommended to [use take over mode instead of this plugin](https://github.com/johnsoncodehk/volar/discussions/471).
 

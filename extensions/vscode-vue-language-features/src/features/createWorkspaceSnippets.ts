@@ -6,7 +6,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (vscode.workspace.workspaceFolders) {
 			for (const rootPath of vscode.workspace.workspaceFolders) {
 
-				const volar = vscode.extensions.getExtension('johnsoncodehk.volar');
+				const volar = vscode.extensions.getExtension('Vue.volar');
 				if (!volar) return;
 
 				const templateUri = vscode.Uri.joinPath(volar.extensionUri, 'templates', 'vue.code-snippets');
