@@ -630,7 +630,7 @@
 		"prepack:browser": "npm run prebuild && npm run build:browser -- --minify && npm run build:node -- --empty",
 		"pack:node": "npm run prepack:node && vsce package",
 		"pack:browser": "npm run prepack:browser && vsce package",
-		"release:node": "npm run prepack:node && vsce publish --target win32-x64 win32-ia32 win32-arm64 linux-x64 linux-arm64 linux-armhf darwin-x64 darwin-arm64 alpine-x64 alpine-arm64",
+		"release:node": "npm run prepack:node && vsce publish --target win32-x64 win32-ia32 win32-arm64 linux-x64 linux-arm64 linux-armhf darwin-x64 darwin-arm64 alpine-x64 alpine-arm64 && ovsx publish",
 		"release:browser": "npm run prepack:browser && vsce publish --target web",
 		"release": "npm run release:node && npm run release:browser"
 	},
@@ -645,6 +645,7 @@
 		"@vue/reactivity": "^3.2.31",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
+		"ovsx": "^0.3.0",
 		"path-browserify": "^1.0.1",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.0-next.14",
