@@ -155,7 +155,7 @@ export default function (options: {
 							start: document.positionAt(sfc.template.start),
 							end: document.positionAt(sfc.template.startTagEnd),
 						},
-						'TypeScript intellisense is disabled on template, you can config `"jsx": "preserve"` in tsconfig or jsconfig to enable it, or config `vueCompilerOptions.experimentalDisableTemplateSupport` to disable this prompt.',
+						'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport":true` in `"vueCompilerOptions"` property.',
 						vscode.DiagnosticSeverity.Information,
 						undefined,
 						'volar',
