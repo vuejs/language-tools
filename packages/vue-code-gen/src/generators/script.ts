@@ -275,6 +275,7 @@ export function generate(
 			codeGen.addText(`);\n`);
 		}
 
+		codeGen.addText(`// @ts-ignore\n`); // fix https://github.com/johnsoncodehk/volar/issues/1263
 		codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
 
 		if (script && scriptRanges?.exportDefault?.args) {
