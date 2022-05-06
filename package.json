@@ -14,9 +14,11 @@
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
 	},
 	"devDependencies": {
+		"@types/node": "latest",
 		"@vscode/test-web": "latest",
 		"lerna": "latest",
 		"typescript": "latest",
-		"vitest": "^0.8.4"
+		"vite": "latest",
+		"vitest": "latest"
 	}
 }

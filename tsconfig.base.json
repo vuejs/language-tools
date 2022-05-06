@@ -3,7 +3,7 @@
 		"target": "ES2016",
 		"lib": [
 			"WebWorker",
-			"ES2016"
+			"ES2020"
 		],
 		"module": "commonjs",
 		"moduleResolution": "node",

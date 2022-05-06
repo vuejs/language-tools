@@ -19,21 +19,21 @@ export default function (options: {
 			triggerCharacters: ['"', ':'],
 
 			on(document, position, context) {
-				return worker(document, (jsonDocument) => {
-					return jsonLs.doComplete(document, position, jsonDocument);
+				return worker(document, async (jsonDocument) => {
+					return await jsonLs.doComplete(document, position, jsonDocument);
 				});
 			},
 
-			resolve(item) {
-				return jsonLs.doResolve(item);
+			async resolve(item) {
+				return await jsonLs.doResolve(item);
 			},
 		},
 
 		definition: {
 
 			on(document, position) {
-				return worker(document, (jsonDocument) => {
-					return jsonLs.findDefinition(document, position, jsonDocument);
+				return worker(document, async (jsonDocument) => {
+					return await jsonLs.findDefinition(document, position, jsonDocument);
 				});
 			},
 		},
@@ -43,55 +43,55 @@ export default function (options: {
 
 				const documentLanguageSettings = undefined; // await getSettings(); // TODO
 
-				return jsonLs.doValidation(document, jsonDocument, documentLanguageSettings, options.schema) as Promise<vscode.Diagnostic[]>;
+				return await jsonLs.doValidation(document, jsonDocument, documentLanguageSettings, options.schema) as vscode.Diagnostic[];
 			});
 		},
 
 		doHover(document, position) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.doHover(document, position, jsonDocument);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.doHover(document, position, jsonDocument);
 			});
 		},
 
 		findDocumentLinks(document) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.findLinks(document, jsonDocument);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.findLinks(document, jsonDocument);
 			});
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.findDocumentSymbols(document, jsonDocument);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.findDocumentSymbols(document, jsonDocument);
 			});
 		},
 
 		findDocumentColors(document) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.findDocumentColors(document, jsonDocument);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.findDocumentColors(document, jsonDocument);
 			});
 		},
 
 		getColorPresentations(document, color, range) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.getColorPresentations(document, jsonDocument, color, range);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.getColorPresentations(document, jsonDocument, color, range);
 			});
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.getFoldingRanges(document);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.getFoldingRanges(document);
 			});
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.getSelectionRanges(document, positions, jsonDocument);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.getSelectionRanges(document, positions, jsonDocument);
 			});
 		},
 
 		format(document, range, options) {
-			return worker(document, (jsonDocument) => {
-				return jsonLs.format(document, range, options);
+			return worker(document, async (jsonDocument) => {
+				return await jsonLs.format(document, range, options);
 			});
 		},
 	};
