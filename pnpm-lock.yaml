@@ -24,9 +24,8 @@ importers:
       esbuild: latest
       typescript-vue-plugin: 0.34.12
       vsce: latest
-    dependencies:
-      '@volar/typescript-plugin-forward': file:extensions/vscode-typescript-vue-plugin/typescript-plugin-forward
     devDependencies:
+      '@volar/typescript-plugin-forward': file:extensions/vscode-typescript-vue-plugin/typescript-plugin-forward
       esbuild: 0.14.38
       typescript-vue-plugin: link:../../packages/typescript-vue-plugin
       vsce: 2.7.0
@@ -6648,4 +6647,4 @@ packages:
     resolution: {directory: extensions/vscode-typescript-vue-plugin/typescript-plugin-forward, type: directory}
     name: '@volar/typescript-plugin-forward'
     version: 0.0.0
-    dev: false
+    dev: true
