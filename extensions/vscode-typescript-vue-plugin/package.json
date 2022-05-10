@@ -32,11 +32,9 @@
 		"release": "vsce publish"
 	},
 	"devDependencies": {
+		"@volar/typescript-plugin-forward": "file:typescript-plugin-forward",
 		"esbuild": "latest",
 		"typescript-vue-plugin": "0.34.12",
 		"vsce": "latest"
-	},
-	"dependencies": {
-		"@volar/typescript-plugin-forward": "file:typescript-plugin-forward"
 	}
 }
