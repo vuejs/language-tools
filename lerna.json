@@ -3,5 +3,5 @@
 		"extensions/*",
 		"packages/*"
 	],
-	"version": "0.34.11"
+	"version": "0.34.12"
 }
