@@ -606,6 +606,29 @@ export async function activate(context: vscode.ExtensionContext) {
 						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
 					</a>
 
+					<table>
+						<thead>
+							<tr>
+								<th>Date</th>
+								<th>Event</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>2022.05.25</td>
+								<td><a target="_top" href="https://www.vuemeetup.com/vue-contributor-day-may-2022">Vue Contributor Day May 2022</a></td>
+							</tr>
+							<tr>
+								<td>2022.06.08</td>
+								<td><a target="_top" href="https://us.vuejs.org/">VueConf US</a></td>
+							</tr>
+							<tr>
+								<td>2022.10.16</td>
+								<td><a target="_top" href="https://vuefes.jp/2022/">Vue Fes Japan Online 2022</a></td>
+							</tr>
+						</tbody>
+					</table>
+
 					<div style="height: 35px; width: 116px; display: flex;">
 						<a
 							style="box-shadow: none; background-color: rgb(250, 251, 252); border-block: 1px solid rgba(27, 31, 35, 0.15); border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; border-inline: 1px solid rgba(27, 31, 35, 0.15); border-start-end-radius: 6px; border-start-start-radius: 6px; caret-color: rgb(36, 41, 46); color: rgb(36, 41, 46); display: block; font-size: 14px; font-weight: 500; inline-size: 100%; line-height: 20px; padding-block: 5px; padding-inline: 16px; position: relative; text-align: center; transition-duration: 0.2s; transition-property: background-color; transition-timing-function: cubic-bezier(0.3, 0, 0.5, 1); user-select: none; vertical-align: middle; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center;"
