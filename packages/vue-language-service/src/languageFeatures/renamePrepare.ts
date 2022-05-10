@@ -1,12 +1,17 @@
+import { getWordRange } from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 
+// https://github.com/microsoft/vscode/blob/dcf27391b7dd7c1cece483806af75b4f87188e70/extensions/html/language-configuration.json#L35
+const htmlWordPatterns = /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\\"\,\.\<\>\/\s]+)/g;
+
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return (uri: string, position: vscode.Position) => {
+	return async (uri: string, position: vscode.Position) => {
 
-		return languageFeatureWorker(
+		const document = context.getTextDocument(uri);
+		const result = await languageFeatureWorker(
 			context,
 			uri,
 			position,
@@ -14,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
-					data => !!data.capabilities.rename,
+					data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.in : !!data.capabilities.rename,
 				)) {
 					yield mappedRange.start;
 				}
@@ -38,5 +43,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return prepares[0];
 			},
 		);
+
+		return result ?? (document ? getWordRange(htmlWordPatterns, position, document) : undefined);
 	};
 }
