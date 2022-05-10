@@ -80,7 +80,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (referenceSourceMap) {
 
-					const range = referenceSourceMap.getSourceRange(reference.range.start, reference.range.end)?.[0];
+					const range = referenceSourceMap.getSourceRange(
+						reference.range.start,
+						reference.range.end,
+						data => !!data.capabilities.references,
+					)?.[0];
 
 					if (!range)
 						return;
