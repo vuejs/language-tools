@@ -638,6 +638,10 @@ export async function activate(context: vscode.ExtensionContext) {
 								<td>2022.10.16</td>
 								<td><a target="_top" href="https://vuefes.jp/2022/">Vue Fes Japan Online 2022</a></td>
 							</tr>
+							<tr>
+								<td>2022.10</td>
+								<td><a target="_top" href="https://vuejslive.com/">Vue.js London 2022</a></td>
+							</tr>
 						</tbody>
 					</table>
 
