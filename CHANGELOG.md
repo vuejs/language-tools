@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.34.12 (2022/5/10)
+
+- chore: change extensions publisher ([#1124](https://github.com/johnsoncodehk/volar/issues/1124))
+- feat: add `"warning"` option to `experimentalShamefullySupportOptionsApi` and make default
+- feat: allow type narrowing in inline handlers bu config `"experimentalAllowTypeNarrowingInInlineHandlers": true` in vueCompilerOptions ([#1249](https://github.com/johnsoncodehk/volar/issues/1249))
+- fix: avoid report error with config `"module": "es2015"` in tsconfig ([#1263](https://github.com/johnsoncodehk/volar/issues/1263))
+- fix: find references result has invalid item
+- fix: property access errors loss in template ([#1164](https://github.com/johnsoncodehk/volar/issues/1164))
+- fix: cannot rename html tag in some cases ([#1272](https://github.com/johnsoncodehk/volar/issues/1272))
+
 ## 0.34.11 (2022/4/29)
 
 - fix: cannnot trigger auto-complete in import statement by input space
