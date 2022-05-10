@@ -17,4 +17,5 @@ export interface VueCompilerOptions {
 	experimentalTemplateCompilerOptionsRequirePath?: string;
 	experimentalDisableTemplateSupport?: boolean;
 	experimentalResolveStyleCssClasses?: 'scoped' | 'always' | 'never';
+	experimentalAllowTypeNarrowingInInlineHandlers?: boolean;
 }

@@ -71,9 +71,9 @@ export function useSfcTemplateScript(
 			templateData.value.lang,
 			sfcTemplateCompileResult.value.ast,
 			compilerOptions.experimentalCompatMode === 2,
+			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
 			templateData.value.htmlToTemplate,
-			!!scriptSetup.value,
 			{
 				getEmitCompletion: SearchTexts.EmitCompletion,
 				getPropsCompletion: SearchTexts.PropsCompletion,

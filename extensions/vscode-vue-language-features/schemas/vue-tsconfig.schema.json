@@ -36,6 +36,10 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				},
+				"experimentalAllowTypeNarrowingInInlineHandlers": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
+				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
 						"scoped",

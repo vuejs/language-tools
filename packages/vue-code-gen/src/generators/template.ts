@@ -49,9 +49,9 @@ export function generate(
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
+	allowTypeNarrowingInEventExpressions: boolean,
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number; } | undefined,
-	isScriptSetup: boolean,
 	searchTexts: {
 		getEmitCompletion(tag: string): string,
 		getPropsCompletion(tag: string): string,
@@ -91,6 +91,7 @@ export function generate(
 	const localVars: Record<string, number> = {};
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
+	const blockConditions: string[] = [];
 
 	tsFormatCodeGen.addText('export { };\n');
 
@@ -393,6 +394,9 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
+
+			let originalBlockConditionsLength = blockConditions.length;
+
 			for (let i = 0; i < node.branches.length; i++) {
 
 				const branch = node.branches[i];
@@ -403,6 +407,8 @@ export function generate(
 					tsCodeGen.addText('else if');
 				else
 					tsCodeGen.addText('else');
+
+				let addedBlockCondition = false;
 
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(` `);
@@ -421,13 +427,24 @@ export function generate(
 						branch.condition.loc.start.offset,
 						formatBrackets.round,
 					);
+
+					if (allowTypeNarrowingInEventExpressions) {
+						blockConditions.push(branch.condition.content);
+						addedBlockCondition = true;
+					}
 				}
 				tsCodeGen.addText(` {\n`);
 				for (const childNode of branch.children) {
 					visitNode(childNode, parentEl);
 				}
 				tsCodeGen.addText('}\n');
+
+				if (addedBlockCondition) {
+					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
+				}
 			}
+
+			blockConditions.length = originalBlockConditionsLength;
 		}
 		else if (node.type === CompilerDOM.NodeTypes.FOR) {
 			// v-for
@@ -747,8 +764,17 @@ export function generate(
 							const _exp = prop.exp;
 							const expIndex = jsChildNode.children.findIndex(child => typeof child === 'object' && child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && child.content === _exp.content);
 							const expNode = jsChildNode.children[expIndex] as CompilerDOM.SimpleExpressionNode;
-							const prefix = jsChildNode.children.filter((child, i) => typeof child === 'string' && i < expIndex).map(child => child as string).join('');
-							const suffix = jsChildNode.children.filter((child, i) => typeof child === 'string' && i > expIndex).map(child => child as string).join('');
+							let prefix = jsChildNode.children.filter((child, i) => typeof child === 'string' && i < expIndex).map(child => child as string).join('');
+							let suffix = jsChildNode.children.filter((child, i) => typeof child === 'string' && i > expIndex).map(child => child as string).join('');
+
+							if (prefix && blockConditions.length) {
+								prefix = prefix.replace('(', '{ ');
+								suffix = suffix.replace(')', '} ');
+								prefix += '\n';
+								for (const blockCondition of blockConditions) {
+									prefix += `if (!(${blockCondition})) return;\n`;
+								}
+							}
 
 							writeInterpolation(
 								expNode.content,
