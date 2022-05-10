@@ -631,6 +631,10 @@ export async function activate(context: vscode.ExtensionContext) {
 								<td><a target="_top" href="https://us.vuejs.org/">VueConf US</a></td>
 							</tr>
 							<tr>
+								<td>2022.09.22</td>
+								<td><a target="_top" href="https://conf.vuejs.de/">vuejs.de Conf 2022</a></td>
+							</tr>
+							<tr>
 								<td>2022.10.16</td>
 								<td><a target="_top" href="https://vuefes.jp/2022/">Vue Fes Japan Online 2022</a></td>
 							</tr>
