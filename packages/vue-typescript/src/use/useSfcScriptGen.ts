@@ -46,7 +46,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				return bindTexts;
 			},
 			getVueLibraryName(compilerOptions.experimentalCompatMode === 2),
-			!!compilerOptions.experimentalShamefullySupportOptionsApi,
+			compilerOptions.experimentalShamefullySupportOptionsApi === undefined ? true : !!compilerOptions.experimentalShamefullySupportOptionsApi,
 		)
 	);
 	const file = computed(() => {
@@ -112,6 +112,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	});
 
 	return {
+		codeGen,
 		lang,
 		file: file as T extends 'script' ? ComputedRef<EmbeddedFile<undefined>> : ComputedRef<EmbeddedFile<undefined> | undefined>,
 		embedded,

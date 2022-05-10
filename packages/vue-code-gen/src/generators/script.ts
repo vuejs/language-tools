@@ -32,6 +32,7 @@ export function generate(
 		mergePropDefaults: false,
 		ConstructorOverloads: false,
 	};
+	let shimedComponentOptions = false;
 
 	if (lsType === 'template') {
 		codeGen.addText('// @ts-nocheck\n');
@@ -125,6 +126,7 @@ export function generate(
 	return {
 		codeGen,
 		teleports,
+		shimedComponentOptions,
 	};
 
 	function writeScriptSrc() {
@@ -172,6 +174,7 @@ export function generate(
 				isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
 			if (isExportRawObject && shimComponentOptions && scriptRanges?.exportDefault) {
+				shimedComponentOptions = true;
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 				codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
