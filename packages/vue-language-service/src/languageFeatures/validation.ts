@@ -160,11 +160,29 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (sourceMap) {
 
-				const sourceRange = sourceMap.getSourceRange(
+				let sourceRange = sourceMap.getSourceRange(
 					error.range.start,
 					error.range.end,
 					data => !!data.capabilities.diagnostic,
 				)?.[0];
+
+				// fix https://github.com/johnsoncodehk/volar/issues/1205
+				// fix https://github.com/johnsoncodehk/volar/issues/1264
+				if (!sourceRange) {
+					const start = sourceMap.getSourceRange(
+						error.range.start,
+						error.range.start,
+						data => !!data.capabilities.diagnostic,
+					)?.[0].start;
+					const end = sourceMap.getSourceRange(
+						error.range.end,
+						error.range.end,
+						data => !!data.capabilities.diagnostic,
+					)?.[0].end;
+					if (start && end) {
+						sourceRange = { start, end };
+					}
+				}
 
 				if (!sourceRange)
 					continue;
