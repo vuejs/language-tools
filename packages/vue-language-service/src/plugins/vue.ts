@@ -172,7 +172,7 @@ export default function (options: {
 							start: document.positionAt(sfc.script.startTagEnd + scriptRanges.exportDefault.expression.start),
 							end: document.positionAt(sfc.script.startTagEnd + scriptRanges.exportDefault.expression.start),
 						},
-						'Component options are wraped by `defineComponent()` internally to support intellisense on IDE for backward compatible, but this is an hacking which lead to this component type inconsistent with same script code on .js / .ts. Recommended wrap component options by `Vue.extends()` or `defineComponent()`. Or you can configure `"experimentalShamefullySupportOptionsApi": true / false` in `"vueCompilerOptions"` property in tsconfig / jsconfig to disable this warning.',
+						'Component options are wrapped by `defineComponent()` internally to support intellisense on IDE for backward compatible, but this is an hacking which lead to this component type inconsistent with same script code on .js / .ts. Recommended wrap component options by `Vue.extends()` or `defineComponent()`. Or you can configure `"experimentalShamefullySupportOptionsApi": true / false` in `"vueCompilerOptions"` property in tsconfig / jsconfig to disable this warning.',
 						vscode.DiagnosticSeverity.Warning,
 						undefined,
 						'volar',
