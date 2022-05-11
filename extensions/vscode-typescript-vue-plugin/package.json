@@ -31,8 +31,10 @@
 		"pack": "vsce package",
 		"release": "vsce publish"
 	},
+	"dependencies": {
+		"@volar/typescript-plugin-forward": "file:typescript-plugin-forward"
+	},
 	"devDependencies": {
-		"@volar/typescript-plugin-forward": "file:typescript-plugin-forward",
 		"esbuild": "latest",
 		"typescript-vue-plugin": "0.34.13",
 		"vsce": "latest"
