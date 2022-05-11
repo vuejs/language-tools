@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.13 (2022/5/12)
+
+- feat: list vue meetup events on preview loading
+- feat: show basic infos by doctor command ([#1254](https://github.com/johnsoncodehk/volar/issues/1254))
+- fix: avoid tsconfig include `.vue` files outside rootDir with typescript plugin ([#1276](https://github.com/johnsoncodehk/volar/issues/1276))
+
+**Breaking changes**
+- Changed `vueCompilerOptions` property `experimentalShamefullySupportOptionsApi` to `experimentalImplicitWrapComponentOptionsWithDefineComponent` and disabled by default ([#1291](https://github.com/johnsoncodehk/volar/issues/1291))
+
 ## 0.34.12 (2022/5/10)
 
 - chore: change extensions publisher ([#1124](https://github.com/johnsoncodehk/volar/issues/1124))
