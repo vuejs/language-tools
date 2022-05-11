@@ -12,7 +12,7 @@ export interface ITemplateScriptData {
 
 export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
-	experimentalShamefullySupportOptionsApi?: boolean;
+	experimentalImplicitWrapComponentOptionsWithDefineComponent?: boolean;
 	experimentalTemplateCompilerOptions?: any;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
 	experimentalDisableTemplateSupport?: boolean;

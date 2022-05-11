@@ -46,7 +46,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				return bindTexts;
 			},
 			getVueLibraryName(compilerOptions.experimentalCompatMode === 2),
-			!!compilerOptions.experimentalShamefullySupportOptionsApi,
+			!!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent,
 		)
 	);
 	const file = computed(() => {

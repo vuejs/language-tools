@@ -16,9 +16,9 @@
 					],
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/351"
 				},
-				"experimentalShamefullySupportOptionsApi": {
+				"experimentalImplicitWrapComponentOptionsWithDefineComponent": {
 					"type": "boolean",
-					"markdownDescription": "Support intellisense components that export options without `Vue.extend` and `defineComponent`. This is essentially a hack and not recommended to use it."
+					"markdownDescription": "Implicit wrap object literal component options export with `defineComponent()`."
 				},
 				"experimentalTemplateCompilerOptions": {
 					"type": "object",
