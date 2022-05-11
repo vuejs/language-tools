@@ -422,6 +422,11 @@
 				"category": "Volar"
 			},
 			{
+				"command": "volar.action.doctor",
+				"title": "Show doctor panel (WIP)",
+				"category": "Volar"
+			},
+			{
 				"command": "volar.action.verifyAllScripts",
 				"title": "Verify All Scripts",
 				"category": "Volar"
@@ -507,6 +512,10 @@
 			"commandPalette": [
 				{
 					"command": "volar.action.restartServer",
+					"when": "volar.activated"
+				},
+				{
+					"command": "volar.action.doctor",
 					"when": "volar.activated"
 				},
 				{

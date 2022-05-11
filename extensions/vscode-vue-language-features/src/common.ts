@@ -16,6 +16,7 @@ import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as tsconfig from './features/tsconfig';
+import * as doctor from './features/doctor';
 
 let apiClient: lsp.CommonLanguageClient;
 let docClient: lsp.CommonLanguageClient | undefined;
@@ -132,6 +133,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	autoInsertion.activate(context, htmlClient, apiClient);
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.activate(context, docClient ?? apiClient);
+	doctor.activate(context);
 
 	async function registerUseSecondServerChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
