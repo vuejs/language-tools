@@ -47,20 +47,8 @@
 	"contributes": {
 		"jsonValidation": [
 			{
-				"fileMatch": "package.json",
-				"url": "./schemas/package.schema.json"
-			},
-			{
 				"fileMatch": "tsconfig.json",
 				"url": "https://json.schemastore.org/tsconfig"
-			},
-			{
-				"fileMatch": "tsconfig.json",
-				"url": "./schemas/tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig.*.json",
@@ -68,23 +56,7 @@
 			},
 			{
 				"fileMatch": "tsconfig-*.json",
-				"url": "./schemas/tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig-*.json",
 				"url": "https://json.schemastore.org/tsconfig"
-			},
-			{
-				"fileMatch": "tsconfig.*.json",
-				"url": "./schemas/tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "typings.json",
@@ -111,20 +83,28 @@
 				"url": "https://json.schemastore.org/jsconfig"
 			},
 			{
-				"fileMatch": "jsconfig.json",
-				"url": "./schemas/jsconfig.schema.json"
+				"fileMatch": "jsconfig.*.json",
+				"url": "https://json.schemastore.org/jsconfig"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.json",
 				"url": "./schemas/vue-tsconfig.schema.json"
 			},
 			{
-				"fileMatch": "jsconfig.*.json",
-				"url": "https://json.schemastore.org/jsconfig"
-			},
-			{
-				"fileMatch": "jsconfig.*.json",
-				"url": "./schemas/jsconfig.schema.json"
+				"fileMatch": "jsconfig-*.json",
+				"url": "./schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.*.json",
