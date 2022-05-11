@@ -1,7 +1,6 @@
 import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
-import type { VueCompilerOptions } from '@volar/vue-typescript';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -96,7 +95,6 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 export default function (options: {
 	getVueDocument(document: TextDocument): VueDocument | undefined,
 	tsLs: ts2.LanguageService | undefined,
-	vueCompilerOptions: VueCompilerOptions,
 }): EmbeddedLanguageServicePlugin {
 
 	const htmlPlugin = useHtmlPlugin({
@@ -159,21 +157,6 @@ export default function (options: {
 						},
 						'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
 						vscode.DiagnosticSeverity.Information,
-						undefined,
-						'volar',
-					);
-					result.push(error);
-				}
-
-				const scriptRanges = vueDocument.file.getScriptRanges();
-				if (sfc.script && scriptRanges?.exportDefault && vueDocument.file.refs.sfcScriptForScriptLs.codeGen.value.shimedComponentOptions && (options.vueCompilerOptions.experimentalShamefullySupportOptionsApi ?? 'warning') === 'warning') {
-					const error = vscode.Diagnostic.create(
-						{
-							start: document.positionAt(sfc.script.startTagEnd + scriptRanges.exportDefault.expression.start),
-							end: document.positionAt(sfc.script.startTagEnd + scriptRanges.exportDefault.expression.start),
-						},
-						'Component options are wrapped by `defineComponent()` internally to support intellisense on IDE for backward compatible, but this is an hacking which lead to this component type inconsistent with same script code on .js / .ts. Recommended wrap component options by `Vue.extends()` or `defineComponent()`. Or you can configure `"experimentalShamefullySupportOptionsApi": true / false` in `"vueCompilerOptions"` property in tsconfig / jsconfig to disable this warning.',
-						vscode.DiagnosticSeverity.Warning,
 						undefined,
 						'volar',
 					);

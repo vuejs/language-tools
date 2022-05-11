@@ -104,7 +104,6 @@ export function createLanguageService(
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => vueDocuments.get(document.uri),
 		tsLs,
-		vueCompilerOptions: vueLsHost.getVueCompilationSettings(),
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',

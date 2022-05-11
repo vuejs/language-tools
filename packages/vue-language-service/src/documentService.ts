@@ -47,7 +47,6 @@ export function getDocumentService(
 	const vuePlugin = useVuePlugin({
 		getVueDocument,
 		tsLs: undefined,
-		vueCompilerOptions: {},
 	});
 	const htmlPlugin = useHtmlPlugin({
 		fileSystemProvider,

@@ -355,7 +355,6 @@ export function createVueFile(
 		getEmbeddeds: untrack(() => embeddeds.value),
 		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
 		getLastUpdated: untrack(() => unref(lastUpdated)),
-		getScriptRanges: untrack(() => scriptRanges.value),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
 		getSfcTemplateDocument: untrack(() => sfcTemplate.file.value),
 		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
