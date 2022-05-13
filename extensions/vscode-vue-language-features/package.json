@@ -389,6 +389,14 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Component preview background style."
+				},
+				"volar.splitEditors.layout.left": {
+					"type": "array",
+					"default": ["script", "scriptSetup", "styles"]
+				},
+				"volar.splitEditors.layout.right": {
+					"type": "array",
+					"default": ["template", "customBlocks"]
 				}
 			}
 		},
