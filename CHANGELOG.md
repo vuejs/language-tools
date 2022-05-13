@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.34.14 (2022/5/13)
+
+- feat: add setting `volar.vueserver.maxOldSpaceSize` to modify language server memory limit ([#1299](https://github.com/johnsoncodehk/volar/issues/1299))
+- feat: add settings `volar.preview.script.vite`, `volar.preview.script.nuxi` to customize preview server command
+- feat: move takeover mode status to status bar ([#1294](https://github.com/johnsoncodehk/volar/issues/1294))
+- feat: add settings to customize split editors layout ([#810](https://github.com/johnsoncodehk/volar/issues/810))
+- fix: tsconfig status and ts version status dons't show with ts file on takeover mode
+
 ## 0.34.13 (2022/5/12)
 
 - feat: list vue meetup events on preview loading
