@@ -95,6 +95,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			{ language: 'vue' },
 		];
 	const _useSecondServer = useSecondServer();
+	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
 	apiClient = createLc(
 		'volar-language-features',
@@ -121,6 +122,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
 
 	registerUseSecondServerChange();
+	registerServerMaxOldSpaceSizeChange();
 	registerRestartRequest();
 	registerClientRequests();
 
@@ -135,13 +137,27 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	tsconfig.activate(context, docClient ?? apiClient);
 	doctor.activate(context);
 
-	async function registerUseSecondServerChange() {
+	async function requestReloadVscode() {
+		const reload = await vscode.window.showInformationMessage(
+			'Please reload VSCode to restart language servers.',
+			'Reload Window'
+		);
+		if (reload === undefined) return; // cancel
+		vscode.commands.executeCommand('workbench.action.reloadWindow');
+	}
+	function registerUseSecondServerChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
 			const nowUseSecondServer = useSecondServer();
 			if (_useSecondServer !== nowUseSecondServer) {
-				const reload = await vscode.window.showInformationMessage('Please reload VSCode to restart language servers.', 'Reload Window');
-				if (reload === undefined) return; // cancel
-				vscode.commands.executeCommand('workbench.action.reloadWindow');
+				return requestReloadVscode();
+			}
+		});
+	}
+	function registerServerMaxOldSpaceSizeChange() {
+		vscode.workspace.onDidChangeConfiguration(async () => {
+			const nowServerMaxOldSpaceSize = serverMaxOldSpaceSize();
+			if (_serverMaxOldSpaceSize !== nowServerMaxOldSpaceSize) {
+				return requestReloadVscode();
 			}
 		});
 	}
@@ -194,6 +210,10 @@ export function takeOverModeEnabled() {
 
 function useSecondServer() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.useSecondServer');
+}
+
+function serverMaxOldSpaceSize() {
+	return vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 }
 
 function getInitializationOptions(
