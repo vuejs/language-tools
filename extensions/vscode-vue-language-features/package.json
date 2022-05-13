@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.34.13",
+	"version": "0.34.14",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -392,11 +392,18 @@
 				},
 				"volar.splitEditors.layout.left": {
 					"type": "array",
-					"default": ["script", "scriptSetup", "styles"]
+					"default": [
+						"script",
+						"scriptSetup",
+						"styles"
+					]
 				},
 				"volar.splitEditors.layout.right": {
 					"type": "array",
-					"default": ["template", "customBlocks"]
+					"default": [
+						"template",
+						"customBlocks"
+					]
 				}
 			}
 		},
