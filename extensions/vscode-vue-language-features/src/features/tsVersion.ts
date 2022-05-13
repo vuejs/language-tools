@@ -41,10 +41,20 @@ export async function activate(context: vscode.ExtensionContext, clients: Common
 				detail: defaultTsdk,
 			};
 		}
+		if (takeOverModeEnabled()) {
+			options[3] = {
+				label: 'What is Takeover Mode?',
+			};
+		}
 
 		const select = await userPick(options);
 		if (select === undefined)
 			return; // cancel
+
+		if (select === '3') {
+			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#takeover-mode'));
+			return;
+		}
 
 		if (select === '2') {
 			vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
@@ -89,6 +99,9 @@ export async function activate(context: vscode.ExtensionContext, clients: Common
 			const tsPaths = getCurrentTsPaths(context);
 			const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
 			statusBar.text = 'TS ' + tsVersion;
+			if (takeOverModeEnabled()) {
+				statusBar.text += ' (takeover)';
+			}
 			statusBar.show();
 		}
 	}

@@ -63,16 +63,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
 	const takeOverMode = takeOverModeEnabled();
-	if (takeOverMode) {
-		vscode.window
-			.showInformationMessage('Take Over Mode enabled.', 'What is Take Over Mode?')
-			.then(option => {
-				if (option !== undefined) {
-					vscode.env.openExternal(vscode.Uri.parse('https://github.com/johnsoncodehk/volar/discussions/471'));
-				}
-			});
-	}
-
 	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
 			{ scheme: 'file', language: 'vue' },
