@@ -367,6 +367,14 @@
 					"default": true,
 					"description": "Enabled auto-import for component with tag completion."
 				},
+				"volar.preview.script.vite": {
+					"type": "string",
+					"default": "node {VITE_BIN} --port={PORT}"
+				},
+				"volar.preview.script.nuxi": {
+					"type": "string",
+					"default": "node {NUXI_BIN} dev --port {PORT}"
+				},
 				"volar.preview.port": {
 					"type": "number",
 					"default": 3333,

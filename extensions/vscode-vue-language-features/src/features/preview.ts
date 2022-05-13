@@ -430,17 +430,21 @@ export async function activate(context: vscode.ExtensionContext) {
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
+		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + type) ?? '';
+
+		if (script.indexOf('{VITE_BIN}') >= 0) {
+			script = script.replace('{VITE_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })));
+		}
+		if (script.indexOf('{NUXI_BIN}') >= 0) {
+			script = script.replace('{NUXI_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/nuxi', { paths: [context.extensionPath] })));
+		}
+		if (script.indexOf('{PORT}') >= 0) {
+			script = script.replace('{PORT}', port.toString());
+		}
+
 		const terminal = vscode.window.createTerminal('volar-preview:' + port);
-		const viteProxyPath = type === 'vite'
-			? require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })
-			: require.resolve('./dist/preview-bin/nuxi', { paths: [context.extensionPath] });
-
 		terminal.sendText(`cd ${viteDir}`);
-
-		if (type === 'vite')
-			terminal.sendText(`node ${JSON.stringify(viteProxyPath)} --port=${port}`);
-		else
-			terminal.sendText(`node ${JSON.stringify(viteProxyPath)} dev --port ${port}`);
+		terminal.sendText(script);
 
 		return {
 			port,
