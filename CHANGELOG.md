@@ -5,7 +5,7 @@
 - feat: support auto-complete for template local variables ([#1284](https://github.com/johnsoncodehk/volar/issues/1284))
 - feat: check if vetur is active on doctor panel ([#1305](https://github.com/johnsoncodehk/volar/issues/1305))
 - feat: enabled `experimentalImplicitWrapComponentOptionsWithDefineComponent` for `lang="js"` by default ([#1298](https://github.com/johnsoncodehk/volar/issues/1298))
-- feat: add `vueCompilerOption.experimentalImplicitWrapComponentOptionsWithDefineComponent` option to improve intellisense on script setup for `lang="js"` ([#1192](https://github.com/johnsoncodehk/volar/issues/1192))
+- feat: add `vueCompilerOption.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup` option to improve intellisense on script setup for `lang="js"` ([#1192](https://github.com/johnsoncodehk/volar/issues/1192))
 
 ## 0.34.14 (2022/5/13)
 
