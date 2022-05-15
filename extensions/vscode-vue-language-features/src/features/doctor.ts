@@ -8,6 +8,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		// TODO: tsconfig infos
 		// TODO: warnings
+		const vetur = vscode.extensions.getExtension('octref.vetur')
+		if (vetur && vetur.isActive) {
+			vscode.window.showWarningMessage(
+				'Vetur is active. Disable it for Volar to work properly.'
+			)
+		}
 
 		const tsPaths = getCurrentTsPaths(context);
 		const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
@@ -19,7 +25,7 @@ vscode.typescript.version: ${tsVersion}
 vscode.typescript-extension.actived: ${!!vscode.extensions.getExtension('vscode.typescript-language-features')}
 vue-language-features.version: ${context.extension.packageJSON.version}
 typescript-vue-plugin.version: ${vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin')?.packageJSON.version}
-vetur.actived: ${!!vscode.extensions.getExtension('octref.vetur')}
+vetur.actived: ${!!vetur}
 workspace.vue-tsc.version: ${getWorkspacePackageJson('vue-tsc')?.version}
 workspace.typescript.version: ${getWorkspacePackageJson('typescript')?.version}
 workspace.vue.version: ${getWorkspacePackageJson('vue')?.version}
