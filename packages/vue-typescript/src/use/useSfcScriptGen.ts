@@ -49,6 +49,9 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
 				? lang.value === 'js' || lang.value === 'jsx'
 				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent,
+			(compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
+				? lang.value === 'js' || lang.value === 'jsx'
+				: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup,
 		)
 	);
 	const file = computed(() => {

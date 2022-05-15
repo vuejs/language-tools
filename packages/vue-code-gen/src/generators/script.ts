@@ -23,6 +23,7 @@ export function generate(
 	getStyleBindTexts: () => string[],
 	vueLibName: string,
 	shimComponentOptions: boolean,
+	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
 ) {
 
 	const codeGen = new CodeGen<EmbeddedFileMappingData>();
@@ -268,7 +269,7 @@ export function generate(
 			},
 		);
 
-		if (scriptSetupRanges?.withDefaultsArg) {
+		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges?.withDefaultsArg) {
 			// fix https://github.com/johnsoncodehk/volar/issues/1187
 			codeGen.addText(`const __VLS_withDefaultsArg = (<T>(t: T) => t)(`);
 			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
@@ -285,42 +286,44 @@ export function generate(
 			codeGen.addText(`),\n`);
 		}
 		if (scriptSetup && scriptSetupRanges) {
-			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
-				codeGen.addText(`props: (`);
-				if (scriptSetupRanges.propsTypeArg) {
+			if (!downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+				if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
+					codeGen.addText(`props: (`);
+					if (scriptSetupRanges.propsTypeArg) {
 
-					usedTypes.DefinePropsToOptions = true;
-					codeGen.addText(`{} as `);
+						usedTypes.DefinePropsToOptions = true;
+						codeGen.addText(`{} as `);
 
-					if (scriptSetupRanges.withDefaultsArg) {
-						usedTypes.mergePropDefaults = true;
-						codeGen.addText(`__VLS_WithDefaults<`);
-					}
+						if (scriptSetupRanges.withDefaultsArg) {
+							usedTypes.mergePropDefaults = true;
+							codeGen.addText(`__VLS_WithDefaults<`);
+						}
 
-					codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codeGen.addText(`>`);
-
-					if (scriptSetupRanges.withDefaultsArg) {
-						codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+						codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 						codeGen.addText(`>`);
+
+						if (scriptSetupRanges.withDefaultsArg) {
+							codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+							codeGen.addText(`>`);
+						}
 					}
+					else if (scriptSetupRanges.propsRuntimeArg) {
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					}
+					codeGen.addText(`),\n`);
 				}
-				else if (scriptSetupRanges.propsRuntimeArg) {
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				if (scriptSetupRanges.emitsTypeArg) {
+					usedTypes.ConstructorOverloads = true;
+					codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+					codeGen.addText(`>>),\n`);
 				}
-				codeGen.addText(`),\n`);
-			}
-			if (scriptSetupRanges.emitsTypeArg) {
-				usedTypes.ConstructorOverloads = true;
-				codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codeGen.addText(`>>),\n`);
-			}
-			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codeGen.addText(`emits: (`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codeGen.addText(`),\n`);
+				else if (scriptSetupRanges.emitsRuntimeArg) {
+					codeGen.addText(`emits: (`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
 			}
 			const bindingsArr: {
 				bindings: { start: number, end: number; }[],
@@ -352,24 +355,72 @@ export function generate(
 				}
 				writeTemplate();
 				codeGen.addText(`};\n`);
-
-				if (scriptSetupRanges.exposeTypeArg) {
-					codeGen.addText(`return { } as `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
-					codeGen.addText(`;\n`);
-				}
-				else if (scriptSetupRanges.exposeRuntimeArg) {
-					codeGen.addText(`return `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-					codeGen.addText(`;\n`);
-				}
-				else {
-					codeGen.addText(`return { };\n`);
-				};
 			}
 
+			codeGen.addText(`return {\n`);
+
+			if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+				// fill $props
+				if (scriptSetupRanges.propsTypeArg) {
+					// NOTE: defineProps is inaccurate for $props
+					codeGen.addText(`$props: defineProps<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+					codeGen.addText(`>(),\n`);
+				}
+				else if (scriptSetupRanges.propsRuntimeArg) {
+					// NOTE: defineProps is inaccurate for $props
+					codeGen.addText(`$props: defineProps(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
+				// fill $emit
+				if (scriptSetupRanges.emitsAssignName) {
+					codeGen.addText(`$emit: ${scriptSetupRanges.emitsAssignName},\n`);
+				}
+				else if (scriptSetupRanges.emitsTypeArg) {
+					codeGen.addText(`$emit: defineEmits<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+					codeGen.addText(`>(),\n`);
+				}
+				else if (scriptSetupRanges.emitsRuntimeArg) {
+					codeGen.addText(`$emit: defineEmits(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
+			}
+
+			if (lsType === 'script') {
+				if (scriptSetupRanges.exposeRuntimeArg) {
+					codeGen.addText(`...(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
+				if (scriptSetupRanges.exposeTypeArg) {
+					codeGen.addText(`...({} as `);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
+					codeGen.addText(`),\n`);
+				}
+			}
 			if (lsType === 'template') {
-				codeGen.addText(`return {\n`);
+				// fill ctx from props
+				if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+					if (scriptSetupRanges.propsAssignName) {
+						codeGen.addText(`...${scriptSetupRanges.propsAssignName},\n`);
+					}
+					else if (scriptSetupRanges.withDefaultsArg && scriptSetupRanges.propsTypeArg) {
+						codeGen.addText(`...withDefaults(defineProps<`);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+						codeGen.addText(`>(), `);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+						codeGen.addText(`),\n`);
+					}
+					else if (scriptSetupRanges.propsRuntimeArg) {
+						codeGen.addText(`...defineProps(`);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+						codeGen.addText(`),\n`);
+					}
+				}
+				// bindings
 				for (const { bindings, content } of bindingsArr) {
 					for (const expose of bindings) {
 						const varName = content.substring(expose.start, expose.end);
@@ -401,8 +452,9 @@ export function generate(
 						});
 					}
 				}
-				codeGen.addText(`};\n`);
 			}
+			codeGen.addText(`};\n`);
+
 			codeGen.addText(`},\n`);
 		}
 

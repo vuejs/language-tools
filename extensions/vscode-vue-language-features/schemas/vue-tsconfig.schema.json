@@ -24,6 +24,14 @@
 					],
 					"markdownDescription": "Implicit wrap object literal component options export with `defineComponent()`."
 				},
+				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
+					"enum": [
+						true,
+						false,
+						"onlyJs"
+					],
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
+				},
 				"experimentalTemplateCompilerOptions": {
 					"type": "object",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/576"
