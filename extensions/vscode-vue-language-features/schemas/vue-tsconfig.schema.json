@@ -17,7 +17,11 @@
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/351"
 				},
 				"experimentalImplicitWrapComponentOptionsWithDefineComponent": {
-					"type": "boolean",
+					"enum": [
+						true,
+						false,
+						"onlyJs"
+					],
 					"markdownDescription": "Implicit wrap object literal component options export with `defineComponent()`."
 				},
 				"experimentalTemplateCompilerOptions": {
