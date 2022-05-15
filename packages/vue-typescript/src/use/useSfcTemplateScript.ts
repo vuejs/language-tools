@@ -98,7 +98,7 @@ export function useSfcTemplateScript(
 
 		writeImportTypes();
 
-		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component> & {\n`);
+		codeGen.addText(`declare const __VLS_ctxBase: InstanceType<typeof __VLS_component> & {\n`);
 		/* CSS Module */
 		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
 		for (const moduleName in cssModuleClasses.value) {
@@ -108,15 +108,16 @@ export function useSfcTemplateScript(
 			codeGen.addText('};\n');
 		}
 		codeGen.addText(`};\n`);
+		codeGen.addText(`declare const __VLS_ctx: typeof __VLS_ctxBase;\n`);
 
-		codeGen.addText(`declare var __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
+		codeGen.addText(`declare const __VLS_vmUnwrap: typeof __VLS_options & { components: { } };\n`);
 
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText('declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n');
-		codeGen.addText('declare var __VLS_allComponents: typeof __VLS_otherComponents & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_otherComponents>;\n');
-		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<typeof __VLS_allComponents> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare const __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
+		codeGen.addText('declare const __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n');
+		codeGen.addText('declare const __VLS_allComponents: typeof __VLS_otherComponents & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_otherComponents>;\n');
+		codeGen.addText('declare const __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<typeof __VLS_allComponents> & JSX.IntrinsicElements;\n'); // sort by priority
 
 		codeGen.addText(`__VLS_allComponents.${SearchTexts.Components};\n`);
 		codeGen.addText(`({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
@@ -126,7 +127,7 @@ export function useSfcTemplateScript(
 		codeGen.addText('type __VLS_StyleScopedClasses = {\n');
 		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true, 'boolean', true);
 		codeGen.addText('};\n');
-		codeGen.addText('declare var __VLS_styleScopedClasses: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
+		codeGen.addText('declare const __VLS_styleScopedClasses: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
 
 		codeGen.addText(`/* CSS variable injection */\n`);
 		writeCssVars();

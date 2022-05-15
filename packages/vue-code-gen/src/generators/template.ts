@@ -497,6 +497,13 @@ export function generate(
 			}
 			tsCodeGen.addText(`) {\n`);
 
+			// fix https://github.com/johnsoncodehk/volar/issues/1284
+			tsCodeGen.addText(`declare const __VLS_ctx: typeof __VLS_ctxBase & {\n`);
+			for (const localVar in localVars) {
+				tsCodeGen.addText(`${localVar}: typeof ${localVar},\n`);
+			}
+			tsCodeGen.addText(`};\n`);
+
 			for (const childNode of node.children) {
 				visitNode(childNode, parentEl);
 			}
@@ -595,6 +602,14 @@ export function generate(
 
 				for (const varName of slotBlockVars)
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
+
+				if (slotBlockVars.length) {
+					tsCodeGen.addText(`declare const __VLS_ctx: typeof __VLS_ctxBase & {\n`);
+					for (const localVar of slotBlockVars) {
+						tsCodeGen.addText(`${localVar}: typeof ${localVar},\n`);
+					}
+					tsCodeGen.addText(`};\n`);
+				}
 			}
 			writeDirectives(node);
 			writeElReferences(node); // <el ref="foo" />
