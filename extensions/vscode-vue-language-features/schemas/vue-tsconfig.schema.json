@@ -16,6 +16,19 @@
 					],
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/351"
 				},
+				"experimentalRuntimeMode": {
+					"type": "string",
+					"default": "runtime-dom",
+					"anyOf": [
+						{
+							"enum": [
+								"runtime-dom",
+								"runtime-uni-app"
+							]
+						}
+					],
+					"markdownDescription": "Run app in browser or uni-app"
+				},
 				"experimentalImplicitWrapComponentOptionsWithDefineComponent": {
 					"enum": [
 						true,
