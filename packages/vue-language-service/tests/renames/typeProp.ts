@@ -2,8 +2,8 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver-protocol';
 import { defineRename } from '../utils/defineRename';
 
-const file_from = path.resolve(__dirname, '../../test-workspace/renames/typeProp_from.vue');
-const file_to = path.resolve(__dirname, '../../test-workspace/renames/typeProp_to.vue');
+const file_from = path.resolve(__dirname, '../../../vue-test-workspace/renames/typeProp_from.vue');
+const file_to = path.resolve(__dirname, '../../../vue-test-workspace/renames/typeProp_to.vue');
 const fileResult_from = `
 <template>{{ barFoo }}</template>
 

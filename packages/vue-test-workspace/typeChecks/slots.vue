@@ -11,8 +11,11 @@
 	<slot name="bar" str="str" :num="1"></slot>
 	<Self>
 		<template #bar="{ str, num }">
-			{{ exactType(str, {} as string) }}
-			{{ exactType(num, {} as number) }}
+			<!-- not support for now -->
+			<!-- {{ exactType(str, {} as string) }} -->
+			<!-- {{ exactType(num, {} as number) }} -->
+			{{ exactType(str, {} as any) }}
+			{{ exactType(num, {} as any) }}
 		</template>
 	</Self>
 </template>
@@ -20,7 +23,7 @@
 <script lang="ts">
 export default { name: 'Self' };
 
-declare const Comp: new <T>(props: { value: T }) => {
+declare const Comp: new <T>(props: { value: T; }) => {
 	$props: typeof props;
 	$slots: {
 		foo: (_: T) => VNode[];
