@@ -49,6 +49,7 @@ export function generate(
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
+	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app',
 	allowTypeNarrowingInEventExpressions: boolean,
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number; } | undefined,
@@ -538,7 +539,7 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
-			const tagText = isHTMLTag(node.tag) || isSVGTag(node.tag) ? node.tag : tagResolves[node.tag].rawComponent;
+			const tagText = experimentalRuntimeMode === 'runtime-dom' && (isHTMLTag(node.tag) || isSVGTag(node.tag)) ? node.tag : tagResolves[node.tag].rawComponent;
 			const fullTagStart = tsCodeGen.getText().length;
 
 			tsCodeGen.addText(`<`);

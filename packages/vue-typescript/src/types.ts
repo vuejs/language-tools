@@ -12,6 +12,7 @@ export interface ITemplateScriptData {
 
 export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
+	experimentalRuntimeMode?: 'runtime-dom' | 'runtime-uni-app';
 	experimentalImplicitWrapComponentOptionsWithDefineComponent?: boolean | 'onlyJs';
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup?: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions?: any;
