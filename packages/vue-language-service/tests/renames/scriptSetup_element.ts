@@ -12,7 +12,7 @@ const tagResult = `
 </template>
 
 <script lang="ts" setup>
-declare const h1: string;
+const h1: string = 'header';
 </script>
 `.trim();
 
@@ -38,7 +38,7 @@ const ctxResult = `
 </template>
 
 <script lang="ts" setup>
-declare const h2: string;
+const h2: string = 'header';
 </script>
 `.trim();
 
@@ -51,7 +51,7 @@ defineRename({
 
 defineRename({
 	fileName: file,
-	position: Position.create(5, 14),
+	position: Position.create(5, 7),
 	newName: 'h2',
 	length: 2,
 }, { [file]: ctxResult });
