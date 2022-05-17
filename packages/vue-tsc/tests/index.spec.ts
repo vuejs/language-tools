@@ -31,5 +31,5 @@ describe(`vue-tsc`, () => {
 				reject(new Error(`Exited with code ${code}`));
 			}
 		});
- 	}));
+ 	}), 40_000);
 });
