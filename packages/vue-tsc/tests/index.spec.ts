@@ -1,18 +1,35 @@
 import path from 'path';
 import { describe, it } from 'vitest';
-import { exec } from 'child_process';
+import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
 
 describe(`vue-tsc`, () => {
-	it(`vue-tsc no errors`, async () => {
-		exec(
-			`node ${JSON.stringify(binPath)} --noEmit`,
-			{ cwd: path.resolve('../../vue-test-workspace') },
-			(error, stdout, stderr) => {
-				// Error: spawn /bin/sh ENOENT
-				console.log({ error, stdout, stderr });
+	it(`vue-tsc no errors`,  () => new Promise((resolve, reject) => {
+		const cp = fork(
+			binPath,
+			['--noEmit'],
+			{
+				silent: true,
+				cwd: path.resolve(__dirname, '../../vue-test-workspace')
 			},
 		);
-	});
+
+		cp.stdout.setEncoding('utf8');
+		cp.stdout.on('data', (data) => {
+			console.log(data);
+		});
+		cp.stderr.setEncoding('utf8');
+		cp.stderr.on('data', (data) => {
+			console.error(data);
+		});
+
+		cp.on('exit', (code) => {
+			if(code === 0) {
+				resolve();
+			} else {
+				reject(new Error(`Exited with code ${code}`));
+			}
+		});
+ 	}));
 });
