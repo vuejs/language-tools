@@ -638,7 +638,21 @@
 					"group": "navigation"
 				}
 			]
-		}
+		},
+		"problemMatchers": [
+			{
+				"name": "vite",
+				"label": "Vite problems",
+				"pattern": {
+					"regexp": ""
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "restarting server...$",
+					"endsPattern": "^\\s*ready in"
+				}
+			}
+		]
 	},
 	"scripts": {
 		"prebuild": "cd ../.. && npm run build",
