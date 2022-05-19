@@ -80,23 +80,25 @@ flowchart LR
     click VSC_TSVP "https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin"
 
     %% Volar - Packages
-    VUE_SERVER["@volar/vue-language-server"]
-    VTS["@volar/vue-typescript"]
-    VUE_CG["@volar/vue-code-gen"]
-    VUE_SERVICE["@volar/vue-language-service"]
-    PUG_SERVICE["@volar/pug-language-service"]
-    TS_SERVICE["@volar/typescript-language-service"]
-    VTSC[vue-tsc]
-    TSVP[typescript-vue-plugin]
+    VOLAR_VUE_SERVER["@volar/vue-language-server"]
+    VOLAR_VUE_TS["@volar/vue-typescript"]
+    VOLAR_VUE_CG["@volar/vue-code-gen"]
+    VOLAR_VUE_SERVICE["@volar/vue-language-service"]
+    VOLAR_PUG_SERVICE["@volar/pug-language-service"]
+    VOLAR_TS_SERVICE["@volar/typescript-language-service"]
+    VOLAR_PREVIEW["@volar/preview"]
+    VUE_TSC[vue-tsc]
+    TS_VUE_PLUGIN[typescript-vue-plugin]
 
-    click VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
-    click VTS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
-    click VUE_CG "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-code-gen"
-    click VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
-    click PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
-    click TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
-    click VTSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
-    click TSVP "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
+    click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
+    click VOLAR_VUE_TS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
+    click VOLAR_VUE_CG "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-code-gen"
+    click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
+    click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
+    click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
+    click VOLAR_PREVIEW "https://github.com/johnsoncodehk/volar/tree/master/packages/preview"
+    click VUE_TSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
+    click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
 
     %% Extrnal Packages
     HTML_SERVICE[vscode-html-languageservice]
@@ -104,12 +106,14 @@ flowchart LR
     JSON_SERVICE[vscode-json-languageservice]
     TS[typescript]
     VSC_TS[vscode.typescript-language-features]
+	VUE_REPL["@vue/repl"]
 
     click HTML_SERVICE "https://github.com/microsoft/vscode-html-languageservice"
     click CSS_SERVICE "https://github.com/microsoft/vscode-css-languageservice"
     click JSON_SERVICE "https://github.com/microsoft/vscode-json-languageservice"
     click TS "https://github.com/microsoft/TypeScript"
     click VSC_TS "https://github.com/microsoft/vscode/tree/main/extensions/typescript-language-features"
+    click VUE_REPL "https://github.com/vuejs/repl"
 
     subgraph VUE_CLIENTS[Language Clients]
       direction LR
@@ -124,8 +128,8 @@ flowchart LR
 
     subgraph Embedded Language Services
       direction LR
-      TS_SERVICE
-      PUG_SERVICE
+      VOLAR_TS_SERVICE
+      VOLAR_PUG_SERVICE
       HTML_SERVICE
       CSS_SERVICE
       JSON_SERVICE
@@ -149,24 +153,28 @@ flowchart LR
     NOVA_VUE --> VUE_CLIENTS
     VIM_VUE --> VUE_CLIENTS
 
-    VUE_CLIENTS -- Language Server Protocol --> VUE_SERVER
+	VSC_VUE --> VOLAR_PREVIEW
+	COC_VUE --> VOLAR_PREVIEW
+
+    VUE_CLIENTS -- Language Server Protocol --> VOLAR_VUE_SERVER
 
     VSC --> VSC_TS
     VSC_TS --> VSC_TSVP
-    VSC_TSVP --> TSVP
-    VUE_SERVER --> VUE_SERVICE
-    VTSC --> VTS
-    TSVP --> VTS
+    VSC_TSVP --> TS_VUE_PLUGIN
+    VOLAR_VUE_SERVER --> VOLAR_VUE_SERVICE
+    VUE_REPL --> VOLAR_VUE_SERVICE
+    VUE_TSC --> VOLAR_VUE_TS
+    TS_VUE_PLUGIN --> VOLAR_VUE_TS
 
-    VUE_SERVICE --> VTS
-    VUE_SERVICE --> TS_SERVICE
-    VUE_SERVICE --> PUG_SERVICE
-    VUE_SERVICE --> HTML_SERVICE
-    VUE_SERVICE --> CSS_SERVICE
-    VUE_SERVICE --> JSON_SERVICE
+    VOLAR_VUE_SERVICE --> VOLAR_VUE_TS
+    VOLAR_VUE_SERVICE --> VOLAR_TS_SERVICE
+    VOLAR_VUE_SERVICE --> VOLAR_PUG_SERVICE
+    VOLAR_VUE_SERVICE --> HTML_SERVICE
+    VOLAR_VUE_SERVICE --> CSS_SERVICE
+    VOLAR_VUE_SERVICE --> JSON_SERVICE
 
-    VTS --> TS
-    VTS --> VUE_CG
+    VOLAR_VUE_TS --> TS
+    VOLAR_VUE_TS --> VOLAR_VUE_CG
 ```
 
 ## Sponsors
