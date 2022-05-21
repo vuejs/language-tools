@@ -44,12 +44,16 @@ export const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
+export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app' = 'runtime-dom', tag: string) {
+	return runtimeMode === 'runtime-dom' ? (isHTMLTag(tag) || isSVGTag(tag)) : ['block', 'component', 'template', 'slot'].includes(tag);
+}
+
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	isVue2: boolean,
-	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app',
+	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
 	allowTypeNarrowingInEventExpressions: boolean,
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number; } | undefined,
@@ -532,7 +536,7 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
-			const tagText = experimentalRuntimeMode === 'runtime-dom' && (isHTMLTag(node.tag) || isSVGTag(node.tag)) ? node.tag : tagResolves[node.tag].rawComponent;
+			const tagText = isIntrinsicElement(experimentalRuntimeMode, node.tag) ? node.tag : tagResolves[node.tag].rawComponent;
 			const fullTagStart = tsCodeGen.getText().length;
 
 			tsCodeGen.addText(`<`);
