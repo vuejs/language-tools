@@ -9,6 +9,9 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 		complete: {
 
+			// https://docs.emmet.io/abbreviations/syntax/
+			triggerCharacters: '>+^*()#.[]$@-{}'.split(''),
+
 			isAdditional: true,
 
 			async on(textDocument, position) {
