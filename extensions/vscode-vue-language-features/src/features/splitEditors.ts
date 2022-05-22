@@ -25,12 +25,12 @@ export function activate(context: vscode.ExtensionContext) {
 				leftBlocks.push(descriptor.script);
 			}
 			if (layout.right.includes('script')) {
-				leftBlocks.push(descriptor.script);
+				rightBlocks.push(descriptor.script);
 			}
 		}
 		if (descriptor.scriptSetup) {
 			if (layout.left.includes('scriptSetup')) {
-				rightBlocks.push(descriptor.scriptSetup);
+				leftBlocks.push(descriptor.scriptSetup);
 			}
 			if (layout.right.includes('scriptSetup')) {
 				rightBlocks.push(descriptor.scriptSetup);
@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		if (descriptor.template) {
 			if (layout.left.includes('template')) {
-				rightBlocks.push(descriptor.template);
+				leftBlocks.push(descriptor.template);
 			}
 			if (layout.right.includes('template')) {
 				rightBlocks.push(descriptor.template);
