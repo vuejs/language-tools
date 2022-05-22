@@ -106,8 +106,12 @@ function walkIdentifiers(
 
 		const functionArgs: string[] = [];
 
-		for (const param of node.parameters)
+		for (const param of node.parameters) {
 			colletVars(ts, param.name, functionArgs);
+			if (param.type) {
+				walkIdentifiers(ts, param.type, cb, localVars);
+			}
+		}
 
 		for (const varName of functionArgs)
 			localVars[varName] = (localVars[varName] ?? 0) + 1;
