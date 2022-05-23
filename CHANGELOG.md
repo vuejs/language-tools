@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.34.16 (2022/5/23)
+
+- feat: add experimental option `vueCompilerOptions.experimentalRuntimeMode` for adapt uni-app ([#1308](https://github.com/johnsoncodehk/volar/issues/1308))
+- fix: type narrowing broken by local variable declare in template ([#1312](https://github.com/johnsoncodehk/volar/issues/1312))
+- fix: cannot recognize component context on arg typeof of arrow function in template ([#1326](https://github.com/johnsoncodehk/volar/issues/1326))
+- fix: emmet suggestion interrupt when input symbol ([#1322](https://github.com/johnsoncodehk/volar/issues/1322))
+- fix: split editors layout not following settings `volar.splitEditors.layout.*` ([#1330](https://github.com/johnsoncodehk/volar/issues/1330))
+
 ## 0.34.15 (2022/5/16)
 
 - feat: support auto-complete for template local variables ([#1284](https://github.com/johnsoncodehk/volar/issues/1284))
