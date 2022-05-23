@@ -3,7 +3,8 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
-import { camelize, capitalize, hyphenate, isHTMLTag } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { isIntrinsicElement } from '@volar/vue-code-gen';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -55,7 +56,7 @@ interface AutoImportCompletionData {
 	importUri: string,
 }
 
-export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
+export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
@@ -78,6 +79,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
+	const runtimeMode = options.tsRuntime.vueLsHost.getVueCompilationSettings().experimentalRuntimeMode;
 
 	return {
 
@@ -199,11 +201,10 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 			const scanner = options.getScanner(document);
 
 			if (vueDocument && scanner) {
-
 				const templateScriptData = vueDocument.file.getTemplateData();
 				const components = new Set([
 					...templateScriptData.components,
-					...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
+					...templateScriptData.components.map(hyphenate).filter(name => !isIntrinsicElement(runtimeMode, name)), 
 				]);
 				const offsetRange = range ? {
 					start: document.offsetAt(range.start),
