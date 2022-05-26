@@ -21,7 +21,8 @@ require('esbuild').build({
             setup(build) {
                 build.onResolve({ filter: /^(vscode-.*|estree-walker|jsonc-parser)/ }, args => {
                     const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
-                    const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
+										// Call twice the replace is to solve the problem of the path in Windows
+                    const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\')
                     return { path: pathEsm }
                 })
                 build.onResolve({ filter: /^\@vue\/compiler-sfc$/ }, args => {
