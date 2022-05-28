@@ -407,11 +407,6 @@
 				}
 			}
 		},
-		"configurationDefaults": {
-			"[vue]": {
-				"editor.semanticHighlighting.enabled": true
-			}
-		},
 		"semanticTokenScopes": [
 			{
 				"language": "vue",
