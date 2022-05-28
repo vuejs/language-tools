@@ -17,7 +17,6 @@ import useHtmlPlugin from './html';
 
 export const semanticTokenTypes = [
 	'componentTag',
-	'operator', // namespaced component accessor: '.'
 ];
 
 // https://v3.vuejs.org/api/directives.html#v-on
@@ -235,13 +234,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 							if (components.has(tokenText)) {
 								result.push([tokenPosition.line, tokenPosition.character, tokenLength, tokenTypes.get('componentTag') ?? -1, 0]);
-							}
-							else if (tokenText.indexOf('.') >= 0) {
-								for (let i = 0; i < tokenText.length; i++) {
-									if (tokenText[i] === '.') {
-										result.push([tokenPosition.line, tokenPosition.character + i, 1, tokenTypes.get('operator') ?? -1, 0]);
-									}
-								}
 							}
 						}
 					}

@@ -121,10 +121,10 @@ export function generate(
 			for (let i = 0; i < tagRanges.length; i++) {
 				const tagRange = tagRanges[i];
 				if (i === 0) {
-					tsCodeGen.addText(`declare const ${var_rawComponent}: typeof `);
+					tsCodeGen.addText(`declare const ${var_rawComponent}: typeof __VLS_ctx.`);
 				}
 				else {
-					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof `);
+					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
 				}
 				writeCode(
 					tagName,
@@ -142,7 +142,7 @@ export function generate(
 			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_rawComponents, '${tagName}'>;\n`);
 			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
 		}
-		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.SlotsComponent<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.WithSlots<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_slots}: __VLS_types.DefaultSlots<typeof ${var_rawComponent}>;\n`);
 

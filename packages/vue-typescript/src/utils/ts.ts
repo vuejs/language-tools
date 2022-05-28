@@ -11,7 +11,7 @@ export function injectCacheLogicToLanguageServiceHost(
 
 	const versionNums = ts.version.split('.').map(s => Number(s));
 	if (versionNums[0] > 4 || (versionNums[0] === 4 && versionNums[1] >= 7)) {
-		console.log('Please update to v0.35.0 or higher to support TypeScript version:', ts.version);
+		console.log('Please update to v0.35.0 or higher for TypeScript version:', ts.version);
 		return;
 	}
 
