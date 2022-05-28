@@ -1,13 +1,9 @@
 # Changelog
 
-## 0.34.17 (2022/5/28)
+## 0.35.0 (2022/5/28)
 
-- feat: do not show unknown tag as red ([#1247](https://github.com/johnsoncodehk/volar/issues/1247))
-- feat: do not default enable `editor.semanticHighlighting.enabled`
-- feat: support syntax highlight for style variable injection
-- fix: auto import creates wrong identifier when dot in file name ([#1335](https://github.com/johnsoncodehk/volar/issues/1335))
-- fix: avoid language server crash on TS 4.7 ([#1300](https://github.com/johnsoncodehk/volar/issues/1300))
-- fix: namespaced component type-check not working
+- perf: update TS auto-import cache logic to TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
+  - Please use 0.34.17 for TS 4.6.4 or lower
 
 ### Our Sponsors
 
@@ -16,6 +12,15 @@
     <img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
   </a>
 </p>
+
+## 0.34.17 (2022/5/28)
+
+- feat: do not show unknown tag as red ([#1247](https://github.com/johnsoncodehk/volar/issues/1247))
+- feat: do not default enable `editor.semanticHighlighting.enabled`
+- feat: support syntax highlight for style variable injection
+- fix: auto import creates wrong identifier when dot in file name ([#1335](https://github.com/johnsoncodehk/volar/issues/1335))
+- fix: avoid language server crash on TS 4.7 ([#1300](https://github.com/johnsoncodehk/volar/issues/1300))
+- fix: namespaced component type-check not working
 
 ## 0.34.16 (2022/5/23)
 
