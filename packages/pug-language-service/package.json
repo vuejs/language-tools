@@ -1,6 +1,6 @@
 {
 	"name": "@volar/pug-language-service",
-	"version": "0.34.17",
+	"version": "0.35.0",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,10 +16,10 @@
 		"vscode-html-languageservice": "^5.0.0"
 	},
 	"dependencies": {
-		"@volar/code-gen": "0.34.17",
-		"@volar/shared": "0.34.17",
-		"@volar/source-map": "0.34.17",
-		"@volar/transforms": "0.34.17",
+		"@volar/code-gen": "0.35.0",
+		"@volar/shared": "0.35.0",
+		"@volar/source-map": "0.35.0",
+		"@volar/transforms": "0.35.0",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",
 		"vscode-languageserver-textdocument": "^1.0.4",
