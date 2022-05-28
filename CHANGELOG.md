@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.34.17 (2022/5/28)
+
+- feat: do not show unknown tag as red ([#1247](https://github.com/johnsoncodehk/volar/issues/1247))
+- feat: do not default enable `editor.semanticHighlighting.enabled`
+- feat: support syntax highlight for style variable injection
+- fix: auto import creates wrong identifier when dot in file name ([#1335](https://github.com/johnsoncodehk/volar/issues/1335))
+- fix: avoid language server crash on TS 4.7 ([#1300](https://github.com/johnsoncodehk/volar/issues/1300))
+- fix: namespaced component type-check not working
+
+### Our Sponsors
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+    <img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+  </a>
+</p>
+
 ## 0.34.16 (2022/5/23)
 
 - feat: add experimental option `vueCompilerOptions.experimentalRuntimeMode` for adapt uni-app ([#1308](https://github.com/johnsoncodehk/volar/issues/1308))
