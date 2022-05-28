@@ -44,8 +44,14 @@ export const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
+function _isHTMLTag(tag: string) {
+	return isHTMLTag(tag)
+		// fix https://github.com/johnsoncodehk/volar/issues/1340
+		|| tag === 'hgroup';
+}
+
 export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app' = 'runtime-dom', tag: string) {
-	return runtimeMode === 'runtime-dom' ? (isHTMLTag(tag) || isSVGTag(tag)) : ['block', 'component', 'template', 'slot'].includes(tag);
+	return runtimeMode === 'runtime-dom' ? (_isHTMLTag(tag) || isSVGTag(tag)) : ['block', 'component', 'template', 'slot'].includes(tag);
 }
 
 export function generate(
