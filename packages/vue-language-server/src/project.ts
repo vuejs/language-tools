@@ -60,6 +60,7 @@ export async function createProject(
 
 	const scripts = shared.createPathMap<{
 		version: number,
+		fileName: string,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
 	}>();
@@ -135,7 +136,7 @@ export async function createProject(
 
 			const script = scripts.uriGet(change.uri);
 
-			if (script && change.type === vscode.FileChangeType.Changed) {
+			if (script && (change.type === vscode.FileChangeType.Changed || change.type === vscode.FileChangeType.Created)) {
 				if (script.version >= 0) {
 					script.version = -1;
 				}
@@ -188,7 +189,13 @@ export async function createProject(
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
 			getProjectVersion: () => projectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
-			getScriptFileNames: () => parsedCommandLine.fileNames,
+			getScriptFileNames: () => {
+				const fileNames = new Set([...parsedCommandLine.fileNames]);
+				for (const script of scripts.values()) {
+					fileNames.add(script.fileName);
+				}
+				return [...fileNames];
+			},
 			getCompilationSettings: () => parsedCommandLine.options,
 			getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 			getScriptVersion,
@@ -202,8 +209,7 @@ export async function createProject(
 		return host;
 
 		function getScriptVersion(fileName: string) {
-			return scripts.fsPathGet(fileName)?.version.toString()
-				?? '';
+			return scripts.fsPathGet(fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 			const script = scripts.fsPathGet(fileName);
@@ -220,6 +226,7 @@ export async function createProject(
 				else {
 					scripts.fsPathSet(fileName, {
 						version: -1,
+						fileName: fileName,
 						snapshot: snapshot,
 						snapshotVersion: -1,
 					});
