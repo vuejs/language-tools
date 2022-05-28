@@ -2,7 +2,7 @@
 
 ## 0.35.0 (2022/5/28)
 
-- perf: update TS auto-import cache logic to TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
+- perf: support TS auto-import cache for TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
   - Please use 0.34.17 for TS 4.6.4 or lower
 
 ### Our Sponsors
