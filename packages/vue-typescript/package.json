@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-typescript",
-	"version": "0.34.16",
+	"version": "0.34.17",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,13 +13,13 @@
 		"directory": "packages/vue-typescript"
 	},
 	"devDependencies": {
-		"@volar/pug-language-service": "0.34.16",
+		"@volar/pug-language-service": "0.34.17",
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/code-gen": "0.34.16",
-		"@volar/source-map": "0.34.16",
-		"@volar/vue-code-gen": "0.34.16",
+		"@volar/code-gen": "0.34.17",
+		"@volar/source-map": "0.34.17",
+		"@volar/vue-code-gen": "0.34.17",
 		"@vue/compiler-sfc": "^3.2.36",
 		"@vue/reactivity": "^3.2.36"
 	},
