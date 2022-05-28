@@ -139,6 +139,9 @@
 			},
 			{
 				"id": "vue-interpolations"
+			},
+			{
+				"id": "vue-sfc-style-variable-injection"
 			}
 		],
 		"grammars": [
@@ -220,6 +223,14 @@
 					"text.html.markdown",
 					"text.html.derivative",
 					"text.pug"
+				]
+			},
+			{
+				"language": "vue-sfc-style-variable-injection",
+				"scopeName": "vue.sfc.style.variable.injection",
+				"path": "./syntaxes/vue-sfc-style-variable-injection.json",
+				"injectTo": [
+					"source.vue"
 				]
 			}
 		],
