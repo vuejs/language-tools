@@ -43,7 +43,9 @@ export function createTypeScriptRuntime(options: {
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	injectCacheLogicToLanguageServiceHost(ts, tsLsHost, tsLsRaw);
+	if (!options.isVueTsc) {
+		injectCacheLogicToLanguageServiceHost(ts, tsLsHost, tsLsRaw);
+	}
 
 	return {
 		vueLsHost: options.vueLsHost,

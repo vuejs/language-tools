@@ -1,22 +1,28 @@
 import type { Path, server } from 'typescript/lib/tsserverlibrary';
 
-export const enum PackageJsonDependencyGroup {
-	Dependencies = 1 << 0,
-	DevDependencies = 1 << 1,
-	PeerDependencies = 1 << 2,
-	OptionalDependencies = 1 << 3,
-	All = Dependencies | DevDependencies | PeerDependencies | OptionalDependencies,
+interface PackageJsonPathFields {
+	typings?: string;
+	types?: string;
+	typesVersions?: Map<string, Map<string, string[]>>;
+	main?: string;
+	tsconfig?: string;
+	type?: string;
+	imports?: object;
+	exports?: object;
+	name?: string;
+}
+
+interface VersionPaths {
+	version: string;
+	paths: Map<string, string[]>;
 }
 
 export interface PackageJsonInfo {
-	fileName: string;
-	parseable: boolean;
-	dependencies?: Map<string, string>;
-	devDependencies?: Map<string, string>;
-	peerDependencies?: Map<string, string>;
-	optionalDependencies?: Map<string, string>;
-	get(dependencyName: string, inGroups?: PackageJsonDependencyGroup): string | undefined;
-	has(dependencyName: string, inGroups?: PackageJsonDependencyGroup): boolean;
+	packageDirectory: string;
+	packageJsonContent: PackageJsonPathFields;
+	versionPaths: VersionPaths | undefined;
+	/** false: resolved to nothing. undefined: not yet resolved */
+	resolvedEntrypoints: string[] | false | undefined;
 }
 
 export const enum Ternary {
@@ -38,20 +44,15 @@ export interface PackageJsonCache {
 	searchDirectoryAndAncestors(directory: Path): void;
 }
 
-export function canCreatePackageJsonCache(ts: typeof import('typescript/lib/tsserverlibrary')) {
-	return 'createPackageJsonInfo' in ts && 'getDirectoryPath' in ts && 'combinePaths' in ts && 'tryFileExists' in ts && 'forEachAncestorDirectory' in ts;
-}
-
 export function createPackageJsonCache(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	host: ProjectService,
 ): PackageJsonCache {
 	const { createPackageJsonInfo, getDirectoryPath, combinePaths, tryFileExists, forEachAncestorDirectory } = ts as any;
-	const packageJsons = new Map<string, PackageJsonInfo>();
-	const directoriesWithoutPackageJson = new Map<string, true>();
+	const packageJsons = new Map<Path, PackageJsonInfo>();
+	const directoriesWithoutPackageJson = new Map<Path, true>();
 	return {
 		addOrUpdate,
-		// @ts-expect-error
 		forEach: packageJsons.forEach.bind(packageJsons),
 		get: packageJsons.get.bind(packageJsons),
 		delete: fileName => {
@@ -63,8 +64,7 @@ export function createPackageJsonCache(
 		},
 		directoryHasPackageJson,
 		searchDirectoryAndAncestors: directory => {
-			// @ts-expect-error
-			forEachAncestorDirectory(directory, ancestor => {
+			forEachAncestorDirectory(directory, (ancestor: Path) => {
 				if (directoryHasPackageJson(ancestor) !== Ternary.Maybe) {
 					return true;
 				}

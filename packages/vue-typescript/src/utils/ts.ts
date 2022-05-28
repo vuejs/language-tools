@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
-import { createPackageJsonCache, canCreatePackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
+import { createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 import * as path from 'path';
 
 export function injectCacheLogicToLanguageServiceHost(
@@ -10,8 +10,9 @@ export function injectCacheLogicToLanguageServiceHost(
 ) {
 
 	const versionNums = ts.version.split('.').map(s => Number(s));
-	if (versionNums[0] > 4 || (versionNums[0] === 4 && versionNums[1] >= 7)) {
-		console.log('Please update to v0.35.0 or higher for TypeScript version:', ts.version);
+	const greaterThan47 = versionNums[0] > 4 || (versionNums[0] === 4 && versionNums[1] >= 7);
+	if (!greaterThan47) {
+		console.log('Please downgrade to v0.34.17 or lower for TypeScript version:', ts.version);
 		return;
 	}
 
@@ -29,7 +30,6 @@ export function injectCacheLogicToLanguageServiceHost(
 		|| !_getDirectoryPath
 		|| !_toPath
 		|| !_createGetCanonicalFileName
-		|| !canCreatePackageJsonCache(ts)
 	) return;
 
 	const moduleSpecifierCache = createModuleSpecifierCache();
@@ -39,6 +39,9 @@ export function injectCacheLogicToLanguageServiceHost(
 		},
 		getPackageJsonAutoImportProvider() {
 			return service.getProgram();
+		},
+		getGlobalTypingsCacheLocation() {
+			return undefined;
 		},
 	});
 	const packageJsonCache = createPackageJsonCache(ts, {
