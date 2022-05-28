@@ -9,6 +9,12 @@ export function injectCacheLogicToLanguageServiceHost(
 	service: ts.LanguageService,
 ) {
 
+	const versionNums = ts.version.split('.').map(s => Number(s));
+	if (versionNums[0] > 4 || (versionNums[0] === 4 && versionNums[1] >= 7)) {
+		console.log('Please update to v0.35.0 or higher to support TypeScript version:', ts.version);
+		return;
+	}
+
 	const _createCacheableExportInfoMap = (ts as any).createCacheableExportInfoMap;
 	const _combinePaths = (ts as any).combinePaths;
 	const _forEachAncestorDirectory = (ts as any).forEachAncestorDirectory;
