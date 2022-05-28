@@ -20,12 +20,12 @@
 		"@volar/shared": "0.34.16",
 		"@volar/vue-language-service": "0.34.16",
 		"@volar/vue-typescript": "0.34.16",
-		"@vue/shared": "^3.2.31",
-		"request-light": "^0.5.7",
+		"@vue/shared": "^3.2.36",
+		"request-light": "^0.5.8",
 		"upath": "^2.0.1",
-		"vscode-html-languageservice": "^4.2.4",
-		"vscode-languageserver": "^8.0.0-next.10",
-		"vscode-languageserver-protocol": "^3.17.0-next.16",
+		"vscode-html-languageservice": "^5.0.0",
+		"vscode-languageserver": "^8.0.1",
+		"vscode-languageserver-protocol": "^3.17.1",
 		"vscode-languageserver-textdocument": "^1.0.4",
 		"vscode-uri": "^3.0.3"
 	}

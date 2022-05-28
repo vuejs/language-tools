@@ -14,6 +14,6 @@
 	},
 	"dependencies": {
 		"@volar/shared": "0.34.16",
-		"vscode-languageserver-types": "^3.17.0-next.9"
+		"vscode-languageserver-types": "^3.17.1"
 	}
 }

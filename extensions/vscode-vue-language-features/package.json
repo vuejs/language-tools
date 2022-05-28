@@ -670,18 +670,17 @@
 	},
 	"devDependencies": {
 		"@types/vscode": "1.63.0",
-		"@types/ws": "^8.5.3",
 		"@volar/preview": "0.34.16",
 		"@volar/shared": "0.34.16",
 		"@volar/vue-language-server": "0.34.16",
-		"@vue/compiler-dom": "^3.2.31",
-		"@vue/compiler-sfc": "^3.2.31",
-		"@vue/reactivity": "^3.2.31",
+		"@vue/compiler-dom": "^3.2.36",
+		"@vue/compiler-sfc": "^3.2.36",
+		"@vue/reactivity": "^3.2.36",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"path-browserify": "^1.0.1",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.0.0-next.14",
-		"vscode-nls": "5.0.0"
+		"vscode-languageclient": "^8.0.1",
+		"vscode-nls": "^5.0.1"
 	}
 }

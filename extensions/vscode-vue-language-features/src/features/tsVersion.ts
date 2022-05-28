@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { CommonLanguageClient } from 'vscode-languageclient';
+import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { takeOverModeEnabled } from '../common';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
-export async function activate(context: vscode.ExtensionContext, clients: CommonLanguageClient[]) {
+export async function activate(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.selectTypeScriptVersion';

@@ -20,8 +20,8 @@
 		"@volar/code-gen": "0.34.16",
 		"@volar/source-map": "0.34.16",
 		"@volar/vue-code-gen": "0.34.16",
-		"@vue/compiler-sfc": "^3.2.31",
-		"@vue/reactivity": "^3.2.31"
+		"@vue/compiler-sfc": "^3.2.36",
+		"@vue/reactivity": "^3.2.36"
 	},
 	"browser": {
 		"./out/plugins/pug.js": "./out/plugins/empty.js"

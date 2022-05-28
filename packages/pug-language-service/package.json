@@ -13,7 +13,7 @@
 		"directory": "packages/pug-language-service"
 	},
 	"devDependencies": {
-		"vscode-html-languageservice": "^4.2.4"
+		"vscode-html-languageservice": "^5.0.0"
 	},
 	"dependencies": {
 		"@volar/code-gen": "0.34.16",
@@ -23,6 +23,6 @@
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",
 		"vscode-languageserver-textdocument": "^1.0.4",
-		"vscode-languageserver-types": "^3.17.0-next.6"
+		"vscode-languageserver-types": "^3.17.1"
 	}
 }

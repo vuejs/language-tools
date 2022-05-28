@@ -18,9 +18,9 @@ import * as virtualFiles from './features/virtualFiles';
 import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
 
-let apiClient: lsp.CommonLanguageClient;
-let docClient: lsp.CommonLanguageClient | undefined;
-let htmlClient: lsp.CommonLanguageClient;
+let apiClient: lsp.BaseLanguageClient;
+let docClient: lsp.BaseLanguageClient | undefined;
+let htmlClient: lsp.BaseLanguageClient;
 
 type CreateLanguageClient = (
 	id: string,
@@ -28,7 +28,7 @@ type CreateLanguageClient = (
 	documentSelector: lsp.DocumentSelector,
 	initOptions: shared.ServerInitializationOptions,
 	port: number,
-) => lsp.CommonLanguageClient;
+) => Promise<lsp.BaseLanguageClient>;
 
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
@@ -87,27 +87,29 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const _useSecondServer = useSecondServer();
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
-	apiClient = createLc(
-		'volar-language-features',
-		'Volar - Language Features Server',
-		languageFeaturesDocumentSelector,
-		getInitializationOptions(context, 'main-language-features', _useSecondServer),
-		6009,
-	);
-	docClient = _useSecondServer ? createLc(
-		'volar-language-features-2',
-		'Volar - Second Language Features Server',
-		languageFeaturesDocumentSelector,
-		getInitializationOptions(context, 'second-language-features', _useSecondServer),
-		6010,
-	) : undefined;
-	htmlClient = createLc(
-		'volar-document-features',
-		'Volar - Document Features Server',
-		documentFeaturesDocumentSelector,
-		getInitializationOptions(context, 'document-features', _useSecondServer),
-		6011,
-	);
+	[apiClient, docClient, htmlClient] = await Promise.all([
+		createLc(
+			'volar-language-features',
+			'Volar - Language Features Server',
+			languageFeaturesDocumentSelector,
+			getInitializationOptions(context, 'main-language-features', _useSecondServer),
+			6009,
+		),
+		_useSecondServer ? createLc(
+			'volar-language-features-2',
+			'Volar - Second Language Features Server',
+			languageFeaturesDocumentSelector,
+			getInitializationOptions(context, 'second-language-features', _useSecondServer),
+			6010,
+		) : undefined,
+		createLc(
+			'volar-document-features',
+			'Volar - Document Features Server',
+			documentFeaturesDocumentSelector,
+			getInitializationOptions(context, 'document-features', _useSecondServer),
+			6011,
+		),
+	]);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
 
@@ -153,7 +155,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 	async function registerRestartRequest() {
 
-		await Promise.all(clients.map(client => client.onReady()));
+		// await Promise.all(clients.map(client => client.onReady()));
 
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
 			await Promise.all(clients.map(client => client.stop()));

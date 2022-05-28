@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import * as shared from '@volar/shared';
-import type { CommonLanguageClient } from 'vscode-languageclient';
+import type { BaseLanguageClient } from 'vscode-languageclient';
 
-export async function activate(context: vscode.ExtensionContext, htmlClient: CommonLanguageClient, tsClient: CommonLanguageClient) {
-
-	await Promise.all([htmlClient.onReady, tsClient.onReady]);
+export async function activate(context: vscode.ExtensionContext, htmlClient: BaseLanguageClient, tsClient: BaseLanguageClient) {
 
 	const supportedLanguages: Record<string, boolean> = {
 		vue: true,

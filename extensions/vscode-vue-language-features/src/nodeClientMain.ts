@@ -3,7 +3,7 @@ import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 
 export function activate(context: vscode.ExtensionContext) {
-	return commonActivate(context, (
+	return commonActivate(context, async (
 		id,
 		name,
 		documentSelector,
@@ -44,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
 			serverOptions,
 			clientOptions,
 		);
-		context.subscriptions.push(client.start());
+		await client.start();
 
 		return client;
 	});
