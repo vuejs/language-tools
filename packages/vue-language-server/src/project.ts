@@ -190,7 +190,7 @@ export async function createProject(
 			getProjectVersion: () => projectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => {
-				const fileNames = new Set([...parsedCommandLine.fileNames]);
+				const fileNames = new Set(parsedCommandLine.fileNames);
 				for (const script of scripts.values()) {
 					fileNames.add(script.fileName);
 				}
