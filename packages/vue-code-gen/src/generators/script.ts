@@ -39,6 +39,7 @@ export function generate(
 	}
 
 	writeScriptSrc();
+	writeScriptSetupImports();
 	writeScriptBeforeExportDefault();
 	writeScriptSetup();
 	writeScriptSetupTypes();
@@ -167,7 +168,7 @@ export function generate(
 			return;
 
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			addVirtualCode('script', 0, scriptRanges.exportDefault.start);
+			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 		}
 		else {
 			let isExportRawObject = false;
@@ -228,7 +229,7 @@ export function generate(
 			},
 		);
 	}
-	function writeScriptSetup() {
+	function writeScriptSetupImports() {
 
 		if (!scriptSetup)
 			return;
@@ -256,8 +257,22 @@ export function generate(
 				},
 			},
 		);
+	}
+	function writeScriptSetup() {
 
-		codeGen.addText('export default await (async () => {\n');
+		if (!scriptSetup)
+			return;
+
+		if (!scriptSetupRanges)
+			return;
+
+		if (scriptRanges?.exportDefault) {
+			codeGen.addText('await (async () => {\n');
+		}
+		else {
+			codeGen.addText('export default await (async () => {\n');
+		}
+
 		codeGen.addCode(
 			scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
 			{
