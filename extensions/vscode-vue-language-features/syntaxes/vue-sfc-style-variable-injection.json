@@ -1,6 +1,6 @@
 {
 	"fileTypes": [],
-	"injectionSelector": "L:meta.property-value.css",
+	"injectionSelector": "L:source.css -comment, L:source.postcss -comment, L:source.sass -comment, L:source.stylus -comment",
 	"patterns": [
 		{
 			"include": "#vue-sfc-style-variable-injection"
