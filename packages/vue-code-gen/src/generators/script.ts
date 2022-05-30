@@ -34,6 +34,9 @@ export function generate(
 		ConstructorOverloads: false,
 	};
 
+	let exportdefaultStart: number | undefined;
+	let exportdefaultEnd: number | undefined;
+
 	if (lsType === 'template') {
 		codeGen.addText('// @ts-nocheck\n');
 	}
@@ -84,13 +87,10 @@ export function generate(
 
 	// fix https://github.com/johnsoncodehk/volar/issues/1048
 	// fix https://github.com/johnsoncodehk/volar/issues/435
-	// fix https://github.com/johnsoncodehk/volar/issues/1127
 	codeGen.addMapping2({
 		data: {
 			vueTag: 'sfc',
-			capabilities: {
-				diagnostic: lsType === 'script',
-			},
+			capabilities: {},
 		},
 		mode: SourceMaps.Mode.Expand,
 		mappedRange: {
@@ -102,6 +102,27 @@ export function generate(
 			end: 0,
 		},
 	});
+
+	// fix https://github.com/johnsoncodehk/volar/issues/1127
+	if (scriptSetup && exportdefaultStart !== undefined && exportdefaultEnd !== undefined) {
+		codeGen.addMapping2({
+			data: {
+				vueTag: 'scriptSetup',
+				capabilities: {
+					diagnostic: lsType === 'script',
+				},
+			},
+			mode: SourceMaps.Mode.Totally,
+			mappedRange: {
+				start: exportdefaultStart,
+				end: exportdefaultEnd,
+			},
+			sourceRange: {
+				start: 0,
+				end: scriptSetup.content.length,
+			},
+		});
+	}
 
 	return {
 		codeGen,
@@ -169,6 +190,7 @@ export function generate(
 
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
+			exportdefaultStart = codeGen.getText().length - (scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start);
 		}
 		else {
 			let isExportRawObject = false;
@@ -270,6 +292,7 @@ export function generate(
 			codeGen.addText('await (async () => {\n');
 		}
 		else {
+			exportdefaultStart = codeGen.getText().length;
 			codeGen.addText('export default await (async () => {\n');
 		}
 
@@ -308,7 +331,6 @@ export function generate(
 			codeGen.addText(`{\n`);
 		}
 		else {
-			codeGen.addText(`// @ts-ignore\n`); // fix https://github.com/johnsoncodehk/volar/issues/1263
 			codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
 		}
 
@@ -490,7 +512,10 @@ export function generate(
 		}
 
 		codeGen.addText(`});\n`);
-		codeGen.addText(`})();\n`);
+		codeGen.addText(`})();`);
+		exportdefaultEnd = codeGen.getText().length;
+
+		codeGen.addText(`\n`);
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);
