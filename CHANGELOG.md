@@ -12,16 +12,16 @@
 - fix: component export default jsdoc loss when use `<script setup>` ([#1327](https://github.com/johnsoncodehk/volar/issues/1327))
 - fix: false positive `@ts-expect-error` error in `withDefaults()` ([#1336](https://github.com/johnsoncodehk/volar/issues/1336))
 
-## 0.35.0 (2022/5/28)
-
-- perf: support TS auto-import cache for TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
-  - Please use 0.34.17 for TS 4.6.4 or lower
-
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.35.0 (2022/5/28)
+
+- perf: support TS auto-import cache for TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
+  - Please use 0.34.17 for TS 4.6.4 or lower
 
 ## 0.34.17 (2022/5/28)
 
