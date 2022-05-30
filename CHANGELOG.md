@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.35.2 (2022/5/30)
+
+- feat: add tsc problemMatchers settings ([#1277](https://github.com/johnsoncodehk/volar/issues/1277))
+- fix: cannot watch external .d.ts file changes ([#1343](https://github.com/johnsoncodehk/volar/issues/1343))
+- fix: incorrect typescript error report with hgroup in template ([#1340](https://github.com/johnsoncodehk/volar/issues/1340))
+- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.com/johnsoncodehk/volar/issues/1365))
+- fix: false positive type check for method arguments with `defineExpose` ([#1364](https://github.com/johnsoncodehk/volar/issues/1364))
+- fix: avoid html emmet active in style block ([#1358](https://github.com/johnsoncodehk/volar/issues/1358))
+- fix: unable to recognize the type of parameters as alongside `<script setup>` ([#1324](https://github.com/johnsoncodehk/volar/issues/1324))
+- fix: component export default jsdoc loss when use `<script setup>` ([#1327](https://github.com/johnsoncodehk/volar/issues/1327))
+- fix: false positive `@ts-expect-error` error in `withDefaults()` ([#1336](https://github.com/johnsoncodehk/volar/issues/1336))
+
 ## 0.35.0 (2022/5/28)
 
 - perf: support TS auto-import cache for TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
