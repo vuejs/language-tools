@@ -390,14 +390,14 @@ export function generate(
 			}
 
 			if (lsType === 'script') {
-				if (scriptSetupRanges.exposeRuntimeArg) {
-					codeGen.addText(`...(`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-					codeGen.addText(`),\n`);
-				}
 				if (scriptSetupRanges.exposeTypeArg) {
 					codeGen.addText(`...({} as `);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
+					codeGen.addText(`),\n`);
+				}
+				else if (scriptSetupRanges.exposeRuntimeArg) {
+					codeGen.addText(`...(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
 					codeGen.addText(`),\n`);
 				}
 			}
