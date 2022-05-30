@@ -3,8 +3,6 @@ import * as emmet from '@vscode/emmet-helper';
 
 export default function (): EmbeddedLanguageServicePlugin {
 
-	let emmetConfig: any;
-
 	return {
 
 		complete: {
@@ -33,10 +31,10 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 	async function getEmmetConfig(syntax: string): Promise<emmet.VSCodeEmmetConfig> {
 
-		emmetConfig = await useConfigurationHost()?.getConfiguration<emmet.VSCodeEmmetConfig>('emmet') ?? {};
-
+		const emmetConfig: any = await useConfigurationHost()?.getConfiguration<emmet.VSCodeEmmetConfig>('emmet') ?? {};
 		const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
 		const preferences = Object.assign({}, emmetConfig['preferences'] || {});
+
 		// jsx, xml and xsl syntaxes need to have self closing tags unless otherwise configured by user
 		if (syntax === 'jsx' || syntax === 'xml' || syntax === 'xsl') {
 			syntaxProfiles[syntax] = syntaxProfiles[syntax] || {};
