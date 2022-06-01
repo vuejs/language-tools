@@ -75,12 +75,16 @@ export function register(
 	// transform
 	function transformDiagnostics<T extends ts.Diagnostic | ts.DiagnosticWithLocation | ts.DiagnosticRelatedInformation>(diagnostics: readonly T[]): T[] {
 		const result: T[] = [];
+
 		for (const diagnostic of diagnostics) {
 			if (
 				diagnostic.file !== undefined
 				&& diagnostic.start !== undefined
 				&& diagnostic.length !== undefined
 			) {
+
+				let founded = false;
+
 				for (const tsOrVueLoc of context.vueFiles.fromEmbeddedLocation(
 					diagnostic.file.fileName,
 					diagnostic.start,
@@ -91,36 +95,46 @@ export function register(
 					if (!context.vueLsHost.fileExists?.(tsOrVueLoc.fileName))
 						continue;
 
-					let file = tsOrVueLoc.fileName === diagnostic.file.fileName
-						? diagnostic.file
-						: undefined;
-					if (!file) {
+					onMapping(diagnostic, tsOrVueLoc.fileName, tsOrVueLoc.range.start, tsOrVueLoc.range.end, tsOrVueLoc.mapped?.vueFile.getContent());
 
-						let docText = tsOrVueLoc.mapped?.vueFile.getContent();
-
-						if (docText === undefined) {
-							const snapshot = context.vueLsHost.getScriptSnapshot(tsOrVueLoc.fileName);
-							if (snapshot) {
-								docText = snapshot.getText(0, snapshot.getLength());
-							}
-						}
-						else {
-							file = ts.createSourceFile(tsOrVueLoc.fileName, docText, tsOrVueLoc.fileName.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest);
-						}
-					}
-					const newDiagnostic: T = {
-						...diagnostic,
-						file,
-						start: tsOrVueLoc.range.start,
-						length: tsOrVueLoc.range.end - tsOrVueLoc.range.start,
-					};
-					const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
-					if (relatedInformation) {
-						(newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(relatedInformation);
-					}
-
-					result.push(newDiagnostic);
+					founded = true;
 					break;
+				}
+
+				// fix https://github.com/johnsoncodehk/volar/issues/1372
+				if (!founded) {
+					for (const start of context.vueFiles.fromEmbeddedLocation(
+						diagnostic.file.fileName,
+						diagnostic.start,
+						diagnostic.start,
+						data => !!data.capabilities.diagnostic,
+					)) {
+
+						if (!context.vueLsHost.fileExists?.(start.fileName))
+							continue;
+
+						for (const end of context.vueFiles.fromEmbeddedLocation(
+							diagnostic.file.fileName,
+							diagnostic.start + diagnostic.length,
+							diagnostic.start + diagnostic.length,
+							data => !!data.capabilities.diagnostic,
+						)) {
+
+							if (!context.vueLsHost.fileExists?.(end.fileName))
+								continue;
+
+							if (start.fileName !== end.fileName)
+								continue;
+
+							onMapping(diagnostic, start.fileName, start.range.start, end.range.end, start.mapped?.vueFile.getContent());
+
+							founded = true;
+							break;
+						}
+						if (founded) {
+							break;
+						}
+					}
 				}
 			}
 			else if (
@@ -129,6 +143,38 @@ export function register(
 				result.push(diagnostic);
 			}
 		}
+
 		return result;
+
+		function onMapping(diagnostic: T, fileName: string, start: number, end: number, docText: string | undefined) {
+
+			let file = fileName === diagnostic.file?.fileName
+				? diagnostic.file
+				: undefined;
+			if (!file) {
+
+				if (docText === undefined) {
+					const snapshot = context.vueLsHost.getScriptSnapshot(fileName);
+					if (snapshot) {
+						docText = snapshot.getText(0, snapshot.getLength());
+					}
+				}
+				else {
+					file = ts.createSourceFile(fileName, docText, fileName.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest);
+				}
+			}
+			const newDiagnostic: T = {
+				...diagnostic,
+				file,
+				start: start,
+				length: end - start,
+			};
+			const relatedInformation = (diagnostic as ts.Diagnostic).relatedInformation;
+			if (relatedInformation) {
+				(newDiagnostic as ts.Diagnostic).relatedInformation = transformDiagnostics(relatedInformation);
+			}
+
+			result.push(newDiagnostic);
+		}
 	}
 }
