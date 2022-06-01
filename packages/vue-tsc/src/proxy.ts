@@ -60,15 +60,14 @@ export function createProgramProxy(
 	});
 	tsRuntime.update(); // must update before getProgram() to update virtual scripts
 
-	const tsProgram = tsRuntime.getTsLs().getProgram();
-	if (!tsProgram)
-		throw '!tsProgram';
-
 	const proxyApis = apis.register(ts, tsRuntime);
-	const program = new Proxy<ts.Program>(tsProgram, {
-		get: (target: any, property: keyof typeof proxyApis) => {
+	const program = new Proxy<ts.Program>({} as ts.Program, {
+		get: (_, property: keyof ts.Program) => {
 			tsRuntime.update();
-			return proxyApis[property] || target[property];
+			if (property in proxyApis) {
+				return proxyApis[property as keyof typeof proxyApis];
+			}
+			return tsRuntime.getTsLs().getProgram()![property];
 		},
 	});
 
