@@ -710,6 +710,9 @@
 					"include": "#template-tag"
 				},
 				{
+					"include": "text.html.derivative"
+				},
+				{
 					"include": "text.html.basic"
 				}
 			]

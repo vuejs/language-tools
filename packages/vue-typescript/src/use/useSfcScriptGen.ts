@@ -46,7 +46,12 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				return bindTexts;
 			},
 			getVueLibraryName(compilerOptions.experimentalCompatMode === 2),
-			!!compilerOptions.experimentalShamefullySupportOptionsApi,
+			(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
+				? lang.value === 'js' || lang.value === 'jsx'
+				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent,
+			(compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
+				? lang.value === 'js' || lang.value === 'jsx'
+				: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup,
 		)
 	);
 	const file = computed(() => {

@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
-import { CommonLanguageClient } from 'vscode-languageclient';
+import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
+import { takeOverModeEnabled } from '../common';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
-export async function activate(context: vscode.ExtensionContext, clients: CommonLanguageClient[]) {
+export async function activate(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.selectTypeScriptVersion';
@@ -40,10 +41,20 @@ export async function activate(context: vscode.ExtensionContext, clients: Common
 				detail: defaultTsdk,
 			};
 		}
+		if (takeOverModeEnabled()) {
+			options[3] = {
+				label: 'What is Takeover Mode?',
+			};
+		}
 
 		const select = await userPick(options);
 		if (select === undefined)
 			return; // cancel
+
+		if (select === '3') {
+			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#takeover-mode'));
+			return;
+		}
 
 		if (select === '2') {
 			vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
@@ -74,13 +85,23 @@ export async function activate(context: vscode.ExtensionContext, clients: Common
 	vscode.window.onDidChangeActiveTextEditor(updateStatusBar, undefined, context.subscriptions);
 
 	function updateStatusBar() {
-		if (vscode.window.activeTextEditor?.document.languageId !== 'vue') {
+		if (
+			vscode.window.activeTextEditor?.document.languageId !== 'vue'
+			&& !(
+				takeOverModeEnabled()
+				&& vscode.window.activeTextEditor
+				&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(vscode.window.activeTextEditor.document.languageId)
+			)
+		) {
 			statusBar.hide();
 		}
 		else {
 			const tsPaths = getCurrentTsPaths(context);
 			const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
 			statusBar.text = 'TS ' + tsVersion;
+			if (takeOverModeEnabled()) {
+				statusBar.text += ' (takeover)';
+			}
 			statusBar.show();
 		}
 	}

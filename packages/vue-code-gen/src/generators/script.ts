@@ -23,6 +23,7 @@ export function generate(
 	getStyleBindTexts: () => string[],
 	vueLibName: string,
 	shimComponentOptions: boolean,
+	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
 ) {
 
 	const codeGen = new CodeGen<EmbeddedFileMappingData>();
@@ -33,13 +34,19 @@ export function generate(
 		ConstructorOverloads: false,
 	};
 
+	let exportdefaultStart: number | undefined;
+	let exportdefaultEnd: number | undefined;
+
 	if (lsType === 'template') {
 		codeGen.addText('// @ts-nocheck\n');
 	}
 
 	writeScriptSrc();
-	writeScript();
+	writeScriptSetupImports();
+	writeScriptBeforeExportDefault();
 	writeScriptSetup();
+	writeScriptSetupTypes();
+	writeScriptAfterExportDefault();
 
 	if (lsType === 'script' && !script && !scriptSetup) {
 		codeGen.addCode(
@@ -54,29 +61,6 @@ export function generate(
 				capabilities: {},
 			},
 		);
-	}
-
-	if (usedTypes.DefinePropsToOptions) {
-		codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-		codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
-	}
-	if (usedTypes.mergePropDefaults) {
-		codeGen.addText(`type __VLS_WithDefaults<P, D> = {
-			// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
-			[K in keyof Pick<P, keyof P>]: K extends keyof D ? P[K] & {
-				default: D[K]
-			} : P[K]
-		};\n`);
-	}
-	if (usedTypes.ConstructorOverloads) {
-		// fix https://github.com/johnsoncodehk/volar/issues/926
-		codeGen.addText('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
-		if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
-			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
-		}
-		else {
-			codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
-		}
 	}
 
 	if (lsType === 'template') {
@@ -103,13 +87,10 @@ export function generate(
 
 	// fix https://github.com/johnsoncodehk/volar/issues/1048
 	// fix https://github.com/johnsoncodehk/volar/issues/435
-	// fix https://github.com/johnsoncodehk/volar/issues/1127
 	codeGen.addMapping2({
 		data: {
 			vueTag: 'sfc',
-			capabilities: {
-				diagnostic: lsType === 'script',
-			},
+			capabilities: {},
 		},
 		mode: SourceMaps.Mode.Expand,
 		mappedRange: {
@@ -122,11 +103,56 @@ export function generate(
 		},
 	});
 
+	// fix https://github.com/johnsoncodehk/volar/issues/1127
+	if (scriptSetup && exportdefaultStart !== undefined && exportdefaultEnd !== undefined) {
+		codeGen.addMapping2({
+			data: {
+				vueTag: 'scriptSetup',
+				capabilities: {
+					diagnostic: lsType === 'script',
+				},
+			},
+			mode: SourceMaps.Mode.Totally,
+			mappedRange: {
+				start: exportdefaultStart,
+				end: exportdefaultEnd,
+			},
+			sourceRange: {
+				start: 0,
+				end: scriptSetup.content.length,
+			},
+		});
+	}
+
 	return {
 		codeGen,
 		teleports,
 	};
 
+	function writeScriptSetupTypes() {
+		if (usedTypes.DefinePropsToOptions) {
+			codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
+			codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+		}
+		if (usedTypes.mergePropDefaults) {
+			codeGen.addText(`type __VLS_WithDefaults<P, D> = {
+				// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
+				[K in keyof Pick<P, keyof P>]: K extends keyof D ? P[K] & {
+					default: D[K]
+				} : P[K]
+			};\n`);
+		}
+		if (usedTypes.ConstructorOverloads) {
+			// fix https://github.com/johnsoncodehk/volar/issues/926
+			codeGen.addText('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
+			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
+				codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
+			}
+			else {
+				codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
+			}
+		}
+	}
 	function writeScriptSrc() {
 		if (!script?.src)
 			return;
@@ -158,13 +184,13 @@ export function generate(
 		codeGen.addText(`;\n`);
 		codeGen.addText(`export { default } from '${src}';\n`);
 	}
-	function writeScript() {
+	function writeScriptBeforeExportDefault() {
 		if (!script)
 			return;
 
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			addVirtualCode('script', 0, scriptRanges.exportDefault.start);
-			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
+			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
+			exportdefaultStart = codeGen.getText().length - (scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start);
 		}
 		else {
 			let isExportRawObject = false;
@@ -181,6 +207,14 @@ export function generate(
 			else {
 				addVirtualCode('script', 0, script.content.length);
 			}
+		}
+	}
+	function writeScriptAfterExportDefault() {
+		if (!script)
+			return;
+
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
+			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
 		}
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
@@ -217,7 +251,7 @@ export function generate(
 			},
 		);
 	}
-	function writeScriptSetup() {
+	function writeScriptSetupImports() {
 
 		if (!scriptSetup)
 			return;
@@ -245,8 +279,23 @@ export function generate(
 				},
 			},
 		);
+	}
+	function writeScriptSetup() {
 
-		codeGen.addText('export default await (async () => {\n');
+		if (!scriptSetup)
+			return;
+
+		if (!scriptSetupRanges)
+			return;
+
+		if (scriptRanges?.exportDefault) {
+			codeGen.addText('await (async () => {\n');
+		}
+		else {
+			exportdefaultStart = codeGen.getText().length;
+			codeGen.addText('export default await (async () => {\n');
+		}
+
 		codeGen.addCode(
 			scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
 			{
@@ -268,58 +317,62 @@ export function generate(
 			},
 		);
 
-		if (scriptSetupRanges?.withDefaultsArg) {
+		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges?.withDefaultsArg) {
 			// fix https://github.com/johnsoncodehk/volar/issues/1187
 			codeGen.addText(`const __VLS_withDefaultsArg = (<T>(t: T) => t)(`);
 			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
 			codeGen.addText(`);\n`);
 		}
 
-		codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
-
-		if (script && scriptRanges?.exportDefault?.args) {
-			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`...(`);
-			addVirtualCode('script', args.start, args.end);
-			codeGen.addText(`),\n`);
+		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
+			// use defineComponent() from user space code if it exist
+			codeGen.addText(`return `);
+			addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
+			codeGen.addText(`{\n`);
 		}
+		else {
+			codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
+		}
+
 		if (scriptSetup && scriptSetupRanges) {
-			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
-				codeGen.addText(`props: (`);
-				if (scriptSetupRanges.propsTypeArg) {
+			if (!downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+				if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
+					codeGen.addText(`props: (`);
+					if (scriptSetupRanges.propsTypeArg) {
 
-					usedTypes.DefinePropsToOptions = true;
-					codeGen.addText(`{} as `);
+						usedTypes.DefinePropsToOptions = true;
+						codeGen.addText(`{} as `);
 
-					if (scriptSetupRanges.withDefaultsArg) {
-						usedTypes.mergePropDefaults = true;
-						codeGen.addText(`__VLS_WithDefaults<`);
-					}
+						if (scriptSetupRanges.withDefaultsArg) {
+							usedTypes.mergePropDefaults = true;
+							codeGen.addText(`__VLS_WithDefaults<`);
+						}
 
-					codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codeGen.addText(`>`);
-
-					if (scriptSetupRanges.withDefaultsArg) {
-						codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+						codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 						codeGen.addText(`>`);
+
+						if (scriptSetupRanges.withDefaultsArg) {
+							codeGen.addText(`, typeof __VLS_withDefaultsArg`);
+							codeGen.addText(`>`);
+						}
 					}
+					else if (scriptSetupRanges.propsRuntimeArg) {
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					}
+					codeGen.addText(`),\n`);
 				}
-				else if (scriptSetupRanges.propsRuntimeArg) {
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				if (scriptSetupRanges.emitsTypeArg) {
+					usedTypes.ConstructorOverloads = true;
+					codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+					codeGen.addText(`>>),\n`);
 				}
-				codeGen.addText(`),\n`);
-			}
-			if (scriptSetupRanges.emitsTypeArg) {
-				usedTypes.ConstructorOverloads = true;
-				codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codeGen.addText(`>>),\n`);
-			}
-			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codeGen.addText(`emits: (`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codeGen.addText(`),\n`);
+				else if (scriptSetupRanges.emitsRuntimeArg) {
+					codeGen.addText(`emits: (`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
 			}
 			const bindingsArr: {
 				bindings: { start: number, end: number; }[],
@@ -351,24 +404,72 @@ export function generate(
 				}
 				writeTemplate();
 				codeGen.addText(`};\n`);
-
-				if (scriptSetupRanges.exposeTypeArg) {
-					codeGen.addText(`return { } as `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
-					codeGen.addText(`;\n`);
-				}
-				else if (scriptSetupRanges.exposeRuntimeArg) {
-					codeGen.addText(`return `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-					codeGen.addText(`;\n`);
-				}
-				else {
-					codeGen.addText(`return { };\n`);
-				};
 			}
 
+			codeGen.addText(`return {\n`);
+
+			if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+				// fill $props
+				if (scriptSetupRanges.propsTypeArg) {
+					// NOTE: defineProps is inaccurate for $props
+					codeGen.addText(`$props: defineProps<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+					codeGen.addText(`>(),\n`);
+				}
+				else if (scriptSetupRanges.propsRuntimeArg) {
+					// NOTE: defineProps is inaccurate for $props
+					codeGen.addText(`$props: defineProps(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
+				// fill $emit
+				if (scriptSetupRanges.emitsAssignName) {
+					codeGen.addText(`$emit: ${scriptSetupRanges.emitsAssignName},\n`);
+				}
+				else if (scriptSetupRanges.emitsTypeArg) {
+					codeGen.addText(`$emit: defineEmits<`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+					codeGen.addText(`>(),\n`);
+				}
+				else if (scriptSetupRanges.emitsRuntimeArg) {
+					codeGen.addText(`$emit: defineEmits(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
+			}
+
+			if (lsType === 'script') {
+				if (scriptSetupRanges.exposeTypeArg) {
+					codeGen.addText(`...({} as `);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
+					codeGen.addText(`),\n`);
+				}
+				else if (scriptSetupRanges.exposeRuntimeArg) {
+					codeGen.addText(`...(`);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+					codeGen.addText(`),\n`);
+				}
+			}
 			if (lsType === 'template') {
-				codeGen.addText(`return {\n`);
+				// fill ctx from props
+				if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+					if (scriptSetupRanges.propsAssignName) {
+						codeGen.addText(`...${scriptSetupRanges.propsAssignName},\n`);
+					}
+					else if (scriptSetupRanges.withDefaultsArg && scriptSetupRanges.propsTypeArg) {
+						codeGen.addText(`...withDefaults(defineProps<`);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+						codeGen.addText(`>(), `);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+						codeGen.addText(`),\n`);
+					}
+					else if (scriptSetupRanges.propsRuntimeArg) {
+						codeGen.addText(`...defineProps(`);
+						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+						codeGen.addText(`),\n`);
+					}
+				}
+				// bindings
 				for (const { bindings, content } of bindingsArr) {
 					for (const expose of bindings) {
 						const varName = content.substring(expose.start, expose.end);
@@ -400,13 +501,21 @@ export function generate(
 						});
 					}
 				}
-				codeGen.addText(`};\n`);
 			}
+			codeGen.addText(`};\n`);
+
 			codeGen.addText(`},\n`);
 		}
 
+		if (script && scriptRanges?.exportDefault?.args) {
+			addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
+		}
+
 		codeGen.addText(`});\n`);
-		codeGen.addText(`})();\n`);
+		codeGen.addText(`})();`);
+		exportdefaultEnd = codeGen.getText().length;
+
+		codeGen.addText(`\n`);
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);

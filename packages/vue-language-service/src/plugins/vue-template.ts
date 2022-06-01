@@ -3,7 +3,8 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
 import { pauseTracking, resetTracking } from '@vue/reactivity';
-import { camelize, capitalize, hyphenate, isHTMLTag } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { isIntrinsicElement } from '@volar/vue-code-gen';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -16,7 +17,6 @@ import useHtmlPlugin from './html';
 
 export const semanticTokenTypes = [
 	'componentTag',
-	'operator', // namespaced component accessor: '.'
 ];
 
 // https://v3.vuejs.org/api/directives.html#v-on
@@ -55,7 +55,7 @@ interface AutoImportCompletionData {
 	importUri: string,
 }
 
-export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
+export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
@@ -78,6 +78,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
+	const runtimeMode = options.tsRuntime.vueLsHost.getVueCompilationSettings().experimentalRuntimeMode;
 
 	return {
 
@@ -199,11 +200,10 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 			const scanner = options.getScanner(document);
 
 			if (vueDocument && scanner) {
-
 				const templateScriptData = vueDocument.file.getTemplateData();
 				const components = new Set([
 					...templateScriptData.components,
-					...templateScriptData.components.map(hyphenate).filter(name => !isHTMLTag(name)),
+					...templateScriptData.components.map(hyphenate).filter(name => !isIntrinsicElement(runtimeMode, name)),
 				]);
 				const offsetRange = range ? {
 					start: document.offsetAt(range.start),
@@ -234,13 +234,6 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
 							if (components.has(tokenText)) {
 								result.push([tokenPosition.line, tokenPosition.character, tokenLength, tokenTypes.get('componentTag') ?? -1, 0]);
-							}
-							else if (tokenText.indexOf('.') >= 0) {
-								for (let i = 0; i < tokenText.length; i++) {
-									if (tokenText[i] === '.') {
-										result.push([tokenPosition.line, tokenPosition.character + i, 1, tokenTypes.get('operator') ?? -1, 0]);
-									}
-								}
 							}
 						}
 					}
@@ -323,7 +316,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 
 		const scriptImport = scriptAst ? getLastImportNode(scriptAst) : undefined;
 		const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
-		const componentName = capitalize(camelize(item.label));
+		const componentName = capitalize(camelize(item.label.replace(/\./g, '-')));
 		const textDoc = vueDocument.getDocument();
 		let insertText = '';
 		const planAResult = await planAInsertText();
@@ -547,6 +540,7 @@ export default function <T extends ReturnType<typeof useHtmlPlugin>>(options: {
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));
 				}
+				baseName = baseName.replace(/\./g, '-');
 				const componentName_1 = hyphenate(baseName);
 				const componentName_2 = capitalize(camelize(baseName));
 				let i: number | '' = '';

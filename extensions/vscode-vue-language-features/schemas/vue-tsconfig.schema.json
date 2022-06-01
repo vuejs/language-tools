@@ -16,9 +16,34 @@
 					],
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/351"
 				},
-				"experimentalShamefullySupportOptionsApi": {
-					"type": "boolean",
-					"markdownDescription": "Support intellisense components that export options without `Vue.extend` and `defineComponent`. This is essentially a hack and not recommended to use it."
+				"experimentalRuntimeMode": {
+					"type": "string",
+					"default": "runtime-dom",
+					"anyOf": [
+						{
+							"enum": [
+								"runtime-dom",
+								"runtime-uni-app"
+							]
+						}
+					],
+					"markdownDescription": "Run app in browser or uni-app"
+				},
+				"experimentalImplicitWrapComponentOptionsWithDefineComponent": {
+					"enum": [
+						true,
+						false,
+						"onlyJs"
+					],
+					"markdownDescription": "Implicit wrap object literal component options export with `defineComponent()`."
+				},
+				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
+					"enum": [
+						true,
+						false,
+						"onlyJs"
+					],
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
 				},
 				"experimentalTemplateCompilerOptions": {
 					"type": "object",
@@ -31,6 +56,10 @@
 				"experimentalDisableTemplateSupport": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+				},
+				"experimentalAllowTypeNarrowingInInlineHandlers": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [

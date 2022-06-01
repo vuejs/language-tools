@@ -1,11 +1,9 @@
 import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
-import { CommonLanguageClient, State } from 'vscode-languageclient';
+import { BaseLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 
-export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
-
-	await languageClient.onReady();
+export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
 	const tagCases = shared.createPathMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);

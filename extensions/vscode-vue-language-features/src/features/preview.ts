@@ -430,17 +430,21 @@ export async function activate(context: vscode.ExtensionContext) {
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
+		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + type) ?? '';
+
+		if (script.indexOf('{VITE_BIN}') >= 0) {
+			script = script.replace('{VITE_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })));
+		}
+		if (script.indexOf('{NUXI_BIN}') >= 0) {
+			script = script.replace('{NUXI_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/nuxi', { paths: [context.extensionPath] })));
+		}
+		if (script.indexOf('{PORT}') >= 0) {
+			script = script.replace('{PORT}', port.toString());
+		}
+
 		const terminal = vscode.window.createTerminal('volar-preview:' + port);
-		const viteProxyPath = type === 'vite'
-			? require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })
-			: require.resolve('./dist/preview-bin/nuxi', { paths: [context.extensionPath] });
-
 		terminal.sendText(`cd ${viteDir}`);
-
-		if (type === 'vite')
-			terminal.sendText(`node ${JSON.stringify(viteProxyPath)} --port=${port}`);
-		else
-			terminal.sendText(`node ${JSON.stringify(viteProxyPath)} dev --port ${port}`);
+		terminal.sendText(script);
 
 		return {
 			port,
@@ -605,6 +609,45 @@ export async function activate(context: vscode.ExtensionContext) {
 					<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg" target="_top">
 						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
 					</a>
+
+					<table>
+						<thead>
+							<tr>
+								<th>Date</th>
+								<th>Event</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>2022.05.25</td>
+								<td><a target="_top" href="https://www.vuemeetup.com/vue-contributor-day-may-2022">Vue Contributor Day May 2022</a></td>
+							</tr>
+							<tr>
+								<td>2022.05.25</td>
+								<td><a target="_top" href="https://events.geekle.us/vuejs/">Vue.js Global Summit'22</a></td>
+							</tr>
+							<tr>
+								<td>2022.06.02</td>
+								<td><a target="_top" href="https://vuejs.amsterdam/">Vuejs Amsterdam</a></td>
+							</tr>
+							<tr>
+								<td>2022.06.08</td>
+								<td><a target="_top" href="https://us.vuejs.org/">VueConf US</a></td>
+							</tr>
+							<tr>
+								<td>2022.09.22</td>
+								<td><a target="_top" href="https://conf.vuejs.de/">vuejs.de Conf 2022</a></td>
+							</tr>
+							<tr>
+								<td>2022.10.16</td>
+								<td><a target="_top" href="https://vuefes.jp/2022/">Vue Fes Japan Online 2022</a></td>
+							</tr>
+							<tr>
+								<td>2022.10</td>
+								<td><a target="_top" href="https://vuejslive.com/">Vue.js London 2022</a></td>
+							</tr>
+						</tbody>
+					</table>
 
 					<div style="height: 35px; width: 116px; display: flex;">
 						<a

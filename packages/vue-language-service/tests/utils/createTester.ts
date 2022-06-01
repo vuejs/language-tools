@@ -2,7 +2,7 @@ import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 
-const testRoot = path.resolve(__dirname, '../../test-workspace');
+const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
 export const tester = createTester(testRoot);
 
 function createTester(root: string) {

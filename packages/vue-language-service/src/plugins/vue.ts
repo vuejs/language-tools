@@ -1,11 +1,11 @@
-import * as html from 'vscode-html-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
-import useHtmlPlugin from './html';
-import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
-import { VueDocument } from '../vueDocuments';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import * as html from 'vscode-html-languageservice';
+import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { VueDocument } from '../vueDocuments';
+import useHtmlPlugin from './html';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
 	version: 1.1,
@@ -155,7 +155,7 @@ export default function (options: {
 							start: document.positionAt(sfc.template.start),
 							end: document.positionAt(sfc.template.startTagEnd),
 						},
-						'TypeScript intellisense is disabled on template, you can config `"jsx": "preserve"` in tsconfig or jsconfig to enable it, or config `vueCompilerOptions.experimentalDisableTemplateSupport` to disable this prompt.',
+						'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
 						vscode.DiagnosticSeverity.Information,
 						undefined,
 						'volar',

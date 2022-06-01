@@ -12,9 +12,7 @@ export function register(
 ) {
 	return async (codeAction: vscode.CodeAction) => {
 
-		// @ts-expect-error
 		const data: Data = codeAction.data;
-
 		const document = getTextDocument(data.uri);
 		const [formatOptions, preferences] = document ? await Promise.all([
 			settings.getFormatOptions?.(document) ?? {},

@@ -1,5 +1,5 @@
 import { generate as generateScript } from './generators/script';
-import { generate as generateTemplateScript } from './generators/template';
+import { generate as generateTemplateScript, isIntrinsicElement } from './generators/template';
 import { parseScriptRanges } from './parsers/scriptRanges';
 import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import * as CompilerDOM from '@vue/compiler-dom';
@@ -7,6 +7,7 @@ import * as CompilerVue2 from './vue2TemplateCompiler';
 
 export * from './types';
 export * from '@vue/compiler-dom';
+export { isIntrinsicElement };
 
 /**
  * @param templateAst Use `require('@vue/compiler-dom').compile` or `require('@volar/vue-code-gen').compileTemplate`, provide to resolve variables unused in script setup
@@ -19,6 +20,7 @@ export function generateSFCScriptTypeCheckCode(
 	scriptCode: string | undefined,
 	scriptSetupCode: string | undefined,
 	shimComponentOptions: boolean,
+	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
 	templateAst?: CompilerDOM.RootNode,
 	cssVars?: string[],
 	vueLibName = 'vue',
@@ -45,6 +47,7 @@ export function generateSFCScriptTypeCheckCode(
 		() => cssVars ?? [],
 		vueLibName,
 		shimComponentOptions,
+		downgradePropsAndEmitsToSetupReturnOnScriptSetup,
 	);
 
 	return {

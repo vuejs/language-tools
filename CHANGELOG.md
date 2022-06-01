@@ -1,5 +1,79 @@
 # Changelog
 
+## 0.35.2 (2022/5/30)
+
+- feat: add tsc problemMatchers settings ([#1277](https://github.com/johnsoncodehk/volar/issues/1277))
+- fix: cannot watch external .d.ts file changes ([#1343](https://github.com/johnsoncodehk/volar/issues/1343))
+- fix: incorrect typescript error report with hgroup in template ([#1340](https://github.com/johnsoncodehk/volar/issues/1340))
+- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.com/johnsoncodehk/volar/issues/1365))
+- fix: false positive type check for method arguments with `defineExpose` ([#1364](https://github.com/johnsoncodehk/volar/issues/1364))
+- fix: avoid html emmet active in style block ([#1358](https://github.com/johnsoncodehk/volar/issues/1358))
+- fix: unable to recognize the type of parameters as alongside `<script setup>` ([#1324](https://github.com/johnsoncodehk/volar/issues/1324))
+- fix: component export default jsdoc loss when use `<script setup>` ([#1327](https://github.com/johnsoncodehk/volar/issues/1327))
+- fix: false positive `@ts-expect-error` error in `withDefaults()` ([#1336](https://github.com/johnsoncodehk/volar/issues/1336))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
+## 0.35.0 (2022/5/28)
+
+- perf: support TS auto-import cache for TS 4.7 ([#1360](https://github.com/johnsoncodehk/volar/issues/1360))
+  - Please use 0.34.17 for TS 4.6.4 or lower
+
+## 0.34.17 (2022/5/28)
+
+- feat: do not show unknown tag as red ([#1247](https://github.com/johnsoncodehk/volar/issues/1247))
+- feat: do not default enable `editor.semanticHighlighting.enabled`
+- feat: support syntax highlight for style variable injection
+- fix: auto import creates wrong identifier when dot in file name ([#1335](https://github.com/johnsoncodehk/volar/issues/1335))
+- fix: avoid language server crash on TS 4.7 ([#1300](https://github.com/johnsoncodehk/volar/issues/1300))
+- fix: namespaced component type-check not working
+
+## 0.34.16 (2022/5/23)
+
+- feat: add experimental option `vueCompilerOptions.experimentalRuntimeMode` for adapt uni-app ([#1308](https://github.com/johnsoncodehk/volar/issues/1308))
+- fix: type narrowing broken by local variable declare in template ([#1312](https://github.com/johnsoncodehk/volar/issues/1312))
+- fix: cannot recognize component context on arg typeof of arrow function in template ([#1326](https://github.com/johnsoncodehk/volar/issues/1326))
+- fix: emmet suggestion interrupt when input symbol ([#1322](https://github.com/johnsoncodehk/volar/issues/1322))
+- fix: split editors layout not following settings `volar.splitEditors.layout.*` ([#1330](https://github.com/johnsoncodehk/volar/issues/1330))
+
+## 0.34.15 (2022/5/16)
+
+- feat: support auto-complete for template local variables ([#1284](https://github.com/johnsoncodehk/volar/issues/1284))
+- feat: check if vetur is active on doctor panel ([#1305](https://github.com/johnsoncodehk/volar/issues/1305))
+- feat: enabled `experimentalImplicitWrapComponentOptionsWithDefineComponent` for `lang="js"` by default ([#1298](https://github.com/johnsoncodehk/volar/issues/1298))
+- feat: add `vueCompilerOption.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup` option to improve intellisense on script setup for `lang="js"` ([#1192](https://github.com/johnsoncodehk/volar/issues/1192))
+
+## 0.34.14 (2022/5/13)
+
+- feat: add setting `volar.vueserver.maxOldSpaceSize` to modify language server memory limit ([#1299](https://github.com/johnsoncodehk/volar/issues/1299))
+- feat: add settings `volar.preview.script.vite`, `volar.preview.script.nuxi` to customize preview server command
+- feat: move takeover mode status to status bar ([#1294](https://github.com/johnsoncodehk/volar/issues/1294))
+- feat: add settings to customize split editors layout ([#810](https://github.com/johnsoncodehk/volar/issues/810))
+- fix: tsconfig status and ts version status dons't show with ts file on takeover mode
+
+## 0.34.13 (2022/5/12)
+
+- feat: list vue meetup events on preview loading
+- feat: show basic infos by doctor command ([#1254](https://github.com/johnsoncodehk/volar/issues/1254))
+- fix: avoid tsconfig include `.vue` files outside rootDir with typescript plugin ([#1276](https://github.com/johnsoncodehk/volar/issues/1276))
+
+**Breaking changes**
+- Changed `vueCompilerOptions` property `experimentalShamefullySupportOptionsApi` to `experimentalImplicitWrapComponentOptionsWithDefineComponent` and disabled by default ([#1291](https://github.com/johnsoncodehk/volar/issues/1291))
+
+## 0.34.12 (2022/5/10)
+
+- chore: change extensions publisher ([#1124](https://github.com/johnsoncodehk/volar/issues/1124))
+- feat: add `"warning"` option to `experimentalShamefullySupportOptionsApi` and make default
+- feat: allow type narrowing in inline handlers bu config `"experimentalAllowTypeNarrowingInInlineHandlers": true` in vueCompilerOptions ([#1249](https://github.com/johnsoncodehk/volar/issues/1249))
+- fix: avoid report error with config `"module": "es2015"` in tsconfig ([#1263](https://github.com/johnsoncodehk/volar/issues/1263))
+- fix: find references result has invalid item
+- fix: property access errors loss in template ([#1264](https://github.com/johnsoncodehk/volar/issues/1264))
+- fix: cannot rename html tag in some cases ([#1272](https://github.com/johnsoncodehk/volar/issues/1272))
+
 ## 0.34.11 (2022/4/29)
 
 - fix: cannnot trigger auto-complete in import statement by input space

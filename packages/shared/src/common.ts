@@ -1,5 +1,5 @@
 
-import type * as vscode from 'vscode-languageserver-types';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function sleep(ms: number) {

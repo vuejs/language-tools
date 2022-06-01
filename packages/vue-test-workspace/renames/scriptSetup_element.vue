@@ -3,5 +3,5 @@
 </template>
 
 <script lang="ts" setup>
-declare const h1: string;
+const h1: string = 'header';
 </script>

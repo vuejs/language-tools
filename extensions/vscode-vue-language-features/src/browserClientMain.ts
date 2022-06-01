@@ -3,7 +3,7 @@ import * as lsp from 'vscode-languageclient/browser';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 
 export function activate(context: vscode.ExtensionContext) {
-	return commonActivate(context, (
+	return commonActivate(context, async (
 		id,
 		name,
 		documentSelector,
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 			clientOptions,
 			worker,
 		);
-		context.subscriptions.push(client.start());
+		await client.start();
 
 		return client;
 	});

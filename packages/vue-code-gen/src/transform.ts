@@ -4,7 +4,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 export function walkInterpolationFragment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	code: string,
-	cb: (fragment: string, offset: number | undefined, beforeCtxAccess?: { ctxText: string, varLength: number; }) => void,
+	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
 	localVars: Record<string, number>,
 	identifiers: Set<string>,
 ) {
@@ -40,8 +40,6 @@ export function walkInterpolationFragment(
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 	// localVarOffsets = localVarOffsets.sort((a, b) => a - b);
 
-	let lastCtxAccess: { ctxText: string, varLength: number; } | undefined;
-
 	if (ctxVars.length) {
 
 		if (ctxVars[0].isShorthand) {
@@ -54,31 +52,25 @@ export function walkInterpolationFragment(
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
 
-			writeCtxAccess(ctxVars[i].text.length);
+			// fix https://github.com/johnsoncodehk/volar/issues/1205
+			// fix https://github.com/johnsoncodehk/volar/issues/1264
+			cb('', ctxVars[i + 1].offset, true);
+			cb('__VLS_ctx.', undefined);
 			if (ctxVars[i + 1].isShorthand) {
-				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset, lastCtxAccess);
+				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
 				cb(': ', undefined);
 			}
 			else {
-				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset, lastCtxAccess);
+				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
 			}
-			lastCtxAccess = undefined;
 		}
 
-		writeCtxAccess(ctxVars[ctxVars.length - 1].text.length);
-		cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset, lastCtxAccess);
-		lastCtxAccess = undefined;
+		cb('', ctxVars[ctxVars.length - 1].offset, true);
+		cb('__VLS_ctx.', undefined);
+		cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
 	}
 	else {
 		cb(code, 0);
-	}
-
-	function writeCtxAccess(varLength: number) {
-		cb('__VLS_ctx.', undefined);
-		lastCtxAccess = {
-			ctxText: '__VLS_ctx.',
-			varLength,
-		};
 	}
 }
 
@@ -114,8 +106,12 @@ function walkIdentifiers(
 
 		const functionArgs: string[] = [];
 
-		for (const param of node.parameters)
+		for (const param of node.parameters) {
 			colletVars(ts, param.name, functionArgs);
+			if (param.type) {
+				walkIdentifiers(ts, param.type, cb, localVars);
+			}
+		}
 
 		for (const varName of functionArgs)
 			localVars[varName] = (localVars[varName] ?? 0) + 1;

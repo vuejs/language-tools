@@ -1,14 +1,13 @@
 import * as vscode from 'vscode';
 import { ResponseError } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
-import type { CommonLanguageClient } from 'vscode-languageclient';
+import type { BaseLanguageClient } from 'vscode-languageclient';
 import * as nls from 'vscode-nls';
 
 const localize = nls.loadMessageBundle();
 
-export async function activate(context: vscode.ExtensionContext, languageClient: CommonLanguageClient) {
+export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
-	await languageClient.onReady();
 	const schemaDocuments: { [uri: string]: boolean; } = {};
 
 	context.subscriptions.push(languageClient.onRequest(shared.GetDocumentContentRequest.type, handle => {

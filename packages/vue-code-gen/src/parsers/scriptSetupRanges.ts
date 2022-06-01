@@ -9,8 +9,10 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	let notOnTopTypeExports: TextRange[] = [];
 	let importSectionEndOffset = 0;
 	let withDefaultsArg: TextRange | undefined;
+	let propsAssignName: string | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
+	let emitsAssignName: string | undefined;
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
 	let exposeRuntimeArg: TextRange | undefined;
@@ -37,7 +39,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			notOnTopTypeExports.push(_getStartEnd(node));
 		}
 	});
-	ast.forEachChild(visitNode);
+	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
 		importSectionEndOffset,
@@ -45,8 +47,10 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 		bindings,
 		typeBindings,
 		withDefaultsArg,
+		propsAssignName,
 		propsRuntimeArg,
 		propsTypeArg,
+		emitsAssignName,
 		emitsRuntimeArg,
 		emitsTypeArg,
 		emitsTypeNums,
@@ -57,7 +61,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
-	function visitNode(node: ts.Node) {
+	function visitNode(node: ts.Node, parent: ts.Node) {
 		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
@@ -68,9 +72,15 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 					const runtimeArg = node.arguments[0];
 					if (callText === 'defineProps') {
 						propsRuntimeArg = _getStartEnd(runtimeArg);
+						if (ts.isVariableDeclaration(parent)) {
+							propsAssignName = parent.name.getText(ast);
+						}
 					}
 					else if (callText === 'defineEmits') {
 						emitsRuntimeArg = _getStartEnd(runtimeArg);
+						if (ts.isVariableDeclaration(parent)) {
+							emitsAssignName = parent.name.getText(ast);
+						}
 					}
 					else if (callText === 'defineExpose') {
 						exposeRuntimeArg = _getStartEnd(runtimeArg);
@@ -80,11 +90,17 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 					const typeArg = node.typeArguments[0];
 					if (callText === 'defineProps') {
 						propsTypeArg = _getStartEnd(typeArg);
+						if (ts.isVariableDeclaration(parent)) {
+							propsAssignName = parent.name.getText(ast);
+						}
 					}
 					else if (callText === 'defineEmits') {
 						emitsTypeArg = _getStartEnd(typeArg);
 						if (ts.isTypeLiteralNode(typeArg)) {
 							emitsTypeNums = typeArg.members.length;
+						}
+						if (ts.isVariableDeclaration(parent)) {
+							emitsAssignName = parent.name.getText(ast);
 						}
 					}
 					else if (callText === 'defineExpose') {
@@ -97,9 +113,12 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 					const arg = node.arguments[1];
 					withDefaultsArg = _getStartEnd(arg);
 				}
+				if (ts.isVariableDeclaration(parent)) {
+					propsAssignName = parent.name.getText(ast);
+				}
 			}
 		}
-		node.forEachChild(child => visitNode(child));
+		node.forEachChild(child => visitNode(child, node));
 	}
 }
 

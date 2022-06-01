@@ -209,8 +209,10 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 			fileExists: fileName => info.project.fileExists(fileName),
 			readFile: fileName => info.project.readFile(fileName),
 		};
-
-		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, info.project.getCurrentDirectory(), info.project.getCompilerOptions());
+		// fix https://github.com/johnsoncodehk/volar/issues/1276
+		// Should use raw tsconfig json not rootDir but seems cannot get it from plugin info
+		const includeRoot = path.resolve(info.project.getCurrentDirectory(), info.project.getCompilerOptions().rootDir || '.');
+		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, includeRoot, info.project.getCompilerOptions());
 		return fileNames;
 	}
 	function update() {

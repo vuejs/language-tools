@@ -125,6 +125,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 				mainCompletion: undefined,
 			};
 
+			// monky fix https://github.com/johnsoncodehk/volar/issues/1358
+			let isFirstMapping = true;
+
 			if (vueDocument) {
 
 				const embeddeds = vueDocument.file.getEmbeddeds();
@@ -138,6 +141,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 						for (const plugin of plugins) {
 
 							if (!plugin.complete?.on)
+								continue;
+
+							if (plugin.complete.isAdditional && !isFirstMapping)
 								continue;
 
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
@@ -188,6 +194,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 								list: completionList,
 							});
 						}
+
+						isFirstMapping = false;
 					}
 
 					return true;
@@ -201,6 +209,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const plugin of plugins) {
 
 					if (!plugin.complete?.on)
+						continue;
+
+					if (plugin.complete.isAdditional && !isFirstMapping)
 						continue;
 
 					if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))

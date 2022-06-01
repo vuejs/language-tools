@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
-import { createPackageJsonCache, canCreatePackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
+import { createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 import * as path from 'path';
 
 export function injectCacheLogicToLanguageServiceHost(
@@ -8,6 +8,13 @@ export function injectCacheLogicToLanguageServiceHost(
 	host: ts.LanguageServiceHost,
 	service: ts.LanguageService,
 ) {
+
+	const versionNums = ts.version.split('.').map(s => Number(s));
+	const greaterThan47 = versionNums[0] > 4 || (versionNums[0] === 4 && versionNums[1] >= 7);
+	if (!greaterThan47) {
+		console.log('TypeScript auto-import cache only working for TypeScript version < 4.7 on v0.35.0 later, please downgrade to v0.34.17 or lower for TypeScript version:', ts.version);
+		return;
+	}
 
 	const _createCacheableExportInfoMap = (ts as any).createCacheableExportInfoMap;
 	const _combinePaths = (ts as any).combinePaths;
@@ -23,7 +30,6 @@ export function injectCacheLogicToLanguageServiceHost(
 		|| !_getDirectoryPath
 		|| !_toPath
 		|| !_createGetCanonicalFileName
-		|| !canCreatePackageJsonCache(ts)
 	) return;
 
 	const moduleSpecifierCache = createModuleSpecifierCache();
@@ -33,6 +39,9 @@ export function injectCacheLogicToLanguageServiceHost(
 		},
 		getPackageJsonAutoImportProvider() {
 			return service.getProgram();
+		},
+		getGlobalTypingsCacheLocation() {
+			return undefined;
 		},
 	});
 	const packageJsonCache = createPackageJsonCache(ts, {

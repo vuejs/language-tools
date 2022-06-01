@@ -15,6 +15,8 @@ export function getDummyTsLs(
 ): ts2.LanguageService {
 	if (!dummyTsLs) {
 		const host: ts.LanguageServiceHost = {
+			readFile: ts.sys.readFile,
+			fileExists: ts.sys.fileExists,
 			getProjectVersion: () => dummyProjectVersion.toString(),
 			getScriptVersion: () => dummyProjectVersion.toString(),
 			getCompilationSettings: () => ({ allowJs: true, jsx: ts.JsxEmit.Preserve }),

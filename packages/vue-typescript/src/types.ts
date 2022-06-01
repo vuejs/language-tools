@@ -12,9 +12,12 @@ export interface ITemplateScriptData {
 
 export interface VueCompilerOptions {
 	experimentalCompatMode?: 2 | 3;
-	experimentalShamefullySupportOptionsApi?: boolean;
+	experimentalRuntimeMode?: 'runtime-dom' | 'runtime-uni-app';
+	experimentalImplicitWrapComponentOptionsWithDefineComponent?: boolean | 'onlyJs';
+	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup?: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions?: any;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
 	experimentalDisableTemplateSupport?: boolean;
 	experimentalResolveStyleCssClasses?: 'scoped' | 'always' | 'never';
+	experimentalAllowTypeNarrowingInInlineHandlers?: boolean;
 }

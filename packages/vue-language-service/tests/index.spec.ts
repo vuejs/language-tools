@@ -1,3 +1,6 @@
+import * as path from 'upath';
+import { defineTypeCheck } from './utils/defineTypeCheck';
+
 import './renames/prop';
 import './renames/typeProp';
 import './renames/cssModules';
@@ -8,6 +11,7 @@ import './renames/scriptSetup_component';
 import './renames/scriptSetup_element';
 import './renames/scriptSetup';
 
-import './typeChecks/events';
-import './typeChecks/scriptSetup';
-import './typeChecks/v_for';
+defineTypeCheck(path.resolve(__dirname, '../../vue-test-workspace/typeChecks/events.vue'));
+defineTypeCheck(path.resolve(__dirname, '../../vue-test-workspace/typeChecks/scriptSetup_scope.vue'));
+defineTypeCheck(path.resolve(__dirname, '../../vue-test-workspace/typeChecks/slots.vue'));
+defineTypeCheck(path.resolve(__dirname, '../../vue-test-workspace/typeChecks/v_for.vue'));
