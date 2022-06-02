@@ -23,9 +23,6 @@ export function getTypesCode(isVue2: boolean) {
 import * as vue from '${libName}';
 import type {
 	FunctionalComponent,
-	HTMLAttributes,
-	VNodeProps,
-	AllowedComponentProps,
 	EmitsOptions,
 	DefineComponent,
 	SetupContext,
@@ -125,8 +122,7 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void> =
 	NonNullable<F2> extends (Function | AnyArray<Function>) ? F2 :
 	NonNullable<F3> extends (Function | AnyArray<Function>) ? F3 :
 	unknown;
-export type GlobalAttrsBase = VNodeProps & AllowedComponentProps;
-export type GlobalAttrs = GlobalAttrsBase & HTMLAttributes;
+export type GlobalAttrs = JSX.IntrinsicElements['div'];
 export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;
 export type ConvertInvalidComponents<T> = { [K in keyof T]: IsComponent_Strict<T[K]> extends true ? T[K] : any };
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
