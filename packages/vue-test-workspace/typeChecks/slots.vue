@@ -11,11 +11,8 @@
 	<slot name="bar" str="str" :num="1"></slot>
 	<Self>
 		<template #bar="{ str, num }">
-			<!-- not support for now -->
-			<!-- {{ exactType(str, {} as string) }} -->
-			<!-- {{ exactType(num, {} as number) }} -->
-			{{ exactType(str, {} as any) }}
-			{{ exactType(num, {} as any) }}
+			{{ exactType(str, {} as string) }}
+			{{ exactType(num, {} as number) }}
 		</template>
 	</Self>
 </template>
