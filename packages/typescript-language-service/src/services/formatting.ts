@@ -9,33 +9,64 @@ export function register(
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	settings: Settings
 ) {
-	return async (uri: string, options: vscode.FormattingOptions, range?: vscode.Range): Promise<vscode.TextEdit[]> => {
-		const document = getTextDocument(uri);
-		if (!document) return [];
+	return {
+		onRange: async (uri: string, options: vscode.FormattingOptions, range?: vscode.Range): Promise<vscode.TextEdit[]> => {
 
-		const fileName = shared.uriToFsPath(document.uri);
-		const tsOptions = await settings.getFormatOptions?.(document, options) ?? options;
+			const document = getTextDocument(uri);
+			if (!document) return [];
 
-		let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
-		try {
-			scriptEdits = range
-				? languageService.getFormattingEditsForRange(fileName, document.offsetAt(range.start), document.offsetAt(range.end), tsOptions)
-				: languageService.getFormattingEditsForDocument(fileName, tsOptions);
-		} catch { }
-		if (!scriptEdits) return [];
+			const fileName = shared.uriToFsPath(document.uri);
+			const tsOptions = await settings.getFormatOptions?.(document, options) ?? options;
 
-		const result: vscode.TextEdit[] = [];
+			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
+			try {
+				scriptEdits = range
+					? languageService.getFormattingEditsForRange(fileName, document.offsetAt(range.start), document.offsetAt(range.end), tsOptions)
+					: languageService.getFormattingEditsForDocument(fileName, tsOptions);
+			} catch { }
+			if (!scriptEdits) return [];
 
-		for (const textEdit of scriptEdits) {
-			result.push({
-				range: {
-					start: document.positionAt(textEdit.span.start),
-					end: document.positionAt(textEdit.span.start + textEdit.span.length),
-				},
-				newText: textEdit.newText,
-			});
-		}
+			const result: vscode.TextEdit[] = [];
 
-		return result;
+			for (const textEdit of scriptEdits) {
+				result.push({
+					range: {
+						start: document.positionAt(textEdit.span.start),
+						end: document.positionAt(textEdit.span.start + textEdit.span.length),
+					},
+					newText: textEdit.newText,
+				});
+			}
+
+			return result;
+		},
+		onType: async (uri: string, options: vscode.FormattingOptions, position: vscode.Position, key: string): Promise<vscode.TextEdit[]> => {
+
+			const document = getTextDocument(uri);
+			if (!document) return [];
+
+			const fileName = shared.uriToFsPath(document.uri);
+			const tsOptions = await settings.getFormatOptions?.(document, options) ?? options;
+
+			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
+			try {
+				scriptEdits = languageService.getFormattingEditsAfterKeystroke(fileName, document.offsetAt(position), key, tsOptions);
+			} catch { }
+			if (!scriptEdits) return [];
+
+			const result: vscode.TextEdit[] = [];
+
+			for (const textEdit of scriptEdits) {
+				result.push({
+					range: {
+						start: document.positionAt(textEdit.span.start),
+						end: document.positionAt(textEdit.span.start + textEdit.span.length),
+					},
+					newText: textEdit.newText,
+				});
+			}
+
+			return result;
+		},
 	};
 }

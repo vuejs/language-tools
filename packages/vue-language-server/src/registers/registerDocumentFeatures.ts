@@ -23,5 +23,10 @@ export function register(
 	if (features.documentFormatting) {
 		server.documentFormattingProvider = true;
 		server.documentRangeFormattingProvider = true;
+		// https://github.com/microsoft/vscode/blob/ce119308e8fd4cd3f992d42b297588e7abe33a0c/extensions/typescript-language-features/src/languageFeatures/formatting.ts#L99
+		server.documentOnTypeFormattingProvider = {
+			firstTriggerCharacter: ';',
+			moreTriggerCharacter: ['}', '\n'],
+		};
 	}
 }

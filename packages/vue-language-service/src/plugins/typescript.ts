@@ -231,7 +231,13 @@ export default function (options: {
 
 		format(document, range, options_2) {
 			if (isTsDocument(document)) {
-				return options.getTsLs().doFormatting(document.uri, options_2, range);
+				return options.getTsLs().doFormatting.onRange(document.uri, options_2, range);
+			}
+		},
+
+		formatOnType(document, position, key, options_2) {
+			if (isTsDocument(document)) {
+				return options.getTsLs().doFormatting.onType(document.uri, options_2, position, key);
 			}
 		},
 	};

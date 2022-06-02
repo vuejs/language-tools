@@ -18,6 +18,11 @@ export function register(
 			return vueDs.format(document, handler.options, handler.range);
 		});
 	});
+	connection.onDocumentOnTypeFormatting(handler => {
+		return worker(handler.textDocument.uri, document => {
+			return vueDs.format(document, handler.options, undefined, handler);
+		});
+	});
 	connection.onSelectionRanges(handler => {
 		return worker(handler.textDocument.uri, document => {
 			return vueDs.getSelectionRanges(document, handler.positions);
