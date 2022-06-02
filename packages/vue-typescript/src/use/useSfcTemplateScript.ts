@@ -39,6 +39,20 @@ export function useSfcTemplateScript(
 	disableTemplateScript: boolean,
 ) {
 	const baseFileName = path.basename(fileName);
+	const scriptLeadingComment = computed(() => {
+		let comments: string[] = [];
+		if (compilerOptions.experimentalUseScriptLeadingCommentInTemplate ?? true) {
+			for (const _script of [script, scriptSetup]) {
+				if (_script.value) {
+					const commentRanges = ts.getLeadingCommentRanges(_script.value.content, 0);
+					if (commentRanges) {
+						comments = commentRanges.map(range => _script.value!.content.substring(range.pos, range.end));
+					}
+				}
+			}
+		}
+		return comments.join('\n');
+	});
 	const cssModuleClasses = computed(() =>
 		styleFiles.value.reduce((obj, style) => {
 			if (style.data.module) {
@@ -85,6 +99,7 @@ export function useSfcTemplateScript(
 
 		const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
+		codeGen.addText(scriptLeadingComment.value + '\n');
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
 
 		if (script.value || scriptSetup.value) {

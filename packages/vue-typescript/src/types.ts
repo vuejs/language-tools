@@ -20,4 +20,5 @@ export interface VueCompilerOptions {
 	experimentalDisableTemplateSupport?: boolean;
 	experimentalResolveStyleCssClasses?: 'scoped' | 'always' | 'never';
 	experimentalAllowTypeNarrowingInInlineHandlers?: boolean;
+	experimentalUseScriptLeadingCommentInTemplate?: boolean;
 }
