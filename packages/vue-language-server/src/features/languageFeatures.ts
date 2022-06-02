@@ -44,9 +44,18 @@ export function register(
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
 
-		return await worker(uri, async vueLs => {
+		const result = await worker(uri, async vueLs => {
 			return vueLs.doCompletionResolve(item, newPosition) ?? item;
 		}) ?? item;
+
+		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
+		if (!insertReplaceSupport) {
+			if (result.textEdit && vscode.InsertReplaceEdit.is(result.textEdit)) {
+				result.textEdit = vscode.TextEdit.replace(result.textEdit.insert, result.textEdit.newText);
+			}
+		}
+
+		return result;
 	});
 	connection.onHover(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
