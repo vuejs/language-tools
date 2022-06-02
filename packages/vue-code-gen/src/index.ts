@@ -72,14 +72,14 @@ export function generateSFCScriptTypeCheckCode(
 /**
  * A wrapper function of `require('@vue/compiler-dom').compile`
  */
-export function compileSFCTemplate(htmlCode: string, options: CompilerDOM.CompilerOptions = {}, vueVersion: 2 | 3 = 3) {
+export function compileSFCTemplate(htmlCode: string, options: CompilerDOM.CompilerOptions = {}, vueVersion: number) {
 
 	const errors: CompilerDOM.CompilerError[] = [];
 	const warnings: CompilerDOM.CompilerError[] = [];
 	let ast: CompilerDOM.RootNode | undefined;
 
 	try {
-		ast = (vueVersion === 2 ? CompilerVue2 : CompilerDOM).compile(htmlCode, {
+		ast = (vueVersion < 3 ? CompilerVue2 : CompilerDOM).compile(htmlCode, {
 			onError: (err: CompilerDOM.CompilerError) => errors.push(err),
 			onWarn: (err: CompilerDOM.CompilerError) => warnings.push(err),
 			expressionPlugins: ['typescript'],

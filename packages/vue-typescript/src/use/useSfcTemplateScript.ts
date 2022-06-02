@@ -84,7 +84,7 @@ export function useSfcTemplateScript(
 			ts,
 			templateData.value.lang,
 			sfcTemplateCompileResult.value.ast,
-			compilerOptions.experimentalCompatMode === 2,
+			compilerOptions.experimentalCompatMode ?? 3,
 			compilerOptions.experimentalRuntimeMode,
 			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
@@ -109,7 +109,7 @@ export function useSfcTemplateScript(
 		else {
 			codeGen.addText(`var __VLS_name = undefined;\n`);
 			codeGen.addText(`var __VLS_options = {};\n`);
-			codeGen.addText(`var __VLS_component = (await import('${getVueLibraryName(isVue2)}')).defineComponent({});\n`);
+			codeGen.addText(`var __VLS_component = (await import('${getVueLibraryName(compilerOptions.experimentalCompatMode ?? 3)}')).defineComponent({});\n`);
 		}
 
 		writeImportTypes();

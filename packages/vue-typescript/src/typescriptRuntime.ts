@@ -29,7 +29,7 @@ export function createTypeScriptRuntime(options: {
 }) {
 
 	const { typescript: ts } = options;
-	const isVue2 = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode === 2;
+	const vueVersion = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode ?? 3;
 	const tsFileVersions = new Map<string, string>();
 	const vueFiles = createVueFiles();
 	const plugins = [
@@ -38,7 +38,7 @@ export function createTypeScriptRuntime(options: {
 	];
 	const tsLsHost = createTsLsHost();
 	const tsLsRaw = ts.createLanguageService(tsLsHost);
-	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(isVue2));
+	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueVersion));
 
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
@@ -58,7 +58,7 @@ export function createTypeScriptRuntime(options: {
 		},
 		getLocalTypesFiles: () => {
 			const fileNames = getLocalTypesFiles();
-			const code = localTypes.getTypesCode(isVue2);
+			const code = localTypes.getTypesCode(vueVersion);
 			return {
 				fileNames,
 				code,

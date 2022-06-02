@@ -58,7 +58,7 @@ export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
-	isVue2: boolean,
+	vueVersion: number,
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
 	allowTypeNarrowingInEventExpressions: boolean,
 	cssScopedClasses: string[] = [],
@@ -337,7 +337,7 @@ export function generate(
 					&& !prop.arg
 					&& prop.name === 'model'
 				) {
-					addProp(getModelValuePropName(node, isVue2), 'v-model', prop.loc.start.offset);
+					addProp(getModelValuePropName(node, vueVersion), 'v-model', prop.loc.start.offset);
 				}
 				else if (
 					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -892,7 +892,7 @@ export function generate(
 						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 							? prop.arg.content
 							: prop.arg.loc.source
-						: getModelValuePropName(node, isVue2);
+						: getModelValuePropName(node, vueVersion);
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					propName_1 = propName_1.substring(1);
@@ -1994,7 +1994,7 @@ function keepHyphenateName(oldName: string, newName: string) {
 }
 // https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 // https://v3.vuejs.org/guide/forms.html#basic-usage
-function getModelValuePropName(node: CompilerDOM.ElementNode, isVue2: boolean) {
+function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number) {
 
 	const tag = node.tag;
 	const typeAttr = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'type') as CompilerDOM.AttributeNode | undefined;
@@ -2010,7 +2010,7 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, isVue2: boolean) {
 		tag === 'input' ||
 		tag === 'textarea' ||
 		tag === 'select' ||
-		isVue2
+		vueVersion < 3
 	) return 'value';
 
 	return 'modelValue';

@@ -45,7 +45,7 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				}
 				return bindTexts;
 			},
-			getVueLibraryName(compilerOptions.experimentalCompatMode === 2),
+			getVueLibraryName(compilerOptions.experimentalCompatMode ?? 3),
 			(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
 				? lang.value === 'js' || lang.value === 'jsx'
 				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent,

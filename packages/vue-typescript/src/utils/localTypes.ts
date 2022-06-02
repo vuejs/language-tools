@@ -6,19 +6,19 @@ const camelCaseText = [
 	': S',
 ].join('\n');
 
-export function getVueLibraryName(isVue2: boolean) {
-	return isVue2 ? '@vue/runtime-dom' : 'vue';
+export function getVueLibraryName(vueVersion: number) {
+	return vueVersion < 2.7 ? '@vue/runtime-dom' : 'vue';
 }
 
-export function getSlotsPropertyName(isVue2: boolean) {
-	return isVue2 ? '$scopedSlots' : '$slots';
+export function getSlotsPropertyName(vueVersion: number) {
+	return vueVersion < 3 ? '$scopedSlots' : '$slots';
 }
 
 export const typesFileName = '__VLS_types.ts';
 
-export function getTypesCode(isVue2: boolean) {
-	const libName = getVueLibraryName(isVue2);
-	const slots = getSlotsPropertyName(isVue2);
+export function getTypesCode(vueVersion: number) {
+	const libName = getVueLibraryName(vueVersion);
+	const slots = getSlotsPropertyName(vueVersion);
 	return `
 import * as vue from '${libName}';
 import type {
