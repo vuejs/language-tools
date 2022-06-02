@@ -331,7 +331,7 @@ export function generate(
 			codeGen.addText(`{\n`);
 		}
 		else {
-			codeGen.addText(`return (await import('${vueLibName}')).defineComponent({\n`);
+			codeGen.addText(`const __VLS_Component = (await import('${vueLibName}')).defineComponent({\n`);
 		}
 
 		if (scriptSetup && scriptSetupRanges) {
@@ -512,6 +512,7 @@ export function generate(
 		}
 
 		codeGen.addText(`});\n`);
+		codeGen.addText(`return {} as new () => InstanceType<typeof __VLS_Component> & { $slots: typeof import('./${path.basename(fileName)}.__VLS_template').default };\n`);
 		codeGen.addText(`})();`);
 		exportdefaultEnd = codeGen.getText().length;
 
