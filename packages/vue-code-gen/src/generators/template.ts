@@ -159,40 +159,59 @@ export function generate(
 
 		if (!isNamespacedTag) {
 			// split tagRanges to fix end tag definition original select range mapping to start tag
-			for (const tagRange of tagRanges) {
-				tsCodeGen.addText(`// @ts-ignore\n`);
-				tsCodeGen.addText(`({ `);
-				writeObjectProperty2(
-					tagName,
-					[tagRange],
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.tagHover,
-					},
-				);
-				tsCodeGen.addText(`: {} as `);
-				tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
-				const names = [...componentNames];
-				for (let i = 0; i < names.length; i++) {
-					if (i > 0) {
-						tsCodeGen.addText(', ');
-					}
-					tsCodeGen.addText(`typeof __VLS_rawComponents`);
-					writePropertyAccess2(
-						names[i],
+			if (isIntrinsicElement(experimentalRuntimeMode, tagName)) {
+				for (const tagRange of tagRanges) {
+					tsCodeGen.addText(`(<`);
+					writeObjectProperty2(
+						tagName,
 						[tagRange],
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.tagReference,
-							normalizeNewName: tagName === names[i] ? undefined : unHyphenatComponentName,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...capabilitiesSet.tagHover,
+								...capabilitiesSet.tagReference,
+							},
 						},
 					);
-					if (i > 0) {
-						tsCodeGen.addText('>');
-					}
+					tsCodeGen.addText(` />);\n`);
 				}
-				tsCodeGen.addText(` });\n`);
+			}
+			else {
+				for (const tagRange of tagRanges) {
+					tsCodeGen.addText(`// @ts-ignore\n`);
+					tsCodeGen.addText(`({ `);
+					writeObjectProperty2(
+						tagName,
+						[tagRange],
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.tagHover,
+						},
+					);
+					tsCodeGen.addText(`: {} as `);
+					tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
+					const names = [...componentNames];
+					for (let i = 0; i < names.length; i++) {
+						if (i > 0) {
+							tsCodeGen.addText(', ');
+						}
+						tsCodeGen.addText(`typeof __VLS_rawComponents`);
+						writePropertyAccess2(
+							names[i],
+							[tagRange],
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.tagReference,
+								normalizeNewName: tagName === names[i] ? undefined : unHyphenatComponentName,
+								applyNewName: keepHyphenateName,
+							},
+						);
+						if (i > 0) {
+							tsCodeGen.addText('>');
+						}
+					}
+					tsCodeGen.addText(` });\n`);
+				}
 			}
 		}
 
