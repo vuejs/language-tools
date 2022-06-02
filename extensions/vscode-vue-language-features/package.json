@@ -13,7 +13,7 @@
 	"author": "johnsoncodehk",
 	"publisher": "Vue",
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.67.0"
 	},
 	"keywords": [
 		"volar",
@@ -708,7 +708,7 @@
 		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/vscode": "1.63.0",
+		"@types/vscode": "1.67.0",
 		"@volar/preview": "0.35.2",
 		"@volar/shared": "0.35.2",
 		"@volar/vue-language-server": "0.35.2",
