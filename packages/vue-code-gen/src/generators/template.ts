@@ -1322,7 +1322,10 @@ export function generate(
 						argRange,
 						{
 							vueTag: 'template',
-							capabilities: capabilitiesSet.slotName,
+							capabilities: {
+								...capabilitiesSet.slotName,
+								completion: !!prop.arg,
+							},
 						},
 						false,
 					);
@@ -1355,6 +1358,31 @@ export function generate(
 					},
 				});
 				tsCodeGen.addText(`;\n`);
+
+				if (isStatic && !prop.arg) {
+
+					let offset = prop.loc.start.offset;
+
+					if (prop.loc.source.startsWith('#'))
+						offset += '#'.length;
+					else if (prop.loc.source.startsWith('v-slot:'))
+						offset += 'v-slot:'.length;
+
+					tsCodeGen.addText(varSlots);
+					tsCodeGen.addText(`['`);
+					writeCode(
+						'',
+						{ start: offset, end: offset },
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: {
+								completion: true,
+							},
+						},
+					);
+					tsCodeGen.addText(`'];\n`);
+				}
 			}
 		}
 	}
