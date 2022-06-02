@@ -1,22 +1,36 @@
 # Changelog
 
-## 0.35.2 (2022/5/30)
+## 0.36.0 (2022/6/3)
 
-- feat: add tsc problemMatchers settings ([#1277](https://github.com/johnsoncodehk/volar/issues/1277))
-- fix: cannot watch external .d.ts file changes ([#1343](https://github.com/johnsoncodehk/volar/issues/1343))
-- fix: incorrect typescript error report with hgroup in template ([#1340](https://github.com/johnsoncodehk/volar/issues/1340))
-- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.com/johnsoncodehk/volar/issues/1365))
-- fix: false positive type check for method arguments with `defineExpose` ([#1364](https://github.com/johnsoncodehk/volar/issues/1364))
-- fix: avoid html emmet active in style block ([#1358](https://github.com/johnsoncodehk/volar/issues/1358))
-- fix: unable to recognize the type of parameters as alongside `<script setup>` ([#1324](https://github.com/johnsoncodehk/volar/issues/1324))
-- fix: component export default jsdoc loss when use `<script setup>` ([#1327](https://github.com/johnsoncodehk/volar/issues/1327))
-- fix: false positive `@ts-expect-error` error in `withDefaults()` ([#1336](https://github.com/johnsoncodehk/volar/issues/1336))
+- feat: support format selection ([#1370](https://github.com/johnsoncodehk/volar/issues/1370))
+- feat: support format on type
+- feat: support `@ts-check`, `@ts-nocheck` for template ([#1369](https://github.com/johnsoncodehk/volar/issues/1369))
+- feat: improve slots auto-complete ([#1251](https://github.com/johnsoncodehk/volar/issues/1251))
+- feat: report error for unkonwn props ([#1077](https://github.com/johnsoncodehk/volar/issues/1077))
+- feat: support jsdoc for jsx IntrinsicElement ([#1212](https://github.com/johnsoncodehk/volar/issues/1212))
+- feat: experimental support for vue 2.7 with `"experimentalCompatMode": 2.7`
+- feat: support typed template slots for script setup ([#1253](https://github.com/johnsoncodehk/volar/issues/1253))
+- fix: `--extendedDiagnostics` not working on vue-tsc ([#1375](https://github.com/johnsoncodehk/volar/issues/1375))
+- fix: template diagnostics incomplete on vue-tsc ([#1372](https://github.com/johnsoncodehk/volar/issues/1372))
+- fix: respected `textDocument.completion.completionItem.insertReplaceSupport` ([#1373](https://github.com/johnsoncodehk/volar/issues/1373))
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.35.2 (2022/5/30)
+
+- feat: add tsc problemMatchers settings ([#1277](https://github.com/johnsoncodehk/volar/issues/1277))
+- fix: cannot watch external .d.ts file changes ([#1343](https://github.com/johnsoncodehk/volar/issues/1343))
+- fix: incorrect typescript error report with hgroup in template ([#1340](https://github.com/johnsoncodehk/volar/issues/1340))
+- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.csom/johnsoncodehk/volar/issues/1365))
+- fix: false positive type check for method arguments with `defineExpose` ([#1364](https://github.com/johnsoncodehk/volar/issues/1364))
+- fix: avoid html emmet active in style block ([#1358](https://github.com/johnsoncodehk/volar/issues/1358))
+- fix: unable to recognize the type of parameters as alongside `<script setup>` ([#1324](https://github.com/johnsoncodehk/volar/issues/1324))
+- fix: component export default jsdoc loss when use `<script setup>` ([#1327](https://github.com/johnsoncodehk/volar/issues/1327))
+- fix: false positive `@ts-expect-error` error in `withDefaults()` ([#1336](https://github.com/johnsoncodehk/volar/issues/1336))
 
 ## 0.35.0 (2022/5/28)
 
