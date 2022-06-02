@@ -116,11 +116,12 @@ export type EmitEvent_3<E2, E> =
 	: E2 extends AnyArray<infer K> ? (E extends K ? (...args: any) => void : unknown) // emits: ['event-1', 'event-2']
 	: E extends keyof E2 ? ReturnVoid<E2[E]> // emits: { 'event-1': () => true, 'event-2': () => true }
 	: unknown
-export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void> =
+export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void> =
 	NonNullable<F0> extends (Function | AnyArray<Function>) ? F0 :
 	NonNullable<F1> extends (Function | AnyArray<Function>) ? F1 :
 	NonNullable<F2> extends (Function | AnyArray<Function>) ? F2 :
 	NonNullable<F3> extends (Function | AnyArray<Function>) ? F3 :
+	NonNullable<F4> extends (Function | AnyArray<Function>) ? F4 :
 	unknown;
 export type GlobalAttrs = JSX.IntrinsicElements['div'];
 export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;

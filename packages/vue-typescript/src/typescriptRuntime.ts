@@ -279,12 +279,6 @@ export function createTypeScriptRuntime(options: {
 			}
 			let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
 			if (tsScript) {
-				if (basename === 'runtime-dom.d.ts') {
-					// allow arbitrary attributes
-					let tsScriptText = tsScript.getText(0, tsScript.getLength());
-					tsScriptText = tsScriptText.replace('type ReservedProps = {', 'type ReservedProps = { [name: string]: any');
-					tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
-				}
 				scriptSnapshots.set(fileName.toLowerCase(), [version, tsScript]);
 				return tsScript;
 			}
