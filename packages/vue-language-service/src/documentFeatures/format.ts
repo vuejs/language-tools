@@ -6,10 +6,14 @@ import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
-	return async (document: TextDocument, options: vscode.FormattingOptions) => {
+	return async (document: TextDocument, options: vscode.FormattingOptions, range?: vscode.Range) => {
+
+		if (!range) {
+			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
+		}
 
 		const originalDocument = document;
-		const rootEdits = await tryFormat(document);
+		const rootEdits = await tryFormat(document, range);
 		const vueDocument = context.getVueDocument(document);
 
 		if (!vueDocument)
@@ -42,12 +46,41 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
 
+				let embeddedRange = sourceMap.getMappedRange(range.start, range.end)?.[0];
+
+				if (!embeddedRange) {
+
+					let start = sourceMap.getMappedRange(range.start)?.[0].start;
+					let end = sourceMap.getMappedRange(range.end)?.[0].end;
+
+					if (!start) {
+						const minSourceStart = Math.min(...sourceMap.mappings.map(m => m.sourceRange.start));
+						if (document.offsetAt(range.start) <= minSourceStart) {
+							start = range.start;
+						}
+					}
+
+					if (!end) {
+						const maxSourceEnd = Math.max(...sourceMap.mappings.map(m => m.sourceRange.end));
+						if (document.offsetAt(range.end) >= maxSourceEnd) {
+							end = range.end;
+						}
+					}
+
+					if (start && end) {
+						embeddedRange = { start, end };
+					}
+				}
+
+				if (!embeddedRange)
+					continue;
+
 				if (embedded.inheritParentIndent)
 					toPatchIndent = {
 						sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
 					};
 
-				const _edits = await tryFormat(sourceMap.mappedDocument);
+				const _edits = await tryFormat(sourceMap.mappedDocument, embeddedRange);
 
 				if (!_edits)
 					continue;
@@ -124,13 +157,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}
 		}
 
-		async function tryFormat(document: TextDocument) {
+		async function tryFormat(document: TextDocument, range: vscode.Range) {
 
 			const plugins = context.getFormatPlugins();
-			const range: vscode.Range = {
-				start: document.positionAt(0),
-				end: document.positionAt(document.getText().length),
-			};
 
 			context.updateTsLs(document);
 

@@ -22,5 +22,6 @@ export function register(
 	}
 	if (features.documentFormatting) {
 		server.documentFormattingProvider = true;
+		server.documentRangeFormattingProvider = true;
 	}
 }
