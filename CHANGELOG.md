@@ -2,17 +2,20 @@
 
 ## 0.36.0 (2022/6/3)
 
-- feat: support format selection ([#1370](https://github.com/johnsoncodehk/volar/issues/1370))
+- feat: support format selection (range formatting) ([#1370](https://github.com/johnsoncodehk/volar/issues/1370))
 - feat: support format on type
 - feat: support `@ts-check`, `@ts-nocheck` for template ([#1369](https://github.com/johnsoncodehk/volar/issues/1369))
 - feat: improve slots auto-complete ([#1251](https://github.com/johnsoncodehk/volar/issues/1251))
-- feat: report error for unkonwn props ([#1077](https://github.com/johnsoncodehk/volar/issues/1077))
 - feat: support jsdoc for jsx IntrinsicElement ([#1212](https://github.com/johnsoncodehk/volar/issues/1212))
 - feat: experimental support for vue 2.7 with `"experimentalCompatMode": 2.7`
 - feat: support typed template slots for script setup ([#1253](https://github.com/johnsoncodehk/volar/issues/1253))
 - fix: `--extendedDiagnostics` not working on vue-tsc ([#1375](https://github.com/johnsoncodehk/volar/issues/1375))
 - fix: template diagnostics incomplete on vue-tsc ([#1372](https://github.com/johnsoncodehk/volar/issues/1372))
 - fix: respected `textDocument.completion.completionItem.insertReplaceSupport` ([#1373](https://github.com/johnsoncodehk/volar/issues/1373))
+
+**Breaking changes**
+
+- feat: report error for unkonwn props ([#1077](https://github.com/johnsoncodehk/volar/issues/1077))
 
 ### Our Sponsors
 
