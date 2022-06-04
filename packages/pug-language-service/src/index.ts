@@ -8,6 +8,7 @@ import { register as registerHover } from './services/hover';
 import { register as registerScanner } from './services/scanner';
 import { register as registerSelectRanges } from './services/selectionRanges';
 import { register as registerFoldingRanges } from './services/foldingRanges';
+import { register as registerQuoteComplete } from './services/quoteComplete';
 
 export { PugDocument } from './pugDocument';
 export { baseParse } from './baseParse';
@@ -24,6 +25,7 @@ export function getLanguageService(htmlLs: html.LanguageService) {
 		doHover: registerHover(htmlLs),
 		createScanner: registerScanner(htmlLs),
 		getSelectionRanges: registerSelectRanges(htmlLs),
+		doQuoteComplete: registerQuoteComplete(htmlLs),
 		getFoldingRanges: registerFoldingRanges(),
 	};
 }
