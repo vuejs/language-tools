@@ -194,7 +194,6 @@ export function createVueFile(
 		baseCssModuleType,
 		getCssVBindRanges,
 		getCssClasses,
-		compilerOptions.experimentalCompatMode === 2,
 		!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(

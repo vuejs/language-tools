@@ -5,14 +5,13 @@ import { computed, Ref } from '@vue/reactivity';
 import { VueCompilerOptions } from '../types';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
-import type { TextRange } from '@volar/vue-code-gen';
+import { getSlotsPropertyName, getVueLibraryName, TextRange } from '@volar/vue-code-gen';
 import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
 import * as path from 'path';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
-import { getVueLibraryName } from '../utils/localTypes';
 
 export function useSfcTemplateScript(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -35,7 +34,6 @@ export function useSfcTemplateScript(
 	baseCssModuleType: string,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
-	isVue2: boolean,
 	disableTemplateScript: boolean,
 ) {
 	const baseFileName = path.basename(fileName);
@@ -130,7 +128,7 @@ export function useSfcTemplateScript(
 		/* Components */
 		codeGen.addText('/* Components */\n');
 		codeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText('declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component>;\n');
+		codeGen.addText(`declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, new () => InstanceType<typeof __VLS_component> & { ${getSlotsPropertyName(compilerOptions.experimentalCompatMode ?? 3)}: typeof __VLS_slots }>;\n`);
 		codeGen.addText('declare var __VLS_allComponents: typeof __VLS_otherComponents & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_otherComponents>;\n');
 		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<typeof __VLS_allComponents> & JSX.IntrinsicElements;\n'); // sort by priority
 

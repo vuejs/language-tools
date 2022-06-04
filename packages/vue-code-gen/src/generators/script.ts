@@ -7,6 +7,14 @@ import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { TeleportMappingData, EmbeddedFileMappingData } from '../types';
 
+export function getSlotsPropertyName(vueVersion: number) {
+	return vueVersion < 3 ? '$scopedSlots' : '$slots';
+}
+
+export function getVueLibraryName(vueVersion: number) {
+	return vueVersion < 2.7 ? '@vue/runtime-dom' : 'vue';
+}
+
 export function generate(
 	lsType: 'template' | 'script',
 	fileName: string,
@@ -21,11 +29,12 @@ export function generate(
 	scriptSetupRanges: ScriptSetupRanges | undefined,
 	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
 	getStyleBindTexts: () => string[],
-	vueLibName: string,
 	shimComponentOptions: boolean,
 	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
+	vueVersion: number,
 ) {
 
+	const vueLibName = getVueLibraryName(vueVersion);
 	const codeGen = new CodeGen<EmbeddedFileMappingData>();
 	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
 	const usedTypes = {
@@ -516,7 +525,7 @@ export function generate(
 			codeGen.addText(`return __VLS_Component;\n`);
 		}
 		else {
-			codeGen.addText(`return {} as new () => InstanceType<typeof __VLS_Component> & { $slots: typeof import('./${path.basename(fileName)}.__VLS_template').default };\n`);
+			codeGen.addText(`return {} as new () => InstanceType<typeof __VLS_Component> & { ${getSlotsPropertyName(vueVersion)}: typeof import('./${path.basename(fileName)}.__VLS_template').default };\n`);
 		}
 		codeGen.addText(`})();`);
 		exportdefaultEnd = codeGen.getText().length;

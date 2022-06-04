@@ -1,3 +1,5 @@
+import { getSlotsPropertyName, getVueLibraryName } from "@volar/vue-code-gen";
+
 const camelCaseText = [
 	'type CamelCase<S extends string> = S extends `${infer First}-${infer Right}`',
 	'? Capitalize<Right> extends Right',
@@ -5,14 +7,6 @@ const camelCaseText = [
 	': `${First}${CamelCase<Capitalize<Right>>}`',
 	': S',
 ].join('\n');
-
-export function getVueLibraryName(vueVersion: number) {
-	return vueVersion < 2.7 ? '@vue/runtime-dom' : 'vue';
-}
-
-export function getSlotsPropertyName(vueVersion: number) {
-	return vueVersion < 3 ? '$scopedSlots' : '$slots';
-}
 
 export const typesFileName = '__VLS_types.ts';
 

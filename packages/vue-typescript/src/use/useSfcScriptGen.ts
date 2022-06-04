@@ -5,7 +5,6 @@ import { generate as genScript } from '@volar/vue-code-gen/out/generators/script
 import type * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
-import { getVueLibraryName } from '../utils/localTypes';
 import type { EmbeddedFileMappingData, TextRange } from '@volar/vue-code-gen';
 import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
 import { VueCompilerOptions } from '../types';
@@ -45,13 +44,13 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 				}
 				return bindTexts;
 			},
-			getVueLibraryName(compilerOptions.experimentalCompatMode ?? 3),
 			(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
 				? lang.value === 'js' || lang.value === 'jsx'
 				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent,
 			(compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
 				? lang.value === 'js' || lang.value === 'jsx'
 				: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup,
+			compilerOptions.experimentalCompatMode ?? 3,
 		)
 	);
 	const file = computed(() => {
