@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.36.1 (2022/6/4)
+
+- feat: add `vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors` option for unkonwn props reporting
+- fix: template slots types missing when use export default in `<script>` with `<script setup>` ([#1389](https://github.com/johnsoncodehk/volar/issues/1389))
+- fix: fixed false positive `__VLS_radioBinding` on radio input tag. ([#1390](https://github.com/johnsoncodehk/volar/issues/1390))
+
 ## 0.36.0 (2022/6/3)
 
 - feat: support format selection (range formatting) ([#1370](https://github.com/johnsoncodehk/volar/issues/1370))
