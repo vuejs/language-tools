@@ -326,7 +326,7 @@ export function generate(
 
 		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
 			// use defineComponent() from user space code if it exist
-			codeGen.addText(`return `);
+			codeGen.addText(`const __VLS_Component = `);
 			addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
 			codeGen.addText(`{\n`);
 		}
