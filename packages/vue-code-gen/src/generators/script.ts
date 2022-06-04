@@ -525,7 +525,7 @@ export function generate(
 			codeGen.addText(`return __VLS_Component;\n`);
 		}
 		else {
-			codeGen.addText(`return {} as new () => InstanceType<typeof __VLS_Component> & { ${getSlotsPropertyName(vueVersion)}: typeof import('./${path.basename(fileName)}.__VLS_template').default };\n`);
+			codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: typeof import('./${path.basename(fileName)}.__VLS_template').default });\n`);
 		}
 		codeGen.addText(`})();`);
 		exportdefaultEnd = codeGen.getText().length;
