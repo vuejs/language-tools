@@ -701,7 +701,7 @@ export function generate(
 								}
 
 								{
-									if (key_3 !== key_2 || true) {
+									if (key_3 !== key_2) {
 										tsCodeGen.addText(`${varInstanceProps}[`);
 										writeCodeWithQuotes(
 											key_3,
