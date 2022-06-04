@@ -2003,9 +2003,6 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 	if (tag === 'input' && type === 'checkbox')
 		return 'checked';
 
-	if (tag === 'input' && type === 'radio')
-		return '__VLS_radioBinding';
-
 	if (
 		tag === 'input' ||
 		tag === 'textarea' ||
