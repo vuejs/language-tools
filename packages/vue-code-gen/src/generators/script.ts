@@ -512,7 +512,12 @@ export function generate(
 		}
 
 		codeGen.addText(`});\n`);
-		codeGen.addText(`return {} as new () => InstanceType<typeof __VLS_Component> & { $slots: typeof import('./${path.basename(fileName)}.__VLS_template').default };\n`);
+		if (lsType === 'template') {
+			codeGen.addText(`return __VLS_Component;\n`);
+		}
+		else {
+			codeGen.addText(`return {} as new () => InstanceType<typeof __VLS_Component> & { $slots: typeof import('./${path.basename(fileName)}.__VLS_template').default };\n`);
+		}
 		codeGen.addText(`})();`);
 		exportdefaultEnd = codeGen.getText().length;
 
