@@ -6,6 +6,12 @@
 - fix: template slots types missing when use export default in `<script>` with `<script setup>` ([#1389](https://github.com/johnsoncodehk/volar/issues/1389))
 - fix: fixed false positive `__VLS_radioBinding` on radio input tag. ([#1390](https://github.com/johnsoncodehk/volar/issues/1390))
 
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.36.0 (2022/6/3)
 
 - feat: support format selection (range formatting) ([#1370](https://github.com/johnsoncodehk/volar/issues/1370))
@@ -22,12 +28,6 @@
 **Breaking changes**
 
 - feat: report error for unkonwn props ([#1077](https://github.com/johnsoncodehk/volar/issues/1077))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.35.2 (2022/5/30)
 
