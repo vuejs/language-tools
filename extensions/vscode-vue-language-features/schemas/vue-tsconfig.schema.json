@@ -66,6 +66,10 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1369"
 				},
+				"experimentalSuppressUnknownJsxPropertyErrors": {
+					"type": "boolean",
+					"markdownDescription": "Suppress unknown property errors in JSX and template. (Default true)"
+				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
 						"scoped",

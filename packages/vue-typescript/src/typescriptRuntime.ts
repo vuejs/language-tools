@@ -29,7 +29,7 @@ export function createTypeScriptRuntime(options: {
 }) {
 
 	const { typescript: ts } = options;
-	const vueVersion = options.vueLsHost.getVueCompilationSettings().experimentalCompatMode ?? 3;
+	const vueCompilerOptions = options.vueLsHost.getVueCompilationSettings();
 	const tsFileVersions = new Map<string, string>();
 	const vueFiles = createVueFiles();
 	const plugins = [
@@ -38,7 +38,7 @@ export function createTypeScriptRuntime(options: {
 	];
 	const tsLsHost = createTsLsHost();
 	const tsLsRaw = ts.createLanguageService(tsLsHost);
-	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueVersion));
+	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3));
 
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
@@ -58,7 +58,7 @@ export function createTypeScriptRuntime(options: {
 		},
 		getLocalTypesFiles: () => {
 			const fileNames = getLocalTypesFiles();
-			const code = localTypes.getTypesCode(vueVersion);
+			const code = localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3);
 			return {
 				fileNames,
 				code,
@@ -279,6 +279,15 @@ export function createTypeScriptRuntime(options: {
 			}
 			let tsScript = options.vueLsHost.getScriptSnapshot(fileName);
 			if (tsScript) {
+				if ((vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors ?? true) && basename === 'runtime-dom.d.ts') {
+					// allow arbitrary attributes
+					let tsScriptText = tsScript.getText(0, tsScript.getLength());
+					tsScriptText = tsScriptText.replace(
+						'type ReservedProps = {',
+						'type ReservedProps = { [name: string]: any',
+					);
+					tsScript = ts.ScriptSnapshot.fromString(tsScriptText);
+				}
 				scriptSnapshots.set(fileName.toLowerCase(), [version, tsScript]);
 				return tsScript;
 			}
