@@ -1,6 +1,6 @@
 {
 	"name": "@volar/source-map",
-	"version": "0.36.0",
+	"version": "0.36.1",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
