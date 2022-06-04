@@ -898,7 +898,9 @@ export function generate(
 					propName_1 = propName_1.substring(1);
 				}
 
-				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
+				const propName_2 = !isStatic ? propName_1
+					: hyphenate(propName_1) === propName_1 && !propName_1.startsWith('data-') && !propName_1.startsWith('aria-') ? camelize(propName_1)
+						: propName_1;
 
 				if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
 					continue;
@@ -1041,7 +1043,7 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			) {
 
-				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
+				const propName = hyphenate(prop.name) === prop.name && !prop.name.startsWith('data-') && !prop.name.startsWith('aria-') ? camelize(prop.name) : prop.name;
 				const propName2 = prop.name;
 
 				if (forRemainStyleOrClass && propName !== 'style' && propName !== 'class')
