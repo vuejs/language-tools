@@ -19,7 +19,7 @@ import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts-format';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
-import useVueSfcScripts from './plugins/vue-sfc-scripts';
+import useVueSfcScripts from './plugins/vue-typescript-scripts';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping } from '@volar/source-map';
