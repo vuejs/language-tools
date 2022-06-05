@@ -23,7 +23,7 @@ export default function (): VueLanguagePlugin {
 				const ast = MarkdownItAst.makeAST(tokens);
 
 				for (const node of ast) {
-					// <script> block
+					// <script> block start tag
 					if (
 						node.nodeType === 'paragraph'
 						&& node.children.length
@@ -32,6 +32,7 @@ export default function (): VueLanguagePlugin {
 						breakTemplateBlock();
 						validScriptBlock = node.children[0].map;
 					}
+					// <script> block end tag
 					if (
 						validScriptBlock
 						&& node.nodeType === 'paragraph'
