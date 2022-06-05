@@ -17,6 +17,7 @@ import { parseCssVars } from './utils/parseCssVars';
 import { Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
+import { parseCssClassNames } from './utils/parseCssClassNames';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 
@@ -80,8 +81,6 @@ export function createVueFile(
 	plugins: VueLanguagePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	baseCssModuleType: string,
-	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
 	tsLs: ts.LanguageService | undefined,
 	tsHost: ts.LanguageServiceHost | undefined,
 ) {
@@ -107,6 +106,7 @@ export function createVueFile(
 		componentItems: [],
 	};
 	const cssVars = new WeakMap<EmbeddedFile, TextRange[]>();
+	const cssClassNames = new WeakMap<EmbeddedFile, TextRange[]>();
 
 	// computeds
 	const parsedSfc = computed(() => parse(content.value, { sourceMap: false, ignoreEmpty: false }));
@@ -185,15 +185,13 @@ export function createVueFile(
 		computed(() => scriptSetupRanges.value),
 		computed(() => sfc.styles),
 		sfcStyles.files,
-		sfcStyles.embeddeds,
 		sfcTemplateCompiled,
 		sfcTemplateCompileResult,
 		sfcStyles.files,
 		scriptLang,
 		compilerOptions,
-		baseCssModuleType,
 		getCssVBindRanges,
-		getCssClasses,
+		getCssClassNameRanges,
 		!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
@@ -558,6 +556,17 @@ export function createVueFile(
 		if (!binds) {
 			binds = [...parseCssVars(embeddedFile.content)];
 			cssVars.set(embeddedFile, binds);
+		}
+
+		return binds;
+	}
+	function getCssClassNameRanges(embeddedFile: EmbeddedFile) {
+
+		let binds = cssClassNames.get(embeddedFile);
+
+		if (!binds) {
+			binds = [...parseCssClassNames(embeddedFile.content)];
+			cssClassNames.set(embeddedFile, binds);
 		}
 
 		return binds;

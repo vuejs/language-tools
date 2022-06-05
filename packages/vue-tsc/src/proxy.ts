@@ -53,8 +53,6 @@ export function createProgramProxy(
 
 	const tsRuntime: TypeScriptRuntime = (options.oldProgram as any)?.__VLS_tsRuntime ?? createTypeScriptRuntime({
 		typescript: ts,
-		baseCssModuleType: 'any',
-		getCssClasses: () => ({}),
 		vueLsHost: vueLsHost,
 		isVueTsc: true,
 	});

@@ -22,7 +22,6 @@ export function useSfcTemplateScript(
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	styles: Ref<Sfc['styles']>,
 	styleFiles: ReturnType<typeof useSfcStyles>['files'],
-	styleEmbeddeds: ReturnType<typeof useSfcStyles>['embeddeds'],
 	templateData: Ref<{
 		lang: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number; } | undefined,
@@ -31,9 +30,8 @@ export function useSfcTemplateScript(
 	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
-	baseCssModuleType: string,
 	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
-	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => Record<string, TextRange[]>,
+	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	disableTemplateScript: boolean,
 ) {
 	const baseFileName = path.basename(fileName);
@@ -51,25 +49,34 @@ export function useSfcTemplateScript(
 		}
 		return comments.join('\n');
 	});
-	const cssModuleClasses = computed(() =>
-		styleFiles.value.reduce((obj, style) => {
+	const cssModuleClasses = computed(() => {
+		const result: { style: typeof styleFiles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
+		for (let i = 0; i < styleFiles.value.length; i++) {
+			const style = styleFiles.value[i];
 			if (style.data.module) {
-				const classes = getCssClasses(style);
-				obj[style.data.module] = { [style.fileName]: classes };
-			}
-			return obj;
-		}, {} as Record<string, Record<string, Record<string, TextRange[]>>>)
-	);
-	const cssScopedClasses = computed(() => {
-		const obj: Record<string, Record<string, TextRange[]>> = {};
-		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
-		for (const style of styleFiles.value) {
-			if ((setting === 'scoped' && style.data.scoped) || setting === 'always') {
-				const classes = getCssClasses(style);
-				obj[style.fileName] = classes;
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: getCssClasses(style),
+				});
 			}
 		}
-		return obj;
+		return result;
+	});
+	const cssScopedClasses = computed(() => {
+		const result: { style: typeof styleFiles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
+		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
+		for (let i = 0; i < styleFiles.value.length; i++) {
+			const style = styleFiles.value[i];
+			if ((setting === 'scoped' && style.data.scoped) || setting === 'always') {
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: getCssClasses(style),
+				});
+			}
+		}
+		return result;
 	});
 	const templateCodeGens = computed(() => {
 
@@ -93,7 +100,7 @@ export function useSfcTemplateScript(
 			}
 		);
 	});
-	const data = computed(() => {
+	const tsxCodeGen = computed(() => {
 
 		const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
@@ -114,12 +121,18 @@ export function useSfcTemplateScript(
 
 		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component> & {\n`);
 		/* CSS Module */
-		const cssModuleMappingsArr: ReturnType<typeof writeCssClassProperties>[] = [];
-		for (const moduleName in cssModuleClasses.value) {
-			const moduleClasses = cssModuleClasses.value[moduleName];
-			codeGen.addText(`${moduleName}: ${baseCssModuleType} & {\n`);
-			cssModuleMappingsArr.push(writeCssClassProperties(moduleClasses, true, 'string', false));
-			codeGen.addText('};\n');
+		for (const cssModule of cssModuleClasses.value) {
+			codeGen.addText(`${cssModule.style.data.module}: Record<string, string>`);
+			for (const classNameRange of cssModule.classNameRanges) {
+				writeCssClassProperty(
+					cssModule.index,
+					cssModule.style.content.substring(classNameRange.start + 1, classNameRange.end),
+					classNameRange,
+					'string',
+					false,
+				);
+			}
+			codeGen.addText(';\n');
 		}
 		codeGen.addText(`};\n`);
 
@@ -137,9 +150,19 @@ export function useSfcTemplateScript(
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
-		codeGen.addText('type __VLS_StyleScopedClasses = {\n');
-		const cssScopedMappings = writeCssClassProperties(cssScopedClasses.value, true, 'boolean', true);
-		codeGen.addText('};\n');
+		codeGen.addText('type __VLS_StyleScopedClasses = {}');
+		for (const scopedCss of cssScopedClasses.value) {
+			for (const classNameRange of scopedCss.classNameRanges) {
+				writeCssClassProperty(
+					scopedCss.index,
+					scopedCss.style.content.substring(classNameRange.start + 1, classNameRange.end),
+					classNameRange,
+					'boolean',
+					true,
+				);
+			}
+		}
+		codeGen.addText(';\n');
 		codeGen.addText('declare var __VLS_styleScopedClasses: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
 
 		codeGen.addText(`/* CSS variable injection */\n`);
@@ -151,11 +174,7 @@ export function useSfcTemplateScript(
 
 		codeGen.addText(`export default __VLS_slots;\n`);
 
-		return {
-			codeGen,
-			cssModuleMappingsArr,
-			cssScopedMappings,
-		};
+		return codeGen;
 
 		function writeImportTypes() {
 
@@ -186,48 +205,37 @@ export function useSfcTemplateScript(
 			}
 			codeGen.addText(`} from './${baseFileName}.__VLS_script';\n`);
 		}
-		function writeCssClassProperties(data: Record<string, Record<string, TextRange[]>>, patchRename: boolean, propertyType: string, optional: boolean) {
-			const mappings = new Map<string, {
-				tsRange: {
-					start: number,
-					end: number,
+		function writeCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
+			codeGen.addText(`\n & { `);
+			codeGen.addMapping2({
+				mappedRange: {
+					start: codeGen.getText().length,
+					end: codeGen.getText().length + className.length + 2,
 				},
-				cssRanges: {
-					start: number,
-					end: number,
-				}[],
-				mode: SourceMaps.Mode,
-				patchRename: boolean,
-			}[]>();
-			for (const uri in data) {
-				const classes = data[uri];
-				if (!mappings.has(uri)) {
-					mappings.set(uri, []);
-				}
-				for (const className in classes) {
-					const ranges = classes[className];
-					mappings.get(uri)!.push({
-						tsRange: {
-							start: codeGen.getText().length + 1, // + '
-							end: codeGen.getText().length + 1 + className.length,
-						},
-						cssRanges: ranges,
-						mode: SourceMaps.Mode.Offset,
-						patchRename,
-					});
-					mappings.get(uri)!.push({
-						tsRange: {
-							start: codeGen.getText().length,
-							end: codeGen.getText().length + className.length + 2,
-						},
-						cssRanges: ranges,
-						mode: SourceMaps.Mode.Totally,
-						patchRename,
-					});
-					codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType},\n`);
-				}
-			}
-			return mappings;
+				sourceRange: classRange,
+				mode: SourceMaps.Mode.Totally,
+				additional: [{
+					mappedRange: {
+						start: codeGen.getText().length + 1, // + '
+						end: codeGen.getText().length + 1 + className.length,
+					},
+					sourceRange: classRange,
+					mode: SourceMaps.Mode.Offset,
+				}],
+				data: {
+					vueTag: 'style',
+					vueTagIndex: styleIndex,
+					capabilities: {
+						references: true,
+						rename: true,
+						referencesCodeLens: true,
+					},
+					normalizeNewName: beforeCssRename,
+					applyNewName: doCssRename,
+				},
+			});
+			codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType}`);
+			codeGen.addText(` }`);
 		}
 		function writeCssVars() {
 
@@ -286,38 +294,8 @@ export function useSfcTemplateScript(
 
 		if (!disableTemplateScript && file.value) {
 			const sourceMap = new SourceMaps.SourceMapBase<EmbeddedFileMappingData>(
-				data.value.codeGen.getMappings(parseMappingSourceRange)
+				tsxCodeGen.value.getMappings(parseMappingSourceRange)
 			);
-
-			for (const [fileName, mappings] of [
-				...data.value.cssModuleMappingsArr.flatMap(m => [...m]),
-				...data.value.cssScopedMappings,
-			]) {
-				const cssSourceMap = styleEmbeddeds.value.find(embedded => embedded.file.fileName === fileName)?.sourceMap;
-				if (!cssSourceMap) continue;
-				for (const mapped of mappings) {
-					const tsRange = mapped.tsRange;
-					for (const cssRange of mapped.cssRanges) {
-						const vueRange = cssSourceMap.getSourceRange(cssRange.start, cssRange.end)?.[0];
-						if (!vueRange) continue;
-						sourceMap.mappings.push({
-							data: {
-								vueTag: 'style',
-								capabilities: {
-									references: true,
-									rename: true,
-									referencesCodeLens: mapped.mode === SourceMaps.Mode.Totally, // has 2 modes
-								},
-								normalizeNewName: mapped.patchRename ? beforeCssRename : undefined,
-								applyNewName: mapped.patchRename ? doCssRename : undefined,
-							},
-							mode: mapped.mode,
-							sourceRange: vueRange,
-							mappedRange: tsRange,
-						});
-					}
-				}
-			}
 
 			return {
 				file: file.value,
@@ -381,12 +359,12 @@ export function useSfcTemplateScript(
 		}
 	});
 	const file = computed(() => {
-		if (data.value) {
+		if (tsxCodeGen.value) {
 			const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
 			const embeddedFile: EmbeddedFile = {
 				fileName: fileName + '.__VLS_template.' + lang,
 				lang: lang,
-				content: data.value.codeGen.getText(),
+				content: tsxCodeGen.value.getText(),
 				capabilities: {
 					diagnostics: true,
 					foldingRanges: false,

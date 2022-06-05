@@ -4,7 +4,6 @@ import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurati
 import * as vueTs from '@volar/vue-typescript';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './plugins/css';
 import useHtmlPlugin from './plugins/html';
 import useJsonPlugin from './plugins/json';
@@ -83,7 +82,6 @@ export function getDocumentService(
 		vueTs.usePugPlugin(),
 	];
 
-	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		getVueDocument,
@@ -143,8 +141,6 @@ export function getDocumentService(
 			vueTsPlugins,
 			{},
 			context.typescript,
-			'Record<string, string>',
-			stylesheetExtra.getCssClasses,
 			undefined,
 			undefined,
 		);

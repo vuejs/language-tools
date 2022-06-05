@@ -9,7 +9,6 @@ import type * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './plugins/css';
 import useEmmetPlugin from './plugins/emmet';
 import useHtmlPlugin from './plugins/html';
@@ -86,8 +85,6 @@ export function createLanguageService(
 
 	const tsRuntime = createTypeScriptRuntime({
 		typescript: ts,
-		baseCssModuleType: 'Record<string, string>',
-		getCssClasses: ef => stylesheetExtra.getCssClasses(ef),
 		vueLsHost: vueLsHost,
 		isTsPlugin: false,
 	});
@@ -193,7 +190,6 @@ export function createLanguageService(
 		scriptTsPlugin,
 	];
 
-	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: LanguageServiceRuntimeContext = {
 		vueDocuments,
 		getTsLs: () => tsLs,
