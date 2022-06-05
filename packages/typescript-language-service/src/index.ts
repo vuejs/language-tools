@@ -33,8 +33,8 @@ export { getSemanticTokenLegend } from './services/semanticTokens';
 import * as path from 'path';
 
 export interface Settings {
-	getFormatOptions?(document: TextDocument, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
-	getPreferences?(document: TextDocument): Promise<ts.UserPreferences>;
+	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
+	getPreferences?(uri: string): Promise<ts.UserPreferences>;
 }
 
 export function createLanguageService(

@@ -15,7 +15,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const preferences = await settings.getPreferences?.(document) ?? {};
+		const preferences = await settings.getPreferences?.(document.uri) ?? {};
 		const fileName = shared.uriToFsPath(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);

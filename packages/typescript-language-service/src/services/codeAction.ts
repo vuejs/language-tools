@@ -40,8 +40,8 @@ export function register(
 		if (!document) return;
 
 		const [formatOptions, preferences] = await Promise.all([
-			settings.getFormatOptions?.(document) ?? {},
-			settings.getPreferences?.(document) ?? {},
+			settings.getFormatOptions?.(document.uri) ?? {},
+			settings.getPreferences?.(document.uri) ?? {},
 		]);
 
 		const fileName = shared.uriToFsPath(document.uri);

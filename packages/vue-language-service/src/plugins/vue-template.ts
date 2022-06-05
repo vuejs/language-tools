@@ -396,14 +396,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function planAInsertText() {
-			const embeddedScriptFile = vueDocument.file.getScriptTsFile();
-			const embeddedScriptDocument = vueDocument.embeddedDocumentsMap.get(embeddedScriptFile);
+			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName());
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const [formatOptions, preferences] = await Promise.all([
-				options.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
-				options.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
+				options.tsSettings.getFormatOptions?.(embeddedScriptUri) ?? {},
+				options.tsSettings.getPreferences?.(embeddedScriptUri) ?? {},
 			]);
-			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
 					for (const change of action.changes) {

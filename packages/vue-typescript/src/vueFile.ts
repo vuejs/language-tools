@@ -339,7 +339,7 @@ export function createVueFile(
 		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
 		update: untrack(update),
 		getTemplateData: untrack(getTemplateData),
-		getScriptTsFile: untrack(() => sfcScriptForScriptLs.file.value),
+		getScriptFileName: untrack(() => fileName + '.' + scriptLang.value),
 		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => scriptAst.value),
 		getScriptSetupAst: untrack(() => scriptSetupAst.value),
@@ -356,7 +356,6 @@ export function createVueFile(
 			allEmbeddeds,
 			teleports,
 			sfcTemplateScript,
-			sfcScriptForScriptLs,
 		},
 	};
 
