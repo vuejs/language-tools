@@ -7,7 +7,6 @@ import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { VueLanguagePlugin } from './typescriptRuntime';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
-import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
@@ -25,6 +24,7 @@ export interface EmbeddedStructure {
 }
 
 export interface Embedded {
+	parentFileName?: string,
 	file: EmbeddedFile,
 	sourceMap: EmbeddedFileSourceMap,
 }
@@ -137,7 +137,6 @@ export function createVueFile(
 	}).filter(notEmpty);
 
 	// use
-	const sfcTemplate = useSfcTemplate(fileName, computed(() => sfc.template));
 	const sfcTemplateCompiled = computed<undefined | {
 		lang: string,
 		htmlText: string,
@@ -253,70 +252,76 @@ export function createVueFile(
 
 		return _all;
 	});
-	const embeddeds = computed(() => {
-
-		const embeddeds: EmbeddedStructure[] = [];
-
-		// template
-		embeddeds.push({
-			self: sfcTemplate.embedded.value,
-			embeddeds: [
-				{
-					self: sfcTemplateScript.embedded.value,
-					inheritParentIndent: true,
-					embeddeds: [],
-				},
-				{
-					self: sfcTemplateScript.formatEmbedded.value,
-					inheritParentIndent: true,
-					embeddeds: [],
-				},
-				{
-					self: sfcTemplateScript.inlineCssEmbedded.value,
-					inheritParentIndent: true,
-					embeddeds: [],
-				},
-			],
-		});
-
-		// scripts - script ls
-		embeddeds.push({
-			self: sfcScriptForScriptLs.embedded.value,
-			embeddeds: [],
-		});
-
-		// scripts - template ls
-		embeddeds.push({
-			self: sfcScriptForTemplateLs.embedded.value,
-			embeddeds: [],
-		});
-
-		for (const getEmbeddeds of pluginEmbeddeds) {
-			for (const embedded of getEmbeddeds.value) {
-				embeddeds.push({
-					self: embedded.value,
-					embeddeds: [],
-				});
-			}
-		}
-
-		return embeddeds;
-	});
 	const allEmbeddeds = computed(() => {
 
 		const all: Embedded[] = [];
 
-		visitEmbedded(embeddeds.value, embedded => all.push(embedded));
+		for (const getEmbeddeds of pluginEmbeddeds) {
+			for (const embedded of getEmbeddeds.value) {
+				all.push(embedded.value);
+			}
+		}
+
+		all.push(...[
+			sfcTemplateScript.embedded.value,
+			sfcTemplateScript.formatEmbedded.value,
+			sfcTemplateScript.inlineCssEmbedded.value,
+			sfcScriptForScriptLs.embedded.value,
+			sfcScriptForTemplateLs.embedded.value,
+		].filter(notEmpty));
 
 		return all;
+	});
+	const embeddeds = computed(() => {
 
-		function visitEmbedded(embeddeds: EmbeddedStructure[], cb: (embedded: Embedded) => void) {
-			for (const embedded of embeddeds) {
+		const embeddeds: EmbeddedStructure[] = [];
+		let remain = [...allEmbeddeds.value];
 
-				visitEmbedded(embedded.embeddeds, cb);
+		while (remain.length) {
+			const beforeLength = remain.length;
+			consumeRemain();
+			if (beforeLength === remain.length) {
+				break;
+			}
+		}
 
-				if (embedded.self) {
-					cb(embedded.self);
+		if (remain.length) {
+			console.error('remain embeddeds', remain.map(e => e.file.fileName));
+		}
+
+		return embeddeds;
+
+		function consumeRemain() {
+			for (let i = remain.length - 1; i >= 0; i--) {
+				const embedded = remain[i];
+				if (!embedded.parentFileName) {
+					embeddeds.push({
+						self: embedded,
+						embeddeds: [],
+					});
+					remain.splice(i, 1);
+				}
+				else {
+					const parent = findParentStructure(embedded.parentFileName, embeddeds);
+					if (parent) {
+						parent.embeddeds.push({
+							self: embedded,
+							inheritParentIndent: true,
+							embeddeds: [],
+						});
+						remain.splice(i, 1);
+					}
+				}
+			}
+		}
+		function findParentStructure(fileName: string, strus: EmbeddedStructure[]): EmbeddedStructure | undefined {
+			for (const stru of strus) {
+				if (stru.self?.file.fileName === fileName) {
+					return stru;
+				}
+				let _stru = findParentStructure(fileName, stru.embeddeds);
+				if (_stru) {
+					return _stru;
 				}
 			}
 		}
@@ -335,7 +340,6 @@ export function createVueFile(
 		update: untrack(update),
 		getTemplateData: untrack(getTemplateData),
 		getScriptTsFile: untrack(() => sfcScriptForScriptLs.file.value),
-		getEmbeddedTemplate: untrack(() => sfcTemplate.embedded.value),
 		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => scriptAst.value),
 		getScriptSetupAst: untrack(() => scriptSetupAst.value),
@@ -345,7 +349,6 @@ export function createVueFile(
 		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
 		getLastUpdated: untrack(() => unref(lastUpdated)),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
-		getSfcTemplateDocument: untrack(() => sfcTemplate.file.value),
 		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 
 		refs: {

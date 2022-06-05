@@ -143,9 +143,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				const templateErrors: vscode.Diagnostic[] = [];
 				const sfcVueTemplateCompiled = vueDocument.file.getSfcVueTemplateCompiled();
 				const sfcTemplateLanguageCompiled = vueDocument.file.getSfcTemplateLanguageCompiled();
-				const sfcTemplate = vueDocument.file.getSfcTemplateDocument();
 
-				if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled && sfcTemplate) {
+				if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled) {
 
 					for (const error of sfcVueTemplateCompiled.errors) {
 						onCompilerError(error, vscode.DiagnosticSeverity.Error);
