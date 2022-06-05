@@ -77,10 +77,7 @@ export function getDocumentService(
 		jsonPlugin,
 		tsPlugin,
 	].map(patchHtmlFormat);
-	const vueTsPlugins = [
-		vueTs.useHtmlPlugin(),
-		vueTs.usePugPlugin(),
-	];
+	const vueTsPlugins = vueTs.getPlugins();
 
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,

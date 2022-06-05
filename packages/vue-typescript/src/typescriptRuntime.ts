@@ -1,13 +1,21 @@
-import type { TextRange } from '@volar/vue-code-gen';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
+import useVueSfcStyles from './plugins/vue-sfc-styles';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
 import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
-import { createVueFile, EmbeddedFile } from './vueFile';
+import { createVueFile, Embedded, EmbeddedFile, Sfc } from './vueFile';
 import { createVueFiles } from './vueFiles';
+
+export function getPlugins() {
+	return [
+		useHtmlPlugin(),
+		usePugPlugin(),
+		useVueSfcStyles(),
+	];
+}
 
 export interface VueLanguagePlugin {
 
@@ -15,6 +23,10 @@ export interface VueLanguagePlugin {
 		html: string,
 		mapping(htmlStart: number, htmlEnd: number): { start: number, end: number; } | undefined,
 	} | undefined;
+
+	getEmbeddedFilesCount?(sfc: Sfc): number;
+
+	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): Embedded;
 }
 
 export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
@@ -30,10 +42,7 @@ export function createTypeScriptRuntime(options: {
 	const vueCompilerOptions = options.vueLsHost.getVueCompilationSettings();
 	const tsFileVersions = new Map<string, string>();
 	const vueFiles = createVueFiles();
-	const plugins = [
-		useHtmlPlugin(),
-		usePugPlugin(),
-	];
+	const plugins = getPlugins();
 	const tsLsHost = createTsLsHost();
 	const tsLsRaw = ts.createLanguageService(tsLsHost);
 	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3));

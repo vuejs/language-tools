@@ -347,10 +347,6 @@ export function useSfcTemplateScript(
 					inlayHints: false,
 				},
 				data: undefined,
-				// data: {
-				// 	module: false,
-				// 	scoped: false,
-				// },
 				isTsHostFile: false,
 			};
 
@@ -418,9 +414,7 @@ export function useSfcTemplateScript(
 		templateCodeGens,
 		embedded,
 		file,
-		formatFile,
 		formatEmbedded,
-		inlineCssFile,
 		inlineCssEmbedded,
 		cssVarTexts,
 	};
