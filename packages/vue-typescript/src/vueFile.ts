@@ -5,7 +5,6 @@ import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSe
 import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
-import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
@@ -19,7 +18,8 @@ import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
-import useVueSfcScripts from './plugins/vue-typescript-scripts';
+import useVueTsScripts from './plugins/vue-typescript-scripts';
+import useVueTsTemplate from './plugins/vue-typescript-template';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping } from '@volar/source-map';
@@ -149,35 +149,8 @@ export function createVueFile(
 			);
 		}
 	});
-	const cssModuleClasses = computed(() => {
-		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			if (style.module) {
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: [...parseCssClassNames(style.content)],
-				});
-			}
-		}
-		return result;
-	});
-	const cssScopedClasses = computed(() => {
-		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
-		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			if ((setting === 'scoped' && style.scoped) || setting === 'always') {
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: [...parseCssClassNames(style.content)],
-				});
-			}
-		}
-		return result;
-	});
+	const cssModuleClasses = useCssModuleClasses(sfc);
+	const cssScopedClasses = useCssScopedClasses(sfc, compilerOptions);
 	const templateCodeGens = computed(() => {
 
 		if (!templateHtmlCompiled.value)
@@ -201,18 +174,7 @@ export function createVueFile(
 			}
 		);
 	});
-	const cssVars = computed(() => {
-		const result: { style: typeof sfc.styles[number], index: number, ranges: TextRange[]; }[] = [];
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			result.push({
-				style: style,
-				index: i,
-				ranges: [...parseCssVars(style.content)],
-			});
-		}
-		return result;
-	});
+	const cssVars = useCssVars(sfc);
 	const cssVarTexts = computed(() => {
 		const result: string[] = [];
 		for (const { style, ranges } of cssVars.value) {
@@ -248,19 +210,6 @@ export function createVueFile(
 				: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
 					: 'js';
 	});
-	const sfcTemplateScript = useSfcTemplateScript(
-		ts,
-		fileName,
-		cssModuleClasses,
-		cssScopedClasses,
-		templateCodeGens,
-		cssVars,
-		sfc,
-		computed(() => scriptSetupRanges.value),
-		scriptLang,
-		compilerOptions,
-		!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
-	);
 	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
 		raws: parseRefSugarCallRanges(ts, scriptSetupAst.value, ['$raw', '$fromRefs']),
@@ -273,13 +222,24 @@ export function createVueFile(
 		useVueSfcCustomBlocks(),
 		useVueSfcScriptsFormat(),
 		useVueSfcTemplate(),
-		useVueSfcScripts(
+		useVueTsScripts(
 			scriptLang,
 			scriptRanges,
 			scriptSetupRanges,
 			templateCodeGens,
 			compilerOptions,
 			cssVarTexts,
+		),
+		useVueTsTemplate(
+			ts,
+			cssModuleClasses,
+			cssScopedClasses,
+			templateCodeGens,
+			cssVars,
+			scriptSetupRanges,
+			scriptLang,
+			compilerOptions,
+			!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 		),
 	];
 
@@ -302,7 +262,11 @@ export function createVueFile(
 						for (const mapping of sourceMap.mappings) {
 							newMappings.push({
 								...mapping,
-								sourceRange: parseMappingSourceRange(mapping),
+								sourceRange: parseMappingSourceRange(mapping.data, mapping.sourceRange),
+								additional: mapping.additional ? mapping.additional.map(add => ({
+									...add,
+									sourceRange: parseMappingSourceRange(mapping.data, add.sourceRange),
+								})) : undefined,
 							});
 						}
 						const newSourceMap = new EmbeddedFileSourceMap(newMappings);
@@ -331,12 +295,6 @@ export function createVueFile(
 				}
 			}
 		}
-
-		all.push(...[
-			sfcTemplateScript.embedded.value,
-			sfcTemplateScript.formatEmbedded.value,
-			sfcTemplateScript.inlineCssEmbedded.value,
-		].filter(notEmpty));
 
 		return all;
 	});
@@ -372,7 +330,7 @@ export function createVueFile(
 		}
 
 		if (remain.length) {
-			console.error('remain embeddeds', remain.map(e => e.file.fileName));
+			console.error('remain embeddeds', remain.map(e => ({ fileName: e.file.fileName, parent: e.parentFileName })));
 		}
 
 		return embeddeds;
@@ -440,8 +398,9 @@ export function createVueFile(
 		},
 	};
 
-	function parseMappingSourceRange({ data, sourceRange: range }: Mapping<EmbeddedFileMappingData>) {
-		if (data.vueTag === 'scriptSrc' && sfc.script?.src) {
+	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
+		if (data.vueTag === 'scriptSrc') {
+			if (!sfc.script?.src) throw '!sfc.script?.src';
 			const vueStart = content.value.substring(0, sfc.script.startTagEnd).lastIndexOf(sfc.script.src);
 			const vueEnd = vueStart + sfc.script.src.length;
 			return {
@@ -449,31 +408,36 @@ export function createVueFile(
 				end: vueEnd + 1,
 			};
 		}
-		else if (data.vueTag === 'script' && sfc.script) {
+		else if (data.vueTag === 'script') {
+			if (!sfc.script) throw '!sfc.script';
 			return {
 				start: sfc.script.startTagEnd + range.start,
 				end: sfc.script.startTagEnd + range.end,
 			};
 		}
-		else if (data.vueTag === 'scriptSetup' && sfc.scriptSetup) {
+		else if (data.vueTag === 'scriptSetup') {
+			if (!sfc.scriptSetup) throw '!sfc.scriptSetup';
 			return {
 				start: sfc.scriptSetup.startTagEnd + range.start,
 				end: sfc.scriptSetup.startTagEnd + range.end,
 			};
 		}
-		else if (data.vueTag === 'template' && sfc.template) {
+		else if (data.vueTag === 'template') {
+			if (!sfc.template) throw '!sfc.template';
 			return {
 				start: sfc.template.startTagEnd + range.start,
 				end: sfc.template.startTagEnd + range.end,
 			};
 		}
-		else if (data.vueTag === 'style' && data?.vueTagIndex !== undefined) {
+		else if (data.vueTag === 'style') {
+			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
 			return {
 				start: sfc.styles[data.vueTagIndex].startTagEnd + range.start,
 				end: sfc.styles[data.vueTagIndex].startTagEnd + range.end,
 			};
 		}
-		else if (data.vueTag === 'customBlock' && data?.vueTagIndex !== undefined) {
+		else if (data.vueTag === 'customBlock') {
+			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
 			return {
 				start: sfc.customBlocks[data.vueTagIndex].startTagEnd + range.start,
 				end: sfc.customBlocks[data.vueTagIndex].startTagEnd + range.end,
@@ -648,7 +612,7 @@ export function createVueFile(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		};
 
-		const file = sfcTemplateScript.file.value;
+		const file = allEmbeddeds.value.find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
 		const hasFile = file &&
 			file.content.indexOf(SearchTexts.Components) >= 0 &&
 			// getSourceFile return undefined for lang=js with allowJs=false;
@@ -670,6 +634,56 @@ export function createVueFile(
 
 		return templateScriptData;
 	}
+}
+
+export function useCssModuleClasses(sfc: Sfc) {
+	return computed(() => {
+		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			if (style.module) {
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: [...parseCssClassNames(style.content)],
+				});
+			}
+		}
+		return result;
+	});
+}
+
+export function useCssScopedClasses(sfc: Sfc, compilerOptions: VueCompilerOptions) {
+	return computed(() => {
+		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
+		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			if ((setting === 'scoped' && style.scoped) || setting === 'always') {
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: [...parseCssClassNames(style.content)],
+				});
+			}
+		}
+		return result;
+	});
+}
+
+export function useCssVars(sfc: Sfc) {
+	return computed(() => {
+		const result: { style: typeof sfc.styles[number], styleIndex: number, ranges: TextRange[]; }[] = [];
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			result.push({
+				style: style,
+				styleIndex: i,
+				ranges: [...parseCssVars(style.content)],
+			});
+		}
+		return result;
+	});
 }
 
 const validScriptSyntaxs = ['js', 'jsx', 'ts', 'tsx'] as const;
