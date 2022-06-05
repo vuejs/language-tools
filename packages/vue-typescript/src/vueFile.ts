@@ -5,8 +5,6 @@ import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSe
 import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
-import { VueLanguagePlugin } from './typescriptRuntime';
-import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
@@ -15,8 +13,28 @@ import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import { parseCssClassNames } from './utils/parseCssClassNames';
 import { parseCssVars } from './utils/parseCssVars';
 
+import useHtmlPlugin from './plugins/html';
+import usePugPlugin from './plugins/pug';
+import useVueSfcStyles from './plugins/vue-sfc-styles';
+import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts-format';
+import useVueSfcTemplate from './plugins/vue-sfc-template';
+import useVueSfcScripts from './plugins/vue-sfc-scripts';
+
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping } from '@volar/source-map';
+
+export interface VueLanguagePlugin {
+
+	compileTemplate?(tmplate: string, lang: string): {
+		html: string,
+		mapping(htmlStart: number, htmlEnd: number): { start: number, end: number; } | undefined,
+	} | undefined;
+
+	getEmbeddedFilesCount?(sfc: Sfc): number;
+
+	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): Embedded | undefined;
+}
 
 export interface VueFile extends ReturnType<typeof createVueFile> { }
 
@@ -30,6 +48,7 @@ export interface Embedded {
 	parentFileName?: string,
 	file: EmbeddedFile,
 	sourceMap: EmbeddedFileSourceMap,
+	teleport?: Teleport,
 }
 
 export interface SfcBlock {
@@ -77,7 +96,6 @@ export function createVueFile(
 	fileName: string,
 	_content: string,
 	_version: string,
-	plugins: VueLanguagePlugin[],
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService | undefined,
@@ -102,37 +120,6 @@ export function createVueFile(
 
 	// computeds
 	const parsedSfc = computed(() => parse(content.value, { sourceMap: false, ignoreEmpty: false }));
-	const pluginEmbeddeds = plugins.map(plugin => {
-		if (plugin.getEmbeddedFilesCount && plugin.getEmbeddedFile) {
-			const embeddedsCount = computed(() => plugin.getEmbeddedFilesCount!(sfc));
-			const embeddeds = computed(() => {
-				const computeds: ComputedRef<Embedded>[] = [];
-				for (let i = 0; i < embeddedsCount.value; i++) {
-					const _i = i;
-					const raw = computed(() => plugin.getEmbeddedFile!(fileName, sfc, _i));
-					const transformed = computed(() => {
-						const sourceMap = raw.value.sourceMap;
-						const newMappings: typeof sourceMap.mappings = [];
-						for (const mapping of sourceMap.mappings) {
-							newMappings.push({
-								...mapping,
-								sourceRange: parseMappingSourceRange(mapping),
-							});
-						}
-						const newSourceMap = new EmbeddedFileSourceMap(newMappings);
-						const newEmbedded: Embedded = {
-							file: raw.value.file,
-							sourceMap: newSourceMap,
-						};
-						return newEmbedded;
-					});
-					computeds.push(transformed);
-				}
-				return computeds;
-			});
-			return embeddeds;
-		}
-	}).filter(notEmpty);
 
 	// use
 	const templateHtmlCompiled = computed<undefined | {
@@ -274,61 +261,74 @@ export function createVueFile(
 		compilerOptions,
 		!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 	);
-	const sfcScriptForTemplateLs = useSfcScriptGen(
-		'template',
-		fileName,
-		content,
-		scriptLang,
-		computed(() => sfc.script),
-		computed(() => sfc.scriptSetup),
-		computed(() => scriptRanges.value),
-		computed(() => scriptSetupRanges.value),
-		templateCodeGens,
-		compilerOptions,
-		cssVarTexts,
-	);
-	const sfcScriptForScriptLs = useSfcScriptGen(
-		'script',
-		fileName,
-		content,
-		scriptLang,
-		computed(() => sfc.script),
-		computed(() => sfc.scriptSetup),
-		computed(() => scriptRanges.value),
-		computed(() => scriptSetupRanges.value),
-		templateCodeGens,
-		compilerOptions,
-		cssVarTexts,
-	);
 	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
 		raws: parseRefSugarCallRanges(ts, scriptSetupAst.value, ['$raw', '$fromRefs']),
 	} : undefined));
 
+	const plugins: VueLanguagePlugin[] = [
+		useHtmlPlugin(),
+		usePugPlugin(),
+		useVueSfcStyles(),
+		useVueSfcCustomBlocks(),
+		useVueSfcScriptsFormat(),
+		useVueSfcTemplate(),
+		useVueSfcScripts(
+			scriptLang,
+			scriptRanges,
+			scriptSetupRanges,
+			templateCodeGens,
+			compilerOptions,
+			cssVarTexts,
+		),
+	];
+
 	// getters
-	const teleports = computed(() => {
+	const pluginEmbeddeds = plugins.map(plugin => {
+		if (plugin.getEmbeddedFilesCount && plugin.getEmbeddedFile) {
+			const embeddedsCount = computed(() => plugin.getEmbeddedFilesCount!(sfc));
+			const embeddeds = computed(() => {
+				const computeds: ComputedRef<Embedded | undefined>[] = [];
+				for (let i = 0; i < embeddedsCount.value; i++) {
+					const _i = i;
+					const raw = computed(() => plugin.getEmbeddedFile!(fileName, sfc, _i));
+					const transformed = computed(() => {
 
-		const _all: {
-			file: EmbeddedFile,
-			teleport: Teleport,
-		}[] = [];
+						if (!raw.value)
+							return;
 
-		if (sfcScriptForTemplateLs.file.value && sfcScriptForTemplateLs.teleport.value) {
-			_all.push({
-				file: sfcScriptForTemplateLs.file.value,
-				teleport: sfcScriptForTemplateLs.teleport.value,
+						const sourceMap = raw.value.sourceMap;
+						const newMappings: typeof sourceMap.mappings = [];
+						for (const mapping of sourceMap.mappings) {
+							newMappings.push({
+								...mapping,
+								sourceRange: parseMappingSourceRange(mapping),
+							});
+						}
+						const newSourceMap = new EmbeddedFileSourceMap(newMappings);
+						const newEmbedded: Embedded = {
+							file: raw.value.file,
+							teleport: raw.value.teleport,
+							sourceMap: newSourceMap,
+						};
+						return newEmbedded;
+					});
+					computeds.push(transformed);
+				}
+				return computeds;
 			});
+			return embeddeds;
 		}
-
-		return _all;
-	});
+	}).filter(notEmpty);
 	const allEmbeddeds = computed(() => {
 
 		const all: Embedded[] = [];
 
 		for (const getEmbeddeds of pluginEmbeddeds) {
 			for (const embedded of getEmbeddeds.value) {
-				all.push(embedded.value);
+				if (embedded.value) {
+					all.push(embedded.value);
+				}
 			}
 		}
 
@@ -336,11 +336,27 @@ export function createVueFile(
 			sfcTemplateScript.embedded.value,
 			sfcTemplateScript.formatEmbedded.value,
 			sfcTemplateScript.inlineCssEmbedded.value,
-			sfcScriptForScriptLs.embedded.value,
-			sfcScriptForTemplateLs.embedded.value,
 		].filter(notEmpty));
 
 		return all;
+	});
+	const teleports = computed(() => {
+
+		const _all: {
+			file: EmbeddedFile,
+			teleport: Teleport,
+		}[] = [];
+
+		for (const embedded of allEmbeddeds.value) {
+			if (embedded.teleport) {
+				_all.push({
+					file: embedded.file,
+					teleport: embedded.teleport,
+				});
+			}
+		}
+
+		return _all;
 	});
 	const embeddeds = computed(() => {
 
@@ -467,9 +483,13 @@ export function createVueFile(
 	}
 	function update(newContent: string, newVersion: string) {
 
-		const scriptLang_1 = sfcScriptForScriptLs.file.value.lang;
-		const scriptText_1 = sfcScriptForScriptLs.file.value.content;
-		const templateScriptContent = sfcTemplateScript.file.value?.content;
+		const oldScripts: Record<string, string> = {};
+
+		for (const embedded of allEmbeddeds.value) {
+			if (embedded.file.isTsHostFile) {
+				oldScripts[embedded.file.fileName] = embedded.file.content;
+			}
+		}
 
 		content.value = newContent;
 		version.value = newVersion;
@@ -480,12 +500,17 @@ export function createVueFile(
 		updateStyles(parsedSfc.value.descriptor.styles);
 		updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
 
-		const scriptLang_2 = sfcScriptForScriptLs.file.value.lang;
-		const scriptText_2 = sfcScriptForScriptLs.file.value.content;
-		const templateScriptContent_2 = sfcTemplateScript.file.value?.content;
+		const newScripts: Record<string, string> = {};
+
+		for (const embedded of allEmbeddeds.value) {
+			if (embedded.file.isTsHostFile) {
+				newScripts[embedded.file.fileName] = embedded.file.content;
+			}
+		}
 
 		return {
-			scriptUpdated: scriptLang_1 !== scriptLang_2 || scriptText_1 !== scriptText_2 || templateScriptContent !== templateScriptContent_2, // TODO
+			scriptUpdated: Object.keys(oldScripts).length !== Object.keys(newScripts).length
+				|| Object.keys(oldScripts).some(fileName => oldScripts[fileName] !== newScripts[fileName]),
 		};
 
 		function updateTemplate(block: SFCTemplateBlock | null) {

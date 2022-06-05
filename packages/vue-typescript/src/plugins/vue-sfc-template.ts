@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from "../typescriptRuntime";
+import { VueLanguagePlugin } from "../vueFile";
 import * as SourceMaps from '@volar/source-map';
 import { Embedded, EmbeddedFile } from '../vueFile';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';

@@ -1,39 +1,10 @@
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import useHtmlPlugin from './plugins/html';
-import usePugPlugin from './plugins/pug';
-import useVueSfcStyles from './plugins/vue-sfc-styles';
-import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts-format';
-import useVueSfcTemplate from './plugins/vue-sfc-template';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
 import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
-import { createVueFile, Embedded, EmbeddedFile, Sfc } from './vueFile';
+import { createVueFile, EmbeddedFile } from './vueFile';
 import { createVueFiles } from './vueFiles';
-
-export function getPlugins() {
-	return [
-		useHtmlPlugin(),
-		usePugPlugin(),
-		useVueSfcStyles(),
-		useVueSfcCustomBlocks(),
-		useVueSfcScriptsFormat(),
-		useVueSfcTemplate(),
-	];
-}
-
-export interface VueLanguagePlugin {
-
-	compileTemplate?(tmplate: string, lang: string): {
-		html: string,
-		mapping(htmlStart: number, htmlEnd: number): { start: number, end: number; } | undefined,
-	} | undefined;
-
-	getEmbeddedFilesCount?(sfc: Sfc): number;
-
-	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): Embedded;
-}
 
 export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
@@ -48,7 +19,6 @@ export function createTypeScriptRuntime(options: {
 	const vueCompilerOptions = options.vueLsHost.getVueCompilationSettings();
 	const tsFileVersions = new Map<string, string>();
 	const vueFiles = createVueFiles();
-	const plugins = getPlugins();
 	const tsLsHost = createTsLsHost();
 	const tsLsRaw = ts.createLanguageService(tsLsHost);
 	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3));
@@ -327,7 +297,6 @@ export function createTypeScriptRuntime(options: {
 					fileName,
 					scriptText,
 					scriptVersion,
-					plugins,
 					options.vueLsHost.getVueCompilationSettings(),
 					options.typescript,
 					tsLsRaw,
