@@ -6,7 +6,6 @@ import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from
 import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { VueLanguagePlugin } from './typescriptRuntime';
-import { useSfcScript } from './use/useSfcScript';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
@@ -31,6 +30,7 @@ export interface Embedded {
 }
 
 export interface SfcBlock {
+	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
 	start: number;
 	end: number;
 	startTagEnd: number;
@@ -175,14 +175,6 @@ export function createVueFile(
 			return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
 		}
 	});
-	const sfcScript = useSfcScript(
-		fileName,
-		computed(() => sfc.script),
-	);
-	const sfcScriptSetup = useSfcScript(
-		fileName,
-		computed(() => sfc.scriptSetup),
-	);
 	const scriptRanges = computed(() =>
 		scriptAst.value
 			? parseScriptRanges(ts, scriptAst.value, !!sfc.scriptSetup, false, false)
@@ -285,16 +277,6 @@ export function createVueFile(
 					embeddeds: [],
 				},
 			],
-		});
-
-		// scripts - format
-		embeddeds.push({
-			self: sfcScript.embedded.value,
-			embeddeds: [],
-		});
-		embeddeds.push({
-			self: sfcScriptSetup.embedded.value,
-			embeddeds: [],
 		});
 
 		// scripts - script ls
@@ -442,6 +424,7 @@ export function createVueFile(
 		function updateTemplate(block: SFCTemplateBlock | null) {
 
 			const newData: Sfc['template'] | null = block ? {
+				tag: 'template',
 				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -463,6 +446,7 @@ export function createVueFile(
 		function updateScript(block: SFCScriptBlock | null) {
 
 			const newData: Sfc['script'] | null = block ? {
+				tag: 'script',
 				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -485,6 +469,7 @@ export function createVueFile(
 		function updateScriptSetup(block: SFCScriptBlock | null) {
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
+				tag: 'scriptSetup',
 				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -508,6 +493,7 @@ export function createVueFile(
 
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
+					tag: 'style',
 					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
 					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
@@ -534,6 +520,7 @@ export function createVueFile(
 
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
+					tag: 'customBlock',
 					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
 					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,

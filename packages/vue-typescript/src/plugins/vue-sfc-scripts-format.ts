@@ -8,23 +8,23 @@ export default function (): VueLanguagePlugin {
 	return {
 
 		getEmbeddedFilesCount(sfc) {
-			return sfc.customBlocks.length;
+			return [sfc.script, sfc.scriptSetup].filter(script => !!script).length;
 		},
 
 		getEmbeddedFile(fileName, sfc, i) {
 
-			const customBlock = sfc.customBlocks[i];
+			const script = [sfc.script, sfc.scriptSetup].filter(script => !!script)[i]!;
 			const file: EmbeddedFile = {
-				fileName: fileName + '.' + i + '.' + customBlock.lang,
-				lang: customBlock.lang,
-				content: customBlock.content,
+				fileName: fileName + '.__VLS_script.format.' + script.lang,
+				lang: script.lang,
+				content: script.content,
 				capabilities: {
-					diagnostics: true,
+					diagnostics: false,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
-					codeActions: true,
-					inlayHints: true,
+					codeActions: false,
+					inlayHints: false,
 				},
 				data: undefined,
 				isTsHostFile: false,
@@ -33,8 +33,7 @@ export default function (): VueLanguagePlugin {
 
 			sourceMap.mappings.push({
 				data: {
-					vueTag: customBlock.tag,
-					vueTagIndex: i,
+					vueTag: script.tag,
 					capabilities: {
 						basic: true,
 						references: true,
@@ -48,11 +47,11 @@ export default function (): VueLanguagePlugin {
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
 					start: 0,
-					end: customBlock.content.length,
+					end: script.content.length,
 				},
 				mappedRange: {
 					start: 0,
-					end: customBlock.content.length,
+					end: script.content.length,
 				},
 			});
 

@@ -33,7 +33,7 @@ export default function (): VueLanguagePlugin {
 
 			sourceMap.mappings.push({
 				data: {
-					vueTag: 'style',
+					vueTag: style.tag,
 					vueTagIndex: i,
 					capabilities: {
 						basic: true,

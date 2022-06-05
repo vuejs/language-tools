@@ -4,6 +4,7 @@ import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
 import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts-format';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
 import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
@@ -16,6 +17,7 @@ export function getPlugins() {
 		usePugPlugin(),
 		useVueSfcStyles(),
 		useVueSfcCustomBlocks(),
+		useVueSfcScriptsFormat(),
 	];
 }
 
