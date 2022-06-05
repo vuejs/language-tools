@@ -95,7 +95,7 @@ export default function (options: {
 	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
-		if (!vueDocument)
+		if (!vueDocument || vueDocument.file.fileName.endsWith('.md'))
 			return;
 
 		return callback(vueDocument);

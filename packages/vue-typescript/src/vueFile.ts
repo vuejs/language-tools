@@ -24,13 +24,14 @@ import useVueTsScripts from './plugins/vue-typescript-scripts';
 import useVueTsTemplate from './plugins/vue-typescript-template';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import { Mapping, MappingBase } from '@volar/source-map';
+import { Mapping, MappingBase, SourceMapBase } from '@volar/source-map';
 
 export interface VueLanguagePlugin {
 
 	compileFileToVue?(fileName: string, content: string): {
 		vue: string,
 		mapping(vueRange: { start: number, end: number; }): { start: number, end: number; } | undefined,
+		sourceMap?: SourceMapBase,
 	} | undefined;
 
 	compileTemplateToHtml?(lang: string, tmplate: string): {
@@ -311,14 +312,70 @@ export function createVueFile(
 			return embeddeds;
 		}
 	}).filter(notEmpty);
+	const embeddedVue = computed(() => {
+		if (!fileName.endsWith('.vue') && compiledVue.value?.sourceMap) {
+			const newSourceMap = new EmbeddedFileSourceMap();
+			for (const mapping of compiledVue.value.sourceMap.mappings) {
+				newSourceMap.mappings.push({
+					...mapping,
+					data: {
+						vueTag: undefined,
+						capabilities: {
+							basic: true,
+							references: true,
+							definitions: true,
+							diagnostic: true,
+							rename: true,
+							completion: true,
+							semanticTokens: true,
+							referencesCodeLens: false,
+							displayWithLink: false,
+						},
+					},
+				});
+			}
+			const embeddedFile: EmbeddedFile = {
+				fileName: fileName + '.vue',
+				lang: 'vue',
+				content: compiledVue.value.vue,
+				capabilities: {
+					diagnostics: true,
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: false,
+					codeActions: true,
+					inlayHints: true,
+				},
+				isTsHostFile: false,
+			};
+			const embedded: Embedded = {
+				file: embeddedFile,
+				sourceMap: newSourceMap,
+			};
+			return embedded;
+		}
+
+	});
 	const allEmbeddeds = computed(() => {
 
 		const all: Embedded[] = [];
 
+		if (embeddedVue.value) {
+			all.push(embeddedVue.value);
+		}
+
 		for (const getEmbeddeds of pluginEmbeddeds) {
 			for (const embedded of getEmbeddeds.value) {
 				if (embedded.value) {
-					all.push(embedded.value);
+					if (embeddedVue.value && !embedded.value.parentFileName) {
+						all.push({
+							...embedded.value,
+							parentFileName: embeddedVue.value.file.fileName,
+						});
+					}
+					else {
+						all.push(embedded.value);
+					}
 				}
 			}
 		}
