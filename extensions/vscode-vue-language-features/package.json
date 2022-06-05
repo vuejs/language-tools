@@ -129,6 +129,10 @@
 				"configuration": "./languages/sfc-template-language-configuration.json"
 			},
 			{
+				"id": "markdown",
+				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
 				"id": "plaintext",
 				"configuration": "./languages/sfc-template-language-configuration.json"
 			},
