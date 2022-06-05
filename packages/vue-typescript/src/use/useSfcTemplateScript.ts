@@ -141,12 +141,11 @@ export function useSfcTemplateScript(
 
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText(`declare var __VLS_ownComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.experimentalCompatMode ?? 3)}: typeof __VLS_slots })>;\n`);
-		codeGen.addText('declare var __VLS_allComponents: typeof __VLS_otherComponents & Omit<typeof __VLS_ownComponent, keyof typeof __VLS_otherComponents>;\n');
-		codeGen.addText('declare var __VLS_rawComponents: __VLS_types.ConvertInvalidComponents<typeof __VLS_allComponents> & JSX.IntrinsicElements;\n'); // sort by priority
+		codeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & typeof __VLS_ctx;\n');
+		codeGen.addText(`declare var __VLS_selfComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.experimentalCompatMode ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.addText('declare var __VLS_components: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
 
-		codeGen.addText(`__VLS_allComponents.${SearchTexts.Components};\n`);
+		codeGen.addText(`__VLS_components.${SearchTexts.Components};\n`);
 		codeGen.addText(`({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
 
 		/* Style Scoped */

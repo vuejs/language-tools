@@ -1,6 +1,6 @@
 import * as SourceMaps from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
-import { camelize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
+import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '../types';
@@ -47,7 +47,9 @@ export const transformContext: CompilerDOM.TransformContext = {
 function _isHTMLTag(tag: string) {
 	return isHTMLTag(tag)
 		// fix https://github.com/johnsoncodehk/volar/issues/1340
-		|| tag === 'hgroup';
+		|| tag === 'hgroup'
+		|| tag === 'slot'
+		|| tag === 'component';
 }
 
 export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app' = 'runtime-dom', tag: string) {
@@ -94,10 +96,8 @@ export function generate(
 		}>,
 	}> = {};
 	const tagResolves: Record<string, {
-		rawComponent: string,
-		slotsComponent: string,
+		component: string,
 		emit: string,
-		slots: string,
 		offsets: number[],
 	}> = {};
 	const localVars: Record<string, number> = {};
@@ -119,10 +119,8 @@ export function generate(
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
 		const var_correctTagName = `__VLS_${elementIndex++}`;
-		const var_rawComponent = `__VLS_${elementIndex++}`;
-		const var_slotsComponent = `__VLS_${elementIndex++}`;
+		const var_rawComponent = capitalize(camelize(tagName));
 		const var_emit = `__VLS_${elementIndex++}`;
-		const var_slots = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
 			for (let i = 0; i < tagRanges.length; i++) {
@@ -146,16 +144,14 @@ export function generate(
 			}
 		}
 		else {
-			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_rawComponents, '${tagName}'>;\n`);
-			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_rawComponents, typeof ${var_correctTagName}, any>;\n`);
+			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_components, '${tagName}'>;\n`);
+			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_components, typeof ${var_correctTagName}, unknown>;\n`);
 		}
-		tsCodeGen.addText(`declare const ${var_slotsComponent}: __VLS_types.WithSlots<typeof ${var_rawComponent}>;\n`);
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
-		tsCodeGen.addText(`declare const ${var_slots}: __VLS_types.DefaultSlots<typeof ${var_rawComponent}>;\n`);
 
 		const name1 = tagName; // hello-world
-		const name2 = camelize(tagName); // helloWorld
-		const name3 = name2[0].toUpperCase() + name2.slice(1); // HelloWorld
+		const name2 = isIntrinsicElement(experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
+		const name3 = isIntrinsicElement(experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
 		if (!isNamespacedTag) {
@@ -196,7 +192,7 @@ export function generate(
 						if (i > 0) {
 							tsCodeGen.addText(', ');
 						}
-						tsCodeGen.addText(`typeof __VLS_rawComponents`);
+						tsCodeGen.addText(`typeof __VLS_components`);
 						writePropertyAccess2(
 							names[i],
 							[tagRange],
@@ -225,14 +221,12 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`(<${var_rawComponent} ${searchTexts.getPropsCompletion(name)}/>);\n`);
+			tsCodeGen.addText(`(<${isIntrinsicElement(experimentalRuntimeMode, tagName) ? tagName : var_rawComponent} ${searchTexts.getPropsCompletion(name)}/>);\n`);
 		}
 
 		tagResolves[tagName] = {
-			rawComponent: var_rawComponent,
-			slotsComponent: var_slotsComponent,
+			component: var_rawComponent,
 			emit: var_emit,
-			slots: var_slots,
 			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
 		};
 	}
@@ -565,7 +559,7 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
-			const tagText = isIntrinsicElement(experimentalRuntimeMode, node.tag) ? node.tag : tagResolves[node.tag].rawComponent;
+			const tagText = isIntrinsicElement(experimentalRuntimeMode, node.tag) ? node.tag : tagResolves[node.tag].component;
 			const fullTagStart = tsCodeGen.getText().length;
 
 			tsCodeGen.addText(`<`);
@@ -667,7 +661,7 @@ export function generate(
 
 						const varInstanceProps = `__VLS_${elementIndex++}`;
 
-						tsCodeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tagResolves[node.tag].rawComponent} & Record<string, unknown>;\n`);
+						tsCodeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tagResolves[node.tag].component} & Record<string, unknown>;\n`);
 						tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
 						tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
 						{
@@ -675,10 +669,10 @@ export function generate(
 							{
 
 								const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
-								const key_3 = 'on' + prop.arg.loc.source[0].toUpperCase() + prop.arg.loc.source.substring(1); // onClick-outside
+								const key_3 = 'on' + capitalize(prop.arg.loc.source); // onClick-outside
 
 								{
-									tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${tagResolves[node.tag].rawComponent}, '${prop.arg.loc.source}'>,\n`);
+									tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${tagResolves[node.tag].component}, '${prop.arg.loc.source}'>,\n`);
 								}
 
 								{
@@ -714,7 +708,7 @@ export function generate(
 												vueTag: 'template',
 												capabilities: capabilitiesSet.attrReference,
 												normalizeNewName(newName) {
-													return 'on' + newName[0].toUpperCase() + newName.substring(1);
+													return 'on' + capitalize(newName);
 												},
 												applyNewName(oldName, newName) {
 													const hName = hyphenate(newName);
@@ -869,7 +863,7 @@ export function generate(
 				if (writedInstance)
 					return;
 
-				tsCodeGen.addText(`const ${varComponentInstance} = new ${tagResolves[node.tag].rawComponent}({ `);
+				tsCodeGen.addText(`const ${varComponentInstance} = new ${tagResolves[node.tag].component}({ `);
 				writeProps(node, false, 'slots');
 				tsCodeGen.addText(`});\n`);
 
@@ -1324,11 +1318,10 @@ export function generate(
 				const varComponentInstance = `__VLS_${elementIndex++}`;
 				const varSlots = `__VLS_${elementIndex++}`;
 
-				tsCodeGen.addText(`const ${varComponentInstance} = new ${tagResolves[parentEl.tag].slotsComponent}({ `);
+				tsCodeGen.addText(`const ${varComponentInstance} = new ${tagResolves[parentEl.tag].component}({ `);
 				writeProps(parentEl, false, 'slots');
 				tsCodeGen.addText(`});\n`);
-
-				tsCodeGen.addText(`declare const ${varSlots}: typeof ${tagResolves[parentEl.tag].slots} & __VLS_types.ScriptSlots<typeof ${varComponentInstance}>;\n`);
+				tsCodeGen.addText(`declare const ${varSlots}: __VLS_types.ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(`const `);

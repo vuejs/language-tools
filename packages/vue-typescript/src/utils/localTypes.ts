@@ -25,11 +25,6 @@ import type {
 } from '${libName}';
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
-type IsFunctionalComponent<T> = T extends (...args: any) => JSX.Element ? true : false;
-type IsConstructorComponent<T> = T extends new (...args: any) => JSX.ElementClass ? true : false;
-type IsComponent_Loose<T> = IsConstructorComponent<T> extends false ? IsFunctionalComponent<T> extends false ? false : true : true; // allow any type
-type IsComponent_Strict<T> = IsConstructorComponent<T> extends true ? true : IsFunctionalComponent<T> extends true ? true : false; // don't allow any type
-type ComponentKeys<T> = keyof { [K in keyof T as IsComponent_Loose<T[K]> extends true ? K : never]: any };
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 type ForableSource<T> = [
@@ -57,16 +52,14 @@ export declare function directiveFunction<T>(dir: T):
 	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
 	: T;
 
-export type HasScriptSlotsType<T> = T extends new (...args: any) => { ${slots}?: infer _ } ? true : false;
-export type DefaultSlots<C> = HasScriptSlotsType<C> extends true ? {} : Record<string, any>;
-export type WithSlots<T> = T extends new (...args: any) => { ${slots}?: infer S } ? T : new (...args: any) => { ${slots}: {} };
-export type ScriptSlots<T> = T extends { ${slots}?: infer S }
-	? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
-	: {};
+export type ExtractComponentSlots<T> =
+	IsAny<T> extends true ? Record<string, any>
+	: T extends { $slots?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
+	: Record<string, any>;
 
 export type GetComponentName<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : GetComponentName_CamelCase<T, CamelCase<K>> : GetComponentName_CamelCase<T, CamelCase<K>>;
-export type GetComponentName_CamelCase<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : GetComponentName_CapitalCase<T, Capitalize<K>> : GetComponentName_CapitalCase<T, Capitalize<K>>;
-export type GetComponentName_CapitalCase<T, K> = K extends keyof T ? K : never;
+type GetComponentName_CamelCase<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : GetComponentName_CapitalCase<T, Capitalize<K>, K> : GetComponentName_CapitalCase<T, Capitalize<K>, K>;
+type GetComponentName_CapitalCase<T, K, O> = K extends keyof T ? K : O;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
@@ -118,8 +111,6 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void>
 	NonNullable<F4> extends (Function | AnyArray<Function>) ? F4 :
 	unknown;
 export type GlobalAttrs = JSX.IntrinsicElements['div'];
-export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;
-export type ConvertInvalidComponents<T> = { [K in keyof T]: IsComponent_Strict<T[K]> extends true ? T[K] : any };
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 `;
 }
