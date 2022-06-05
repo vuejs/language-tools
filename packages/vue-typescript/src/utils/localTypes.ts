@@ -54,7 +54,7 @@ export declare function directiveFunction<T>(dir: T):
 
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
-	: T extends { $slots?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
+	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
 	: Record<string, any>;
 
 export type GetComponentName<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : GetComponentName_CamelCase<T, CamelCase<K>> : GetComponentName_CamelCase<T, CamelCase<K>>;
