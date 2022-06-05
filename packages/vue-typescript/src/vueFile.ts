@@ -94,11 +94,6 @@ export function createVueFile(
 		styles: [],
 		customBlocks: [],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
-	const lastUpdated = {
-		template: false,
-		script: false,
-		scriptSetup: false,
-	};
 	let templateScriptData: ITemplateScriptData = {
 		projectVersion: undefined,
 		components: [],
@@ -420,7 +415,6 @@ export function createVueFile(
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
 		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
-		getLastUpdated: untrack(() => unref(lastUpdated)),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
 		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 
@@ -507,9 +501,6 @@ export function createVueFile(
 				lang: block.lang ?? 'html',
 			} : null;
 
-			lastUpdated.template = sfc.template?.lang !== newData?.lang
-				|| sfc.template?.content !== newData?.content;
-
 			if (sfc.template && newData) {
 				updateBlock(sfc.template, newData);
 			}
@@ -530,9 +521,6 @@ export function createVueFile(
 				src: block.src,
 			} : null;
 
-			lastUpdated.script = sfc.script?.lang !== newData?.lang
-				|| sfc.script?.content !== newData?.content;
-
 			if (sfc.script && newData) {
 				updateBlock(sfc.script, newData);
 			}
@@ -551,9 +539,6 @@ export function createVueFile(
 				content: block.content,
 				lang: getValidScriptSyntax(block.lang ?? 'js'),
 			} : null;
-
-			lastUpdated.scriptSetup = sfc.scriptSetup?.lang !== newData?.lang
-				|| sfc.scriptSetup?.content !== newData?.content;
 
 			if (sfc.scriptSetup && newData) {
 				updateBlock(sfc.scriptSetup, newData);
