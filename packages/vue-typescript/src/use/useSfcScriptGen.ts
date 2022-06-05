@@ -19,9 +19,8 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 	scriptRanges: Ref<ReturnType<typeof parseScriptRanges> | undefined>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	htmlGen: Ref<ReturnType<typeof templateGen.generate> | undefined>,
-	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	compilerOptions: VueCompilerOptions,
-	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
+	cssVars: Ref<string[]>,
 ) {
 
 	const codeGen = computed(() =>
@@ -35,12 +34,8 @@ export function useSfcScriptGen<T extends 'template' | 'script'>(
 			() => htmlGen.value,
 			() => {
 				const bindTexts: string[] = [];
-				for (const style of sfcStyles.value) {
-					const binds = getCssVBindRanges(style);
-					for (const cssBind of binds) {
-						const bindText = style.content.substring(cssBind.start, cssBind.end);
-						bindTexts.push(bindText);
-					}
+				for (const cssVar of cssVars.value) {
+					bindTexts.push(cssVar);
 				}
 				return bindTexts;
 			},

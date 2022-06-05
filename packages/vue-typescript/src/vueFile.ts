@@ -13,11 +13,9 @@ import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcStyles } from './use/useSfcStyles';
 import { useSfcTemplate } from './use/useSfcTemplate';
 import { useSfcTemplateScript } from './use/useSfcTemplateScript';
-import { parseCssVars } from './utils/parseCssVars';
 import { Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
-import { parseCssClassNames } from './utils/parseCssClassNames';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 
@@ -105,8 +103,6 @@ export function createVueFile(
 		components: [],
 		componentItems: [],
 	};
-	const cssVars = new WeakMap<EmbeddedFile, TextRange[]>();
-	const cssClassNames = new WeakMap<EmbeddedFile, TextRange[]>();
 
 	// computeds
 	const parsedSfc = computed(() => parse(content.value, { sourceMap: false, ignoreEmpty: false }));
@@ -184,14 +180,10 @@ export function createVueFile(
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptSetupRanges.value),
 		computed(() => sfc.styles),
-		sfcStyles.files,
 		sfcTemplateCompiled,
 		sfcTemplateCompileResult,
-		sfcStyles.files,
 		scriptLang,
 		compilerOptions,
-		getCssVBindRanges,
-		getCssClassNameRanges,
 		!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
 	);
 	const sfcScriptForTemplateLs = useSfcScriptGen(
@@ -204,9 +196,8 @@ export function createVueFile(
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateScript.templateCodeGens,
-		computed(() => sfcStyles.files.value),
 		compilerOptions,
-		getCssVBindRanges,
+		sfcTemplateScript.cssVarTexts,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -218,9 +209,8 @@ export function createVueFile(
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
 		sfcTemplateScript.templateCodeGens,
-		computed(() => sfcStyles.files.value),
 		compilerOptions,
-		getCssVBindRanges,
+		sfcTemplateScript.cssVarTexts,
 	);
 	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
@@ -548,28 +538,6 @@ export function createVueFile(
 		};
 
 		return templateScriptData;
-	}
-	function getCssVBindRanges(embeddedFile: EmbeddedFile) {
-
-		let binds = cssVars.get(embeddedFile);
-
-		if (!binds) {
-			binds = [...parseCssVars(embeddedFile.content)];
-			cssVars.set(embeddedFile, binds);
-		}
-
-		return binds;
-	}
-	function getCssClassNameRanges(embeddedFile: EmbeddedFile) {
-
-		let binds = cssClassNames.get(embeddedFile);
-
-		if (!binds) {
-			binds = [...parseCssClassNames(embeddedFile.content)];
-			cssClassNames.set(embeddedFile, binds);
-		}
-
-		return binds;
 	}
 }
 

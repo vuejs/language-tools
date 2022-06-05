@@ -7,11 +7,12 @@ import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
 import { getSlotsPropertyName, getVueLibraryName, TextRange } from '@volar/vue-code-gen';
 import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
-import { useSfcStyles } from './useSfcStyles';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
 import * as path from 'path';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
+import { parseCssVars } from '../utils/parseCssVars';
+import { parseCssClassNames } from '../utils/parseCssClassNames';
 
 export function useSfcTemplateScript(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -21,17 +22,13 @@ export function useSfcTemplateScript(
 	scriptSetup: Ref<Sfc['scriptSetup']>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	styles: Ref<Sfc['styles']>,
-	styleFiles: ReturnType<typeof useSfcStyles>['files'],
 	templateData: Ref<{
 		lang: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number; } | undefined,
 	} | undefined>,
 	sfcTemplateCompileResult: Ref<ReturnType<(typeof import('@volar/vue-code-gen'))['compileSFCTemplate']> | undefined>,
-	sfcStyles: ReturnType<(typeof import('./useSfcStyles'))['useSfcStyles']>['files'],
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
-	getCssVBindRanges: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
-	getCssClasses: (cssEmbeddeFile: EmbeddedFile) => TextRange[],
 	disableTemplateScript: boolean,
 ) {
 	const baseFileName = path.basename(fileName);
@@ -50,34 +47,55 @@ export function useSfcTemplateScript(
 		return comments.join('\n');
 	});
 	const cssModuleClasses = computed(() => {
-		const result: { style: typeof styleFiles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
-		for (let i = 0; i < styleFiles.value.length; i++) {
-			const style = styleFiles.value[i];
-			if (style.data.module) {
+		const result: { style: typeof styles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
+		for (let i = 0; i < styles.value.length; i++) {
+			const style = styles.value[i];
+			if (style.module) {
 				result.push({
 					style: style,
 					index: i,
-					classNameRanges: getCssClasses(style),
+					classNameRanges: [...parseCssClassNames(style.content)],
 				});
 			}
 		}
 		return result;
 	});
 	const cssScopedClasses = computed(() => {
-		const result: { style: typeof styleFiles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
+		const result: { style: typeof styles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
 		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
-		for (let i = 0; i < styleFiles.value.length; i++) {
-			const style = styleFiles.value[i];
-			if ((setting === 'scoped' && style.data.scoped) || setting === 'always') {
+		for (let i = 0; i < styles.value.length; i++) {
+			const style = styles.value[i];
+			if ((setting === 'scoped' && style.scoped) || setting === 'always') {
 				result.push({
 					style: style,
 					index: i,
-					classNameRanges: getCssClasses(style),
+					classNameRanges: [...parseCssClassNames(style.content)],
 				});
 			}
 		}
 		return result;
 	});
+	const cssVars = computed(() => {
+		const result: { style: typeof styles['value'][number], index: number, ranges: TextRange[]; }[] = [];
+		for (let i = 0; i < styles.value.length; i++) {
+			const style = styles.value[i];
+			result.push({
+				style: style,
+				index: i,
+				ranges: [...parseCssVars(style.content)],
+			});
+		}
+		return result;
+	});
+	const cssVarTexts = computed(() => {
+		const result: string[] = [];
+		for (const { style, ranges } of cssVars.value) {
+			for (const range of ranges) {
+				result.push(style.content.substring(range.start, range.end));
+			}
+		}
+		return result;
+	})
 	const templateCodeGens = computed(() => {
 
 		if (!templateData.value)
@@ -123,7 +141,7 @@ export function useSfcTemplateScript(
 		codeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component> & {\n`);
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses.value) {
-			codeGen.addText(`${cssModule.style.data.module}: Record<string, string>`);
+			codeGen.addText(`${cssModule.style.module}: Record<string, string>`);
 			for (const classNameRange of cssModule.classNameRanges) {
 				writeCssClassProperty(
 					cssModule.index,
@@ -242,16 +260,11 @@ export function useSfcTemplateScript(
 			const emptyLocalVars: Record<string, number> = {};
 			const identifiers = new Set<string>();
 
-			for (let i = 0; i < sfcStyles.value.length; i++) {
-
-				const style = sfcStyles.value[i];
-				const binds = getCssVBindRanges(style);
-
-				for (const cssBind of binds) {
-					const bindText = style.content.substring(cssBind.start, cssBind.end);
+			for (const cssVar of cssVars.value) {
+				for (const cssBind of cssVar.ranges) {
 					walkInterpolationFragment(
 						ts,
-						bindText,
+						cssVar.style.content.substring(cssBind.start, cssBind.end),
 						(frag, fragOffset, isJustForErrorMapping) => {
 							if (fragOffset === undefined) {
 								codeGen.addText(frag);
@@ -266,7 +279,7 @@ export function useSfcTemplateScript(
 									SourceMaps.Mode.Offset,
 									{
 										vueTag: 'style',
-										vueTagIndex: i,
+										vueTagIndex: cssVar.index,
 										capabilities: isJustForErrorMapping ? {
 											diagnostic: true,
 										} : {
@@ -409,6 +422,7 @@ export function useSfcTemplateScript(
 		formatEmbedded,
 		inlineCssFile,
 		inlineCssEmbedded,
+		cssVarTexts,
 	};
 
 	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: SourceMaps.Range) {
