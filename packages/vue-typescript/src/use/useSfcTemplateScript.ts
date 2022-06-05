@@ -92,6 +92,7 @@ export function useSfcTemplateScript(
 			compilerOptions.experimentalCompatMode ?? 3,
 			compilerOptions.experimentalRuntimeMode,
 			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
+			!!scriptSetup.value,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
 			templateData.value.htmlToTemplate,
 			{

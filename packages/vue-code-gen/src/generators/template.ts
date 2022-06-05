@@ -61,6 +61,7 @@ export function generate(
 	vueVersion: number,
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
 	allowTypeNarrowingInEventExpressions: boolean,
+	hasScriptSetup: boolean,
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number; } | undefined,
 	searchTexts: {
@@ -275,7 +276,10 @@ export function generate(
 			SourceMaps.Mode.Expand,
 			{
 				vueTag: 'template',
-				capabilities: capabilitiesSet.slotNameExport,
+				capabilities: {
+					...capabilitiesSet.slotNameExport,
+					referencesCodeLens: hasScriptSetup,
+				},
 			},
 		);
 		tsCodeGen.addText(`: typeof ${slot.varName},\n`);
