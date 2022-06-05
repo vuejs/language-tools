@@ -1,22 +1,20 @@
-import { computed, Ref } from '@vue/reactivity';
+import { VueLanguagePlugin } from "../typescriptRuntime";
 import * as SourceMaps from '@volar/source-map';
-import { Embedded, EmbeddedFile, Sfc } from '../vueFile';
+import { Embedded, EmbeddedFile } from '../vueFile';
 import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 
-export function useSfcCustomBlocks(
-	fileName: string,
-	customBlocks: Ref<Sfc['customBlocks']>,
-) {
+export default function (): VueLanguagePlugin {
 
-	const files = computed(() => {
+	return {
 
-		const _files: EmbeddedFile[] = [];
+		getEmbeddedFilesCount(sfc) {
+			return sfc.customBlocks.length;
+		},
 
-		for (let i = 0; i < customBlocks.value.length; i++) {
+		getEmbeddedFile(fileName, sfc, i) {
 
-			const customBlock = customBlocks.value[i];
-
-			_files.push({
+			const customBlock = sfc.customBlocks[i];
+			const file: EmbeddedFile = {
 				fileName: fileName + '.' + i + '.' + customBlock.lang,
 				lang: customBlock.lang,
 				content: customBlock.content,
@@ -30,19 +28,7 @@ export function useSfcCustomBlocks(
 				},
 				data: undefined,
 				isTsHostFile: false,
-			});
-		}
-
-		return _files;
-	});
-	const embeddeds = computed(() => {
-
-		const _embeddeds: Embedded[] = [];
-
-		for (let i = 0; i < customBlocks.value.length && i < files.value.length; i++) {
-
-			const file = files.value[i];
-			const customBlock = customBlocks.value[i];
+			};
 			const sourceMap = new EmbeddedFileSourceMap();
 
 			sourceMap.mappings.push({
@@ -61,8 +47,8 @@ export function useSfcCustomBlocks(
 				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
-					start: customBlock.startTagEnd,
-					end: customBlock.startTagEnd + customBlock.content.length,
+					start: 0,
+					end: customBlock.content.length,
 				},
 				mappedRange: {
 					start: 0,
@@ -70,14 +56,12 @@ export function useSfcCustomBlocks(
 				},
 			});
 
-			_embeddeds.push({ file, sourceMap });
-		}
+			const embedded: Embedded = {
+				file,
+				sourceMap,
+			};
 
-		return _embeddeds;
-	});
-
-	return {
-		files,
-		embeddeds,
+			return embedded;
+		},
 	};
 }

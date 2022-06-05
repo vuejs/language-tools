@@ -3,10 +3,9 @@ import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, ref, shallowRef, unref } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { ITemplateScriptData, VueCompilerOptions } from './types';
 import { VueLanguagePlugin } from './typescriptRuntime';
-import { useSfcCustomBlocks } from './use/useSfcCustomBlocks';
 import { useSfcScript } from './use/useSfcScript';
 import { useSfcScriptGen } from './use/useSfcScriptGen';
 import { useSfcTemplate } from './use/useSfcTemplate';
@@ -138,7 +137,6 @@ export function createVueFile(
 	}).filter(notEmpty);
 
 	// use
-	const sfcCustomBlocks = useSfcCustomBlocks(fileName, computed(() => sfc.customBlocks));
 	const sfcTemplate = useSfcTemplate(fileName, computed(() => sfc.template));
 	const sfcTemplateCompiled = computed<undefined | {
 		lang: string,
@@ -311,24 +309,13 @@ export function createVueFile(
 			embeddeds: [],
 		});
 
-		// styles
 		for (const getEmbeddeds of pluginEmbeddeds) {
-			console.log(getEmbeddeds.value.length);
 			for (const embedded of getEmbeddeds.value) {
-				console.log('embedded', embedded.value.file.fileName);
 				embeddeds.push({
 					self: embedded.value,
 					embeddeds: [],
 				});
 			}
-		}
-
-		// customBlocks
-		for (const customBlock of sfcCustomBlocks.embeddeds.value) {
-			embeddeds.push({
-				self: customBlock,
-				embeddeds: [],
-			});
 		}
 
 		return embeddeds;
